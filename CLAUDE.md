@@ -16,7 +16,6 @@ AI-first knowledge platform that ingests company data from multiple sources (Fir
 ## Commands
 
 ```bash
-cd knowledge-platform
 npm run dev          # Start dev server (Turbopack)
 npm run build        # Production build
 npm run lint         # ESLint (Next.js core web vitals + TypeScript)
@@ -55,7 +54,7 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 ## Next.js 16 Warning
 
-This uses Next.js 16 which has breaking changes from earlier versions. Read the relevant guide in `knowledge-platform/node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This uses Next.js 16 which has breaking changes from earlier versions. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 
 ## Path Aliases
 
