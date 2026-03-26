@@ -1,11 +1,18 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { embedText, embedBatch } from "./embeddings";
 
-// Use service role key — this runs server-side, needs to bypass RLS
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-init to avoid build-time errors when env vars aren't available
+let _supabase: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 const BATCH_SIZE = 50;
 
@@ -27,7 +34,7 @@ async function reEmbedTable(
   contentField: string
 ): Promise<number> {
   // Fetch stale rows
-  const { data: staleRows, error } = await supabase
+  const { data: staleRows, error } = await getSupabase()
     .from(table)
     .select("*")
     .eq("embedding_stale", true)
@@ -43,7 +50,7 @@ async function reEmbedTable(
 
   // Update each row with new embedding
   for (let i = 0; i < rows.length; i++) {
-    await supabase
+    await getSupabase()
       .from(table)
       .update({
         embedding: embeddings[i] as any,
@@ -59,7 +66,7 @@ async function reEmbedTable(
  * Special handler for people table: aggregate profile before embedding.
  */
 async function reEmbedPeople(): Promise<number> {
-  const { data: stalePeople, error } = await supabase
+  const { data: stalePeople, error } = await getSupabase()
     .from("people")
     .select("id, name, team, role")
     .eq("embedding_stale", true)
@@ -69,13 +76,13 @@ async function reEmbedPeople(): Promise<number> {
 
   for (const person of stalePeople) {
     // Fetch skills
-    const { data: skills } = await supabase
+    const { data: skills } = await getSupabase()
       .from("people_skills")
       .select("skill, evidence_count")
       .eq("person_id", person.id);
 
     // Fetch projects
-    const { data: projects } = await supabase
+    const { data: projects } = await getSupabase()
       .from("people_projects")
       .select("project, role_in_project")
       .eq("person_id", person.id);
@@ -84,7 +91,7 @@ async function reEmbedPeople(): Promise<number> {
     const profileText = buildProfileText(person, skills || [], projects || []);
     const embedding = await embedText(profileText);
 
-    await supabase
+    await getSupabase()
       .from("people")
       .update({ embedding: embedding as any, embedding_stale: false })
       .eq("id", person.id);
