@@ -17,7 +17,7 @@ export function registerSearchTools(server: McpServer) {
 
       const { data: results, error } = await supabase.rpc("search_all_content", {
         query_embedding: queryEmbedding,
-        match_threshold: 0.75,
+        match_threshold: 0.3,
         match_count: limit,
       });
 

@@ -15,7 +15,7 @@ export async function getStaleRows(table: string, limit: number = 50) {
   const { data, error } = await getAdminClient()
     .from(table)
     .select("*")
-    .eq("embedding_stale", true)
+    .or("embedding_stale.eq.true,embedding.is.null")
     .limit(limit);
   if (error || !data) return [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
