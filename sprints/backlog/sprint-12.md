@@ -1,8 +1,8 @@
 # Sprint 12: Google Drive Watch Renewal
 
-**Phase:** 2 — Expand Sources & Agents
+**Phase:** V2 — Toegang & Kwaliteit
 **Requirements:** REQ-301, REQ-106
-**Depends on:** Sprint 10 (Drive watch subscription active)
+**Depends on:** Sprint 10 (Drive webhook receiving notifications)
 **Produces:** Auto-renewing Drive watch channel that never silently expires
 
 ---
@@ -20,16 +20,17 @@ INSERT INTO system_config (key, value) VALUES
 ```
 
 **Update the subscription function from Sprint 10 to store channel info:**
+
 ```typescript
 async function subscribeToDriveChanges(accessToken: string): Promise<void> {
-  const tokenRes = await fetch(
-    "https://www.googleapis.com/drive/v3/changes/startPageToken",
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
+  const tokenRes = await fetch("https://www.googleapis.com/drive/v3/changes/startPageToken", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
   const { startPageToken } = await tokenRes.json();
 
   await supabase.from("system_config").upsert({
-    key: "drive_page_token", value: startPageToken,
+    key: "drive_page_token",
+    value: startPageToken,
   });
 
   const channelId = crypto.randomUUID();
@@ -49,7 +50,7 @@ async function subscribeToDriveChanges(accessToken: string): Promise<void> {
         address: `${Deno.env.get("SUPABASE_URL")}/functions/v1/drive-webhook`,
         expiration,
       }),
-    }
+    },
   );
 
   const channel = await watchRes.json();
@@ -70,6 +71,7 @@ async function subscribeToDriveChanges(accessToken: string): Promise<void> {
 **What:** Edge Function that stops the old channel and creates a new subscription.
 
 **Create `supabase/functions/drive-renew/index.ts`:**
+
 ```typescript
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getAccessToken } from "../_shared/google-auth.ts";
@@ -77,12 +79,12 @@ import { getAccessToken } from "../_shared/google-auth.ts";
 Deno.serve(async (req) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
   const accessToken = await getAccessToken(
     Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY")!,
-    Deno.env.get("GOOGLE_ADMIN_EMAIL")!
+    Deno.env.get("GOOGLE_ADMIN_EMAIL")!,
   );
 
   // Stop the old channel
@@ -91,9 +93,7 @@ Deno.serve(async (req) => {
     .select("key, value")
     .in("key", ["drive_channel_id", "drive_channel_resource_id", "drive_page_token"]);
 
-  const configMap = Object.fromEntries(
-    (configs || []).map((c) => [c.key, c.value])
-  );
+  const configMap = Object.fromEntries((configs || []).map((c) => [c.key, c.value]));
 
   if (configMap.drive_channel_id && configMap.drive_channel_resource_id) {
     await fetch("https://www.googleapis.com/drive/v3/channels/stop", {
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
         address: `${Deno.env.get("SUPABASE_URL")}/functions/v1/drive-webhook`,
         expiration,
       }),
-    }
+    },
   );
 
   const channel = await watchRes.json();
@@ -173,6 +173,7 @@ SELECT cron.schedule(
 ```
 
 **Error recovery:** If renewal fails, the watch expires silently. Add a check to the drive-webhook handler:
+
 ```typescript
 // At the start of drive-webhook handler:
 const { data: expiryConfig } = await supabase

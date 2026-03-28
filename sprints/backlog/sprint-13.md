@@ -1,6 +1,6 @@
 # Sprint 13: Slack Ingestion Setup
 
-**Phase:** 2 — Expand Sources & Agents
+**Phase:** V2 — Toegang & Kwaliteit
 **Requirements:** REQ-400, REQ-401, REQ-402, REQ-408
 **Depends on:** Sprint 05 (Gatekeeper pipeline)
 **Produces:** Slack Events API connected, messages flowing to our endpoint
@@ -12,6 +12,7 @@
 **What:** Set up a Slack App with the right scopes and event subscriptions.
 
 **Steps:**
+
 1. Go to [api.slack.com/apps](https://api.slack.com/apps) → Create New App → From Scratch
 2. Name: "Knowledge Platform" | Workspace: your workspace
 
@@ -36,6 +37,7 @@
    ```
 
 **Store token:**
+
 ```bash
 supabase secrets set SLACK_BOT_TOKEN=xoxb-your-token
 supabase secrets set SLACK_SIGNING_SECRET=your-signing-secret
@@ -48,6 +50,7 @@ supabase secrets set SLACK_SIGNING_SECRET=your-signing-secret
 **What:** Receive Slack events, verify authenticity, respond within 3 seconds, queue processing.
 
 **Create `supabase/functions/slack-webhook/index.ts`:**
+
 ```typescript
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createHmac } from "https://deno.land/std/crypto/mod.ts";
@@ -74,10 +77,12 @@ Deno.serve(async (req) => {
     new TextEncoder().encode(signingSecret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const sig = await crypto.subtle.sign("HMAC", hmac, new TextEncoder().encode(baseString));
-  const computed = `v0=${Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("")}`;
+  const computed = `v0=${Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")}`;
 
   if (computed !== signature) {
     return new Response("Invalid signature", { status: 401 });
@@ -93,7 +98,7 @@ Deno.serve(async (req) => {
       // Queue for processing (fire and forget)
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       );
 
       // Store raw event in a queue table for async processing
@@ -111,6 +116,7 @@ Deno.serve(async (req) => {
 ```
 
 **Create event queue table:**
+
 ```sql
 CREATE TABLE event_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -137,13 +143,14 @@ Deploy: `supabase functions deploy slack-webhook --no-verify-jwt`
 **What:** Background worker that picks up pending Slack events from the queue and processes them.
 
 **Create `supabase/functions/process-events/index.ts`:**
+
 ```typescript
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 Deno.serve(async (req) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
   // Fetch pending events
@@ -223,6 +230,7 @@ async function resolveSlackUser(userId: string): Promise<string> {
 ```
 
 **Schedule processor via pg_cron (every minute):**
+
 ```sql
 SELECT cron.schedule(
     'process-slack-events',

@@ -1,162 +1,370 @@
-# Sprint 07: Fireflies Polling Fallback
+# Sprint 07: Impact Check / Conflict-detectie
 
-**Phase:** 1 — Foundation
-**Requirements:** REQ-202, REQ-106
-**Depends on:** Sprint 04 (Fireflies webhook pipeline)
-**Produces:** Resilient ingestion that catches missed webhooks
+**Phase:** V1 — Data Pipeline
+**Requirements:** REQ-605, REQ-607
+**Depends on:** Sprint 05 (Gatekeeper extracts decisions), Sprint 06 (entity resolution + data saved to tables)
+**Produces:** Conflict detection that compares new decisions against existing content, creates update_suggestions, and notifies via Slack. The system NEVER modifies documentation itself — it signals and suggests.
 
 ---
 
-## Task 1: Build polling function
+## Task 1: Detect conflicts between new decisions and existing content
 
-**What:** Query Fireflies `transcripts` endpoint to find unprocessed meetings. Compare against what's already in the `meetings` table.
+**What:** When the Gatekeeper extracts a decision (in Sprint 05), embed it and compare against existing decisions and meetings using vector similarity. If similar content exists with different conclusions, flag it as a potential conflict.
 
-**Create `supabase/functions/fireflies-poll/index.ts`:**
+Based on PRD Stap 8: the embedding of a new decision is compared against `decisions` and `meetings` tables. Similarity > 0.8 triggers conflict analysis.
+
+**Create `src/lib/impact-check.ts`:**
+
 ```typescript
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
+import { embedText } from "./embeddings";
 
-const FIREFLIES_API = "https://api.fireflies.ai/graphql";
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
 
-Deno.serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+interface ConflictResult {
+  has_conflict: boolean;
+  conflicts: {
+    target_id: string;
+    target_table: string;
+    target_content: string;
+    similarity: number;
+  }[];
+}
 
-  const apiKey = Deno.env.get("FIREFLIES_API_KEY")!;
+/**
+ * Check a new decision against existing content for potential conflicts.
+ *
+ * Flow from PRD Stap 8:
+ * 1. Embed the new decision text
+ * 2. Search existing decisions and meetings for high similarity (> 0.8)
+ * 3. If similar content exists with different conclusions → potential conflict
+ */
+export async function checkForConflicts(
+  decisionText: string,
+  sourceId: string, // the meeting that produced this decision
+  threshold: number = 0.8,
+): Promise<ConflictResult> {
+  const embedding = await embedText(decisionText);
+  const conflicts: ConflictResult["conflicts"] = [];
 
-  // Fetch recent transcripts from Fireflies (last 24 hours)
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-  const query = `
-    query RecentTranscripts {
-      transcripts {
-        id
-        title
-        date
-      }
-    }
-  `;
-
-  const response = await fetch(FIREFLIES_API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({ query }),
+  // ── Search existing decisions ──
+  const { data: similarDecisions, error: decError } = await supabase.rpc("match_decisions", {
+    query_embedding: embedding,
+    match_threshold: threshold,
+    match_count: 5,
   });
 
-  const result = await response.json();
-  const transcripts = result.data?.transcripts || [];
+  if (!decError && similarDecisions) {
+    for (const match of similarDecisions) {
+      // Skip self-matches (decisions from the same meeting)
+      if (match.source_id === sourceId) continue;
 
-  // Filter to recent transcripts only
-  const recentTranscripts = transcripts.filter(
-    (t: any) => new Date(t.date) > new Date(since)
-  );
-
-  // Check which ones we already have
-  const { data: existing } = await supabase
-    .from("meetings")
-    .select("fireflies_id")
-    .in(
-      "fireflies_id",
-      recentTranscripts.map((t: any) => t.id)
-    );
-
-  const existingIds = new Set(existing?.map((e) => e.fireflies_id) || []);
-  const missing = recentTranscripts.filter(
-    (t: any) => !existingIds.has(t.id)
-  );
-
-  // Process missing transcripts by calling the webhook handler
-  for (const transcript of missing) {
-    // Call the existing webhook Edge Function to process each missing meeting
-    await fetch(
-      `${Deno.env.get("SUPABASE_URL")}/functions/v1/fireflies-webhook`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({
-          meetingId: transcript.id,
-          eventType: "Transcription completed",
-        }),
-      }
-    );
+      conflicts.push({
+        target_id: match.id,
+        target_table: "decisions",
+        target_content: match.decision,
+        similarity: match.similarity,
+      });
+    }
   }
 
-  return new Response(
-    JSON.stringify({
-      checked: recentTranscripts.length,
-      missing: missing.length,
-      processed: missing.map((t: any) => t.id),
-    }),
-    { headers: { "Content-Type": "application/json" } }
-  );
-});
-```
+  // ── Search existing meetings (summary) ──
+  const { data: similarMeetings, error: meetError } = await supabase.rpc("match_meetings", {
+    query_embedding: embedding,
+    match_threshold: threshold,
+    match_count: 5,
+  });
 
-**Key detail:** The polling function reuses the existing webhook handler — it simply calls it with the same payload shape. This avoids duplicating ingestion logic.
+  if (!meetError && similarMeetings) {
+    for (const match of similarMeetings) {
+      // Skip the source meeting itself
+      if (match.id === sourceId) continue;
 
----
+      conflicts.push({
+        target_id: match.id,
+        target_table: "meetings",
+        target_content: match.summary || match.title,
+        similarity: match.similarity,
+      });
+    }
+  }
 
-## Task 2: Schedule polling via pg_cron
-
-**What:** Run the polling fallback every 30 minutes.
-
-```sql
-SELECT cron.schedule(
-    'fireflies-poll-fallback',
-    '*/30 * * * *',
-    $$
-    SELECT net.http_post(
-        url := 'https://YOUR_PROJECT.supabase.co/functions/v1/fireflies-poll',
-        headers := jsonb_build_object(
-            'Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY',
-            'Content-Type', 'application/json'
-        ),
-        body := '{}'::jsonb
-    ) AS request_id;
-    $$
-);
-```
-
-Deploy: `supabase functions deploy fireflies-poll --no-verify-jwt`
-
----
-
-## Task 3: Verify idempotency
-
-**What:** Ensure that even if polling finds an already-processed meeting, it doesn't create duplicates.
-
-The idempotency is already handled in Sprint 04's webhook handler:
-```typescript
-// This check in fireflies-webhook/index.ts prevents duplicates:
-const { data: existing } = await supabase
-  .from("meetings")
-  .select("id")
-  .eq("fireflies_id", meetingId)
-  .single();
-
-if (existing) {
-  return new Response(JSON.stringify({ skipped: true, reason: "duplicate" }));
+  return {
+    has_conflict: conflicts.length > 0,
+    conflicts,
+  };
 }
 ```
 
-**Test scenario:**
-1. Meeting arrives via webhook → processed normally
-2. Polling runs 30 minutes later → finds the same meeting
-3. Webhook handler checks `fireflies_id` → already exists → skips
+**Required RPC functions (add to Sprint 03 migration or create here):**
+
+```sql
+-- Match against decisions table
+CREATE OR REPLACE FUNCTION match_decisions(
+    query_embedding VECTOR(1536),
+    match_threshold FLOAT DEFAULT 0.8,
+    match_count INT DEFAULT 5
+)
+RETURNS TABLE (
+    id UUID,
+    decision TEXT,
+    source_id UUID,
+    made_by TEXT,
+    date TIMESTAMP,
+    similarity FLOAT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        d.id,
+        d.decision,
+        d.source_id,
+        d.made_by,
+        d.date,
+        1 - (d.embedding <=> query_embedding) AS similarity
+    FROM decisions d
+    WHERE d.status = 'active'
+      AND d.embedding IS NOT NULL
+      AND 1 - (d.embedding <=> query_embedding) > match_threshold
+    ORDER BY d.embedding <=> query_embedding
+    LIMIT match_count;
+END;
+$$;
+
+-- Match against meetings table
+CREATE OR REPLACE FUNCTION match_meetings(
+    query_embedding VECTOR(1536),
+    match_threshold FLOAT DEFAULT 0.8,
+    match_count INT DEFAULT 5
+)
+RETURNS TABLE (
+    id UUID,
+    title TEXT,
+    summary TEXT,
+    date TIMESTAMP,
+    similarity FLOAT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        m.id,
+        m.title,
+        m.summary,
+        m.date,
+        1 - (m.embedding <=> query_embedding) AS similarity
+    FROM meetings m
+    WHERE m.status = 'active'
+      AND m.embedding IS NOT NULL
+      AND 1 - (m.embedding <=> query_embedding) > match_threshold
+    ORDER BY m.embedding <=> query_embedding
+    LIMIT match_count;
+END;
+$$;
+```
+
+---
+
+## Task 2: Create entries in update_suggestions table
+
+**What:** When a conflict is detected, create an entry in `update_suggestions` with the target content, trigger source, current content, suggested new content, and reason.
+
+**Add to `src/lib/impact-check.ts`:**
+
+```typescript
+/**
+ * Create update suggestions for detected conflicts.
+ * These are human-reviewable suggestions — the system NEVER auto-modifies.
+ */
+export async function createUpdateSuggestions(
+  newDecisionText: string,
+  triggerSourceId: string, // meeting ID that triggered this
+  triggerSourceType: string, // 'meeting'
+  conflicts: ConflictResult["conflicts"],
+): Promise<number> {
+  let created = 0;
+
+  for (const conflict of conflicts) {
+    await supabase.from("update_suggestions").insert({
+      target_content_id: conflict.target_id,
+      target_table: conflict.target_table,
+      trigger_source_id: triggerSourceId,
+      trigger_source_type: triggerSourceType,
+      current_content: conflict.target_content,
+      new_content: newDecisionText,
+      reason: `Nieuw besluit uit meeting conflicteert mogelijk met bestaande ${conflict.target_table === "decisions" ? "beslissing" : "meeting-inhoud"} (similarity: ${conflict.similarity.toFixed(3)}).`,
+      status: "pending",
+    });
+    created++;
+  }
+
+  return created;
+}
+
+/**
+ * Full impact check pipeline for a single decision.
+ * Called after saving a decision in Sprint 06.
+ */
+export async function runImpactCheck(
+  decisionText: string,
+  meetingId: string,
+): Promise<{ conflicts_found: number; suggestions_created: number }> {
+  // Check for conflicts
+  const conflictResult = await checkForConflicts(decisionText, meetingId);
+
+  if (!conflictResult.has_conflict) {
+    return { conflicts_found: 0, suggestions_created: 0 };
+  }
+
+  // Create update suggestions
+  const suggestionsCreated = await createUpdateSuggestions(
+    decisionText,
+    meetingId,
+    "meeting",
+    conflictResult.conflicts,
+  );
+
+  // Notify via Slack
+  await notifyConflictToSlack(decisionText, meetingId, conflictResult.conflicts);
+
+  return {
+    conflicts_found: conflictResult.conflicts.length,
+    suggestions_created: suggestionsCreated,
+  };
+}
+```
+
+---
+
+## Task 3: Post conflict notification to Slack
+
+**What:** When a conflict is detected, immediately notify via Slack with actionable context. The message includes what the new decision is, what it conflicts with, and a call to review.
+
+**Add to `src/lib/impact-check.ts`:**
+
+```typescript
+/**
+ * Send conflict notification to Slack.
+ * Message format from PRD:
+ * "Nieuw besluit uit meeting X conflicteert mogelijk met bestaande documentatie Y. Review nodig."
+ */
+async function notifyConflictToSlack(
+  newDecisionText: string,
+  meetingId: string,
+  conflicts: ConflictResult["conflicts"],
+): Promise<void> {
+  const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+  if (!slackWebhookUrl) {
+    console.error("SLACK_WEBHOOK_URL not set — cannot send conflict notification");
+    return;
+  }
+
+  // Fetch meeting title for context
+  const { data: meeting } = await supabase
+    .from("meetings")
+    .select("title, date")
+    .eq("id", meetingId)
+    .single();
+
+  const meetingTitle = meeting?.title || "Onbekende meeting";
+  const meetingDate = meeting?.date
+    ? new Date(meeting.date).toLocaleDateString("nl-NL")
+    : "onbekende datum";
+
+  // Build conflict details
+  const conflictLines = conflicts.map((c) => {
+    const typeLabel = c.target_table === "decisions" ? "beslissing" : "meeting";
+    const preview =
+      c.target_content.length > 100 ? c.target_content.slice(0, 100) + "..." : c.target_content;
+    return `  • ${typeLabel}: "${preview}" (similarity: ${c.similarity.toFixed(2)})`;
+  });
+
+  const message = [
+    `:warning: *Conflict gedetecteerd*`,
+    "",
+    `*Nieuw besluit* uit meeting "${meetingTitle}" (${meetingDate}):`,
+    `> ${newDecisionText}`,
+    "",
+    `*Conflicteert mogelijk met:*`,
+    ...conflictLines,
+    "",
+    `_Review nodig. Bekijk via MCP of in de database._`,
+  ].join("\n");
+
+  await fetch(slackWebhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: message }),
+  });
+
+  console.log(`Conflict notification sent to Slack for meeting ${meetingId}`);
+}
+```
+
+**Integrate into the extraction pipeline (in `save-extractions.ts`):**
+
+```typescript
+import { runImpactCheck } from "./impact-check";
+
+// After saving decisions in saveExtractions():
+for (const decision of gatekeeperResult.decisions) {
+  // ... insert decision into decisions table ...
+
+  // Run impact check for each new decision
+  const impactResult = await runImpactCheck(decision.decision, meetingId);
+  if (impactResult.conflicts_found > 0) {
+    console.log(
+      `Impact check: ${impactResult.conflicts_found} conflicts found, ` +
+        `${impactResult.suggestions_created} suggestions created`,
+    );
+  }
+}
+```
+
+**IMPORTANT design principle from PRD:** The system NEVER modifies documentation itself. It:
+
+1. Detects potential conflicts via embedding similarity
+2. Creates entries in `update_suggestions` table
+3. Notifies humans via Slack
+4. Humans decide whether to accept or reject the suggestion
+
+**Example flow from PRD:**
+
+```
+Nieuw besluit: "Onboarding flow wordt 2 stappen"
+        ↓
+Embedding-search tegen bestaande content
+        ↓
+Hit gevonden met hoge similarity (>0.8):
+  "Onboarding flow bestaat uit 3 stappen" (PRD-HalalBox)
+        ↓
+Conflict gedetecteerd (hoge similarity + afwijkende inhoud)
+        ↓
+Entry in update_suggestions tabel:
+  - target: PRD-HalalBox
+  - trigger: meeting 27-03
+  - huidige inhoud: "3 stappen"
+  - suggestie: "2 stappen (besloten in meeting 27-03)"
+        ↓
+Notificatie naar Slack
+```
 
 ---
 
 ## Verification
 
-- [ ] Polling function lists recent Fireflies transcripts
-- [ ] Already-processed meetings are skipped (idempotency works)
-- [ ] Missing meetings are processed through the full pipeline (Gatekeeper → extraction)
-- [ ] pg_cron job runs every 30 minutes: `SELECT * FROM cron.job WHERE jobname = 'fireflies-poll-fallback';`
-- [ ] No duplicate meetings in `meetings` table after both webhook and polling run
+- [ ] `checkForConflicts()` returns conflicts when a similar decision exists (similarity > 0.8)
+- [ ] `checkForConflicts()` does NOT return the source meeting itself as a conflict (self-match filter works)
+- [ ] `update_suggestions` table receives entries with: target_content_id, target_table, trigger_source_id, current_content, new_content, reason
+- [ ] Slack notification is sent with Dutch message format: "Nieuw besluit uit meeting X conflicteert mogelijk met..."
+- [ ] `match_decisions` RPC function works correctly
+- [ ] `match_meetings` RPC function works correctly
+- [ ] Impact check runs automatically after each decision is saved
+- [ ] System never auto-modifies existing content — only creates suggestions
+- [ ] Suggestions have status = 'pending' by default

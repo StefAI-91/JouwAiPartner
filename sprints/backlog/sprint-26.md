@@ -1,215 +1,247 @@
-# Sprint 26: Frontend — System Health & Insights
+# Sprint 26: Frontend — Projects & Quarantine
 
-**Phase:** 3 — Insights & Delivery
-**Requirements:** REQ-1404, REQ-1405, REQ-1205, REQ-1803
-**Depends on:** Sprint 09 (metrics), Sprint 22 (insights populated), Sprint 24 (UI patterns)
-**Produces:** System Health dashboard + Insights feed + MCP insights tool
-
----
-
-## Task 1: System Health dashboard
-
-**What:** Visualize the three core metrics + agent run history.
-
-**Create `src/app/health/page.tsx`:**
-```typescript
-import { createClient } from "@/lib/supabase/server";
-import { HealthDashboard } from "@/components/health-dashboard";
-
-export default async function HealthPage() {
-  const supabase = await createClient();
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-
-  // Query volume
-  const { count: queryCount } = await supabase
-    .from("metrics").select("id", { count: "exact" })
-    .eq("metric_name", "mcp_query").gte("created_at", sevenDaysAgo);
-
-  // Gatekeeper rates
-  const { data: decisions } = await supabase
-    .from("metrics").select("metric_value")
-    .eq("metric_name", "gatekeeper_decision").gte("created_at", sevenDaysAgo);
-
-  const admitted = decisions?.filter((d) => d.metric_value.action === "admit").length || 0;
-  const quarantined = decisions?.filter((d) => d.metric_value.action === "quarantine").length || 0;
-  const rejected = decisions?.filter((d) => d.metric_value.action === "reject").length || 0;
-
-  // Zero-match rate
-  const { count: zeroMatches } = await supabase
-    .from("metrics").select("id", { count: "exact" })
-    .eq("metric_name", "search_zero_match").gte("created_at", sevenDaysAgo);
-
-  // Embedding staleness
-  const tables = ["documents", "meetings", "slack_messages", "emails", "people", "projects"];
-  let totalStale = 0;
-  for (const table of tables) {
-    const { count } = await supabase
-      .from(table).select("id", { count: "exact" }).eq("embedding_stale", true);
-    totalStale += count || 0;
-  }
-
-  // Recent agent runs
-  const { data: agentRuns } = await supabase
-    .from("content_reviews").select("agent_role, action, created_at")
-    .in("agent_role", ["curator", "analyst"]).eq("action", "health_report")
-    .order("created_at", { ascending: false }).limit(10);
-
-  return (
-    <HealthDashboard
-      metrics={{
-        queryCount: queryCount || 0,
-        admitted, quarantined, rejected,
-        zeroMatchRate: queryCount ? ((zeroMatches || 0) / queryCount * 100) : 0,
-        staleEmbeddings: totalStale,
-        recentAgentRuns: agentRuns || [],
-      }}
-    />
-  );
-}
-```
-
-**Dashboard component layout:**
-- Row 1: Three metric cards (Query Volume, Gatekeeper Rates pie chart, Zero-Match Rate)
-- Row 2: Embedding staleness count + Agent run history table
-- Use shadcn `Card` components, optionally add a chart library like `recharts` for the pie chart
-
-```bash
-npm install recharts
-```
+**Phase:** V3 — Intelligentie & Frontend
+**Requirements:** REQ-1402, REQ-1403, REQ-1407
+**Depends on:** Sprint 25 (UI patterns established), Sprint 20 (Auth)
+**Produces:** Project overview page and team quarantine management
 
 ---
 
-## Task 2: Insights Feed page
+## Task 1: Project Overview page
 
-**What:** Browse analyst-generated insights, filterable by topic and timeframe.
+**What:** Show all knowledge linked to a project: team, decisions, action items, meetings, docs.
 
-**Create `src/app/insights/page.tsx`:**
+**Create `src/app/projects/[name]/page.tsx`:**
+
 ```typescript
 import { createClient } from "@/lib/supabase/server";
 
-export default async function InsightsPage() {
+export default async function ProjectPage({ params }: { params: { name: string } }) {
   const supabase = await createClient();
+  const projectName = decodeURIComponent(params.name);
 
-  const { data: insights } = await supabase
-    .from("insights")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50);
+  // Fetch project entity
+  const { data: project } = await supabase
+    .from("projects").select("*")
+    .or(`name.ilike.%${projectName}%,aliases.cs.{${projectName}}`)
+    .single();
 
-  // Get unique topics for filter dropdown
-  const topics = [...new Set(insights?.map((i) => i.topic).filter(Boolean))];
+  // Fetch related data in parallel
+  const [team, decisions, actionItems] = await Promise.all([
+    supabase.from("people_projects").select("project, role_in_project, people(name, role)")
+      .ilike("project", `%${projectName}%`),
+    supabase.from("decisions").select("*")
+      .ilike("decision", `%${projectName}%`).order("date", { ascending: false }).limit(10),
+    supabase.from("action_items").select("*")
+      .ilike("description", `%${projectName}%`).order("created_at", { ascending: false }).limit(10),
+  ]);
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Insights</h1>
+      <h1 className="text-2xl font-bold">{project?.name || projectName}</h1>
+      {project?.client && <p className="text-muted-foreground">Client: {project.client}</p>}
 
-      {/* Topic filter tabs */}
-      {/* Date range picker */}
+      {/* Team section */}
+      <section className="mt-6">
+        <h2 className="text-lg font-semibold mb-3">Team ({team.data?.length || 0})</h2>
+        {/* Render team members with roles */}
+      </section>
 
-      <div className="space-y-4">
-        {insights?.map((insight) => (
-          <Card key={insight.id} className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">{insight.title}</h3>
-                <Badge className="mt-1">{insight.topic || "General"}</Badge>
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {new Date(insight.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            <p className="mt-3 text-sm">{insight.body}</p>
-            {insight.supporting_sources?.length > 0 && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Based on {insight.supporting_sources.length} source(s)
-              </p>
-            )}
-            <div className="mt-2">
-              {insight.dispatched
-                ? <Badge variant="outline">Dispatched</Badge>
-                : <Badge variant="secondary">Pending dispatch</Badge>
-              }
-            </div>
-          </Card>
-        ))}
-      </div>
+      {/* Decisions section */}
+      <section className="mt-6">
+        <h2 className="text-lg font-semibold mb-3">Decisions ({decisions.data?.length || 0})</h2>
+        {/* Render decisions with date and who made them */}
+      </section>
+
+      {/* Action Items section */}
+      <section className="mt-6">
+        <h2 className="text-lg font-semibold mb-3">Action Items ({actionItems.data?.length || 0})</h2>
+        {/* Render action items with status badges */}
+      </section>
     </div>
   );
 }
 ```
 
+**Projects index page `src/app/projects/page.tsx`:** Lists all projects with status and member count.
+
 ---
 
-## Task 3: Add `get_insights` MCP tool
+## Task 2: Quarantine Queue page
 
-**What:** Let Claude query insights via MCP.
+**What:** Team-specific quarantine review with one-click approve/reject and agent-assisted suggestions.
 
-**Add to `mcp-server/src/tools/structured.ts`:**
+**Create `src/app/quarantine/page.tsx`:**
+
 ```typescript
-server.tool(
-  "get_insights",
-  "Get analyst-generated insights about company patterns, risks, and opportunities. Use when someone asks about trends, risks, or what the AI has noticed.",
-  {
-    topic: z.string().optional().describe("Filter by topic"),
-    days: z.number().optional().default(30).describe("Look back N days"),
-    limit: z.number().optional().default(10),
-  },
-  async ({ topic, days, limit }) => {
-    const since = new Date(Date.now() - days * 86400000).toISOString();
+import { createClient } from "@/lib/supabase/server";
+import { QuarantineQueue } from "@/components/quarantine-queue";
 
-    let query = supabase
-      .from("insights")
-      .select("id, title, body, topic, supporting_sources, created_at")
-      .gte("created_at", since)
+export default async function QuarantinePage() {
+  const supabase = await createClient();
+
+  // Fetch all quarantined content with the Gatekeeper's reason
+  const tables = ["documents", "meetings", "slack_messages", "emails"];
+  const quarantined: any[] = [];
+
+  for (const table of tables) {
+    const { data } = await supabase
+      .from(table)
+      .select("id, title, content, relevance_score, category, created_at")
+      .eq("status", "quarantined")
       .order("created_at", { ascending: false })
-      .limit(limit);
+      .limit(20);
 
-    if (topic) query = query.ilike("topic", `%${topic}%`);
-
-    const { data, error } = await query;
-
-    if (error || !data?.length) {
-      return { content: [{ type: "text" as const, text: "No insights found for this period." }] };
+    if (data) {
+      quarantined.push(...data.map((d) => ({ ...d, source_table: table })));
     }
-
-    const formatted = data.map((i, idx) =>
-      `### ${idx + 1}. ${i.title}\n**Topic:** ${i.topic || "General"} | **Date:** ${new Date(i.created_at).toLocaleDateString()}\n\n${i.body}\n\n*Based on ${i.supporting_sources?.length || 0} source(s)*`
-    ).join("\n\n---\n\n");
-
-    return { content: [{ type: "text" as const, text: `## Recent Insights\n\n${formatted}` }] };
   }
-);
+
+  // Fetch Gatekeeper reasons for these items
+  const ids = quarantined.map((q) => q.id);
+  const { data: reviews } = await supabase
+    .from("content_reviews")
+    .select("content_id, reason, metadata")
+    .in("content_id", ids)
+    .eq("action", "quarantined");
+
+  const reviewMap = Object.fromEntries(
+    (reviews || []).map((r) => [r.content_id, r])
+  );
+
+  return <QuarantineQueue items={quarantined} reviews={reviewMap} />;
+}
+```
+
+**Client component `src/components/quarantine-queue.tsx`:**
+
+```typescript
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
+
+export function QuarantineQueue({ items, reviews }: { items: any[]; reviews: any }) {
+  const supabase = createClient();
+
+  async function approve(item: any) {
+    // Call API route that promotes content (generates embedding + updates status)
+    await fetch("/api/quarantine/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: item.id, table: item.source_table }),
+    });
+    // Optimistic UI update
+  }
+
+  async function reject(item: any) {
+    await fetch("/api/quarantine/reject", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: item.id, table: item.source_table }),
+    });
+  }
+
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-6">Quarantine Queue ({items.length})</h1>
+      {items.map((item) => (
+        <Card key={item.id} className="mb-4 p-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-medium">{item.title || "Untitled"}</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {item.content?.slice(0, 200)}...
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Score: {item.relevance_score?.toFixed(2)} |
+                Reason: {reviews[item.id]?.reason || "No reason recorded"} |
+                Source: {item.source_table}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="default" size="sm" onClick={() => approve(item)}>
+                Approve
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => reject(item)}>
+                Reject
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+```
+
+**API routes for approve/reject:**
+
+```typescript
+// src/app/api/quarantine/approve/route.ts
+import { embedText } from "@/lib/embeddings";
+
+export async function POST(req: Request) {
+  const { id, table } = await req.json();
+  const supabase = await createClient();
+
+  // Fetch content for embedding
+  const { data } = await supabase.from(table).select("content, body").eq("id", id).single();
+  const text = data?.content || data?.body || "";
+  const embedding = await embedText(text);
+
+  await supabase
+    .from(table)
+    .update({
+      status: "active",
+      embedding: embedding as any,
+      embedding_stale: false,
+    })
+    .eq("id", id);
+
+  await supabase.from("content_reviews").insert({
+    content_id: id,
+    content_table: table,
+    agent_role: "human",
+    action: "promoted",
+    reason: "Manually approved from quarantine queue",
+  });
+
+  return NextResponse.json({ success: true });
+}
 ```
 
 ---
 
-## Task 4: Navigation layout
+## Task 3: Role-based views
 
-**What:** Add a navigation sidebar/header that connects all pages.
+**What:** Ensure users only see quarantine items relevant to their team.
 
-**Create `src/app/layout.tsx` with navigation:**
 ```typescript
-// Sidebar navigation with links to:
-// - /knowledge (Knowledge Browser)
-// - /people (People Directory)
-// - /projects (Projects)
-// - /insights (Insights Feed)
-// - /quarantine (Quarantine Queue)
-// - /health (System Health)
-```
+// In QuarantinePage, filter by user's team:
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+const { data: profile } = await supabase
+  .from("user_profiles")
+  .select("team, role")
+  .eq("id", user?.id)
+  .single();
 
-Use shadcn `Sidebar` or a simple navigation component. Keep it clean and minimal.
+// Admin sees everything, members see their team's content
+// Filter quarantine items based on the source channel/team mapping
+```
 
 ---
 
 ## Verification
 
-- [ ] System Health shows query volume, Gatekeeper rates, zero-match rate
-- [ ] Stale embedding count is accurate
-- [ ] Agent run history shows Curator and Analyst runs with timestamps
-- [ ] Insights Feed shows all insights, filterable by topic
-- [ ] `get_insights` MCP tool returns insights from Claude Code
-- [ ] Navigation connects all dashboard pages
-- [ ] All pages enforce RLS (restricted content hidden from non-admins)
-
-**Phase 3 is complete when this sprint passes all checks. The full platform is now operational.**
+- [ ] Project page shows team, decisions, and action items for a given project
+- [ ] Projects index lists all projects with basic stats
+- [ ] Quarantine queue shows all quarantined content with Gatekeeper reasoning
+- [ ] One-click approve generates embedding and promotes to active
+- [ ] One-click reject archives the content
+- [ ] Actions are logged to `content_reviews` with agent_role='human'
+- [ ] Users see quarantine items appropriate to their role

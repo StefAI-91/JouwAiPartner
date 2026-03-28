@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import {
-  fetchFirefliesTranscript,
-  chunkTranscript,
-} from "@/lib/fireflies";
-
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+import { fetchFirefliesTranscript } from "@/lib/fireflies";
+import { chunkTranscript } from "@/lib/transcript-processor";
+import { getMeetingByFirefliesId } from "@/lib/queries/meetings";
+import { isValidDuration, hasParticipants } from "@/lib/validations/fireflies";
+import { processMeeting } from "@/lib/services/gatekeeper-pipeline";
 
 export async function POST(req: NextRequest) {
-  const supabase = getSupabase();
   const payload = await req.json();
   const { meetingId, eventType } = payload;
 
@@ -23,12 +15,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Idempotency — skip if already ingested
-  const { data: existing } = await supabase
-    .from("meetings")
-    .select("id")
-    .eq("fireflies_id", meetingId)
-    .single();
-
+  const existing = await getMeetingByFirefliesId(meetingId);
   if (existing) {
     return NextResponse.json({ skipped: true, reason: "duplicate" });
   }
@@ -37,31 +24,43 @@ export async function POST(req: NextRequest) {
   const transcript = await fetchFirefliesTranscript(meetingId);
 
   if (!transcript) {
-    return NextResponse.json(
-      { error: "Failed to fetch transcript" },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "Failed to fetch transcript" }, { status: 502 });
+  }
+
+  // Pre-filter: duration < 2 minutes (test calls, accidental recordings)
+  const durationCheck = isValidDuration(transcript.sentences);
+  if (!durationCheck.valid) {
+    return NextResponse.json({
+      skipped: true,
+      reason: "too_short",
+      duration: durationCheck.duration,
+    });
+  }
+
+  // Pre-filter: no participants
+  if (!hasParticipants(transcript.participants)) {
+    return NextResponse.json({ skipped: true, reason: "no_participants" });
   }
 
   // Chunk the transcript for storage
   const chunks = chunkTranscript(transcript.sentences);
+  const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");
 
-  // Insert meeting record — re-embedding worker picks up stale rows
-  const { error } = await supabase.from("meetings").insert({
+  // Run through Gatekeeper pipeline (score + extract + novelty check)
+  const { result, meetingId: insertedId } = await processMeeting({
     fireflies_id: meetingId,
     title: transcript.title,
     date: transcript.date,
     participants: transcript.participants,
-    summary: transcript.summary?.overview ?? "",
-    action_items: transcript.summary?.action_items ?? [],
-    transcript: chunks.map((c) => c.text).join("\n\n---\n\n"),
-    embedding_stale: true,
-    status: "active",
+    summary: transcript.summary?.notes ?? "",
+    topics: transcript.summary?.topics_discussed ?? [],
+    transcript: chunkedTranscript,
   });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ success: true, meetingId });
+  return NextResponse.json({
+    success: result.action === "pass",
+    meetingId: insertedId,
+    action: result.action,
+    relevance_score: result.relevance_score,
+  });
 }

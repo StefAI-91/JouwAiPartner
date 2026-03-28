@@ -1,197 +1,207 @@
-# Sprint 24: Frontend — Knowledge Browser & People Directory
+# Sprint 24: Dispatcher Agent
 
-**Phase:** 3 — Insights & Delivery
-**Requirements:** REQ-1400, REQ-1401, REQ-1406, REQ-1408
-**Depends on:** Sprint 01 (Next.js), Sprint 18 (Auth + RLS)
-**Produces:** Browseable knowledge base and people directory in the web UI
-
----
-
-## Task 1: Knowledge Browser page
-
-**What:** Browse and search all content with filters by source, category, date, and status.
-
-**Create `src/app/knowledge/page.tsx`:**
-```typescript
-// Server component that fetches initial data
-import { createClient } from "@/lib/supabase/server";
-import { KnowledgeBrowser } from "@/components/knowledge-browser";
-
-export default async function KnowledgePage() {
-  const supabase = await createClient();
-
-  // Fetch recent content across all tables
-  const [documents, meetings, slackMessages] = await Promise.all([
-    supabase.from("documents").select("id, title, source, category, status, relevance_score, created_at")
-      .eq("status", "active").order("created_at", { ascending: false }).limit(50),
-    supabase.from("meetings").select("id, title, date, participants, category, status, relevance_score, created_at")
-      .eq("status", "active").order("created_at", { ascending: false }).limit(50),
-    supabase.from("slack_messages").select("id, channel, author, category, status, relevance_score, timestamp")
-      .eq("status", "active").order("timestamp", { ascending: false }).limit(50),
-  ]);
-
-  const allContent = [
-    ...(documents.data || []).map((d) => ({ ...d, source_type: "document" })),
-    ...(meetings.data || []).map((m) => ({ ...m, source_type: "meeting" })),
-    ...(slackMessages.data || []).map((s) => ({ ...s, source_type: "slack" })),
-  ].sort((a, b) => new Date(b.created_at || b.timestamp).getTime() - new Date(a.created_at || a.timestamp).getTime());
-
-  return <KnowledgeBrowser initialContent={allContent} />;
-}
-```
-
-**Create `src/components/knowledge-browser.tsx`:** (Client component)
-```typescript
-"use client";
-
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
-// Component with:
-// - Search bar (text filter)
-// - Source filter dropdown (all / documents / meetings / slack / email)
-// - Category filter (decision / context / action_item / reference / insight)
-// - Content cards showing: title, source type badge, categories, date, relevance score
-// - Click to expand and see full content
-```
-
-**Key UI components needed (install via shadcn):**
-```bash
-npx shadcn@latest add input select card badge table dialog tabs
-```
+**Phase:** V3 — Intelligentie & Frontend
+**Requirements:** REQ-900–REQ-903
+**Depends on:** Sprint 23 (insights table populated by Analyst)
+**Produces:** Automatic routing of insights and alerts to Slack and email
 
 ---
 
-## Task 2: People Directory page
+## Task 1: Build Dispatcher — Slack routing
 
-**What:** Browse people profiles with their skills and project involvement.
+**What:** Watch for new insights and post them to relevant Slack channels.
 
-**Create `src/app/people/page.tsx`:**
+**Create `src/lib/agents/dispatcher.ts`:**
+
 ```typescript
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
-export default async function PeoplePage() {
-  const supabase = await createClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+);
 
-  const { data: people } = await supabase
-    .from("people")
-    .select(`
-      id, name, team, role,
-      people_skills(skill, evidence_count),
-      people_projects(project, role_in_project)
-    `)
-    .order("name");
+const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN!;
 
-  return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">People Directory</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {people?.map((person) => (
-          <PersonCard key={person.id} person={person} />
-        ))}
-      </div>
-    </div>
-  );
+// Topic-to-channel routing map (configurable)
+const CHANNEL_ROUTING: Record<string, string> = {
+  engineering: "C_ENGINEERING_ID",
+  sales: "C_SALES_ID",
+  product: "C_PRODUCT_ID",
+  general: "C_GENERAL_ID",
+};
+
+const DEFAULT_CHANNEL = "C_GENERAL_ID";
+
+export async function dispatchInsights(): Promise<number> {
+  // Fetch undispatched insights
+  const { data: insights } = await supabase
+    .from("insights")
+    .select("*")
+    .eq("dispatched", false)
+    .order("created_at", { ascending: true });
+
+  if (!insights || insights.length === 0) return 0;
+
+  let dispatched = 0;
+
+  for (const insight of insights) {
+    // Determine target channel based on topic
+    const channel = CHANNEL_ROUTING[insight.topic?.toLowerCase()] || DEFAULT_CHANNEL;
+
+    // Format the Slack message
+    const blocks = [
+      {
+        type: "header",
+        text: { type: "plain_text", text: `Insight: ${insight.title}` },
+      },
+      {
+        type: "section",
+        text: { type: "mrkdwn", text: insight.body },
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `Topic: *${insight.topic || "General"}* | Generated: ${new Date(insight.created_at).toLocaleDateString()}`,
+          },
+        ],
+      },
+    ];
+
+    // Post to Slack
+    const slackRes = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        channel,
+        blocks,
+        text: `Insight: ${insight.title}`, // fallback for notifications
+      }),
+    });
+
+    const result = await slackRes.json();
+
+    if (result.ok) {
+      // Mark as dispatched
+      await supabase.from("insights").update({ dispatched: true }).eq("id", insight.id);
+      dispatched++;
+    }
+  }
+
+  return dispatched;
 }
+```
 
-function PersonCard({ person }: { person: any }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{person.name}</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {person.role || "No role"} · {person.team || "No team"}
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-3">
-          <p className="text-xs font-medium mb-1">Skills</p>
-          <div className="flex flex-wrap gap-1">
-            {person.people_skills?.slice(0, 5).map((s: any) => (
-              <Badge key={s.skill} variant="secondary">
-                {s.skill} ({s.evidence_count})
-              </Badge>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-xs font-medium mb-1">Projects</p>
-          <div className="flex flex-wrap gap-1">
-            {person.people_projects?.map((p: any) => (
-              <Badge key={p.project} variant="outline">
-                {p.project}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+**Required Slack scopes:** Add `chat:write` to your Slack app's OAuth scopes and reinstall.
+
+---
+
+## Task 2: Email digest routing
+
+**What:** Send email digests for insights that need broader distribution.
+
+```typescript
+// Using Resend, Postmark, or any transactional email service
+// Example with Resend:
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Recipient routing (configurable)
+const EMAIL_ROUTING: Record<string, string[]> = {
+  leadership: ["ceo@company.com", "cto@company.com"],
+  engineering: ["eng-team@company.com"],
+  sales: ["sales-team@company.com"],
+};
+
+async function sendInsightEmail(insight: any): Promise<void> {
+  const recipients = EMAIL_ROUTING[insight.topic?.toLowerCase()] || [];
+  if (recipients.length === 0) return;
+
+  await resend.emails.send({
+    from: "Knowledge Platform <insights@company.com>",
+    to: recipients,
+    subject: `Insight: ${insight.title}`,
+    html: `
+      <h2>${insight.title}</h2>
+      <p>${insight.body}</p>
+      <hr>
+      <p><small>Topic: ${insight.topic} | Generated: ${new Date(insight.created_at).toLocaleDateString()}</small></p>
+      <p><small>View more insights in the <a href="${process.env.APP_URL}/insights">dashboard</a>.</small></p>
+    `,
+  });
+}
+```
+
+**Add email dispatch to the main function:**
+
+```typescript
+export async function dispatchInsights(): Promise<number> {
+  // ... existing Slack dispatch code ...
+
+  for (const insight of insights) {
+    // Slack dispatch (from Task 1)
+    await postToSlack(insight);
+
+    // Email dispatch
+    await sendInsightEmail(insight);
+
+    // Mark dispatched
+    await supabase.from("insights").update({ dispatched: true }).eq("id", insight.id);
+    dispatched++;
+  }
+  return dispatched;
 }
 ```
 
 ---
 
-## Task 3: Real-time subscriptions
+## Task 3: Schedule Dispatcher
 
-**What:** Use Supabase Realtime to update the UI when new content is ingested.
+**What:** Run after the Analyst to dispatch new insights.
 
-```typescript
-"use client";
+**API route + Edge Function (same pattern as Curator/Analyst):**
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+```sql
+-- Run at 5:30 AM (30 min after Analyst)
+SELECT cron.schedule(
+    'dispatch-insights',
+    '30 5 * * *',
+    $$
+    SELECT net.http_post(
+        url := 'https://YOUR_PROJECT.supabase.co/functions/v1/run-dispatcher',
+        headers := jsonb_build_object('Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY'),
+        body := '{}'::jsonb
+    );
+    $$
+);
 
-export function useRealtimeContent(initialContent: any[]) {
-  const [content, setContent] = useState(initialContent);
-  const supabase = createClient();
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("content-changes")
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "meetings",
-        filter: "status=eq.active",
-      }, (payload) => {
-        setContent((prev) => [
-          { ...payload.new, source_type: "meeting" },
-          ...prev,
-        ]);
-      })
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "documents",
-        filter: "status=eq.active",
-      }, (payload) => {
-        setContent((prev) => [
-          { ...payload.new, source_type: "document" },
-          ...prev,
-        ]);
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
-
-  return content;
-}
+-- Also run every 15 minutes during work hours for real-time alerts
+SELECT cron.schedule(
+    'dispatch-realtime',
+    '*/15 8-18 * * 1-5',    -- every 15 min, 8AM-6PM, Mon-Fri
+    $$
+    SELECT net.http_post(
+        url := 'https://YOUR_PROJECT.supabase.co/functions/v1/run-dispatcher',
+        headers := jsonb_build_object('Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY'),
+        body := '{}'::jsonb
+    );
+    $$
+);
 ```
-
-**Enable Realtime in Supabase Dashboard:** Database → Replication → enable replication for `meetings`, `documents`, `slack_messages`, `emails` tables.
 
 ---
 
 ## Verification
 
-- [ ] Knowledge Browser shows content from all sources with correct badges
-- [ ] Filters work: source type, category, search text
-- [ ] People Directory shows all people with skills and projects
-- [ ] Skill evidence counts are displayed
-- [ ] New content appears in real-time without page refresh
-- [ ] RLS is enforced: restricted content hidden from non-admin users
+- [ ] New insights in `insights` table are posted to the correct Slack channel
+- [ ] Slack messages use Block Kit formatting (header, body, context)
+- [ ] Email digests are sent to the correct recipients based on topic
+- [ ] Insights are marked `dispatched = true` after successful delivery
+- [ ] Failed dispatches are retried on the next run (not marked dispatched)
+- [ ] Daily dispatch runs after Analyst, plus real-time during work hours

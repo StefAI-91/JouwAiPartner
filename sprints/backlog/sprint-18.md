@@ -1,129 +1,172 @@
-# Sprint 18: Access Control & Security
+# Sprint 18: Curator — Advanced Checks
 
-**Phase:** 2 — Expand Sources & Agents
-**Requirements:** REQ-606, REQ-1300–REQ-1305
-**Depends on:** Sprint 05 (Gatekeeper tags sensitivity), Sprint 02 (all tables)
-**Produces:** Supabase Auth + Row Level Security enforcing sensitivity-based access
+**Phase:** V2 — Toegang & Kwaliteit
+**Requirements:** REQ-704, REQ-706, REQ-1703
+**Depends on:** Sprint 17 (Curator base agent)
+**Produces:** Contradiction detection, quarantine auto-review, and 30-day auto-reject
 
 ---
 
-## Task 1: Add sensitivity field and update Gatekeeper
+## Task 1: Contradiction detection
 
-**What:** Ensure all content tables have the `sensitivity` column (added in Sprint 02) and the Gatekeeper tags it.
+**What:** Add a tool and prompt extension to the Curator that finds conflicting statements about the same topic.
 
-The Gatekeeper already outputs `sensitivity: "open" | "restricted"` from Sprint 05. Verify it's being written to the DB in `processContent()`.
+**Add tool to `CURATOR_TOOLS`:**
 
-**Add sensitivity column if missing from any table:**
-```sql
--- Should already exist from Sprint 02, but verify:
-ALTER TABLE documents ADD COLUMN IF NOT EXISTS sensitivity TEXT DEFAULT 'open';
-ALTER TABLE meetings ADD COLUMN IF NOT EXISTS sensitivity TEXT DEFAULT 'open';
-ALTER TABLE slack_messages ADD COLUMN IF NOT EXISTS sensitivity TEXT DEFAULT 'open';
-ALTER TABLE emails ADD COLUMN IF NOT EXISTS sensitivity TEXT DEFAULT 'open';
+```typescript
+{
+  name: "find_contradictions",
+  description: "Search for entries on the same topic that contain conflicting information.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      topic: { type: "string", description: "Topic to check for contradictions" },
+    },
+    required: ["topic"],
+  },
+}
+```
+
+**Implementation:** Embed the topic, find similar entries, then pass the top matches to the Curator to reason about contradictions. The Curator uses Claude Sonnet's reasoning to determine if statements actually conflict.
+
+```typescript
+case "find_contradictions": {
+  const topicEmbedding = await embedText(input.topic);
+  const { data } = await supabase.rpc("search_all_content", {
+    query_embedding: topicEmbedding,
+    match_threshold: 0.80,
+    match_count: 10,
+  });
+  return JSON.stringify({
+    topic: input.topic,
+    related_entries: (data || []).map((d: any) => ({
+      id: d.id,
+      source: d.source_table,
+      content: d.content?.slice(0, 300),
+      title: d.title,
+    })),
+  });
+}
+```
+
+The Curator prompt instructs it to review the entries and flag genuine contradictions (not just different perspectives).
+
+---
+
+## Task 2: Quarantine auto-review
+
+**What:** The Curator reviews quarantined content and auto-promotes or auto-rejects based on patterns.
+
+**Add tool:**
+
+```typescript
+{
+  name: "review_quarantine",
+  description: "Get quarantined entries for review. Decide whether to promote (admit) or reject each one.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      table: { type: "string" },
+      limit: { type: "number" },
+    },
+    required: ["table"],
+  },
+},
+{
+  name: "promote_content",
+  description: "Promote quarantined content to active status.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      table: { type: "string" },
+      id: { type: "string" },
+      reason: { type: "string" },
+    },
+    required: ["table", "id", "reason"],
+  },
+}
+```
+
+**Implementation:**
+
+```typescript
+case "review_quarantine": {
+  const { data } = await supabase
+    .from(input.table)
+    .select("id, title, content, relevance_score, category, created_at")
+    .eq("status", "quarantined")
+    .order("created_at", { ascending: true })
+    .limit(input.limit || 10);
+  return JSON.stringify({ quarantined: data || [] });
+}
+
+case "promote_content": {
+  const embedding = await embedText(
+    (await supabase.from(input.table).select("content").eq("id", input.id).single()).data?.content || ""
+  );
+  await supabase.from(input.table).update({
+    status: "active",
+    embedding: embedding as any,
+    embedding_stale: false,
+  }).eq("id", input.id);
+  await supabase.from("content_reviews").insert({
+    content_id: input.id,
+    content_table: input.table,
+    agent_role: "curator",
+    action: "promoted",
+    reason: input.reason,
+  });
+  return JSON.stringify({ success: true });
+}
 ```
 
 ---
 
-## Task 2: Set up Supabase Auth
+## Task 3: Auto-reject quarantined content after 30 days
 
-**What:** Configure authentication so users can log in and be identified for RLS.
+**What:** Scheduled job that rejects quarantined entries older than 30 days.
 
-**Supabase Dashboard:**
-1. Authentication → Providers → Enable Email/Password
-2. Optionally enable Google OAuth for SSO (if using Google Workspace)
-
-**Create user profiles table:**
 ```sql
-CREATE TABLE user_profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email TEXT NOT NULL,
-    name TEXT,
-    team TEXT,
-    role TEXT DEFAULT 'member',  -- 'admin', 'member'
-    created_at TIMESTAMP DEFAULT NOW()
+-- Run daily at 3 AM (after Curator at 2 AM)
+SELECT cron.schedule(
+    'quarantine-auto-reject',
+    '0 3 * * *',
+    $$
+    WITH expired AS (
+        UPDATE documents SET status = 'archived'
+        WHERE status = 'quarantined' AND created_at < NOW() - INTERVAL '30 days'
+        RETURNING id, 'documents' AS tbl
+    ), expired_meetings AS (
+        UPDATE meetings SET status = 'archived'
+        WHERE status = 'quarantined' AND created_at < NOW() - INTERVAL '30 days'
+        RETURNING id, 'meetings' AS tbl
+    ), expired_slack AS (
+        UPDATE slack_messages SET status = 'archived'
+        WHERE status = 'quarantined' AND created_at < NOW() - INTERVAL '30 days'
+        RETURNING id, 'slack_messages' AS tbl
+    ), expired_emails AS (
+        UPDATE emails SET status = 'archived'
+        WHERE status = 'quarantined' AND created_at < NOW() - INTERVAL '30 days'
+        RETURNING id, 'emails' AS tbl
+    ), all_expired AS (
+        SELECT * FROM expired
+        UNION ALL SELECT * FROM expired_meetings
+        UNION ALL SELECT * FROM expired_slack
+        UNION ALL SELECT * FROM expired_emails
+    )
+    INSERT INTO content_reviews (content_id, content_table, agent_role, action, reason)
+    SELECT id, tbl, 'system', 'auto_rejected', 'Quarantined content expired after 30 days without review'
+    FROM all_expired;
+    $$
 );
-
--- Auto-create profile on signup
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.user_profiles (id, email, name)
-    VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'name');
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 ```
-
----
-
-## Task 3: Implement Row Level Security
-
-**What:** RLS policies that enforce: open content visible to all, restricted content visible only to originating team or admins.
-
-```sql
--- Enable RLS on all content tables
-ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE slack_messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE emails ENABLE ROW LEVEL SECURITY;
-
--- Policy: open content visible to all authenticated users
-CREATE POLICY "Open content visible to all" ON documents
-    FOR SELECT USING (
-        sensitivity = 'open'
-        AND auth.uid() IS NOT NULL
-    );
-
--- Policy: restricted content visible to admins or same team
-CREATE POLICY "Restricted content for team/admins" ON documents
-    FOR SELECT USING (
-        sensitivity = 'restricted'
-        AND (
-            EXISTS (
-                SELECT 1 FROM user_profiles
-                WHERE id = auth.uid() AND role = 'admin'
-            )
-            -- Add team-based logic when team tagging is implemented
-        )
-    );
-
--- Repeat for meetings, slack_messages, emails (same pattern)
--- Use a function to reduce duplication:
-CREATE OR REPLACE FUNCTION can_read_content(content_sensitivity TEXT)
-RETURNS BOOLEAN AS $$
-BEGIN
-    IF content_sensitivity = 'open' THEN
-        RETURN auth.uid() IS NOT NULL;
-    END IF;
-    -- Restricted: admin only for now
-    RETURN EXISTS (
-        SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'admin'
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Simplified policies using the function
-CREATE POLICY "Content access" ON meetings
-    FOR SELECT USING (can_read_content(sensitivity));
-CREATE POLICY "Content access" ON slack_messages
-    FOR SELECT USING (can_read_content(sensitivity));
-CREATE POLICY "Content access" ON emails
-    FOR SELECT USING (can_read_content(sensitivity));
-```
-
-**Important:** Service role key bypasses RLS (used by agents and ingestion). The anon key respects RLS (used by frontend and MCP when user-authenticated).
 
 ---
 
 ## Verification
 
-- [ ] Users can sign up/sign in via Supabase Auth
-- [ ] User profile is auto-created on signup
-- [ ] Open content is visible to all authenticated users
-- [ ] Restricted content is only visible to admins
-- [ ] Unauthenticated requests return no data (RLS blocks)
-- [ ] Agent functions (using service role key) still have full access
+- [ ] Curator finds contradicting statements on the same topic
+- [ ] Contradictions are flagged with specific entries cited
+- [ ] Quarantined content is reviewed: some promoted (with embedding generated), some rejected
+- [ ] Auto-reject runs daily: quarantined entries older than 30 days get archived
+- [ ] All actions logged to `content_reviews`

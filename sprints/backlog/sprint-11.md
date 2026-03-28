@@ -1,6 +1,6 @@
 # Sprint 11: Google Drive Ingestion Pipeline
 
-**Phase:** 2 — Expand Sources & Agents
+**Phase:** V2 — Toegang & Kwaliteit
 **Requirements:** REQ-302, REQ-303, REQ-304, REQ-305
 **Depends on:** Sprint 10 (Drive webhook receiving notifications)
 **Produces:** Google Docs content chunked, scored, and stored in the knowledge base
@@ -12,6 +12,7 @@
 **What:** When Drive push notification arrives, call `changes.list` to get changed files, then fetch Google Doc content.
 
 **Add to `supabase/functions/drive-webhook/index.ts`:**
+
 ```typescript
 // After receiving a change notification:
 
@@ -27,7 +28,7 @@ let pageToken = config?.value;
 // Fetch changes
 const changesRes = await fetch(
   `https://www.googleapis.com/drive/v3/changes?pageToken=${pageToken}&fields=nextPageToken,newStartPageToken,changes(fileId,file(id,name,mimeType,modifiedTime,trashed))`,
-  { headers: { Authorization: `Bearer ${accessToken}` } }
+  { headers: { Authorization: `Bearer ${accessToken}` } },
 );
 
 const changes = await changesRes.json();
@@ -49,7 +50,7 @@ for (const change of changes.changes || []) {
   // Fetch doc content as plain text
   const contentRes = await fetch(
     `https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/plain`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
+    { headers: { Authorization: `Bearer ${accessToken}` } },
   );
   const content = await contentRes.text();
 
@@ -58,6 +59,7 @@ for (const change of changes.changes || []) {
 ```
 
 **System config table** (create in Supabase if not exists):
+
 ```sql
 CREATE TABLE IF NOT EXISTS system_config (
     key TEXT PRIMARY KEY,
@@ -75,7 +77,7 @@ CREATE TABLE IF NOT EXISTS system_config (
 ```typescript
 interface DocChunk {
   text: string;
-  section: string;       // heading or "Introduction"
+  section: string; // heading or "Introduction"
   chunkIndex: number;
   tokenEstimate: number;
 }
@@ -143,7 +145,7 @@ function chunkDocument(content: string, title: string): DocChunk[] {
 ```typescript
 async function processGoogleDoc(
   file: { id: string; name: string; modifiedTime: string },
-  content: string
+  content: string,
 ): Promise<void> {
   // Pre-filter: skip empty docs and templates
   if (!content.trim() || content.length < 50) return;
@@ -161,10 +163,7 @@ async function processGoogleDoc(
 
   if (existing && existing.length > 0) {
     // Delete old chunks for this doc
-    await supabase
-      .from("documents")
-      .delete()
-      .eq("source", `gdrive:${file.id}`);
+    await supabase.from("documents").delete().eq("source", `gdrive:${file.id}`);
   }
 
   // Process each chunk through the Gatekeeper pipeline
@@ -194,6 +193,7 @@ async function processGoogleDoc(
 ```
 
 **Key design decisions:**
+
 - `source` field uses `gdrive:{fileId}` format — makes it easy to find all chunks from the same doc
 - On update: delete all old chunks, re-chunk, re-ingest through Gatekeeper
 - Each chunk includes the section heading for context

@@ -1,0 +1,46 @@
+{
+  "skill_name": "visualize",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Maak een mockup van een leads tabel met zoekbalk, filters op status, en bulk acties",
+      "expected_output": "Een standalone HTML-bestand met een component-schets die de leads tabel toont in meerdere states (default, loading, empty, error, gevuld). Met realistische dummy data (echte namen, emails, datums). Interactieve filters en zoekbalk.",
+      "files": [],
+      "assertions": [
+        "Output is een enkel .html bestand",
+        "Bevat Tailwind CDN script tag",
+        "Bevat geen React of andere framework imports",
+        "Toont de gele schets-indicator balk bovenaan",
+        "Bevat realistische dummy data (geen Lorem ipsum)",
+        "Bestandsnaam volgt het patroon sketch-[type]-[beschrijving].html"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Visualiseer het datamodel voor een compliance portaal met users, organizations, audits, findings en action_items",
+      "expected_output": "Een standalone HTML-bestand met een ER-diagram dat alle tabellen toont als kaarten met kolommen en types, verbonden met relatielijnen. Primary keys en foreign keys gemarkeerd.",
+      "files": [],
+      "assertions": [
+        "Output is een enkel .html bestand",
+        "Alle 5 genoemde tabellen zijn zichtbaar",
+        "Relaties tussen tabellen zijn visueel weergegeven",
+        "Primary keys zijn gemarkeerd",
+        "Foreign keys zijn gemarkeerd",
+        "Kolom types zijn zichtbaar"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Schets de flow voor het aanmaken van een nieuwe audit: van klikken op 'Nieuwe audit' tot de audit die in de lijst verschijnt. Inclusief het toewijzen van een auditor en het selecteren van een template.",
+      "expected_output": "Een standalone HTML-bestand met een flow/proces visualisatie die alle stappen toont van start tot eind, met beslismomenten en foutpaden.",
+      "files": [],
+      "assertions": [
+        "Output is een enkel .html bestand",
+        "Toont een duidelijk startpunt en eindpunt",
+        "Bevat beslismomenten (bijv. template selectie, auditor toewijzing)",
+        "Stappen zijn verbonden met pijlen of visuele connectoren",
+        "Bevat een legenda of kleurcodering"
+      ]
+    }
+  ]
+}

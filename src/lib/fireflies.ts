@@ -1,9 +1,5 @@
 const FIREFLIES_API = "https://api.fireflies.ai/graphql";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 export interface FirefliesTranscript {
   id: string;
   title: string;
@@ -11,9 +7,11 @@ export interface FirefliesTranscript {
   participants: string[];
   summary: {
     overview: string;
-    action_items: string[];
-    shorthand_bullet: string[];
+    notes: string;
+    action_items: string;
+    shorthand_bullet: string;
     keywords: string[];
+    topics_discussed: string[];
   };
   sentences: {
     index: number;
@@ -24,17 +22,16 @@ export interface FirefliesTranscript {
   }[];
 }
 
-export interface TranscriptChunk {
-  text: string;
-  speakers: string[];
-  startTime: number;
-  endTime: number;
-  tokenEstimate: number;
-}
-
-// ---------------------------------------------------------------------------
-// Fireflies GraphQL client
-// ---------------------------------------------------------------------------
+const LIST_TRANSCRIPTS_QUERY = `
+  query RecentTranscripts($limit: Int) {
+    transcripts(limit: $limit) {
+      id
+      title
+      date
+      participants
+    }
+  }
+`;
 
 const TRANSCRIPT_QUERY = `
   query Transcript($id: String!) {
@@ -45,9 +42,11 @@ const TRANSCRIPT_QUERY = `
       participants
       summary {
         overview
+        notes
         action_items
         shorthand_bullet
         keywords
+        topics_discussed
       }
       sentences {
         index
@@ -81,80 +80,42 @@ export async function fetchFirefliesTranscript(
   if (!response.ok) return null;
 
   const result = await response.json();
+  if (result.errors?.length) {
+    console.error("Fireflies API error:", result.errors[0].message);
+    return null;
+  }
   return result.data?.transcript ?? null;
 }
 
-// ---------------------------------------------------------------------------
-// Transcript chunking
-// ---------------------------------------------------------------------------
-
-const TARGET_CHUNK_TOKENS = 600;
-const MAX_CHUNK_TOKENS = 800;
-const CHARS_PER_TOKEN = 4;
-
-export function chunkTranscript(
-  sentences: FirefliesTranscript["sentences"],
-): TranscriptChunk[] {
-  if (sentences.length === 0) return [];
-
-  const chunks: TranscriptChunk[] = [];
-  let currentChunk: typeof sentences = [];
-  let currentTokens = 0;
-
-  for (let idx = 0; idx < sentences.length; idx++) {
-    const sentence = sentences[idx];
-    const sentenceTokens = Math.ceil(sentence.text.length / CHARS_PER_TOKEN);
-
-    // Start new chunk if adding this sentence exceeds hard max
-    if (
-      currentTokens + sentenceTokens > MAX_CHUNK_TOKENS &&
-      currentChunk.length > 0
-    ) {
-      chunks.push(buildChunk(currentChunk));
-      // Keep last sentence as overlap for context continuity
-      currentChunk = [currentChunk[currentChunk.length - 1]];
-      currentTokens = Math.ceil(currentChunk[0].text.length / CHARS_PER_TOKEN);
-    }
-
-    currentChunk.push(sentence);
-    currentTokens += sentenceTokens;
-
-    // If we hit the target and there's a natural speaker change, break
-    const nextSentence = sentences[idx + 1];
-    if (
-      currentTokens >= TARGET_CHUNK_TOKENS &&
-      currentChunk.length > 1 &&
-      nextSentence &&
-      sentence.speaker_name !== nextSentence.speaker_name
-    ) {
-      chunks.push(buildChunk(currentChunk));
-      currentChunk = [sentence]; // overlap
-      currentTokens = sentenceTokens;
-    }
-  }
-
-  // Flush remaining
-  if (currentChunk.length > 0) {
-    chunks.push(buildChunk(currentChunk));
-  }
-
-  return chunks;
+export interface FirefliesListItem {
+  id: string;
+  title: string;
+  date: string;
+  participants: string[];
 }
 
-function buildChunk(
-  sentences: FirefliesTranscript["sentences"],
-): TranscriptChunk {
-  const text = sentences
-    .map((s) => `${s.speaker_name}: ${s.text}`)
-    .join("\n");
+export async function listFirefliesTranscripts(limit: number = 30): Promise<FirefliesListItem[]> {
+  const apiKey = process.env.FIREFLIES_API_KEY;
+  if (!apiKey) throw new Error("FIREFLIES_API_KEY is not set");
 
-  const speakers = [...new Set(sentences.map((s) => s.speaker_name))];
+  const response = await fetch(FIREFLIES_API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      query: LIST_TRANSCRIPTS_QUERY,
+      variables: { limit },
+    }),
+  });
 
-  return {
-    text,
-    speakers,
-    startTime: sentences[0].start_time,
-    endTime: sentences[sentences.length - 1].end_time,
-    tokenEstimate: Math.ceil(text.length / CHARS_PER_TOKEN),
-  };
+  if (!response.ok) return [];
+
+  const result = await response.json();
+  if (result.errors?.length) {
+    console.error("Fireflies API error:", result.errors[0].message);
+    return [];
+  }
+  return result.data?.transcripts ?? [];
 }

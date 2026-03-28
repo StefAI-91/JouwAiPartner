@@ -1,137 +1,132 @@
-# Sprint 20: Slack Socket Mode + Event Replay
+# Sprint 20: Access Control & Security
 
-**Phase:** 2 — Expand Sources & Agents
-**Requirements:** REQ-409, REQ-1502, REQ-1503
-**Depends on:** Sprint 13 (Slack ingestion, event_queue table)
-**Produces:** Dev-friendly Slack connection + resilient event processing
-
----
-
-## Task 1: Slack Socket Mode for development
-
-**What:** WebSocket-based Slack connection that works without a public URL. Use for local development and testing.
-
-**Create `src/lib/slack-socket.ts`:**
-```typescript
-import { WebSocket } from "ws";
-
-// Get an App-Level Token from api.slack.com → Your App → Basic Information → App-Level Tokens
-// Create token with scope: connections:write
-
-export async function startSocketMode(appToken: string, onEvent: (event: any) => void) {
-  // Open a WebSocket connection
-  const connRes = await fetch("https://slack.com/api/apps.connections.open", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${appToken}` },
-  });
-  const { url } = await connRes.json();
-
-  const ws = new WebSocket(url);
-
-  ws.on("message", (data: string) => {
-    const payload = JSON.parse(data);
-
-    // Acknowledge the event (required)
-    if (payload.envelope_id) {
-      ws.send(JSON.stringify({ envelope_id: payload.envelope_id }));
-    }
-
-    // Process the event
-    if (payload.type === "events_api" && payload.payload?.event) {
-      onEvent(payload.payload.event);
-    }
-  });
-
-  ws.on("close", () => {
-    console.log("Socket Mode disconnected, reconnecting in 5s...");
-    setTimeout(() => startSocketMode(appToken, onEvent), 5000);
-  });
-
-  console.log("Slack Socket Mode connected");
-}
-```
-
-**Usage in dev:**
-```typescript
-// dev-only script: scripts/slack-dev.ts
-startSocketMode(process.env.SLACK_APP_TOKEN!, async (event) => {
-  // Insert into event_queue just like the webhook does
-  await supabase.from("event_queue").insert({
-    source: "slack",
-    event_id: event.event_ts,
-    payload: event,
-    status: "pending",
-  });
-});
-```
-
-**Slack App setup:** Enable Socket Mode in your app settings → generate an App-Level Token with `connections:write` scope.
+**Phase:** V2 — Toegang & Kwaliteit
+**Requirements:** REQ-606, REQ-1300–REQ-1305
+**Depends on:** Sprint 05 (Gatekeeper tags sensitivity), Sprint 02 (all tables)
+**Produces:** Supabase Auth + Row Level Security enforcing sensitivity-based access
 
 ---
 
-## Task 2: Event replay for failed events
+## Task 1: Add sensitivity field and update Gatekeeper
 
-**What:** Ability to re-process failed events from the queue.
+**What:** Ensure all content tables have the `sensitivity` column (added in Sprint 02) and the Gatekeeper tags it.
 
-**Create API route `src/app/api/events/replay/route.ts`:**
-```typescript
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+The Gatekeeper already outputs `sensitivity: "open" | "restricted"` from Sprint 05. Verify it's being written to the DB in `processContent()`.
 
-export async function POST(req: Request) {
-  const { event_ids, source, status_filter } = await req.json();
-  const supabase = await createClient();
+**Add sensitivity column if missing from any table:**
 
-  let query = supabase
-    .from("event_queue")
-    .update({ status: "pending", attempts: 0 })
-    .eq("status", status_filter || "failed");
-
-  if (event_ids) query = query.in("id", event_ids);
-  if (source) query = query.eq("source", source);
-
-  const { data, error, count } = await query.select("id");
-
-  return NextResponse.json({
-    replayed: data?.length || 0,
-    error: error?.message,
-  });
-}
-```
-
-**Replay all failed Slack events:**
-```bash
-curl -X POST http://localhost:3000/api/events/replay \
-  -H "Content-Type: application/json" \
-  -d '{"source": "slack", "status_filter": "failed"}'
+```sql
+-- Should already exist from Sprint 02, but verify:
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS sensitivity TEXT DEFAULT 'open';
+ALTER TABLE meetings ADD COLUMN IF NOT EXISTS sensitivity TEXT DEFAULT 'open';
+ALTER TABLE slack_messages ADD COLUMN IF NOT EXISTS sensitivity TEXT DEFAULT 'open';
+ALTER TABLE emails ADD COLUMN IF NOT EXISTS sensitivity TEXT DEFAULT 'open';
 ```
 
 ---
 
-## Task 3: Agent independence verification
+## Task 2: Set up Supabase Auth
 
-**What:** Verify each agent can be stopped and restarted without affecting others.
+**What:** Configure authentication so users can log in and be identified for RLS.
 
-**Test checklist:**
-- [ ] Stop the Curator cron job → Gatekeeper still processes new content
-- [ ] Stop the event processor → Slack events queue up in `event_queue`, nothing lost
-- [ ] Restart the event processor → queued events are processed
-- [ ] Stop the re-embedding worker → content is ingested with `embedding_stale=true`, worker catches up on restart
-- [ ] Stop the MCP server → agents still run, just can't query. Restart restores querying.
+**Supabase Dashboard:**
 
-**Each component is independent because:**
-- All communication goes through the database
-- No direct agent-to-agent calls
-- Event queue acts as a buffer
-- `embedding_stale` flag acts as a deferred work queue
+1. Authentication → Providers → Enable Email/Password
+2. Optionally enable Google OAuth for SSO (if using Google Workspace)
+
+**Create user profiles table:**
+
+```sql
+CREATE TABLE user_profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    name TEXT,
+    team TEXT,
+    role TEXT DEFAULT 'member',  -- 'admin', 'member'
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Auto-create profile on signup
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.user_profiles (id, email, name)
+    VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'name');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+```
+
+---
+
+## Task 3: Implement Row Level Security
+
+**What:** RLS policies that enforce: open content visible to all, restricted content visible only to originating team or admins.
+
+```sql
+-- Enable RLS on all content tables
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE slack_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE emails ENABLE ROW LEVEL SECURITY;
+
+-- Policy: open content visible to all authenticated users
+CREATE POLICY "Open content visible to all" ON documents
+    FOR SELECT USING (
+        sensitivity = 'open'
+        AND auth.uid() IS NOT NULL
+    );
+
+-- Policy: restricted content visible to admins or same team
+CREATE POLICY "Restricted content for team/admins" ON documents
+    FOR SELECT USING (
+        sensitivity = 'restricted'
+        AND (
+            EXISTS (
+                SELECT 1 FROM user_profiles
+                WHERE id = auth.uid() AND role = 'admin'
+            )
+            -- Add team-based logic when team tagging is implemented
+        )
+    );
+
+-- Repeat for meetings, slack_messages, emails (same pattern)
+-- Use a function to reduce duplication:
+CREATE OR REPLACE FUNCTION can_read_content(content_sensitivity TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+    IF content_sensitivity = 'open' THEN
+        RETURN auth.uid() IS NOT NULL;
+    END IF;
+    -- Restricted: admin only for now
+    RETURN EXISTS (
+        SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Simplified policies using the function
+CREATE POLICY "Content access" ON meetings
+    FOR SELECT USING (can_read_content(sensitivity));
+CREATE POLICY "Content access" ON slack_messages
+    FOR SELECT USING (can_read_content(sensitivity));
+CREATE POLICY "Content access" ON emails
+    FOR SELECT USING (can_read_content(sensitivity));
+```
+
+**Important:** Service role key bypasses RLS (used by agents and ingestion). The anon key respects RLS (used by frontend and MCP when user-authenticated).
 
 ---
 
 ## Verification
 
-- [ ] Socket Mode connects and receives Slack events locally (no public URL needed)
-- [ ] Events from Socket Mode are processed identically to Events API webhooks
-- [ ] Failed events can be replayed via API endpoint
-- [ ] Replayed events go through the full pipeline (Gatekeeper, extraction)
-- [ ] Each agent/worker can be stopped and restarted independently
-- [ ] No data loss when any single component is temporarily down
+- [ ] Users can sign up/sign in via Supabase Auth
+- [ ] User profile is auto-created on signup
+- [ ] Open content is visible to all authenticated users
+- [ ] Restricted content is only visible to admins
+- [ ] Unauthenticated requests return no data (RLS blocks)
+- [ ] Agent functions (using service role key) still have full access

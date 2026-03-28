@@ -1,234 +1,166 @@
-# Sprint 21: Gmail Ingestion
+# Sprint 21: Entity Resolution Advanced & Retention
 
-**Phase:** 3 — Insights & Delivery
-**Requirements:** REQ-500–REQ-506
-**Depends on:** Sprint 05 (Gatekeeper pipeline), Sprint 10 (Google auth utility)
-**Produces:** Real-time email ingestion via Google Cloud Pub/Sub
+**Phase:** V2 — Toegang & Kwaliteit
+**Requirements:** REQ-1605, REQ-1606, REQ-1700–REQ-1702
+**Depends on:** Sprint 06 (extraction pipeline), Sprint 02 (projects table with aliases)
+**Produces:** Cross-source entity linking + automated data lifecycle management
 
 ---
 
-## Task 1: Set up Pub/Sub topic and Gmail watch
+## Task 1: Entity matching during ingestion
 
-**What:** Create the Google Cloud Pub/Sub infrastructure for Gmail push notifications.
+**What:** When the extractor finds a project mention, match it against existing `projects.aliases`.
 
-**Google Cloud Console steps:**
-1. Enable **Gmail API** and **Cloud Pub/Sub API**
-2. Create Pub/Sub topic: `projects/YOUR_PROJECT/topics/gmail-notifications`
-3. Grant Publisher role to Gmail:
-```bash
-gcloud pubsub topics add-iam-policy-binding gmail-notifications \
-  --member="serviceAccount:gmail-api-push@system.gserviceaccount.com" \
-  --role="roles/pubsub.publisher"
-```
-4. Create Pub/Sub push subscription pointing to your Edge Function:
-```bash
-gcloud pubsub subscriptions create gmail-push-sub \
-  --topic=gmail-notifications \
-  --push-endpoint=https://YOUR_PROJECT.supabase.co/functions/v1/gmail-webhook \
-  --ack-deadline=60
-```
+**Add to `src/lib/agents/extractor.ts` in `saveExtractions()`:**
 
-**Start watching a user's inbox:**
 ```typescript
-async function watchGmail(accessToken: string, userEmail: string): Promise<void> {
-  const response = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/${userEmail}/watch`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        topicName: "projects/YOUR_PROJECT/topics/gmail-notifications",
-        labelIds: ["INBOX"],
-        labelFilterAction: "include",
-      }),
+// After extracting people, before inserting decisions:
+for (const person of result.people) {
+  for (const project of person.projects) {
+    // Try to match project name against existing projects
+    const matchedProject = await matchProjectEntity(project.name);
+
+    if (matchedProject) {
+      // Use the canonical project name
+      await supabase.from("people_projects").upsert(
+        {
+          person_id: personId,
+          project: matchedProject.name, // canonical name
+          role_in_project: project.role || null,
+          last_mentioned: new Date().toISOString(),
+          source_ids: [{ source_type: source.type, source_id: source.id }],
+        },
+        { onConflict: "person_id,project" },
+      );
+    } else {
+      // No match — create new project entity
+      await supabase.from("projects").insert({
+        name: project.name,
+        aliases: [project.name],
+        embedding_stale: true,
+      });
     }
-  );
-  const result = await response.json();
-  // Store result.historyId and result.expiration for later use
-  await supabase.from("system_config").upsert([
-    { key: `gmail_history_${userEmail}`, value: result.historyId },
-    { key: `gmail_watch_expiry_${userEmail}`, value: String(result.expiration) },
-  ]);
+  }
+}
+
+async function matchProjectEntity(name: string): Promise<{ id: string; name: string } | null> {
+  // Check exact name match
+  const { data: exact } = await supabase
+    .from("projects")
+    .select("id, name")
+    .ilike("name", name)
+    .single();
+  if (exact) return exact;
+
+  // Check aliases (Postgres array contains)
+  const { data: aliasMatch } = await supabase
+    .from("projects")
+    .select("id, name")
+    .contains("aliases", [name])
+    .single();
+  if (aliasMatch) return aliasMatch;
+
+  // Fuzzy match: embed the name and check similarity against project embeddings
+  const embedding = await embedText(name);
+  const { data: semantic } = await supabase.rpc("match_projects", {
+    query_embedding: embedding,
+    match_threshold: 0.88, // high threshold — we need to be sure
+    match_count: 1,
+  });
+
+  if (semantic && semantic.length > 0) {
+    // Add this name as an alias for the matched project
+    const project = semantic[0];
+    const { data: current } = await supabase
+      .from("projects")
+      .select("aliases")
+      .eq("id", project.id)
+      .single();
+    const aliases = current?.aliases || [];
+    if (!aliases.includes(name)) {
+      aliases.push(name);
+      await supabase.from("projects").update({ aliases }).eq("id", project.id);
+    }
+    return { id: project.id, name: project.name };
+  }
+
+  return null;
 }
 ```
 
-**Schedule daily renewal (watch expires every 7 days):**
+**Add the match_projects RPC function:**
+
 ```sql
+CREATE OR REPLACE FUNCTION match_projects(
+    query_embedding VECTOR(1536),
+    match_threshold FLOAT DEFAULT 0.85,
+    match_count INT DEFAULT 3
+)
+RETURNS TABLE (id UUID, name TEXT, similarity FLOAT)
+LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id, p.name, 1 - (p.embedding <=> query_embedding) AS similarity
+    FROM projects p
+    WHERE p.embedding IS NOT NULL
+      AND 1 - (p.embedding <=> query_embedding) > match_threshold
+    ORDER BY p.embedding <=> query_embedding
+    LIMIT match_count;
+END;
+$$;
+```
+
+---
+
+## Task 2: Retention policy automation
+
+**What:** Scheduled jobs to enforce retention rules.
+
+```sql
+-- Run weekly: archive old content, purge expired rejections
 SELECT cron.schedule(
-    'gmail-watch-renewal',
-    '0 6 * * *',    -- daily at 6 AM
+    'retention-cleanup',
+    '0 4 * * 0',    -- Sunday at 4 AM
     $$
-    SELECT net.http_post(
-        url := 'https://YOUR_PROJECT.supabase.co/functions/v1/gmail-renew',
-        headers := jsonb_build_object('Authorization', 'Bearer YOUR_SERVICE_ROLE_KEY'),
-        body := '{}'::jsonb
-    );
+    -- Drop embeddings from archived content older than 12 months
+    UPDATE documents SET embedding = NULL
+    WHERE status = 'archived' AND updated_at < NOW() - INTERVAL '12 months' AND embedding IS NOT NULL;
+
+    UPDATE meetings SET embedding = NULL
+    WHERE status = 'archived' AND updated_at < NOW() - INTERVAL '12 months' AND embedding IS NOT NULL;
+
+    UPDATE slack_messages SET embedding = NULL
+    WHERE status = 'archived' AND updated_at < NOW() - INTERVAL '12 months' AND embedding IS NOT NULL;
+
+    UPDATE emails SET embedding = NULL
+    WHERE status = 'archived' AND updated_at < NOW() - INTERVAL '12 months' AND embedding IS NOT NULL;
+
+    -- Purge rejected content metadata older than 90 days
+    DELETE FROM content_reviews
+    WHERE action = 'rejected' AND created_at < NOW() - INTERVAL '90 days';
     $$
 );
 ```
 
 ---
 
-## Task 2: Build Gmail webhook and email fetching
+## Task 3: Entity dedup in Curator
 
-**Create `supabase/functions/gmail-webhook/index.ts`:**
-```typescript
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { getAccessToken } from "../_shared/google-auth.ts";
+**What:** Add project entity deduplication to the Curator's nightly sweep (already partially done in Sprint 17/18). Ensure the Curator checks for project aliases that should be merged.
 
-Deno.serve(async (req) => {
-  const body = await req.json();
+Add to Curator system prompt:
 
-  // Pub/Sub sends: { message: { data: base64, messageId, publishTime } }
-  const data = JSON.parse(atob(body.message.data));
-  // data = { emailAddress: "user@company.com", historyId: "12345" }
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
-
-  const userEmail = data.emailAddress;
-  const accessToken = await getAccessToken(
-    Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY")!,
-    userEmail
-  );
-
-  // Get stored history ID
-  const { data: config } = await supabase
-    .from("system_config")
-    .select("value")
-    .eq("key", `gmail_history_${userEmail}`)
-    .single();
-
-  const startHistoryId = config?.value;
-
-  // Fetch history changes
-  const historyRes = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/${userEmail}/history?startHistoryId=${startHistoryId}&historyTypes=messageAdded&labelId=INBOX`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
-  const history = await historyRes.json();
-
-  // Update stored history ID
-  if (history.historyId) {
-    await supabase.from("system_config").upsert({
-      key: `gmail_history_${userEmail}`,
-      value: history.historyId,
-    });
-  }
-
-  // Process new messages
-  const messageIds = new Set<string>();
-  for (const record of history.history || []) {
-    for (const msg of record.messagesAdded || []) {
-      messageIds.add(msg.message.id);
-    }
-  }
-
-  for (const messageId of messageIds) {
-    await processEmail(accessToken, userEmail, messageId, supabase);
-  }
-
-  return new Response(JSON.stringify({ processed: messageIds.size }));
-});
-
-async function processEmail(accessToken: string, userEmail: string, messageId: string, supabase: any) {
-  // Fetch full message
-  const msgRes = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/${userEmail}/messages/${messageId}?format=full`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
-  const message = await msgRes.json();
-
-  // Extract headers
-  const headers = message.payload.headers;
-  const subject = headers.find((h: any) => h.name === "Subject")?.value || "";
-  const from = headers.find((h: any) => h.name === "From")?.value || "";
-  const to = headers.find((h: any) => h.name === "To")?.value || "";
-  const date = headers.find((h: any) => h.name === "Date")?.value || "";
-
-  // Extract body (handle multipart)
-  const body = extractBody(message.payload);
-
-  // Pre-filter
-  if (shouldSkipEmail(from, subject, body)) return;
-
-  // Idempotency check
-  const { data: existing } = await supabase
-    .from("emails").select("id").eq("gmail_id", messageId).single();
-  if (existing) return;
-
-  // Process through Gatekeeper
-  await processContent({
-    table: "emails",
-    data: {
-      gmail_id: messageId,
-      subject,
-      sender: from,
-      recipients: to.split(",").map((r: string) => r.trim()),
-      body,
-      thread_id: message.threadId,
-      date: new Date(date).toISOString(),
-    },
-    contentField: "body",
-    metadata: { source: "email", title: subject, author: from },
-  });
-}
-
-function extractBody(payload: any): string {
-  if (payload.body?.data) {
-    return atob(payload.body.data.replace(/-/g, "+").replace(/_/g, "/"));
-  }
-  if (payload.parts) {
-    const textPart = payload.parts.find((p: any) => p.mimeType === "text/plain");
-    if (textPart?.body?.data) {
-      return atob(textPart.body.data.replace(/-/g, "+").replace(/_/g, "/"));
-    }
-  }
-  return "";
-}
-
-function shouldSkipEmail(from: string, subject: string, body: string): boolean {
-  const lowerSubject = subject.toLowerCase();
-  const lowerFrom = from.toLowerCase();
-
-  // Skip newsletters
-  if (lowerFrom.includes("noreply") || lowerFrom.includes("no-reply")) return true;
-  if (lowerSubject.includes("unsubscribe")) return true;
-
-  // Skip automated notifications
-  if (lowerFrom.includes("notifications@") || lowerFrom.includes("mailer-daemon")) return true;
-
-  // Skip very short emails
-  if (body.length < 50) return true;
-
-  return false;
-}
 ```
-
----
-
-## Task 3: Email chunking
-
-**What:** One email = one chunk. Long email threads: each reply is a separate chunk with thread context in metadata.
-
-The email body is typically short enough for a single chunk. For long threads, the `thread_id` field groups them. The MCP server can fetch all emails in a thread when needed.
-
-No special chunking logic needed — emails are naturally chunked by message.
+5. ENTITY DEDUP: Check for projects that appear to be duplicates (similar names or overlapping aliases). Propose merges if confident.
+```
 
 ---
 
 ## Verification
 
-- [ ] Pub/Sub topic created and Gmail has Publisher role
-- [ ] `users.watch` subscription is active for target user(s)
-- [ ] Push notification triggers email fetch via `history.list`
-- [ ] historyId is stored and updated after each notification
-- [ ] Newsletters, noreply, and short emails are pre-filtered
-- [ ] Duplicate `gmail_id` is rejected (idempotency)
-- [ ] Emails pass through Gatekeeper (scored, categorized, extracted)
-- [ ] Daily renewal keeps the watch alive (7-day expiry)
+- [ ] New project mentions match against existing projects by name, alias, or embedding
+- [ ] Unmatched projects create new entities with the name as first alias
+- [ ] Fuzzy matches add the new name as an alias to the existing project
+- [ ] Archived content older than 12 months has embeddings dropped (raw text preserved)
+- [ ] Rejected content metadata is purged after 90 days
+- [ ] Retention cron job runs weekly

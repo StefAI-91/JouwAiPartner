@@ -1,17 +1,18 @@
-# Sprint 04: Fireflies Webhook Ingestion
+# Sprint 04: Fireflies Webhook + Pre-filter
 
-**Phase:** 1 — Foundation
+**Phase:** V1 — Data Pipeline
 **Requirements:** REQ-103, REQ-200, REQ-201, REQ-204
 **Depends on:** Sprint 02 (meetings table), Sprint 03 (embedding utility)
-**Produces:** Real-time meeting ingestion from Fireflies
+**Produces:** Real-time meeting ingestion from Fireflies with rule-based pre-filtering that saves 60-70% API costs
 
 ---
 
 ## Task 1: Create Fireflies webhook Edge Function
 
-**What:** Supabase Edge Function that receives the Fireflies webhook POST when a transcription completes.
+**What:** Supabase Edge Function that receives the Fireflies webhook POST when a transcription completes. Fetches the full transcript via GraphQL.
 
 **Create `supabase/functions/fireflies-webhook/index.ts`:**
+
 ```typescript
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -33,10 +34,10 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Check idempotency — skip if already processed
+  // ── Pre-filter: duplicate check (idempotency) ──
   const { data: existing } = await supabase
     .from("meetings")
     .select("id")
@@ -44,7 +45,7 @@ Deno.serve(async (req) => {
     .single();
 
   if (existing) {
-    return new Response(JSON.stringify({ skipped: true, reason: "duplicate" }), {
+    return new Response(JSON.stringify({ skipped: true, reason: "duplicate_meeting_id" }), {
       status: 200,
     });
   }
@@ -53,15 +54,31 @@ Deno.serve(async (req) => {
   const transcript = await fetchFirefliesTranscript(meetingId);
 
   if (!transcript) {
-    return new Response(JSON.stringify({ error: "Failed to fetch transcript" }), {
-      status: 500,
+    return new Response(JSON.stringify({ error: "Failed to fetch transcript" }), { status: 500 });
+  }
+
+  // ── Pre-filter: duration check ──
+  const durationMinutes = calculateDurationMinutes(transcript.sentences);
+  if (durationMinutes < 2) {
+    console.log(`Pre-filter: rejected ${meetingId} — duration ${durationMinutes}min < 2min`);
+    return new Response(
+      JSON.stringify({ skipped: true, reason: "too_short", duration: durationMinutes }),
+      { status: 200 },
+    );
+  }
+
+  // ── Pre-filter: participants check ──
+  if (!transcript.participants || transcript.participants.length === 0) {
+    console.log(`Pre-filter: rejected ${meetingId} — no participants`);
+    return new Response(JSON.stringify({ skipped: true, reason: "no_participants" }), {
+      status: 200,
     });
   }
 
   // Chunk the transcript
   const chunks = chunkTranscript(transcript.sentences);
 
-  // Store as meeting record (the Gatekeeper will process it in Sprint 05)
+  // Store as meeting record — Gatekeeper will process in Sprint 05
   // For now, insert directly with embedding_stale = true
   const { error } = await supabase.from("meetings").insert({
     fireflies_id: meetingId,
@@ -69,16 +86,15 @@ Deno.serve(async (req) => {
     date: transcript.date,
     participants: transcript.participants,
     summary: transcript.summary?.overview || "",
-    action_items: transcript.summary?.action_items || [],
     transcript: chunks.map((c) => c.text).join("\n\n---\n\n"),
-    embedding_stale: true, // re-embedding worker will handle this
+    embedding_stale: true,
     status: "active",
   });
 
-  return new Response(
-    JSON.stringify({ success: !error, meetingId, error }),
-    { status: error ? 500 : 200, headers: { "Content-Type": "application/json" } }
-  );
+  return new Response(JSON.stringify({ success: !error, meetingId, error }), {
+    status: error ? 500 : 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });
 ```
 
@@ -89,9 +105,79 @@ Deploy: `supabase functions deploy fireflies-webhook --no-verify-jwt`
 
 ---
 
-## Task 2: Fetch transcript via Fireflies GraphQL API
+## Task 2: Pre-filter (rules, no AI)
 
-**What:** GraphQL query to fetch full transcript data including sentences, summary, and action items.
+**What:** Simple rule-based filters that run BEFORE any AI call, saving 60-70% API costs. Three rules from the PRD:
+
+1. Test-calls shorter than 2 minutes → reject
+2. Meetings without participants → reject
+3. Duplicate meeting_id → reject (idempotency)
+
+These are integrated directly into the webhook handler above. Here are the helper functions:
+
+```typescript
+/**
+ * Calculate meeting duration from sentences array.
+ * Returns duration in minutes.
+ */
+function calculateDurationMinutes(sentences: { start_time: number; end_time: number }[]): number {
+  if (!sentences || sentences.length === 0) return 0;
+
+  const firstStart = sentences[0].start_time;
+  const lastEnd = sentences[sentences.length - 1].end_time;
+
+  // Fireflies times are in seconds
+  return (lastEnd - firstStart) / 60;
+}
+
+/**
+ * Pre-filter result type for logging/debugging.
+ */
+interface PreFilterResult {
+  passed: boolean;
+  reason?: "too_short" | "no_participants" | "duplicate_meeting_id";
+  details?: Record<string, any>;
+}
+
+/**
+ * Run all pre-filter checks. Returns whether the meeting should proceed.
+ * Note: duplicate check runs separately (before GraphQL fetch) for efficiency.
+ */
+function runPreFilter(transcript: FirefliesTranscript): PreFilterResult {
+  // Rule 1: Duration < 2 minutes
+  const duration = calculateDurationMinutes(transcript.sentences);
+  if (duration < 2) {
+    return {
+      passed: false,
+      reason: "too_short",
+      details: { duration_minutes: duration },
+    };
+  }
+
+  // Rule 2: No participants
+  if (!transcript.participants || transcript.participants.length === 0) {
+    return {
+      passed: false,
+      reason: "no_participants",
+    };
+  }
+
+  return { passed: true };
+}
+```
+
+**Why pre-filter matters:**
+
+- A typical Fireflies account has many test calls, accidental recordings, and short check-ins
+- Each Gatekeeper call costs ~$0.001 (Haiku input tokens)
+- Pre-filtering 60-70% of junk saves $5-15/month at scale
+- No AI needed — these are deterministic rules
+
+---
+
+## Task 3: Fetch transcript via Fireflies GraphQL API + chunk transcript
+
+**What:** GraphQL query to fetch full transcript data including sentences, summary, and action items. Plus chunking for meaningful embeddings.
 
 ```typescript
 const FIREFLIES_API_KEY = Deno.env.get("FIREFLIES_API_KEY")!;
@@ -116,9 +202,7 @@ interface FirefliesTranscript {
   }[];
 }
 
-async function fetchFirefliesTranscript(
-  meetingId: string
-): Promise<FirefliesTranscript | null> {
+async function fetchFirefliesTranscript(meetingId: string): Promise<FirefliesTranscript | null> {
   const query = `
     query Transcript($id: String!) {
       transcript(id: $id) {
@@ -161,20 +245,12 @@ async function fetchFirefliesTranscript(
 ```
 
 **Set the API key:**
+
 ```bash
 supabase secrets set FIREFLIES_API_KEY=your-key-here
 ```
 
-**Gotchas:**
-- Fireflies rate limits: ~50 requests/minute on standard plans
-- `sentences` can be very large for long meetings (2+ hours = thousands of sentences)
-- `date` comes as a Unix timestamp string from Fireflies — may need conversion
-
----
-
-## Task 3: Chunk transcript by topic segments
-
-**What:** Split long transcripts into semantic chunks of ~500-800 tokens for meaningful embeddings.
+**Transcript chunking:**
 
 ```typescript
 interface TranscriptChunk {
@@ -185,9 +261,9 @@ interface TranscriptChunk {
   tokenEstimate: number;
 }
 
-const TARGET_CHUNK_TOKENS = 600;  // target ~600 tokens per chunk
-const MAX_CHUNK_TOKENS = 800;     // hard max
-const CHARS_PER_TOKEN = 4;        // rough estimate
+const TARGET_CHUNK_TOKENS = 600; // target ~600 tokens per chunk
+const MAX_CHUNK_TOKENS = 800; // hard max
+const CHARS_PER_TOKEN = 4; // rough estimate
 
 function chunkTranscript(
   sentences: {
@@ -195,7 +271,7 @@ function chunkTranscript(
     speaker_name: string;
     start_time: number;
     end_time: number;
-  }[]
+  }[],
 ): TranscriptChunk[] {
   const chunks: TranscriptChunk[] = [];
   let currentChunk: typeof sentences = [];
@@ -205,16 +281,11 @@ function chunkTranscript(
     const sentenceTokens = Math.ceil(sentence.text.length / CHARS_PER_TOKEN);
 
     // Start new chunk if adding this sentence exceeds max
-    if (
-      currentTokens + sentenceTokens > MAX_CHUNK_TOKENS &&
-      currentChunk.length > 0
-    ) {
+    if (currentTokens + sentenceTokens > MAX_CHUNK_TOKENS && currentChunk.length > 0) {
       chunks.push(buildChunk(currentChunk));
       // Keep last sentence as overlap for context continuity
       currentChunk = [currentChunk[currentChunk.length - 1]];
-      currentTokens = Math.ceil(
-        currentChunk[0].text.length / CHARS_PER_TOKEN
-      );
+      currentTokens = Math.ceil(currentChunk[0].text.length / CHARS_PER_TOKEN);
     }
 
     currentChunk.push(sentence);
@@ -224,8 +295,7 @@ function chunkTranscript(
     if (
       currentTokens >= TARGET_CHUNK_TOKENS &&
       currentChunk.length > 1 &&
-      sentence.speaker_name !==
-        sentences[sentences.indexOf(sentence) + 1]?.speaker_name
+      sentence.speaker_name !== sentences[sentences.indexOf(sentence) + 1]?.speaker_name
     ) {
       chunks.push(buildChunk(currentChunk));
       currentChunk = [sentence]; // overlap
@@ -247,11 +317,9 @@ function buildChunk(
     speaker_name: string;
     start_time: number;
     end_time: number;
-  }[]
+  }[],
 ): TranscriptChunk {
-  const text = sentences
-    .map((s) => `${s.speaker_name}: ${s.text}`)
-    .join("\n");
+  const text = sentences.map((s) => `${s.speaker_name}: ${s.text}`).join("\n");
 
   const speakers = [...new Set(sentences.map((s) => s.speaker_name))];
 
@@ -266,17 +334,26 @@ function buildChunk(
 ```
 
 **Chunking strategy:**
+
 - Target: ~600 tokens per chunk (sweet spot for embedding quality)
 - Hard max: 800 tokens (OpenAI allows 8,191 but shorter chunks = better retrieval)
 - Break on speaker changes when near target (natural topic boundaries)
 - Overlap: last sentence of previous chunk starts the next chunk (preserves context)
+
+**Gotchas:**
+
+- Fireflies rate limits: ~50 requests/minute on standard plans
+- `sentences` can be very large for long meetings (2+ hours = thousands of sentences)
+- `date` comes as a Unix timestamp string from Fireflies — may need conversion
 
 ---
 
 ## Verification
 
 - [ ] Webhook endpoint responds to POST with Fireflies payload shape
-- [ ] Duplicate `meetingId` is rejected (idempotency check)
+- [ ] Pre-filter: meeting shorter than 2 minutes is rejected (not sent to Gatekeeper)
+- [ ] Pre-filter: meeting without participants is rejected
+- [ ] Pre-filter: duplicate `meetingId` is rejected (idempotency check)
 - [ ] GraphQL query returns full transcript with sentences, summary, action items
 - [ ] Chunking produces chunks of ~500-800 tokens
 - [ ] Meeting row appears in `meetings` table with `embedding_stale = true`

@@ -1,0 +1,131 @@
+import { NextRequest, NextResponse } from "next/server";
+import { listFirefliesTranscripts, fetchFirefliesTranscript } from "@/lib/fireflies";
+import { chunkTranscript } from "@/lib/transcript-processor";
+import { getMeetingByFirefliesId } from "@/lib/queries/meetings";
+import { isValidDuration, hasParticipants } from "@/lib/validations/fireflies";
+import { processMeeting } from "@/lib/services/gatekeeper-pipeline";
+import { runReEmbedWorker } from "@/lib/services/re-embed-worker";
+
+interface IngestResult {
+  id: string;
+  title: string;
+  status: "imported" | "skipped" | "failed";
+  reason?: string;
+  relevance_score?: number;
+  action?: string;
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({}));
+  const limit = body.limit ?? 20;
+
+  // Step 1: List recent transcripts from Fireflies
+  const transcripts = await listFirefliesTranscripts(limit);
+
+  if (transcripts.length === 0) {
+    return NextResponse.json({
+      summary: { total: 0, imported: 0, skipped: 0, failed: 0 },
+      embeddings: null,
+      results: [],
+    });
+  }
+
+  const results: IngestResult[] = [];
+
+  for (const item of transcripts) {
+    // Idempotency — skip already imported
+    const existing = await getMeetingByFirefliesId(item.id);
+    if (existing) {
+      results.push({
+        id: item.id,
+        title: item.title,
+        status: "skipped",
+        reason: "already_imported",
+      });
+      continue;
+    }
+
+    // Fetch full transcript
+    const transcript = await fetchFirefliesTranscript(item.id);
+    if (!transcript) {
+      results.push({
+        id: item.id,
+        title: item.title,
+        status: "failed",
+        reason: "fetch_failed",
+      });
+      continue;
+    }
+
+    // Pre-filters
+    const durationCheck = isValidDuration(transcript.sentences);
+    if (!durationCheck.valid) {
+      results.push({
+        id: item.id,
+        title: item.title,
+        status: "skipped",
+        reason: `too_short (${durationCheck.duration.toFixed(1)}min)`,
+      });
+      continue;
+    }
+
+    if (!hasParticipants(transcript.participants)) {
+      results.push({
+        id: item.id,
+        title: item.title,
+        status: "skipped",
+        reason: "no_participants",
+      });
+      continue;
+    }
+
+    // Chunk and process through gatekeeper
+    try {
+      const chunks = chunkTranscript(transcript.sentences);
+      const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { result, meetingId } = await processMeeting({
+        fireflies_id: item.id,
+        title: transcript.title,
+        date: transcript.date,
+        participants: transcript.participants,
+        summary: transcript.summary?.notes ?? "",
+        topics: transcript.summary?.topics_discussed ?? [],
+        transcript: chunkedTranscript,
+      });
+
+      results.push({
+        id: item.id,
+        title: transcript.title,
+        status: result.action === "pass" ? "imported" : "skipped",
+        reason: result.action === "reject" ? result.reason : undefined,
+        relevance_score: result.relevance_score,
+        action: result.action,
+      });
+    } catch (err) {
+      results.push({
+        id: item.id,
+        title: item.title,
+        status: "failed",
+        reason: err instanceof Error ? err.message : "unknown_error",
+      });
+    }
+  }
+
+  const imported = results.filter((r) => r.status === "imported").length;
+  const skipped = results.filter((r) => r.status === "skipped").length;
+  const failed = results.filter((r) => r.status === "failed").length;
+
+  // Generate embeddings for all stale rows (meetings + extracted decisions)
+  let embedResult = null;
+  if (imported > 0) {
+    embedResult = await runReEmbedWorker();
+  }
+
+  return NextResponse.json({
+    summary: { total: results.length, imported, skipped, failed },
+    embeddings: embedResult ? { processed: embedResult.total, byTable: embedResult.byTable } : null,
+    results,
+  });
+}

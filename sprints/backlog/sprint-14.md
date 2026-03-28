@@ -1,6 +1,6 @@
 # Sprint 14: Slack Thread Aggregation
 
-**Phase:** 2 — Expand Sources & Agents
+**Phase:** V2 — Toegang & Kwaliteit
 **Requirements:** REQ-403, REQ-404, REQ-405, REQ-406, REQ-407
 **Depends on:** Sprint 13 (Slack events flowing to queue)
 **Produces:** Threads ingested as coherent knowledge units, pre-filters applied
@@ -12,6 +12,7 @@
 **What:** Instead of processing individual messages, detect threads and aggregate them.
 
 **Update the event processor to handle threads:**
+
 ```typescript
 async function processSlackEvent(event: any, supabase: any): Promise<void> {
   const slackToken = Deno.env.get("SLACK_BOT_TOKEN")!;
@@ -26,7 +27,7 @@ async function processSlackEvent(event: any, supabase: any): Promise<void> {
     // This is a reply in a thread — fetch the FULL thread and replace
     const threadRes = await fetch(
       `https://slack.com/api/conversations.replies?channel=${event.channel}&ts=${threadTs}`,
-      { headers: { Authorization: `Bearer ${slackToken}` } }
+      { headers: { Authorization: `Bearer ${slackToken}` } },
     );
     const threadData = await threadRes.json();
     const messages = threadData.messages || [];
@@ -71,7 +72,7 @@ async function processSlackEvent(event: any, supabase: any): Promise<void> {
 }
 
 async function buildThreadContent(
-  messages: any[]
+  messages: any[],
 ): Promise<{ text: string; participants: string[] }> {
   const participants = new Set<string>();
   const lines: string[] = [];
@@ -90,6 +91,7 @@ async function buildThreadContent(
 ```
 
 **Delayed message processor** — modify the event processor to check `created_at`:
+
 ```typescript
 // Only fetch events whose created_at is in the past (respects the 5-min delay)
 const { data: events } = await supabase
@@ -97,7 +99,7 @@ const { data: events } = await supabase
   .select("*")
   .eq("status", "pending")
   .in("source", ["slack", "slack_delayed"])
-  .lte("created_at", new Date().toISOString())  // only process if delay has passed
+  .lte("created_at", new Date().toISOString()) // only process if delay has passed
   .order("created_at", { ascending: true })
   .limit(20);
 ```
@@ -118,8 +120,12 @@ function shouldSkipMessage(event: any): boolean {
 
   // Skip message subtypes that aren't real content
   const skipSubtypes = [
-    "channel_join", "channel_leave", "channel_topic",
-    "channel_purpose", "channel_name", "pinned_item",
+    "channel_join",
+    "channel_leave",
+    "channel_topic",
+    "channel_purpose",
+    "channel_name",
+    "pinned_item",
   ];
   if (event.subtype && skipSubtypes.includes(event.subtype)) return true;
 
@@ -153,7 +159,7 @@ async function processDelayedMessage(event: any, supabase: any): Promise<void> {
   // Check if this message now has replies (became a thread)
   const threadRes = await fetch(
     `https://slack.com/api/conversations.replies?channel=${event.channel}&ts=${event.ts}&limit=2`,
-    { headers: { Authorization: `Bearer ${slackToken}` } }
+    { headers: { Authorization: `Bearer ${slackToken}` } },
   );
   const threadData = await threadRes.json();
 

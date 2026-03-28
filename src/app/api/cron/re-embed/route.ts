@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runReEmbedWorker } from "@/lib/re-embed-worker";
+import { runReEmbedWorker } from "@/lib/services/re-embed-worker";
 
 export async function POST(req: NextRequest) {
   // Verify the request is authorized via shared secret
