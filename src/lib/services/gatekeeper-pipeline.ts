@@ -5,6 +5,8 @@ import { searchAllContent } from "@/lib/queries/content";
 import { insertMeeting } from "@/lib/actions/meetings";
 import { insertContentReview } from "@/lib/actions/content-reviews";
 import { saveExtractions } from "@/lib/services/save-extractions";
+import { getMeetingExtractions } from "@/lib/queries/meetings";
+import { updateRowEmbedding } from "@/lib/actions/embeddings";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -59,6 +61,35 @@ async function logGatekeeperDecision(
       action_items_count: result.action_items.length,
     },
   });
+}
+
+/**
+ * Generate and store embedding for a meeting, enriched with its extractions.
+ */
+async function embedMeeting(meetingId: string, input: MeetingInput): Promise<void> {
+  const { decisions, actionItems } = await getMeetingExtractions(meetingId);
+
+  const parts: string[] = [];
+  if (input.title) parts.push(`Meeting: ${input.title}`);
+  if (input.participants.length) parts.push(`Deelnemers: ${input.participants.join(", ")}`);
+  if (input.summary) parts.push(`Samenvatting: ${input.summary}`);
+
+  if (decisions.length > 0) {
+    parts.push(
+      "Besluiten:\n" + decisions.map((d) => `- ${d.decision} (door ${d.made_by})`).join("\n"),
+    );
+  }
+  if (actionItems.length > 0) {
+    parts.push(
+      "Actiepunten:\n" +
+        actionItems
+          .map((a) => `- ${a.description}${a.assignee ? ` (${a.assignee})` : ""}`)
+          .join("\n"),
+    );
+  }
+
+  const embedding = await embedText(parts.join("\n\n"));
+  await updateRowEmbedding("meetings", meetingId, embedding);
 }
 
 /**
@@ -119,6 +150,9 @@ export async function processMeeting(
   // Save extracted data (decisions, action_items) with entity resolution
   if (result.action === "pass" && meetingId) {
     await saveExtractions(result, meetingId);
+
+    // Generate embedding for the meeting (enriched with extractions)
+    await embedMeeting(meetingId, input);
   }
 
   return { result, meetingId };

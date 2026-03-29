@@ -46,7 +46,6 @@ function buildMeetingEmbedText(
     parts.push(`Deelnemers: ${meeting.participants.join(", ")}`);
   }
   if (meeting.summary) parts.push(`Samenvatting: ${meeting.summary}`);
-  if (meeting.transcript) parts.push(`Transcript:\n${meeting.transcript}`);
 
   if (decisions.length > 0) {
     parts.push(
