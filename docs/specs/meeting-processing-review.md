@@ -183,6 +183,7 @@ meetings
 ├── unmatched_organization_name TEXT    -- als AI org niet kan koppelen
 ├── raw_fireflies JSONB                -- originele Fireflies response + Gatekeeper/Extractor output
 ├── relevance_score FLOAT              -- Gatekeeper score, voor ranking
+├── search_vector TSVECTOR              -- full-text search, auto-update via trigger
 ├── embedding VECTOR(1024)
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
@@ -230,6 +231,7 @@ extractions
 ├── project_id UUID FK → projects
 ├── corrected_by UUID FK → profiles    -- NULL = AI-extractie, gevuld = mens-geverifieerd
 ├── corrected_at TIMESTAMPTZ
+├── search_vector TSVECTOR              -- full-text search, auto-update via trigger
 ├── embedding VECTOR(1024)             -- direct geembed, geen wachten
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
@@ -424,7 +426,40 @@ Er is geen review-gate. Alles wordt direct geembed na verwerking:
 
 De meeting-embedding bevat naast de standaard velden ook de Extractor-output (insights: project_updates, strategy_ideas, client_info) uit `raw_fireflies`. Dit verbetert de zoekresultaten.
 
-### 7.4 Re-embed worker
+### 7.4 Hybrid search (vector + full-text)
+
+Naast semantische vector search wordt PostgreSQL full-text search (`tsvector`) ingezet. Dit combineert het beste van twee werelden:
+
+- **Vector search** — vindt semantisch vergelijkbare content ("Q3 financiën" matcht "derde kwartaal budget")
+- **Full-text search** — vindt exacte termen, namen en vakjargon ("churn", "Acme Corp", "HalalBox")
+
+**Implementatie:**
+
+- `search_vector TSVECTOR` kolom op `meetings` en `extractions`
+- Automatisch bijgewerkt via trigger bij INSERT/UPDATE
+- Taalconfiguratie: `dutch` voor Nederlandse content
+- GIN index op `search_vector` voor snelle full-text queries
+
+**Combinatie via Reciprocal Rank Fusion (RRF):**
+
+```sql
+-- Pseudo-code: hybrid search in search_all_content()
+WITH semantic AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY embedding <=> query_embedding) AS rank
+  FROM meetings WHERE embedding <=> query_embedding < threshold
+),
+lexical AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY ts_rank(search_vector, query) DESC) AS rank
+  FROM meetings WHERE search_vector @@ query
+)
+SELECT id, (1.0/(60+s.rank) + 1.0/(60+l.rank)) AS rrf_score
+FROM semantic s FULL OUTER JOIN lexical l USING (id)
+ORDER BY rrf_score DESC
+```
+
+RRF combineert rankings zonder dat de scores genormaliseerd hoeven te worden. De constante 60 dempt de invloed van hoge rankings — standaard in hybrid search implementaties.
+
+### 7.5 Re-embed worker
 
 De re-embed worker verwerkt records met `embedding_stale = true`. Draait elke 5 minuten via pg_cron.
 

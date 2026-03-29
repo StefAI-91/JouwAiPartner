@@ -50,9 +50,12 @@ Het volledige schema wordt from scratch opgebouwd in één sprint. 8 tabellen, v
 | DATA-040 | Tabel extractions: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE   |
 | DATA-041 | Tabel extractions: created_at TIMESTAMPTZ                                         |
 | DATA-050 | Tabel extractions: corrected_by UUID FK -> profiles, corrected_at TIMESTAMPTZ     |
+| DATA-051 | Tabel meetings: search_vector TSVECTOR met auto-update trigger (dutch config)     |
+| DATA-052 | Tabel extractions: search_vector TSVECTOR met auto-update trigger (dutch config)  |
+| DATA-053 | GIN indexes op search_vector kolommen voor full-text search                        |
 | DATA-042 | HNSW vector indexes op alle embedding-kolommen                                    |
 | DATA-043 | B-tree indexes op FK-kolommen en veelgebruikte filters                            |
-| DATA-044 | search_all_content() over meetings + extractions                                  |
+| DATA-044 | search_all_content() als hybrid search (vector + full-text via RRF)               |
 | DATA-045 | match_people() voor entity resolution                                             |
 | DATA-046 | match_projects() voor entity resolution                                           |
 | DATA-047 | search_meetings_by_participant()                                                  |
@@ -171,11 +174,28 @@ CREATE TABLE meetings (
   unmatched_organization_name TEXT,
   raw_fireflies JSONB,
   relevance_score FLOAT,
+  search_vector TSVECTOR,
   embedding VECTOR(1024),
   embedding_stale BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Auto-update search_vector bij INSERT/UPDATE
+CREATE OR REPLACE FUNCTION meetings_search_vector_trigger() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.search_vector := to_tsvector('dutch',
+    COALESCE(NEW.title, '') || ' ' ||
+    COALESCE(NEW.summary, '') || ' ' ||
+    COALESCE(array_to_string(NEW.participants, ' '), '')
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER meetings_search_vector_update
+  BEFORE INSERT OR UPDATE OF title, summary, participants ON meetings
+  FOR EACH ROW EXECUTE FUNCTION meetings_search_vector_trigger();
 ```
 
 **meeting_projects** -- Many-to-many: meetings <-> projects.
@@ -213,10 +233,26 @@ CREATE TABLE extractions (
   project_id UUID REFERENCES projects(id),
   corrected_by UUID REFERENCES profiles(id),
   corrected_at TIMESTAMPTZ,
+  search_vector TSVECTOR,
   embedding VECTOR(1024),
   embedding_stale BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Auto-update search_vector bij INSERT/UPDATE
+CREATE OR REPLACE FUNCTION extractions_search_vector_trigger() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.search_vector := to_tsvector('dutch',
+    COALESCE(NEW.content, '') || ' ' ||
+    COALESCE(NEW.transcript_ref, '')
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER extractions_search_vector_update
+  BEFORE INSERT OR UPDATE OF content, transcript_ref ON extractions
+  FOR EACH ROW EXECUTE FUNCTION extractions_search_vector_trigger();
 ```
 
 ### Indexes
@@ -227,6 +263,11 @@ CREATE TABLE extractions (
 - `projects.embedding`
 - `meetings.embedding`
 - `extractions.embedding`
+
+**GIN indexes (full-text search):**
+
+- `meetings.search_vector`
+- `extractions.search_vector`
 
 **B-tree indexes:**
 
@@ -241,7 +282,7 @@ CREATE TABLE extractions (
 
 ### Search Functions
 
-- `search_all_content(query_embedding, match_threshold, match_count)` — zoekt over meetings + extractions, retourneert content + bron + confidence
+- `search_all_content(query_embedding, search_text, match_threshold, match_count)` — **hybrid search**: combineert vector similarity + full-text search via RRF (Reciprocal Rank Fusion). Accepteert optioneel een `search_text` parameter voor keyword matching naast de embedding.
 - `match_people(query_embedding, match_threshold, match_count)` — entity resolution voor deelnemers
 - `match_projects(query_embedding, match_threshold, match_count)` — entity resolution voor projecten
 - `search_meetings_by_participant(query_embedding, participant_name, match_threshold, match_count)` — meetings filteren op deelnemer
@@ -260,8 +301,8 @@ CREATE TABLE extractions (
 - [ ] Verwijder alle bestaande bestanden in `supabase/migrations/`
 - [ ] Maak migratie 1: extensions + profiles + organizations + people + projects
 - [ ] Maak migratie 2: meetings + meeting_projects + meeting_participants + extractions
-- [ ] Maak migratie 3: HNSW vector indexes + B-tree indexes
-- [ ] Maak migratie 4: search_all_content(), match_people(), match_projects(), search_meetings_by_participant()
+- [ ] Maak migratie 3: HNSW vector indexes + GIN full-text indexes + B-tree indexes
+- [ ] Maak migratie 4: search_all_content() als hybrid search (vector + full-text via RRF), match_people(), match_projects(), search_meetings_by_participant()
 - [ ] Maak migratie 5: pg_cron + pg_net + re-embed worker schedule
 - [ ] Voer alle migraties uit op Supabase en verifieer
 - [ ] Regenereer Supabase TypeScript types (`supabase gen types typescript`)
@@ -278,8 +319,10 @@ CREATE TABLE extractions (
 - [ ] [DATA-021..030] Meetings tabel met alle kolommen, geen requires_review
 - [ ] [DATA-031..032] Koppeltabellen met composite PKs en CASCADE deletes
 - [ ] [DATA-033..041,050] Extractions tabel met confidence, transcript_ref, metadata JSONB, corrected_by/corrected_at
+- [ ] [DATA-051..053] search_vector kolommen bestaan op meetings en extractions, GIN indexes aanwezig, triggers werken
 - [ ] [DATA-042..043] Vector en B-tree indexes bestaan
 - [ ] [DATA-044..047] Search functions retourneren correcte resultaten
+- [ ] Hybrid search test: insert een meeting met specifiek keyword, zoek via embedding (semantisch) én via keyword (full-text), verifieer dat beide resultaten opleveren
 - [ ] [DATA-048..049] Cron job is gescheduled
 - [ ] Handmatig een meeting + extractie inserten en via search_all_content() terugvinden werkt
 - [ ] TypeScript types zijn geregenereerd en compileren zonder fouten

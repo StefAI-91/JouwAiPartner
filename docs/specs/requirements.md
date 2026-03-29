@@ -84,9 +84,12 @@ Totaal: 82 requirements.
 | DATA-040 | Tabel extractions: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE             | PRD sectie 3.8           | 001    |
 | DATA-041 | Tabel extractions: created_at TIMESTAMPTZ                                                   | PRD sectie 3.8           | 001    |
 | DATA-050 | Tabel extractions: corrected_by UUID FK -> profiles, corrected_at TIMESTAMPTZ               | PRD sectie 3.8           | 001    |
+| DATA-051 | Tabel meetings: search_vector TSVECTOR met auto-update trigger (dutch config)               | PRD sectie 7.4           | 001    |
+| DATA-052 | Tabel extractions: search_vector TSVECTOR met auto-update trigger (dutch config)            | PRD sectie 7.4           | 001    |
+| DATA-053 | GIN indexes op search_vector kolommen voor full-text search                                  | PRD sectie 7.4           | 001    |
 | DATA-042 | HNSW vector indexes op alle embedding-kolommen                                              | PRD sectie 8, sprint 001 | 001    |
 | DATA-043 | B-tree indexes op FK-kolommen en veelgebruikte filters                                      | PRD sectie 8, sprint 001 | 001    |
-| DATA-044 | Vector search functie: search_all_content() over meetings + extractions                     | PRD sectie 8, sprint 001 | 001    |
+| DATA-044 | Hybrid search functie: search_all_content() met vector + full-text via RRF                  | PRD sectie 7.4, 8        | 001    |
 | DATA-045 | Vector search functie: match_people()                                                       | PRD sectie 8, sprint 001 | 001    |
 | DATA-046 | Vector search functie: match_projects()                                                     | PRD sectie 8, sprint 001 | 001    |
 | DATA-047 | Vector search functie: search_meetings_by_participant()                                     | PRD sectie 8, sprint 001 | 001    |
