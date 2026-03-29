@@ -615,7 +615,43 @@ Naarmate er meer data binnenkomt groeit de kennisbasis per entiteit. Een **leven
 
 ---
 
-## 14. Gedachtelog
+## 14. Voorbereiding op schaal: Pipeline Orchestratie
+
+> Dit hoofdstuk beschrijft een toekomstige uitbreiding. Er wordt nu niks voor gebouwd, maar de code wordt zo opgezet dat de stap klein is.
+
+### Huidige situatie (v1)
+
+De pipeline draait synchroon in een Supabase Edge Function: webhook → Gatekeeper → Extractor → opslag → embedding. Bij ~5 users en ~50 meetings/maand is dit ruim voldoende. Edge Functions hebben 400s timeout op Pro; de volledige pipeline kost <30 seconden.
+
+### Wanneer orchestratie nodig wordt
+
+- **Meerdere bronnen** — Gmail, Slack en Docs sturen tegelijk events, burst-verwerking wordt een probleem
+- **>200 meetings/maand** — pg_cron's single-instance-per-job limiet wordt een bottleneck
+- **Complexe agent chains** — Curator (nightly) en Analyst (daily) draaien >5 minuten per run
+- **Observability** — "waarom is die meeting niet verwerkt?" is niet te beantwoorden zonder pipeline-logs
+
+### Wat we nu doen om de stap klein te houden
+
+1. **Gatekeeper en Extractor als losse functies** — niet verweven met de webhook handler. De webhook ontvangt, valideert en roept `processMeeting()` aan. De pipeline-logica zit in `gatekeeper-pipeline.ts`, niet in de route handler.
+2. **Elke pipeline-stap logt naar de database** — `raw_fireflies` JSONB bevat de volledige Gatekeeper- en Extractor-output. Dit is de audit trail.
+3. **Idempotente verwerking** — `fireflies_id` UNIQUE constraint voorkomt dubbele verwerking. De pipeline kan veilig opnieuw gedraaid worden.
+
+### Migratiepad (wanneer het zover is)
+
+Vervang de synchrone Edge Function call door een event-queue:
+
+- **Inngest** (event-driven, serverless) — past op het "database als communicatiebus" patroon. Agents emiten events, Inngest orchestreert met automatic retries, throttling en batching. Heeft AgentKit voor AI agent workflows.
+- **Trigger.dev** (dedicated compute, geen timeouts) — beter als agents >5 minuten draaien. Native Supabase integratie.
+
+De webhook handler wordt dan: ontvang event → enqueue naar Inngest/Trigger.dev → klaar. De pipeline-functies blijven identiek, alleen de aanroep verandert.
+
+---
+
+## 15. Gedachtelog
+
+### Waarom geen pipeline orchestrator in v1
+
+Bij ~5 users en ~50 meetings/maand is de complexiteit van Inngest of Trigger.dev niet gerechtvaardigd. De synchrone pipeline in een Edge Function is simpeler, sneller te debuggen, en heeft geen externe dependency. De code is zo opgezet dat de overstap later klein is: losse functies, database-logging, idempotente verwerking.
 
 ### Waarom organizations i.p.v. clients?
 
