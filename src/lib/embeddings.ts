@@ -15,7 +15,7 @@ const EMBEDDING_DIMENSIONS = 1024;
 type InputType = "search_document" | "search_query";
 
 /**
- * Embed a single text string using Cohere embed-v4.
+ * Embed a single text string using Cohere embed-v4 (v2 API).
  * Returns a number[] of length 1024.
  *
  * @param inputType - "search_document" for storage, "search_query" for search
@@ -24,11 +24,12 @@ export async function embedText(
   text: string,
   inputType: InputType = "search_document",
 ): Promise<number[]> {
-  const response = await getCohere().embed({
+  const response = await getCohere().v2.embed({
     model: EMBEDDING_MODEL,
     texts: [text],
     inputType,
     embeddingTypes: ["float"],
+    outputDimension: EMBEDDING_DIMENSIONS,
   });
 
   const embeddings = response.embeddings as { float: number[][] };
@@ -36,7 +37,7 @@ export async function embedText(
 }
 
 /**
- * Embed multiple texts in a single API call (batch).
+ * Embed multiple texts in a single API call (batch, v2 API).
  * Cohere supports up to 96 texts per request.
  * Returns number[][] in same order as input.
  *
@@ -52,11 +53,12 @@ export async function embedBatch(
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
     const batch = texts.slice(i, i + BATCH_SIZE);
 
-    const response = await getCohere().embed({
+    const response = await getCohere().v2.embed({
       model: EMBEDDING_MODEL,
       texts: batch,
       inputType,
       embeddingTypes: ["float"],
+      outputDimension: EMBEDDING_DIMENSIONS,
     });
 
     const embeddings = response.embeddings as { float: number[][] };
