@@ -548,6 +548,19 @@ Eén fase: fundering. Pipeline werkt end-to-end. Meetings verwerken via webhook,
 
 ## 12. Buiten Scope
 
+### Vervallen tabellen uit v1
+
+| Tabel                        | Was in v1                                               | Reden vervallen                                                                                                                                                                                     |
+| ---------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pending_matches`            | Onopgeloste entity matches voor handmatige review-queue | Review-queue bestaat niet meer. Ongematchte projectnamen zitten in extraction content en kunnen later handmatig gekoppeld worden. Ongematchte orgs staan in `meetings.unmatched_organization_name`. |
+| `update_suggestions`         | Conflict-detectie en impact check bij wijzigingen       | Was onderdeel van een Curator-agent flow die buiten scope is. Wordt pas relevant bij meerdere bronnen die dezelfde entiteiten raken.                                                                |
+| `content_reviews`            | Audit trail van Gatekeeper-beslissingen                 | Vervangen door `raw_fireflies` JSONB die de volledige Gatekeeper- en Extractor-output bevat. Dit is een rijkere audit trail dan een aparte tabel met samenvattingen.                                |
+| `decisions` (apart)          | Aparte tabel voor besluiten                             | Samengevoegd in `extractions` met type='decision'.                                                                                                                                                  |
+| `action_items` (apart)       | Aparte tabel voor actiepunten                           | Samengevoegd in `extractions` met type='action_item'.                                                                                                                                               |
+| `organization_needs` (apart) | Aparte tabel voor klantbehoeften                        | Samengevoegd in `extractions` met type='need'.                                                                                                                                                      |
+
+### Overig buiten scope
+
 - Review-queue UI (vervallen — geen review-gate)
 - Gamification
 - Mobile/PWA
