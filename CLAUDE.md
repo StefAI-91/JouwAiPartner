@@ -127,9 +127,9 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 ### Security (drie lagen, altijd alle drie)
 
-1. **Middleware** — route bescherming per rol.
+1. **Middleware** — route bescherming (v1: alleen auth check, role-based komt in v3).
 2. **Zod validatie in Server Actions** — valideer álle input vóór de database call.
-3. **RLS policies op elke tabel** — SELECT, INSERT, UPDATE per rol. Geen uitzonderingen.
+3. **RLS policies op elke tabel** — v1 uitzondering: RLS komt in v3. Iedereen ziet alles.
 
 - Frontend checks zijn voor UX, niet voor security.
 - Service role client alleen server-side, alleen voor admin/seed taken.
@@ -181,8 +181,8 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 - Sprints are in `sprints/`: `done/` for completed, `backlog/` for upcoming
 - When a sprint is completed, move its file from `sprints/backlog/` to `sprints/done/`
-- Each sprint file references requirement IDs (REQ-xxx) from `REQUIREMENTS_MATRIX.md`
-- Full PRD is in `PROJECT_REQUIREMENTS.md`
+- Each sprint file references requirement IDs (FUNC-xxx, DATA-xxx, AI-xxx, MCP-xxx, RULE-xxx) from `docs/specs/requirements.md`
+- Full PRD is in `docs/specs/meeting-processing-review.md` (archived v1: `docs/archive/prd-knowledge-platform-v1.md`)
 
 ## Next.js 16 Warning
 
