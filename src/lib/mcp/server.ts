@@ -3,21 +3,18 @@ import { registerSearchTools } from "./tools/search";
 import { registerMeetingTools } from "./tools/meetings";
 import { registerActionTools } from "./tools/actions";
 import { registerDecisionTools } from "./tools/decisions";
-import { registerPendingTools } from "./tools/pending";
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "jouwaipartner-knowledge",
     version: "1.0.0",
-    description: "JouwAIPartner kennisbasis — meeting transcripts, besluiten, actiepunten",
+    description: "JouwAIPartner kennisbasis — meeting transcripts, besluiten, actiepunten, inzichten",
   });
 
-  // Register all v1 tools
   registerSearchTools(server);
   registerMeetingTools(server);
   registerActionTools(server);
   registerDecisionTools(server);
-  registerPendingTools(server);
 
   // Register the system prompt as an MCP prompt
   server.prompt(

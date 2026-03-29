@@ -5,7 +5,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 export function registerMeetingTools(server: McpServer) {
   server.tool(
     "get_meeting_summary",
-    "Haal de volledige samenvatting, actiepunten en deelnemers op voor een specifieke meeting. Gebruik het meeting ID uit zoekresultaten, of zoek op titel.",
+    "Haal de volledige samenvatting, extracties en deelnemers op voor een specifieke meeting. Gebruik het meeting ID uit zoekresultaten, of zoek op titel.",
     {
       meeting_id: z.string().optional().describe("UUID of the meeting (from search results)"),
       title_search: z.string().optional().describe("Search meetings by title (partial match)"),
@@ -16,7 +16,10 @@ export function registerMeetingTools(server: McpServer) {
       let query = supabase
         .from("meetings")
         .select(
-          "id, title, date, participants, summary, transcript, category, relevance_score, project_id",
+          `id, title, date, participants, summary, meeting_type, party_type,
+           relevance_score,
+           organization:organization_id (name),
+           unmatched_organization_name`,
         );
 
       if (meeting_id) {
@@ -34,7 +37,7 @@ export function registerMeetingTools(server: McpServer) {
         };
       }
 
-      const { data: meetings, error } = await query.eq("status", "active").limit(5);
+      const { data: meetings, error } = await query.limit(5);
 
       if (error || !meetings || meetings.length === 0) {
         return {
@@ -52,50 +55,63 @@ export function registerMeetingTools(server: McpServer) {
       const formatted = await Promise.all(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         meetings.map(async (m: any) => {
-          const { data: decisions } = await supabase
-            .from("decisions")
-            .select("decision, made_by")
-            .eq("source_id", m.id);
+          // Haal alle extracties op voor deze meeting
+          const { data: extractions } = await supabase
+            .from("extractions")
+            .select("type, content, confidence, transcript_ref")
+            .eq("meeting_id", m.id)
+            .order("type")
+            .order("confidence", { ascending: false });
 
-          const { data: actionItems } = await supabase
-            .from("action_items")
-            .select("description, assignee, due_date, scope, status")
-            .eq("source_id", m.id);
+          const orgName =
+            m.organization?.name || m.unmatched_organization_name || "Onbekend";
+          const dateStr = m.date
+            ? new Date(m.date).toLocaleDateString("nl-NL")
+            : "Onbekend";
 
-          return [
+          const sections: string[] = [
             `## ${m.title}`,
-            `**Datum:** ${m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend"}`,
+            `**Datum:** ${dateStr}`,
             `**Deelnemers:** ${m.participants?.join(", ") || "Onbekend"}`,
-            `**Categorieen:** ${m.category?.join(", ") || "Niet gecategoriseerd"}`,
+            `**Type:** ${m.meeting_type || "Niet geclassificeerd"} | **Partij:** ${m.party_type || "Onbekend"}`,
+            `**Organisatie:** ${orgName}`,
             `**Relevantie:** ${m.relevance_score?.toFixed(2) || "N/A"}`,
             "",
             `### Samenvatting`,
             m.summary || "Geen samenvatting beschikbaar.",
-            "",
-            `### Besluiten`,
-            decisions && decisions.length > 0
-              ? decisions
-                  .map(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (d: any, i: number) =>
-                      `${i + 1}. ${d.decision} (door: ${d.made_by || "onbekend"})`,
-                  )
-                  .join("\n")
-              : "Geen besluiten vastgelegd.",
-            "",
-            `### Actiepunten`,
-            actionItems && actionItems.length > 0
-              ? actionItems
-                  .map(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (a: any, i: number) =>
-                      `${i + 1}. ${a.description} — ${a.assignee || "niemand"} ${a.due_date ? `(deadline: ${a.due_date})` : ""} [${a.status}]`,
-                  )
-                  .join("\n")
-              : "Geen actiepunten vastgelegd.",
-            "",
-            `**Meeting ID:** ${m.id}`,
-          ].join("\n");
+          ];
+
+          if (extractions && extractions.length > 0) {
+            const grouped: Record<string, typeof extractions> = {};
+            for (const e of extractions) {
+              if (!grouped[e.type]) grouped[e.type] = [];
+              grouped[e.type].push(e);
+            }
+
+            const typeLabels: Record<string, string> = {
+              decision: "Besluiten",
+              action_item: "Actiepunten",
+              insight: "Inzichten",
+              need: "Behoeften",
+            };
+
+            for (const [type, items] of Object.entries(grouped)) {
+              const label = typeLabels[type] || type;
+              sections.push("", `### ${label}`);
+              items.forEach((item, i) => {
+                const conf =
+                  item.confidence != null
+                    ? ` (${Math.round(item.confidence * 100)}%)`
+                    : "";
+                sections.push(`${i + 1}. ${item.content}${conf}`);
+              });
+            }
+          } else {
+            sections.push("", "Nog geen extracties beschikbaar.");
+          }
+
+          sections.push("", `**Meeting ID:** ${m.id}`);
+          return sections.join("\n");
         }),
       );
 
