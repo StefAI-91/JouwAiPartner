@@ -48,9 +48,24 @@ FUNC-005..008, FUNC-014..018, AI-003..007, RULE-001, RULE-003, RULE-004, RULE-00
 - Alles geembed → vindbaar via search_all_content()
 - Ongeldige transcript_ref → confidence = 0.0
 
+## Evaluatie-set aanmaken
+
+Na deze sprint werkt de volledige pipeline. Maak een `tests/golden-questions.md` met 10 vragen + verwachte antwoorden op basis van echte verwerkte meetings. Handmatig doorlopen na elke fase om regressie te detecteren. Geen automatisering — gewoon een checklist.
+
+Voorbeeld:
+```
+1. "Wat is er besloten over [project]?" → verwacht: [specifiek besluit] met bron
+2. "Welke actiepunten staan open voor [naam]?" → verwacht: [lijst]
+...
+```
+
 ## Demo-moment (Fase 1 compleet)
 
 Stuur een echte Fireflies webhook. De meeting wordt automatisch verwerkt. Stel via Claude de vraag: "Wat is er besloten in de meeting van vandaag?"
+
+## Adoptie-experiment
+
+Na de demo: vraag het team om **1 week lang elke ochtend 1 vraag** te stellen via Claude/MCP. Geen tooling nodig — gewoon afspreken en doen. Dit is de eerste test of het systeem waarde levert.
 
 ## Geraakt
 
