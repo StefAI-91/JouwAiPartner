@@ -1,17 +1,15 @@
 -- Seed data: Organizations, People, Projects
 -- Idempotent: ON CONFLICT DO UPDATE
--- Run via: psql -f supabase/seed/seed.sql
+-- Run via Supabase SQL Editor of: psql -f supabase/seed/seed.sql
 
 -- =============================================================================
 -- Organizations
 -- =============================================================================
 INSERT INTO organizations (id, name, aliases, type, contact_person, email, status)
 VALUES
-    ('a0000000-0000-0000-0000-000000000001', 'JouwAiPartner', ARRAY['JAP', 'Jouw AI Partner'], 'other', 'Stefan', 'stefan@jouwaipartner.nl', 'active'),
-    ('a0000000-0000-0000-0000-000000000002', 'TechVentures BV', ARRAY['TechVentures', 'TV'], 'client', 'Mark de Vries', 'mark@techventures.nl', 'active'),
-    ('a0000000-0000-0000-0000-000000000003', 'CreativeMinds Agency', ARRAY['CreativeMinds', 'CMA'], 'client', 'Lisa Jansen', 'lisa@creativeminds.nl', 'active'),
-    ('a0000000-0000-0000-0000-000000000004', 'DataFlow Solutions', ARRAY['DataFlow'], 'partner', 'Pieter Bakker', 'pieter@dataflow.io', 'active'),
-    ('a0000000-0000-0000-0000-000000000005', 'GreenEnergy Corp', ARRAY['GreenEnergy', 'GEC'], 'client', 'Anna de Groot', 'anna@greenenergy.nl', 'prospect')
+    ('a0000000-0000-0000-0000-000000000001', 'Flowwijs', ARRAY['JouwAiPartner', 'Jouw AI Partner', 'JAP'], 'other', 'Stef Banninga', NULL, 'active'),
+    ('a0000000-0000-0000-0000-000000000002', 'Ordus', ARRAY[]::TEXT[], 'client', 'Bart Nelissen', 'bartnelissen@ordus.nl', 'active'),
+    ('a0000000-0000-0000-0000-000000000003', 'Effect op maat', ARRAY['Effect op Maat', 'EOM'], 'client', 'Fleur Timmerman', 'info@effectopmaat.nl', 'active')
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     aliases = EXCLUDED.aliases,
@@ -26,13 +24,16 @@ ON CONFLICT (id) DO UPDATE SET
 -- =============================================================================
 INSERT INTO people (id, name, email, team, role)
 VALUES
-    ('b0000000-0000-0000-0000-000000000001', 'Stefan', 'stefan@jouwaipartner.nl', 'leadership', 'founder'),
-    ('b0000000-0000-0000-0000-000000000002', 'Mark de Vries', 'mark@techventures.nl', NULL, 'cto'),
-    ('b0000000-0000-0000-0000-000000000003', 'Lisa Jansen', 'lisa@creativeminds.nl', NULL, 'creative director'),
-    ('b0000000-0000-0000-0000-000000000004', 'Pieter Bakker', 'pieter@dataflow.io', NULL, 'lead engineer'),
-    ('b0000000-0000-0000-0000-000000000005', 'Anna de Groot', 'anna@greenenergy.nl', NULL, 'sustainability manager'),
-    ('b0000000-0000-0000-0000-000000000006', 'Tom Hendriks', 'tom@jouwaipartner.nl', 'engineering', 'developer'),
-    ('b0000000-0000-0000-0000-000000000007', 'Eva Willems', 'eva@jouwaipartner.nl', 'marketing', 'marketing lead')
+    -- Eigen team
+    ('b0000000-0000-0000-0000-000000000001', 'Stef Banninga', NULL, 'leadership', 'mede-eigenaar'),
+    ('b0000000-0000-0000-0000-000000000002', 'Wouter van den Heuvel', NULL, 'leadership', 'mede-eigenaar'),
+    ('b0000000-0000-0000-0000-000000000003', 'Ege', NULL, 'engineering', 'teamlid'),
+    ('b0000000-0000-0000-0000-000000000004', 'Tibor', NULL, NULL, 'partner'),
+    ('b0000000-0000-0000-0000-000000000005', 'Kenji', NULL, NULL, 'outsource teamlid'),
+    ('b0000000-0000-0000-0000-000000000006', 'Myrrh', NULL, NULL, 'outsource teamlid'),
+    -- Klanten
+    ('b0000000-0000-0000-0000-000000000007', 'Bart Nelissen', 'bartnelissen@ordus.nl', NULL, 'klant'),
+    ('b0000000-0000-0000-0000-000000000008', 'Fleur Timmerman', 'info@effectopmaat.nl', NULL, 'klant')
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     email = EXCLUDED.email,
@@ -45,11 +46,9 @@ ON CONFLICT (id) DO UPDATE SET
 -- =============================================================================
 INSERT INTO projects (id, name, aliases, organization_id, status)
 VALUES
-    ('c0000000-0000-0000-0000-000000000001', 'AI Kennisplatform', ARRAY['Kennisplatform', 'Knowledge Platform'], 'a0000000-0000-0000-0000-000000000001', 'active'),
-    ('c0000000-0000-0000-0000-000000000002', 'TechVentures Portal', ARRAY['TV Portal', 'Klantenportaal TV'], 'a0000000-0000-0000-0000-000000000002', 'active'),
-    ('c0000000-0000-0000-0000-000000000003', 'Brand Refresh CMA', ARRAY['CMA Rebrand'], 'a0000000-0000-0000-0000-000000000003', 'active'),
-    ('c0000000-0000-0000-0000-000000000004', 'Data Pipeline Integratie', ARRAY['Pipeline', 'ETL Project'], 'a0000000-0000-0000-0000-000000000004', 'active'),
-    ('c0000000-0000-0000-0000-000000000005', 'GreenEnergy Dashboard', ARRAY['GEC Dashboard'], 'a0000000-0000-0000-0000-000000000005', 'lead')
+    ('c0000000-0000-0000-0000-000000000001', 'Ordus', ARRAY[]::TEXT[], 'a0000000-0000-0000-0000-000000000002', 'active'),
+    ('c0000000-0000-0000-0000-000000000002', 'Fleur op zak', ARRAY['Fleur op Zak'], 'a0000000-0000-0000-0000-000000000003', 'active'),
+    ('c0000000-0000-0000-0000-000000000003', 'HelperU', ARRAY['Helper U'], 'a0000000-0000-0000-0000-000000000001', 'active')
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     aliases = EXCLUDED.aliases,
