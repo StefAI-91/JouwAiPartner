@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
@@ -83,5 +83,28 @@ export async function GET() {
         0,
       ),
     },
+  });
+}
+
+/**
+ * DELETE: Clean all meetings + extractions for re-testing
+ */
+export async function DELETE(_req: NextRequest) {
+  const supabase = getAdminClient();
+
+  const { count: extractionsDeleted } = await supabase
+    .from("extractions")
+    .delete({ count: "exact" })
+    .neq("id", "00000000-0000-0000-0000-000000000000");
+
+  const { count: meetingsDeleted } = await supabase
+    .from("meetings")
+    .delete({ count: "exact" })
+    .neq("id", "00000000-0000-0000-0000-000000000000");
+
+  return NextResponse.json({
+    cleaned: true,
+    meetings_deleted: meetingsDeleted,
+    extractions_deleted: extractionsDeleted,
   });
 }

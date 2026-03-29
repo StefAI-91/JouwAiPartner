@@ -44,6 +44,7 @@ interface PipelineResult {
   meetingId: string | null;
   extractions_saved: number;
   embedded: boolean;
+  errors: string[];
 }
 
 /**
@@ -108,6 +109,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       meetingId: null,
       extractions_saved: 0,
       embedded: false,
+      errors: [`Meeting insert: ${insertResult.error}`],
     };
   }
 
@@ -119,6 +121,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   // Step 6: Run Extractor agent
   let extractorResult: ExtractorOutput | null = null;
   let extractionsSaved = 0;
+  let extractorError: string | null = null;
 
   try {
     extractorResult = await runExtractor(input.transcript, {
@@ -154,17 +157,26 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       `Extractor: ${extractionsSaved} extractions saved, project linked: ${saveResult.project_linked}`,
     );
   } catch (err) {
-    console.error("Extractor failed:", err);
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error("Extractor failed:", errMsg);
+    extractorError = errMsg;
   }
 
   // Step 8: Embed meeting + extractions
   let embedded = false;
+  let embedError: string | null = null;
   try {
     await embedMeetingWithExtractions(meetingId);
     embedded = true;
   } catch (err) {
-    console.error("Embedding failed (will retry via re-embed worker):", err);
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error("Embedding failed:", errMsg);
+    embedError = errMsg;
   }
+
+  const errors: string[] = [];
+  if (extractorError) errors.push(`Extractor: ${extractorError}`);
+  if (embedError) errors.push(`Embedding: ${embedError}`);
 
   return {
     gatekeeper: gatekeeperResult,
@@ -172,5 +184,6 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     meetingId,
     extractions_saved: extractionsSaved,
     embedded,
+    errors,
   };
 }
