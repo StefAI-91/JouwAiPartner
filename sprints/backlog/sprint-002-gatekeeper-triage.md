@@ -98,6 +98,8 @@ Fireflies email per deelnemer
 - [ ] Organisatie-koppeling implementeren: exact match → alias match → fallback unmatched_organization_name
 - [ ] Deelnemer-matching implementeren: email → meeting_participants, fallback → participants text[]
 - [ ] Meeting opslaan met nieuwe velden: meeting_type, party_type, relevance_score, organization_id/unmatched_organization_name
+- [ ] Pipeline-code aanpassen aan nieuw schema: alle verwijzingen naar oude tabellen (decisions, action_items, content_reviews) verwijderen uit gatekeeper-pipeline.ts — opslag van extracties verhuist naar sprint 003
+- [ ] Pre-filter aanpassen: `participants.length < 2` (solo-recording is geen gesprek) en `duration < 2 min`
 - [ ] Test: webhook → meeting geclassificeerd + org gekoppeld + deelnemers gematcht
 
 ## Acceptatiecriteria
@@ -110,8 +112,17 @@ Fireflies email per deelnemer
 - [ ] [AI-001..002] Geen extracties (decisions, action_items, etc.) in Gatekeeper output
 - [ ] Handmatige test: webhook sturen → meeting in DB met correcte classificatie
 
+## Schema-compatibiliteit
+
+De bestaande code verwijst naar oude tabellen (`decisions`, `action_items`, `content_reviews`). In deze sprint wordt de pipeline-code aangepast zodat:
+
+- Gatekeeper-output alleen triage-velden bevat (geen extracties)
+- Meeting-opslag naar het nieuwe `meetings` schema schrijft (zonder `requires_review`)
+- Alle verwijzingen naar oude extractie-tabellen verwijderd worden uit de pipeline
+- De pipeline na deze sprint alleen meetings opslaat — extractie-opslag komt in sprint 003
+
 ## Geraakt door deze sprint
 
 - `src/lib/agents/gatekeeper.ts` (schema + prompt)
-- `src/lib/services/gatekeeper-pipeline.ts` (reject-logica weg, opslag aangepast)
+- `src/lib/services/gatekeeper-pipeline.ts` (reject-logica weg, opslag aangepast aan nieuw schema, extractie-code verwijderd)
 - `src/lib/services/entity-resolution.ts` (org-koppeling uitbreiden)

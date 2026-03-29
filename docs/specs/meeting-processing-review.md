@@ -38,7 +38,7 @@ Meeting transcripts zijn feiten — iemand heeft het gezegd. De onwaarheden onts
 De pipeline-code verwerkt Fireflies-meetings end-to-end en wordt hergebruikt:
 
 ```
-Fireflies webhook → pre-filter (< 2 min of < 1 deelnemer → skip)
+Fireflies webhook → pre-filter (< 2 min of < 2 deelnemers → skip)
     → Gatekeeper (Haiku): triage — type, score, org, party type
     → Extractor (Sonnet): decisions, action_items, needs, insights — met confidence + transcript ref
     → entity resolution (projecten + organisaties matchen)
@@ -313,7 +313,7 @@ Bepaald door de Gatekeeper op basis van deelnemers en context:
 Voordat een meeting de AI-pipeline ingaat, wordt een pre-filter toegepast. Meetings die niet aan de minimale criteria voldoen worden overgeslagen:
 
 - **Duur < 2 minuten** → skip (te kort voor zinvolle content)
-- **Minder dan 1 deelnemer** → skip (geen gesprek)
+- **Minder dan 2 deelnemers** → skip (solo-recording is geen gesprek)
 
 Meetings die door de pre-filter komen worden altijd opgeslagen, ongeacht score.
 

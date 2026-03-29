@@ -113,7 +113,9 @@ Projectnaam uit Extractor
 - [ ] raw_fireflies JSONB vullen: Fireflies response + Gatekeeper output + Extractor output
 - [ ] Embedding: meeting direct embedden na opslag
 - [ ] Embedding: extractions direct embedden na opslag
-- [ ] Re-embed worker aanpassen: verwerkt embedding_stale, verrijkt meeting-embedding met insights
+- [ ] Re-embed worker aanpassen: verwijder review_status checks, verwerkt embedding_stale, verrijkt meeting-embedding met insights
+- [ ] Pipeline-code: verwijder alle verwijzingen naar oude tabellen (decisions, action_items als aparte inserts) — alles gaat nu naar `extractions` tabel
+- [ ] Entity-resolution aanpassen: project-matches resulteren in `meeting_projects` rows + `extractions.project_id`, niet meer in oude tabel-structuur
 - [ ] Test: webhook → meeting + extractions in DB, confidence + transcript_ref aanwezig, alles geembed
 
 ## Acceptatiecriteria
@@ -127,9 +129,18 @@ Projectnaam uit Extractor
 - [ ] [RULE-001] Alles is vindbaar via search_all_content() — geen filtering op review_status
 - [ ] Handmatige test: webhook → meeting + extractions in DB → vindbaar via search
 
+## Schema-compatibiliteit
+
+De bestaande code schrijft naar oude tabellen (`decisions`, `action_items`). In deze sprint wordt:
+
+- Alle INSERT/UPDATE logica herschreven naar de `extractions` tabel
+- `re-embed-worker.ts` gestript van `review_status` checks — alles met `embedding_stale = true` wordt verwerkt
+- `entity-resolution.ts` aangepast voor het nieuwe schema (project matches → `meeting_projects` + `extractions.project_id`)
+- Queries in MCP tools werken nog op de oude tabellen tot sprint 004 — dat is acceptabel omdat er geen oude data meer is na clean slate
+
 ## Geraakt door deze sprint
 
 - `src/lib/agents/extractor.ts` (nieuw)
-- `src/lib/services/gatekeeper-pipeline.ts` (Extractor integratie, opslag aanpassen)
-- `src/lib/services/entity-resolution.ts` (project-koppeling 3-tier)
-- `src/lib/services/re-embed-worker.ts` (geen review_status check meer, meeting verrijking)
+- `src/lib/services/gatekeeper-pipeline.ts` (Extractor integratie, opslag naar extractions tabel)
+- `src/lib/services/entity-resolution.ts` (project-koppeling 3-tier, nieuw schema)
+- `src/lib/services/re-embed-worker.ts` (review_status checks weg, embedding_stale only, meeting verrijking)
