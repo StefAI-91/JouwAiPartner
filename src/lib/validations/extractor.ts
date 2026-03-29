@@ -12,11 +12,37 @@ export const ExtractionItemSchema = z.object({
     .string()
     .nullable()
     .describe("Exact quote from transcript that supports this extraction. Null if not applicable."),
-  metadata: z
-    .record(z.string(), z.unknown())
-    .describe(
-      "Type-specific metadata. For action_item: {assignee, deadline, scope, project}. For decision: {made_by}. For need: {client, urgency}. For insight: {category}.",
-    ),
+  assignee: z.string().nullable().describe("Who is responsible (for action_item). Null otherwise."),
+  deadline: z
+    .string()
+    .nullable()
+    .describe("Due date if mentioned (for action_item). Null otherwise."),
+  scope: z
+    .enum(["project", "personal"])
+    .nullable()
+    .describe("Scope of the action item. Null for non-action_items."),
+  project: z.string().nullable().describe("Related project name if applicable. Null otherwise."),
+  made_by: z
+    .string()
+    .nullable()
+    .describe("Who made the decision (for decision type). Null otherwise."),
+  client: z.string().nullable().describe("Client name (for need type). Null otherwise."),
+  urgency: z
+    .enum(["high", "medium", "low"])
+    .nullable()
+    .describe("Urgency level (for need type). Null otherwise."),
+  category: z
+    .enum([
+      "strategic",
+      "market_signal",
+      "client_feedback",
+      "technical",
+      "people",
+      "risk",
+      "growth",
+    ])
+    .nullable()
+    .describe("Insight category (for insight type). Null otherwise."),
 });
 
 export const ExtractorOutputSchema = z.object({

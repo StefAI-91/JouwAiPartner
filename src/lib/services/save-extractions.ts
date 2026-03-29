@@ -47,12 +47,20 @@ export async function saveExtractions(
   const rows = extractorOutput.extractions.map((item: ExtractionItem) => {
     // Resolve project_id for project-scoped items
     let projectId: string | null = null;
-    const itemProject =
-      item.type === "action_item" ? (item.metadata as { project?: string }).project : null;
-
-    if (itemProject) {
-      projectId = entityResolutions.get(itemProject) ?? null;
+    if (item.type === "action_item" && item.project) {
+      projectId = entityResolutions.get(item.project) ?? null;
     }
+
+    // Build metadata JSONB from flat fields
+    const metadata: Record<string, unknown> = {};
+    if (item.assignee) metadata.assignee = item.assignee;
+    if (item.deadline) metadata.deadline = item.deadline;
+    if (item.scope) metadata.scope = item.scope;
+    if (item.project) metadata.project = item.project;
+    if (item.made_by) metadata.made_by = item.made_by;
+    if (item.client) metadata.client = item.client;
+    if (item.urgency) metadata.urgency = item.urgency;
+    if (item.category) metadata.category = item.category;
 
     return {
       meeting_id: meetingId,
@@ -60,7 +68,7 @@ export async function saveExtractions(
       content: item.content,
       confidence: item.confidence,
       transcript_ref: item.transcript_ref,
-      metadata: item.metadata,
+      metadata,
       project_id: projectId || meetingProjectId,
       embedding_stale: true,
     };
