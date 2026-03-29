@@ -29,11 +29,11 @@ De MCP server en tools bestaan al:
 
 ## Taken
 
-- [ ] search.ts: query aanpassen voor nieuw schema + Cohere embedding
-- [ ] meetings.ts: nieuwe kolommen meegeven (meeting_type, party_type, organization)
-- [ ] decisions.ts: query extractions WHERE type='decision'
-- [ ] actions.ts: query extractions WHERE type='action_item'
-- [ ] pending.ts: verwijderen
+- [x] search.ts: query aanpassen voor nieuw schema + Cohere embedding (sprint 2)
+- [x] meetings.ts: nieuwe kolommen meegeven (meeting_type, party_type, organization, extractions)
+- [x] decisions.ts: query extractions WHERE type='decision'
+- [x] actions.ts: query extractions WHERE type='action_item'
+- [x] pending.ts: verwijderen
 - [ ] Testen met Claude client (handmatige test data)
 
 ## Testbaar

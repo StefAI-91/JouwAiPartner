@@ -1,56 +1,69 @@
-import OpenAI from "openai";
+import { CohereClient } from "cohere-ai";
 
-let _openai: OpenAI | null = null;
+let _cohere: CohereClient | null = null;
 
-function getOpenAI(): OpenAI {
-  if (!_openai) {
-    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getCohere(): CohereClient {
+  if (!_cohere) {
+    _cohere = new CohereClient({ token: process.env.COHERE_API_KEY });
   }
-  return _openai;
+  return _cohere;
 }
 
-const EMBEDDING_MODEL = "text-embedding-3-small";
-const EMBEDDING_DIMENSIONS = 1536;
-const MAX_TOKENS = 8191; // model limit
+const EMBEDDING_MODEL = "embed-v4.0";
+const EMBEDDING_DIMENSIONS = 1024;
+
+type InputType = "search_document" | "search_query";
 
 /**
- * Embed a single text string.
- * Returns a number[] of length 1536.
+ * Embed a single text string using Cohere embed-v4.
+ * Returns a number[] of length 1024.
+ *
+ * @param inputType - "search_document" for storage, "search_query" for search
  */
-export async function embedText(text: string): Promise<number[]> {
-  const response = await getOpenAI().embeddings.create({
+export async function embedText(
+  text: string,
+  inputType: InputType = "search_document"
+): Promise<number[]> {
+  const response = await getCohere().embed({
     model: EMBEDDING_MODEL,
-    input: text.slice(0, MAX_TOKENS * 4), // rough char limit (~4 chars/token)
-    dimensions: EMBEDDING_DIMENSIONS,
+    texts: [text],
+    inputType,
+    embeddingTypes: ["float"],
   });
 
-  return response.data[0].embedding;
+  const embeddings = response.embeddings as { float: number[][] };
+  return embeddings.float[0];
 }
 
 /**
  * Embed multiple texts in a single API call (batch).
- * Max 2048 inputs per request.
+ * Cohere supports up to 96 texts per request.
  * Returns number[][] in same order as input.
+ *
+ * @param inputType - "search_document" for storage, "search_query" for search
  */
-export async function embedBatch(texts: string[]): Promise<number[][]> {
-  const BATCH_SIZE = 2048;
+export async function embedBatch(
+  texts: string[],
+  inputType: InputType = "search_document"
+): Promise<number[][]> {
+  const BATCH_SIZE = 96;
   const allEmbeddings: number[][] = [];
 
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-    const batch = texts.slice(i, i + BATCH_SIZE).map(
-      (t) => t.slice(0, MAX_TOKENS * 4)
-    );
+    const batch = texts.slice(i, i + BATCH_SIZE);
 
-    const response = await getOpenAI().embeddings.create({
+    const response = await getCohere().embed({
       model: EMBEDDING_MODEL,
-      input: batch,
-      dimensions: EMBEDDING_DIMENSIONS,
+      texts: batch,
+      inputType,
+      embeddingTypes: ["float"],
     });
 
-    // Sort by index to maintain order
-    const sorted = response.data.sort((a, b) => a.index - b.index);
-    allEmbeddings.push(...sorted.map((d) => d.embedding));
+    const embeddings = response.embeddings as { float: number[][] };
+    allEmbeddings.push(...embeddings.float);
   }
 
   return allEmbeddings;
 }
+
+export { EMBEDDING_DIMENSIONS };

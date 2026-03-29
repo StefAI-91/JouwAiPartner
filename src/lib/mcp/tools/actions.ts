@@ -5,37 +5,29 @@ import { getAdminClient } from "@/lib/supabase/admin";
 export function registerActionTools(server: McpServer) {
   server.tool(
     "get_action_items",
-    "Haal actiepunten op, optioneel gefilterd op eigenaar, status of project.",
+    "Haal actiepunten op uit meetings, optioneel gefilterd op persoon of project.",
     {
-      assignee: z.string().optional().describe("Filter by assignee name (partial match)"),
-      status: z.enum(["open", "in_progress", "done"]).optional().describe("Filter by status"),
+      person: z.string().optional().describe("Filter by person name (partial match in content)"),
       project: z.string().optional().describe("Filter by project name"),
+      limit: z.number().optional().default(20).describe("Max results (default 20)"),
     },
-    async ({ assignee, status, project }) => {
+    async ({ person, project, limit }) => {
       const supabase = getAdminClient();
 
-      let query = supabase
-        .from("action_items")
+      const query = supabase
+        .from("extractions")
         .select(
           `
-          id, description, assignee, due_date, scope, status,
-          source_type, source_id, project_id,
-          projects:project_id (name)
+          id, content, confidence, transcript_ref, created_at,
+          meeting:meeting_id (id, title, date, participants),
+          organization:organization_id (name),
+          project:project_id (name)
         `,
         )
-        .order("due_date", { ascending: true, nullsFirst: false });
+        .eq("type", "action_item")
+        .order("created_at", { ascending: false });
 
-      if (assignee) {
-        query = query.ilike("assignee", `%${assignee}%`);
-      }
-      if (status) {
-        query = query.eq("status", status);
-      }
-      if (project) {
-        query = query.not("project_id", "is", null);
-      }
-
-      const { data: items, error } = await query.limit(50);
+      const { data: items, error } = await query.limit(limit);
 
       if (error) {
         return {
@@ -55,18 +47,38 @@ export function registerActionTools(server: McpServer) {
       }
 
       let filtered = items;
+      if (person) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        filtered = filtered.filter((item: any) =>
+          item.content?.toLowerCase().includes(person.toLowerCase()),
+        );
+      }
       if (project) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        filtered = items.filter((item: any) =>
-          item.projects?.name?.toLowerCase().includes(project.toLowerCase()),
+        filtered = filtered.filter((item: any) =>
+          item.project?.name?.toLowerCase().includes(project.toLowerCase()) ||
+          item.meeting?.title?.toLowerCase().includes(project.toLowerCase()),
         );
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const formatted = filtered.map((item: any, i: number) => {
-        const projectName = item.projects?.name || "geen project";
-        const deadline = item.due_date || "geen deadline";
-        return `${i + 1}. **${item.description}**\n   Eigenaar: ${item.assignee || "niemand"} | Deadline: ${deadline} | Status: ${item.status} | Scope: ${item.scope} | Project: ${projectName}`;
+        const meeting = item.meeting;
+        const dateStr = meeting?.date
+          ? new Date(meeting.date).toLocaleDateString("nl-NL")
+          : "onbekende datum";
+        const projectName = item.project?.name || item.organization?.name || "geen project";
+        const confidence =
+          item.confidence != null ? ` (${Math.round(item.confidence * 100)}% zeker)` : "";
+
+        return [
+          `${i + 1}. **${item.content}**${confidence}`,
+          `   Meeting: ${meeting?.title || "onbekend"} | Datum: ${dateStr}`,
+          `   Project: ${projectName}`,
+          item.transcript_ref ? `   Citaat: "${item.transcript_ref}"` : null,
+        ]
+          .filter(Boolean)
+          .join("\n");
       });
 
       return {

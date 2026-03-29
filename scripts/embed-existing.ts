@@ -33,25 +33,17 @@ async function main() {
   console.log(`Embedding stale: ${meeting.embedding_stale}`);
 
   // Get extractions
-  const { decisions, actionItems } = await getMeetingExtractions(MEETING_ID);
-  console.log(`Decisions: ${decisions.length}, Action items: ${actionItems.length}`);
+  const extractions = await getMeetingExtractions(MEETING_ID);
+  console.log(`Extractions: ${extractions.length}`);
 
   // Build enriched text
   const parts: string[] = [];
   if (meeting.title) parts.push(`Meeting: ${meeting.title}`);
   if (meeting.participants?.length) parts.push(`Deelnemers: ${meeting.participants.join(", ")}`);
   if (meeting.summary) parts.push(`Samenvatting: ${meeting.summary}`);
-  if (decisions.length > 0) {
+  if (extractions.length > 0) {
     parts.push(
-      "Besluiten:\n" + decisions.map((d) => `- ${d.decision} (door ${d.made_by})`).join("\n"),
-    );
-  }
-  if (actionItems.length > 0) {
-    parts.push(
-      "Actiepunten:\n" +
-        actionItems
-          .map((a) => `- ${a.description}${a.assignee ? ` (${a.assignee})` : ""}`)
-          .join("\n"),
+      "Extracties:\n" + extractions.map((e) => `- [${e.type}] ${e.content}`).join("\n"),
     );
   }
 
@@ -59,7 +51,7 @@ async function main() {
   console.log(`\nEmbed tekst lengte: ${embedText_.length} chars`);
 
   // Generate embedding
-  console.log("\nEmbedding genereren (OpenAI text-embedding-3-small)...");
+  console.log("\nEmbedding genereren (Cohere embed-v4.0)...");
   const startTime = Date.now();
   const embedding = await embedText(embedText_);
   const duration = ((Date.now() - startTime) / 1000).toFixed(1);

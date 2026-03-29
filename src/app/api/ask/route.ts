@@ -25,10 +25,11 @@ const SearchPlanSchema = z.object({
   reasoning: z.string().describe("Why these queries will find the answer"),
 });
 
-async function searchAll(embedding: number[], threshold: number, count: number) {
+async function searchAll(embedding: number[], threshold: number, count: number, queryText = "") {
   const { data } = await getAdminClient().rpc("search_all_content", {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     query_embedding: embedding as any,
+    query_text: queryText,
     match_threshold: threshold,
     match_count: count,
   });
@@ -57,6 +58,7 @@ async function searchSingleTable(
   embedding: number[],
   threshold: number,
   count: number,
+  queryText = "",
 ) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const rpcMap: Record<string, string> = {
@@ -65,7 +67,7 @@ async function searchSingleTable(
   };
 
   // Fall back to search_all_content and filter client-side
-  const allResults = await searchAll(embedding, threshold, count * 2);
+  const allResults = await searchAll(embedding, threshold, count * 2, queryText);
   if (table === "all") return allResults;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return allResults.filter((r: any) => r.source_table === table);
@@ -98,18 +100,18 @@ Gegeven een vraag, maak 1-3 zoekqueries die samen het beste antwoord opleveren. 
       const searchText = q.participant_filter
         ? `${q.participant_filter} ${q.search_text}`
         : q.search_text;
-      const embedding = await embedText(searchText);
+      const embedding = await embedText(searchText, "search_query");
 
       if (q.source_filter !== "all") {
         return {
           query: q,
-          results: await searchSingleTable(q.source_filter, embedding, 0.2, 8),
+          results: await searchSingleTable(q.source_filter, embedding, 0.2, 8, q.search_text),
         };
       }
 
       return {
         query: q,
-        results: await searchAll(embedding, 0.2, 8),
+        results: await searchAll(embedding, 0.2, 8, q.search_text),
       };
     }),
   );

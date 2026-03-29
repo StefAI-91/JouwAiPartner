@@ -132,7 +132,7 @@ const features: FeatureCardProps[] = [
     status: "actief",
     details: [
       "Cross-tabel: meetings, documenten, Slack en e-mails tegelijk",
-      "OpenAI embeddings (1536 dimensies) voor nauwkeurige resultaten",
+      "Cohere embed-v4 embeddings (1024 dimensies) voor nauwkeurige resultaten",
       "Gerangschikt op relevantie (cosine similarity)",
       "API: POST /api/search met natuurlijke taal query",
     ],
@@ -208,7 +208,7 @@ const faqs = [
   {
     question: "Welke AI-modellen worden gebruikt?",
     answer:
-      "Claude Haiku voor de Gatekeeper (~$0.001 per call). OpenAI text-embedding-3-small voor embeddings (~$0.02/1M tokens). Later: Sonnet voor de Curator, Opus voor de Analyst.",
+      "Claude Haiku voor de Gatekeeper (~$0.001 per call). Cohere embed-v4 voor embeddings. Later: Sonnet voor de Curator, Opus voor de Analyst.",
   },
 ];
 

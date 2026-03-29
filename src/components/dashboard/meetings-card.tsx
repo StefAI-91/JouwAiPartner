@@ -67,14 +67,10 @@ export function MeetingsCard({ meetings }: MeetingsCardProps) {
                       {meeting.participants.length}
                     </span>
                   )}
-                  {meeting.category && meeting.category.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {meeting.category.slice(0, 3).map((cat) => (
-                        <Badge key={cat} variant="outline" className="h-4 text-[10px]">
-                          {cat}
-                        </Badge>
-                      ))}
-                    </div>
+                  {meeting.meeting_type && (
+                    <Badge variant="outline" className="h-4 text-[10px]">
+                      {meeting.meeting_type}
+                    </Badge>
                   )}
                 </div>
               </li>
