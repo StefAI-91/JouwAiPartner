@@ -7,7 +7,11 @@ _Bijgewerkt: 2026-03-29_
 
 ## Overzicht
 
-Het project is opgedeeld in **3 fases** met **8 sprints**. Elke fase heeft een duidelijke mijlpaal met een tastbaar resultaat dat je kunt demonstreren. Elke sprint is klein genoeg om in 1-2 sessies af te ronden.
+Het project is opgedeeld in **3 fases** met **7 sprints**. Elke fase heeft een duidelijke mijlpaal met een tastbaar resultaat dat je kunt demonstreren. Elke sprint is klein genoeg om in 1-2 sessies af te ronden.
+
+### Bestaande code
+
+Er is al een werkende codebase met MCP server, Gatekeeper agent, services en search functions. Het schema moet echter fundamenteel veranderen (12 oude tabellen → 8 nieuwe, 1536-dim → 1024-dim Cohere). De sprints bouwen voort op bestaande code waar mogelijk.
 
 ```
 Fase 0: Walking Skeleton        → "De keten werkt"
@@ -23,22 +27,17 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 > **Doel:** Bewijs dat de keten database → embedding → MCP werkt, voordat je automatisering bouwt.
 > **Demo:** "Ik stel een vraag via Claude en krijg een antwoord uit onze eigen database."
 
-| Sprint | Wat                                        | Tastbaar resultaat                                    |
-| ------ | ------------------------------------------ | ----------------------------------------------------- |
-| 001    | Core tabellen + triggers                   | Tabellen bestaan, seed data erin, types gegenereerd   |
-| 002    | Indexes + search functions + embed utility | `search_all_content()` retourneert resultaten         |
-| 003    | Basis MCP server + search_knowledge tool   | Via MCP een vraag stellen → antwoord uit de database  |
+| Sprint | Wat                                                  | Tastbaar resultaat                                    |
+| ------ | ---------------------------------------------------- | ----------------------------------------------------- |
+| 001    | Clean slate DB: drop oud, bouw nieuw + triggers      | Nieuwe tabellen staan, oude weg, types gegenereerd    |
+| 002    | Indexes + search functions + Cohere embed utility    | `search_all_content()` retourneert resultaten         |
+| 003    | Bestaande MCP tools aanpassen voor nieuw schema      | Via MCP een vraag stellen → antwoord uit de database  |
 
-### Sprint 001: Core tabellen + triggers
+### Sprint 001: Clean slate database
 
-**Scope:**
-- Extensions: vector, pg_cron, pg_net
-- 8 tabellen: profiles, organizations, people, projects, meetings, meeting_projects, meeting_participants, extractions
-- Auth trigger voor profiles
-- search_vector triggers op meetings en extractions
-- Supabase TypeScript types regenereren
+**Scope:** Drop 12 oude tabellen (documents, slack_messages, emails, people_skills, people_projects, decisions, action_items, content_reviews, insights + oude meetings/people/projects). Bouw 8 nieuwe tabellen met 1024-dim vectors, search_vector triggers, auth trigger.
 
-**Testbaar:** Migraties draaien zonder fouten. Handmatig een meeting INSERT werkt.
+**Testbaar:** Oude tabellen weg. Nieuwe migraties draaien. Handmatig een meeting INSERT werkt.
 
 **Requirements:** DATA-001..041, DATA-050..052
 
@@ -46,33 +45,23 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 
 ### Sprint 002: Indexes, search functions, seed data, embed utility
 
-**Scope:**
-- HNSW vector indexes op alle embedding-kolommen
-- GIN indexes op search_vector kolommen
-- B-tree indexes op FK-kolommen en filters
-- Search functions: `search_all_content()`, `match_people()`, `match_projects()`, `search_meetings_by_participant()`
-- pg_cron schedule voor re-embed worker
-- Seed script met initiele organizations, people en projects (idempotent)
-- Cohere embed-v4 utility (`src/lib/utils/embed.ts`)
+**Scope:** Indexes (HNSW 1024-dim, GIN, B-tree). Search functions herschrijven voor nieuw schema. Seed data. `src/lib/embeddings.ts` vervangen: OpenAI → Cohere embed-v4. pg_cron schedule.
 
-**Testbaar:** Seed data staat in de database. Een handmatig geembedde meeting is vindbaar via `search_all_content()`.
+**Testbaar:** Seed data in DB. Meeting met embedding vindbaar via `search_all_content()`.
 
 **Requirements:** DATA-042..049, DATA-053, FUNC-019, FUNC-027, FUNC-028
 
 ---
 
-### Sprint 003: Basis MCP server + search_knowledge
+### Sprint 003: MCP tools aanpassen voor nieuw schema
 
-**Scope:**
-- MCP server setup (TypeScript/Node.js)
-- `search_knowledge` tool: embed query via Cohere → vector search → resultaten met meeting titel en datum
-- Verbinding testen met Claude client
+**Scope:** Bestaande MCP server + tools (search, decisions, meetings, actions) aanpassen voor nieuw schema. `pending.ts` verwijderen. Cohere embedding voor search queries.
 
-**Testbaar:** Via Claude/MCP de vraag "wat weten we over [project]?" stellen en een antwoord krijgen op basis van de seed data + handmatig ingevoerde meeting.
+**Testbaar:** Via Claude/MCP een vraag stellen → antwoord uit de database met seed data.
 
 **Requirements:** FUNC-020 (basis), MCP-001 (basis)
 
-**Demo-moment Fase 0:** Laat aan het team zien dat je via Claude vragen kunt stellen over jullie eigen data. Het is nog handmatig ingevoerd, maar de keten werkt.
+**Demo-moment Fase 0:** Laat aan het team zien dat je via Claude vragen kunt stellen over jullie eigen data. Nog handmatig, maar de keten werkt.
 
 ---
 
@@ -89,17 +78,9 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 
 ### Sprint 004: Webhook + Gatekeeper triage
 
-**Scope:**
-- Fireflies webhook ontvanger (Edge Function of API route)
-- Pre-filter: meetings < 2 min of < 2 deelnemers → skip
-- Gatekeeper agent (Haiku 4.5): meeting_type, party_type, relevance_score, organization_name
-- Prompt caching voor system prompt
-- Novelty check (duplicaat-detectie via fireflies_id)
-- Organisatie-koppeling: 2-tier (exact match → alias match → unmatched_organization_name)
-- Deelnemer-matching: email → meeting_participants
-- Meeting opslaan met classificatie
+**Scope:** Webhook ontvanger + pre-filter. Bestaande `gatekeeper.ts` versimpelen tot alleen classificatie (strip extractie-code). `gatekeeper-pipeline.ts` aanpassen: reject-logica weg, nieuw schema. `entity-resolution.ts` uitbreiden met org-koppeling.
 
-**Testbaar:** Webhook sturen → meeting verschijnt in DB met meeting_type, party_type, relevance_score en organisation gekoppeld.
+**Testbaar:** Webhook sturen → meeting in DB met meeting_type, party_type, relevance_score, org gekoppeld.
 
 **Requirements:** FUNC-001..004, FUNC-009..013, FUNC-025..026, AI-001..002, AI-006
 
@@ -107,22 +88,13 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 
 ### Sprint 005: Extractor + embedding + pipeline
 
-**Scope:**
-- Extractor agent (Sonnet): decisions, action_items, needs, insights met confidence + transcript_ref
-- Extractie gestuurd door meeting_type
-- Transcript_ref validatie (string match tegen transcript, confidence → 0 bij mismatch)
-- Extracties opslaan in extractions tabel
-- Project-koppeling: 3-tier entity resolution (exact → alias → embedding)
-- raw_fireflies JSONB vullen (Fireflies + Gatekeeper + Extractor output)
-- Meeting + extractions direct embedden via Cohere embed-v4
-- Re-embed worker aanpassen (embedding_stale, meeting verrijking)
-- Prompt caching voor Extractor system prompt
+**Scope:** Nieuwe Extractor agent (Sonnet). `save-extractions.ts` herschrijven naar `extractions` tabel. `entity-resolution.ts` uitbreiden met 3-tier. `re-embed-worker.ts` aanpassen. `impact-check.ts` en `pending-matches-digest.ts` verwijderen.
 
-**Testbaar:** Webhook → meeting + extracties in DB met confidence + transcript_ref → alles geembed → vindbaar via `search_all_content()`.
+**Testbaar:** Webhook → meeting + extracties in DB met confidence + transcript_ref → vindbaar via MCP.
 
 **Requirements:** FUNC-005..008, FUNC-014..018, AI-003..007, RULE-001, RULE-003, RULE-004, RULE-006
 
-**Demo-moment Fase 1:** Stuur een echte Fireflies webhook. Laat zien dat de meeting automatisch verwerkt wordt en dat je er direct vragen over kunt stellen via Claude. "Wat is er besloten in de meeting van vandaag?"
+**Demo-moment Fase 1:** Stuur een echte Fireflies webhook. "Wat is er besloten in de meeting van vandaag?" → antwoord binnen 30 seconden.
 
 ---
 
