@@ -61,11 +61,13 @@ export async function embedMeetingWithExtractions(meetingId: string): Promise<vo
   // Embed meeting (enriched with extractions)
   const meetingText = buildMeetingEmbedText(meeting, extractions);
   const meetingEmbedding = await embedText(meetingText);
-  await updateRowEmbedding("meetings", meetingId, meetingEmbedding);
+  const meetingResult = await updateRowEmbedding("meetings", meetingId, meetingEmbedding);
+  if ("error" in meetingResult) {
+    throw new Error(`Failed to save meeting embedding: ${meetingResult.error}`);
+  }
 
   // Embed individual extractions in batch
   if (extractions.length > 0) {
-    // Fetch extraction IDs
     const { data: extractionRows } = await getAdminClient()
       .from("extractions")
       .select("id, content")
@@ -76,7 +78,10 @@ export async function embedMeetingWithExtractions(meetingId: string): Promise<vo
       const embeddings = await embedBatch(texts);
 
       for (let i = 0; i < extractionRows.length; i++) {
-        await updateRowEmbedding("extractions", extractionRows[i].id, embeddings[i]);
+        const result = await updateRowEmbedding("extractions", extractionRows[i].id, embeddings[i]);
+        if ("error" in result) {
+          console.error(`Failed to embed extraction ${extractionRows[i].id}: ${result.error}`);
+        }
       }
     }
   }
