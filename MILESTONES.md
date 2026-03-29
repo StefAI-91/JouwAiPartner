@@ -173,7 +173,28 @@ FASE 2: Dagelijks bruikbaar          ▼
   [MCP core tools]       [overzicht+correctie]
                                      │
                               DEMO: "Het team gebruikt dit elke dag"
+                                     │
+v2: Smart Queries                    ▼
+  [multi-hop graph queries via SQL]
+                                     │
+                              DEMO: "Welke besluiten over klant X spreken elkaar tegen?"
 ```
+
+---
+
+## v2: Smart Queries (na v1)
+
+> **Mijlpaal:** Het systeem kan complexe, relatie-gebaseerde vragen beantwoorden over meerdere meetings heen.
+> **Doel:** Van "zoek iets op" naar "redeneer over verbanden" — multi-hop queries over de bestaande graph-structuur (FK-relaties) zonder aparte graph database.
+> **Demo:** "Welke besluiten over klant X spreken elkaar tegen?" → antwoord met beide besluiten, bronnen, en de tegenstrijdigheid.
+
+**Voorbeelden van vragen die v2 beantwoordt:**
+- "Welke besluiten conflicteren met elkaar?" (cross-join + embedding similarity)
+- "Hoe heeft de strategie voor project X zich ontwikkeld?" (tijdlijn over meerdere meetings)
+- "Met welke klanten heeft Jan het meest contact?" (relatie-aggregatie)
+- "Welke actiepunten van Pieter zijn gerelateerd aan klant Y?" (multi-hop: person → meetings → org)
+
+**Aanpak:** MCP tool `smart_query` die automatisch multi-hop SQL queries bouwt op basis van de vraag. Gebruikt de bestaande FK-structuur (meetings → organizations → projects → extractions → people) als impliciete graph. Geen Apache AGE of aparte graph database nodig.
 
 ---
 
