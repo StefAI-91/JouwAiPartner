@@ -138,7 +138,7 @@ people
 ├── email TEXT UNIQUE
 ├── team TEXT
 ├── role TEXT
-├── embedding VECTOR(1536)
+├── embedding VECTOR(1024)
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
 ├── updated_at TIMESTAMPTZ DEFAULT now()
@@ -158,7 +158,7 @@ projects
 │   -- Sales: 'lead' | 'discovery' | 'proposal' | 'negotiation' | 'won'
 │   -- Delivery: 'kickoff' | 'in_progress' | 'review' | 'completed'
 │   -- Overig: 'on_hold' | 'lost' | 'maintenance'
-├── embedding VECTOR(1536)
+├── embedding VECTOR(1024)
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
 ├── updated_at TIMESTAMPTZ DEFAULT now()
@@ -183,7 +183,8 @@ meetings
 ├── unmatched_organization_name TEXT    -- als AI org niet kan koppelen
 ├── raw_fireflies JSONB                -- originele Fireflies response + Gatekeeper/Extractor output
 ├── relevance_score FLOAT              -- Gatekeeper score, voor ranking
-├── embedding VECTOR(1536)
+├── search_vector TSVECTOR              -- full-text search, auto-update via trigger
+├── embedding VECTOR(1024)
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
 ├── updated_at TIMESTAMPTZ DEFAULT now()
@@ -230,7 +231,8 @@ extractions
 ├── project_id UUID FK → projects
 ├── corrected_by UUID FK → profiles    -- NULL = AI-extractie, gevuld = mens-geverifieerd
 ├── corrected_at TIMESTAMPTZ
-├── embedding VECTOR(1536)             -- direct geembed, geen wachten
+├── search_vector TSVECTOR              -- full-text search, auto-update via trigger
+├── embedding VECTOR(1024)             -- direct geembed, geen wachten
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
 ```
@@ -321,9 +323,11 @@ Meetings die door de pre-filter komen worden altijd opgeslagen, ongeacht score.
 
 ## 6. 2-Staps AI Pipeline
 
-### 6.1 Stap 1: Gatekeeper (Haiku) — Triage
+### 6.1 Stap 1: Gatekeeper (Haiku 4.5) — Triage
 
-De Gatekeeper doet alleen classificatie en scoring. Geen extracties.
+De Gatekeeper doet alleen classificatie en scoring. Geen extracties. Gebruikt **Claude Haiku 4.5** (`claude-haiku-4-5-20251001`) — betere classificatie-accuracy dan Haiku 3, 90% van Sonnet's performance bij 1/3 van de kosten.
+
+**Kostenoptimalisatie:** Gebruik prompt caching voor het Gatekeeper system prompt — dit is identiek per call en bespaart tot 90% op input tokens.
 
 **Output:**
 
@@ -340,7 +344,13 @@ De Gatekeeper doet alleen classificatie en scoring. Geen extracties.
 
 Een apart AI-call (Sonnet) doet de inhoudelijke extractie. Sonnet is betrouwbaarder dan Haiku voor interpretatie.
 
+**Kostenoptimalisatie:**
+- **Prompt caching:** het Extractor system prompt is identiek per meeting_type en wordt gecached (90% besparing op input tokens)
+- **Batch API:** meetings hoeven niet real-time verwerkt te worden. Anthropic's Batch API biedt 50% korting. Gecombineerd met prompt caching: tot 95% besparing.
+
 **Input:** meeting transcript + Gatekeeper triage output (meeting_type, party_type)
+
+**Transcript_ref validatie:** na extractie wordt elke `transcript_ref` gevalideerd tegen het oorspronkelijke transcript via string matching. Als de quote niet voorkomt in het transcript, wordt de confidence score naar 0.0 gezet. Dit vangt hallucinaties op.
 
 **Output per extractie:**
 
@@ -390,18 +400,74 @@ De volledige Fireflies API-response plus Gatekeeper- en Extractor-output worden 
 
 ## 7. Embedding Strategie
 
-### 7.1 Alles direct embedden
+### 7.1 Model: Cohere embed-v4
+
+| Eigenschap | Waarde |
+|---|---|
+| Model | `embed-v4.0` via `cohere-ai` SDK |
+| Dimensies | **1024** (Matryoshka — kleiner dan max 1536, snellere HNSW queries) |
+| Context window | 128K tokens (volledige transcripts passen in één call) |
+| Multilingual | 100+ talen, sterk op Nederlands (35% beter cross-lingual dan v3) |
+| Kosten | $0.12 per 1M tokens (~$0.06/maand bij verwacht volume) |
+| Batch support | Tot 96 teksten per API-call |
+
+**Waarom Cohere i.p.v. OpenAI text-embedding-3-small:**
+- Betere multilingual performance (cruciaal voor Nederlandse meetings)
+- 128K context window vs. 8K (geen afkapping van lange transcripts)
+- Hogere MTEB score (65.2 vs ~62.3)
+- Matryoshka support: 1024-dim is sneller en kleiner dan 1536, met minimaal kwaliteitsverlies
+
+**Belangrijk:** Cohere vereist een `inputType` parameter:
+- `search_document` — bij opslaan van content (meetings, extracties)
+- `search_query` — bij zoeken (MCP queries, entity resolution)
+
+**SDK:** `cohere-ai` npm package (niet via Vercel AI SDK — die ondersteunt Cohere embed-v4 nog niet).
+
+### 7.2 Alles direct embedden
 
 Er is geen review-gate. Alles wordt direct geembed na verwerking:
 
 - **Meetings** — titel, datum, samenvatting, deelnemers
 - **Extracties** — content + transcript_ref + metadata
 
-### 7.2 Meeting embedding verrijking
+### 7.3 Meeting embedding verrijking
 
 De meeting-embedding bevat naast de standaard velden ook de Extractor-output (insights: project_updates, strategy_ideas, client_info) uit `raw_fireflies`. Dit verbetert de zoekresultaten.
 
-### 7.3 Re-embed worker
+### 7.4 Hybrid search (vector + full-text)
+
+Naast semantische vector search wordt PostgreSQL full-text search (`tsvector`) ingezet. Dit combineert het beste van twee werelden:
+
+- **Vector search** — vindt semantisch vergelijkbare content ("Q3 financiën" matcht "derde kwartaal budget")
+- **Full-text search** — vindt exacte termen, namen en vakjargon ("churn", "Acme Corp", "HalalBox")
+
+**Implementatie:**
+
+- `search_vector TSVECTOR` kolom op `meetings` en `extractions`
+- Automatisch bijgewerkt via trigger bij INSERT/UPDATE
+- Taalconfiguratie: `dutch` voor Nederlandse content
+- GIN index op `search_vector` voor snelle full-text queries
+
+**Combinatie via Reciprocal Rank Fusion (RRF):**
+
+```sql
+-- Pseudo-code: hybrid search in search_all_content()
+WITH semantic AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY embedding <=> query_embedding) AS rank
+  FROM meetings WHERE embedding <=> query_embedding < threshold
+),
+lexical AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY ts_rank(search_vector, query) DESC) AS rank
+  FROM meetings WHERE search_vector @@ query
+)
+SELECT id, (1.0/(60+s.rank) + 1.0/(60+l.rank)) AS rrf_score
+FROM semantic s FULL OUTER JOIN lexical l USING (id)
+ORDER BY rrf_score DESC
+```
+
+RRF combineert rankings zonder dat de scores genormaliseerd hoeven te worden. De constante 60 dempt de invloed van hoge rankings — standaard in hybrid search implementaties.
+
+### 7.5 Re-embed worker
 
 De re-embed worker verwerkt records met `embedding_stale = true`. Draait elke 5 minuten via pg_cron.
 
@@ -423,11 +489,30 @@ Bron: Meeting "Discovery call Acme Corp" — 15 maart 2026
 
 ### 8.3 MCP tools
 
-- `search_knowledge` — zoekt over meetings + extractions, retourneert altijd bronvermelding
+**Zoeken:**
+
+- `search_knowledge` — hybrid search (vector + full-text) over meetings + extractions, retourneert altijd bronvermelding
 - `get_decisions` — filtert extractions op type='decision', inclusief transcript_ref
 - `get_action_items` — filtert extractions op type='action_item', inclusief metadata (assignee, due_date, status)
+
+**Ophalen:**
+
 - `get_meeting_summary` — meeting detail met meeting_type, party_type, organization, extractions
+- `get_organization_overview` — compleet overzicht van een organisatie: alle meetings, extracties, projecten en people, gesorteerd op datum. Geen vector search — directe SQL joins via organization_id. Bedoeld voor vragen als "geef me alles over klant X"
+- `list_meetings` — meetings filteren op organization, project, date_from, date_to, meeting_type, party_type, met pagination. Geen vector search — directe SQL filters. Bedoeld voor temporele vragen als "wanneer hebben we laatst met klant Y gesproken?"
+
+**Muteren:**
+
 - `correct_extraction` — corrigeer een extractie: overschrijf content/metadata, zet corrected_by/corrected_at, embedding_stale=true
+
+### 8.4 Waarom ophaal-tools naast zoek-tools
+
+`search_knowledge` vindt content via semantische + keyword matching, maar heeft twee beperkingen:
+
+1. **Limiet op resultaten** — bij veel meetings over dezelfde klant mis je data
+2. **Geen completheidsgarantie** — similarity search vindt de meest relevante resultaten, niet alle resultaten
+
+Voor use cases als "maak een PRD op basis van alle klantgesprekken" of "wanneer spraken we klant X voor het laatst" heb je geen zoekresultaten nodig maar een **compleet overzicht**. `get_organization_overview` en `list_meetings` leveren dat via directe SQL queries — sneller, compleet, en zonder AI-kosten.
 
 ---
 
@@ -559,6 +644,14 @@ Eén fase: fundering. Pipeline werkt end-to-end. Meetings verwerken via webhook,
 | `action_items` (apart)       | Aparte tabel voor actiepunten                           | Samengevoegd in `extractions` met type='action_item'.                                                                                                                                               |
 | `organization_needs` (apart) | Aparte tabel voor klantbehoeften                        | Samengevoegd in `extractions` met type='need'.                                                                                                                                                      |
 
+### RLS policies (bewuste uitzondering)
+
+CLAUDE.md schrijft RLS policies voor op elke tabel. Voor v1 is dit een bewuste uitzondering:
+- **5 users** die allemaal alles mogen zien — er is geen autorisatie-logica nodig
+- **Geen frontend** — alle toegang gaat via MCP server die met service role key draait
+- **Komt in v3** — wanneer meer users, frontend dashboard, of role-based access nodig is
+- Tot die tijd: service role key server-side only, nooit exposed naar client
+
 ### Overig buiten scope
 
 - Review-queue UI (vervallen — geen review-gate)
@@ -592,7 +685,43 @@ Naarmate er meer data binnenkomt groeit de kennisbasis per entiteit. Een **leven
 
 ---
 
-## 14. Gedachtelog
+## 14. Voorbereiding op schaal: Pipeline Orchestratie
+
+> Dit hoofdstuk beschrijft een toekomstige uitbreiding. Er wordt nu niks voor gebouwd, maar de code wordt zo opgezet dat de stap klein is.
+
+### Huidige situatie (v1)
+
+De pipeline draait synchroon in een Supabase Edge Function: webhook → Gatekeeper → Extractor → opslag → embedding. Bij ~5 users en ~50 meetings/maand is dit ruim voldoende. Edge Functions hebben 400s timeout op Pro; de volledige pipeline kost <30 seconden.
+
+### Wanneer orchestratie nodig wordt
+
+- **Meerdere bronnen** — Gmail, Slack en Docs sturen tegelijk events, burst-verwerking wordt een probleem
+- **>200 meetings/maand** — pg_cron's single-instance-per-job limiet wordt een bottleneck
+- **Complexe agent chains** — Curator (nightly) en Analyst (daily) draaien >5 minuten per run
+- **Observability** — "waarom is die meeting niet verwerkt?" is niet te beantwoorden zonder pipeline-logs
+
+### Wat we nu doen om de stap klein te houden
+
+1. **Gatekeeper en Extractor als losse functies** — niet verweven met de webhook handler. De webhook ontvangt, valideert en roept `processMeeting()` aan. De pipeline-logica zit in `gatekeeper-pipeline.ts`, niet in de route handler.
+2. **Elke pipeline-stap logt naar de database** — `raw_fireflies` JSONB bevat de volledige Gatekeeper- en Extractor-output. Dit is de audit trail.
+3. **Idempotente verwerking** — `fireflies_id` UNIQUE constraint voorkomt dubbele verwerking. De pipeline kan veilig opnieuw gedraaid worden.
+
+### Migratiepad (wanneer het zover is)
+
+Vervang de synchrone Edge Function call door een event-queue:
+
+- **Inngest** (event-driven, serverless) — past op het "database als communicatiebus" patroon. Agents emiten events, Inngest orchestreert met automatic retries, throttling en batching. Heeft AgentKit voor AI agent workflows.
+- **Trigger.dev** (dedicated compute, geen timeouts) — beter als agents >5 minuten draaien. Native Supabase integratie.
+
+De webhook handler wordt dan: ontvang event → enqueue naar Inngest/Trigger.dev → klaar. De pipeline-functies blijven identiek, alleen de aanroep verandert.
+
+---
+
+## 15. Gedachtelog
+
+### Waarom geen pipeline orchestrator in v1
+
+Bij ~5 users en ~50 meetings/maand is de complexiteit van Inngest of Trigger.dev niet gerechtvaardigd. De synchrone pipeline in een Edge Function is simpeler, sneller te debuggen, en heeft geen externe dependency. De code is zo opgezet dat de overstap later klein is: losse functies, database-logging, idempotente verwerking.
 
 ### Waarom organizations i.p.v. clients?
 
@@ -606,9 +735,21 @@ We willen kunnen zien waarom een score laag is en of die beoordeling juist is. D
 
 Een review-gate creëert een bottleneck: niemand reviewt consistent, waardoor 80% van de kennis onvindbaar blijft. In plaats daarvan: alles direct doorzoekbaar met bronvermelding. De gebruiker verifieert op het moment dat het ertoe doet — niet in een aparte queue. Correctie werkt als feedback loop, niet als gate.
 
+### Waarom Haiku 4.5 i.p.v. Haiku 3
+
+Haiku 4.5 scoort 73.3% op SWE-bench vs Sonnet's 77.2% — binnen 5 procentpunten bij 1/3 van de kosten en 4-5x sneller. Voor classificatie/triage is het verschil nog kleiner. De meerkosten ($1/$5 vs $0.25/$1.25 per M tokens) zijn verwaarloosbaar bij ~50 meetings/maand.
+
 ### Waarom 2-staps AI
 
-De Gatekeeper (Haiku) deed te veel in één call: classificeren + scoren + extraheren. Twee gespecialiseerde calls zijn betrouwbaarder. Haiku voor triage (goedkoop, snel), Sonnet voor extractie (nauwkeuriger). De kosten zijn verwaarloosbaar bij het verwachte volume.
+De Gatekeeper (Haiku) deed te veel in één call: classificeren + scoren + extraheren. Twee gespecialiseerde calls zijn betrouwbaarder. Haiku 4.5 voor triage (goedkoop, snel), Sonnet voor extractie (nauwkeuriger). De kosten zijn verwaarloosbaar bij het verwachte volume.
+
+### Waarom transcript_ref validatie
+
+LLMs zijn systematisch overconfident — self-reported confidence scores zijn onbetrouwbaar (onderzoek toont dat 90% confidence soms slechts 24% accuracy betekent). Transcript_ref validatie is een harde, deterministische check: als de AI zegt "Jan zei X" en die quote staat niet in het transcript, dan weten we dat het een hallucinatie is. Dit is waardevoller dan de confidence score zelf.
+
+### Waarom prompt caching en geen Batch API (v1)
+
+Prompt caching is gratis te activeren en bespaart 90% op input tokens voor herhaalde system prompts. De Batch API (50% korting, 24h verwerking) is bewust niet in v1 — meetings moeten near-real-time verwerkt worden zodat het team ze direct kan opvragen. Batch API wordt relevant bij nightly Curator/Analyst runs in v2+.
 
 ### Waarom één extractions tabel
 

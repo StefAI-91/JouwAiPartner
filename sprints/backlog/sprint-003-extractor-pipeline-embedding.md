@@ -85,8 +85,16 @@ Gatekeeper output (meeting_type, party_type, org, score)
   → Project-koppeling: 3-tier entity resolution
   → Opslag: meeting + extractions
   → raw_fireflies: Fireflies + Gatekeeper + Extractor output
-  → Embedding: meeting direct, extractions direct
+  → Embedding: meeting + extractions direct via Cohere embed-v4 (1024-dim)
 ```
+
+### Embedding
+
+Embeddings worden gegenereerd via Cohere embed-v4 (`embed-v4.0`, 1024 dimensies) met de `cohere-ai` SDK. De embedding utility uit sprint 001 (`src/lib/utils/embed.ts`) wordt hergebruikt.
+
+- **Opslag:** `inputType: "search_document"` — voor meetings en extracties
+- **Batch:** tot 96 teksten per API-call — meetings en hun extracties kunnen in één batch
+- **Meeting verrijking:** de embedding-tekst bevat titel + samenvatting + insights uit Extractor output
 
 ### Project-koppeling (3-tier)
 
@@ -106,13 +114,14 @@ Projectnaam uit Extractor
 
 ## Taken
 
-- [ ] Maak Extractor agent aan: `src/lib/agents/extractor.ts` met Sonnet, ExtractionSchema, prompt per meeting_type
+- [ ] Maak Extractor agent aan: `src/lib/agents/extractor.ts` met Sonnet, ExtractionSchema, prompt per meeting_type. Schakel prompt caching in voor system prompt (identiek per meeting_type).
+- [ ] Transcript_ref validatie: na extractie, check of elke transcript_ref daadwerkelijk voorkomt in het transcript (string match). Zo niet → confidence naar 0.0.
 - [ ] Integreer Extractor in pipeline: na Gatekeeper, vóór opslag
 - [ ] Pipeline opslag aanpassen: sla extractions op in `extractions` tabel met alle velden
 - [ ] Project-koppeling: 3-tier entity resolution, resultaat in meeting_projects
 - [ ] raw_fireflies JSONB vullen: Fireflies response + Gatekeeper output + Extractor output
-- [ ] Embedding: meeting direct embedden na opslag
-- [ ] Embedding: extractions direct embedden na opslag
+- [ ] Embedding: meeting direct embedden na opslag via Cohere embed-v4 (`inputType: "search_document"`, 1024-dim)
+- [ ] Embedding: extractions direct embedden na opslag (batch meerdere extracties per API-call)
 - [ ] Re-embed worker aanpassen: verwijder review_status checks, verwerkt embedding_stale, verrijkt meeting-embedding met insights
 - [ ] Pipeline-code: verwijder alle verwijzingen naar oude tabellen (decisions, action_items als aparte inserts) — alles gaat nu naar `extractions` tabel
 - [ ] Entity-resolution aanpassen: project-matches resulteren in `meeting_projects` rows + `extractions.project_id`, niet meer in oude tabel-structuur
@@ -122,7 +131,7 @@ Projectnaam uit Extractor
 
 - [ ] [FUNC-005] Extractor produceert decisions, action_items, needs en/of insights afhankelijk van meeting_type
 - [ ] [FUNC-006] Elke extractie heeft een confidence score tussen 0.0 en 1.0
-- [ ] [FUNC-007] Elke extractie heeft een transcript_ref die terug te herleiden is naar het transcript
+- [ ] [FUNC-007] Elke extractie heeft een transcript_ref die terug te herleiden is naar het transcript. Gevalideerd via string matching — niet-gevonden refs resulteren in confidence 0.0.
 - [ ] [FUNC-008] Een sales meeting levert needs + client_info insights, een internal_sync levert project_update insights
 - [ ] [FUNC-014..015] Projecten worden gematcht en gekoppeld via meeting_projects
 - [ ] [FUNC-017] Meetings en extractions zijn direct geembed (geen review-gate)

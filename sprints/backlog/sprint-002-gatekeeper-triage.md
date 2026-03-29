@@ -1,4 +1,4 @@
-# Micro Sprint 002: Gatekeeper Triage (Haiku)
+# Micro Sprint 002: Gatekeeper Triage (Haiku 4.5)
 
 ## Doel
 
@@ -38,6 +38,8 @@ De Gatekeeper doet nu te veel in één call:
 - Pass/reject beslissing nemen
 
 ### Nieuwe situatie
+
+De Gatekeeper gebruikt **Claude Haiku 4.5** (`claude-haiku-4-5-20251001`) — betere classificatie dan Haiku 3, 90% van Sonnet's performance bij 1/3 van de kosten. Prompt caching wordt ingeschakeld voor het system prompt (90% besparing op input tokens).
 
 De Gatekeeper doet alleen:
 
@@ -93,6 +95,7 @@ Fireflies email per deelnemer
 
 - [ ] `GatekeeperSchema` strippen: verwijder action, decisions, action_items, project_updates, strategy_ideas, client_info, entities
 - [ ] `GatekeeperSchema` uitbreiden: meeting_type, party_type, organization_name (als die er nog niet zijn)
+- [ ] Model upgraden naar Haiku 4.5 (`claude-haiku-4-5-20251001`) en prompt caching inschakelen voor system prompt
 - [ ] Gatekeeper prompt herschrijven: alleen classificatie-instructies, meeting type lijst, party type regels
 - [ ] Reject-logica verwijderen uit `gatekeeper-pipeline.ts` — alle meetings worden opgeslagen
 - [ ] Organisatie-koppeling implementeren: exact match → alias match → fallback unmatched_organization_name

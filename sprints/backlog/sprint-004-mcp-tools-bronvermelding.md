@@ -12,11 +12,15 @@ MCP tools updaten zodat het team via elke LLM-client vragen kan stellen over mee
 | FUNC-021 | get_decisions filtert extractions op type='decision' met bronvermelding         |
 | FUNC-022 | get_action_items filtert op type='action_item' met metadata                     |
 | FUNC-023 | get_meeting_summary retourneert meeting detail met alle velden                  |
+| FUNC-024 | get_organization_overview retourneert compleet klantoverzicht via SQL joins     |
+| FUNC-025 | list_meetings filtert meetings op organization, project, datum, type            |
 | MCP-001  | search_knowledge bevat bronvermelding (meeting titel, datum, transcript_ref)    |
 | MCP-002  | search_knowledge bevat confidence score per resultaat                           |
 | MCP-003  | get_decisions filtert extractions op type='decision'                            |
 | MCP-004  | get_action_items filtert extractions op type='action_item' met metadata         |
 | MCP-005  | get_meeting_summary bevat meeting_type, party_type, organization, extractions   |
+| MCP-007  | get_organization_overview retourneert meetings, extracties, projecten, people    |
+| MCP-008  | list_meetings filtert op organization, project, date_from, date_to, type        |
 | MCP-006  | correct_extraction overschrijft content/metadata, zet corrected_by/corrected_at |
 | RULE-002 | Bronvermelding verplicht bij elk MCP-antwoord                                   |
 
@@ -77,6 +81,37 @@ Extracties:
 [lijst met bronvermelding per extractie]
 ```
 
+**get_organization_overview:**
+
+```
+Organisatie: Acme Corp (client, active)
+Contactpersoon: Mohammed | Email: m@acme.nl
+
+Projecten: 2
+- HalalBox (in_progress)
+- Acme Portal (discovery)
+
+Meetings: 5 (laatste: 22 maart 2026)
+1. "Discovery call Acme Corp" — 15 maart 2026 (discovery, client)
+   → 2 decisions, 3 action items, 1 need
+2. "Sprint review HalalBox" — 22 maart 2026 (review, client)
+   → 1 decision, 2 action items
+
+Extracties totaal: 12 decisions, 8 action items, 3 needs, 5 insights
+[details per extractie met bronvermelding]
+```
+
+**list_meetings:**
+
+```
+Filters: organization=Acme Corp, date_from=2026-01-01
+Resultaten: 5 meetings
+
+1. "Sprint review HalalBox" — 22 maart 2026 | review | client
+2. "Discovery call Acme Corp" — 15 maart 2026 | discovery | client
+3. ...
+```
+
 ### Query aanpassingen
 
 De MCP tools queryen nu `decisions` en `action_items` tabellen. Dit moet worden aangepast naar de `extractions` tabel met filter op `type`.
@@ -86,6 +121,11 @@ De MCP tools queryen nu `decisions` en `action_items` tabellen. Dit moet worden 
 - `search_knowledge`: gebruikt `search_all_content()` die al over meetings + extractions zoekt
 
 Elke query moet joinen met `meetings` voor bronvermelding (titel, datum).
+
+**Nieuwe tools (directe SQL, geen vector search):**
+
+- `get_organization_overview`: JOIN organizations → meetings (via organization_id) → extractions (via meeting_id) → projects (via meeting_projects). Geen AI, geen embedding — puur relationele queries.
+- `list_meetings`: `SELECT FROM meetings WHERE` met optionele filters op organization_id, project_id (via meeting_projects), date range, meeting_type, party_type. Pagination via `LIMIT/OFFSET` of cursor.
 
 ## Prerequisites
 
@@ -99,6 +139,8 @@ Elke query moet joinen met `meetings` voor bronvermelding (titel, datum).
 - [ ] `get_decisions` tool aanpassen: filter type='decision', join meetings voor bron, metadata meegeven
 - [ ] `get_action_items` tool aanpassen: filter type='action_item', assignee/due_date/status uit metadata
 - [ ] `get_meeting_summary` tool aanpassen: meeting_type, party_type, organization, extracties meegeven
+- [ ] `get_organization_overview` tool bouwen: JOIN organizations → meetings → extractions → projects, gesorteerd op datum, geen vector search
+- [ ] `list_meetings` tool bouwen: SQL filters op organization, project, date_from, date_to, meeting_type, party_type, met pagination (limit/offset)
 - [ ] `correct_extraction` tool bouwen: overschrijf content/metadata, zet corrected_by (auth user) + corrected_at, embedding_stale=true
 - [ ] Alle tools: toon verificatie-status (AI + confidence of "geverifieerd door [naam]") bij elke extractie
 - [ ] Tool descriptions updaten zodat LLM-clients weten wat ze kunnen verwachten
@@ -116,6 +158,10 @@ Elke query moet joinen met `meetings` voor bronvermelding (titel, datum).
 - [ ] Gecorrigeerde extracties tonen "geverifieerd door [naam]" i.p.v. confidence score
 - [ ] Handmatige test: vraag via MCP "wat is er besloten over project X?" → antwoord met bron + confidence
 - [ ] Handmatige test: corrigeer een extractie → bij volgende query toont het "geverifieerd door [naam]"
+- [ ] [MCP-007] get_organization_overview retourneert meetings, extracties, projecten en people voor een organisatie
+- [ ] [MCP-008] list_meetings filtert correct op organization, project, datum en type
+- [ ] Handmatige test: "geef me alles over klant X" → get_organization_overview levert compleet overzicht
+- [ ] Handmatige test: "wanneer spraken we klant Y laatst?" → list_meetings levert gesorteerde lijst
 
 ## Geraakt door deze sprint
 
@@ -123,4 +169,6 @@ Elke query moet joinen met `meetings` voor bronvermelding (titel, datum).
 - `src/lib/mcp/tools/get-decisions.ts` (query naar extractions, bronvermelding)
 - `src/lib/mcp/tools/get-action-items.ts` (query naar extractions, metadata)
 - `src/lib/mcp/tools/get-meeting-summary.ts` (nieuwe velden)
+- `src/lib/mcp/tools/get-organization-overview.ts` (nieuw — SQL joins, geen vector search)
+- `src/lib/mcp/tools/list-meetings.ts` (nieuw — SQL filters met pagination)
 - `src/lib/mcp/tools/correct-extraction.ts` (nieuw)
