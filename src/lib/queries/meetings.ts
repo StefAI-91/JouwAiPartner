@@ -38,3 +38,29 @@ export async function getMeetingExtractions(meetingId: string) {
   if (error || !data) return [];
   return data;
 }
+
+/**
+ * Batch fetch extractions for multiple meetings at once (avoids N+1).
+ * Returns a Map of meetingId -> extractions.
+ */
+export async function getMeetingExtractionsBatch(
+  meetingIds: string[],
+): Promise<Map<string, { type: string; content: string }[]>> {
+  const result = new Map<string, { type: string; content: string }[]>();
+  if (meetingIds.length === 0) return result;
+
+  const { data, error } = await getAdminClient()
+    .from("extractions")
+    .select("meeting_id, type, content")
+    .in("meeting_id", meetingIds);
+
+  if (error || !data) return result;
+
+  for (const row of data) {
+    const existing = result.get(row.meeting_id) ?? [];
+    existing.push({ type: row.type, content: row.content });
+    result.set(row.meeting_id, existing);
+  }
+
+  return result;
+}

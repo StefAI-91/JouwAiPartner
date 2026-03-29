@@ -11,7 +11,8 @@ export function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "jouwaipartner-knowledge",
     version: "1.0.0",
-    description: "JouwAIPartner kennisbasis — organisaties, projecten, mensen, meetings, besluiten, actiepunten",
+    description:
+      "JouwAIPartner kennisbasis — organisaties, projecten, mensen, meetings, besluiten, actiepunten",
   });
 
   registerSearchTools(server);

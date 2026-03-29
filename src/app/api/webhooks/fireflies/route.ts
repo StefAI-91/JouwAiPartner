@@ -6,6 +6,12 @@ import { isValidDuration, hasParticipants } from "@/lib/validations/fireflies";
 import { processMeeting } from "@/lib/services/gatekeeper-pipeline";
 
 export async function POST(req: NextRequest) {
+  // Verify webhook secret
+  const secret = req.headers.get("x-webhook-secret");
+  if (!secret || secret !== process.env.FIREFLIES_WEBHOOK_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const payload = await req.json();
   const { meetingId, eventType } = payload;
 

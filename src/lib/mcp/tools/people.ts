@@ -14,10 +14,7 @@ export function registerPeopleTools(server: McpServer) {
     async ({ search, team, role }) => {
       const supabase = getAdminClient();
 
-      let query = supabase
-        .from("people")
-        .select("id, name, email, team, role")
-        .order("name");
+      let query = supabase.from("people").select("id, name, email, team, role").order("name");
 
       if (search) query = query.ilike("name", `%${search}%`);
       if (team) query = query.eq("team", team);
@@ -33,9 +30,7 @@ export function registerPeopleTools(server: McpServer) {
 
       if (!data || data.length === 0) {
         return {
-          content: [
-            { type: "text" as const, text: "Geen mensen gevonden met deze filters." },
-          ],
+          content: [{ type: "text" as const, text: "Geen mensen gevonden met deze filters." }],
         };
       }
 

@@ -12,10 +12,7 @@ export function registerOrganizationTools(server: McpServer) {
         .enum(["client", "partner", "supplier", "other"])
         .optional()
         .describe("Filter by type"),
-      status: z
-        .enum(["prospect", "active", "inactive"])
-        .optional()
-        .describe("Filter by status"),
+      status: z.enum(["prospect", "active", "inactive"]).optional().describe("Filter by status"),
     },
     async ({ search, type, status }) => {
       const supabase = getAdminClient();

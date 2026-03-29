@@ -56,10 +56,11 @@ export function registerDecisionTools(server: McpServer) {
 
       let filtered = decisions;
       if (project) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        filtered = decisions.filter((d: any) =>
-          d.project?.name?.toLowerCase().includes(project.toLowerCase()) ||
-          d.meeting?.title?.toLowerCase().includes(project.toLowerCase()),
+        filtered = decisions.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase join type
+          (d: any) =>
+            d.project?.name?.toLowerCase().includes(project.toLowerCase()) ||
+            d.meeting?.title?.toLowerCase().includes(project.toLowerCase()),
         );
       }
 
@@ -70,7 +71,8 @@ export function registerDecisionTools(server: McpServer) {
           ? new Date(meeting.date).toLocaleDateString("nl-NL")
           : "onbekende datum";
         const projectName = d.project?.name || d.organization?.name || "geen project";
-        const confidence = d.confidence != null ? ` (${Math.round(d.confidence * 100)}% zeker)` : "";
+        const confidence =
+          d.confidence != null ? ` (${Math.round(d.confidence * 100)}% zeker)` : "";
 
         return [
           `${i + 1}. **${d.content}**${confidence}`,

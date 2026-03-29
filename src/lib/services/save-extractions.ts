@@ -1,5 +1,5 @@
 import { GatekeeperOutput } from "@/lib/validations/gatekeeper";
-import { resolveAllEntities, resolveProject } from "@/lib/services/entity-resolution";
+import { resolveAllEntities } from "@/lib/services/entity-resolution";
 import { updateMeetingProject } from "@/lib/actions/meetings";
 import { insertDecision } from "@/lib/actions/decisions";
 import { insertActionItem } from "@/lib/actions/action-items";
@@ -67,16 +67,13 @@ export async function saveExtractions(
   }
 
   // Step 4: Save action items with scope and project_id
+  // Reuse entityResolutions map instead of calling resolveProject again (avoids N+1)
   for (const item of gatekeeperResult.action_items) {
     let actionProjectId: string | null = null;
 
     if (item.scope === "project" && item.project) {
-      const resolution = await resolveProject(item.project);
-      actionProjectId = resolution.project_id;
-
-      if (!resolution.matched) {
-        pendingMatchesCreated++;
-      }
+      // Look up from already-resolved entities first
+      actionProjectId = entityResolutions.get(item.project) ?? null;
     }
 
     await insertActionItem({

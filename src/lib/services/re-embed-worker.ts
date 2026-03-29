@@ -1,6 +1,6 @@
 import { embedText, embedBatch } from "@/lib/embeddings";
-import { getStaleRows } from "@/lib/queries/content";
-import { getMeetingExtractions } from "@/lib/queries/meetings";
+import { getStaleRows, StaleRow } from "@/lib/queries/content";
+import { getMeetingExtractionsBatch } from "@/lib/queries/meetings";
 import { getStalePeople } from "@/lib/queries/people";
 import { updateRowEmbedding } from "@/lib/actions/embeddings";
 
@@ -16,7 +16,9 @@ async function reEmbedTable(table: string, contentField: string): Promise<number
   const staleRows = await getStaleRows(table);
   if (staleRows.length === 0) return 0;
 
-  const texts = staleRows.map((row) => row[contentField] || "");
+  const texts = staleRows.map(
+    (row) => (row as unknown as Record<string, string>)[contentField] || "",
+  );
   const embeddings = await embedBatch(texts);
 
   for (let i = 0; i < staleRows.length; i++) {
@@ -31,8 +33,7 @@ async function reEmbedTable(table: string, contentField: string): Promise<number
  * and extractions (decisions, action items, insights, needs).
  */
 function buildMeetingEmbedText(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  meeting: Record<string, any>,
+  meeting: StaleRow,
   extractions: { type: string; content: string }[],
 ): string {
   const parts: string[] = [];
@@ -66,13 +67,18 @@ function buildMeetingEmbedText(
 
 /**
  * Process stale meetings with enriched embed text.
+ * Uses batch query for extractions to avoid N+1.
  */
 async function reEmbedMeetings(): Promise<number> {
   const staleRows = await getStaleRows("meetings");
   if (staleRows.length === 0) return 0;
 
+  // Batch fetch all extractions for stale meetings (avoids N+1)
+  const meetingIds = staleRows.map((m) => m.id);
+  const allExtractions = await getMeetingExtractionsBatch(meetingIds);
+
   for (const meeting of staleRows) {
-    const extractions = await getMeetingExtractions(meeting.id);
+    const extractions = allExtractions.get(meeting.id) ?? [];
     const text = buildMeetingEmbedText(meeting, extractions);
     const embedding = await embedText(text);
     await updateRowEmbedding("meetings", meeting.id, embedding);

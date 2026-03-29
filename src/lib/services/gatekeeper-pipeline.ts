@@ -75,9 +75,7 @@ async function embedMeeting(meetingId: string, input: MeetingInput): Promise<voi
   if (input.summary) parts.push(`Samenvatting: ${input.summary}`);
 
   if (extractions.length > 0) {
-    parts.push(
-      "Extracties:\n" + extractions.map((e) => `- [${e.type}] ${e.content}`).join("\n"),
-    );
+    parts.push("Extracties:\n" + extractions.map((e) => `- [${e.type}] ${e.content}`).join("\n"));
   }
 
   const embedding = await embedText(parts.join("\n\n"));
@@ -114,7 +112,7 @@ export async function processMeeting(
     }
 
     // Score >= 0.6 -> insert the meeting
-    const { data, error } = await insertMeeting({
+    const insertResult = await insertMeeting({
       fireflies_id: input.fireflies_id,
       title: input.title,
       date: new Date(Number(input.date)).toISOString(),
@@ -128,11 +126,10 @@ export async function processMeeting(
       embedding_stale: true,
     });
 
-    if (error) {
-      console.error("Meeting insert error:", error);
-    }
-    if (!error && data) {
-      meetingId = data.id;
+    if ("error" in insertResult) {
+      console.error("Meeting insert error:", insertResult.error);
+    } else {
+      meetingId = insertResult.data.id;
     }
   }
 

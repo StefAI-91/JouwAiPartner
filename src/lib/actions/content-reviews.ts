@@ -1,3 +1,5 @@
+"use server";
+
 import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function insertContentReview(review: {
@@ -7,6 +9,9 @@ export async function insertContentReview(review: {
   action: string;
   reason: string;
   metadata: Record<string, unknown>;
-}) {
-  await getAdminClient().from("content_reviews").insert(review);
+}): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient().from("content_reviews").insert(review);
+
+  if (error) return { error: error.message };
+  return { success: true };
 }
