@@ -1,3 +1,6 @@
+> **ARCHIVED** — Dit document is vervangen door `docs/specs/meeting-processing-review.md` (v2).
+> Belangrijke verschillen: Cohere 1024-dim i.p.v. OpenAI 1536-dim, unified `extractions` tabel i.p.v. aparte tabellen, 2-staps AI pipeline (Haiku triage + Sonnet extractie).
+
 # Knowledge Platform v1 — PRD
 
 _Project: JouwAIPartner_
