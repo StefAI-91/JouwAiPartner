@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { listFirefliesTranscripts, fetchFirefliesTranscript } from "@/lib/fireflies";
 import { chunkTranscript } from "@/lib/transcript-processor";
 import { getMeetingByFirefliesId } from "@/lib/queries/meetings";
 import { isValidDuration, hasParticipants } from "@/lib/validations/fireflies";
 import { processMeeting } from "@/lib/services/gatekeeper-pipeline";
 import { runReEmbedWorker } from "@/lib/services/re-embed-worker";
+
+const ingestSchema = z.object({
+  limit: z.number().int().min(1).max(100).default(20),
+});
 
 interface IngestResult {
   id: string;
@@ -16,8 +21,16 @@ interface IngestResult {
 }
 
 export async function POST(req: NextRequest) {
+  // Auth check
+  const authHeader = req.headers.get("authorization");
+  const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
+  if (process.env.CRON_SECRET && authHeader !== expectedToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => ({}));
-  const limit = body.limit ?? 20;
+  const parsed = ingestSchema.safeParse(body);
+  const limit = parsed.success ? parsed.data.limit : 20;
 
   // Step 1: List recent transcripts from Fireflies
   const transcripts = await listFirefliesTranscripts(limit);

@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
 import { fetchFirefliesTranscript } from "@/lib/fireflies";
 import { chunkTranscript } from "@/lib/transcript-processor";
 import { getMeetingByFirefliesId } from "@/lib/queries/meetings";
 import { isValidDuration, hasParticipants } from "@/lib/validations/fireflies";
 import { processMeeting } from "@/lib/services/gatekeeper-pipeline";
 
+function verifyFirefliesSignature(rawBody: string, signature: string | null): boolean {
+  const secret = process.env.FIREFLIES_WEBHOOK_SECRET;
+  if (!secret || !signature) return false;
+
+  const expectedSignature = createHmac("sha256", secret).update(rawBody).digest("hex");
+  return signature === expectedSignature;
+}
+
 export async function POST(req: NextRequest) {
-  const payload = await req.json();
+  // Verify Fireflies HMAC signature (x-hub-signature header)
+  const rawBody = await req.text();
+  const signature = req.headers.get("x-hub-signature");
+
+  if (!verifyFirefliesSignature(rawBody, signature)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const payload = JSON.parse(rawBody);
   const { meetingId, eventType } = payload;
 
   // Only process completed transcriptions

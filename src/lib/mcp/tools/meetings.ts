@@ -13,14 +13,12 @@ export function registerMeetingTools(server: McpServer) {
     async ({ meeting_id, title_search }) => {
       const supabase = getAdminClient();
 
-      let query = supabase
-        .from("meetings")
-        .select(
-          `id, title, date, participants, summary, meeting_type, party_type,
+      let query = supabase.from("meetings").select(
+        `id, title, date, participants, summary, meeting_type, party_type,
            relevance_score,
            organization:organization_id (name),
            unmatched_organization_name`,
-        );
+      );
 
       if (meeting_id) {
         query = query.eq("id", meeting_id);
@@ -63,11 +61,8 @@ export function registerMeetingTools(server: McpServer) {
             .order("type")
             .order("confidence", { ascending: false });
 
-          const orgName =
-            m.organization?.name || m.unmatched_organization_name || "Onbekend";
-          const dateStr = m.date
-            ? new Date(m.date).toLocaleDateString("nl-NL")
-            : "Onbekend";
+          const orgName = m.organization?.name || m.unmatched_organization_name || "Onbekend";
+          const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
 
           const sections: string[] = [
             `## ${m.title}`,
@@ -100,9 +95,7 @@ export function registerMeetingTools(server: McpServer) {
               sections.push("", `### ${label}`);
               items.forEach((item, i) => {
                 const conf =
-                  item.confidence != null
-                    ? ` (${Math.round(item.confidence * 100)}%)`
-                    : "";
+                  item.confidence != null ? ` (${Math.round(item.confidence * 100)}%)` : "";
                 sections.push(`${i + 1}. ${item.content}${conf}`);
               });
             }

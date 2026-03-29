@@ -54,10 +54,11 @@ export function registerActionTools(server: McpServer) {
         );
       }
       if (project) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        filtered = filtered.filter((item: any) =>
-          item.project?.name?.toLowerCase().includes(project.toLowerCase()) ||
-          item.meeting?.title?.toLowerCase().includes(project.toLowerCase()),
+        filtered = filtered.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase join type
+          (item: any) =>
+            item.project?.name?.toLowerCase().includes(project.toLowerCase()) ||
+            item.meeting?.title?.toLowerCase().includes(project.toLowerCase()),
         );
       }
 

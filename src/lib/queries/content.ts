@@ -17,13 +17,30 @@ export async function searchAllContent(
   return data;
 }
 
-export async function getStaleRows(table: string, limit: number = 50) {
+const STALE_ROW_COLUMNS: Record<string, string> = {
+  meetings: "id, title, participants, summary, embedding_stale",
+  extractions: "id, content, type, embedding_stale",
+  projects: "id, name, embedding_stale",
+};
+
+export interface StaleRow {
+  id: string;
+  title?: string;
+  participants?: string[];
+  summary?: string;
+  content?: string;
+  type?: string;
+  name?: string;
+  embedding_stale?: boolean;
+}
+
+export async function getStaleRows(table: string, limit: number = 50): Promise<StaleRow[]> {
+  const columns = STALE_ROW_COLUMNS[table] ?? "id, embedding_stale";
   const { data, error } = await getAdminClient()
     .from(table)
-    .select("*")
+    .select(columns)
     .or("embedding_stale.eq.true,embedding.is.null")
     .limit(limit);
   if (error || !data) return [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data as Record<string, any>[];
+  return data as unknown as StaleRow[];
 }

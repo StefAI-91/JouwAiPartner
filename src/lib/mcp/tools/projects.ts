@@ -38,9 +38,7 @@ export function registerProjectTools(server: McpServer) {
 
       if (!data || data.length === 0) {
         return {
-          content: [
-            { type: "text" as const, text: "Geen projecten gevonden met deze filters." },
-          ],
+          content: [{ type: "text" as const, text: "Geen projecten gevonden met deze filters." }],
         };
       }
 

@@ -1,9 +1,5 @@
 import { embedText } from "@/lib/embeddings";
-import {
-  getProjectByNameIlike,
-  getAllProjects,
-  matchProjectsByEmbedding,
-} from "@/lib/queries/projects";
+import { getAllProjects, matchProjectsByEmbedding } from "@/lib/queries/projects";
 import { updateProjectAliases } from "@/lib/actions/projects";
 import { insertPendingMatch } from "@/lib/actions/pending-matches";
 
@@ -21,20 +17,33 @@ interface MatchResult {
  * 3. Embedding similarity match via match_projects RPC
  */
 export async function resolveProject(extractedName: string): Promise<MatchResult> {
-  // Step 1: Exact match on name
-  const exactMatch = await getProjectByNameIlike(extractedName);
-  if (exactMatch) {
-    return { matched: true, project_id: exactMatch.id, match_type: "exact" };
-  }
-
-  // Step 2: Alias match
   const allProjects = await getAllProjects();
-  if (allProjects) {
-    const aliasMatch = allProjects.find((p) =>
+  return resolveProjectWithCache(extractedName, allProjects);
+}
+
+/**
+ * Resolve a project name using a pre-fetched projects list (avoids N+1).
+ */
+async function resolveProjectWithCache(
+  extractedName: string,
+  cachedProjects: { id: string; name: string; aliases: string[] | null }[] | null,
+): Promise<MatchResult> {
+  const nameLower = extractedName.toLowerCase();
+
+  // Step 1: Exact match on name (in-memory instead of DB call)
+  if (cachedProjects) {
+    const exactMatch = cachedProjects.find(
+      (p) => p.name.toLowerCase().includes(nameLower) || nameLower.includes(p.name.toLowerCase()),
+    );
+    if (exactMatch) {
+      return { matched: true, project_id: exactMatch.id, match_type: "exact" };
+    }
+
+    // Step 2: Alias match
+    const aliasMatch = cachedProjects.find((p) =>
       p.aliases?.some(
         (alias: string) =>
-          alias.toLowerCase().includes(extractedName.toLowerCase()) ||
-          extractedName.toLowerCase().includes(alias.toLowerCase()),
+          alias.toLowerCase().includes(nameLower) || nameLower.includes(alias.toLowerCase()),
       ),
     );
     if (aliasMatch) {
@@ -93,6 +102,7 @@ export async function createPendingMatch(
 /**
  * Resolve all entities from a Gatekeeper output.
  * Returns a map of name -> project_id.
+ * Pre-fetches all projects once to avoid N+1 queries.
  */
 export async function resolveAllEntities(
   entities: { projects: string[]; clients: string[] },
@@ -102,8 +112,13 @@ export async function resolveAllEntities(
   const resolutions = new Map<string, string | null>();
   const allNames = [...new Set([...entities.projects, ...entities.clients])];
 
+  if (allNames.length === 0) return resolutions;
+
+  // Pre-fetch all projects once (avoids N+1 in alias matching)
+  const allProjects = await getAllProjects();
+
   for (const name of allNames) {
-    const result = await resolveProject(name);
+    const result = await resolveProjectWithCache(name, allProjects);
     resolutions.set(name, result.project_id);
 
     if (!result.matched) {

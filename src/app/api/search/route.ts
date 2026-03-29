@@ -1,33 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
 import { embedText } from "@/lib/embeddings";
+import { searchAllContent } from "@/lib/queries/content";
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-}
+const searchSchema = z.object({
+  query: z.string().min(1).max(1000),
+});
 
 export async function POST(req: NextRequest) {
-  const { query } = await req.json();
+  const body = await req.json().catch(() => null);
+  const parsed = searchSchema.safeParse(body);
 
-  if (!query) {
-    return NextResponse.json({ error: "query is required" }, { status: 400 });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "query is required (string, 1-1000 chars)" },
+      { status: 400 },
+    );
   }
 
+  const { query } = parsed.data;
   const embedding = await embedText(query, "search_query");
-
-  const { data, error } = await getSupabase().rpc("search_all_content", {
-    query_embedding: embedding,
-    query_text: query,
-    match_threshold: 0.3,
-    match_count: 10,
-  });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const data = await searchAllContent(embedding, 0.3, 10, query);
 
   return NextResponse.json({ results: data });
 }

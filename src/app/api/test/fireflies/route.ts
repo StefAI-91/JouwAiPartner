@@ -1,8 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const FIREFLIES_API = "https://api.fireflies.ai/graphql";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not available in production" }, { status: 403 });
+  }
+
+  const authHeader = req.headers.get("authorization");
+  const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
+  if (process.env.CRON_SECRET && authHeader !== expectedToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const apiKey = process.env.FIREFLIES_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "FIREFLIES_API_KEY not set" });

@@ -1,3 +1,5 @@
+"use server";
+
 import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function insertPendingMatch(match: {
@@ -7,6 +9,9 @@ export async function insertPendingMatch(match: {
   suggested_match_id: string | null;
   similarity_score: number | null;
   status: string;
-}) {
-  await getAdminClient().from("pending_matches").insert(match);
+}): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient().from("pending_matches").insert(match);
+
+  if (error) return { error: error.message };
+  return { success: true };
 }

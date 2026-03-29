@@ -96,7 +96,7 @@ const layers: LayerProps[] = [
     sprint: "Sprint 2",
     status: "live",
     simpleExplanation:
-      "De database is geoptimaliseerd om snel te zoeken. Er zijn speciale indexen voor zowel betekenis-zoeken (\"vind alles over AI strategie\") als exacte tekst-zoeken (\"het woord 'budget'\").",
+      'De database is geoptimaliseerd om snel te zoeken. Er zijn speciale indexen voor zowel betekenis-zoeken ("vind alles over AI strategie") als exacte tekst-zoeken ("het woord \'budget\'").',
     technicalDetails: [
       "HNSW vector indexes op alle embedding kolommen (cosine distance, 1024-dim)",
       "GIN indexes op search_vector kolommen voor full-text search",
@@ -239,7 +239,11 @@ const mcpTools: ToolInfo[] = [
     parameters: [
       { name: "search", description: "Zoek op projectnaam (deels matchen)", required: false },
       { name: "organization", description: "Filter op organisatienaam", required: false },
-      { name: "status", description: "lead, active, paused, completed, of cancelled", required: false },
+      {
+        name: "status",
+        description: "lead, active, paused, completed, of cancelled",
+        required: false,
+      },
     ],
     exampleQuestions: [
       "Welke projecten zijn er actief?",
@@ -255,7 +259,11 @@ const mcpTools: ToolInfo[] = [
       "Zoekt door alle mensen in het systeem: teamleden, klanten, partners. Filter op naam, team of rol.",
     parameters: [
       { name: "search", description: "Zoek op naam (deels matchen)", required: false },
-      { name: "team", description: "Filter op team (engineering, leadership, etc.)", required: false },
+      {
+        name: "team",
+        description: "Filter op team (engineering, leadership, etc.)",
+        required: false,
+      },
       { name: "role", description: "Filter op rol (deels matchen)", required: false },
     ],
     exampleQuestions: [
@@ -270,8 +278,14 @@ const seedSection = {
   simpleExplanation:
     "Het systeem is voorgeladen met jullie echte organisaties, teamleden en projecten. Zo kan het platform meteen namen herkennen wanneer ze in meetings voorkomen.",
   data: [
-    { category: "Organisaties", items: ["Flowwijs (eigen)", "Ordus (klant)", "Effect op maat (klant)"] },
-    { category: "Team", items: ["Stef Banninga", "Wouter van den Heuvel", "Ege", "Tibor", "Kenji", "Myrrh"] },
+    {
+      category: "Organisaties",
+      items: ["Flowwijs (eigen)", "Ordus (klant)", "Effect op maat (klant)"],
+    },
+    {
+      category: "Team",
+      items: ["Stef Banninga", "Wouter van den Heuvel", "Ege", "Tibor", "Kenji", "Myrrh"],
+    },
     { category: "Klanten", items: ["Bart Nelissen (Ordus)", "Fleur Timmerman (Effect op maat)"] },
     { category: "Projecten", items: ["Ordus", "Fleur op zak", "HelperU"] },
   ],
@@ -296,7 +310,15 @@ function FlowArrow() {
   );
 }
 
-function LayerCard({ icon: Icon, title, sprint, status, simpleExplanation, technicalDetails, tables }: LayerProps) {
+function LayerCard({
+  icon: Icon,
+  title,
+  sprint,
+  status,
+  simpleExplanation,
+  technicalDetails,
+  tables,
+}: LayerProps) {
   return (
     <Card className={status === "gepland" ? "opacity-60" : ""}>
       <CardHeader>
@@ -474,7 +496,14 @@ export default function ArchitectuurPage() {
               <p className="mb-2 text-xs font-medium text-muted-foreground">Hoe werkt het?</p>
               <ol className="space-y-1 text-xs text-muted-foreground">
                 <li>1. Je stelt een vraag aan Claude</li>
-                <li>2. Claude kiest de juiste tool (bijv. <code className="rounded bg-muted px-1 font-mono text-[11px]">search_knowledge</code> of <code className="rounded bg-muted px-1 font-mono text-[11px]">get_projects</code>)</li>
+                <li>
+                  2. Claude kiest de juiste tool (bijv.{" "}
+                  <code className="rounded bg-muted px-1 font-mono text-[11px]">
+                    search_knowledge
+                  </code>{" "}
+                  of{" "}
+                  <code className="rounded bg-muted px-1 font-mono text-[11px]">get_projects</code>)
+                </li>
                 <li>3. De tool bevraagt de database en stuurt resultaten terug</li>
                 <li>4. Claude formuleert een antwoord op basis van de resultaten</li>
               </ol>
@@ -487,21 +516,34 @@ export default function ArchitectuurPage() {
                 <AccordionContent>
                   <div className="space-y-3">
                     <div>
-                      <p className="mb-1 text-xs font-medium text-muted-foreground">In Claude.ai (web)</p>
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        In Claude.ai (web)
+                      </p>
                       <ol className="space-y-0.5 text-xs text-muted-foreground">
                         <li>1. Ga naar Claude.ai &rarr; Settings &rarr; Integrations</li>
                         <li>2. Klik &quot;Add MCP Server&quot;</li>
-                        <li>3. Vul de URL in: <code className="rounded bg-muted px-1 font-mono text-[11px]">[jouw-vercel-url]/api/mcp</code></li>
+                        <li>
+                          3. Vul de URL in:{" "}
+                          <code className="rounded bg-muted px-1 font-mono text-[11px]">
+                            [jouw-vercel-url]/api/mcp
+                          </code>
+                        </li>
                         <li>4. Klaar! Claude kan nu je kennisbasis bevragen</li>
                       </ol>
                     </div>
                     <div>
-                      <p className="mb-1 text-xs font-medium text-muted-foreground">In Claude Code (CLI)</p>
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">
+                        In Claude Code (CLI)
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        Voeg toe aan <code className="rounded bg-muted px-1 font-mono text-[11px]">.claude.json</code>:
+                        Voeg toe aan{" "}
+                        <code className="rounded bg-muted px-1 font-mono text-[11px]">
+                          .claude.json
+                        </code>
+                        :
                       </p>
                       <pre className="mt-1 rounded-lg bg-muted p-2 font-mono text-[11px] text-muted-foreground">
-{`{
+                        {`{
   "mcpServers": {
     "kennisbasis": {
       "type": "url",
@@ -587,17 +629,16 @@ export default function ArchitectuurPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Voorgeladen data</CardTitle>
-          <CardDescription>
-            {seedSection.simpleExplanation}
-          </CardDescription>
+          <CardDescription>{seedSection.simpleExplanation}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             {seedSection.data.map((group) => (
-              <div key={group.category} className="rounded-lg border border-border/50 bg-muted/30 p-3">
-                <p className="mb-1.5 text-xs font-medium text-muted-foreground">
-                  {group.category}
-                </p>
+              <div
+                key={group.category}
+                className="rounded-lg border border-border/50 bg-muted/30 p-3"
+              >
+                <p className="mb-1.5 text-xs font-medium text-muted-foreground">{group.category}</p>
                 <ul className="space-y-0.5">
                   {group.items.map((item) => (
                     <li key={item} className="text-xs text-foreground">
@@ -620,12 +661,43 @@ export default function ArchitectuurPage() {
         <CardContent>
           <ol className="space-y-3">
             {[
-              { sprint: "Sprint 1", title: "Database tabellen", status: "live" as const, description: "Alle tabellen, relaties en triggers aangemaakt" },
-              { sprint: "Sprint 2", title: "Indexes, zoeken en embeddings", status: "live" as const, description: "Vector + full-text search, Cohere embed-v4, seed data" },
-              { sprint: "Sprint 3", title: "MCP Server + Tools", status: "live" as const, description: "7 tools: search, meetings, besluiten, actiepunten, organisaties, projecten, mensen" },
-              { sprint: "Sprint 4", title: "Fireflies webhook + Gatekeeper", status: "gepland" as const, description: "Meetings automatisch ontvangen en classificeren" },
-              { sprint: "Sprint 5", title: "Extractor + pipeline", status: "gepland" as const, description: "Besluiten, actiepunten en inzichten automatisch extraheren" },
-              { sprint: "Sprint 6", title: "MCP tools uitbreiden", status: "gepland" as const, description: "Gerichte zoek-tools per domein (mensen, projecten, tijdlijn)" },
+              {
+                sprint: "Sprint 1",
+                title: "Database tabellen",
+                status: "live" as const,
+                description: "Alle tabellen, relaties en triggers aangemaakt",
+              },
+              {
+                sprint: "Sprint 2",
+                title: "Indexes, zoeken en embeddings",
+                status: "live" as const,
+                description: "Vector + full-text search, Cohere embed-v4, seed data",
+              },
+              {
+                sprint: "Sprint 3",
+                title: "MCP Server + Tools",
+                status: "live" as const,
+                description:
+                  "7 tools: search, meetings, besluiten, actiepunten, organisaties, projecten, mensen",
+              },
+              {
+                sprint: "Sprint 4",
+                title: "Fireflies webhook + Gatekeeper",
+                status: "gepland" as const,
+                description: "Meetings automatisch ontvangen en classificeren",
+              },
+              {
+                sprint: "Sprint 5",
+                title: "Extractor + pipeline",
+                status: "gepland" as const,
+                description: "Besluiten, actiepunten en inzichten automatisch extraheren",
+              },
+              {
+                sprint: "Sprint 6",
+                title: "MCP tools uitbreiden",
+                status: "gepland" as const,
+                description: "Gerichte zoek-tools per domein (mensen, projecten, tijdlijn)",
+              },
             ].map((item) => (
               <li key={item.sprint} className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
@@ -653,11 +725,31 @@ export default function ArchitectuurPage() {
         <CardContent>
           <ul className="space-y-2">
             {[
-              { test: "Cohere embed-v4 embedding generatie", result: "11 records geembed (8 people, 3 projects)", pass: true },
-              { test: "Re-embed worker (/api/test/embed)", result: "Verwerkt alle stale records automatisch", pass: true },
-              { test: "Fireflies API connectie", result: "3 echte transcripts gevonden", pass: true },
-              { test: "Hybrid search (search_all_content)", result: "Werkt, maar nog geen meetings om te doorzoeken", pass: true },
-              { test: "Ask pipeline (/api/ask)", result: "Claude plant queries, zoekt, geeft eerlijk 'geen data' terug", pass: true },
+              {
+                test: "Cohere embed-v4 embedding generatie",
+                result: "11 records geembed (8 people, 3 projects)",
+                pass: true,
+              },
+              {
+                test: "Re-embed worker (/api/test/embed)",
+                result: "Verwerkt alle stale records automatisch",
+                pass: true,
+              },
+              {
+                test: "Fireflies API connectie",
+                result: "3 echte transcripts gevonden",
+                pass: true,
+              },
+              {
+                test: "Hybrid search (search_all_content)",
+                result: "Werkt, maar nog geen meetings om te doorzoeken",
+                pass: true,
+              },
+              {
+                test: "Ask pipeline (/api/ask)",
+                result: "Claude plant queries, zoekt, geeft eerlijk 'geen data' terug",
+                pass: true,
+              },
             ].map((item) => (
               <li key={item.test} className="flex items-start gap-2">
                 <span className={`mt-0.5 text-xs ${item.pass ? "text-green-600" : "text-red-500"}`}>

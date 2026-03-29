@@ -1,3 +1,5 @@
+"use server";
+
 import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function insertActionItem(item: {
@@ -9,6 +11,13 @@ export async function insertActionItem(item: {
   source_type: string;
   source_id: string;
   project_id: string | null;
-}) {
-  await getAdminClient().from("action_items").insert(item);
+}): Promise<{ success: true; id: string } | { error: string }> {
+  const { data, error } = await getAdminClient()
+    .from("action_items")
+    .insert(item)
+    .select("id")
+    .single();
+
+  if (error) return { error: error.message };
+  return { success: true, id: data.id };
 }

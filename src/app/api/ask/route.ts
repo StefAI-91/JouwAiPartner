@@ -3,7 +3,11 @@ import { generateObject, generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 import { embedText } from "@/lib/embeddings";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { searchAllContent } from "@/lib/queries/content";
+
+const askSchema = z.object({
+  question: z.string().min(1).max(2000),
+});
 
 const SearchPlanSchema = z.object({
   queries: z
@@ -12,10 +16,6 @@ const SearchPlanSchema = z.object({
         search_text: z
           .string()
           .describe("Semantic search query optimized for embedding similarity"),
-        participant_filter: z
-          .string()
-          .nullable()
-          .describe("Filter on participant name if the question is about a specific person"),
         source_filter: z
           .enum(["all", "meetings", "documents", "slack_messages", "emails"])
           .describe("Which source to search, 'all' for cross-table search"),
@@ -25,60 +25,33 @@ const SearchPlanSchema = z.object({
   reasoning: z.string().describe("Why these queries will find the answer"),
 });
 
-async function searchAll(embedding: number[], threshold: number, count: number, queryText = "") {
-  const { data } = await getAdminClient().rpc("search_all_content", {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    query_embedding: embedding as any,
-    query_text: queryText,
-    match_threshold: threshold,
-    match_count: count,
-  });
-  return data ?? [];
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function searchMeetingsByParticipant(
-  embedding: number[],
-  participant: string,
-  threshold: number,
-  count: number,
-) {
-  const { data } = await getAdminClient().rpc("search_meetings_by_participant", {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    query_embedding: embedding as any,
-    participant_name: participant,
-    match_threshold: threshold,
-    match_count: count,
-  });
-  return data ?? [];
-}
-
-async function searchSingleTable(
-  table: string,
-  embedding: number[],
-  threshold: number,
-  count: number,
-  queryText = "",
-) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const rpcMap: Record<string, string> = {
-    meetings: "search_all_content",
-    documents: "search_all_content",
-  };
-
-  // Fall back to search_all_content and filter client-side
-  const allResults = await searchAll(embedding, threshold, count * 2, queryText);
-  if (table === "all") return allResults;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return allResults.filter((r: any) => r.source_table === table);
+interface SearchResult {
+  id: string;
+  similarity?: number;
+  source_table?: string;
+  title?: string;
+  subject?: string;
+  channel?: string;
+  transcript?: string;
+  content?: string;
+  summary?: string;
+  body?: string;
+  participants?: string[];
+  date?: string;
 }
 
 export async function POST(req: NextRequest) {
-  const { question } = await req.json();
+  const body = await req.json().catch(() => null);
+  const parsed = askSchema.safeParse(body);
 
-  if (!question) {
-    return NextResponse.json({ error: "question is required" }, { status: 400 });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "question is required (string, 1-2000 chars)" },
+      { status: 400 },
+    );
   }
+
+  const { question } = parsed.data;
 
   // Step 1: Decompose the question into search queries
   const { object: plan } = await generateObject({
@@ -87,39 +60,31 @@ export async function POST(req: NextRequest) {
     system: `Je bent een search planner voor een kennisplatform. Het platform bevat meetings (met transcripts en deelnemers), documenten, Slack berichten en emails.
 
 Gegeven een vraag, maak 1-3 zoekqueries die samen het beste antwoord opleveren. Denk aan:
-- Als de vraag over een specifiek persoon gaat, filter op die persoon als participant
 - Gebruik verschillende formuleringen om meer te vinden
 - Als de vraag breed is, zoek in alle bronnen. Als het specifiek over een meeting gaat, filter op meetings.`,
     prompt: question,
   });
 
-  // Step 2: Execute all searches in parallel
-  // Include participant name in search text for better embedding match
+  // Step 2: Execute all searches in parallel using centralized query
   const searchResults = await Promise.all(
     plan.queries.map(async (q) => {
-      const searchText = q.participant_filter
-        ? `${q.participant_filter} ${q.search_text}`
-        : q.search_text;
-      const embedding = await embedText(searchText, "search_query");
+      const embedding = await embedText(q.search_text, "search_query");
+      const results = (await searchAllContent(embedding, 0.2, 8, q.search_text)) as SearchResult[];
 
       if (q.source_filter !== "all") {
         return {
           query: q,
-          results: await searchSingleTable(q.source_filter, embedding, 0.2, 8, q.search_text),
+          results: results.filter((r) => r.source_table === q.source_filter),
         };
       }
 
-      return {
-        query: q,
-        results: await searchAll(embedding, 0.2, 8, q.search_text),
-      };
+      return { query: q, results };
     }),
   );
 
   // Step 3: Deduplicate and collect all unique results
   const seen = new Set<string>();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allResults: any[] = [];
+  const allResults: SearchResult[] = [];
 
   for (const sr of searchResults) {
     for (const r of sr.results) {
@@ -131,8 +96,7 @@ Gegeven een vraag, maak 1-3 zoekqueries die samen het beste antwoord opleveren. 
   }
 
   // Sort by similarity
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  allResults.sort((a: any, b: any) => (b.similarity ?? 0) - (a.similarity ?? 0));
+  allResults.sort((a, b) => (b.similarity ?? 0) - (a.similarity ?? 0));
   const topResults = allResults.slice(0, 10);
 
   if (topResults.length === 0) {
@@ -145,8 +109,7 @@ Gegeven een vraag, maak 1-3 zoekqueries die samen het beste antwoord opleveren. 
 
   // Step 4: Synthesize answer with Claude
   const contextBlock = topResults
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((r: any, i: number) => {
+    .map((r, i) => {
       const source = r.source_table ?? "meetings";
       const title = r.title ?? r.subject ?? r.channel ?? "Untitled";
       const content = r.transcript ?? r.content ?? r.summary ?? r.body ?? "";
@@ -172,15 +135,10 @@ Regels:
 - Als de bronnen het antwoord niet volledig geven, zeg dat eerlijk
 - Citeer relevante uitspraken letterlijk waar mogelijk
 - Wees concreet en specifiek, geen vage samenvattingen`,
-    prompt: `Vraag: ${question}
-
-${contextBlock}
-
-Beantwoord de vraag op basis van bovenstaande bronnen.`,
+    prompt: `Vraag: ${question}\n\n${contextBlock}\n\nBeantwoord de vraag op basis van bovenstaande bronnen.`,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sources = topResults.map((r: any, i: number) => ({
+  const sources = topResults.map((r, i) => ({
     index: i + 1,
     id: r.id,
     source_table: r.source_table ?? "meetings",

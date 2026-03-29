@@ -22,7 +22,7 @@ type InputType = "search_document" | "search_query";
  */
 export async function embedText(
   text: string,
-  inputType: InputType = "search_document"
+  inputType: InputType = "search_document",
 ): Promise<number[]> {
   const response = await getCohere().embed({
     model: EMBEDDING_MODEL,
@@ -44,7 +44,7 @@ export async function embedText(
  */
 export async function embedBatch(
   texts: string[],
-  inputType: InputType = "search_document"
+  inputType: InputType = "search_document",
 ): Promise<number[][]> {
   const BATCH_SIZE = 96;
   const allEmbeddings: number[][] = [];
