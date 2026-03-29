@@ -1,7 +1,7 @@
 # Requirements Register
 
 Gegenereerd uit `docs/specs/meeting-processing-review.md` (v2) op 2026-03-29.
-Totaal: 82 requirements.
+Totaal: 90 requirements.
 
 ---
 
@@ -102,11 +102,13 @@ Totaal: 82 requirements.
 
 | ID     | Beschrijving                                                                            | Bron           | Sprint |
 | ------ | --------------------------------------------------------------------------------------- | -------------- | ------ |
-| AI-001 | Gatekeeper (Haiku) schema: meeting_type, party_type, relevance_score, organization_name | PRD sectie 5.1 | 002    |
+| AI-001 | Gatekeeper (Haiku 4.5) schema: meeting_type, party_type, relevance_score, organization_name | PRD sectie 5.1 | 002    |
 | AI-002 | Gatekeeper prompt: alleen classificatie, geen extractie-instructies                     | PRD sectie 5.1 | 002    |
 | AI-003 | Extractor (Sonnet) als apart AI-call na Gatekeeper                                      | PRD sectie 5.2 | 003    |
 | AI-004 | Extractor output: type, content, confidence, transcript_ref, metadata per extractie     | PRD sectie 5.2 | 003    |
 | AI-005 | Extractor wordt gestuurd door meeting_type voor type-specifieke extracties              | PRD sectie 5.2 | 003    |
+| AI-006 | Prompt caching inschakelen voor Gatekeeper en Extractor system prompts                  | PRD sectie 6.1 | 002-003 |
+| AI-007 | Transcript_ref validatie: quote checken tegen brontranscript, confidence→0 bij mismatch | PRD sectie 6.2 | 003    |
 
 ## MCP eisen
 
@@ -130,4 +132,4 @@ Totaal: 82 requirements.
 | RULE-003 | Confidence als indicator, niet als gate                        | PRD sectie 2   | 003     |
 | RULE-004 | Needs zijn cumulatief — geen status-veld, groeiend profiel     | PRD sectie 3.8 | 003     |
 | RULE-005 | Meeting transcript is bron van waarheid, extracties zijn index | PRD sectie 1   | -       |
-| RULE-006 | 2-staps AI: Haiku voor triage, Sonnet voor extractie           | PRD sectie 5   | 002-003 |
+| RULE-006 | 2-staps AI: Haiku 4.5 voor triage, Sonnet voor extractie       | PRD sectie 5   | 002-003 |

@@ -308,6 +308,7 @@ CREATE TRIGGER extractions_search_vector_update
 - [ ] Regenereer Supabase TypeScript types (`supabase gen types typescript`)
 - [ ] Maak seed script `supabase/seed/seed.sql` met initiële organizations, people en projects (idempotent met ON CONFLICT DO UPDATE)
 - [ ] Installeer `cohere-ai` SDK (`npm install cohere-ai`) en verwijder `openai` als het alleen voor embeddings gebruikt wordt
+- [ ] Voeg `COHERE_API_KEY` toe aan environment variabelen (Vercel + lokaal)
 - [ ] Maak embedding utility `src/lib/utils/embed.ts` met Cohere embed-v4 wrapper (model `embed-v4.0`, 1024 dimensies, `inputType` parameter voor document vs query)
 
 ## Acceptatiecriteria

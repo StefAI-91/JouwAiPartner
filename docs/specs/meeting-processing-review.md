@@ -323,9 +323,11 @@ Meetings die door de pre-filter komen worden altijd opgeslagen, ongeacht score.
 
 ## 6. 2-Staps AI Pipeline
 
-### 6.1 Stap 1: Gatekeeper (Haiku) — Triage
+### 6.1 Stap 1: Gatekeeper (Haiku 4.5) — Triage
 
-De Gatekeeper doet alleen classificatie en scoring. Geen extracties.
+De Gatekeeper doet alleen classificatie en scoring. Geen extracties. Gebruikt **Claude Haiku 4.5** (`claude-haiku-4-5-20251001`) — betere classificatie-accuracy dan Haiku 3, 90% van Sonnet's performance bij 1/3 van de kosten.
+
+**Kostenoptimalisatie:** Gebruik prompt caching voor het Gatekeeper system prompt — dit is identiek per call en bespaart tot 90% op input tokens.
 
 **Output:**
 
@@ -342,7 +344,13 @@ De Gatekeeper doet alleen classificatie en scoring. Geen extracties.
 
 Een apart AI-call (Sonnet) doet de inhoudelijke extractie. Sonnet is betrouwbaarder dan Haiku voor interpretatie.
 
+**Kostenoptimalisatie:**
+- **Prompt caching:** het Extractor system prompt is identiek per meeting_type en wordt gecached (90% besparing op input tokens)
+- **Batch API:** meetings hoeven niet real-time verwerkt te worden. Anthropic's Batch API biedt 50% korting. Gecombineerd met prompt caching: tot 95% besparing.
+
 **Input:** meeting transcript + Gatekeeper triage output (meeting_type, party_type)
+
+**Transcript_ref validatie:** na extractie wordt elke `transcript_ref` gevalideerd tegen het oorspronkelijke transcript via string matching. Als de quote niet voorkomt in het transcript, wordt de confidence score naar 0.0 gezet. Dit vangt hallucinaties op.
 
 **Output per extractie:**
 
@@ -636,6 +644,14 @@ Eén fase: fundering. Pipeline werkt end-to-end. Meetings verwerken via webhook,
 | `action_items` (apart)       | Aparte tabel voor actiepunten                           | Samengevoegd in `extractions` met type='action_item'.                                                                                                                                               |
 | `organization_needs` (apart) | Aparte tabel voor klantbehoeften                        | Samengevoegd in `extractions` met type='need'.                                                                                                                                                      |
 
+### RLS policies (bewuste uitzondering)
+
+CLAUDE.md schrijft RLS policies voor op elke tabel. Voor v1 is dit een bewuste uitzondering:
+- **5 users** die allemaal alles mogen zien — er is geen autorisatie-logica nodig
+- **Geen frontend** — alle toegang gaat via MCP server die met service role key draait
+- **Komt in v3** — wanneer meer users, frontend dashboard, of role-based access nodig is
+- Tot die tijd: service role key server-side only, nooit exposed naar client
+
 ### Overig buiten scope
 
 - Review-queue UI (vervallen — geen review-gate)
@@ -719,9 +735,21 @@ We willen kunnen zien waarom een score laag is en of die beoordeling juist is. D
 
 Een review-gate creëert een bottleneck: niemand reviewt consistent, waardoor 80% van de kennis onvindbaar blijft. In plaats daarvan: alles direct doorzoekbaar met bronvermelding. De gebruiker verifieert op het moment dat het ertoe doet — niet in een aparte queue. Correctie werkt als feedback loop, niet als gate.
 
+### Waarom Haiku 4.5 i.p.v. Haiku 3
+
+Haiku 4.5 scoort 73.3% op SWE-bench vs Sonnet's 77.2% — binnen 5 procentpunten bij 1/3 van de kosten en 4-5x sneller. Voor classificatie/triage is het verschil nog kleiner. De meerkosten ($1/$5 vs $0.25/$1.25 per M tokens) zijn verwaarloosbaar bij ~50 meetings/maand.
+
 ### Waarom 2-staps AI
 
-De Gatekeeper (Haiku) deed te veel in één call: classificeren + scoren + extraheren. Twee gespecialiseerde calls zijn betrouwbaarder. Haiku voor triage (goedkoop, snel), Sonnet voor extractie (nauwkeuriger). De kosten zijn verwaarloosbaar bij het verwachte volume.
+De Gatekeeper (Haiku) deed te veel in één call: classificeren + scoren + extraheren. Twee gespecialiseerde calls zijn betrouwbaarder. Haiku 4.5 voor triage (goedkoop, snel), Sonnet voor extractie (nauwkeuriger). De kosten zijn verwaarloosbaar bij het verwachte volume.
+
+### Waarom transcript_ref validatie
+
+LLMs zijn systematisch overconfident — self-reported confidence scores zijn onbetrouwbaar (onderzoek toont dat 90% confidence soms slechts 24% accuracy betekent). Transcript_ref validatie is een harde, deterministische check: als de AI zegt "Jan zei X" en die quote staat niet in het transcript, dan weten we dat het een hallucinatie is. Dit is waardevoller dan de confidence score zelf.
+
+### Waarom prompt caching en geen Batch API (v1)
+
+Prompt caching is gratis te activeren en bespaart 90% op input tokens voor herhaalde system prompts. De Batch API (50% korting, 24h verwerking) is bewust niet in v1 — meetings moeten near-real-time verwerkt worden zodat het team ze direct kan opvragen. Batch API wordt relevant bij nightly Curator/Analyst runs in v2+.
 
 ### Waarom één extractions tabel
 

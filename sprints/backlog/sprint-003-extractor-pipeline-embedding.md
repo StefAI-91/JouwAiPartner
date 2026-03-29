@@ -114,7 +114,8 @@ Projectnaam uit Extractor
 
 ## Taken
 
-- [ ] Maak Extractor agent aan: `src/lib/agents/extractor.ts` met Sonnet, ExtractionSchema, prompt per meeting_type
+- [ ] Maak Extractor agent aan: `src/lib/agents/extractor.ts` met Sonnet, ExtractionSchema, prompt per meeting_type. Schakel prompt caching in voor system prompt (identiek per meeting_type).
+- [ ] Transcript_ref validatie: na extractie, check of elke transcript_ref daadwerkelijk voorkomt in het transcript (string match). Zo niet → confidence naar 0.0.
 - [ ] Integreer Extractor in pipeline: na Gatekeeper, vóór opslag
 - [ ] Pipeline opslag aanpassen: sla extractions op in `extractions` tabel met alle velden
 - [ ] Project-koppeling: 3-tier entity resolution, resultaat in meeting_projects
@@ -130,7 +131,7 @@ Projectnaam uit Extractor
 
 - [ ] [FUNC-005] Extractor produceert decisions, action_items, needs en/of insights afhankelijk van meeting_type
 - [ ] [FUNC-006] Elke extractie heeft een confidence score tussen 0.0 en 1.0
-- [ ] [FUNC-007] Elke extractie heeft een transcript_ref die terug te herleiden is naar het transcript
+- [ ] [FUNC-007] Elke extractie heeft een transcript_ref die terug te herleiden is naar het transcript. Gevalideerd via string matching — niet-gevonden refs resulteren in confidence 0.0.
 - [ ] [FUNC-008] Een sales meeting levert needs + client_info insights, een internal_sync levert project_update insights
 - [ ] [FUNC-014..015] Projecten worden gematcht en gekoppeld via meeting_projects
 - [ ] [FUNC-017] Meetings en extractions zijn direct geembed (geen review-gate)

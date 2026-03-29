@@ -12,7 +12,7 @@
 | Sprint | Inhoud                                                   | Resultaat                                                 |
 | ------ | -------------------------------------------------------- | --------------------------------------------------------- |
 | 001    | Database: alle tabellen, indexes, search functions, cron | Schema staat, search werkt                                |
-| 002    | Gatekeeper triage (Haiku): type, score, org, deelnemers  | Meetings worden geclassificeerd en gekoppeld              |
+| 002    | Gatekeeper triage (Haiku 4.5): type, score, org, deelnemers | Meetings worden geclassificeerd en gekoppeld           |
 | 003    | Extractor (Sonnet) + pipeline opslag + Cohere embedding  | Extracties met confidence + bronvermelding, alles geembed via Cohere embed-v4 (1024-dim) |
 | 004    | MCP tools + bronvermelding + ophaal-tools                | Team kan zoeken, filteren en complete klantoverzichten opvragen met bron |
 
