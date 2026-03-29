@@ -1,118 +1,91 @@
+import { getAdminClient } from "@/lib/supabase/admin";
 import { resolveAllEntities } from "@/lib/services/entity-resolution";
 import { updateMeetingProject } from "@/lib/actions/meetings";
-import { insertDecision } from "@/lib/actions/decisions";
-import { insertActionItem } from "@/lib/actions/action-items";
-import { runImpactCheck } from "@/lib/services/impact-check";
+import { ExtractorOutput, ExtractionItem } from "@/lib/validations/extractor";
 
 /**
- * Extraction result from a future Extractor agent (sprint 5).
- * Decoupled from GatekeeperOutput since Gatekeeper now only classifies.
- */
-interface ExtractionResult {
-  entities: { people: string[]; projects: string[]; clients: string[]; topics: string[] };
-  decisions: { decision: string; made_by: string }[];
-  action_items: {
-    description: string;
-    assignee: string;
-    deadline: string | null;
-    scope: "project" | "personal";
-    project: string | null;
-  }[];
-  project_updates: { project: string; status: string; blockers: string[] }[];
-}
-
-/**
- * Save all extracted data to the database.
- * Runs entity resolution first, then inserts with correct project_id linkage.
- * NOTE: Will be called by the Extractor agent in sprint 5, not by Gatekeeper.
+ * Save all Extractor output to the unified `extractions` table.
+ * Runs entity resolution for project/client linking.
  */
 export async function saveExtractions(
-  extractionResult: ExtractionResult,
+  extractorOutput: ExtractorOutput,
   meetingId: string,
 ): Promise<{
-  decisions_saved: number;
-  action_items_saved: number;
-  pending_matches_created: number;
+  extractions_saved: number;
+  project_linked: boolean;
 }> {
-  let pendingMatchesCreated = 0;
-
-  // Step 1: Resolve all entities
+  // Step 1: Resolve entities (projects + clients) for linking
   const entityResolutions = await resolveAllEntities(
-    extractionResult.entities,
+    extractorOutput.entities,
     meetingId,
     "meetings",
   );
 
-  // Step 2: Determine meeting's primary project
+  // Step 2: Determine and set meeting's primary project
   let meetingProjectId: string | null = null;
 
-  if (extractionResult.project_updates.length > 0) {
-    meetingProjectId = entityResolutions.get(extractionResult.project_updates[0].project) || null;
+  if (extractorOutput.primary_project) {
+    meetingProjectId = entityResolutions.get(extractorOutput.primary_project) ?? null;
   }
 
-  if (!meetingProjectId && extractionResult.entities.projects.length > 0) {
-    meetingProjectId = entityResolutions.get(extractionResult.entities.projects[0]) || null;
+  // Fallback: first resolved project
+  if (!meetingProjectId && extractorOutput.entities.projects.length > 0) {
+    for (const proj of extractorOutput.entities.projects) {
+      const resolved = entityResolutions.get(proj);
+      if (resolved) {
+        meetingProjectId = resolved;
+        break;
+      }
+    }
   }
 
-  // Update meeting with project_id
   if (meetingProjectId) {
     await updateMeetingProject(meetingId, meetingProjectId);
   }
 
-  // Step 3: Save decisions + run impact check
-  for (const decision of extractionResult.decisions) {
-    await insertDecision({
-      decision: decision.decision,
-      context: null,
-      made_by: decision.made_by,
-      source_type: "meeting",
-      source_id: meetingId,
-      project_id: meetingProjectId,
-      date: new Date().toISOString(),
-      status: "active",
+  // Step 3: Build extraction rows for batch insert
+  const rows = extractorOutput.extractions.map((item: ExtractionItem) => {
+    // Resolve project_id for project-scoped items
+    let projectId: string | null = null;
+    if (item.type === "action_item" && item.project) {
+      projectId = entityResolutions.get(item.project) ?? null;
+    }
+
+    // Build metadata JSONB from flat fields
+    const metadata: Record<string, unknown> = {};
+    if (item.assignee) metadata.assignee = item.assignee;
+    if (item.deadline) metadata.deadline = item.deadline;
+    if (item.scope) metadata.scope = item.scope;
+    if (item.project) metadata.project = item.project;
+    if (item.made_by) metadata.made_by = item.made_by;
+    if (item.client) metadata.client = item.client;
+    if (item.urgency) metadata.urgency = item.urgency;
+    if (item.category) metadata.category = item.category;
+
+    return {
+      meeting_id: meetingId,
+      type: item.type,
+      content: item.content,
+      confidence: item.confidence,
+      transcript_ref: item.transcript_ref,
+      metadata,
+      project_id: projectId || meetingProjectId,
       embedding_stale: true,
-    });
+    };
+  });
 
-    // Impact check: detect conflicts with existing decisions/meetings
-    const impactResult = await runImpactCheck(decision.decision, meetingId);
-    if (impactResult.conflicts_found > 0) {
-      console.log(
-        `Impact check: ${impactResult.conflicts_found} conflicts, ` +
-          `${impactResult.suggestions_created} suggestions created`,
-      );
+  // Step 4: Batch insert all extractions
+  if (rows.length > 0) {
+    const { error } = await getAdminClient().from("extractions").insert(rows);
+
+    if (error) {
+      console.error("Failed to insert extractions:", error.message);
+      return { extractions_saved: 0, project_linked: !!meetingProjectId };
     }
-  }
-
-  // Step 4: Save action items with scope and project_id
-  // Reuse entityResolutions map instead of calling resolveProject again (avoids N+1)
-  for (const item of extractionResult.action_items) {
-    let actionProjectId: string | null = null;
-
-    if (item.scope === "project" && item.project) {
-      // Look up from already-resolved entities first
-      actionProjectId = entityResolutions.get(item.project) ?? null;
-    }
-
-    await insertActionItem({
-      description: item.description,
-      assignee: item.assignee || null,
-      due_date: item.deadline || null,
-      scope: item.scope,
-      status: "open",
-      source_type: "meeting",
-      source_id: meetingId,
-      project_id: actionProjectId || meetingProjectId,
-    });
-  }
-
-  // Count pending matches from entity resolution
-  for (const [, projectId] of entityResolutions) {
-    if (projectId === null) pendingMatchesCreated++;
   }
 
   return {
-    decisions_saved: extractionResult.decisions.length,
-    action_items_saved: extractionResult.action_items.length,
-    pending_matches_created: pendingMatchesCreated,
+    extractions_saved: rows.length,
+    project_linked: !!meetingProjectId,
   };
 }

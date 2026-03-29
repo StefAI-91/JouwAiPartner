@@ -1,7 +1,6 @@
 import { embedText } from "@/lib/embeddings";
 import { getAllProjects, matchProjectsByEmbedding } from "@/lib/queries/projects";
 import { updateProjectAliases } from "@/lib/actions/projects";
-import { insertPendingMatch } from "@/lib/actions/pending-matches";
 import { getAllOrganizations } from "@/lib/queries/organizations";
 
 interface MatchResult {
@@ -81,26 +80,6 @@ async function resolveProjectWithCache(
 }
 
 /**
- * Create a pending_matches entry for an unresolved name.
- */
-export async function createPendingMatch(
-  contentId: string,
-  contentTable: string,
-  extractedName: string,
-  suggestedMatchId?: string,
-  similarityScore?: number,
-): Promise<void> {
-  await insertPendingMatch({
-    content_id: contentId,
-    content_table: contentTable,
-    extracted_name: extractedName,
-    suggested_match_id: suggestedMatchId || null,
-    similarity_score: similarityScore || null,
-    status: "pending",
-  });
-}
-
-/**
  * Resolve all entities from a Gatekeeper output.
  * Returns a map of name -> project_id.
  * Pre-fetches all projects once to avoid N+1 queries.
@@ -121,10 +100,6 @@ export async function resolveAllEntities(
   for (const name of allNames) {
     const result = await resolveProjectWithCache(name, allProjects);
     resolutions.set(name, result.project_id);
-
-    if (!result.matched) {
-      await createPendingMatch(contentId, contentTable, name);
-    }
   }
 
   return resolutions;

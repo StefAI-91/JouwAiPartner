@@ -43,8 +43,8 @@ const layers: LayerProps[] = [
   {
     icon: Mic,
     title: "Bronnen",
-    sprint: "Sprint 4-5",
-    status: "gepland",
+    sprint: "Sprint 4",
+    status: "live",
     simpleExplanation:
       "Fireflies neemt meetings op en stuurt het transcript automatisch naar ons platform. Later komen hier ook Google Docs, Slack en Gmail bij.",
     technicalDetails: [
@@ -58,13 +58,17 @@ const layers: LayerProps[] = [
     icon: Brain,
     title: "AI Verwerking",
     sprint: "Sprint 4-5",
-    status: "gepland",
+    status: "live",
     simpleExplanation:
-      "Twee AI-agents verwerken elke meeting. De Gatekeeper classificeert (wat voor meeting is dit?), de Extractor haalt besluiten, actiepunten en inzichten eruit.",
+      "Twee AI-agents verwerken elke meeting. De Gatekeeper classificeert (wat voor meeting is dit?), de Extractor haalt besluiten, actiepunten en inzichten eruit. Daarna worden meeting en extracties direct geembed zodat ze meteen doorzoekbaar zijn.",
     technicalDetails: [
-      "Gatekeeper (Claude Haiku): classificeert meeting_type, party_type, relevance_score (0.0-1.0)",
-      "Extractor (Claude Sonnet): haalt decisions, action_items, needs, insights eruit met confidence score",
+      "Gatekeeper (Claude Haiku 4.5): classificeert meeting_type, party_type, relevance_score (0.0-1.0)",
+      "Extractor (Claude Sonnet 4.5): haalt decisions, action_items, needs, insights eruit met confidence score en transcript_ref",
+      "Transcript_ref validatie: exacte quote-check tegen transcript, confidence \u2192 0.0 bij mismatch",
+      "Meeting-type-specifieke extractie-instructies (client_call \u2192 needs, strategy \u2192 decisions, etc.)",
       "Entity resolution: koppelt genoemde organisaties/projecten aan de database (exact \u2192 alias \u2192 embedding match)",
+      "Inline embedding na pipeline: meeting + extracties direct doorzoekbaar via Cohere embed-v4",
+      "raw_fireflies JSONB: volledige audit trail van Fireflies + Gatekeeper + Extractor output",
       "Alles wordt opgeslagen \u2014 niets wordt weggegooid. Onzekere content krijgt lage confidence.",
     ],
   },
@@ -126,11 +130,11 @@ const embedSection = {
   simpleExplanation:
     "Elke tekst (meeting-samenvatting, persoonsnaam, projectnaam) wordt omgezet in een lijst van 1024 getallen \u2014 een 'embedding'. Teksten die qua betekenis op elkaar lijken, hebben vergelijkbare getallen. Zo kan het systeem zoeken op betekenis in plaats van exacte woorden.",
   technicalDetails: [
-    "Model: Cohere embed-v4.0 (1024 dimensies)",
+    "Model: Cohere embed-v4.0 via v2 API (1024 dimensies, outputDimension parameter)",
     "inputType: 'search_document' voor opslag, 'search_query' voor zoekopdrachten",
     "Batch embedding: tot 96 teksten per API call",
-    "Re-embed worker verwerkt automatisch records met embedding_stale = true",
-    "Edge Function (Deno) draait dezelfde logica voor de pg_cron scheduled job",
+    "Inline embedding: meeting + extracties worden direct na pipeline geembed",
+    "Re-embed worker als fallback voor records met embedding_stale = true",
   ],
 };
 
@@ -683,14 +687,15 @@ export default function ArchitectuurPage() {
               {
                 sprint: "Sprint 4",
                 title: "Fireflies webhook + Gatekeeper",
-                status: "gepland" as const,
-                description: "Meetings automatisch ontvangen en classificeren",
+                status: "live" as const,
+                description: "Meetings automatisch ontvangen, classificeren en opslaan",
               },
               {
                 sprint: "Sprint 5",
-                title: "Extractor + pipeline",
-                status: "gepland" as const,
-                description: "Besluiten, actiepunten en inzichten automatisch extraheren",
+                title: "Extractor + embedding pipeline",
+                status: "live" as const,
+                description:
+                  "Volledige pipeline: Gatekeeper \u2192 Extractor \u2192 opslag \u2192 embedding. 23 extracties uit 1 meeting, alles direct doorzoekbaar.",
               },
               {
                 sprint: "Sprint 6",
@@ -719,35 +724,50 @@ export default function ArchitectuurPage() {
       {/* Test results */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Test resultaten (vandaag)</CardTitle>
-          <CardDescription>Wat hebben we live getest op de preview branch?</CardDescription>
+          <CardTitle className="text-base">Test resultaten</CardTitle>
+          <CardDescription>Live getest op de preview branch</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="space-y-2">
             {[
               {
-                test: "Cohere embed-v4 embedding generatie",
-                result: "11 records geembed (8 people, 3 projects)",
+                test: "Volledige pipeline: Gatekeeper \u2192 Extractor \u2192 opslag \u2192 embedding",
+                result: "1 meeting \u2192 23 extracties \u2192 alles geembed en doorzoekbaar",
                 pass: true,
               },
               {
-                test: "Re-embed worker (/api/test/embed)",
-                result: "Verwerkt alle stale records automatisch",
+                test: "Gatekeeper classificatie (Claude Haiku 4.5)",
+                result: "meeting_type: strategy, relevance: 0.95, party_type: partner",
                 pass: true,
               },
               {
-                test: "Fireflies API connectie",
-                result: "3 echte transcripts gevonden",
+                test: "Extractor (Claude Sonnet 4.5)",
+                result: "4 decisions, 5 action_items, 4 needs, 8 insights met transcript_ref",
                 pass: true,
               },
               {
-                test: "Hybrid search (search_all_content)",
-                result: "Werkt, maar nog geen meetings om te doorzoeken",
+                test: "Cohere embed-v4 (v2 API, 1024 dim)",
+                result: "Meeting + 23 extracties + people + projects geembed",
                 pass: true,
               },
               {
-                test: "Ask pipeline (/api/ask)",
-                result: "Claude plant queries, zoekt, geeft eerlijk 'geen data' terug",
+                test: "Entity resolution (3-tier)",
+                result: "Projecten 'MVP - Effect op Maat' en 'Fleur op Zak' herkend",
+                pass: true,
+              },
+              {
+                test: "Idempotency check",
+                result: "Duplicate meetings correct overgeslagen",
+                pass: true,
+              },
+              {
+                test: "Pre-filters",
+                result: "Meetings zonder deelnemers overgeslagen",
+                pass: true,
+              },
+              {
+                test: "raw_fireflies JSONB",
+                result: "Audit trail met gatekeeper + extractor metadata opgeslagen",
                 pass: true,
               },
             ].map((item) => (
