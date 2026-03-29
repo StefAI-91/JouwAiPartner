@@ -1,7 +1,6 @@
 import { runGatekeeper } from "@/lib/agents/gatekeeper";
 import { GatekeeperOutput } from "@/lib/validations/gatekeeper";
 import { insertMeeting } from "@/lib/actions/meetings";
-import { insertContentReview } from "@/lib/actions/content-reviews";
 import { resolveOrganization } from "@/lib/services/entity-resolution";
 import { findPeopleByEmails } from "@/lib/queries/people";
 import { linkMeetingParticipants } from "@/lib/actions/meeting-participants";
@@ -14,28 +13,6 @@ interface MeetingInput {
   summary: string;
   topics: string[];
   transcript: string;
-}
-
-/**
- * Log every Gatekeeper decision for transparency and tuning.
- */
-async function logGatekeeperDecision(
-  contentId: string | null,
-  result: GatekeeperOutput,
-): Promise<void> {
-  await insertContentReview({
-    content_id: contentId || "00000000-0000-0000-0000-000000000000",
-    content_table: "meetings",
-    agent_role: "gatekeeper",
-    action: "admitted",
-    reason: result.reason,
-    metadata: {
-      relevance_score: result.relevance_score,
-      meeting_type: result.meeting_type,
-      party_type: result.party_type,
-      organization_name: result.organization_name,
-    },
-  });
 }
 
 /**
@@ -103,10 +80,7 @@ export async function processMeeting(
     meetingId = insertResult.data.id;
   }
 
-  // Step 4: Log decision for audit trail
-  await logGatekeeperDecision(meetingId, result);
-
-  // Step 5: Match participants to known people
+  // Step 4: Match participants to known people
   if (meetingId) {
     await matchParticipants(meetingId, input.participants);
   }
