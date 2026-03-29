@@ -25,13 +25,13 @@ DATA-042..049, DATA-053, FUNC-019, FUNC-027, FUNC-028
 
 ## Taken
 
-- [ ] Migratie 8: HNSW vector indexes (1024-dim)
-- [ ] Migratie 9: GIN + B-tree indexes
-- [ ] Migratie 10: search_all_content() (hybrid), match_people(), match_projects(), search_meetings_by_participant() — allemaal 1024-dim
-- [ ] Migratie 11: pg_cron schedule
-- [ ] Maak seed script `supabase/seed/seed.sql`
-- [ ] Vervang `src/lib/embeddings.ts`: OpenAI → Cohere embed-v4
-- [ ] `npm install cohere-ai && npm uninstall openai` (als openai alleen voor embeddings is)
+- [x] Migratie 8: HNSW vector indexes (1024-dim)
+- [x] Migratie 9: GIN + B-tree indexes
+- [x] Migratie 10: search_all_content() (hybrid), match_people(), match_projects(), search_meetings_by_participant() — allemaal 1024-dim
+- [x] Migratie 11: pg_cron schedule
+- [x] Maak seed script `supabase/seed/seed.sql`
+- [x] Vervang `src/lib/embeddings.ts`: OpenAI → Cohere embed-v4
+- [x] `npm install cohere-ai && npm uninstall openai` (als openai alleen voor embeddings is)
 - [ ] Voeg `COHERE_API_KEY` toe aan environment variabelen
 
 ## Testbaar
