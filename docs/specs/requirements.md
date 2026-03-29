@@ -54,13 +54,13 @@ Totaal: 82 requirements.
 | DATA-010 | Tabel organizations: created_at, updated_at TIMESTAMPTZ                                     | PRD sectie 3.2           | 001    |
 | DATA-011 | Tabel people: id UUID PK, name TEXT NOT NULL, email TEXT UNIQUE                             | PRD sectie 3.3           | 001    |
 | DATA-012 | Tabel people: team TEXT, role TEXT                                                          | PRD sectie 3.3           | 001    |
-| DATA-013 | Tabel people: embedding VECTOR(1536), embedding_stale BOOLEAN DEFAULT TRUE                  | PRD sectie 3.3           | 001    |
+| DATA-013 | Tabel people: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE                  | PRD sectie 3.3           | 001    |
 | DATA-014 | Tabel people: created_at, updated_at TIMESTAMPTZ                                            | PRD sectie 3.3           | 001    |
 | DATA-015 | Tabel projects: id UUID PK, name TEXT NOT NULL UNIQUE                                       | PRD sectie 3.4           | 001    |
 | DATA-016 | Tabel projects: aliases TEXT[] DEFAULT '{}'                                                 | PRD sectie 3.4           | 001    |
 | DATA-017 | Tabel projects: organization_id UUID FK -> organizations                                    | PRD sectie 3.4           | 001    |
 | DATA-018 | Tabel projects: status TEXT DEFAULT 'lead' (sales/delivery/overig)                          | PRD sectie 3.4           | 001    |
-| DATA-019 | Tabel projects: embedding VECTOR(1536), embedding_stale BOOLEAN DEFAULT TRUE                | PRD sectie 3.4           | 001    |
+| DATA-019 | Tabel projects: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE                | PRD sectie 3.4           | 001    |
 | DATA-020 | Tabel projects: created_at, updated_at TIMESTAMPTZ                                          | PRD sectie 3.4           | 001    |
 | DATA-021 | Tabel meetings: id UUID PK, fireflies_id TEXT UNIQUE, title TEXT NOT NULL                   | PRD sectie 3.5           | 001    |
 | DATA-022 | Tabel meetings: date TIMESTAMPTZ, participants TEXT[], summary TEXT, transcript TEXT        | PRD sectie 3.5           | 001    |
@@ -70,7 +70,7 @@ Totaal: 82 requirements.
 | DATA-026 | Tabel meetings: unmatched_organization_name TEXT                                            | PRD sectie 3.5           | 001    |
 | DATA-027 | Tabel meetings: raw_fireflies JSONB                                                         | PRD sectie 3.5           | 001    |
 | DATA-028 | Tabel meetings: relevance_score FLOAT                                                       | PRD sectie 3.5           | 001    |
-| DATA-029 | Tabel meetings: embedding VECTOR(1536), embedding_stale BOOLEAN DEFAULT TRUE                | PRD sectie 3.5           | 001    |
+| DATA-029 | Tabel meetings: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE                | PRD sectie 3.5           | 001    |
 | DATA-030 | Tabel meetings: created_at, updated_at TIMESTAMPTZ                                          | PRD sectie 3.5           | 001    |
 | DATA-031 | Tabel meeting_projects: composite PK (meeting_id, project_id), FKs met ON DELETE CASCADE    | PRD sectie 3.6           | 001    |
 | DATA-032 | Tabel meeting_participants: composite PK (meeting_id, person_id), FKs met ON DELETE CASCADE | PRD sectie 3.7           | 001    |
@@ -81,7 +81,7 @@ Totaal: 82 requirements.
 | DATA-037 | Tabel extractions: metadata JSONB DEFAULT '{}' (type-specifieke velden)                     | PRD sectie 3.8           | 001    |
 | DATA-038 | Tabel extractions: transcript_ref TEXT (bronvermelding)                                     | PRD sectie 3.8           | 001    |
 | DATA-039 | Tabel extractions: organization_id UUID FK -> organizations, project_id UUID FK -> projects | PRD sectie 3.8           | 001    |
-| DATA-040 | Tabel extractions: embedding VECTOR(1536), embedding_stale BOOLEAN DEFAULT TRUE             | PRD sectie 3.8           | 001    |
+| DATA-040 | Tabel extractions: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE             | PRD sectie 3.8           | 001    |
 | DATA-041 | Tabel extractions: created_at TIMESTAMPTZ                                                   | PRD sectie 3.8           | 001    |
 | DATA-050 | Tabel extractions: corrected_by UUID FK -> profiles, corrected_at TIMESTAMPTZ               | PRD sectie 3.8           | 001    |
 | DATA-042 | HNSW vector indexes op alle embedding-kolommen                                              | PRD sectie 8, sprint 001 | 001    |

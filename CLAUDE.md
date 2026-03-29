@@ -9,7 +9,8 @@ AI-first knowledge platform that ingests company data from multiple sources (Fir
 ## Tech Stack
 
 - **Frontend:** Next.js 16 (App Router) + React 19 + Tailwind CSS v4 (CSS-first, geen tailwind.config) + shadcn/ui (base-nova style, Lucide icons)
-- **Database:** Supabase (PostgreSQL EU-Frankfurt + pgvector, 1536-dim embeddings via OpenAI text-embedding-3-small)
+- **Database:** Supabase (PostgreSQL EU-Frankfurt + pgvector, 1024-dim embeddings via Cohere embed-v4)
+- **Embeddings:** Cohere embed-v4 (`cohere-ai` SDK, `embed-v4.0` model, 1024 dimensies, `inputType: "search_document"` voor opslag, `"search_query"` voor zoeken)
 - **AI:** Vercel AI SDK (`ai`, `@ai-sdk/anthropic`) + Claude Agent SDK. Haiku for simple tasks, Sonnet for reasoning, Opus for deep analysis.
 - **Validation:** Zod
 - **Hosting:** Vercel

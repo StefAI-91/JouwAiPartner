@@ -138,7 +138,7 @@ people
 ├── email TEXT UNIQUE
 ├── team TEXT
 ├── role TEXT
-├── embedding VECTOR(1536)
+├── embedding VECTOR(1024)
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
 ├── updated_at TIMESTAMPTZ DEFAULT now()
@@ -158,7 +158,7 @@ projects
 │   -- Sales: 'lead' | 'discovery' | 'proposal' | 'negotiation' | 'won'
 │   -- Delivery: 'kickoff' | 'in_progress' | 'review' | 'completed'
 │   -- Overig: 'on_hold' | 'lost' | 'maintenance'
-├── embedding VECTOR(1536)
+├── embedding VECTOR(1024)
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
 ├── updated_at TIMESTAMPTZ DEFAULT now()
@@ -183,7 +183,7 @@ meetings
 ├── unmatched_organization_name TEXT    -- als AI org niet kan koppelen
 ├── raw_fireflies JSONB                -- originele Fireflies response + Gatekeeper/Extractor output
 ├── relevance_score FLOAT              -- Gatekeeper score, voor ranking
-├── embedding VECTOR(1536)
+├── embedding VECTOR(1024)
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
 ├── updated_at TIMESTAMPTZ DEFAULT now()
@@ -230,7 +230,7 @@ extractions
 ├── project_id UUID FK → projects
 ├── corrected_by UUID FK → profiles    -- NULL = AI-extractie, gevuld = mens-geverifieerd
 ├── corrected_at TIMESTAMPTZ
-├── embedding VECTOR(1536)             -- direct geembed, geen wachten
+├── embedding VECTOR(1024)             -- direct geembed, geen wachten
 ├── embedding_stale BOOLEAN DEFAULT TRUE
 ├── created_at TIMESTAMPTZ DEFAULT now()
 ```
@@ -390,18 +390,41 @@ De volledige Fireflies API-response plus Gatekeeper- en Extractor-output worden 
 
 ## 7. Embedding Strategie
 
-### 7.1 Alles direct embedden
+### 7.1 Model: Cohere embed-v4
+
+| Eigenschap | Waarde |
+|---|---|
+| Model | `embed-v4.0` via `cohere-ai` SDK |
+| Dimensies | **1024** (Matryoshka — kleiner dan max 1536, snellere HNSW queries) |
+| Context window | 128K tokens (volledige transcripts passen in één call) |
+| Multilingual | 100+ talen, sterk op Nederlands (35% beter cross-lingual dan v3) |
+| Kosten | $0.12 per 1M tokens (~$0.06/maand bij verwacht volume) |
+| Batch support | Tot 96 teksten per API-call |
+
+**Waarom Cohere i.p.v. OpenAI text-embedding-3-small:**
+- Betere multilingual performance (cruciaal voor Nederlandse meetings)
+- 128K context window vs. 8K (geen afkapping van lange transcripts)
+- Hogere MTEB score (65.2 vs ~62.3)
+- Matryoshka support: 1024-dim is sneller en kleiner dan 1536, met minimaal kwaliteitsverlies
+
+**Belangrijk:** Cohere vereist een `inputType` parameter:
+- `search_document` — bij opslaan van content (meetings, extracties)
+- `search_query` — bij zoeken (MCP queries, entity resolution)
+
+**SDK:** `cohere-ai` npm package (niet via Vercel AI SDK — die ondersteunt Cohere embed-v4 nog niet).
+
+### 7.2 Alles direct embedden
 
 Er is geen review-gate. Alles wordt direct geembed na verwerking:
 
 - **Meetings** — titel, datum, samenvatting, deelnemers
 - **Extracties** — content + transcript_ref + metadata
 
-### 7.2 Meeting embedding verrijking
+### 7.3 Meeting embedding verrijking
 
 De meeting-embedding bevat naast de standaard velden ook de Extractor-output (insights: project_updates, strategy_ideas, client_info) uit `raw_fireflies`. Dit verbetert de zoekresultaten.
 
-### 7.3 Re-embed worker
+### 7.4 Re-embed worker
 
 De re-embed worker verwerkt records met `embedding_stale = true`. Draait elke 5 minuten via pg_cron.
 

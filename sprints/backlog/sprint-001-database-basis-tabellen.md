@@ -20,13 +20,13 @@ Het volledige schema wordt from scratch opgebouwd in één sprint. 8 tabellen, v
 | DATA-010 | Tabel organizations: created_at, updated_at TIMESTAMPTZ                           |
 | DATA-011 | Tabel people: id UUID PK, name TEXT NOT NULL, email TEXT UNIQUE                   |
 | DATA-012 | Tabel people: team TEXT, role TEXT                                                |
-| DATA-013 | Tabel people: embedding VECTOR(1536), embedding_stale BOOLEAN DEFAULT TRUE        |
+| DATA-013 | Tabel people: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE        |
 | DATA-014 | Tabel people: created_at, updated_at TIMESTAMPTZ                                  |
 | DATA-015 | Tabel projects: id UUID PK, name TEXT NOT NULL UNIQUE                             |
 | DATA-016 | Tabel projects: aliases TEXT[] DEFAULT '{}'                                       |
 | DATA-017 | Tabel projects: organization_id UUID FK -> organizations                          |
 | DATA-018 | Tabel projects: status TEXT DEFAULT 'lead'                                        |
-| DATA-019 | Tabel projects: embedding VECTOR(1536), embedding_stale BOOLEAN DEFAULT TRUE      |
+| DATA-019 | Tabel projects: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE      |
 | DATA-020 | Tabel projects: created_at, updated_at TIMESTAMPTZ                                |
 | DATA-021 | Tabel meetings: id UUID PK, fireflies_id TEXT UNIQUE, title TEXT NOT NULL         |
 | DATA-022 | Tabel meetings: date, participants, summary, transcript                           |
@@ -36,7 +36,7 @@ Het volledige schema wordt from scratch opgebouwd in één sprint. 8 tabellen, v
 | DATA-026 | Tabel meetings: unmatched_organization_name TEXT                                  |
 | DATA-027 | Tabel meetings: raw_fireflies JSONB                                               |
 | DATA-028 | Tabel meetings: relevance_score FLOAT                                             |
-| DATA-029 | Tabel meetings: embedding VECTOR(1536), embedding_stale BOOLEAN DEFAULT TRUE      |
+| DATA-029 | Tabel meetings: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE      |
 | DATA-030 | Tabel meetings: created_at, updated_at TIMESTAMPTZ                                |
 | DATA-031 | Tabel meeting_projects: composite PK, FKs met ON DELETE CASCADE                   |
 | DATA-032 | Tabel meeting_participants: composite PK, FKs met ON DELETE CASCADE               |
@@ -47,7 +47,7 @@ Het volledige schema wordt from scratch opgebouwd in één sprint. 8 tabellen, v
 | DATA-037 | Tabel extractions: metadata JSONB DEFAULT '{}'                                    |
 | DATA-038 | Tabel extractions: transcript_ref TEXT                                            |
 | DATA-039 | Tabel extractions: organization_id FK, project_id FK                              |
-| DATA-040 | Tabel extractions: embedding VECTOR(1536), embedding_stale BOOLEAN DEFAULT TRUE   |
+| DATA-040 | Tabel extractions: embedding VECTOR(1024), embedding_stale BOOLEAN DEFAULT TRUE   |
 | DATA-041 | Tabel extractions: created_at TIMESTAMPTZ                                         |
 | DATA-050 | Tabel extractions: corrected_by UUID FK -> profiles, corrected_at TIMESTAMPTZ     |
 | DATA-042 | HNSW vector indexes op alle embedding-kolommen                                    |
@@ -131,7 +131,7 @@ CREATE TABLE people (
   email TEXT UNIQUE,
   team TEXT,
   role TEXT,
-  embedding VECTOR(1536),
+  embedding VECTOR(1024),
   embedding_stale BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -147,7 +147,7 @@ CREATE TABLE projects (
   aliases TEXT[] DEFAULT '{}',
   organization_id UUID REFERENCES organizations(id),
   status TEXT DEFAULT 'lead',
-  embedding VECTOR(1536),
+  embedding VECTOR(1024),
   embedding_stale BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -171,7 +171,7 @@ CREATE TABLE meetings (
   unmatched_organization_name TEXT,
   raw_fireflies JSONB,
   relevance_score FLOAT,
-  embedding VECTOR(1536),
+  embedding VECTOR(1024),
   embedding_stale BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -213,7 +213,7 @@ CREATE TABLE extractions (
   project_id UUID REFERENCES projects(id),
   corrected_by UUID REFERENCES profiles(id),
   corrected_at TIMESTAMPTZ,
-  embedding VECTOR(1536),
+  embedding VECTOR(1024),
   embedding_stale BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -266,6 +266,8 @@ CREATE TABLE extractions (
 - [ ] Voer alle migraties uit op Supabase en verifieer
 - [ ] Regenereer Supabase TypeScript types (`supabase gen types typescript`)
 - [ ] Maak seed script `supabase/seed/seed.sql` met initiële organizations, people en projects (idempotent met ON CONFLICT DO UPDATE)
+- [ ] Installeer `cohere-ai` SDK (`npm install cohere-ai`) en verwijder `openai` als het alleen voor embeddings gebruikt wordt
+- [ ] Maak embedding utility `src/lib/utils/embed.ts` met Cohere embed-v4 wrapper (model `embed-v4.0`, 1024 dimensies, `inputType` parameter voor document vs query)
 
 ## Acceptatiecriteria
 
@@ -288,3 +290,5 @@ CREATE TABLE extractions (
 - `supabase/migrations/*` (alle bestaande verwijderd, 5 nieuwe aangemaakt)
 - `supabase/seed/seed.sql` (nieuw)
 - `src/lib/types/database.ts` (geregenereerd)
+- `src/lib/utils/embed.ts` (nieuw — Cohere embed-v4 wrapper)
+- `package.json` (`cohere-ai` toevoegen)
