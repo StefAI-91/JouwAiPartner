@@ -37,6 +37,8 @@ Totaal: 82 requirements.
 | FUNC-026 | Pre-filter: meetings met < 2 deelnemers worden overgeslagen (solo-recording is geen gesprek) | PRD sectie 5   | 002    |
 | FUNC-027 | Seed script met initiële organizations, people en projects (idempotent)                      | PRD sectie 10  | 001    |
 | FUNC-028 | Supabase TypeScript types regenereren na migraties                                           | PRD sectie 10  | 001    |
+| FUNC-029 | MCP get_organization_overview retourneert compleet klantoverzicht via SQL joins               | PRD sectie 8.3 | 004    |
+| FUNC-030 | MCP list_meetings filtert op organization, project, datum, type met pagination               | PRD sectie 8.3 | 004    |
 
 ## Datamodel eisen
 
@@ -116,6 +118,8 @@ Totaal: 82 requirements.
 | MCP-004 | get_action_items filtert extractions op type='action_item' met metadata                               | PRD sectie 7.3 | 004    |
 | MCP-005 | get_meeting_summary bevat meeting_type, party_type, organization, extractions                         | PRD sectie 8.3 | 004    |
 | MCP-006 | correct_extraction overschrijft content/metadata, zet corrected_by/corrected_at, embedding_stale=true | PRD sectie 9   | 004    |
+| MCP-007 | get_organization_overview retourneert meetings, extracties, projecten, people via SQL joins            | PRD sectie 8.3 | 004    |
+| MCP-008 | list_meetings filtert op organization, project, date_from, date_to, meeting_type met pagination       | PRD sectie 8.3 | 004    |
 
 ## Business rules
 

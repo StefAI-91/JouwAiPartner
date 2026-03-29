@@ -481,11 +481,30 @@ Bron: Meeting "Discovery call Acme Corp" — 15 maart 2026
 
 ### 8.3 MCP tools
 
-- `search_knowledge` — zoekt over meetings + extractions, retourneert altijd bronvermelding
+**Zoeken:**
+
+- `search_knowledge` — hybrid search (vector + full-text) over meetings + extractions, retourneert altijd bronvermelding
 - `get_decisions` — filtert extractions op type='decision', inclusief transcript_ref
 - `get_action_items` — filtert extractions op type='action_item', inclusief metadata (assignee, due_date, status)
+
+**Ophalen:**
+
 - `get_meeting_summary` — meeting detail met meeting_type, party_type, organization, extractions
+- `get_organization_overview` — compleet overzicht van een organisatie: alle meetings, extracties, projecten en people, gesorteerd op datum. Geen vector search — directe SQL joins via organization_id. Bedoeld voor vragen als "geef me alles over klant X"
+- `list_meetings` — meetings filteren op organization, project, date_from, date_to, meeting_type, party_type, met pagination. Geen vector search — directe SQL filters. Bedoeld voor temporele vragen als "wanneer hebben we laatst met klant Y gesproken?"
+
+**Muteren:**
+
 - `correct_extraction` — corrigeer een extractie: overschrijf content/metadata, zet corrected_by/corrected_at, embedding_stale=true
+
+### 8.4 Waarom ophaal-tools naast zoek-tools
+
+`search_knowledge` vindt content via semantische + keyword matching, maar heeft twee beperkingen:
+
+1. **Limiet op resultaten** — bij veel meetings over dezelfde klant mis je data
+2. **Geen completheidsgarantie** — similarity search vindt de meest relevante resultaten, niet alle resultaten
+
+Voor use cases als "maak een PRD op basis van alle klantgesprekken" of "wanneer spraken we klant X voor het laatst" heb je geen zoekresultaten nodig maar een **compleet overzicht**. `get_organization_overview` en `list_meetings` leveren dat via directe SQL queries — sneller, compleet, en zonder AI-kosten.
 
 ---
 
