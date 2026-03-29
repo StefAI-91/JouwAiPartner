@@ -5,9 +5,9 @@ export const ExtractionItemSchema = z.object({
   content: z.string().describe("The extracted content in Dutch, concise and clear"),
   confidence: z
     .number()
-    .min(0)
-    .max(1)
-    .describe("Confidence score 0.0–1.0. Set to 0.0 if transcript_ref could not be verified."),
+    .describe(
+      "Confidence score 0.0–1.0. Must be between 0 and 1. Set to 0.0 if transcript_ref could not be verified.",
+    ),
   transcript_ref: z
     .string()
     .nullable()

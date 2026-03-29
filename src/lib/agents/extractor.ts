@@ -99,8 +99,11 @@ export async function runExtractor(
     ],
   });
 
-  // Post-process: validate transcript_ref against actual transcript
+  // Post-process: validate transcript_ref + clamp confidence
   for (const extraction of object.extractions) {
+    // Clamp confidence to 0.0–1.0 (Anthropic API doesn't support min/max in schema)
+    extraction.confidence = Math.max(0, Math.min(1, extraction.confidence));
+
     if (extraction.transcript_ref) {
       const refLower = extraction.transcript_ref.toLowerCase();
       const transcriptLower = transcript.toLowerCase();
