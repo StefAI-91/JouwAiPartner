@@ -13,6 +13,13 @@ import {
   Mic,
   ArrowDown,
   Layers,
+  Wrench,
+  Building2,
+  FolderKanban,
+  Users,
+  MessageSquare,
+  CheckCircle2,
+  ListChecks,
   type LucideIcon,
 } from "lucide-react";
 
@@ -126,6 +133,138 @@ const embedSection = {
     "Edge Function (Deno) draait dezelfde logica voor de pg_cron scheduled job",
   ],
 };
+
+// ---------------------------------------------------------------------------
+// MCP Tools
+// ---------------------------------------------------------------------------
+interface ToolInfo {
+  icon: LucideIcon;
+  name: string;
+  description: string;
+  simpleExplanation: string;
+  parameters: { name: string; description: string; required: boolean }[];
+  exampleQuestions: string[];
+}
+
+const mcpTools: ToolInfo[] = [
+  {
+    icon: Search,
+    name: "search_knowledge",
+    description: "Semantisch zoeken over alle content",
+    simpleExplanation:
+      "Zoekt door alle meetings en extracties op basis van betekenis. Combineert twee methoden: vector search (begrijpt de betekenis) en full-text search (vindt exacte woorden). De resultaten worden gefuseerd via Reciprocal Rank Fusion zodat je altijd de meest relevante resultaten krijgt.",
+    parameters: [
+      { name: "query", description: "Je zoekvraag in gewone taal", required: true },
+      { name: "limit", description: "Max aantal resultaten (standaard 10)", required: false },
+    ],
+    exampleQuestions: [
+      "Wat weten we over het Ordus project?",
+      "Zijn er afspraken gemaakt over het budget?",
+      "Wat is er besproken over de planning van Fleur op zak?",
+    ],
+  },
+  {
+    icon: MessageSquare,
+    name: "get_meeting_summary",
+    description: "Meeting detail met alle extracties",
+    simpleExplanation:
+      "Haalt alle informatie op over een specifieke meeting: samenvatting, deelnemers, type meeting, organisatie, en alle extracties (besluiten, actiepunten, inzichten) die eruit zijn gehaald. Je kunt zoeken op meeting ID of op titel.",
+    parameters: [
+      { name: "meeting_id", description: "UUID van de meeting", required: false },
+      { name: "title_search", description: "Zoek op titel (deels matchen)", required: false },
+    ],
+    exampleQuestions: [
+      "Vat de kick-off meeting met Effect op Maat samen",
+      "Wat is er besproken in de meeting met het AI team?",
+    ],
+  },
+  {
+    icon: CheckCircle2,
+    name: "get_decisions",
+    description: "Besluiten uit meetings ophalen",
+    simpleExplanation:
+      "Haalt alle besluiten op die uit meetings zijn geextraheerd. Elk besluit toont de confidence score (hoe zeker de AI is), de bron-meeting, en eventueel een citaat uit het transcript.",
+    parameters: [
+      { name: "project", description: "Filter op projectnaam", required: false },
+      { name: "date_from", description: "Vanaf datum (ISO formaat)", required: false },
+      { name: "date_to", description: "Tot datum (ISO formaat)", required: false },
+      { name: "limit", description: "Max resultaten (standaard 20)", required: false },
+    ],
+    exampleQuestions: [
+      "Welke besluiten zijn er genomen over Ordus?",
+      "Wat is er deze week besloten?",
+      "Toon alle besluiten van de afgelopen maand",
+    ],
+  },
+  {
+    icon: ListChecks,
+    name: "get_action_items",
+    description: "Actiepunten uit meetings ophalen",
+    simpleExplanation:
+      "Haalt alle actiepunten op die uit meetings zijn geextraheerd. Je kunt filteren op persoon (wie moet het doen) of op project.",
+    parameters: [
+      { name: "person", description: "Filter op naam (deels matchen in inhoud)", required: false },
+      { name: "project", description: "Filter op projectnaam", required: false },
+      { name: "limit", description: "Max resultaten (standaard 20)", required: false },
+    ],
+    exampleQuestions: [
+      "Welke actiepunten staan er open voor Stef?",
+      "Wat moet er nog gebeuren voor het Ordus project?",
+      "Toon alle actiepunten",
+    ],
+  },
+  {
+    icon: Building2,
+    name: "get_organizations",
+    description: "Organisaties opzoeken",
+    simpleExplanation:
+      "Zoekt door alle organisaties in het systeem: klanten, partners, leveranciers. Je kunt filteren op type (client, partner, supplier) of status (active, prospect, inactive).",
+    parameters: [
+      { name: "search", description: "Zoek op naam (deels matchen)", required: false },
+      { name: "type", description: "client, partner, supplier, of other", required: false },
+      { name: "status", description: "prospect, active, of inactive", required: false },
+    ],
+    exampleQuestions: [
+      "Welke klanten hebben we?",
+      "Wat weten we over Ordus als organisatie?",
+      "Toon alle actieve partners",
+    ],
+  },
+  {
+    icon: FolderKanban,
+    name: "get_projects",
+    description: "Projecten opzoeken",
+    simpleExplanation:
+      "Zoekt door alle projecten met hun gekoppelde organisatie. Filter op naam, organisatie of status (lead, active, paused, completed, cancelled).",
+    parameters: [
+      { name: "search", description: "Zoek op projectnaam (deels matchen)", required: false },
+      { name: "organization", description: "Filter op organisatienaam", required: false },
+      { name: "status", description: "lead, active, paused, completed, of cancelled", required: false },
+    ],
+    exampleQuestions: [
+      "Welke projecten zijn er actief?",
+      "Welke projecten lopen er voor Ordus?",
+      "Toon alle interne projecten",
+    ],
+  },
+  {
+    icon: Users,
+    name: "get_people",
+    description: "Mensen opzoeken",
+    simpleExplanation:
+      "Zoekt door alle mensen in het systeem: teamleden, klanten, partners. Filter op naam, team of rol.",
+    parameters: [
+      { name: "search", description: "Zoek op naam (deels matchen)", required: false },
+      { name: "team", description: "Filter op team (engineering, leadership, etc.)", required: false },
+      { name: "role", description: "Filter op rol (deels matchen)", required: false },
+    ],
+    exampleQuestions: [
+      "Wie werkt er bij Flowwijs?",
+      "Wie zit er in het engineering team?",
+      "Toon alle mede-eigenaren",
+    ],
+  },
+];
 
 const seedSection = {
   simpleExplanation:
@@ -305,6 +444,145 @@ export default function ArchitectuurPage() {
         </CardContent>
       </Card>
 
+      {/* MCP Tools */}
+      <div>
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+            <Wrench className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">MCP Tools</h2>
+            <p className="text-xs text-muted-foreground">
+              7 tools beschikbaar via het Model Context Protocol
+            </p>
+          </div>
+        </div>
+
+        {/* What is MCP */}
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle className="text-base">Wat is MCP?</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm leading-relaxed text-foreground">
+              MCP (Model Context Protocol) is een standaard waarmee AI-assistenten zoals Claude
+              tools kunnen gebruiken. Onze MCP server draait op Vercel en geeft Claude directe
+              toegang tot jullie kennisbasis. Claude kan zelf beslissen welke tool het beste past
+              bij je vraag.
+            </p>
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">Hoe werkt het?</p>
+              <ol className="space-y-1 text-xs text-muted-foreground">
+                <li>1. Je stelt een vraag aan Claude</li>
+                <li>2. Claude kiest de juiste tool (bijv. <code className="rounded bg-muted px-1 font-mono text-[11px]">search_knowledge</code> of <code className="rounded bg-muted px-1 font-mono text-[11px]">get_projects</code>)</li>
+                <li>3. De tool bevraagt de database en stuurt resultaten terug</li>
+                <li>4. Claude formuleert een antwoord op basis van de resultaten</li>
+              </ol>
+            </div>
+            <Accordion>
+              <AccordionItem>
+                <AccordionTrigger className="py-2 text-xs text-muted-foreground hover:no-underline">
+                  Hoe koppel je de MCP server?
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">In Claude.ai (web)</p>
+                      <ol className="space-y-0.5 text-xs text-muted-foreground">
+                        <li>1. Ga naar Claude.ai &rarr; Settings &rarr; Integrations</li>
+                        <li>2. Klik &quot;Add MCP Server&quot;</li>
+                        <li>3. Vul de URL in: <code className="rounded bg-muted px-1 font-mono text-[11px]">[jouw-vercel-url]/api/mcp</code></li>
+                        <li>4. Klaar! Claude kan nu je kennisbasis bevragen</li>
+                      </ol>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-muted-foreground">In Claude Code (CLI)</p>
+                      <p className="text-xs text-muted-foreground">
+                        Voeg toe aan <code className="rounded bg-muted px-1 font-mono text-[11px]">.claude.json</code>:
+                      </p>
+                      <pre className="mt-1 rounded-lg bg-muted p-2 font-mono text-[11px] text-muted-foreground">
+{`{
+  "mcpServers": {
+    "kennisbasis": {
+      "type": "url",
+      "url": "[jouw-vercel-url]/api/mcp"
+    }
+  }
+}`}
+                      </pre>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* Tool cards */}
+        <div className="space-y-3">
+          {mcpTools.map((tool) => {
+            const ToolIcon = tool.icon;
+            return (
+              <Card key={tool.name}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <ToolIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <code className="font-mono text-sm font-semibold">{tool.name}</code>
+                        <Badge variant="default">Live</Badge>
+                      </div>
+                      <CardDescription className="text-xs">{tool.description}</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm leading-relaxed text-foreground">
+                    {tool.simpleExplanation}
+                  </p>
+
+                  {/* Parameters */}
+                  <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">Parameters</p>
+                    <div className="space-y-1">
+                      {tool.parameters.map((param) => (
+                        <div key={param.name} className="flex items-start gap-2 text-xs">
+                          <code className="mt-0.5 shrink-0 rounded bg-muted px-1 py-0.5 font-mono text-[11px]">
+                            {param.name}
+                          </code>
+                          <span className="text-muted-foreground">
+                            {param.description}
+                            {param.required && (
+                              <span className="ml-1 text-primary">(verplicht)</span>
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Example questions */}
+                  <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                      Voorbeeldvragen voor Claude
+                    </p>
+                    <ul className="space-y-0.5">
+                      {tool.exampleQuestions.map((q) => (
+                        <li key={q} className="text-xs italic text-muted-foreground">
+                          &quot;{q}&quot;
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Seed data */}
       <Card>
         <CardHeader>
@@ -344,7 +622,7 @@ export default function ArchitectuurPage() {
             {[
               { sprint: "Sprint 1", title: "Database tabellen", status: "live" as const, description: "Alle tabellen, relaties en triggers aangemaakt" },
               { sprint: "Sprint 2", title: "Indexes, zoeken en embeddings", status: "live" as const, description: "Vector + full-text search, Cohere embed-v4, seed data" },
-              { sprint: "Sprint 3", title: "MCP Server", status: "gepland" as const, description: "Kennisbasis beschikbaar maken voor elk LLM-client (Claude, ChatGPT, etc.)" },
+              { sprint: "Sprint 3", title: "MCP Server + Tools", status: "live" as const, description: "7 tools: search, meetings, besluiten, actiepunten, organisaties, projecten, mensen" },
               { sprint: "Sprint 4", title: "Fireflies webhook + Gatekeeper", status: "gepland" as const, description: "Meetings automatisch ontvangen en classificeren" },
               { sprint: "Sprint 5", title: "Extractor + pipeline", status: "gepland" as const, description: "Besluiten, actiepunten en inzichten automatisch extraheren" },
               { sprint: "Sprint 6", title: "MCP tools uitbreiden", status: "gepland" as const, description: "Gerichte zoek-tools per domein (mensen, projecten, tijdlijn)" },
