@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, MessageSquare, FolderKanban, Users, HelpCircle } from "lucide-react";
+import { Home, MessageSquare, FolderKanban, Users, HelpCircle, Layers } from "lucide-react";
 
 interface NavItem {
   href: string;
@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { href: "/meetings", label: "Meetings", icon: MessageSquare, disabled: true },
   { href: "/projects", label: "Projecten", icon: FolderKanban, disabled: true },
   { href: "/people", label: "Mensen", icon: Users, disabled: true },
+  { href: "/architectuur", label: "Architectuur", icon: Layers },
   { href: "/help", label: "Help", icon: HelpCircle },
 ];
 
