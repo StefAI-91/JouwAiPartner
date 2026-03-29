@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
       const chunks = chunkTranscript(transcript.sentences);
       const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");
 
-      const { result, meetingId } = await processMeeting({
+      const pipelineResult = await processMeeting({
         fireflies_id: item.id,
         title: transcript.title,
         date: transcript.date,
@@ -105,15 +105,22 @@ export async function POST(req: NextRequest) {
         summary: transcript.summary?.notes ?? "",
         topics: transcript.summary?.topics_discussed ?? [],
         transcript: chunkedTranscript,
+        raw_fireflies: {
+          fireflies_id: item.id,
+          title: transcript.title,
+          date: transcript.date,
+          participants: transcript.participants,
+          summary: transcript.summary,
+        },
       });
 
       results.push({
         id: item.id,
         title: transcript.title,
-        status: meetingId ? "imported" : "failed",
-        reason: meetingId ? undefined : "insert_failed",
-        relevance_score: result.relevance_score,
-        meeting_type: result.meeting_type,
+        status: pipelineResult.meetingId ? "imported" : "failed",
+        reason: pipelineResult.meetingId ? undefined : "insert_failed",
+        relevance_score: pipelineResult.gatekeeper.relevance_score,
+        meeting_type: pipelineResult.gatekeeper.meeting_type,
       });
     } catch (err) {
       results.push({

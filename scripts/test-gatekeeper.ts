@@ -57,7 +57,7 @@ async function main() {
   console.log(`\nVolledige pipeline draait (Gatekeeper + DB opslag)...\n`);
   const startTime = Date.now();
 
-  const { result, meetingId } = await processMeeting({
+  const pipelineResult = await processMeeting({
     fireflies_id: full.id,
     title: full.title,
     date: full.date,
@@ -71,14 +71,16 @@ async function main() {
 
   console.log(`Klaar in ${duration}s\n`);
   console.log("=== RESULTAAT ===\n");
-  console.log(`Score: ${result.relevance_score}`);
-  console.log(`Meeting type: ${result.meeting_type}`);
-  console.log(`Party type: ${result.party_type}`);
-  console.log(`Organisatie: ${result.organization_name ?? "(intern)"}`);
-  console.log(`Reden: ${result.reason}`);
+  console.log(`Score: ${pipelineResult.gatekeeper.relevance_score}`);
+  console.log(`Meeting type: ${pipelineResult.gatekeeper.meeting_type}`);
+  console.log(`Party type: ${pipelineResult.gatekeeper.party_type}`);
+  console.log(`Organisatie: ${pipelineResult.gatekeeper.organization_name ?? "(intern)"}`);
+  console.log(`Reden: ${pipelineResult.gatekeeper.reason}`);
+  console.log(`Extracties: ${pipelineResult.extractions_saved}`);
+  console.log(`Embedded: ${pipelineResult.embedded}`);
 
-  if (meetingId) {
-    console.log(`\nMeeting opgeslagen in database met ID: ${meetingId}`);
+  if (pipelineResult.meetingId) {
+    console.log(`\nMeeting opgeslagen in database met ID: ${pipelineResult.meetingId}`);
   } else {
     console.log(`\nMeeting NIET opgeslagen (insert error)`);
   }

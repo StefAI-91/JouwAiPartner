@@ -14,6 +14,7 @@ export async function insertMeeting(meeting: {
   relevance_score: number;
   organization_id: string | null;
   unmatched_organization_name: string | null;
+  raw_fireflies?: Record<string, unknown> | null;
   embedding_stale: boolean;
 }): Promise<{ success: true; data: { id: string } } | { error: string }> {
   const { data, error } = await getAdminClient()
