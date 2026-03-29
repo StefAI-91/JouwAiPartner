@@ -72,15 +72,15 @@ async function main() {
   console.log(`Klaar in ${duration}s\n`);
   console.log("=== RESULTAAT ===\n");
   console.log(`Score: ${result.relevance_score}`);
-  console.log(`Actie: ${result.action}`);
+  console.log(`Meeting type: ${result.meeting_type}`);
+  console.log(`Party type: ${result.party_type}`);
+  console.log(`Organisatie: ${result.organization_name ?? "(intern)"}`);
   console.log(`Reden: ${result.reason}`);
 
   if (meetingId) {
     console.log(`\nMeeting opgeslagen in database met ID: ${meetingId}`);
-    console.log(`Besluiten opgeslagen: ${result.decisions.length}`);
-    console.log(`Actiepunten opgeslagen: ${result.action_items.length}`);
   } else {
-    console.log(`\nMeeting NIET opgeslagen (actie: ${result.action})`);
+    console.log(`\nMeeting NIET opgeslagen (insert error)`);
   }
 }
 

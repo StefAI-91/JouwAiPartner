@@ -8,17 +8,12 @@ export async function insertMeeting(meeting: {
   date: string;
   participants: string[];
   summary: string;
-  action_items: {
-    description: string;
-    assignee: string;
-    deadline: string | null;
-    scope: string;
-    project: string | null;
-  }[];
   transcript: string;
+  meeting_type: string;
+  party_type: string;
   relevance_score: number;
-  status: string;
-  category: string[];
+  organization_id: string | null;
+  unmatched_organization_name: string | null;
   embedding_stale: boolean;
 }): Promise<{ success: true; data: { id: string } } | { error: string }> {
   const { data, error } = await getAdminClient()

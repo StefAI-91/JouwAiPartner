@@ -1,4 +1,3 @@
-import { GatekeeperOutput } from "@/lib/validations/gatekeeper";
 import { resolveAllEntities } from "@/lib/services/entity-resolution";
 import { updateMeetingProject } from "@/lib/actions/meetings";
 import { insertDecision } from "@/lib/actions/decisions";
@@ -6,11 +5,29 @@ import { insertActionItem } from "@/lib/actions/action-items";
 import { runImpactCheck } from "@/lib/services/impact-check";
 
 /**
- * Save all extracted data from the Gatekeeper output to the database.
+ * Extraction result from a future Extractor agent (sprint 5).
+ * Decoupled from GatekeeperOutput since Gatekeeper now only classifies.
+ */
+interface ExtractionResult {
+  entities: { people: string[]; projects: string[]; clients: string[]; topics: string[] };
+  decisions: { decision: string; made_by: string }[];
+  action_items: {
+    description: string;
+    assignee: string;
+    deadline: string | null;
+    scope: "project" | "personal";
+    project: string | null;
+  }[];
+  project_updates: { project: string; status: string; blockers: string[] }[];
+}
+
+/**
+ * Save all extracted data to the database.
  * Runs entity resolution first, then inserts with correct project_id linkage.
+ * NOTE: Will be called by the Extractor agent in sprint 5, not by Gatekeeper.
  */
 export async function saveExtractions(
-  gatekeeperResult: GatekeeperOutput,
+  extractionResult: ExtractionResult,
   meetingId: string,
 ): Promise<{
   decisions_saved: number;
@@ -21,7 +38,7 @@ export async function saveExtractions(
 
   // Step 1: Resolve all entities
   const entityResolutions = await resolveAllEntities(
-    gatekeeperResult.entities,
+    extractionResult.entities,
     meetingId,
     "meetings",
   );
@@ -29,12 +46,12 @@ export async function saveExtractions(
   // Step 2: Determine meeting's primary project
   let meetingProjectId: string | null = null;
 
-  if (gatekeeperResult.project_updates.length > 0) {
-    meetingProjectId = entityResolutions.get(gatekeeperResult.project_updates[0].project) || null;
+  if (extractionResult.project_updates.length > 0) {
+    meetingProjectId = entityResolutions.get(extractionResult.project_updates[0].project) || null;
   }
 
-  if (!meetingProjectId && gatekeeperResult.entities.projects.length > 0) {
-    meetingProjectId = entityResolutions.get(gatekeeperResult.entities.projects[0]) || null;
+  if (!meetingProjectId && extractionResult.entities.projects.length > 0) {
+    meetingProjectId = entityResolutions.get(extractionResult.entities.projects[0]) || null;
   }
 
   // Update meeting with project_id
@@ -43,7 +60,7 @@ export async function saveExtractions(
   }
 
   // Step 3: Save decisions + run impact check
-  for (const decision of gatekeeperResult.decisions) {
+  for (const decision of extractionResult.decisions) {
     await insertDecision({
       decision: decision.decision,
       context: null,
@@ -68,7 +85,7 @@ export async function saveExtractions(
 
   // Step 4: Save action items with scope and project_id
   // Reuse entityResolutions map instead of calling resolveProject again (avoids N+1)
-  for (const item of gatekeeperResult.action_items) {
+  for (const item of extractionResult.action_items) {
     let actionProjectId: string | null = null;
 
     if (item.scope === "project" && item.project) {
@@ -94,8 +111,8 @@ export async function saveExtractions(
   }
 
   return {
-    decisions_saved: gatekeeperResult.decisions.length,
-    action_items_saved: gatekeeperResult.action_items.length,
+    decisions_saved: extractionResult.decisions.length,
+    action_items_saved: extractionResult.action_items.length,
     pending_matches_created: pendingMatchesCreated,
   };
 }

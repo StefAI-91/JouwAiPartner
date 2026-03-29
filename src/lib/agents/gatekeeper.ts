@@ -4,32 +4,31 @@ import { GatekeeperSchema, GatekeeperOutput } from "@/lib/validations/gatekeeper
 
 export type { GatekeeperOutput };
 
-const SYSTEM_PROMPT = `Je ontvangt meeting notes en metadata. Beoordeel en extraheer het volgende.
-ALLE output moet in het Nederlands zijn.
+const SYSTEM_PROMPT = `Je bent de Gatekeeper: je classificeert meetings. Je extraheert NIETS.
+ALLE output moet in het Nederlands zijn (behalve enum-waarden).
 
-BEOORDELING:
-- Relevantie-score (0.0 - 1.0)
-- Actie: pass (≥0.6) of reject (<0.6)
+Je bepaalt:
+1. RELEVANTIE-SCORE (0.0–1.0): hoe waardevol is deze meeting voor het bedrijf?
+   - 0.0–0.3: ruis (small talk, testgesprekken)
+   - 0.4–0.5: beperkt relevant (algemene info)
+   - 0.6–0.8: relevant (concrete inhoud, updates)
+   - 0.9–1.0: kritiek (besluiten, strategie, klantafspraken)
 
-EXTRACTIE:
-1. BESLUITEN — wat is er concreet besloten? Door wie?
-2. ACTIEPUNTEN — schrijf duidelijke, concrete actiepunten op basis van de notes.
-   - Formuleer als: "[Persoon] moet [concrete actie] [deadline indien genoemd]"
-   - Koppel aan een project als het projectgerelateerd is
-   - Markeer als "persoonlijk" als het niet bij een project hoort
-3. PROJECTUPDATES — welke projecten zijn besproken, wat is de status?
-4. STRATEGIE & IDEEËN — nieuwe richtingen of brainstorms?
-5. KLANTINFO — wat is er gezegd over of namens klanten?
+2. MEETING TYPE: wat voor soort meeting is dit?
+   - standup, sprint_review, strategy, client_call, internal, one_on_one, other
 
-ENTITEITEN:
-- Personen die worden genoemd
-- Projecten die worden besproken
-- Klanten die ter sprake komen
-- Onderwerpen/thema's
+3. PARTY TYPE: met wie was de meeting?
+   - client: meeting met een klant
+   - partner: meeting met een partner/leverancier
+   - internal: alleen intern team
+   - other: overig
 
-Wees streng bij de beoordeling: alleen inhoud met duidelijke bedrijfswaarde krijgt score >= 0.6.
-Small talk, greetings en irrelevante gesprekken krijgen een lage score.
-Als je twijfelt over extractie, laat het veld leeg in plaats van te gokken.`;
+4. ORGANIZATION NAME: welke externe organisatie was betrokken?
+   - Geef de organisatienaam als het een client/partner meeting is
+   - null als het een interne meeting is
+
+BELANGRIJK: Je doet GEEN extractie van besluiten, actiepunten of andere inhoud.
+Je classificeert alleen.`;
 
 export async function runGatekeeper(
   notes: string,
@@ -55,8 +54,19 @@ export async function runGatekeeper(
   const { object } = await generateObject({
     model: anthropic("claude-haiku-4-5-20251001"),
     schema: GatekeeperSchema,
-    system: SYSTEM_PROMPT,
-    prompt: `${contextPrefix}${topicsSection}\n\nMeeting Notes:\n${notes}`,
+    messages: [
+      {
+        role: "system",
+        content: SYSTEM_PROMPT,
+        providerOptions: {
+          anthropic: { cacheControl: { type: "ephemeral" } },
+        },
+      },
+      {
+        role: "user",
+        content: `${contextPrefix}${topicsSection}\n\nMeeting Notes:\n${notes}`,
+      },
+    ],
   });
 
   return object;
