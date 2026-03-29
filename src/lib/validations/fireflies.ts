@@ -10,5 +10,5 @@ export function isValidDuration(sentences: { start_time: number; end_time: numbe
 }
 
 export function hasParticipants(participants: string[] | undefined): boolean {
-  return !!participants && participants.length > 0;
+  return !!participants && participants.length >= 2;
 }

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ skipped: true });
   }
 
-  // Idempotency — skip if already ingested
+  // Idempotency — skip if already ingested (novelty check on fireflies_id)
   const existing = await getMeetingByFirefliesId(meetingId);
   if (existing) {
     return NextResponse.json({ skipped: true, reason: "duplicate" });
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   const chunks = chunkTranscript(transcript.sentences);
   const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");
 
-  // Run through Gatekeeper pipeline (score + extract + novelty check)
+  // Run through Gatekeeper pipeline (classify + store + org resolution + participant matching)
   const { result, meetingId: insertedId } = await processMeeting({
     fireflies_id: meetingId,
     title: transcript.title,
@@ -75,9 +75,10 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({
-    success: result.action === "pass",
+    success: !!insertedId,
     meetingId: insertedId,
-    action: result.action,
+    meeting_type: result.meeting_type,
+    party_type: result.party_type,
     relevance_score: result.relevance_score,
   });
 }

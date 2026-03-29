@@ -17,7 +17,7 @@ interface IngestResult {
   status: "imported" | "skipped" | "failed";
   reason?: string;
   relevance_score?: number;
-  action?: string;
+  meeting_type?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const results: IngestResult[] = [];
 
   for (const item of transcripts) {
-    // Idempotency — skip already imported
+    // Idempotency — skip already imported (novelty check on fireflies_id)
     const existing = await getMeetingByFirefliesId(item.id);
     if (existing) {
       results.push({
@@ -97,7 +97,6 @@ export async function POST(req: NextRequest) {
       const chunks = chunkTranscript(transcript.sentences);
       const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { result, meetingId } = await processMeeting({
         fireflies_id: item.id,
         title: transcript.title,
@@ -111,10 +110,10 @@ export async function POST(req: NextRequest) {
       results.push({
         id: item.id,
         title: transcript.title,
-        status: result.action === "pass" ? "imported" : "skipped",
-        reason: result.action === "reject" ? result.reason : undefined,
+        status: meetingId ? "imported" : "failed",
+        reason: meetingId ? undefined : "insert_failed",
         relevance_score: result.relevance_score,
-        action: result.action,
+        meeting_type: result.meeting_type,
       });
     } catch (err) {
       results.push({
@@ -130,7 +129,7 @@ export async function POST(req: NextRequest) {
   const skipped = results.filter((r) => r.status === "skipped").length;
   const failed = results.filter((r) => r.status === "failed").length;
 
-  // Generate embeddings for all stale rows (meetings + extracted decisions)
+  // Generate embeddings for all stale rows
   let embedResult = null;
   if (imported > 0) {
     embedResult = await runReEmbedWorker();
