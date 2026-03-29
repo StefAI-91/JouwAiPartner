@@ -23,7 +23,7 @@ async function checkForConflicts(
   sourceId: string,
   threshold: number = 0.8,
 ): Promise<ConflictResult> {
-  const embedding = await embedText(decisionText);
+  const embedding = await embedText(decisionText, "search_query");
   const conflicts: Conflict[] = [];
 
   // Search existing decisions

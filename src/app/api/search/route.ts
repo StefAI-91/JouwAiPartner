@@ -16,10 +16,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "query is required" }, { status: 400 });
   }
 
-  const embedding = await embedText(query);
+  const embedding = await embedText(query, "search_query");
 
   const { data, error } = await getSupabase().rpc("search_all_content", {
     query_embedding: embedding,
+    query_text: query,
     match_threshold: 0.3,
     match_count: 10,
   });

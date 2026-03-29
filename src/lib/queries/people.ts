@@ -9,19 +9,3 @@ export async function getStalePeople(limit: number = 50) {
   if (error || !data) return [];
   return data;
 }
-
-export async function getPersonSkills(personId: string) {
-  const { data } = await getAdminClient()
-    .from("people_skills")
-    .select("skill, evidence_count")
-    .eq("person_id", personId);
-  return data || [];
-}
-
-export async function getPersonProjects(personId: string) {
-  const { data } = await getAdminClient()
-    .from("people_projects")
-    .select("project, role_in_project")
-    .eq("person_id", personId);
-  return data || [];
-}

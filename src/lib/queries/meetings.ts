@@ -6,14 +6,13 @@ export interface RecentMeeting {
   date: string | null;
   participants: string[] | null;
   relevance_score: number | null;
-  category: string[] | null;
-  status: string | null;
+  meeting_type: string | null;
 }
 
 export async function listRecentMeetings(limit: number = 10): Promise<RecentMeeting[]> {
   const { data, error } = await getAdminClient()
     .from("meetings")
-    .select("id, title, date, participants, relevance_score, category, status")
+    .select("id, title, date, participants, relevance_score, meeting_type")
     .order("date", { ascending: false, nullsFirst: false })
     .limit(limit);
 
@@ -31,21 +30,11 @@ export async function getMeetingByFirefliesId(firefliesId: string) {
 }
 
 export async function getMeetingExtractions(meetingId: string) {
-  const [decisionsRes, actionItemsRes] = await Promise.all([
-    getAdminClient()
-      .from("decisions")
-      .select("decision, made_by")
-      .eq("source_id", meetingId)
-      .eq("source_type", "meeting"),
-    getAdminClient()
-      .from("action_items")
-      .select("description, assignee")
-      .eq("source_id", meetingId)
-      .eq("source_type", "meeting"),
-  ]);
+  const { data, error } = await getAdminClient()
+    .from("extractions")
+    .select("type, content, confidence, transcript_ref")
+    .eq("meeting_id", meetingId);
 
-  return {
-    decisions: decisionsRes.data ?? [],
-    actionItems: actionItemsRes.data ?? [],
-  };
+  if (error || !data) return [];
+  return data;
 }

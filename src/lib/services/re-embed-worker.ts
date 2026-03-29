@@ -1,14 +1,11 @@
 import { embedText, embedBatch } from "@/lib/embeddings";
 import { getStaleRows } from "@/lib/queries/content";
 import { getMeetingExtractions } from "@/lib/queries/meetings";
-import { getStalePeople, getPersonSkills, getPersonProjects } from "@/lib/queries/people";
+import { getStalePeople } from "@/lib/queries/people";
 import { updateRowEmbedding } from "@/lib/actions/embeddings";
 
 const SIMPLE_EMBEDDABLE_TABLES = [
-  { table: "documents", contentField: "content" },
-  { table: "decisions", contentField: "decision" },
-  { table: "slack_messages", contentField: "content" },
-  { table: "emails", contentField: "body" },
+  { table: "extractions", contentField: "content" },
   { table: "projects", contentField: "name" },
 ] as const;
 
@@ -31,13 +28,12 @@ async function reEmbedTable(table: string, contentField: string): Promise<number
 
 /**
  * Build rich embed text for a meeting: title, participants, summary,
- * transcript, decisions, and action items.
+ * and extractions (decisions, action items, insights, needs).
  */
 function buildMeetingEmbedText(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meeting: Record<string, any>,
-  decisions: { decision: string; made_by: string }[],
-  actionItems: { description: string; assignee: string | null }[],
+  extractions: { type: string; content: string }[],
 ): string {
   const parts: string[] = [];
 
@@ -47,19 +43,22 @@ function buildMeetingEmbedText(
   }
   if (meeting.summary) parts.push(`Samenvatting: ${meeting.summary}`);
 
-  if (decisions.length > 0) {
-    parts.push(
-      "Besluiten:\n" + decisions.map((d) => `- ${d.decision} (door ${d.made_by})`).join("\n"),
-    );
+  const grouped: Record<string, string[]> = {};
+  for (const e of extractions) {
+    if (!grouped[e.type]) grouped[e.type] = [];
+    grouped[e.type].push(e.content);
   }
 
-  if (actionItems.length > 0) {
-    parts.push(
-      "Actiepunten:\n" +
-        actionItems
-          .map((a) => `- ${a.description}${a.assignee ? ` (${a.assignee})` : ""}`)
-          .join("\n"),
-    );
+  const typeLabels: Record<string, string> = {
+    decision: "Besluiten",
+    action_item: "Actiepunten",
+    insight: "Inzichten",
+    need: "Behoeften",
+  };
+
+  for (const [type, items] of Object.entries(grouped)) {
+    const label = typeLabels[type] || type;
+    parts.push(`${label}:\n` + items.map((item) => `- ${item}`).join("\n"));
   }
 
   return parts.join("\n\n");
@@ -73,8 +72,8 @@ async function reEmbedMeetings(): Promise<number> {
   if (staleRows.length === 0) return 0;
 
   for (const meeting of staleRows) {
-    const { decisions, actionItems } = await getMeetingExtractions(meeting.id);
-    const text = buildMeetingEmbedText(meeting, decisions, actionItems);
+    const extractions = await getMeetingExtractions(meeting.id);
+    const text = buildMeetingEmbedText(meeting, extractions);
     const embedding = await embedText(text);
     await updateRowEmbedding("meetings", meeting.id, embedding);
   }
@@ -83,28 +82,16 @@ async function reEmbedMeetings(): Promise<number> {
 }
 
 /**
- * Aggregate person data into a text profile for embedding.
+ * Build simple profile text for embedding.
  */
-function buildProfileText(
-  person: { name: string; team: string | null; role: string | null },
-  skills: { skill: string; evidence_count: number }[],
-  projects: { project: string; role_in_project: string | null }[],
-): string {
-  const lines = [`${person.name}`];
+function buildProfileText(person: {
+  name: string;
+  team: string | null;
+  role: string | null;
+}): string {
+  const lines = [person.name];
   if (person.role) lines.push(`Role: ${person.role}`);
   if (person.team) lines.push(`Team: ${person.team}`);
-
-  if (skills.length > 0) {
-    const sorted = skills.sort((a, b) => b.evidence_count - a.evidence_count);
-    lines.push(`Skills: ${sorted.map((s) => s.skill).join(", ")}`);
-  }
-
-  if (projects.length > 0) {
-    lines.push(
-      `Projects: ${projects.map((p) => `${p.project}${p.role_in_project ? ` (${p.role_in_project})` : ""}`).join(", ")}`,
-    );
-  }
-
   return lines.join("\n");
 }
 
@@ -116,9 +103,7 @@ async function reEmbedPeople(): Promise<number> {
   if (stalePeople.length === 0) return 0;
 
   for (const person of stalePeople) {
-    const skills = await getPersonSkills(person.id);
-    const projects = await getPersonProjects(person.id);
-    const profileText = buildProfileText(person, skills, projects);
+    const profileText = buildProfileText(person);
     const embedding = await embedText(profileText);
     await updateRowEmbedding("people", person.id, embedding);
   }
@@ -140,7 +125,6 @@ export async function runReEmbedWorker(): Promise<{
   }
 
   results["meetings"] = await reEmbedMeetings();
-
   results["people"] = await reEmbedPeople();
 
   const total = Object.values(results).reduce((sum, n) => sum + n, 0);

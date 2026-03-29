@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION search_all_content(
     query_embedding VECTOR(1024),
     query_text TEXT DEFAULT '',
     match_count INT DEFAULT 20,
-    similarity_threshold FLOAT DEFAULT 0.3
+    match_threshold FLOAT DEFAULT 0.3
 )
 RETURNS TABLE (
     id UUID,
@@ -50,7 +50,7 @@ BEGIN
             ROW_NUMBER() OVER (ORDER BY m.embedding <=> query_embedding) AS vec_rank
         FROM meetings m
         WHERE m.embedding IS NOT NULL
-          AND 1 - (m.embedding <=> query_embedding) >= similarity_threshold
+          AND 1 - (m.embedding <=> query_embedding) >= match_threshold
         ORDER BY m.embedding <=> query_embedding
         LIMIT match_count * 2
     ),
@@ -66,7 +66,7 @@ BEGIN
             ROW_NUMBER() OVER (ORDER BY e.embedding <=> query_embedding) AS vec_rank
         FROM extractions e
         WHERE e.embedding IS NOT NULL
-          AND 1 - (e.embedding <=> query_embedding) >= similarity_threshold
+          AND 1 - (e.embedding <=> query_embedding) >= match_threshold
         ORDER BY e.embedding <=> query_embedding
         LIMIT match_count * 2
     ),
@@ -151,7 +151,7 @@ $$;
 CREATE OR REPLACE FUNCTION match_people(
     query_embedding VECTOR(1024),
     match_count INT DEFAULT 10,
-    similarity_threshold FLOAT DEFAULT 0.3
+    match_threshold FLOAT DEFAULT 0.3
 )
 RETURNS TABLE (
     id UUID,
@@ -175,7 +175,7 @@ BEGIN
         (1 - (p.embedding <=> query_embedding))::FLOAT AS similarity
     FROM people p
     WHERE p.embedding IS NOT NULL
-      AND 1 - (p.embedding <=> query_embedding) >= similarity_threshold
+      AND 1 - (p.embedding <=> query_embedding) >= match_threshold
     ORDER BY p.embedding <=> query_embedding
     LIMIT match_count;
 END;
@@ -187,7 +187,7 @@ $$;
 CREATE OR REPLACE FUNCTION match_projects(
     query_embedding VECTOR(1024),
     match_count INT DEFAULT 10,
-    similarity_threshold FLOAT DEFAULT 0.3
+    match_threshold FLOAT DEFAULT 0.3
 )
 RETURNS TABLE (
     id UUID,
@@ -209,7 +209,7 @@ BEGIN
         (1 - (pr.embedding <=> query_embedding))::FLOAT AS similarity
     FROM projects pr
     WHERE pr.embedding IS NOT NULL
-      AND 1 - (pr.embedding <=> query_embedding) >= similarity_threshold
+      AND 1 - (pr.embedding <=> query_embedding) >= match_threshold
     ORDER BY pr.embedding <=> query_embedding
     LIMIT match_count;
 END;
@@ -217,54 +217,54 @@ $$;
 
 -- =============================================================================
 -- search_meetings_by_participant: Find meetings for a specific person
--- Uses meeting_participants join table + optional text search
+-- Searches by participant name via text array + meeting_participants join,
+-- combined with vector similarity on meeting content.
 -- =============================================================================
 CREATE OR REPLACE FUNCTION search_meetings_by_participant(
-    participant_id UUID,
-    query_text TEXT DEFAULT '',
-    match_count INT DEFAULT 20
+    query_embedding VECTOR(1024),
+    participant_name TEXT,
+    match_threshold FLOAT DEFAULT 0.3,
+    match_count INT DEFAULT 10
 )
 RETURNS TABLE (
     id UUID,
     title TEXT,
     date TIMESTAMPTZ,
     summary TEXT,
-    meeting_type TEXT,
-    organization_name TEXT,
-    text_rank FLOAT
+    participants TEXT[],
+    similarity FLOAT
 )
 LANGUAGE plpgsql
 STABLE
 AS $$
-DECLARE
-    ts_query TSQUERY;
 BEGIN
-    IF query_text <> '' THEN
-        ts_query := plainto_tsquery('dutch', query_text);
-    ELSE
-        ts_query := NULL;
-    END IF;
-
     RETURN QUERY
     SELECT
         m.id,
         m.title,
         m.date,
         m.summary,
-        m.meeting_type,
-        o.name AS organization_name,
-        CASE
-            WHEN ts_query IS NOT NULL THEN ts_rank_cd(m.search_vector, ts_query)::FLOAT
-            ELSE 0.0::FLOAT
-        END AS text_rank
+        m.participants,
+        (1 - (m.embedding <=> query_embedding))::FLOAT AS similarity
     FROM meetings m
-    INNER JOIN meeting_participants mp ON mp.meeting_id = m.id
-    LEFT JOIN organizations o ON o.id = m.organization_id
-    WHERE mp.person_id = participant_id
-      AND (ts_query IS NULL OR m.search_vector @@ ts_query)
-    ORDER BY
-        CASE WHEN ts_query IS NOT NULL THEN ts_rank_cd(m.search_vector, ts_query) ELSE 0.0 END DESC,
-        m.date DESC NULLS LAST
+    WHERE m.embedding IS NOT NULL
+      AND 1 - (m.embedding <=> query_embedding) >= match_threshold
+      AND (
+          -- Match via participants text array (case-insensitive)
+          EXISTS (
+              SELECT 1 FROM unnest(m.participants) AS p
+              WHERE p ILIKE '%' || participant_name || '%'
+          )
+          OR
+          -- Match via meeting_participants join (on people.name)
+          EXISTS (
+              SELECT 1 FROM meeting_participants mp
+              JOIN people pe ON pe.id = mp.person_id
+              WHERE mp.meeting_id = m.id
+                AND pe.name ILIKE '%' || participant_name || '%'
+          )
+      )
+    ORDER BY m.embedding <=> query_embedding
     LIMIT match_count;
 END;
 $$;

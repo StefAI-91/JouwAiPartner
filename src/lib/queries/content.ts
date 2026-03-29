@@ -1,9 +1,15 @@
 import { getAdminClient } from "@/lib/supabase/admin";
 
-export async function searchAllContent(embedding: number[], threshold: number, count: number) {
+export async function searchAllContent(
+  embedding: number[],
+  threshold: number,
+  count: number,
+  queryText = "",
+) {
   const { data, error } = await getAdminClient().rpc("search_all_content", {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     query_embedding: embedding as any,
+    query_text: queryText,
     match_threshold: threshold,
     match_count: count,
   });

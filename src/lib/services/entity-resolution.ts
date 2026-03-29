@@ -47,7 +47,7 @@ export async function resolveProject(extractedName: string): Promise<MatchResult
   }
 
   // Step 3: Embedding match via match_projects RPC
-  const embedding = await embedText(extractedName);
+  const embedding = await embedText(extractedName, "search_query");
   const embeddingMatches = await matchProjectsByEmbedding(embedding);
 
   if (embeddingMatches && embeddingMatches.length > 0) {

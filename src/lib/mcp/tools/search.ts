@@ -13,10 +13,11 @@ export function registerSearchTools(server: McpServer) {
     },
     async ({ query, limit }) => {
       const supabase = getAdminClient();
-      const queryEmbedding = await embedText(query);
+      const queryEmbedding = await embedText(query, "search_query");
 
       const { data: results, error } = await supabase.rpc("search_all_content", {
         query_embedding: queryEmbedding,
+        query_text: query,
         match_threshold: 0.3,
         match_count: limit,
       });

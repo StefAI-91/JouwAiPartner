@@ -67,24 +67,16 @@ async function logGatekeeperDecision(
  * Generate and store embedding for a meeting, enriched with its extractions.
  */
 async function embedMeeting(meetingId: string, input: MeetingInput): Promise<void> {
-  const { decisions, actionItems } = await getMeetingExtractions(meetingId);
+  const extractions = await getMeetingExtractions(meetingId);
 
   const parts: string[] = [];
   if (input.title) parts.push(`Meeting: ${input.title}`);
   if (input.participants.length) parts.push(`Deelnemers: ${input.participants.join(", ")}`);
   if (input.summary) parts.push(`Samenvatting: ${input.summary}`);
 
-  if (decisions.length > 0) {
+  if (extractions.length > 0) {
     parts.push(
-      "Besluiten:\n" + decisions.map((d) => `- ${d.decision} (door ${d.made_by})`).join("\n"),
-    );
-  }
-  if (actionItems.length > 0) {
-    parts.push(
-      "Actiepunten:\n" +
-        actionItems
-          .map((a) => `- ${a.description}${a.assignee ? ` (${a.assignee})` : ""}`)
-          .join("\n"),
+      "Extracties:\n" + extractions.map((e) => `- [${e.type}] ${e.content}`).join("\n"),
     );
   }
 
