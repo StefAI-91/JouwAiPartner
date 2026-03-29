@@ -157,15 +157,9 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       `Extractor: ${extractionsSaved} extractions saved, project linked: ${saveResult.project_linked}`,
     );
   } catch (err) {
-    const errObj = err as Record<string, unknown>;
-    const errMsg =
-      err instanceof Error
-        ? `${err.message} | ${err.stack?.split("\n")[1] ?? ""}`
-        : JSON.stringify(err);
-    const statusCode = errObj?.statusCode ?? errObj?.status ?? "unknown";
-    const responseBody = errObj?.responseBody ?? errObj?.data ?? errObj?.cause ?? "";
+    const errMsg = err instanceof Error ? err.message : String(err);
     console.error("Extractor failed:", errMsg);
-    extractorError = `[${statusCode}] ${errMsg} | body: ${JSON.stringify(responseBody).slice(0, 500)}`;
+    extractorError = errMsg;
   }
 
   // Step 8: Embed meeting + extractions
