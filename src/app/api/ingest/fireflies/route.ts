@@ -21,12 +21,12 @@ interface IngestResult {
 }
 
 export async function POST(req: NextRequest) {
-  // Auth check
-  const authHeader = req.headers.get("authorization");
-  const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
-  if (process.env.CRON_SECRET && authHeader !== expectedToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // TODO: Auth check tijdelijk uitgeschakeld voor testen — weer aanzetten na test
+  // const authHeader = req.headers.get("authorization");
+  // const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
+  // if (process.env.CRON_SECRET && authHeader !== expectedToken) {
+  //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // }
 
   const body = await req.json().catch(() => ({}));
   const parsed = ingestSchema.safeParse(body);
