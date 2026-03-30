@@ -389,7 +389,7 @@ function LayerCard({
 // ---------------------------------------------------------------------------
 export default function ArchitectuurPage() {
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
+    <div className="space-y-8">
       {/* Header */}
       <div>
         <h1>Hoe het platform werkt</h1>
