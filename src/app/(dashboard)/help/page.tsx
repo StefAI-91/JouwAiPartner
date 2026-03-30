@@ -134,7 +134,7 @@ const features: FeatureCardProps[] = [
       "Cross-tabel: meetings, documenten, Slack en e-mails tegelijk",
       "Cohere embed-v4 embeddings (1024 dimensies) voor nauwkeurige resultaten",
       "Gerangschikt op relevantie (cosine similarity)",
-      "API: POST /api/search met natuurlijke taal query",
+      "Zoeken via MCP search_knowledge tool met natuurlijke taal query",
     ],
   },
   {
