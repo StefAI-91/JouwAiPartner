@@ -2,11 +2,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { formatVerificatieStatus } from "./utils";
+import { trackMcpQuery } from "./usage-tracking";
 
 export function registerActionTools(server: McpServer) {
   server.tool(
     "get_action_items",
-    "Haal actiepunten op uit meetings met eigenaar, deadline, bronvermelding (meeting, datum, citaat), confidence score en verificatie-status. Optioneel gefilterd op persoon of project.",
+    "Haal actiepunten (taken, to-dos, afspraken) op uit meetings. Toont eigenaar, deadline, bronvermelding en verificatie-status. Filter op persoon om iemands taken te zien, of op project voor projectspecifieke actiepunten.",
     {
       person: z
         .string()
@@ -17,6 +18,11 @@ export function registerActionTools(server: McpServer) {
     },
     async ({ person, project, limit }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(
+        supabase,
+        "get_action_items",
+        [person, project].filter(Boolean).join(", ") || "all",
+      );
 
       const query = supabase
         .from("extractions")

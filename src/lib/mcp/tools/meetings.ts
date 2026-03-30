@@ -2,17 +2,22 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { formatVerificatieStatus } from "./utils";
+import { trackMcpQuery } from "./usage-tracking";
 
 export function registerMeetingTools(server: McpServer) {
   server.tool(
     "get_meeting_summary",
-    "Haal de volledige samenvatting op voor een meeting: metadata, deelnemers, en alle extracties (besluiten, actiepunten, inzichten, behoeften) met bronvermelding, confidence en verificatie-status. Gebruik meeting ID uit zoekresultaten, of zoek op titel.",
+    "Haal de volledige samenvatting op voor een specifieke meeting: metadata, deelnemers, en alle extracties (besluiten, actiepunten, inzichten, behoeften) met bronvermelding. Gebruik meeting ID uit zoekresultaten of list_meetings, of zoek op titel. Voor het filteren/zoeken van meetings gebruik list_meetings.",
     {
-      meeting_id: z.string().optional().describe("UUID of the meeting (from search results)"),
+      meeting_id: z
+        .string()
+        .optional()
+        .describe("UUID of the meeting (from search results or list_meetings)"),
       title_search: z.string().optional().describe("Search meetings by title (partial match)"),
     },
     async ({ meeting_id, title_search }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(supabase, "get_meeting_summary", meeting_id || title_search || "");
 
       let query = supabase.from("meetings").select(
         `id, title, date, participants, summary, meeting_type, party_type,

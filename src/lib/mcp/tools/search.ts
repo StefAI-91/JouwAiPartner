@@ -3,17 +3,19 @@ import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { embedText } from "@/lib/embeddings";
 import { formatVerificatieStatus } from "./utils";
+import { trackMcpQuery } from "./usage-tracking";
 
 export function registerSearchTools(server: McpServer) {
   server.tool(
     "search_knowledge",
-    "Semantisch zoeken over alle content in de kennisbasis (meetings, besluiten, actiepunten, inzichten, behoeften). Retourneert resultaten met bronvermelding, confidence en verificatie-status.",
+    "Semantisch zoeken over alle content in de kennisbasis (meetings, besluiten, actiepunten, inzichten, behoeften). Gebruik voor open vragen, conceptuele zoekopdrachten of wanneer je niet weet in welke meeting iets besproken is. Retourneert resultaten met bronvermelding, confidence en verificatie-status.",
     {
       query: z.string().describe("The search query in natural language"),
       limit: z.number().optional().default(10).describe("Max results to return (default 10)"),
     },
     async ({ query, limit }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(supabase, "search_knowledge", query);
       const queryEmbedding = await embedText(query, "search_query");
 
       const { data: results, error } = await supabase.rpc("search_all_content", {

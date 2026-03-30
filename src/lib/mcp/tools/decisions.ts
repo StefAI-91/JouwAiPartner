@@ -2,11 +2,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { formatVerificatieStatus } from "./utils";
+import { trackMcpQuery } from "./usage-tracking";
 
 export function registerDecisionTools(server: McpServer) {
   server.tool(
     "get_decisions",
-    "Haal besluiten op uit meetings met bronvermelding (meeting, datum, citaat), confidence score en verificatie-status. Optioneel gefilterd op project of datumbereik.",
+    "Haal besluiten op uit meetings. Toont wie het besluit nam, bronvermelding en verificatie-status. Filter op project of datumbereik. Gebruik voor vragen als 'Welke besluiten zijn er genomen over X?'.",
     {
       project: z.string().optional().describe("Filter by project name"),
       date_from: z.string().optional().describe("Start date (ISO format, e.g. 2026-03-01)"),
@@ -15,6 +16,11 @@ export function registerDecisionTools(server: McpServer) {
     },
     async ({ project, date_from, date_to, limit }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(
+        supabase,
+        "get_decisions",
+        [project, date_from, date_to].filter(Boolean).join(", ") || "all",
+      );
 
       let query = supabase
         .from("extractions")

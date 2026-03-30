@@ -2,10 +2,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 
+import { trackMcpQuery } from "./usage-tracking";
+
 export function registerPeopleTools(server: McpServer) {
   server.tool(
     "get_people",
-    "Haal mensen op (teamleden, klanten, contactpersonen). Zoek op naam, team of rol.",
+    "Haal mensen op (teamleden, klanten, contactpersonen). Zoek op naam, team of rol. Gebruik om te achterhalen wie er in het team zit of om een persoon te vinden.",
     {
       search: z.string().optional().describe("Search by name (partial match)"),
       team: z.string().optional().describe("Filter by team (e.g. 'engineering', 'leadership')"),
@@ -13,6 +15,11 @@ export function registerPeopleTools(server: McpServer) {
     },
     async ({ search, team, role }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(
+        supabase,
+        "get_people",
+        [search, team, role].filter(Boolean).join(", ") || "all",
+      );
 
       let query = supabase.from("people").select("id, name, email, team, role").order("name");
 

@@ -2,10 +2,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 
+import { trackMcpQuery } from "./usage-tracking";
+
 export function registerProjectTools(server: McpServer) {
   server.tool(
     "get_projects",
-    "Haal projecten op, optioneel gefilterd op naam, organisatie of status.",
+    "Haal projecten op, optioneel gefilterd op naam, organisatie of status. Toont projectnaam, aliassen, organisatie en status.",
     {
       search: z.string().optional().describe("Search by project name or alias (partial match)"),
       organization: z.string().optional().describe("Filter by organization name (partial match)"),
@@ -16,6 +18,11 @@ export function registerProjectTools(server: McpServer) {
     },
     async ({ search, organization, status }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(
+        supabase,
+        "get_projects",
+        [search, organization, status].filter(Boolean).join(", ") || "all",
+      );
 
       let query = supabase
         .from("projects")
