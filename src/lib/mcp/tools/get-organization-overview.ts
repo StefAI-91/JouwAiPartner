@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
+import { escapeLike } from "./utils";
 
 export function registerOrganizationOverviewTools(server: McpServer) {
   server.tool(
@@ -18,7 +19,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       const { data: orgs, error: orgError } = await supabase
         .from("organizations")
         .select("id, name, aliases, type, contact_person, email, status")
-        .ilike("name", `%${organization_name}%`)
+        .ilike("name", `%${escapeLike(organization_name)}%`)
         .limit(1);
 
       if (orgError || !orgs || orgs.length === 0) {

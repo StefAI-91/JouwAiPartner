@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
-import { formatVerificatieStatus } from "./utils";
+import { escapeLike, formatVerificatieStatus } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
 export function registerActionTools(server: McpServer) {
@@ -24,7 +24,7 @@ export function registerActionTools(server: McpServer) {
         [person, project].filter(Boolean).join(", ") || "all",
       );
 
-      const query = supabase
+      let query = supabase
         .from("extractions")
         .select(
           `
@@ -36,6 +36,34 @@ export function registerActionTools(server: McpServer) {
         )
         .eq("type", "action_item")
         .order("created_at", { ascending: false });
+
+      // Database-side filtering for person (content or metadata->assignee)
+      if (person) {
+        const escaped = escapeLike(person);
+        query = query.or(`content.ilike.%${escaped}%,metadata->>assignee.ilike.%${escaped}%`);
+      }
+
+      // Database-side filtering for project
+      if (project) {
+        const { data: projects } = await supabase
+          .from("projects")
+          .select("id")
+          .ilike("name", `%${escapeLike(project)}%`);
+
+        if (projects && projects.length > 0) {
+          const projectIds = projects.map((p: { id: string }) => p.id);
+          query = query.in("project_id", projectIds);
+        } else {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Geen project gevonden voor "${project}".`,
+              },
+            ],
+          };
+        }
+      }
 
       const { data: items, error } = await query.limit(limit);
 
@@ -56,24 +84,7 @@ export function registerActionTools(server: McpServer) {
         };
       }
 
-      let filtered = items;
-      if (person) {
-        const lowerPerson = person.toLowerCase();
-        filtered = filtered.filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase join type
-          (item: any) =>
-            item.content?.toLowerCase().includes(lowerPerson) ||
-            item.metadata?.assignee?.toLowerCase().includes(lowerPerson),
-        );
-      }
-      if (project) {
-        filtered = filtered.filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase join type
-          (item: any) =>
-            item.project?.name?.toLowerCase().includes(project.toLowerCase()) ||
-            item.meeting?.title?.toLowerCase().includes(project.toLowerCase()),
-        );
-      }
+      const filtered = items;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const formatted = filtered.map((item: any, i: number) => {

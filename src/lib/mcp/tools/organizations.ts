@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 
 import { trackMcpQuery } from "./usage-tracking";
+import { escapeLike } from "./utils";
 
 export function registerOrganizationTools(server: McpServer) {
   server.tool(
@@ -31,7 +32,7 @@ export function registerOrganizationTools(server: McpServer) {
 
       if (type) query = query.eq("type", type);
       if (status) query = query.eq("status", status);
-      if (search) query = query.ilike("name", `%${search}%`);
+      if (search) query = query.ilike("name", `%${escapeLike(search)}%`);
 
       const { data, error } = await query.limit(50);
 

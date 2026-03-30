@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
+import { escapeLike } from "./utils";
 
 export function registerListMeetingsTools(server: McpServer) {
   server.tool(
@@ -55,7 +56,7 @@ export function registerListMeetingsTools(server: McpServer) {
         const { data: orgs } = await supabase
           .from("organizations")
           .select("id")
-          .ilike("name", `%${organization}%`);
+          .ilike("name", `%${escapeLike(organization)}%`);
 
         if (orgs && orgs.length > 0) {
           const orgIds = orgs.map((o: { id: string }) => o.id);
@@ -77,7 +78,7 @@ export function registerListMeetingsTools(server: McpServer) {
         const { data: projects } = await supabase
           .from("projects")
           .select("id")
-          .ilike("name", `%${project}%`);
+          .ilike("name", `%${escapeLike(project)}%`);
 
         if (projects && projects.length > 0) {
           const projectIds = projects.map((p: { id: string }) => p.id);

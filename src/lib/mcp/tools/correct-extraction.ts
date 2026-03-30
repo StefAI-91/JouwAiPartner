@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
+import { escapeLike } from "./utils";
 
 export function registerCorrectExtractionTools(server: McpServer) {
   server.tool(
@@ -57,7 +58,7 @@ export function registerCorrectExtractionTools(server: McpServer) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
-        .ilike("full_name", `%${corrected_by_name}%`)
+        .ilike("full_name", `%${escapeLike(corrected_by_name)}%`)
         .limit(1);
 
       if (profile && profile.length > 0) {
