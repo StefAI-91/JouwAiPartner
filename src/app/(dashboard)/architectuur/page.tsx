@@ -154,9 +154,9 @@ const mcpTools: ToolInfo[] = [
   {
     icon: Search,
     name: "search_knowledge",
-    description: "Semantisch zoeken over alle content",
+    description: "Semantisch zoeken over alle content met bronvermelding",
     simpleExplanation:
-      "Zoekt door alle meetings en extracties op basis van betekenis. Combineert twee methoden: vector search (begrijpt de betekenis) en full-text search (vindt exacte woorden). De resultaten worden gefuseerd via Reciprocal Rank Fusion zodat je altijd de meest relevante resultaten krijgt.",
+      "Zoekt door alle meetings en extracties op basis van betekenis. Combineert vector search (begrijpt de betekenis) en full-text search (vindt exacte woorden) via Reciprocal Rank Fusion. Elk resultaat toont de bron (meeting titel + datum), een transcript-citaat, en de verificatie-status: 'AI (confidence: X%)' of 'Geverifieerd' als iemand het heeft gecorrigeerd.",
     parameters: [
       { name: "query", description: "Je zoekvraag in gewone taal", required: true },
       { name: "limit", description: "Max aantal resultaten (standaard 10)", required: false },
@@ -170,9 +170,9 @@ const mcpTools: ToolInfo[] = [
   {
     icon: MessageSquare,
     name: "get_meeting_summary",
-    description: "Meeting detail met alle extracties",
+    description: "Meeting detail met alle extracties en verificatie-status",
     simpleExplanation:
-      "Haalt alle informatie op over een specifieke meeting: samenvatting, deelnemers, type meeting, organisatie, en alle extracties (besluiten, actiepunten, inzichten) die eruit zijn gehaald. Je kunt zoeken op meeting ID of op titel.",
+      "Haalt alle informatie op over een specifieke meeting: samenvatting, deelnemers, type meeting, organisatie, en alle extracties (besluiten, actiepunten, inzichten). Elke extractie toont metadata (eigenaar, deadline, besluitnemer), een transcript-citaat, en verificatie-status. Je kunt zoeken op meeting ID of op titel.",
     parameters: [
       { name: "meeting_id", description: "UUID van de meeting", required: false },
       { name: "title_search", description: "Zoek op titel (deels matchen)", required: false },
@@ -185,9 +185,9 @@ const mcpTools: ToolInfo[] = [
   {
     icon: CheckCircle2,
     name: "get_decisions",
-    description: "Besluiten uit meetings ophalen",
+    description: "Besluiten uit meetings met bronvermelding",
     simpleExplanation:
-      "Haalt alle besluiten op die uit meetings zijn geextraheerd. Elk besluit toont de confidence score (hoe zeker de AI is), de bron-meeting, en eventueel een citaat uit het transcript.",
+      "Haalt alle besluiten op die uit meetings zijn geextraheerd. Elk besluit toont wie het besluit nam (made_by), de bron-meeting met datum, een transcript-citaat, en verificatie-status: 'AI (confidence: X%)' of 'Geverifieerd' als iemand het heeft nagekeken.",
     parameters: [
       { name: "project", description: "Filter op projectnaam", required: false },
       { name: "date_from", description: "Vanaf datum (ISO formaat)", required: false },
@@ -203,11 +203,15 @@ const mcpTools: ToolInfo[] = [
   {
     icon: ListChecks,
     name: "get_action_items",
-    description: "Actiepunten uit meetings ophalen",
+    description: "Actiepunten met eigenaar, deadline en bronvermelding",
     simpleExplanation:
-      "Haalt alle actiepunten op die uit meetings zijn geextraheerd. Je kunt filteren op persoon (wie moet het doen) of op project.",
+      "Haalt alle actiepunten op die uit meetings zijn geextraheerd. Elk actiepunt toont de eigenaar (assignee), deadline, bron-meeting met datum, een transcript-citaat, en verificatie-status. Je kunt filteren op persoon (zoekt in inhoud en metadata) of op project.",
     parameters: [
-      { name: "person", description: "Filter op naam (deels matchen in inhoud)", required: false },
+      {
+        name: "person",
+        description: "Filter op naam (matcht in inhoud en assignee)",
+        required: false,
+      },
       { name: "project", description: "Filter op projectnaam", required: false },
       { name: "limit", description: "Max resultaten (standaard 20)", required: false },
     ],
@@ -699,9 +703,17 @@ export default function ArchitectuurPage() {
               },
               {
                 sprint: "Sprint 6",
-                title: "MCP tools uitbreiden",
+                title: "Bronvermelding + verificatie",
+                status: "live" as const,
+                description:
+                  "Alle MCP tools tonen bronvermelding (meeting, datum, citaat), confidence scores, verificatie-status en metadata (eigenaar, deadline, besluitnemer).",
+              },
+              {
+                sprint: "Sprint 7",
+                title: "Overzicht-tools + correctie",
                 status: "gepland" as const,
-                description: "Gerichte zoek-tools per domein (mensen, projecten, tijdlijn)",
+                description:
+                  "Organisatie-overzichten, meeting-filtering, extractie-correcties en usage tracking. v1 launch.",
               },
             ].map((item) => (
               <li key={item.sprint} className="flex items-start gap-3">
@@ -768,6 +780,28 @@ export default function ArchitectuurPage() {
               {
                 test: "raw_fireflies JSONB",
                 result: "Audit trail met gatekeeper + extractor metadata opgeslagen",
+                pass: true,
+              },
+              {
+                test: "search_knowledge bronvermelding (Sprint 6)",
+                result:
+                  "Resultaten tonen bron (meeting titel + datum), transcript-citaat en verificatie-status",
+                pass: true,
+              },
+              {
+                test: "get_decisions metadata (Sprint 6)",
+                result: "Besluiten tonen made_by, confidence en verificatie-status",
+                pass: true,
+              },
+              {
+                test: "get_action_items metadata (Sprint 6)",
+                result: "Actiepunten tonen assignee, deadline, en person-filter werkt op metadata",
+                pass: true,
+              },
+              {
+                test: "Sufficiency check (Sprint 6)",
+                result:
+                  "MCP system prompt versterkt: geen antwoord zonder bron, eerlijk bij ontbrekende data",
                 pass: true,
               },
             ].map((item) => (
