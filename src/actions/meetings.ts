@@ -1,6 +1,7 @@
 "use server";
 
 import { getAdminClient } from "@/lib/supabase/admin";
+import { insertMeetingSchema, updateMeetingProjectSchema } from "@/lib/validations/meetings-action";
 
 export async function insertMeeting(meeting: {
   fireflies_id: string;
@@ -17,9 +18,12 @@ export async function insertMeeting(meeting: {
   raw_fireflies?: Record<string, unknown> | null;
   embedding_stale: boolean;
 }): Promise<{ success: true; data: { id: string } } | { error: string }> {
+  const parsed = insertMeetingSchema.safeParse(meeting);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
   const { data, error } = await getAdminClient()
     .from("meetings")
-    .insert(meeting)
+    .insert(parsed.data)
     .select("id")
     .single();
 
@@ -27,14 +31,30 @@ export async function insertMeeting(meeting: {
   return { success: true, data };
 }
 
+export async function updateMeetingRawFireflies(
+  meetingId: string,
+  rawFireflies: Record<string, unknown>,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ raw_fireflies: rawFireflies })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateMeetingProject(
   meetingId: string,
   projectId: string,
 ): Promise<{ success: true } | { error: string }> {
+  const parsed = updateMeetingProjectSchema.safeParse({ meetingId, projectId });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
   const { error } = await getAdminClient()
     .from("meetings")
-    .update({ project_id: projectId })
-    .eq("id", meetingId);
+    .update({ project_id: parsed.data.projectId })
+    .eq("id", parsed.data.meetingId);
 
   if (error) return { error: error.message };
   return { success: true };

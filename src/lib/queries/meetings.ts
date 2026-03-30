@@ -29,6 +29,17 @@ export async function getMeetingByFirefliesId(firefliesId: string) {
   return data;
 }
 
+export async function getMeetingForEmbedding(meetingId: string) {
+  const { data, error } = await getAdminClient()
+    .from("meetings")
+    .select("title, participants, summary")
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data;
+}
+
 export async function getMeetingExtractions(meetingId: string) {
   const { data, error } = await getAdminClient()
     .from("extractions")

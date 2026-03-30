@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
-import { fetchFirefliesTranscript } from "@/lib/fireflies";
-import { chunkTranscript } from "@/lib/transcript-processor";
-import { getMeetingByFirefliesId } from "@/lib/queries/meetings";
-import { isValidDuration, hasParticipants } from "@/lib/validations/fireflies";
-import { processMeeting } from "@/lib/services/gatekeeper-pipeline";
+import { processFirefliesWebhook } from "@/lib/services/fireflies-webhook";
 
 function verifyFirefliesSignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.FIREFLIES_WEBHOOK_SECRET;
@@ -15,7 +11,6 @@ function verifyFirefliesSignature(rawBody: string, signature: string | null): bo
 }
 
 export async function POST(req: NextRequest) {
-  // Verify Fireflies HMAC signature (x-hub-signature header)
   const rawBody = await req.text();
   const signature = req.headers.get("x-hub-signature");
 
@@ -26,68 +21,15 @@ export async function POST(req: NextRequest) {
   const payload = JSON.parse(rawBody);
   const { meetingId, eventType } = payload;
 
-  // Only process completed transcriptions
   if (eventType !== "Transcription completed" || !meetingId) {
     return NextResponse.json({ skipped: true });
   }
 
-  // Idempotency — skip if already ingested (novelty check on fireflies_id)
-  const existing = await getMeetingByFirefliesId(meetingId);
-  if (existing) {
-    return NextResponse.json({ skipped: true, reason: "duplicate" });
+  const result = await processFirefliesWebhook(meetingId);
+
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: 502 });
   }
 
-  // Fetch full transcript from Fireflies
-  const transcript = await fetchFirefliesTranscript(meetingId);
-
-  if (!transcript) {
-    return NextResponse.json({ error: "Failed to fetch transcript" }, { status: 502 });
-  }
-
-  // Pre-filter: duration < 2 minutes (test calls, accidental recordings)
-  const durationCheck = isValidDuration(transcript.sentences);
-  if (!durationCheck.valid) {
-    return NextResponse.json({
-      skipped: true,
-      reason: "too_short",
-      duration: durationCheck.duration,
-    });
-  }
-
-  // Pre-filter: no participants
-  if (!hasParticipants(transcript.participants)) {
-    return NextResponse.json({ skipped: true, reason: "no_participants" });
-  }
-
-  // Chunk the transcript for storage
-  const chunks = chunkTranscript(transcript.sentences);
-  const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");
-
-  // Run through full pipeline (Gatekeeper → insert → Extractor → save → embed)
-  const pipelineResult = await processMeeting({
-    fireflies_id: meetingId,
-    title: transcript.title,
-    date: transcript.date,
-    participants: transcript.participants,
-    summary: transcript.summary?.notes ?? "",
-    topics: transcript.summary?.topics_discussed ?? [],
-    transcript: chunkedTranscript,
-    raw_fireflies: {
-      fireflies_id: meetingId,
-      title: transcript.title,
-      date: transcript.date,
-      participants: transcript.participants,
-      summary: transcript.summary,
-    },
-  });
-
-  return NextResponse.json({
-    success: !!pipelineResult.meetingId,
-    meetingId: pipelineResult.meetingId,
-    meeting_type: pipelineResult.gatekeeper.meeting_type,
-    party_type: pipelineResult.gatekeeper.party_type,
-    relevance_score: pipelineResult.gatekeeper.relevance_score,
-    extractions_saved: pipelineResult.extractions_saved,
-    embedded: pipelineResult.embedded,
-  });
+  return NextResponse.json(result);
 }

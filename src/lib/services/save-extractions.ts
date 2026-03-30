@@ -1,4 +1,4 @@
-import { getAdminClient } from "@/lib/supabase/admin";
+import { insertExtractions } from "@/lib/actions/extractions";
 import { resolveAllEntities } from "@/lib/services/entity-resolution";
 import { updateMeetingProject } from "@/lib/actions/meetings";
 import { ExtractorOutput, ExtractionItem } from "@/lib/validations/extractor";
@@ -76,10 +76,10 @@ export async function saveExtractions(
 
   // Step 4: Batch insert all extractions
   if (rows.length > 0) {
-    const { error } = await getAdminClient().from("extractions").insert(rows);
+    const insertResult = await insertExtractions(rows);
 
-    if (error) {
-      console.error("Failed to insert extractions:", error.message);
+    if ("error" in insertResult) {
+      console.error("Failed to insert extractions:", insertResult.error);
       return { extractions_saved: 0, project_linked: !!meetingProjectId };
     }
   }

@@ -1,7 +1,7 @@
 import { runGatekeeper } from "@/lib/agents/gatekeeper";
 import { runExtractor, ExtractorOutput } from "@/lib/agents/extractor";
 import { GatekeeperOutput } from "@/lib/validations/gatekeeper";
-import { insertMeeting } from "@/lib/actions/meetings";
+import { insertMeeting, updateMeetingRawFireflies } from "@/lib/actions/meetings";
 import { resolveOrganization } from "@/lib/services/entity-resolution";
 import { findPeopleByEmails } from "@/lib/queries/people";
 import { linkMeetingParticipants } from "@/lib/actions/meeting-participants";
@@ -35,7 +35,7 @@ async function matchParticipants(meetingId: string, participants: string[]): Pro
     console.error("Failed to link participants:", result.error);
     return 0;
   }
-  return result.linked;
+  return result.data?.linked ?? 0;
 }
 
 interface PipelineResult {
@@ -143,11 +143,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     };
 
     // Update raw_fireflies with extractor metadata
-    const { getAdminClient } = await import("@/lib/supabase/admin");
-    await getAdminClient()
-      .from("meetings")
-      .update({ raw_fireflies: rawFireflies })
-      .eq("id", meetingId);
+    await updateMeetingRawFireflies(meetingId, rawFireflies);
 
     // Step 7: Save extractions
     const saveResult = await saveExtractions(extractorResult, meetingId);

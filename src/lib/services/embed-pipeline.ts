@@ -1,7 +1,7 @@
 import { embedText, embedBatch } from "@/lib/embeddings";
 import { updateRowEmbedding } from "@/lib/actions/embeddings";
-import { getMeetingExtractions } from "@/lib/queries/meetings";
-import { getAdminClient } from "@/lib/supabase/admin";
+import { getMeetingExtractions, getMeetingForEmbedding } from "@/lib/queries/meetings";
+import { getExtractionsByMeetingId } from "@/lib/queries/extractions";
 
 /**
  * Build rich embed text for a meeting including its extractions.
@@ -45,14 +45,10 @@ function buildMeetingEmbedText(
  */
 export async function embedMeetingWithExtractions(meetingId: string): Promise<void> {
   // Fetch meeting data
-  const { data: meeting, error } = await getAdminClient()
-    .from("meetings")
-    .select("title, participants, summary")
-    .eq("id", meetingId)
-    .single();
+  const meeting = await getMeetingForEmbedding(meetingId);
 
-  if (error || !meeting) {
-    throw new Error(`Failed to fetch meeting ${meetingId}: ${error?.message}`);
+  if (!meeting) {
+    throw new Error(`Failed to fetch meeting ${meetingId}`);
   }
 
   // Fetch extractions
@@ -68,10 +64,7 @@ export async function embedMeetingWithExtractions(meetingId: string): Promise<vo
 
   // Embed individual extractions in batch
   if (extractions.length > 0) {
-    const { data: extractionRows } = await getAdminClient()
-      .from("extractions")
-      .select("id, content")
-      .eq("meeting_id", meetingId);
+    const extractionRows = await getExtractionsByMeetingId(meetingId);
 
     if (extractionRows && extractionRows.length > 0) {
       const texts = extractionRows.map((e) => e.content);

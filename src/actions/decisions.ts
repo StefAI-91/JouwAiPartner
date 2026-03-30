@@ -1,6 +1,7 @@
 "use server";
 
 import { getAdminClient } from "@/lib/supabase/admin";
+import { insertDecisionSchema } from "@/lib/validations/decisions-action";
 
 export async function insertDecision(decision: {
   decision: string;
@@ -12,13 +13,16 @@ export async function insertDecision(decision: {
   date: string;
   status: string;
   embedding_stale: boolean;
-}): Promise<{ success: true; id: string } | { error: string }> {
+}): Promise<{ success: true; data: { id: string } } | { error: string }> {
+  const parsed = insertDecisionSchema.safeParse(decision);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
   const { data, error } = await getAdminClient()
     .from("decisions")
-    .insert(decision)
+    .insert(parsed.data)
     .select("id")
     .single();
 
   if (error) return { error: error.message };
-  return { success: true, id: data.id };
+  return { success: true, data: { id: data.id } };
 }
