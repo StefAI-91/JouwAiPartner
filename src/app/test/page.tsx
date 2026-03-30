@@ -190,7 +190,6 @@ export default function TestSearchPage() {
           </div>
         )}
       </section>
-
     </div>
   );
 }

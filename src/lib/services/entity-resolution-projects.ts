@@ -83,11 +83,10 @@ async function resolveProjectWithCache(
  * Returns a map of name -> project_id.
  * Pre-fetches all projects once to avoid N+1 queries.
  */
-export async function resolveAllEntities(
-  entities: { projects: string[]; clients: string[] },
-  contentId: string,
-  contentTable: string,
-): Promise<Map<string, string | null>> {
+export async function resolveAllEntities(entities: {
+  projects: string[];
+  clients: string[];
+}): Promise<Map<string, string | null>> {
   const resolutions = new Map<string, string | null>();
   const allNames = [...new Set([...entities.projects, ...entities.clients])];
 

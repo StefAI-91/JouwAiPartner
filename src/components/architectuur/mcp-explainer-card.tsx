@@ -14,10 +14,9 @@ export function McpExplainerCard() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm leading-relaxed text-foreground">
-          MCP (Model Context Protocol) is een standaard waarmee AI-assistenten zoals Claude
-          tools kunnen gebruiken. Onze MCP server draait op Vercel en geeft Claude directe
-          toegang tot jullie kennisbasis. Claude kan zelf beslissen welke tool het beste past
-          bij je vraag.
+          MCP (Model Context Protocol) is een standaard waarmee AI-assistenten zoals Claude tools
+          kunnen gebruiken. Onze MCP server draait op Vercel en geeft Claude directe toegang tot
+          jullie kennisbasis. Claude kan zelf beslissen welke tool het beste past bij je vraag.
         </p>
         <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">Hoe werkt het?</p>
@@ -25,11 +24,8 @@ export function McpExplainerCard() {
             <li>1. Je stelt een vraag aan Claude</li>
             <li>
               2. Claude kiest de juiste tool (bijv.{" "}
-              <code className="rounded bg-muted px-1 font-mono text-[11px]">
-                search_knowledge
-              </code>{" "}
-              of{" "}
-              <code className="rounded bg-muted px-1 font-mono text-[11px]">get_projects</code>)
+              <code className="rounded bg-muted px-1 font-mono text-[11px]">search_knowledge</code>{" "}
+              of <code className="rounded bg-muted px-1 font-mono text-[11px]">get_projects</code>)
             </li>
             <li>3. De tool bevraagt de database en stuurt resultaten terug</li>
             <li>4. Claude formuleert een antwoord op basis van de resultaten</li>

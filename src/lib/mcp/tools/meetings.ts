@@ -78,7 +78,8 @@ export function registerMeetingTools(server: McpServer) {
       const formatted = meetings.map((m: McpMeetingRow) => {
         const extractions = extractionsByMeeting[m.id] || [];
 
-        const orgName = m.organization?.name || m.unmatched_organization_name || "Onbekend";
+        const org = Array.isArray(m.organization) ? m.organization[0] : m.organization;
+        const orgName = org?.name || m.unmatched_organization_name || "Onbekend";
         const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
 
         const sections: string[] = [

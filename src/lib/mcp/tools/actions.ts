@@ -88,11 +88,15 @@ export function registerActionTools(server: McpServer) {
       const filtered = items;
 
       const formatted = filtered.map((item: McpActionItemRow, i: number) => {
-        const meeting = item.meeting;
+        const meeting = Array.isArray(item.meeting) ? item.meeting[0] : item.meeting;
         const dateStr = meeting?.date
           ? new Date(meeting.date).toLocaleDateString("nl-NL")
           : "onbekende datum";
-        const projectName = item.project?.name || item.organization?.name || "geen project";
+        const projectRow = Array.isArray(item.project) ? item.project[0] : item.project;
+        const organizationRow = Array.isArray(item.organization)
+          ? item.organization[0]
+          : item.organization;
+        const projectName = projectRow?.name || organizationRow?.name || "geen project";
         const status = formatVerificatieStatus(item.confidence, item.corrected_by);
         const assignee = item.metadata?.assignee;
         const deadline = item.metadata?.deadline;

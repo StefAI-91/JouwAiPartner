@@ -52,7 +52,7 @@ export function registerOrganizationTools(server: McpServer) {
       }
 
       const formatted = data.map((org: McpOrganizationRow, i: number) => {
-        const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
+        const aliases = org.aliases && org.aliases.length > 0 ? ` (${org.aliases.join(", ")})` : "";
         const contact = org.contact_person
           ? `\n   Contact: ${org.contact_person}${org.email ? ` <${org.email}>` : ""}`
           : "";

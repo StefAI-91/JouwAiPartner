@@ -17,17 +17,13 @@ export function EmbeddingsCard() {
             <Brain className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-base">
-              Embeddings: hoe zoeken op betekenis werkt
-            </CardTitle>
+            <CardTitle className="text-base">Embeddings: hoe zoeken op betekenis werkt</CardTitle>
             <CardDescription className="text-xs">Sprint 2</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm leading-relaxed text-foreground">
-          {embedSection.simpleExplanation}
-        </p>
+        <p className="text-sm leading-relaxed text-foreground">{embedSection.simpleExplanation}</p>
         <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">Voorbeeld</p>
           <p className="text-xs leading-relaxed text-muted-foreground">

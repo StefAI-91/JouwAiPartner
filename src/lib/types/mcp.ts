@@ -21,7 +21,7 @@ export interface McpProjectRow {
   name: string;
   aliases: string[] | null;
   status: string | null;
-  organization: { name: string } | null;
+  organization: { name: string }[] | null;
 }
 
 export interface McpMeetingRow {
@@ -33,13 +33,12 @@ export interface McpMeetingRow {
   meeting_type: string | null;
   party_type: string | null;
   relevance_score: number | null;
-  organization: { id: string; name: string } | null;
+  organization: { name: string }[] | null;
   unmatched_organization_name: string | null;
-  project: { id: string; name: string } | null;
 }
 
 export interface McpExtractionRow {
-  id: string;
+  meeting_id: string;
   type: string;
   content: string;
   confidence: number | null;
@@ -47,9 +46,6 @@ export interface McpExtractionRow {
   metadata: Record<string, unknown> | null;
   corrected_by: string | null;
   corrected_at: string | null;
-  created_at: string | null;
-  meeting_id: string | null;
-  meeting: { id: string; title: string; date: string | null } | null;
 }
 
 export interface McpDecisionRow {
@@ -61,7 +57,11 @@ export interface McpDecisionRow {
   corrected_by: string | null;
   corrected_at: string | null;
   created_at: string | null;
-  meeting: { id: string; title: string; date: string | null } | null;
+  meeting:
+    | { id: string; title: string; date: string | null; participants: string[] | null }[]
+    | null;
+  organization: { name: string }[] | null;
+  project: { name: string }[] | null;
 }
 
 export interface McpActionItemRow {
@@ -73,7 +73,11 @@ export interface McpActionItemRow {
   corrected_by: string | null;
   corrected_at: string | null;
   created_at: string | null;
-  meeting: { id: string; title: string; date: string | null } | null;
+  meeting:
+    | { id: string; title: string; date: string | null; participants: string[] | null }[]
+    | null;
+  organization: { name: string }[] | null;
+  project: { name: string }[] | null;
 }
 
 export interface McpSearchResult {
@@ -87,6 +91,9 @@ export interface McpSearchResult {
   meeting_title: string | null;
   organization_name: string | null;
   similarity: number;
+  title: string | null;
+  transcript_ref: string | null;
+  meeting_id: string | null;
 }
 
 export interface McpListMeetingRow {
@@ -96,9 +103,8 @@ export interface McpListMeetingRow {
   meeting_type: string | null;
   party_type: string | null;
   relevance_score: number | null;
-  organization: { id: string; name: string } | null;
+  organization: { id: string; name: string }[] | null;
   unmatched_organization_name: string | null;
-  summary: string | null;
 }
 
 export interface McpOverviewProjectRow {

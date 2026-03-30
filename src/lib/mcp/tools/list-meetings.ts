@@ -139,7 +139,8 @@ export function registerListMeetingsTools(server: McpServer) {
 
       const formatted = meetings.map((m: McpListMeetingRow, i: number) => {
         const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
-        const orgName = m.organization?.name || m.unmatched_organization_name || "—";
+        const org = Array.isArray(m.organization) ? m.organization[0] : m.organization;
+        const orgName = org?.name || m.unmatched_organization_name || "—";
         const relevance = m.relevance_score ? ` | Relevantie: ${m.relevance_score.toFixed(2)}` : "";
 
         return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}\n   ID: ${m.id}`;

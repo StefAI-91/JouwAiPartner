@@ -434,8 +434,7 @@ export const testResults: TestResult[] = [
   },
   {
     test: "Sufficiency check (Sprint 6)",
-    result:
-      "MCP system prompt versterkt: geen antwoord zonder bron, eerlijk bij ontbrekende data",
+    result: "MCP system prompt versterkt: geen antwoord zonder bron, eerlijk bij ontbrekende data",
     pass: true,
   },
 ];

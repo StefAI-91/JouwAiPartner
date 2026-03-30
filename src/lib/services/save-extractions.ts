@@ -15,11 +15,7 @@ export async function saveExtractions(
   project_linked: boolean;
 }> {
   // Step 1: Resolve entities (projects + clients) for linking
-  const entityResolutions = await resolveAllEntities(
-    extractorOutput.entities,
-    meetingId,
-    "meetings",
-  );
+  const entityResolutions = await resolveAllEntities(extractorOutput.entities);
 
   // Step 2: Determine and set meeting's primary project
   let meetingProjectId: string | null = null;

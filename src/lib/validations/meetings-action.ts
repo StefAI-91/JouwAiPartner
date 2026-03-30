@@ -12,7 +12,7 @@ export const insertMeetingSchema = z.object({
   relevance_score: z.number().min(0).max(1),
   organization_id: z.string().uuid().nullable(),
   unmatched_organization_name: z.string().nullable(),
-  raw_fireflies: z.record(z.unknown()).nullable().optional(),
+  raw_fireflies: z.record(z.string(), z.unknown()).nullable().optional(),
   embedding_stale: z.boolean(),
 });
 

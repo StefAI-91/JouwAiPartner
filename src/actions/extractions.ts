@@ -8,7 +8,7 @@ export async function insertExtractions(
     type: string;
     content: string;
     confidence: number;
-    transcript_ref: string;
+    transcript_ref: string | null;
     metadata: Record<string, unknown>;
     project_id: string | null;
     embedding_stale: boolean;

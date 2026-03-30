@@ -42,9 +42,7 @@ async function main() {
   if (meeting.participants?.length) parts.push(`Deelnemers: ${meeting.participants.join(", ")}`);
   if (meeting.summary) parts.push(`Samenvatting: ${meeting.summary}`);
   if (extractions.length > 0) {
-    parts.push(
-      "Extracties:\n" + extractions.map((e) => `- [${e.type}] ${e.content}`).join("\n"),
-    );
+    parts.push("Extracties:\n" + extractions.map((e) => `- [${e.type}] ${e.content}`).join("\n"));
   }
 
   const embedText_ = parts.join("\n\n");

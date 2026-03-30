@@ -87,11 +87,13 @@ export function registerDecisionTools(server: McpServer) {
       const filtered = decisions;
 
       const formatted = filtered.map((d: McpDecisionRow, i: number) => {
-        const meeting = d.meeting;
+        const meeting = Array.isArray(d.meeting) ? d.meeting[0] : d.meeting;
         const dateStr = meeting?.date
           ? new Date(meeting.date).toLocaleDateString("nl-NL")
           : "onbekende datum";
-        const projectName = d.project?.name || d.organization?.name || "geen project";
+        const projectRow = Array.isArray(d.project) ? d.project[0] : d.project;
+        const organizationRow = Array.isArray(d.organization) ? d.organization[0] : d.organization;
+        const projectName = projectRow?.name || organizationRow?.name || "geen project";
         const status = formatVerificatieStatus(d.confidence, d.corrected_by);
         const madeBy = d.metadata?.made_by;
 

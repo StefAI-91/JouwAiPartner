@@ -76,8 +76,9 @@ export function registerProjectTools(server: McpServer) {
       const filtered = data;
 
       const formatted = filtered.map((p: McpProjectRow, i: number) => {
-        const aliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
-        const orgName = p.organization?.name || "geen organisatie";
+        const aliases = p.aliases && p.aliases.length > 0 ? ` (${p.aliases.join(", ")})` : "";
+        const org = Array.isArray(p.organization) ? p.organization[0] : p.organization;
+        const orgName = org?.name || "geen organisatie";
         return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}`;
       });
 

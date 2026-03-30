@@ -1,7 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
-import type { McpOverviewProjectRow, McpOverviewMeetingRow, McpOverviewExtractionRow } from "@/lib/types/mcp";
+import type {
+  McpOverviewProjectRow,
+  McpOverviewMeetingRow,
+  McpOverviewExtractionRow,
+} from "@/lib/types/mcp";
 import { trackMcpQuery } from "./usage-tracking";
 import { escapeLike } from "./utils";
 
@@ -63,7 +67,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       const sections: string[] = [];
 
       // Organization header
-      const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
+      const aliases = org.aliases && org.aliases.length > 0 ? ` (${org.aliases.join(", ")})` : "";
       sections.push(`# ${org.name}${aliases}`);
       sections.push(`**Type:** ${org.type} | **Status:** ${org.status}`);
       if (org.contact_person) {
@@ -74,7 +78,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       sections.push("", "## Projecten");
       if (projects && projects.length > 0) {
         projects.forEach((p: McpOverviewProjectRow, i: number) => {
-          const pAliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
+          const pAliases = p.aliases && p.aliases.length > 0 ? ` (${p.aliases.join(", ")})` : "";
           sections.push(`${i + 1}. **${p.name}**${pAliases} — ${p.status}`);
         });
       } else {

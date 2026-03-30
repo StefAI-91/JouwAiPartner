@@ -57,6 +57,15 @@
 /* ─── Light Theme: Warm Ink ─── */
 
 :root {
+  /* Font variables — system font fallbacks */
+  --font-sans:
+    "DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading:
+    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-geist-mono:
+    "Geist Mono", ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+
   /* Core */
   --background: oklch(0.98 0.002 75);
   --foreground: oklch(0.15 0.01 75);
