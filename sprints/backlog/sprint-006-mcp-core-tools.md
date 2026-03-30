@@ -10,7 +10,7 @@ FUNC-020..023, MCP-001..005, RULE-002
 ## Scope
 
 1. `search_knowledge` uitbreiden: bronvermelding (meeting titel, datum, transcript_ref) + confidence + verificatie-status
-1b. Sufficiency check in MCP system prompt: *"Als je geen relevante bronnen vindt, zeg dat expliciet. Geef nooit een antwoord zonder bron."* Geen code nodig — Claude respecteert dit via de system prompt.
+   1b. Sufficiency check in MCP system prompt: _"Als je geen relevante bronnen vindt, zeg dat expliciet. Geef nooit een antwoord zonder bron."_ Geen code nodig — Claude respecteert dit via de system prompt.
 2. `get_decisions`: filter extractions type='decision', join meetings voor bron, made_by/date/context uit metadata
 3. `get_action_items`: filter type='action_item', assignee/due_date/status uit metadata, join meetings voor bron
 4. `get_meeting_summary`: meeting detail met meeting_type, party_type, organization, deelnemers, alle extracties met bronvermelding
@@ -18,12 +18,12 @@ FUNC-020..023, MCP-001..005, RULE-002
 
 ## Taken
 
-- [ ] search_knowledge uitbreiden met bronvermelding + confidence
-- [ ] Sufficiency check toevoegen aan MCP system prompt ("geen bron = zeg dat eerlijk")
-- [ ] get_decisions tool bouwen
-- [ ] get_action_items tool bouwen
-- [ ] get_meeting_summary tool bouwen
-- [ ] Verificatie-status logica (AI confidence vs corrected_by)
+- [x] search_knowledge uitbreiden met bronvermelding + confidence
+- [x] Sufficiency check toevoegen aan MCP system prompt ("geen bron = zeg dat eerlijk")
+- [x] get_decisions tool bouwen
+- [x] get_action_items tool bouwen
+- [x] get_meeting_summary tool bouwen
+- [x] Verificatie-status logica (AI confidence vs corrected_by)
 - [ ] Testen via MCP client
 - [ ] Golden questions doorlopen (tests/golden-questions.md) — check of antwoorden kloppen met bronvermelding
 

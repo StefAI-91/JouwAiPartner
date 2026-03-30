@@ -1,11 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { formatVerificatieStatus } from "./utils";
 
 export function registerDecisionTools(server: McpServer) {
   server.tool(
     "get_decisions",
-    "Haal besluiten op uit meetings, optioneel gefilterd op project of datumbereik.",
+    "Haal besluiten op uit meetings met bronvermelding (meeting, datum, citaat), confidence score en verificatie-status. Optioneel gefilterd op project of datumbereik.",
     {
       project: z.string().optional().describe("Filter by project name"),
       date_from: z.string().optional().describe("Start date (ISO format, e.g. 2026-03-01)"),
@@ -19,7 +20,7 @@ export function registerDecisionTools(server: McpServer) {
         .from("extractions")
         .select(
           `
-          id, content, confidence, transcript_ref, created_at,
+          id, content, confidence, transcript_ref, metadata, corrected_by, corrected_at, created_at,
           meeting:meeting_id (id, title, date, participants),
           organization:organization_id (name),
           project:project_id (name)
@@ -71,11 +72,13 @@ export function registerDecisionTools(server: McpServer) {
           ? new Date(meeting.date).toLocaleDateString("nl-NL")
           : "onbekende datum";
         const projectName = d.project?.name || d.organization?.name || "geen project";
-        const confidence =
-          d.confidence != null ? ` (${Math.round(d.confidence * 100)}% zeker)` : "";
+        const status = formatVerificatieStatus(d.confidence, d.corrected_by);
+        const madeBy = d.metadata?.made_by;
 
         return [
-          `${i + 1}. **${d.content}**${confidence}`,
+          `${i + 1}. **${d.content}**`,
+          `   ${status || ""}`,
+          madeBy ? `   Besluit door: ${madeBy}` : null,
           `   Meeting: ${meeting?.title || "onbekend"} | Datum: ${dateStr}`,
           `   Project: ${projectName}`,
           d.transcript_ref ? `   Citaat: "${d.transcript_ref}"` : null,
