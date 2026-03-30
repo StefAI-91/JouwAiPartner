@@ -2,16 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-interface SearchResult {
-  id: string;
-  content: string;
-  title: string;
-  source_table: string;
-  similarity: number;
-}
 
 interface IngestResult {
   id: string;
@@ -29,29 +20,11 @@ interface IngestResponse {
 }
 
 export default function TestSearchPage() {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [timing, setTiming] = useState<number | null>(null);
-
   const [ingesting, setIngesting] = useState(false);
 
   const [ingestData, setIngestData] = useState<IngestResponse | null>(null);
 
   const [ingestError, setIngestError] = useState<string | null>(null);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [askQuestion, setAskQuestion] = useState("");
-  const [askAnswer, setAskAnswer] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [askSources, setAskSources] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [askPlan, setAskPlan] = useState<any | null>(null);
-  const [asking, setAsking] = useState(false);
-  const [askError, setAskError] = useState<string | null>(null);
-  const [askTiming, setAskTiming] = useState<number | null>(null);
 
   const [embedding, setEmbedding] = useState(false);
   const [embedData, setEmbedData] = useState<{
@@ -59,41 +32,6 @@ export default function TestSearchPage() {
     byTable: Record<string, number>;
   } | null>(null);
   const [embedError, setEmbedError] = useState<string | null>(null);
-
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!query.trim()) return;
-
-    setLoading(true);
-    setError(null);
-    setResults([]);
-    setTiming(null);
-
-    const start = performance.now();
-
-    try {
-      const res = await fetch("/api/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query.trim() }),
-      });
-
-      const data = await res.json();
-      const elapsed = performance.now() - start;
-      setTiming(Math.round(elapsed));
-
-      if (!res.ok) {
-        setError(data.error || "Search failed");
-        return;
-      }
-
-      setResults(data.results ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleIngest() {
     setIngesting(true);
@@ -143,51 +81,6 @@ export default function TestSearchPage() {
       setEmbedding(false);
     }
   }
-
-  async function handleAsk(e: React.FormEvent) {
-    e.preventDefault();
-    if (!askQuestion.trim()) return;
-
-    setAsking(true);
-    setAskError(null);
-    setAskAnswer(null);
-    setAskSources([]);
-    setAskPlan(null);
-    setAskTiming(null);
-
-    const start = performance.now();
-
-    try {
-      const res = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: askQuestion.trim() }),
-      });
-
-      const data = await res.json();
-      setAskTiming(Math.round(performance.now() - start));
-
-      if (!res.ok) {
-        setAskError(data.error || "Ask failed");
-        return;
-      }
-
-      setAskAnswer(data.answer);
-      setAskSources(data.sources ?? []);
-      setAskPlan(data.plan ?? null);
-    } catch (err) {
-      setAskError(err instanceof Error ? err.message : "Network error");
-    } finally {
-      setAsking(false);
-    }
-  }
-
-  const sourceColors: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-    documents: "default",
-    meetings: "secondary",
-    slack_messages: "outline",
-    emails: "destructive",
-  };
 
   const statusColors: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
     imported: "default",
@@ -298,67 +191,6 @@ export default function TestSearchPage() {
         )}
       </section>
 
-      {/* Search Section */}
-      <section>
-        <h2 className="mb-2 text-2xl font-bold">Vector Search Test</h2>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Test de semantic search over alle content tabellen (documents, meetings, slack, emails).
-        </p>
-
-        <form onSubmit={handleSearch} className="mb-8 flex gap-2">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Zoek op betekenis, bijv. 'onboarding proces nieuwe medewerkers'..."
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/50"
-          />
-          <Button type="submit" disabled={loading || !query.trim()}>
-            {loading ? "Zoeken..." : "Zoek"}
-          </Button>
-        </form>
-
-        {error && (
-          <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-            {error}
-          </div>
-        )}
-
-        {timing !== null && (
-          <p className="mb-4 text-xs text-muted-foreground">
-            {results.length} resultaten in {timing}ms
-          </p>
-        )}
-
-        <div className="flex flex-col gap-3">
-          {results.map((result) => (
-            <Card key={result.id} size="sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {result.title || "Untitled"}
-                  <Badge variant={sourceColors[result.source_table] ?? "outline"}>
-                    {result.source_table}
-                  </Badge>
-                </CardTitle>
-                <CardDescription>
-                  Similarity: {(result.similarity * 100).toFixed(1)}%
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="line-clamp-4 text-sm text-muted-foreground whitespace-pre-wrap">
-                  {result.content}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-
-          {timing !== null && results.length === 0 && !error && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Geen resultaten gevonden. Probeer een andere zoekopdracht of verlaag de threshold.
-            </p>
-          )}
-        </div>
-      </section>
     </div>
   );
 }
