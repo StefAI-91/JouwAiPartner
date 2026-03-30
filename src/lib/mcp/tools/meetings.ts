@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import type { McpMeetingRow, McpExtractionRow } from "@/lib/types/mcp";
 import { escapeLike, formatVerificatieStatus } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
@@ -68,15 +69,13 @@ export function registerMeetingTools(server: McpServer) {
         .order("confidence", { ascending: false });
 
       // Group extractions by meeting_id
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const extractionsByMeeting: Record<string, any[]> = {};
+      const extractionsByMeeting: Record<string, McpExtractionRow[]> = {};
       for (const e of allExtractions || []) {
         if (!extractionsByMeeting[e.meeting_id]) extractionsByMeeting[e.meeting_id] = [];
         extractionsByMeeting[e.meeting_id].push(e);
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = meetings.map((m: any) => {
+      const formatted = meetings.map((m: McpMeetingRow) => {
         const extractions = extractionsByMeeting[m.id] || [];
 
         const orgName = m.organization?.name || m.unmatched_organization_name || "Onbekend";
@@ -111,8 +110,7 @@ export function registerMeetingTools(server: McpServer) {
           for (const [type, items] of Object.entries(grouped)) {
             const label = typeLabels[type] || type;
             sections.push("", `### ${label}`);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            items.forEach((item: any, i: number) => {
+            items.forEach((item: McpExtractionRow, i: number) => {
               const status = formatVerificatieStatus(item.confidence, item.corrected_by);
               const meta: string[] = [];
               if (item.metadata?.assignee) meta.push(`Eigenaar: ${item.metadata.assignee}`);

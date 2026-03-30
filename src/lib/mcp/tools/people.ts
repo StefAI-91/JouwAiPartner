@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import type { McpPersonRow } from "@/lib/types/mcp";
 
 import { trackMcpQuery } from "./usage-tracking";
 import { escapeLike } from "./utils";
@@ -42,8 +43,7 @@ export function registerPeopleTools(server: McpServer) {
         };
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = data.map((p: any, i: number) => {
+      const formatted = data.map((p: McpPersonRow, i: number) => {
         const details = [
           p.role ? `Rol: ${p.role}` : null,
           p.team ? `Team: ${p.team}` : null,

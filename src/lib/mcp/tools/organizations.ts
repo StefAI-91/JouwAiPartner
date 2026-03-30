@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import type { McpOrganizationRow } from "@/lib/types/mcp";
 
 import { trackMcpQuery } from "./usage-tracking";
 import { escapeLike } from "./utils";
@@ -50,8 +51,7 @@ export function registerOrganizationTools(server: McpServer) {
         };
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = data.map((org: any, i: number) => {
+      const formatted = data.map((org: McpOrganizationRow, i: number) => {
         const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
         const contact = org.contact_person
           ? `\n   Contact: ${org.contact_person}${org.email ? ` <${org.email}>` : ""}`

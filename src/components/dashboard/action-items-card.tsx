@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { OpenActionItem } from "@/lib/queries/action-items";
+import { DASHBOARD } from "@/lib/config/dashboard";
 
 interface ActionItemsCardProps {
   items: OpenActionItem[];
@@ -22,7 +23,7 @@ function getUrgency(dueDateStr: string | null): Urgency {
 
 function formatDueDate(dueDateStr: string | null): string {
   if (!dueDateStr) return "";
-  return new Date(dueDateStr).toLocaleDateString("nl-NL", {
+  return new Date(dueDateStr).toLocaleDateString(DASHBOARD.locale, {
     day: "numeric",
     month: "short",
   });

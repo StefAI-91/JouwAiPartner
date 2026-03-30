@@ -1,6 +1,6 @@
-import { insertExtractions } from "@/lib/actions/extractions";
-import { resolveAllEntities } from "@/lib/services/entity-resolution";
-import { updateMeetingProject } from "@/lib/actions/meetings";
+import { insertExtractions } from "@/actions/extractions";
+import { resolveAllEntities } from "@/lib/services/entity-resolution-projects";
+import { updateMeetingProject } from "@/actions/meetings";
 import { ExtractorOutput, ExtractionItem } from "@/lib/validations/extractor";
 
 /**

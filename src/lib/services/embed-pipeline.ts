@@ -1,5 +1,5 @@
 import { embedText, embedBatch } from "@/lib/embeddings";
-import { updateRowEmbedding } from "@/lib/actions/embeddings";
+import { updateRowEmbedding } from "@/actions/embeddings";
 import { getMeetingExtractions, getMeetingForEmbedding } from "@/lib/queries/meetings";
 import { getExtractionsByMeetingId } from "@/lib/queries/extractions";
 

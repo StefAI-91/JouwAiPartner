@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import type { McpActionItemRow } from "@/lib/types/mcp";
 import { escapeLike, formatVerificatieStatus } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
@@ -86,8 +87,7 @@ export function registerActionTools(server: McpServer) {
 
       const filtered = items;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = filtered.map((item: any, i: number) => {
+      const formatted = filtered.map((item: McpActionItemRow, i: number) => {
         const meeting = item.meeting;
         const dateStr = meeting?.date
           ? new Date(meeting.date).toLocaleDateString("nl-NL")

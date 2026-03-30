@@ -10,7 +10,7 @@ register({ baseUrl: resolve(__dirname, ".."), paths: tsconfig.compilerOptions.pa
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getMeetingExtractions } from "@/lib/queries/meetings";
 import { embedText } from "@/lib/embeddings";
-import { updateRowEmbedding } from "@/lib/actions/embeddings";
+import { updateRowEmbedding } from "@/actions/embeddings";
 
 const MEETING_ID = "f43219a7-850f-4c8c-9ed4-6d4f09ee04b0";
 

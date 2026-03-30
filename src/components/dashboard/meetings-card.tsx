@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import type { RecentMeeting } from "@/lib/queries/meetings";
+import { DASHBOARD } from "@/lib/config/dashboard";
 
 interface MeetingsCardProps {
   meetings: RecentMeeting[];
@@ -9,7 +10,7 @@ interface MeetingsCardProps {
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("nl-NL", {
+  return new Date(dateStr).toLocaleDateString(DASHBOARD.locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -23,8 +24,8 @@ function relevancePercent(score: number | null): string {
 
 function relevanceBadgeVariant(score: number | null): "default" | "secondary" | "outline" {
   if (score == null) return "outline";
-  if (score >= 0.8) return "default";
-  if (score >= 0.6) return "secondary";
+  if (score >= DASHBOARD.relevance.high) return "default";
+  if (score >= DASHBOARD.relevance.medium) return "secondary";
   return "outline";
 }
 

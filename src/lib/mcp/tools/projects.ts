@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import type { McpProjectRow } from "@/lib/types/mcp";
 
 import { trackMcpQuery } from "./usage-tracking";
 import { escapeLike } from "./utils";
@@ -74,8 +75,7 @@ export function registerProjectTools(server: McpServer) {
 
       const filtered = data;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = filtered.map((p: any, i: number) => {
+      const formatted = filtered.map((p: McpProjectRow, i: number) => {
         const aliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
         const orgName = p.organization?.name || "geen organisatie";
         return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}`;

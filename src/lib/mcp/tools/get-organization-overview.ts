@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import type { McpOverviewProjectRow, McpOverviewMeetingRow, McpOverviewExtractionRow } from "@/lib/types/mcp";
 import { trackMcpQuery } from "./usage-tracking";
 import { escapeLike } from "./utils";
 
@@ -72,8 +73,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       // Projects
       sections.push("", "## Projecten");
       if (projects && projects.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        projects.forEach((p: any, i: number) => {
+        projects.forEach((p: McpOverviewProjectRow, i: number) => {
           const pAliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
           sections.push(`${i + 1}. **${p.name}**${pAliases} — ${p.status}`);
         });
@@ -84,8 +84,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       // Meetings
       sections.push("", "## Recente meetings");
       if (meetings && meetings.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        meetings.forEach((m: any, i: number) => {
+        meetings.forEach((m: McpOverviewMeetingRow, i: number) => {
           const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
           sections.push(
             `${i + 1}. **${m.title}** — ${dateStr} (${m.meeting_type || "onbekend type"})`,
@@ -119,8 +118,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         for (const [type, items] of Object.entries(grouped)) {
           const label = typeLabels[type] || type;
           sections.push("", `### ${label} (${items.length})`);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          items.forEach((item: any, i: number) => {
+          items.forEach((item: McpOverviewExtractionRow, i: number) => {
             const meta: string[] = [];
             if (item.metadata?.assignee) meta.push(`Eigenaar: ${item.metadata.assignee}`);
             if (item.metadata?.deadline) meta.push(`Deadline: ${item.metadata.deadline}`);

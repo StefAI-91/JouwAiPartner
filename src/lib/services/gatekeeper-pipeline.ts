@@ -1,10 +1,10 @@
 import { runGatekeeper } from "@/lib/agents/gatekeeper";
 import { runExtractor, ExtractorOutput } from "@/lib/agents/extractor";
 import { GatekeeperOutput } from "@/lib/validations/gatekeeper";
-import { insertMeeting, updateMeetingRawFireflies } from "@/lib/actions/meetings";
-import { resolveOrganization } from "@/lib/services/entity-resolution";
+import { insertMeeting, updateMeetingRawFireflies } from "@/actions/meetings";
+import { resolveOrganization } from "@/lib/services/entity-resolution-organizations";
 import { findPeopleByEmails } from "@/lib/queries/people";
-import { linkMeetingParticipants } from "@/lib/actions/meeting-participants";
+import { linkMeetingParticipants } from "@/actions/meeting-participants";
 import { saveExtractions } from "@/lib/services/save-extractions";
 import { embedMeetingWithExtractions } from "@/lib/services/embed-pipeline";
 

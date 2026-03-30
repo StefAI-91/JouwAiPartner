@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import type { McpListMeetingRow } from "@/lib/types/mcp";
 import { trackMcpQuery } from "./usage-tracking";
 import { escapeLike } from "./utils";
 
@@ -136,8 +137,7 @@ export function registerListMeetingsTools(server: McpServer) {
         };
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = meetings.map((m: any, i: number) => {
+      const formatted = meetings.map((m: McpListMeetingRow, i: number) => {
         const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
         const orgName = m.organization?.name || m.unmatched_organization_name || "—";
         const relevance = m.relevance_score ? ` | Relevantie: ${m.relevance_score.toFixed(2)}` : "";

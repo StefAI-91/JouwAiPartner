@@ -2,7 +2,7 @@ import { embedText, embedBatch } from "@/lib/embeddings";
 import { getStaleRows, StaleRow } from "@/lib/queries/content";
 import { getMeetingExtractionsBatch } from "@/lib/queries/meetings";
 import { getStalePeople } from "@/lib/queries/people";
-import { updateRowEmbedding } from "@/lib/actions/embeddings";
+import { updateRowEmbedding } from "@/actions/embeddings";
 
 const SIMPLE_EMBEDDABLE_TABLES = [
   { table: "extractions", contentField: "content" },

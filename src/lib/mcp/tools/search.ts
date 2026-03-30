@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { embedText } from "@/lib/embeddings";
+import type { McpSearchResult } from "@/lib/types/mcp";
 import { formatVerificatieStatus } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
@@ -50,8 +51,7 @@ export function registerSearchTools(server: McpServer) {
         need: "Behoefte",
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = results.map((r: any, i: number) => {
+      const formatted = results.map((r: McpSearchResult, i: number) => {
         const sourceLabel = sourceLabels[r.source_type] || r.source_type;
         const dateStr = r.date ? new Date(r.date).toLocaleDateString("nl-NL") : null;
         const status = formatVerificatieStatus(r.confidence, r.corrected_by);

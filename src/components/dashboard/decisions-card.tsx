@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { RecentDecision } from "@/lib/queries/decisions";
+import { DASHBOARD } from "@/lib/config/dashboard";
 
 interface DecisionsCardProps {
   decisions: RecentDecision[];
@@ -8,7 +9,7 @@ interface DecisionsCardProps {
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("nl-NL", {
+  return new Date(dateStr).toLocaleDateString(DASHBOARD.locale, {
     day: "numeric",
     month: "short",
   });
@@ -42,7 +43,7 @@ export function DecisionsCard({ decisions }: DecisionsCardProps) {
             {decisions.map((d) => (
               <li key={d.id} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm leading-snug">{truncate(d.decision, 120)}</p>
+                  <p className="text-sm leading-snug">{truncate(d.decision, DASHBOARD.truncate.decision)}</p>
                   {d.status && (
                     <Badge
                       variant={STATUS_VARIANTS[d.status] ?? "outline"}
@@ -55,7 +56,7 @@ export function DecisionsCard({ decisions }: DecisionsCardProps) {
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                   {d.made_by && <span>{d.made_by}</span>}
                   {d.meeting_title && (
-                    <span className="italic">{truncate(d.meeting_title, 40)}</span>
+                    <span className="italic">{truncate(d.meeting_title, DASHBOARD.truncate.meetingTitle)}</span>
                   )}
                   {d.date && <span>{formatDate(d.date)}</span>}
                 </div>
