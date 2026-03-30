@@ -1,13 +1,17 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { formatVerificatieStatus } from "./utils";
 
 export function registerActionTools(server: McpServer) {
   server.tool(
     "get_action_items",
-    "Haal actiepunten op uit meetings, optioneel gefilterd op persoon of project.",
+    "Haal actiepunten op uit meetings met eigenaar, deadline, bronvermelding (meeting, datum, citaat), confidence score en verificatie-status. Optioneel gefilterd op persoon of project.",
     {
-      person: z.string().optional().describe("Filter by person name (partial match in content)"),
+      person: z
+        .string()
+        .optional()
+        .describe("Filter by person name (matches assignee in metadata or content)"),
       project: z.string().optional().describe("Filter by project name"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
     },
@@ -18,7 +22,7 @@ export function registerActionTools(server: McpServer) {
         .from("extractions")
         .select(
           `
-          id, content, confidence, transcript_ref, created_at,
+          id, content, confidence, transcript_ref, metadata, corrected_by, corrected_at, created_at,
           meeting:meeting_id (id, title, date, participants),
           organization:organization_id (name),
           project:project_id (name)
@@ -48,9 +52,12 @@ export function registerActionTools(server: McpServer) {
 
       let filtered = items;
       if (person) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        filtered = filtered.filter((item: any) =>
-          item.content?.toLowerCase().includes(person.toLowerCase()),
+        const lowerPerson = person.toLowerCase();
+        filtered = filtered.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase join type
+          (item: any) =>
+            item.content?.toLowerCase().includes(lowerPerson) ||
+            item.metadata?.assignee?.toLowerCase().includes(lowerPerson),
         );
       }
       if (project) {
@@ -69,11 +76,15 @@ export function registerActionTools(server: McpServer) {
           ? new Date(meeting.date).toLocaleDateString("nl-NL")
           : "onbekende datum";
         const projectName = item.project?.name || item.organization?.name || "geen project";
-        const confidence =
-          item.confidence != null ? ` (${Math.round(item.confidence * 100)}% zeker)` : "";
+        const status = formatVerificatieStatus(item.confidence, item.corrected_by);
+        const assignee = item.metadata?.assignee;
+        const deadline = item.metadata?.deadline;
 
         return [
-          `${i + 1}. **${item.content}**${confidence}`,
+          `${i + 1}. **${item.content}**`,
+          `   ${status || ""}`,
+          assignee ? `   Eigenaar: ${assignee}` : null,
+          deadline ? `   Deadline: ${deadline}` : null,
           `   Meeting: ${meeting?.title || "onbekend"} | Datum: ${dateStr}`,
           `   Project: ${projectName}`,
           item.transcript_ref ? `   Citaat: "${item.transcript_ref}"` : null,

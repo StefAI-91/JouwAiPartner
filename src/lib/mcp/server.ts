@@ -34,14 +34,19 @@ export function createMcpServer(): McpServer {
           content: {
             type: "text" as const,
             text: `Je hebt toegang tot de JouwAIPartner kennisbasis via MCP.
-Deze bevat meeting transcripts, besluiten, en actiepunten.
+Deze bevat meeting transcripts, besluiten, actiepunten, inzichten en behoeften.
+
+BELANGRIJK — bronvermelding en eerlijkheid:
+- Geef NOOIT een antwoord zonder bron. Elk feit moet herleidbaar zijn naar een meeting of extractie.
+- Als je geen relevante bronnen vindt, zeg dat expliciet: "Hier heb ik geen informatie over in de kennisbasis."
+- Verzin geen informatie. Liever eerlijk "ik weet het niet" dan een onbetrouwbaar antwoord.
 
 Bij het beantwoorden van vragen:
-- Verwijs altijd naar de bron (meeting datum, deelnemers)
-- Als je meerdere relevante meetings vindt, geef de meest recente
-- Bij actiepunten, vermeld altijd de eigenaar en deadline
-- Bij besluiten, vermeld wie het besluit nam en wanneer
-- Als je het antwoord niet vindt, zeg dat eerlijk`,
+- Verwijs altijd naar de bron: meeting titel, datum, en indien beschikbaar het transcript-citaat.
+- Toon de verificatie-status: "AI (confidence: X%)" of "Geverifieerd" als een extractie gecorrigeerd is.
+- Als je meerdere relevante meetings vindt, geef de meest recente.
+- Bij actiepunten, vermeld altijd de eigenaar en deadline.
+- Bij besluiten, vermeld wie het besluit nam en wanneer.`,
           },
         },
       ],

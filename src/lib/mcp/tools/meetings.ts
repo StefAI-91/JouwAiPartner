@@ -1,11 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { formatVerificatieStatus } from "./utils";
 
 export function registerMeetingTools(server: McpServer) {
   server.tool(
     "get_meeting_summary",
-    "Haal de volledige samenvatting, extracties en deelnemers op voor een specifieke meeting. Gebruik het meeting ID uit zoekresultaten, of zoek op titel.",
+    "Haal de volledige samenvatting op voor een meeting: metadata, deelnemers, en alle extracties (besluiten, actiepunten, inzichten, behoeften) met bronvermelding, confidence en verificatie-status. Gebruik meeting ID uit zoekresultaten, of zoek op titel.",
     {
       meeting_id: z.string().optional().describe("UUID of the meeting (from search results)"),
       title_search: z.string().optional().describe("Search meetings by title (partial match)"),
@@ -53,10 +54,11 @@ export function registerMeetingTools(server: McpServer) {
       const formatted = await Promise.all(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         meetings.map(async (m: any) => {
-          // Haal alle extracties op voor deze meeting
           const { data: extractions } = await supabase
             .from("extractions")
-            .select("type, content, confidence, transcript_ref")
+            .select(
+              "type, content, confidence, transcript_ref, metadata, corrected_by, corrected_at",
+            )
             .eq("meeting_id", m.id)
             .order("type")
             .order("confidence", { ascending: false });
@@ -93,10 +95,19 @@ export function registerMeetingTools(server: McpServer) {
             for (const [type, items] of Object.entries(grouped)) {
               const label = typeLabels[type] || type;
               sections.push("", `### ${label}`);
-              items.forEach((item, i) => {
-                const conf =
-                  item.confidence != null ? ` (${Math.round(item.confidence * 100)}%)` : "";
-                sections.push(`${i + 1}. ${item.content}${conf}`);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              items.forEach((item: any, i: number) => {
+                const status = formatVerificatieStatus(item.confidence, item.corrected_by);
+                const meta: string[] = [];
+                if (item.metadata?.assignee) meta.push(`Eigenaar: ${item.metadata.assignee}`);
+                if (item.metadata?.deadline) meta.push(`Deadline: ${item.metadata.deadline}`);
+                if (item.metadata?.made_by) meta.push(`Door: ${item.metadata.made_by}`);
+                if (item.metadata?.urgency) meta.push(`Urgentie: ${item.metadata.urgency}`);
+
+                sections.push(`${i + 1}. ${item.content}`);
+                if (status) sections.push(`   ${status}`);
+                if (meta.length > 0) sections.push(`   ${meta.join(" | ")}`);
+                if (item.transcript_ref) sections.push(`   Citaat: "${item.transcript_ref}"`);
               });
             }
           } else {
