@@ -2,10 +2,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 
+import { trackMcpQuery } from "./usage-tracking";
+import { escapeLike } from "./utils";
+
 export function registerOrganizationTools(server: McpServer) {
   server.tool(
     "get_organizations",
-    "Haal organisaties op (klanten, partners, leveranciers). Zoek op naam of filter op type/status.",
+    "Haal een lijst van organisaties op (klanten, partners, leveranciers). Zoek op naam of filter op type/status. Voor een compleet overzicht van één organisatie met al haar meetings, projecten en extracties, gebruik get_organization_overview.",
     {
       search: z.string().optional().describe("Search by name or alias (partial match)"),
       type: z
@@ -16,6 +19,11 @@ export function registerOrganizationTools(server: McpServer) {
     },
     async ({ search, type, status }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(
+        supabase,
+        "get_organizations",
+        [search, type, status].filter(Boolean).join(", ") || "all",
+      );
 
       let query = supabase
         .from("organizations")
@@ -24,7 +32,7 @@ export function registerOrganizationTools(server: McpServer) {
 
       if (type) query = query.eq("type", type);
       if (status) query = query.eq("status", status);
-      if (search) query = query.ilike("name", `%${search}%`);
+      if (search) query = query.ilike("name", `%${escapeLike(search)}%`);
 
       const { data, error } = await query.limit(50);
 

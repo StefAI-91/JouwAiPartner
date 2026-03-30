@@ -1,4 +1,12 @@
 /**
+ * Escape LIKE/ILIKE wildcard characters in user input.
+ * Prevents % and _ from being interpreted as wildcards.
+ */
+export function escapeLike(input: string): string {
+  return input.replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+/**
  * Format verification status for MCP tool output.
  * Shows "AI (confidence: 87%)" or "Geverifieerd door [naam]".
  */

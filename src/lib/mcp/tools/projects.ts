@@ -2,10 +2,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 
+import { trackMcpQuery } from "./usage-tracking";
+import { escapeLike } from "./utils";
+
 export function registerProjectTools(server: McpServer) {
   server.tool(
     "get_projects",
-    "Haal projecten op, optioneel gefilterd op naam, organisatie of status.",
+    "Haal projecten op, optioneel gefilterd op naam, organisatie of status. Toont projectnaam, aliassen, organisatie en status.",
     {
       search: z.string().optional().describe("Search by project name or alias (partial match)"),
       organization: z.string().optional().describe("Filter by organization name (partial match)"),
@@ -16,6 +19,11 @@ export function registerProjectTools(server: McpServer) {
     },
     async ({ search, organization, status }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(
+        supabase,
+        "get_projects",
+        [search, organization, status].filter(Boolean).join(", ") || "all",
+      );
 
       let query = supabase
         .from("projects")
@@ -26,7 +34,29 @@ export function registerProjectTools(server: McpServer) {
         .order("name");
 
       if (status) query = query.eq("status", status);
-      if (search) query = query.ilike("name", `%${search}%`);
+      if (search) query = query.ilike("name", `%${escapeLike(search)}%`);
+
+      // Database-side filtering for organization
+      if (organization) {
+        const { data: orgs } = await supabase
+          .from("organizations")
+          .select("id")
+          .ilike("name", `%${escapeLike(organization)}%`);
+
+        if (orgs && orgs.length > 0) {
+          const orgIds = orgs.map((o: { id: string }) => o.id);
+          query = query.in("organization_id", orgIds);
+        } else {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Geen organisatie gevonden voor "${organization}".`,
+              },
+            ],
+          };
+        }
+      }
 
       const { data, error } = await query.limit(50);
 
@@ -42,13 +72,7 @@ export function registerProjectTools(server: McpServer) {
         };
       }
 
-      let filtered = data;
-      if (organization) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        filtered = data.filter((p: any) =>
-          p.organization?.name?.toLowerCase().includes(organization.toLowerCase()),
-        );
-      }
+      const filtered = data;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const formatted = filtered.map((p: any, i: number) => {

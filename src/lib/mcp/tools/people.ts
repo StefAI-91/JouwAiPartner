@@ -2,10 +2,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/supabase/admin";
 
+import { trackMcpQuery } from "./usage-tracking";
+import { escapeLike } from "./utils";
+
 export function registerPeopleTools(server: McpServer) {
   server.tool(
     "get_people",
-    "Haal mensen op (teamleden, klanten, contactpersonen). Zoek op naam, team of rol.",
+    "Haal mensen op (teamleden, klanten, contactpersonen). Zoek op naam, team of rol. Gebruik om te achterhalen wie er in het team zit of om een persoon te vinden.",
     {
       search: z.string().optional().describe("Search by name (partial match)"),
       team: z.string().optional().describe("Filter by team (e.g. 'engineering', 'leadership')"),
@@ -13,12 +16,17 @@ export function registerPeopleTools(server: McpServer) {
     },
     async ({ search, team, role }) => {
       const supabase = getAdminClient();
+      await trackMcpQuery(
+        supabase,
+        "get_people",
+        [search, team, role].filter(Boolean).join(", ") || "all",
+      );
 
       let query = supabase.from("people").select("id, name, email, team, role").order("name");
 
-      if (search) query = query.ilike("name", `%${search}%`);
+      if (search) query = query.ilike("name", `%${escapeLike(search)}%`);
       if (team) query = query.eq("team", team);
-      if (role) query = query.ilike("role", `%${role}%`);
+      if (role) query = query.ilike("role", `%${escapeLike(role)}%`);
 
       const { data, error } = await query.limit(50);
 

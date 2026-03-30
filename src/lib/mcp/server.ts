@@ -6,6 +6,9 @@ import { registerDecisionTools } from "./tools/decisions";
 import { registerOrganizationTools } from "./tools/organizations";
 import { registerProjectTools } from "./tools/projects";
 import { registerPeopleTools } from "./tools/people";
+import { registerOrganizationOverviewTools } from "./tools/get-organization-overview";
+import { registerListMeetingsTools } from "./tools/list-meetings";
+import { registerCorrectExtractionTools } from "./tools/correct-extraction";
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -22,6 +25,9 @@ export function createMcpServer(): McpServer {
   registerOrganizationTools(server);
   registerProjectTools(server);
   registerPeopleTools(server);
+  registerOrganizationOverviewTools(server);
+  registerListMeetingsTools(server);
+  registerCorrectExtractionTools(server);
 
   // Register the system prompt as an MCP prompt
   server.prompt(

@@ -17,11 +17,11 @@ FUNC-024, FUNC-029..030, MCP-006..008
 
 ## Taken
 
-- [ ] get_organization_overview tool bouwen (SQL joins)
-- [ ] list_meetings tool bouwen (SQL filters + pagination)
-- [ ] correct_extraction tool bouwen
-- [ ] `mcp_queries` tabel + INSERT bij elke tool call (usage tracking)
-- [ ] Tool descriptions updaten
+- [x] get_organization_overview tool bouwen (SQL joins)
+- [x] list_meetings tool bouwen (SQL filters + pagination)
+- [x] correct_extraction tool bouwen
+- [x] `mcp_queries` tabel + INSERT bij elke tool call (usage tracking)
+- [x] Tool descriptions updaten
 - [ ] Testen: overzicht, filtering, correctie
 - [ ] Golden questions doorlopen — finale check voor v1 launch
 
