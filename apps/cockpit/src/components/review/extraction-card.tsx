@@ -18,10 +18,11 @@ interface ExtractionCardProps {
     confidence: number | null;
     transcript_ref: string | null;
   };
+  readOnly?: boolean;
   onEdit?: (id: string, content: string) => void;
 }
 
-export function ExtractionCard({ extraction, onEdit }: ExtractionCardProps) {
+export function ExtractionCard({ extraction, readOnly, onEdit }: ExtractionCardProps) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(extraction.content);
   const config = TYPE_CONFIG[extraction.type] ?? TYPE_CONFIG.insight;
@@ -38,7 +39,7 @@ export function ExtractionCard({ extraction, onEdit }: ExtractionCardProps) {
       className="rounded-xl bg-white p-4 shadow-sm"
       style={{ borderLeft: `3px solid ${config.color}` }}
     >
-      {editing ? (
+      {!readOnly && editing ? (
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -56,8 +57,8 @@ export function ExtractionCard({ extraction, onEdit }: ExtractionCardProps) {
         />
       ) : (
         <p
-          onClick={() => setEditing(true)}
-          className="cursor-text text-sm leading-relaxed hover:bg-muted/30 rounded-lg p-1 -m-1 transition-colors"
+          onClick={readOnly ? undefined : () => setEditing(true)}
+          className={`text-sm leading-relaxed ${readOnly ? "" : "cursor-text hover:bg-muted/30 rounded-lg p-1 -m-1 transition-colors"}`}
         >
           {content}
         </p>
