@@ -10,12 +10,13 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/database": "*",
-    "@repo/ai": "*",
-    "@repo/mcp": "*",
     "@base-ui/react": "^1.3.0",
+    "@repo/ai": "*",
+    "@repo/database": "*",
+    "@repo/mcp": "*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "jose": "^6.2.2",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
     "react": "19.2.4",

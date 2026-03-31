@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   async function handleLogin(e: React.FormEvent) {
@@ -27,7 +28,8 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/");
+      const returnTo = searchParams.get("returnTo");
+      router.push(returnTo ?? "/");
       router.refresh();
     }
   }

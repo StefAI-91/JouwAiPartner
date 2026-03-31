@@ -1,18 +1,34 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createMcpServer } from "@repo/mcp/server";
 import { createClient } from "@repo/database/supabase/server";
+import { verifyAccessToken } from "@/lib/oauth";
 
 // Stateless mode: each request gets a fresh server+transport.
 // This works on Vercel serverless — no in-memory session persistence needed
 // because each MCP tool call is a self-contained request/response.
 
 async function handleMcpRequest(request: Request): Promise<Response> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  // Try Bearer token first (OAuth 2.1 for Claude Desktop / remote MCP clients)
+  const authHeader = request.headers.get("authorization");
+  let authenticated = false;
+
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    const payload = await verifyAccessToken(token);
+    if (payload?.sub) {
+      authenticated = true;
+    }
+  }
+
+  // Fall back to Supabase session cookie (browser/dashboard usage)
+  if (!authenticated) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   const transport = new WebStandardStreamableHTTPServerTransport({
