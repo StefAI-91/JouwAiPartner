@@ -36,7 +36,7 @@ export function BottomNav({ reviewCount }: { reviewCount?: number }) {
               aria-current={isActive ? "page" : undefined}
               className={`relative flex flex-col items-center gap-0.5 rounded-full px-3.5 py-2 text-xs font-medium transition-all ${
                 isActive
-                  ? "bg-[#006B3F] text-white shadow-lg"
+                  ? "bg-primary text-primary-foreground shadow-lg"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >

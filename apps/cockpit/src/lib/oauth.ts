@@ -11,8 +11,10 @@ function getSigningKey(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-// ── In-memory client registry (dynamic registrations within a single invocation) ──
-
+// ── In-memory client registry ──
+// WARNING: Dynamic registrations are NOT persisted across serverless cold starts.
+// This is acceptable for the current MCP use case where clients re-register on
+// connection setup. For persistent clients, migrate to a Supabase `oauth_clients` table.
 const REGISTERED_CLIENTS = new Map<
   string,
   { clientId: string; redirectUris: string[]; name: string }
@@ -73,6 +75,9 @@ export function registerClient(data: {
     redirectUris: data.redirectUris,
     name: data.name,
   });
+  console.warn(
+    `[oauth] Client "${data.name}" registered in-memory (clientId: ${clientId}). Will not survive cold start.`,
+  );
   return { clientId };
 }
 

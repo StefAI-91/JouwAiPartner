@@ -1,5 +1,5 @@
 import { embedText, embedBatch } from "../embeddings";
-import { updateRowEmbedding } from "@repo/database/mutations/embeddings";
+import { updateRowEmbedding, batchUpdateEmbeddings } from "@repo/database/mutations/embeddings";
 import { getMeetingExtractions } from "@repo/database/queries/meetings";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
@@ -66,7 +66,7 @@ export async function embedMeetingWithExtractions(meetingId: string): Promise<vo
     throw new Error(`Failed to save meeting embedding: ${meetingResult.error}`);
   }
 
-  // Embed individual extractions in batch
+  // Embed individual extractions in batch (fixes N+1: Q-01)
   if (extractions.length > 0) {
     const { data: extractionRows } = await getAdminClient()
       .from("extractions")
@@ -76,12 +76,11 @@ export async function embedMeetingWithExtractions(meetingId: string): Promise<vo
     if (extractionRows && extractionRows.length > 0) {
       const texts = extractionRows.map((e) => e.content);
       const embeddings = await embedBatch(texts);
+      const ids = extractionRows.map((e) => e.id);
 
-      for (let i = 0; i < extractionRows.length; i++) {
-        const result = await updateRowEmbedding("extractions", extractionRows[i].id, embeddings[i]);
-        if ("error" in result) {
-          console.error(`Failed to embed extraction ${extractionRows[i].id}: ${result.error}`);
-        }
+      const result = await batchUpdateEmbeddings("extractions", ids, embeddings);
+      if ("error" in result) {
+        console.error(`Failed to batch embed extractions for meeting ${meetingId}: ${result.error}`);
       }
     }
   }

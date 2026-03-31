@@ -63,8 +63,13 @@ export function registerCorrectExtractionTools(server: McpServer) {
         correctedByUserId = profile[0].id;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const updatePayload: Record<string, any> = {
+      const updatePayload: {
+        corrected_by: string | null;
+        corrected_at: string;
+        embedding_stale: boolean;
+        content?: string;
+        metadata?: Record<string, unknown>;
+      } = {
         corrected_by: correctedByUserId,
         corrected_at: new Date().toISOString(),
         embedding_stale: true,

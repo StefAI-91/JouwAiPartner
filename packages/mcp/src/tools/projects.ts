@@ -73,8 +73,15 @@ export function registerProjectTools(server: McpServer) {
 
       const filtered = data;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = filtered.map((p: any, i: number) => {
+      interface ProjectItem {
+        id: string;
+        name: string;
+        aliases: string[];
+        status: string;
+        organization: { name: string } | null;
+      }
+
+      const formatted = (filtered as unknown as ProjectItem[]).map((p: ProjectItem, i: number) => {
         const aliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
         const orgName = p.organization?.name || "geen organisatie";
         return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}`;

@@ -10,7 +10,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="flex min-h-screen flex-col">
       {/* Mobile header */}
       <header className="flex h-14 items-center border-b border-border/50 bg-white/60 px-4 backdrop-blur-sm">
-        <span className="font-heading text-sm font-semibold text-[#006B3F]">
+        <span className="font-heading text-sm font-semibold text-primary">
           Knowledge Platform
         </span>
       </header>

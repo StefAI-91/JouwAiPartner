@@ -89,14 +89,14 @@ export function ReviewCard({ meeting }: ReviewCardProps) {
       <div className="mt-5 flex items-center justify-end gap-2">
         <Link
           href={`/review/${meeting.id}`}
-          className="rounded-full border-2 border-slate-200 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-[#006B3F] hover:text-[#006B3F]"
+          className="rounded-full border-2 border-slate-200 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-primary hover:text-primary"
         >
           Review
         </Link>
         <button
           onClick={handleApprove}
           disabled={loading}
-          className="rounded-full bg-gradient-to-b from-[#006B3F] to-[#005A35] px-5 py-2 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+          className="rounded-full bg-gradient-to-b from-brand to-brand-dark px-5 py-2 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
         >
           {loading ? "Approving..." : "Approve"}
         </button>

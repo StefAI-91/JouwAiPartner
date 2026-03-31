@@ -42,8 +42,15 @@ export function registerPeopleTools(server: McpServer) {
         };
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = data.map((p: any, i: number) => {
+      interface PersonItem {
+        id: string;
+        name: string;
+        email: string | null;
+        team: string | null;
+        role: string | null;
+      }
+
+      const formatted = (data as unknown as PersonItem[]).map((p: PersonItem, i: number) => {
         const details = [
           p.role ? `Rol: ${p.role}` : null,
           p.team ? `Team: ${p.team}` : null,

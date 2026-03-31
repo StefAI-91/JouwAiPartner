@@ -26,7 +26,7 @@ export function ReviewEmptyState({ stats }: ReviewEmptyStateProps) {
 
       {/* Chat bubble */}
       <div className="mt-8 rounded-[2rem] bg-white p-8 shadow-sm">
-        <h2 className="text-center font-heading text-xl font-semibold text-[#006B3F]">
+        <h2 className="text-center font-heading text-xl font-semibold text-primary">
           All caught up!
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
@@ -37,11 +37,11 @@ export function ReviewEmptyState({ stats }: ReviewEmptyStateProps) {
         {/* Stats */}
         <div className="mt-6 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-muted/50 p-4 text-center">
-            <p className="font-heading text-2xl font-bold text-[#006B3F]">{stats.verifiedToday}</p>
+            <p className="font-heading text-2xl font-bold text-primary">{stats.verifiedToday}</p>
             <p className="text-xs text-muted-foreground">Verified today</p>
           </div>
           <div className="rounded-2xl bg-muted/50 p-4 text-center">
-            <p className="font-heading text-2xl font-bold text-[#006B3F]">{stats.totalVerified}</p>
+            <p className="font-heading text-2xl font-bold text-primary">{stats.totalVerified}</p>
             <p className="text-xs text-muted-foreground">Total verified</p>
           </div>
         </div>
