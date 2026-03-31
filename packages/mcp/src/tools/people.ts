@@ -50,7 +50,7 @@ export function registerPeopleTools(server: McpServer) {
         role: string | null;
       }
 
-      const formatted = (data as PersonItem[]).map((p: PersonItem, i: number) => {
+      const formatted = (data as unknown as PersonItem[]).map((p: PersonItem, i: number) => {
         const details = [
           p.role ? `Rol: ${p.role}` : null,
           p.team ? `Team: ${p.team}` : null,

@@ -81,7 +81,7 @@ export function registerProjectTools(server: McpServer) {
         organization: { name: string } | null;
       }
 
-      const formatted = (filtered as ProjectItem[]).map((p: ProjectItem, i: number) => {
+      const formatted = (filtered as unknown as ProjectItem[]).map((p: ProjectItem, i: number) => {
         const aliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
         const orgName = p.organization?.name || "geen organisatie";
         return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}`;

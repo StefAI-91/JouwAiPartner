@@ -96,7 +96,7 @@ export function registerActionTools(server: McpServer) {
         project: { name: string } | null;
       }
 
-      const filtered = items as ActionItem[];
+      const filtered = items as unknown as ActionItem[];
 
       const formatted = filtered.map((item: ActionItem, i: number) => {
         const meeting = item.meeting;

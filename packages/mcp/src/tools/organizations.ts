@@ -60,7 +60,7 @@ export function registerOrganizationTools(server: McpServer) {
         status: "prospect" | "active" | "inactive";
       }
 
-      const formatted = (data as OrganizationItem[]).map((org: OrganizationItem, i: number) => {
+      const formatted = (data as unknown as OrganizationItem[]).map((org: OrganizationItem, i: number) => {
         const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
         const contact = org.contact_person
           ? `\n   Contact: ${org.contact_person}${org.email ? ` <${org.email}>` : ""}`

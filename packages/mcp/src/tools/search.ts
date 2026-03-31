@@ -63,7 +63,7 @@ export function registerSearchTools(server: McpServer) {
         meeting_id: string | null;
       }
 
-      const formatted = (results as SearchResult[]).map((r: SearchResult, i: number) => {
+      const formatted = (results as unknown as SearchResult[]).map((r: SearchResult, i: number) => {
         const sourceLabel = sourceLabels[r.source_type] || r.source_type;
         const dateStr = r.date ? new Date(r.date).toLocaleDateString("nl-NL") : null;
         const status = formatVerificatieStatus(r.confidence, r.corrected_by);
