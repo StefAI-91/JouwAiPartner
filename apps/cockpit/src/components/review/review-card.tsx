@@ -1,0 +1,96 @@
+"use client";
+
+import Link from "next/link";
+import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
+import { ExtractionDots } from "@/components/shared/extraction-dots";
+import { approveMeetingAction } from "@/actions/review";
+import { useState } from "react";
+
+interface ReviewCardProps {
+  meeting: {
+    id: string;
+    title: string | null;
+    date: string | null;
+    meeting_type: string | null;
+    party_type: string | null;
+    created_at: string;
+    organization: { name: string } | null;
+    meeting_participants: { person: { id: string; full_name: string } }[];
+    extractions: { id: string; type: string; content: string; confidence: number | null }[];
+  };
+}
+
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = now - then;
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+export function ReviewCard({ meeting }: ReviewCardProps) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleApprove(e: React.MouseEvent) {
+    e.preventDefault();
+    setLoading(true);
+    const result = await approveMeetingAction({ meetingId: meeting.id });
+    if ("error" in result) {
+      setLoading(false);
+    }
+  }
+
+  const participants = meeting.meeting_participants.map((mp) => mp.person.full_name).join(", ");
+
+  return (
+    <div className="rounded-[2rem] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+      {/* Top row: meta + time ago */}
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          {meeting.organization && (
+            <span className="font-medium text-foreground/70">{meeting.organization.name}</span>
+          )}
+          <MeetingTypeBadge type={meeting.meeting_type} />
+          {meeting.party_type && (
+            <span className="text-muted-foreground">{meeting.party_type}</span>
+          )}
+        </div>
+        <span>{timeAgo(meeting.date ?? meeting.created_at)}</span>
+      </div>
+
+      {/* Title */}
+      <h3 className="mt-3 font-heading text-lg font-semibold leading-snug">
+        {meeting.title ?? "Untitled meeting"}
+      </h3>
+
+      {/* Participants */}
+      {participants && <p className="mt-1 text-sm text-muted-foreground">{participants}</p>}
+
+      {/* Extraction dots */}
+      <div className="mt-4">
+        <ExtractionDots extractions={meeting.extractions} />
+      </div>
+
+      {/* Actions */}
+      <div className="mt-5 flex items-center justify-end gap-2">
+        <Link
+          href={`/review/${meeting.id}`}
+          className="rounded-full border-2 border-slate-200 px-5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-[#006B3F] hover:text-[#006B3F]"
+        >
+          Review
+        </Link>
+        <button
+          onClick={handleApprove}
+          disabled={loading}
+          className="rounded-full bg-gradient-to-b from-[#006B3F] to-[#005A35] px-5 py-2 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+        >
+          {loading ? "Approving..." : "Approve"}
+        </button>
+      </div>
+    </div>
+  );
+}

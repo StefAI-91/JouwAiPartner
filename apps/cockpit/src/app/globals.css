@@ -57,8 +57,8 @@
 /* ─── Light Theme: Warm Ink ─── */
 
 :root {
-  /* Core */
-  --background: oklch(0.98 0.002 75);
+  /* Core — Subtle warm gradient feel */
+  --background: #fdfbfb;
   --foreground: oklch(0.15 0.01 75);
 
   /* Surfaces */
@@ -67,9 +67,9 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.01 75);
 
-  /* Brand — Deep teal with warmth */
-  --primary: oklch(0.45 0.12 175);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Brand — #006B3F green */
+  --primary: #006b3f;
+  --primary-foreground: #ffffff;
 
   /* Supporting */
   --secondary: oklch(0.96 0.005 75);
@@ -89,16 +89,16 @@
   /* Borders & Inputs */
   --border: oklch(0.9 0.005 75);
   --input: oklch(0.9 0.005 75);
-  --ring: oklch(0.45 0.12 175);
+  --ring: #006b3f;
 
   /* Charts — Tonal progression */
-  --chart-1: oklch(0.45 0.12 175);
+  --chart-1: #006b3f;
   --chart-2: oklch(0.6 0.1 155);
   --chart-3: oklch(0.7 0.15 70);
   --chart-4: oklch(0.55 0.22 25);
   --chart-5: oklch(0.55 0.12 280);
 
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
   /* Sidebar */
   --sidebar: oklch(0.97 0.003 75);
@@ -173,7 +173,9 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;
@@ -249,13 +251,31 @@
   /* Glow effect for primary elements */
   .glow-primary {
     box-shadow:
-      0 0 20px oklch(0.45 0.12 175 / 15%),
-      0 0 60px oklch(0.45 0.12 175 / 5%);
+      0 0 20px rgb(0 107 63 / 15%),
+      0 0 60px rgb(0 107 63 / 5%);
   }
   .dark .glow-primary {
     box-shadow:
-      0 0 20px oklch(0.72 0.14 175 / 20%),
-      0 0 60px oklch(0.72 0.14 175 / 8%);
+      0 0 20px rgb(0 107 63 / 20%),
+      0 0 60px rgb(0 107 63 / 8%);
+  }
+
+  /* Extraction type colors */
+  .extraction-decision {
+    --extraction-color: #3b82f6;
+    --extraction-bg: #dbeafe;
+  }
+  .extraction-action_item {
+    --extraction-color: #16a34a;
+    --extraction-bg: #dcfce7;
+  }
+  .extraction-need {
+    --extraction-color: #a855f7;
+    --extraction-bg: #f3e8ff;
+  }
+  .extraction-insight {
+    --extraction-color: #6b7280;
+    --extraction-bg: #f3f4f6;
   }
 
   /* Status indicators */

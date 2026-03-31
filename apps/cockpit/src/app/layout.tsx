@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { DM_Sans, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Nunito, Fredoka, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const nunito = Nunito({
   variable: "--font-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const jakarta = Plus_Jakarta_Sans({
+const fredoka = Fredoka({
   variable: "--font-heading",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="nl"
-      className={`${dmSans.variable} ${jakarta.variable} ${geistMono.variable} h-full`}
+      className={`${nunito.variable} ${fredoka.variable} ${geistMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">{children}</body>
     </html>
