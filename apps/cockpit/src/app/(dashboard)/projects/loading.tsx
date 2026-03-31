@@ -1,0 +1,27 @@
+export default function ProjectsLoading() {
+  return (
+    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+      <div>
+        <div className="h-8 w-36 animate-pulse rounded-lg bg-muted" />
+        <div className="mt-2 h-4 w-48 animate-pulse rounded-lg bg-muted" />
+      </div>
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="rounded-[2rem] bg-white p-6 shadow-sm">
+            <div className="h-3 w-28 animate-pulse rounded bg-muted" />
+            <div className="mt-2 h-6 w-52 animate-pulse rounded bg-muted" />
+            <div className="mt-3 flex gap-1">
+              {Array.from({ length: 5 }).map((_, j) => (
+                <div key={j} className="h-5 w-16 animate-pulse rounded-full bg-muted" />
+              ))}
+            </div>
+            <div className="mt-4 flex gap-4">
+              <div className="h-3 w-20 animate-pulse rounded bg-muted" />
+              <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
