@@ -25,7 +25,7 @@ interface ReviewDetailProps {
     transcript: string | null;
     summary: string | null;
     organization: { name: string } | null;
-    meeting_participants: { person: { id: string; full_name: string } }[];
+    meeting_participants: { person: { id: string; name: string } }[];
     extractions: Extraction[];
   };
 }
@@ -122,7 +122,7 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
     return parts;
   }
 
-  const participants = meeting.meeting_participants.map((mp) => mp.person.full_name);
+  const participants = meeting.meeting_participants.map((mp) => mp.person.name);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">

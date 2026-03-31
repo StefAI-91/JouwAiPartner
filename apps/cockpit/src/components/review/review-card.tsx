@@ -15,7 +15,7 @@ interface ReviewCardProps {
     party_type: string | null;
     created_at: string;
     organization: { name: string } | null;
-    meeting_participants: { person: { id: string; full_name: string } }[];
+    meeting_participants: { person: { id: string; name: string } }[];
     extractions: { id: string; type: string; content: string; confidence: number | null }[];
   };
 }
@@ -44,7 +44,7 @@ export function ReviewCard({ meeting }: ReviewCardProps) {
     }
   }
 
-  const participants = meeting.meeting_participants.map((mp) => mp.person.full_name).join(", ");
+  const participants = meeting.meeting_participants.map((mp) => mp.person.name).join(", ");
 
   return (
     <div className="rounded-[2rem] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
