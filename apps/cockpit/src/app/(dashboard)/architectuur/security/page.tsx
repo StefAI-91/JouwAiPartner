@@ -279,19 +279,34 @@ const integrations: IntegrationFlow[] = [
   },
   {
     icon: Wrench,
-    name: "MCP Server",
+    name: "MCP Server + OAuth 2.1",
     provider: "Eigen (Vercel)",
     purpose:
-      "Model Context Protocol endpoint waarmee AI-clients (Claude Desktop, etc.) de kennisbank kunnen doorzoeken.",
+      "Model Context Protocol endpoint met OAuth 2.1 + PKCE beveiliging. AI-clients (Claude Desktop, etc.) authenticeren via authorization code flow.",
     region: "Vercel Edge (afhankelijk van deployment regio)",
     credentials: [
       {
+        name: "OAUTH_SECRET",
+        type: "JWT signing key (HS256, min 32 chars)",
+        sensitivity: "Kritiek",
+      },
+      {
         name: "Supabase session cookie",
-        type: "User auth (via Supabase SSR)",
+        type: "Fallback auth (via Supabase SSR)",
         sensitivity: "Hoog",
       },
     ],
     dataOut: [
+      {
+        name: "Authorization codes",
+        sensitivity: "hoog",
+        description: "Eenmalige codes (10 min geldig) voor OAuth token exchange",
+      },
+      {
+        name: "JWT access tokens",
+        sensitivity: "hoog",
+        description: "HS256-signed Bearer tokens (1 uur geldig) met sub, scope, client_id",
+      },
       {
         name: "Zoekresultaten",
         sensitivity: "hoog",
@@ -310,18 +325,34 @@ const integrations: IntegrationFlow[] = [
     ],
     dataIn: [
       {
+        name: "OAuth requests",
+        sensitivity: "midden",
+        description: "Authorization requests met PKCE challenge, token requests met code_verifier",
+      },
+      {
+        name: "Client registration",
+        sensitivity: "laag",
+        description: "RFC 7591 dynamic client registration met redirect_uris",
+      },
+      {
         name: "Tool calls",
         sensitivity: "laag",
         description: "MCP protocol berichten met tool-naam en parameters (zoekvraag, filters)",
       },
     ],
     endpoints: [
-      "/api/mcp — POST (stateless HTTP transport, vereist Supabase user auth)",
+      "/.well-known/oauth-authorization-server — OAuth server metadata (discovery)",
+      "/api/oauth/register — Dynamic client registration (RFC 7591)",
+      "/api/oauth/authorize — Authorization endpoint (vereist Supabase login, PKCE S256 verplicht)",
+      "/api/oauth/token — Token endpoint (authorization_code grant, PKCE verificatie)",
+      "/api/mcp — POST (dual auth: OAuth Bearer token of Supabase session cookie)",
       "10 tools: search_knowledge, get_meeting_summary, get_decisions, get_action_items, get_organization_overview, list_meetings, get_organizations, get_projects, get_people, correct_extraction",
     ],
     risks: [
-      "Alle tools draaien op admin client (service role) zonder RLS — ingelogde gebruiker kan alle data opvragen",
-      "Geen rate limiting op MCP endpoint",
+      "Auth codes in-memory opgeslagen — gaan verloren bij server restart (serverless: beperkt window)",
+      "Dynamic client registration is open — elke client kan zich registreren zonder voorafgaande goedkeuring",
+      "JWT tokens zijn 1 uur geldig — geen revocation mechanisme",
+      "Alle MCP tools draaien op admin client (service role) zonder RLS",
       "correct_extraction tool kan extracties muteren vanuit AI-client",
     ],
   },
@@ -423,9 +454,14 @@ const allCredentials = [
     description: "Cohere embedding API toegang",
   },
   {
+    name: "OAUTH_SECRET",
+    risk: "kritiek",
+    description: "JWT signing key voor MCP OAuth tokens (HS256, min 32 chars)",
+  },
+  {
     name: "CRON_SECRET",
     risk: "hoog",
-    description: "Bearer token voor cron/ingest endpoints",
+    description: "Bearer token voor cron/ingest endpoints (fallback voor OAUTH_SECRET)",
   },
   {
     name: "NEXT_PUBLIC_SUPABASE_URL",
@@ -623,13 +659,15 @@ export default function SecurityDatamappingPage() {
             Data stroomt door <strong>5 systemen</strong>: Fireflies (bron), Anthropic Claude
             (AI-verwerking), Cohere (embeddings), Supabase (opslag, EU-Frankfurt) en ons MCP
             endpoint (toegang voor AI-clients). Alle API endpoints zijn beveiligd met authenticatie
-            (Supabase auth, HMAC of Bearer token).
+            (Supabase auth, HMAC of Bearer token). Het MCP endpoint gebruikt{" "}
+            <strong>OAuth 2.1 + PKCE</strong> voor externe AI-clients.
           </p>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">5 externe integraties</Badge>
-            <Badge variant="outline">6 API keys/secrets</Badge>
+            <Badge variant="outline">7 API keys/secrets</Badge>
             <Badge variant="outline">9 database-tabellen</Badge>
             <Badge variant="outline">10 MCP tools</Badge>
+            <Badge variant="outline">OAuth 2.1 + PKCE</Badge>
             <Badge variant="outline">Opslag: EU-Frankfurt</Badge>
           </div>
         </CardContent>
@@ -712,7 +750,12 @@ export default function SecurityDatamappingPage() {
         <CardContent>
           <div className="space-y-2">
             {[
-              "Authenticatie op /api/mcp (Supabase user auth vereist)",
+              "OAuth 2.1 + PKCE op MCP endpoint — externe AI-clients authenticeren via authorization code flow",
+              "OAuth server metadata via /.well-known/oauth-authorization-server (discovery)",
+              "Dynamic client registration (RFC 7591) — MCP clients kunnen zichzelf registreren",
+              "JWT access tokens (HS256, 1 uur geldig) met PKCE S256 verificatie",
+              "Dual auth op /api/mcp: OAuth Bearer token of Supabase session cookie",
+              "Authenticatie op /api/mcp (Supabase user auth als fallback)",
               "/api/search en /api/ask verwijderd — functionaliteit via MCP tools",
               "CRON_SECRET verplicht voor /api/cron/* en /api/ingest/*",
               "Security headers: X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy",
@@ -747,7 +790,11 @@ export default function SecurityDatamappingPage() {
               },
               {
                 priority: "hoog",
-                item: "Rate limiting op MCP en webhook endpoints",
+                item: "Rate limiting op MCP, OAuth en webhook endpoints",
+              },
+              {
+                priority: "hoog",
+                item: "OAuth token revocation endpoint toevoegen (tokens zijn nu niet intrekbaar)",
               },
               {
                 priority: "hoog",
@@ -768,6 +815,14 @@ export default function SecurityDatamappingPage() {
               {
                 priority: "midden",
                 item: "Data retentiebeleid definieren en implementeren",
+              },
+              {
+                priority: "midden",
+                item: "OAuth auth codes migreren van in-memory naar database (persistentie bij restart)",
+              },
+              {
+                priority: "midden",
+                item: "Client registration beperken — allowlist of approval flow voor nieuwe MCP clients",
               },
               {
                 priority: "midden",
