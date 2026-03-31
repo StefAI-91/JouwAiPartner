@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
+import { Users, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import type { RecentMeeting } from "@repo/database/queries/meetings";
 
 function meetingHref(meeting: RecentMeeting): string {
@@ -19,20 +19,51 @@ function formatDate(dateStr: string | null): string {
   return new Date(dateStr).toLocaleDateString("nl-NL", {
     day: "numeric",
     month: "short",
-    year: "numeric",
   });
 }
 
-function relevancePercent(score: number | null): string {
-  if (score == null) return "";
-  return Math.round(score * 100) + "%";
+function relevanceColor(score: number | null): string {
+  if (score == null) return "text-muted-foreground/40 stroke-muted";
+  if (score >= 0.8) return "text-[#006B3F] stroke-[#006B3F]";
+  if (score >= 0.6) return "text-amber-500 stroke-amber-500";
+  return "text-muted-foreground stroke-muted-foreground/40";
 }
 
-function relevanceBadgeVariant(score: number | null): "default" | "secondary" | "outline" {
-  if (score == null) return "outline";
-  if (score >= 0.8) return "default";
-  if (score >= 0.6) return "secondary";
-  return "outline";
+function RelevanceRing({ score }: { score: number | null }) {
+  if (score == null) return null;
+  const percent = Math.round(score * 100);
+  const radius = 14;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - score * circumference;
+
+  return (
+    <div className={`relative flex items-center justify-center ${relevanceColor(score)}`}>
+      <svg width="36" height="36" className="-rotate-90">
+        <circle
+          cx="18"
+          cy="18"
+          r={radius}
+          fill="none"
+          strokeWidth="2.5"
+          className="stroke-muted/50"
+        />
+        <circle
+          cx="18"
+          cy="18"
+          r={radius}
+          fill="none"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="stroke-current transition-[stroke-dashoffset] duration-500"
+        />
+      </svg>
+      <span className="absolute text-[9px] font-semibold tabular-nums">
+        {percent}
+      </span>
+    </div>
+  );
 }
 
 export function MeetingsCard({ meetings }: MeetingsCardProps) {
@@ -42,63 +73,67 @@ export function MeetingsCard({ meetings }: MeetingsCardProps) {
         <CardTitle>Recente meetings</CardTitle>
         <CardDescription>Verwerkte Fireflies transcripts</CardDescription>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="pt-2">
         {meetings.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
             Nog geen meetings verwerkt.
           </p>
         ) : (
-          <ul className="divide-y divide-border/50">
-            {meetings.map((meeting) => (
-              <li key={meeting.id}>
-                <Link
-                  href={meetingHref(meeting)}
-                  className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 rounded-lg -mx-2 px-2 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-medium leading-snug">{meeting.title ?? "Naamloos"}</p>
-                    <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-                      {meeting.verification_status === "verified" && (
-                        <Badge variant="default" className="h-4 text-[10px] bg-green-600">
-                          verified
-                        </Badge>
-                      )}
-                      {meeting.verification_status === "draft" && (
-                        <Badge variant="secondary" className="h-4 text-[10px]">
-                          draft
-                        </Badge>
-                      )}
-                      {meeting.relevance_score != null && (
-                        <Badge
-                          variant={relevanceBadgeVariant(meeting.relevance_score)}
-                          className="h-4 text-[10px]"
-                        >
-                          {relevancePercent(meeting.relevance_score)}
-                        </Badge>
-                      )}
+          <ul className="-mx-1">
+            {meetings.map((meeting) => {
+              const isVerified = meeting.verification_status === "verified";
+              return (
+                <li key={meeting.id}>
+                  <Link
+                    href={meetingHref(meeting)}
+                    className="group flex items-center gap-3 rounded-lg px-2.5 py-3 transition-all hover:bg-muted/60 active:scale-[0.995]"
+                  >
+                    {/* Relevance ring */}
+                    <div className="shrink-0">
+                      <RelevanceRing score={meeting.relevance_score} />
                     </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                    {meeting.date && (
-                      <span className="text-xs text-muted-foreground">
-                        {formatDate(meeting.date)}
-                      </span>
-                    )}
-                    {meeting.participants && meeting.participants.length > 0 && (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Users className="h-3 w-3" />
-                        {meeting.participants.length}
-                      </span>
-                    )}
-                    {meeting.meeting_type && (
-                      <Badge variant="outline" className="h-4 text-[10px]">
-                        {meeting.meeting_type}
-                      </Badge>
-                    )}
-                  </div>
-                </Link>
-              </li>
-            ))}
+
+                    {/* Content */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-medium leading-snug">
+                          {meeting.title ?? "Naamloos"}
+                        </p>
+                      </div>
+                      <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                        {meeting.date && (
+                          <span>{formatDate(meeting.date)}</span>
+                        )}
+                        {meeting.participants && meeting.participants.length > 0 && (
+                          <span className="flex items-center gap-0.5">
+                            <Users className="h-3 w-3" />
+                            {meeting.participants.length}
+                          </span>
+                        )}
+                        {meeting.meeting_type && (
+                          <span className="rounded-md bg-muted px-1.5 py-px font-medium">
+                            {meeting.meeting_type.replace(/_/g, " ")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status + arrow */}
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      {isVerified ? (
+                        <CheckCircle2 className="h-4 w-4 text-[#006B3F]" />
+                      ) : (
+                        <Badge variant="secondary" className="h-5 gap-1 text-[10px] font-medium">
+                          <Clock className="h-2.5 w-2.5" />
+                          review
+                        </Badge>
+                      )}
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>
