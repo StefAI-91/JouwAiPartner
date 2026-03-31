@@ -19,15 +19,18 @@ export async function listDraftMeetings(client?: SupabaseClient): Promise<Review
     .from("meetings")
     .select(
       `id, title, date, meeting_type, party_type, created_at,
-       organization:organizations!meetings_organization_id_fkey(name),
-       meeting_participants(person:people!meeting_participants_person_id_fkey(id, full_name)),
+       organization:organizations(name),
+       meeting_participants(person:people(id, full_name)),
        extractions(id, type, content, confidence)`,
     )
     .eq("verification_status", "draft")
     .order("date", { ascending: false, nullsFirst: false });
 
-  if (error || !data) return [];
-  return data as unknown as ReviewMeeting[];
+  if (error) {
+    console.error("[listDraftMeetings]", error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as ReviewMeeting[];
 }
 
 export interface ReviewMeetingDetail {
@@ -59,15 +62,18 @@ export async function getDraftMeetingById(
     .from("meetings")
     .select(
       `id, title, date, meeting_type, party_type, transcript, summary,
-       organization:organizations!meetings_organization_id_fkey(name),
-       meeting_participants(person:people!meeting_participants_person_id_fkey(id, full_name)),
+       organization:organizations(name),
+       meeting_participants(person:people(id, full_name)),
        extractions(id, type, content, confidence, transcript_ref, metadata)`,
     )
     .eq("id", meetingId)
     .eq("verification_status", "draft")
     .single();
 
-  if (error || !data) return null;
+  if (error) {
+    console.error("[getDraftMeetingById]", error.message);
+    return null;
+  }
   return data as unknown as ReviewMeetingDetail;
 }
 
