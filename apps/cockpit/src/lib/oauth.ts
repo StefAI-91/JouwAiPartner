@@ -11,46 +11,55 @@ function getSigningKey(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-// ── In-memory stores (serverless-safe via Supabase in production) ──
-// For v1 we keep auth codes + registered clients in memory.
-// On Vercel each invocation is short-lived, so we use a KV-like
-// approach with expiry baked into the JWT itself.
-
-const AUTH_CODES = new Map<
-  string,
-  {
-    clientId: string;
-    redirectUri: string;
-    codeChallenge: string;
-    userId: string;
-    expiresAt: number;
-  }
->();
+// ── In-memory client registry (dynamic registrations within a single invocation) ──
 
 const REGISTERED_CLIENTS = new Map<
   string,
   { clientId: string; redirectUris: string[]; name: string }
 >();
 
-// ── Auth code helpers ────────────────────────────────────────
-export function storeAuthCode(
-  code: string,
+// ── Auth code helpers (JWT-based, serverless-safe) ───────────
+// Auth codes are self-contained signed JWTs so they survive across
+// Vercel serverless invocations (no shared memory between /authorize and /token).
+
+export async function storeAuthCode(
+  _code: string,
   data: {
     clientId: string;
     redirectUri: string;
     codeChallenge: string;
     userId: string;
   },
-) {
-  AUTH_CODES.set(code, { ...data, expiresAt: Date.now() + 10 * 60 * 1000 }); // 10 min
+): Promise<string> {
+  return new SignJWT({
+    type: "auth_code",
+    client_id: data.clientId,
+    redirect_uri: data.redirectUri,
+    code_challenge: data.codeChallenge,
+    sub: data.userId,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("5m")
+    .setIssuer("jouwaipartner")
+    .sign(getSigningKey());
 }
 
-export function consumeAuthCode(code: string) {
-  const entry = AUTH_CODES.get(code);
-  if (!entry) return null;
-  AUTH_CODES.delete(code);
-  if (Date.now() > entry.expiresAt) return null;
-  return entry;
+export async function consumeAuthCode(code: string) {
+  try {
+    const { payload } = await jwtVerify(code, getSigningKey(), {
+      issuer: "jouwaipartner",
+    });
+    if (payload.type !== "auth_code") return null;
+    return {
+      clientId: payload.client_id as string,
+      redirectUri: payload.redirect_uri as string,
+      codeChallenge: payload.code_challenge as string,
+      userId: payload.sub as string,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // ── Client registration helpers ──────────────────────────────

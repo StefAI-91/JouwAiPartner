@@ -33,8 +33,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // Consume the auth code (one-time use)
-  const authCode = consumeAuthCode(code);
+  // Consume the auth code (JWT-based, verifies signature + expiry)
+  const authCode = await consumeAuthCode(code);
   if (!authCode) {
     return Response.json(
       { error: "invalid_grant", error_description: "Invalid or expired authorization code" },
