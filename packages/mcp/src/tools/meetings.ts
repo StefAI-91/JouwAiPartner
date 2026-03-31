@@ -66,15 +66,37 @@ export function registerMeetingTools(server: McpServer) {
         .order("type")
         .order("confidence", { ascending: false });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const extractionsByMeeting: Record<string, any[]> = {};
+      interface ExtractionItem {
+        meeting_id: string;
+        type: string;
+        content: string;
+        confidence: number | null;
+        transcript_ref: string | null;
+        metadata: { assignee?: string; deadline?: string; made_by?: string; urgency?: string } | null;
+        corrected_by: string | null;
+        corrected_at: string | null;
+      }
+
+      const extractionsByMeeting: Record<string, ExtractionItem[]> = {};
       for (const e of allExtractions || []) {
         if (!extractionsByMeeting[e.meeting_id]) extractionsByMeeting[e.meeting_id] = [];
         extractionsByMeeting[e.meeting_id].push(e);
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = meetings.map((m: any) => {
+      interface MeetingSummaryItem {
+        id: string;
+        title: string;
+        date: string | null;
+        participants: string[] | null;
+        summary: string | null;
+        meeting_type: string | null;
+        party_type: "client" | "partner" | "internal" | "other" | null;
+        relevance_score: number | null;
+        organization: { name: string } | null;
+        unmatched_organization_name: string | null;
+      }
+
+      const formatted = (meetings as MeetingSummaryItem[]).map((m: MeetingSummaryItem) => {
         const extractions = extractionsByMeeting[m.id] || [];
 
         const orgName = m.organization?.name || m.unmatched_organization_name || "Onbekend";
@@ -109,8 +131,7 @@ export function registerMeetingTools(server: McpServer) {
           for (const [type, items] of Object.entries(grouped)) {
             const label = typeLabels[type] || type;
             sections.push("", `### ${label}`);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            items.forEach((item: any, i: number) => {
+            items.forEach((item: ExtractionItem, i: number) => {
               const status = formatVerificatieStatus(item.confidence, item.corrected_by);
               const meta: string[] = [];
               if (item.metadata?.assignee) meta.push(`Eigenaar: ${item.metadata.assignee}`);

@@ -50,8 +50,20 @@ export function registerSearchTools(server: McpServer) {
         need: "Behoefte",
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = results.map((r: any, i: number) => {
+      interface SearchResult {
+        id: string;
+        source_type: string;
+        content: string;
+        title: string | null;
+        date: string | null;
+        similarity: number;
+        confidence: number | null;
+        corrected_by: string | null;
+        transcript_ref: string | null;
+        meeting_id: string | null;
+      }
+
+      const formatted = (results as SearchResult[]).map((r: SearchResult, i: number) => {
         const sourceLabel = sourceLabels[r.source_type] || r.source_type;
         const dateStr = r.date ? new Date(r.date).toLocaleDateString("nl-NL") : null;
         const status = formatVerificatieStatus(r.confidence, r.corrected_by);

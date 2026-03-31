@@ -140,8 +140,18 @@ export function registerListMeetingsTools(server: McpServer) {
         };
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = meetings.map((m: any, i: number) => {
+      interface MeetingListItem {
+        id: string;
+        title: string;
+        date: string | null;
+        meeting_type: string | null;
+        party_type: "client" | "partner" | "internal" | "other" | null;
+        relevance_score: number | null;
+        organization: { id: string; name: string } | null;
+        unmatched_organization_name: string | null;
+      }
+
+      const formatted = (meetings as MeetingListItem[]).map((m: MeetingListItem, i: number) => {
         const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
         const orgName = m.organization?.name || m.unmatched_organization_name || "—";
         const relevance = m.relevance_score ? ` | Relevantie: ${m.relevance_score.toFixed(2)}` : "";

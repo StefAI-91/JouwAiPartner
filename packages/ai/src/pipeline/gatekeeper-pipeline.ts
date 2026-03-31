@@ -154,7 +154,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     const saveResult = await saveExtractions(extractorResult, meetingId);
     extractionsSaved = saveResult.extractions_saved;
 
-    console.log(
+    console.info(
       `Extractor: ${extractionsSaved} extractions saved, project linked: ${saveResult.project_linked}`,
     );
   } catch (err) {

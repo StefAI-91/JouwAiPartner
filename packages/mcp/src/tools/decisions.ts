@@ -83,10 +83,23 @@ export function registerDecisionTools(server: McpServer) {
         };
       }
 
-      const filtered = decisions;
+      interface DecisionItem {
+        id: string;
+        content: string;
+        confidence: number | null;
+        transcript_ref: string | null;
+        metadata: { made_by?: string } | null;
+        corrected_by: string | null;
+        corrected_at: string | null;
+        created_at: string;
+        meeting: { id: string; title: string; date: string | null; participants: string[] | null } | null;
+        organization: { name: string } | null;
+        project: { name: string } | null;
+      }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = filtered.map((d: any, i: number) => {
+      const filtered = decisions as DecisionItem[];
+
+      const formatted = filtered.map((d: DecisionItem, i: number) => {
         const meeting = d.meeting;
         const dateStr = meeting?.date
           ? new Date(meeting.date).toLocaleDateString("nl-NL")

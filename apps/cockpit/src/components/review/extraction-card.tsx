@@ -51,7 +51,7 @@ export function ExtractionCard({ extraction, onEdit }: ExtractionCardProps) {
           }}
           autoFocus
           aria-label={`Edit ${config.label.toLowerCase()} content`}
-          className="w-full resize-none rounded-lg border border-input bg-muted/30 p-2 text-sm outline-none focus:border-[#006B3F] focus:ring-1 focus:ring-[#006B3F]"
+          className="w-full resize-none rounded-lg border border-input bg-muted/30 p-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           rows={3}
         />
       ) : (

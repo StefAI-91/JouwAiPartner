@@ -1,33 +1,23 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
-// Accepted risk (v2): meeting + extractions update is non-atomic (two separate calls).
-// With 3 internal reviewers and low concurrency this is safe. Migrate to a Supabase
-// RPC with a single transaction if extraction counts or reviewer count grows.
+/**
+ * Verify a meeting and all its extractions atomically via RPC.
+ * Optionally applies edits to individual extractions before verifying.
+ */
 export async function verifyMeeting(
   meetingId: string,
   userId: string,
   client?: SupabaseClient,
 ): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
-  const now = new Date().toISOString();
 
-  const { error: meetingError } = await db
-    .from("meetings")
-    .update({ verification_status: "verified", verified_by: userId, verified_at: now })
-    .eq("id", meetingId)
-    .eq("verification_status", "draft");
+  const { error } = await db.rpc("verify_meeting", {
+    p_meeting_id: meetingId,
+    p_user_id: userId,
+  });
 
-  if (meetingError) return { error: meetingError.message };
-
-  const { error: extractionError } = await db
-    .from("extractions")
-    .update({ verification_status: "verified", verified_by: userId, verified_at: now })
-    .eq("meeting_id", meetingId)
-    .eq("verification_status", "draft");
-
-  if (extractionError) return { error: extractionError.message };
-
+  if (error) return { error: error.message };
   return { success: true };
 }
 
@@ -38,61 +28,36 @@ export async function verifyMeetingWithEdits(
   client?: SupabaseClient,
 ): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
-  const now = new Date().toISOString();
 
-  // Apply edits to individual extractions
-  for (const edit of edits) {
-    const updateData: Record<string, unknown> = {};
-    if (edit.content !== undefined) updateData.content = edit.content;
-    if (edit.metadata !== undefined) updateData.metadata = edit.metadata;
+  const editsJson = edits.map((e) => ({
+    extractionId: e.extractionId,
+    content: e.content ?? null,
+    metadata: e.metadata ?? null,
+  }));
 
-    if (Object.keys(updateData).length > 0) {
-      const { error } = await db
-        .from("extractions")
-        .update(updateData)
-        .eq("id", edit.extractionId)
-        .eq("meeting_id", meetingId);
+  const { error } = await db.rpc("verify_meeting", {
+    p_meeting_id: meetingId,
+    p_user_id: userId,
+    p_edits: editsJson,
+  });
 
-      if (error) return { error: error.message };
-    }
-  }
-
-  // Then verify everything
-  return verifyMeeting(meetingId, userId, db);
+  if (error) return { error: error.message };
+  return { success: true };
 }
 
 export async function rejectMeeting(
   meetingId: string,
   userId: string,
-  reason: string,
+  _reason: string,
   client?: SupabaseClient,
 ): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
-  const now = new Date().toISOString();
 
-  const { error: meetingError } = await db
-    .from("meetings")
-    .update({
-      verification_status: "rejected",
-      verified_by: userId,
-      verified_at: now,
-    })
-    .eq("id", meetingId)
-    .eq("verification_status", "draft");
+  const { error } = await db.rpc("reject_meeting", {
+    p_meeting_id: meetingId,
+    p_user_id: userId,
+  });
 
-  if (meetingError) return { error: meetingError.message };
-
-  const { error: extractionError } = await db
-    .from("extractions")
-    .update({
-      verification_status: "rejected",
-      verified_by: userId,
-      verified_at: now,
-    })
-    .eq("meeting_id", meetingId)
-    .eq("verification_status", "draft");
-
-  if (extractionError) return { error: extractionError.message };
-
+  if (error) return { error: error.message };
   return { success: true };
 }

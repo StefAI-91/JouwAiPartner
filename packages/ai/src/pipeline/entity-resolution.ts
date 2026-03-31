@@ -1,4 +1,4 @@
-import { embedText } from "../embeddings";
+import { embedText, embedBatch } from "../embeddings";
 import { getAllProjects, matchProjectsByEmbedding } from "@repo/database/queries/projects";
 import { updateProjectAliases } from "@repo/database/mutations/projects";
 import { getAllOrganizations } from "@repo/database/queries/organizations";
@@ -97,9 +97,47 @@ export async function resolveAllEntities(
   // Pre-fetch all projects once (avoids N+1 in alias matching)
   const allProjects = await getAllProjects();
 
+  // First pass: resolve via in-memory matching (exact + alias)
+  const unmatchedNames: string[] = [];
   for (const name of allNames) {
-    const result = await resolveProjectWithCache(name, allProjects);
-    resolutions.set(name, result.project_id);
+    const nameLower = name.toLowerCase();
+    const exactMatch = allProjects?.find(
+      (p) => p.name.toLowerCase().includes(nameLower) || nameLower.includes(p.name.toLowerCase()),
+    );
+    if (exactMatch) {
+      resolutions.set(name, exactMatch.id);
+      continue;
+    }
+    const aliasMatch = allProjects?.find((p) =>
+      p.aliases?.some(
+        (alias: string) =>
+          alias.toLowerCase().includes(nameLower) || nameLower.includes(alias.toLowerCase()),
+      ),
+    );
+    if (aliasMatch) {
+      resolutions.set(name, aliasMatch.id);
+      continue;
+    }
+    unmatchedNames.push(name);
+  }
+
+  // Second pass: batch embed all unmatched names at once (fixes Q-04)
+  if (unmatchedNames.length > 0) {
+    const embeddings = await embedBatch(unmatchedNames, "search_query");
+    for (let i = 0; i < unmatchedNames.length; i++) {
+      const name = unmatchedNames[i];
+      const embeddingMatches = await matchProjectsByEmbedding(embeddings[i]);
+      if (embeddingMatches && embeddingMatches.length > 0) {
+        const bestMatch = embeddingMatches[0];
+        const currentAliases = bestMatch.aliases || [];
+        if (!currentAliases.includes(name)) {
+          await updateProjectAliases(bestMatch.id, [...currentAliases, name]);
+        }
+        resolutions.set(name, bestMatch.id);
+      } else {
+        resolutions.set(name, null);
+      }
+    }
   }
 
   return resolutions;

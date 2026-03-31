@@ -54,6 +54,33 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         .order("created_at", { ascending: false })
         .limit(50);
 
+      interface OverviewProject {
+        id: string;
+        name: string;
+        aliases: string[];
+        status: string;
+      }
+
+      interface OverviewMeeting {
+        id: string;
+        title: string;
+        date: string | null;
+        meeting_type: string | null;
+        party_type: "client" | "partner" | "internal" | "other" | null;
+        relevance_score: number | null;
+        summary: string | null;
+      }
+
+      interface OverviewExtraction {
+        type: string;
+        content: string;
+        confidence: number | null;
+        metadata: { assignee?: string; deadline?: string; made_by?: string; urgency?: string } | null;
+        transcript_ref: string | null;
+        corrected_by: string | null;
+        meeting_id: string;
+      }
+
       const sections: string[] = [];
 
       const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
@@ -65,8 +92,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       sections.push("", "## Projecten");
       if (projects && projects.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        projects.forEach((p: any, i: number) => {
+        (projects as OverviewProject[]).forEach((p: OverviewProject, i: number) => {
           const pAliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
           sections.push(`${i + 1}. **${p.name}**${pAliases} — ${p.status}`);
         });
@@ -76,8 +102,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       sections.push("", "## Recente meetings");
       if (meetings && meetings.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        meetings.forEach((m: any, i: number) => {
+        (meetings as OverviewMeeting[]).forEach((m: OverviewMeeting, i: number) => {
           const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
           sections.push(
             `${i + 1}. **${m.title}** — ${dateStr} (${m.meeting_type || "onbekend type"})`,
@@ -94,8 +119,8 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       sections.push("", "## Extracties");
       if (extractions && extractions.length > 0) {
-        const grouped: Record<string, typeof extractions> = {};
-        for (const e of extractions) {
+        const grouped: Record<string, OverviewExtraction[]> = {};
+        for (const e of extractions as OverviewExtraction[]) {
           if (!grouped[e.type]) grouped[e.type] = [];
           grouped[e.type].push(e);
         }
@@ -110,8 +135,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         for (const [type, items] of Object.entries(grouped)) {
           const label = typeLabels[type] || type;
           sections.push("", `### ${label} (${items.length})`);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          items.forEach((item: any, i: number) => {
+          items.forEach((item: OverviewExtraction, i: number) => {
             const meta: string[] = [];
             if (item.metadata?.assignee) meta.push(`Eigenaar: ${item.metadata.assignee}`);
             if (item.metadata?.deadline) meta.push(`Deadline: ${item.metadata.deadline}`);

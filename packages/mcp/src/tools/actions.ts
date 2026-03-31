@@ -82,10 +82,23 @@ export function registerActionTools(server: McpServer) {
         };
       }
 
-      const filtered = items;
+      interface ActionItem {
+        id: string;
+        content: string;
+        confidence: number | null;
+        transcript_ref: string | null;
+        metadata: { assignee?: string; deadline?: string } | null;
+        corrected_by: string | null;
+        corrected_at: string | null;
+        created_at: string;
+        meeting: { id: string; title: string; date: string | null; participants: string[] | null } | null;
+        organization: { name: string } | null;
+        project: { name: string } | null;
+      }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const formatted = filtered.map((item: any, i: number) => {
+      const filtered = items as ActionItem[];
+
+      const formatted = filtered.map((item: ActionItem, i: number) => {
         const meeting = item.meeting;
         const dateStr = meeting?.date
           ? new Date(meeting.date).toLocaleDateString("nl-NL")

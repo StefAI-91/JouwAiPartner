@@ -1,8 +1,8 @@
-import { embedText, embedBatch } from "../embeddings";
+import { embedBatch } from "../embeddings";
 import { getStaleRows, StaleRow } from "@repo/database/queries/content";
 import { getMeetingExtractionsBatch } from "@repo/database/queries/meetings";
 import { getStalePeople } from "@repo/database/queries/people";
-import { updateRowEmbedding } from "@repo/database/mutations/embeddings";
+import { batchUpdateEmbeddings } from "@repo/database/mutations/embeddings";
 
 const SIMPLE_EMBEDDABLE_TABLES = [
   { table: "extractions", contentField: "content" },
@@ -11,6 +11,7 @@ const SIMPLE_EMBEDDABLE_TABLES = [
 
 /**
  * Process stale embeddings for a simple table (single content field).
+ * Uses batch embedding + batch update to avoid N+1.
  */
 async function reEmbedTable(
   table: "meetings" | "extractions" | "projects",
@@ -23,10 +24,9 @@ async function reEmbedTable(
     (row) => (row as unknown as Record<string, string>)[contentField] || "",
   );
   const embeddings = await embedBatch(texts);
+  const ids = staleRows.map((row) => row.id);
 
-  for (let i = 0; i < staleRows.length; i++) {
-    await updateRowEmbedding(table, staleRows[i].id, embeddings[i]);
-  }
+  await batchUpdateEmbeddings(table, ids, embeddings);
 
   return staleRows.length;
 }
@@ -70,7 +70,7 @@ function buildMeetingEmbedText(
 
 /**
  * Process stale meetings with enriched embed text.
- * Uses batch query for extractions to avoid N+1.
+ * Uses batch query for extractions and batch embedding to avoid N+1.
  */
 async function reEmbedMeetings(): Promise<number> {
   const staleRows = await getStaleRows("meetings");
@@ -80,12 +80,14 @@ async function reEmbedMeetings(): Promise<number> {
   const meetingIds = staleRows.map((m) => m.id);
   const allExtractions = await getMeetingExtractionsBatch(meetingIds);
 
-  for (const meeting of staleRows) {
+  // Batch embed all meetings at once (fixes N+1: Q-02)
+  const texts = staleRows.map((meeting) => {
     const extractions = allExtractions.get(meeting.id) ?? [];
-    const text = buildMeetingEmbedText(meeting, extractions);
-    const embedding = await embedText(text);
-    await updateRowEmbedding("meetings", meeting.id, embedding);
-  }
+    return buildMeetingEmbedText(meeting, extractions);
+  });
+  const embeddings = await embedBatch(texts);
+
+  await batchUpdateEmbeddings("meetings", meetingIds, embeddings);
 
   return staleRows.length;
 }
@@ -106,16 +108,17 @@ function buildProfileText(person: {
 
 /**
  * Special handler for people table: aggregate profile before embedding.
+ * Uses batch embedding to avoid N+1 (fixes Q-03).
  */
 async function reEmbedPeople(): Promise<number> {
   const stalePeople = await getStalePeople();
   if (stalePeople.length === 0) return 0;
 
-  for (const person of stalePeople) {
-    const profileText = buildProfileText(person);
-    const embedding = await embedText(profileText);
-    await updateRowEmbedding("people", person.id, embedding);
-  }
+  const texts = stalePeople.map(buildProfileText);
+  const embeddings = await embedBatch(texts);
+  const ids = stalePeople.map((p) => p.id);
+
+  await batchUpdateEmbeddings("people", ids, embeddings);
 
   return stalePeople.length;
 }

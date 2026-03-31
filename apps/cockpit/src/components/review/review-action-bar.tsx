@@ -41,7 +41,7 @@ export function ReviewActionBar({
             Approving 1 meeting + {extractionCount} extraction
             {extractionCount !== 1 ? "s" : ""}
             {editCount > 0 && (
-              <span className="ml-1 font-medium text-[#006B3F]">({editCount} edited)</span>
+              <span className="ml-1 font-medium text-primary">({editCount} edited)</span>
             )}
           </span>
 
@@ -87,7 +87,7 @@ export function ReviewActionBar({
             <button
               onClick={onApprove}
               disabled={loading === "approve"}
-              className="rounded-full bg-gradient-to-b from-[#006B3F] to-[#005A35] px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+              className="rounded-full bg-gradient-to-b from-brand to-brand-dark px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
             >
               {loading === "approve" ? "Approving..." : "Approve All"}
             </button>
