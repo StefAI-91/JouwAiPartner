@@ -12,7 +12,7 @@ export function registerListMeetingsTools(server: McpServer) {
       organization: z.string().optional().describe("Filter op organisatienaam (partial match)"),
       project: z.string().optional().describe("Filter op projectnaam (partial match)"),
       date_from: z.string().optional().describe("Vanaf datum (ISO format, bijv. 2026-01-01)"),
-      date_to: z.string().optional().describe("Tot datum (ISO format, bijv. 2026-03-31)"),
+      date_to: z.string().optional().describe("Tot en met datum, inclusief (ISO format, bijv. 2026-03-31)"),
       meeting_type: z.string().optional().describe("Filter op meeting type"),
       party_type: z
         .enum(["client", "partner", "internal", "other"])
@@ -111,7 +111,13 @@ export function registerListMeetingsTools(server: McpServer) {
       }
 
       if (date_from) query = query.gte("date", date_from);
-      if (date_to) query = query.lte("date", date_to);
+      if (date_to) {
+        // date_to is inclusive: "2026-03-31" should include all meetings on that day.
+        // When only a date is provided (no time component), append end-of-day so the
+        // lte comparison covers the full day against the TIMESTAMPTZ column.
+        const endOfDay = date_to.includes("T") ? date_to : `${date_to}T23:59:59.999Z`;
+        query = query.lte("date", endOfDay);
+      }
       if (meeting_type) query = query.eq("meeting_type", meeting_type);
       if (party_type) query = query.eq("party_type", party_type);
 
