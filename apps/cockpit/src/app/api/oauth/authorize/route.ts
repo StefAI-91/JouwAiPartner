@@ -60,12 +60,21 @@ export async function GET(request: NextRequest) {
   }
 
   // User is authenticated — issue authorization code (JWT-based, serverless-safe)
-  const code = await storeAuthCode("", {
-    clientId,
-    redirectUri,
-    codeChallenge,
-    userId: user.id,
-  });
+  let code: string;
+  try {
+    code = await storeAuthCode("", {
+      clientId,
+      redirectUri,
+      codeChallenge,
+      userId: user.id,
+    });
+  } catch (err) {
+    console.error("[OAuth authorize] Failed to create auth code:", err);
+    return Response.json(
+      { error: "server_error", error_description: "Failed to create authorization code. Check OAUTH_SECRET env var." },
+      { status: 500 },
+    );
+  }
 
   // Redirect back to Claude with the auth code
   const callback = new URL(redirectUri);
