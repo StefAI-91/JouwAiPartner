@@ -1,38 +1,11 @@
-"use client";
+import { LoginForm } from "./login-form";
 
-import { useState } from "react";
-import { createClient } from "@repo/database/supabase/client";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const supabase = createClient();
-
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
-      const returnTo = searchParams.get("returnTo");
-      router.push(returnTo ?? "/");
-      router.refresh();
-    }
-  }
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const { returnTo } = await searchParams;
 
   return (
     <div className="relative flex min-h-full items-center justify-center px-4">
@@ -64,48 +37,7 @@ export default function LoginPage() {
           <p className="mt-2 text-sm text-muted-foreground">Log in om door te gaan</p>
         </div>
 
-        {/* Login form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium">
-              E-mail
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="je@email.nl"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium">
-              Wachtwoord
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full rounded-lg border border-input bg-card px-3 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {error && (
-            <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          <Button type="submit" disabled={loading} className="w-full glow-primary" size="lg">
-            {loading ? "Bezig..." : "Inloggen"}
-          </Button>
-        </form>
+        <LoginForm returnTo={returnTo} />
 
         <p className="text-center text-xs text-muted-foreground">
           Jouw AI Partner &middot; Knowledge Platform
