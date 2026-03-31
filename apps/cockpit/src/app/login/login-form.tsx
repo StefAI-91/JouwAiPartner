@@ -26,8 +26,11 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
     if (error) {
       setError(error.message);
       setLoading(false);
+    } else if (returnTo) {
+      // Full browser navigation for OAuth returnTo URLs (API routes need real redirects)
+      window.location.href = returnTo;
     } else {
-      router.push(returnTo ?? "/");
+      router.push("/");
       router.refresh();
     }
   }

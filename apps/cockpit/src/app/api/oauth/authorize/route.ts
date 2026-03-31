@@ -59,9 +59,8 @@ export async function GET(request: NextRequest) {
     return Response.redirect(loginUrl.toString());
   }
 
-  // User is authenticated — issue authorization code
-  const code = crypto.randomUUID();
-  storeAuthCode(code, {
+  // User is authenticated — issue authorization code (JWT-based, serverless-safe)
+  const code = await storeAuthCode("", {
     clientId,
     redirectUri,
     codeChallenge,
