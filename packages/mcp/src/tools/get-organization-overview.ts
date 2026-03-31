@@ -92,7 +92,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       sections.push("", "## Projecten");
       if (projects && projects.length > 0) {
-        (projects as OverviewProject[]).forEach((p: OverviewProject, i: number) => {
+        (projects as unknown as OverviewProject[]).forEach((p: OverviewProject, i: number) => {
           const pAliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
           sections.push(`${i + 1}. **${p.name}**${pAliases} — ${p.status}`);
         });
@@ -102,7 +102,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       sections.push("", "## Recente meetings");
       if (meetings && meetings.length > 0) {
-        (meetings as OverviewMeeting[]).forEach((m: OverviewMeeting, i: number) => {
+        (meetings as unknown as OverviewMeeting[]).forEach((m: OverviewMeeting, i: number) => {
           const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
           sections.push(
             `${i + 1}. **${m.title}** — ${dateStr} (${m.meeting_type || "onbekend type"})`,
@@ -120,7 +120,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       sections.push("", "## Extracties");
       if (extractions && extractions.length > 0) {
         const grouped: Record<string, OverviewExtraction[]> = {};
-        for (const e of extractions as OverviewExtraction[]) {
+        for (const e of extractions as unknown as OverviewExtraction[]) {
           if (!grouped[e.type]) grouped[e.type] = [];
           grouped[e.type].push(e);
         }

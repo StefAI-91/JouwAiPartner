@@ -96,7 +96,7 @@ export function registerMeetingTools(server: McpServer) {
         unmatched_organization_name: string | null;
       }
 
-      const formatted = (meetings as MeetingSummaryItem[]).map((m: MeetingSummaryItem) => {
+      const formatted = (meetings as unknown as MeetingSummaryItem[]).map((m: MeetingSummaryItem) => {
         const extractions = extractionsByMeeting[m.id] || [];
 
         const orgName = m.organization?.name || m.unmatched_organization_name || "Onbekend";

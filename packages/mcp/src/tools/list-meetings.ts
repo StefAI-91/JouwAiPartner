@@ -151,7 +151,7 @@ export function registerListMeetingsTools(server: McpServer) {
         unmatched_organization_name: string | null;
       }
 
-      const formatted = (meetings as MeetingListItem[]).map((m: MeetingListItem, i: number) => {
+      const formatted = (meetings as unknown as MeetingListItem[]).map((m: MeetingListItem, i: number) => {
         const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
         const orgName = m.organization?.name || m.unmatched_organization_name || "—";
         const relevance = m.relevance_score ? ` | Relevantie: ${m.relevance_score.toFixed(2)}` : "";

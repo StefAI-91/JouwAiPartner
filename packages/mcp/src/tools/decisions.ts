@@ -97,7 +97,7 @@ export function registerDecisionTools(server: McpServer) {
         project: { name: string } | null;
       }
 
-      const filtered = decisions as DecisionItem[];
+      const filtered = decisions as unknown as DecisionItem[];
 
       const formatted = filtered.map((d: DecisionItem, i: number) => {
         const meeting = d.meeting;
