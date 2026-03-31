@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
+// Accepted risk (v2): meeting + extractions update is non-atomic (two separate calls).
+// With 3 internal reviewers and low concurrency this is safe. Migrate to a Supabase
+// RPC with a single transaction if extraction counts or reviewer count grows.
 export async function verifyMeeting(
   meetingId: string,
   userId: string,

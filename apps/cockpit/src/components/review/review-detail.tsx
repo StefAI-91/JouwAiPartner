@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ExtractionCard } from "./extraction-card";
+import { ReviewActionBar } from "./review-action-bar";
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
 
@@ -42,8 +43,7 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
   const router = useRouter();
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
-  const [showReject, setShowReject] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleEdit = useCallback((id: string, content: string) => {
     setEdits((prev) => new Map(prev).set(id, content));
@@ -51,6 +51,7 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
 
   async function handleApprove() {
     setLoading("approve");
+    setError(null);
     const extractionEdits = Array.from(edits.entries()).map(([extractionId, content]) => ({
       extractionId,
       content,
@@ -62,22 +63,24 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
     });
 
     if ("error" in result) {
+      setError(result.error);
       setLoading(null);
       return;
     }
     router.push("/review");
   }
 
-  async function handleReject() {
-    if (!rejectReason.trim()) return;
+  async function handleReject(reason: string) {
     setLoading("reject");
+    setError(null);
 
     const result = await rejectMeetingAction({
       meetingId: meeting.id,
-      reason: rejectReason,
+      reason,
     });
 
     if ("error" in result) {
+      setError(result.error);
       setLoading(null);
       return;
     }
@@ -92,7 +95,7 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
     grouped.set(ext.type, list);
   }
 
-  // Highlight transcript refs in transcript
+  // Highlight transcript refs
   const transcriptRefs = new Set(
     meeting.extractions
       .map((e) => e.transcript_ref)
@@ -128,7 +131,6 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       {/* Left panel: Transcript (55%) */}
       <div className="flex-1 overflow-y-auto border-r border-border/50 p-6 lg:w-[55%] lg:flex-none">
-        {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {meeting.organization && (
@@ -150,7 +152,6 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
           )}
         </div>
 
-        {/* Participants */}
         {participants.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
             {participants.map((name) => (
@@ -161,7 +162,6 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
           </div>
         )}
 
-        {/* Summary */}
         {meeting.summary && (
           <div className="mb-6 rounded-xl bg-muted/50 p-4">
             <h3 className="mb-2 text-sm font-semibold">Summary</h3>
@@ -169,7 +169,6 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
           </div>
         )}
 
-        {/* Transcript */}
         {meeting.transcript ? (
           <div className="prose prose-sm max-w-none">
             <h3 className="mb-3 text-sm font-semibold">Transcript</h3>
@@ -185,14 +184,13 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
       {/* Right panel: Extractions (45%) */}
       <div className="flex-1 overflow-y-auto p-6 lg:w-[45%] lg:flex-none">
         <h2 className="mb-4">Extractions</h2>
-
         <div className="space-y-6">
           {TYPE_ORDER.map((type) => {
             const items = grouped.get(type);
             if (!items || items.length === 0) return null;
             return (
               <div key={type}>
-                <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   {TYPE_LABELS[type]} ({items.length})
                 </h3>
                 <div className="space-y-3">
@@ -206,65 +204,14 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
         </div>
       </div>
 
-      {/* Sticky bottom action bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-white/90 px-6 py-4 backdrop-blur-xl lg:bottom-0">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            Approving 1 meeting + {meeting.extractions.length} extraction
-            {meeting.extractions.length !== 1 ? "s" : ""}
-            {edits.size > 0 && (
-              <span className="ml-1 text-[#006B3F] font-medium">({edits.size} edited)</span>
-            )}
-          </span>
-
-          <div className="flex items-center gap-3">
-            {showReject ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Reason for rejection..."
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleReject();
-                    if (e.key === "Escape") setShowReject(false);
-                  }}
-                  autoFocus
-                  className="w-64 rounded-full border-2 border-red-200 px-4 py-2 text-sm outline-none focus:border-red-400"
-                />
-                <button
-                  onClick={handleReject}
-                  disabled={!rejectReason.trim() || loading === "reject"}
-                  className="rounded-full border-2 border-red-200 px-5 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
-                >
-                  {loading === "reject" ? "Rejecting..." : "Confirm"}
-                </button>
-                <button
-                  onClick={() => setShowReject(false)}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowReject(true)}
-                className="rounded-full border-2 border-red-200 px-5 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-              >
-                Reject
-              </button>
-            )}
-
-            <button
-              onClick={handleApprove}
-              disabled={loading === "approve"}
-              className="rounded-full bg-gradient-to-b from-[#006B3F] to-[#005A35] px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-            >
-              {loading === "approve" ? "Approving..." : "Approve All"}
-            </button>
-          </div>
-        </div>
-      </div>
+      <ReviewActionBar
+        extractionCount={meeting.extractions.length}
+        editCount={edits.size}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        loading={loading}
+        error={error}
+      />
     </div>
   );
 }

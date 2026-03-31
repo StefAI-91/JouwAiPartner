@@ -34,12 +34,15 @@ function timeAgo(dateStr: string): string {
 
 export function ReviewCard({ meeting }: ReviewCardProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleApprove(e: React.MouseEvent) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     const result = await approveMeetingAction({ meetingId: meeting.id });
     if ("error" in result) {
+      setError(result.error);
       setLoading(false);
     }
   }
@@ -74,6 +77,13 @@ export function ReviewCard({ meeting }: ReviewCardProps) {
       <div className="mt-4">
         <ExtractionDots extractions={meeting.extractions} />
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+          {error}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="mt-5 flex items-center justify-end gap-2">

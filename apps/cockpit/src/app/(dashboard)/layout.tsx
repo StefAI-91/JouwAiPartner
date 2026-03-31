@@ -1,17 +1,10 @@
 import { createClient } from "@repo/database/supabase/server";
+import { getDraftMeetingCount } from "@repo/database/queries/review";
 import { BottomNav } from "@/components/layout/bottom-nav";
 
-async function getReviewCount(): Promise<number> {
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from("meetings")
-    .select("id", { count: "exact", head: true })
-    .eq("verification_status", "draft");
-  return count ?? 0;
-}
-
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const reviewCount = await getReviewCount();
+  const supabase = await createClient();
+  const reviewCount = await getDraftMeetingCount(supabase);
 
   return (
     <div className="flex min-h-screen flex-col">
