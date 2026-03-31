@@ -1,7 +1,8 @@
 # Milestones & Fases
 
-_Project: JouwAIPartner v1_
-_Bijgewerkt: 2026-03-29_
+_Project: Jouw AI Partner_
+_Updated: 2026-03-31_
+_Full spec: `docs/specs/platform-spec.md`_
 
 ---
 
@@ -27,11 +28,11 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 > **Doel:** Bewijs dat de keten database → embedding → MCP werkt, voordat je automatisering bouwt.
 > **Demo:** "Ik stel een vraag via Claude en krijg een antwoord uit onze eigen database."
 
-| Sprint | Wat                                                  | Tastbaar resultaat                                    |
-| ------ | ---------------------------------------------------- | ----------------------------------------------------- |
-| 001    | Clean slate DB: drop oud, bouw nieuw + triggers      | Nieuwe tabellen staan, oude weg, types gegenereerd    |
-| 002    | Indexes + search functions + Cohere embed utility    | `search_all_content()` retourneert resultaten         |
-| 003    | Bestaande MCP tools aanpassen voor nieuw schema      | Via MCP een vraag stellen → antwoord uit de database  |
+| Sprint | Wat                                               | Tastbaar resultaat                                   |
+| ------ | ------------------------------------------------- | ---------------------------------------------------- |
+| 001    | Clean slate DB: drop oud, bouw nieuw + triggers   | Nieuwe tabellen staan, oude weg, types gegenereerd   |
+| 002    | Indexes + search functions + Cohere embed utility | `search_all_content()` retourneert resultaten        |
+| 003    | Bestaande MCP tools aanpassen voor nieuw schema   | Via MCP een vraag stellen → antwoord uit de database |
 
 ### Sprint 001: Clean slate database
 
@@ -71,10 +72,10 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 > **Doel:** Automatische ingestion: webhook → triage → extractie → embedding → doorzoekbaar.
 > **Demo:** "Er komt een meeting binnen via Fireflies en 30 seconden later kan ik er vragen over stellen."
 
-| Sprint | Wat                                           | Tastbaar resultaat                                          |
-| ------ | --------------------------------------------- | ----------------------------------------------------------- |
-| 004    | Fireflies webhook + pre-filter + Gatekeeper   | Meeting binnenkomst → geclassificeerd + org gekoppeld in DB |
-| 005    | Extractor + embedding + volledige pipeline     | Meeting → extracties met confidence + alles geembed + vindbaar |
+| Sprint | Wat                                         | Tastbaar resultaat                                             |
+| ------ | ------------------------------------------- | -------------------------------------------------------------- |
+| 004    | Fireflies webhook + pre-filter + Gatekeeper | Meeting binnenkomst → geclassificeerd + org gekoppeld in DB    |
+| 005    | Extractor + embedding + volledige pipeline  | Meeting → extracties met confidence + alles geembed + vindbaar |
 
 ### Sprint 004: Webhook + Gatekeeper triage
 
@@ -104,14 +105,15 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 > **Doel:** Alle MCP tools werken met bronvermelding. Organisatie-overzichten. Correctiemogelijkheid.
 > **Demo:** "Geef me alles over klant X" → compleet overzicht met bronnen en confidence.
 
-| Sprint | Wat                                             | Tastbaar resultaat                                        |
-| ------ | ----------------------------------------------- | --------------------------------------------------------- |
-| 006    | MCP core tools + bronvermelding                 | get_decisions, get_action_items, get_meeting_summary werken met bron |
-| 007    | MCP overzicht-tools + correctie                 | get_organization_overview, list_meetings, correct_extraction |
+| Sprint | Wat                             | Tastbaar resultaat                                                   |
+| ------ | ------------------------------- | -------------------------------------------------------------------- |
+| 006    | MCP core tools + bronvermelding | get_decisions, get_action_items, get_meeting_summary werken met bron |
+| 007    | MCP overzicht-tools + correctie | get_organization_overview, list_meetings, correct_extraction         |
 
 ### Sprint 006: MCP core tools + bronvermelding
 
 **Scope:**
+
 - `search_knowledge` uitbreiden: bronvermelding + confidence + transcript_ref + verificatie-status
 - `get_decisions`: filter type='decision', join meetings voor bron, made_by/date/context uit metadata
 - `get_action_items`: filter type='action_item', assignee/due_date/status uit metadata
@@ -127,6 +129,7 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 ### Sprint 007: Overzicht-tools + correctie
 
 **Scope:**
+
 - `get_organization_overview`: JOIN organizations → meetings → extractions → projects → people. Puur SQL, geen vector search.
 - `list_meetings`: filters op organization, project, date_from, date_to, meeting_type, party_type. Pagination.
 - `correct_extraction`: content/metadata overschrijven, corrected_by + corrected_at zetten, embedding_stale=true
@@ -140,16 +143,33 @@ Fase 2: Dagelijks bruikbaar      → "Het team gebruikt dit elke dag"
 
 ---
 
-## Definitie of Done (v1 compleet)
+## v1 Status: COMPLETE (2026-03-31)
 
-- [ ] Meeting binnenkomst via webhook → classificatie → extractie → opslag → embedding → doorzoekbaar via MCP
-- [ ] Elk MCP-antwoord bevat bronvermelding (meeting titel, datum, transcript quote)
-- [ ] Elk MCP-antwoord toont confidence score of "geverifieerd door [naam]"
-- [ ] Extracties zijn corrigeerbaar via MCP `correct_extraction` tool
-- [ ] Organisatie-overzichten beschikbaar via `get_organization_overview`
-- [ ] Meetings filterbaar via `list_meetings`
-- [ ] Seed data (organizations, people, projects) staat in de database
-- [ ] Team kan dagelijks vragen stellen over klantgesprekken en krijgt bruikbare antwoorden
+All 7 sprints (001-007) are done. The meetings pipeline works end-to-end.
+
+- [x] Meeting ingestion via webhook -> classification -> extraction -> storage -> embedding -> searchable via MCP
+- [x] Every MCP answer includes source attribution (meeting title, date, transcript quote)
+- [x] Every MCP answer shows confidence score or "verified by [name]"
+- [x] Extractions are correctable via MCP `correct_extraction` tool
+- [x] Organization overviews via `get_organization_overview`
+- [x] Meetings filterable via `list_meetings`
+- [x] Seed data (organizations, people, projects) in database
+- [x] Team can ask daily questions about client meetings and get usable answers
+
+---
+
+## v2: Review & Dashboard (NEXT)
+
+> **Goal:** Make the platform visually usable and add verification gate.
+> **Spec:** See `docs/specs/platform-spec.md` section 13 (v2 scope).
+
+**Scope:**
+
+- Add verification_status to meetings and extractions (draft -> verified)
+- Review queue UI (approve/edit/reject meetings and extractions)
+- Project overview page (all projects with status, meetings, action items)
+- Meeting detail page (view transcript, extractions, verify inline)
+- Update MCP tools to filter on verified content by default
 
 ---
 
@@ -174,27 +194,29 @@ FASE 2: Dagelijks bruikbaar          ▼
                                      │
                               DEMO: "Het team gebruikt dit elke dag"
                                      │
-v2: Smart Queries                    ▼
-  [multi-hop graph queries via SQL]
+v2: Review & Dashboard               ▼
+  [verification gate + cockpit UI]
                                      │
-                              DEMO: "Welke besluiten over klant X spreken elkaar tegen?"
+                              DEMO: "Review queue, project overview, meeting detail"
+                                     │
+v3: Client Portal + Second Source    ▼
+  [external portal + Google Docs/Email]
 ```
 
 ---
 
-## v2: Smart Queries (na v1)
+## Future: Smart Queries (v3+)
 
-> **Mijlpaal:** Het systeem kan complexe, relatie-gebaseerde vragen beantwoorden over meerdere meetings heen.
-> **Doel:** Van "zoek iets op" naar "redeneer over verbanden" — multi-hop queries over de bestaande graph-structuur (FK-relaties) zonder aparte graph database.
-> **Demo:** "Welke besluiten over klant X spreken elkaar tegen?" → antwoord met beide besluiten, bronnen, en de tegenstrijdigheid.
+> Multi-hop queries over the knowledge graph (FK relationships) without a separate graph database.
+> Deferred until verification gate is in place and multiple data sources are connected.
 
-**Voorbeelden van vragen die v2 beantwoordt:**
-- "Welke besluiten conflicteren met elkaar?" (cross-join + embedding similarity)
-- "Hoe heeft de strategie voor project X zich ontwikkeld?" (tijdlijn over meerdere meetings)
-- "Met welke klanten heeft Jan het meest contact?" (relatie-aggregatie)
-- "Welke actiepunten van Pieter zijn gerelateerd aan klant Y?" (multi-hop: person → meetings → org)
+**Example questions:**
 
-**Aanpak:** MCP tool `smart_query` die automatisch multi-hop SQL queries bouwt op basis van de vraag. Gebruikt de bestaande FK-structuur (meetings → organizations → projects → extractions → people) als impliciete graph. Geen Apache AGE of aparte graph database nodig.
+- "Which decisions about client X contradict each other?"
+- "How has the strategy for project X evolved over time?"
+- "Which of Pieter's action items relate to client Y?"
+
+**Approach:** MCP tool `smart_query` that builds multi-hop SQL queries from the question. Uses existing FK structure as implicit graph.
 
 ---
 

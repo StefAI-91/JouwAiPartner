@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architecture: Jouw AI Partner Platform Roadmap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+              navy: {
+                50: "#f0f4f8",
+                100: "#d9e2ec",
+                200: "#bcccdc",
+                300: "#9fb3c8",
+                400: "#829ab1",
+                500: "#627d98",
+                600: "#486581",
+                700: "#334e68",
+                800: "#243b53",
+                900: "#102a43",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "ARCHITECTURE OVERVIEW — Jouw AI Partner Platform";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(90deg, #006B3F, #004a2b);
+        color: #dcfce7;
+        text-align: center;
+        padding: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+      }
+      body {
+        padding-top: 32px;
+        background: #0f172a;
+      }
+      .glow-green {
+        box-shadow: 0 0 20px rgba(0, 107, 63, 0.3);
+      }
+      .glow-amber {
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+      }
+      .glow-blue {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+      }
+      .glow-purple {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+      }
+      .arrow-down {
+        width: 2px;
+        background: linear-gradient(to bottom, rgba(100,200,150,0.6), rgba(100,200,150,0.1));
+        margin: 0 auto;
+      }
+      .phase-connector {
+        width: 3px;
+        background: linear-gradient(to bottom, #006B3F, #f59e0b);
+        margin: 0 auto;
+        position: relative;
+      }
+      .phase-connector::after {
+        content: "";
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 8px solid #f59e0b;
+      }
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+      }
+      .tab-active {
+        background: rgba(0, 107, 63, 0.2);
+        border-color: #006B3F;
+        color: #86efac;
+      }
+      .data-flow-line {
+        stroke-dasharray: 6 4;
+        animation: dash 1.5s linear infinite;
+      }
+      @keyframes dash {
+        to { stroke-dashoffset: -20; }
+      }
+    </style>
+  </head>
+  <body class="text-gray-200 min-h-screen">
+
+    <!-- HEADER -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <h1 class="text-3xl font-bold text-white">Jouw AI Partner</h1>
+          <p class="text-navy-300 mt-1">AI-Native Knowledge Platform — Complete Architecture & Roadmap</p>
+        </div>
+        <div class="text-right text-sm text-navy-400">
+          <div>Version: 1.0</div>
+          <div>Date: 2026-03-31</div>
+          <div class="mt-1 text-primary-400 font-medium">v1 Complete | v2 Next</div>
+        </div>
+      </div>
+      <div class="h-px bg-gradient-to-r from-primary-500 via-navy-600 to-transparent mt-4"></div>
+    </div>
+
+    <!-- TAB NAVIGATION -->
+    <div class="max-w-7xl mx-auto px-6 mb-8">
+      <div class="flex gap-2">
+        <button onclick="showTab('architecture')" id="tab-architecture" class="tab-btn px-4 py-2 rounded-lg border border-navy-600 text-sm font-medium transition-all tab-active">System Architecture</button>
+        <button onclick="showTab('dataflow')" id="tab-dataflow" class="tab-btn px-4 py-2 rounded-lg border border-navy-600 text-sm font-medium transition-all text-navy-300 hover:text-white hover:border-navy-400">Data Flow & Pipeline</button>
+        <button onclick="showTab('roadmap')" id="tab-roadmap" class="tab-btn px-4 py-2 rounded-lg border border-navy-600 text-sm font-medium transition-all text-navy-300 hover:text-white hover:border-navy-400">Phase Roadmap</button>
+        <button onclick="showTab('entities')" id="tab-entities" class="tab-btn px-4 py-2 rounded-lg border border-navy-600 text-sm font-medium transition-all text-navy-300 hover:text-white hover:border-navy-400">Knowledge Graph</button>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 1: SYSTEM ARCHITECTURE ==================== -->
+    <div id="panel-architecture" class="tab-panel max-w-7xl mx-auto px-6 pb-16">
+
+      <!-- DESIGN CONSTRAINTS BAR -->
+      <div class="mb-8 p-4 rounded-xl bg-navy-800/50 border border-navy-700 flex flex-wrap gap-4 text-xs">
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Solo non-coding maintainer (Stef + Claude Code)</div>
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Small team: 6 people, 3 reviewers</div>
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Modular: each source works independently</div>
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span> English platform language</div>
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Budget-conscious: right-size AI models</div>
+      </div>
+
+      <!-- LAYER 1: DATA SOURCES -->
+      <div class="mb-2">
+        <div class="text-xs font-semibold text-navy-400 uppercase tracking-wider mb-3">Layer 1 — Data Sources</div>
+        <div class="grid grid-cols-6 gap-3">
+          <!-- Fireflies -->
+          <div class="rounded-xl bg-primary-900/40 border border-primary-500/50 p-4 glow-green">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-lg">&#127908;</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary-500/30 text-primary-300 font-bold">LIVE</span>
+            </div>
+            <div class="font-semibold text-sm text-white">Fireflies</div>
+            <div class="text-[11px] text-navy-300 mt-1">Meeting transcripts</div>
+            <div class="text-[10px] text-primary-400 mt-2">Webhook (real-time)</div>
+          </div>
+          <!-- Manual Input -->
+          <div class="rounded-xl bg-navy-800/60 border border-amber-500/30 p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-lg">&#9997;</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold">v2</span>
+            </div>
+            <div class="font-semibold text-sm text-white">Manual Input</div>
+            <div class="text-[11px] text-navy-300 mt-1">UI forms & edits</div>
+            <div class="text-[10px] text-navy-400 mt-2">Server Actions</div>
+          </div>
+          <!-- Google Docs -->
+          <div class="rounded-xl bg-navy-800/40 border border-navy-600 p-4 opacity-60">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-lg">&#128196;</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">v3</span>
+            </div>
+            <div class="font-semibold text-sm text-white">Google Docs</div>
+            <div class="text-[11px] text-navy-300 mt-1">Knowledge base docs</div>
+            <div class="text-[10px] text-navy-400 mt-2">Google API sync</div>
+          </div>
+          <!-- Gmail -->
+          <div class="rounded-xl bg-navy-800/40 border border-navy-600 p-4 opacity-60">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-lg">&#128231;</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">v3</span>
+            </div>
+            <div class="font-semibold text-sm text-white">Gmail / Email</div>
+            <div class="text-[11px] text-navy-300 mt-1">Personal + shared inbox</div>
+            <div class="text-[10px] text-navy-400 mt-2">Gmail API</div>
+          </div>
+          <!-- Slack -->
+          <div class="rounded-xl bg-navy-800/40 border border-navy-600 p-4 opacity-40">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-lg">&#128172;</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-navy-500/30 text-navy-300 font-bold">v3+</span>
+            </div>
+            <div class="font-semibold text-sm text-white">Slack</div>
+            <div class="text-[11px] text-navy-300 mt-1">Internal comms</div>
+            <div class="text-[10px] text-navy-400 mt-2">Slack API</div>
+          </div>
+          <!-- File uploads -->
+          <div class="rounded-xl bg-navy-800/40 border border-navy-600 p-4 opacity-40">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-lg">&#128193;</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-navy-500/30 text-navy-300 font-bold">v3+</span>
+            </div>
+            <div class="font-semibold text-sm text-white">File Uploads</div>
+            <div class="text-[11px] text-navy-300 mt-1">PDFs, images, docs</div>
+            <div class="text-[10px] text-navy-400 mt-2">Direct upload</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARROW -->
+      <div class="arrow-down h-8"></div>
+
+      <!-- LAYER 2: AI PIPELINE -->
+      <div class="mb-2">
+        <div class="text-xs font-semibold text-navy-400 uppercase tracking-wider mb-3">Layer 2 — AI Processing Pipeline</div>
+        <div class="rounded-xl bg-navy-800/50 border border-navy-600 p-5">
+          <div class="flex items-center gap-3">
+            <!-- Pre-filter -->
+            <div class="flex-shrink-0 rounded-lg bg-navy-700 border border-navy-500 px-4 py-3 text-center">
+              <div class="text-xs font-bold text-navy-200">Pre-filter</div>
+              <div class="text-[10px] text-navy-400 mt-1">&lt; 2 min or &lt; 2 people</div>
+              <div class="text-[10px] text-red-400">skip</div>
+            </div>
+            <div class="text-primary-400 font-mono text-xl">&rarr;</div>
+            <!-- Gatekeeper -->
+            <div class="flex-shrink-0 rounded-lg bg-primary-900/40 border border-primary-500/40 px-4 py-3 text-center glow-green">
+              <div class="text-[10px] text-primary-300 font-medium">Haiku 4.5</div>
+              <div class="text-sm font-bold text-white mt-0.5">Gatekeeper</div>
+              <div class="text-[10px] text-navy-300 mt-1">classify + score</div>
+              <div class="flex gap-1 mt-2 justify-center">
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-navy-700 text-navy-300">meeting_type</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-navy-700 text-navy-300">party_type</span>
+              </div>
+            </div>
+            <div class="text-primary-400 font-mono text-xl">&rarr;</div>
+            <!-- Extractor -->
+            <div class="flex-shrink-0 rounded-lg bg-blue-900/30 border border-blue-500/30 px-4 py-3 text-center glow-blue">
+              <div class="text-[10px] text-blue-300 font-medium">Sonnet</div>
+              <div class="text-sm font-bold text-white mt-0.5">Extractor</div>
+              <div class="text-[10px] text-navy-300 mt-1">extract + validate</div>
+              <div class="flex gap-1 mt-2 justify-center flex-wrap">
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-navy-700 text-navy-300">decisions</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-navy-700 text-navy-300">actions</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-navy-700 text-navy-300">needs</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-navy-700 text-navy-300">insights</span>
+              </div>
+            </div>
+            <div class="text-primary-400 font-mono text-xl">&rarr;</div>
+            <!-- Entity Resolution -->
+            <div class="flex-shrink-0 rounded-lg bg-navy-700 border border-navy-500 px-4 py-3 text-center">
+              <div class="text-sm font-bold text-white">Entity Resolution</div>
+              <div class="text-[10px] text-navy-300 mt-1">org + project + people</div>
+              <div class="text-[10px] text-navy-400 mt-1">3-tier: exact &rarr; alias &rarr; embedding</div>
+            </div>
+            <div class="text-primary-400 font-mono text-xl">&rarr;</div>
+            <!-- Embeddings -->
+            <div class="flex-shrink-0 rounded-lg bg-purple-900/30 border border-purple-500/30 px-4 py-3 text-center glow-purple">
+              <div class="text-[10px] text-purple-300 font-medium">Cohere embed-v4</div>
+              <div class="text-sm font-bold text-white mt-0.5">Embed</div>
+              <div class="text-[10px] text-navy-300 mt-1">1024-dim vectors</div>
+              <div class="text-[10px] text-navy-400 mt-1">128K context</div>
+            </div>
+          </div>
+          <!-- Future agents -->
+          <div class="mt-4 pt-4 border-t border-navy-700 flex gap-3 opacity-40">
+            <div class="text-[10px] text-navy-400 self-center">v3+ agents:</div>
+            <div class="rounded-lg bg-navy-700/50 border border-navy-600 px-3 py-2 text-center">
+              <div class="text-[10px] text-navy-300">Curator (Sonnet)</div>
+              <div class="text-[9px] text-navy-400">Nightly: drift, contradictions</div>
+            </div>
+            <div class="rounded-lg bg-navy-700/50 border border-navy-600 px-3 py-2 text-center">
+              <div class="text-[10px] text-navy-300">Analyst (Opus)</div>
+              <div class="text-[9px] text-navy-400">Daily: patterns, trends</div>
+            </div>
+            <div class="rounded-lg bg-navy-700/50 border border-navy-600 px-3 py-2 text-center">
+              <div class="text-[10px] text-navy-300">Dispatcher (Haiku)</div>
+              <div class="text-[9px] text-navy-400">Route alerts to Slack/email</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARROW -->
+      <div class="arrow-down h-8"></div>
+
+      <!-- LAYER 3: VERIFICATION -->
+      <div class="mb-2">
+        <div class="text-xs font-semibold text-navy-400 uppercase tracking-wider mb-3">Layer 3 — Verification Gate <span class="text-amber-400">(v2 — CRITICAL)</span></div>
+        <div class="rounded-xl bg-amber-900/20 border border-amber-500/30 p-5 glow-amber">
+          <div class="flex items-center gap-6">
+            <div class="flex-1">
+              <div class="flex items-center gap-4">
+                <!-- Draft -->
+                <div class="text-center">
+                  <div class="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/50 flex items-center justify-center">
+                    <span class="text-amber-300 text-xl">&#9998;</span>
+                  </div>
+                  <div class="text-[11px] font-semibold text-amber-300 mt-2">Draft</div>
+                  <div class="text-[9px] text-navy-400">AI-processed</div>
+                </div>
+                <div class="text-amber-400 font-mono text-2xl">&rarr;</div>
+                <!-- Review -->
+                <div class="text-center">
+                  <div class="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/50 flex items-center justify-center pulse">
+                    <span class="text-amber-300 text-xl">&#128065;</span>
+                  </div>
+                  <div class="text-[11px] font-semibold text-amber-300 mt-2">Review</div>
+                  <div class="text-[9px] text-navy-400">Human checks</div>
+                </div>
+                <div class="text-primary-400 font-mono text-2xl">&rarr;</div>
+                <!-- Verified -->
+                <div class="text-center">
+                  <div class="w-16 h-16 rounded-full bg-primary-500/20 border-2 border-primary-500/50 flex items-center justify-center">
+                    <span class="text-primary-300 text-xl">&#10003;</span>
+                  </div>
+                  <div class="text-[11px] font-semibold text-primary-300 mt-2">Verified</div>
+                  <div class="text-[9px] text-navy-400">Source of truth</div>
+                </div>
+              </div>
+            </div>
+            <div class="flex-shrink-0 w-px h-20 bg-navy-600"></div>
+            <div class="flex-shrink-0 w-64">
+              <div class="text-xs font-semibold text-white mb-2">Rules</div>
+              <div class="space-y-1.5 text-[11px]">
+                <div class="flex items-start gap-2"><span class="text-primary-400 mt-0.5">&#10003;</span><span class="text-navy-200">MCP queries only verified content</span></div>
+                <div class="flex items-start gap-2"><span class="text-primary-400 mt-0.5">&#10003;</span><span class="text-navy-200">Client portal: verified only</span></div>
+                <div class="flex items-start gap-2"><span class="text-primary-400 mt-0.5">&#10003;</span><span class="text-navy-200">Cockpit: everything with status</span></div>
+                <div class="flex items-start gap-2"><span class="text-amber-400 mt-0.5">&#9888;</span><span class="text-navy-200">Staleness detection (v2+)</span></div>
+                <div class="flex items-start gap-2"><span class="text-amber-400 mt-0.5">&#9888;</span><span class="text-navy-200">Contradiction detection (v3)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARROW -->
+      <div class="arrow-down h-8"></div>
+
+      <!-- LAYER 4: KNOWLEDGE BASE -->
+      <div class="mb-2">
+        <div class="text-xs font-semibold text-navy-400 uppercase tracking-wider mb-3">Layer 4 — Knowledge Base (Supabase PostgreSQL + pgvector)</div>
+        <div class="rounded-xl bg-purple-900/20 border border-purple-500/30 p-5 glow-purple">
+          <div class="grid grid-cols-3 gap-4">
+            <!-- Current tables -->
+            <div>
+              <div class="text-[10px] text-primary-300 font-bold uppercase tracking-wider mb-2">Current (v1) &#10003;</div>
+              <div class="space-y-1.5">
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-primary-500"></span><span class="text-white">organizations</span><span class="text-navy-400">clients, partners</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-primary-500"></span><span class="text-white">projects</span><span class="text-navy-400">+ aliases, status</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-primary-500"></span><span class="text-white">people</span><span class="text-navy-400">team + contacts</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-primary-500"></span><span class="text-white">meetings</span><span class="text-navy-400">transcripts, classification</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-primary-500"></span><span class="text-white">extractions</span><span class="text-navy-400">decisions, actions, needs</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-navy-500"></span><span class="text-navy-300">meeting_projects</span><span class="text-navy-400">M:M</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-navy-500"></span><span class="text-navy-300">meeting_participants</span><span class="text-navy-400">M:M</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-navy-500"></span><span class="text-navy-300">profiles</span><span class="text-navy-400">auth users</span></div>
+              </div>
+            </div>
+            <!-- Future tables -->
+            <div>
+              <div class="text-[10px] text-amber-300 font-bold uppercase tracking-wider mb-2">v2 Extensions</div>
+              <div class="space-y-1.5">
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-amber-500/50"></span><span class="text-navy-200">+ verification_status</span><span class="text-navy-400">on meetings</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-amber-500/50"></span><span class="text-navy-200">+ verified_by/at</span><span class="text-navy-400">on meetings</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-amber-500/50"></span><span class="text-navy-200">+ verification_status</span><span class="text-navy-400">on extractions</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-amber-500/50"></span><span class="text-navy-200">+ phase</span><span class="text-navy-400">on projects</span></div>
+              </div>
+              <div class="text-[10px] text-navy-400 font-bold uppercase tracking-wider mb-2 mt-4">v3+ New Tables</div>
+              <div class="space-y-1.5 opacity-50">
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-navy-500"></span><span class="text-navy-300">documents</span><span class="text-navy-400">Google Docs, uploads</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-navy-500"></span><span class="text-navy-300">messages</span><span class="text-navy-400">Slack, email threads</span></div>
+                <div class="flex items-center gap-2 text-xs"><span class="w-2 h-2 rounded bg-navy-500"></span><span class="text-navy-300">sprints</span><span class="text-navy-400">project management</span></div>
+              </div>
+            </div>
+            <!-- Search capabilities -->
+            <div>
+              <div class="text-[10px] text-purple-300 font-bold uppercase tracking-wider mb-2">Search Engine</div>
+              <div class="space-y-3">
+                <div class="rounded-lg bg-navy-800/60 p-3">
+                  <div class="text-xs font-semibold text-white">Vector Search (HNSW)</div>
+                  <div class="text-[10px] text-navy-300 mt-1">Semantic similarity — "Q3 finances" matches "third quarter budget"</div>
+                </div>
+                <div class="rounded-lg bg-navy-800/60 p-3">
+                  <div class="text-xs font-semibold text-white">Full-text Search (GIN)</div>
+                  <div class="text-[10px] text-navy-300 mt-1">Exact terms — names, jargon, specific phrases</div>
+                </div>
+                <div class="rounded-lg bg-navy-800/60 p-3">
+                  <div class="text-xs font-semibold text-white">Hybrid RRF</div>
+                  <div class="text-[10px] text-navy-300 mt-1">Reciprocal Rank Fusion combines both for best results</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARROW -->
+      <div class="arrow-down h-8"></div>
+
+      <!-- LAYER 5: INTERFACES -->
+      <div>
+        <div class="text-xs font-semibold text-navy-400 uppercase tracking-wider mb-3">Layer 5 — Interfaces</div>
+        <div class="grid grid-cols-3 gap-4">
+          <!-- Cockpit -->
+          <div class="rounded-xl bg-primary-900/30 border border-primary-500/40 p-5 glow-green">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">&#127919;</span>
+                <span class="font-bold text-white">Cockpit</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold">v2</span>
+            </div>
+            <div class="text-[11px] text-primary-200 mb-3">Internal — Stef, Wouter, Ege</div>
+            <div class="space-y-1.5">
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> Dashboard & overview</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-amber-400">&#9632;</span> Review queue (verify/edit/reject)</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> Projects with status & phase</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> Clients (CRM-lite)</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> Meeting detail & transcript</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> Pipeline health</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200 opacity-40"><span class="text-navy-500">&#9632;</span> AI action triggers (v4+)</div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-navy-700 text-[10px] text-navy-400">
+              Shows ALL content (draft + verified) with status indicators
+            </div>
+          </div>
+          <!-- Client Portal -->
+          <div class="rounded-xl bg-blue-900/20 border border-blue-500/30 p-5 opacity-60 glow-blue">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">&#127760;</span>
+                <span class="font-bold text-white">Client Portal</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">v3</span>
+            </div>
+            <div class="text-[11px] text-blue-200 mb-3">External — per client, read-only</div>
+            <div class="space-y-1.5">
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-blue-400">&#9632;</span> Project phase tracker</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-blue-400">&#9632;</span> Meeting summaries (no transcripts)</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-blue-400">&#9632;</span> Action items & status</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-blue-400">&#9632;</span> Key decisions</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-blue-400">&#9632;</span> Non-technical PRD</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-blue-400">&#9632;</span> AI-generated project summary</div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-navy-700 text-[10px] text-navy-400">
+              ONLY verified content. Scoped to client's organization. Separate auth.
+            </div>
+          </div>
+          <!-- MCP -->
+          <div class="rounded-xl bg-navy-800/50 border border-navy-500 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">&#129302;</span>
+                <span class="font-bold text-white">MCP Interface</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary-500/30 text-primary-300 font-bold">LIVE</span>
+            </div>
+            <div class="text-[11px] text-navy-300 mb-3">AI — Claude & other LLM clients</div>
+            <div class="space-y-1.5">
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> search_knowledge (hybrid)</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> get_decisions / get_action_items</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> get_meeting_summary</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> get_organization_overview</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> list_meetings + entities</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200"><span class="text-primary-400">&#9632;</span> correct_extraction</div>
+              <div class="text-[11px] flex items-center gap-2 text-navy-200 opacity-40"><span class="text-navy-500">&#9632;</span> AI actions: email, tasks (v4+)</div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-navy-700 text-[10px] text-navy-400">
+              12 tools live. v2: filter on verified_status by default.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 2: DATA FLOW ==================== -->
+    <div id="panel-dataflow" class="tab-panel max-w-7xl mx-auto px-6 pb-16 hidden">
+
+      <div class="text-center mb-8">
+        <h2 class="text-xl font-bold text-white">Data Flow: From Source to Truth</h2>
+        <p class="text-navy-300 text-sm mt-1">Every piece of content follows the same path — regardless of source</p>
+      </div>
+
+      <!-- Universal pipeline -->
+      <div class="max-w-4xl mx-auto">
+
+        <!-- Step 1 -->
+        <div class="flex items-start gap-6 mb-2">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 border-2 border-blue-500/50 flex items-center justify-center text-blue-300 font-bold">1</div>
+          <div class="flex-1 rounded-xl bg-navy-800/50 border border-navy-600 p-4">
+            <div class="font-semibold text-white text-sm">Ingest</div>
+            <div class="text-xs text-navy-300 mt-1">Data arrives via webhook, API sync, or manual input. Raw data is stored immediately.</div>
+            <div class="flex gap-2 mt-3">
+              <span class="text-[10px] px-2 py-1 rounded bg-primary-900/40 border border-primary-500/30 text-primary-300">Fireflies webhook</span>
+              <span class="text-[10px] px-2 py-1 rounded bg-navy-700 border border-navy-500 text-navy-300">Google API</span>
+              <span class="text-[10px] px-2 py-1 rounded bg-navy-700 border border-navy-500 text-navy-300">Gmail API</span>
+              <span class="text-[10px] px-2 py-1 rounded bg-navy-700 border border-navy-500 text-navy-300">Slack API</span>
+              <span class="text-[10px] px-2 py-1 rounded bg-navy-700 border border-navy-500 text-navy-300">File upload</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ml-5 w-px h-6 bg-navy-600"></div>
+
+        <!-- Step 2 -->
+        <div class="flex items-start gap-6 mb-2">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 border-2 border-purple-500/50 flex items-center justify-center text-purple-300 font-bold">2</div>
+          <div class="flex-1 rounded-xl bg-navy-800/50 border border-navy-600 p-4">
+            <div class="font-semibold text-white text-sm">AI Process</div>
+            <div class="text-xs text-navy-300 mt-1">Content is classified, structured data is extracted, entities are resolved, embeddings are generated.</div>
+            <div class="grid grid-cols-4 gap-2 mt-3">
+              <div class="text-center p-2 rounded-lg bg-navy-700/50">
+                <div class="text-[10px] text-navy-200 font-medium">Classify</div>
+                <div class="text-[9px] text-navy-400">Gatekeeper</div>
+              </div>
+              <div class="text-center p-2 rounded-lg bg-navy-700/50">
+                <div class="text-[10px] text-navy-200 font-medium">Extract</div>
+                <div class="text-[9px] text-navy-400">Extractor</div>
+              </div>
+              <div class="text-center p-2 rounded-lg bg-navy-700/50">
+                <div class="text-[10px] text-navy-200 font-medium">Resolve</div>
+                <div class="text-[9px] text-navy-400">Entity matching</div>
+              </div>
+              <div class="text-center p-2 rounded-lg bg-navy-700/50">
+                <div class="text-[10px] text-navy-200 font-medium">Embed</div>
+                <div class="text-[9px] text-navy-400">Cohere 1024d</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ml-5 w-px h-6 bg-navy-600"></div>
+
+        <!-- Step 3 -->
+        <div class="flex items-start gap-6 mb-2">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 border-2 border-amber-500/50 flex items-center justify-center text-amber-300 font-bold pulse">3</div>
+          <div class="flex-1 rounded-xl bg-amber-900/20 border border-amber-500/30 p-4">
+            <div class="font-semibold text-white text-sm">Review Queue <span class="text-amber-300 text-xs font-normal">(verification gate)</span></div>
+            <div class="text-xs text-navy-300 mt-1">Content enters the review queue with status <code class="text-amber-300">draft</code>. A human reviewer must approve, edit, or reject.</div>
+            <div class="flex gap-4 mt-3">
+              <div class="flex items-center gap-2 text-[11px]">
+                <span class="w-6 h-6 rounded bg-primary-500/20 border border-primary-500/50 flex items-center justify-center text-primary-300 text-xs">&#10003;</span>
+                <span class="text-navy-200">Approve</span>
+              </div>
+              <div class="flex items-center gap-2 text-[11px]">
+                <span class="w-6 h-6 rounded bg-amber-500/20 border border-amber-500/50 flex items-center justify-center text-amber-300 text-xs">&#9998;</span>
+                <span class="text-navy-200">Edit & approve</span>
+              </div>
+              <div class="flex items-center gap-2 text-[11px]">
+                <span class="w-6 h-6 rounded bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-300 text-xs">&#10005;</span>
+                <span class="text-navy-200">Reject</span>
+              </div>
+            </div>
+            <div class="text-[10px] text-amber-300/70 mt-3">Reviewers: Stef, Wouter, Ege</div>
+          </div>
+        </div>
+
+        <div class="ml-5 w-px h-6 bg-navy-600"></div>
+
+        <!-- Step 4 -->
+        <div class="flex items-start gap-6 mb-2">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary-500/20 border-2 border-primary-500/50 flex items-center justify-center text-primary-300 font-bold">4</div>
+          <div class="flex-1 rounded-xl bg-primary-900/20 border border-primary-500/30 p-4">
+            <div class="font-semibold text-white text-sm">Verified Truth <span class="text-primary-300 text-xs font-normal">(source of truth)</span></div>
+            <div class="text-xs text-navy-300 mt-1">Only verified content is queryable by MCP tools (default), visible in client portal, and usable by AI for generating new insights.</div>
+            <div class="flex gap-3 mt-3">
+              <div class="rounded-lg bg-navy-800/50 p-2 px-3 text-[10px]">
+                <span class="text-primary-300">&#10003;</span> <span class="text-navy-200">MCP queries</span>
+              </div>
+              <div class="rounded-lg bg-navy-800/50 p-2 px-3 text-[10px]">
+                <span class="text-primary-300">&#10003;</span> <span class="text-navy-200">Client portal</span>
+              </div>
+              <div class="rounded-lg bg-navy-800/50 p-2 px-3 text-[10px]">
+                <span class="text-primary-300">&#10003;</span> <span class="text-navy-200">AI insights generation</span>
+              </div>
+              <div class="rounded-lg bg-navy-800/50 p-2 px-3 text-[10px]">
+                <span class="text-primary-300">&#10003;</span> <span class="text-navy-200">Cross-project learning</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ml-5 w-px h-6 bg-navy-600"></div>
+
+        <!-- Step 5 -->
+        <div class="flex items-start gap-6">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-navy-700 border-2 border-navy-500 flex items-center justify-center text-navy-300 font-bold opacity-50">5</div>
+          <div class="flex-1 rounded-xl bg-navy-800/30 border border-navy-700 p-4 opacity-50">
+            <div class="font-semibold text-white text-sm">Knowledge Drift Detection <span class="text-navy-400 text-xs font-normal">(v3: Curator agent)</span></div>
+            <div class="text-xs text-navy-300 mt-1">Curator agent runs nightly: checks for contradictions, staleness, status mismatches. Flagged items re-enter the review queue.</div>
+            <div class="flex gap-2 mt-3">
+              <span class="text-[10px] px-2 py-1 rounded bg-navy-700 text-navy-400">Cross-meeting contradictions</span>
+              <span class="text-[10px] px-2 py-1 rounded bg-navy-700 text-navy-400">Stale content</span>
+              <span class="text-[10px] px-2 py-1 rounded bg-navy-700 text-navy-400">Status mismatches</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== TAB 3: PHASE ROADMAP ==================== -->
+    <div id="panel-roadmap" class="tab-panel max-w-7xl mx-auto px-6 pb-16 hidden">
+
+      <div class="text-center mb-10">
+        <h2 class="text-xl font-bold text-white">Platform Roadmap</h2>
+        <p class="text-navy-300 text-sm mt-1">Each phase must be completed before the next can begin — the output of each phase is the foundation for the next</p>
+      </div>
+
+      <!-- PHASE 1: v1 -->
+      <div class="max-w-5xl mx-auto mb-4">
+        <div class="rounded-2xl bg-primary-900/30 border-2 border-primary-500/50 p-6 glow-green relative">
+          <div class="absolute -top-3 left-6 px-3 py-0.5 bg-primary-500 text-white text-xs font-bold rounded-full">COMPLETE</div>
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-white">v1 — Meetings Pipeline</h3>
+              <p class="text-primary-200 text-sm mt-1">"De keten werkt"</p>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-navy-400">Sprints 001-007</div>
+              <div class="text-xs text-primary-300 font-medium">All done</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-3 mt-4">
+            <div class="rounded-lg bg-primary-800/30 p-3">
+              <div class="text-xs font-semibold text-primary-200">Database</div>
+              <div class="text-[10px] text-navy-300 mt-1">8 tables, vector indexes, search functions, triggers</div>
+            </div>
+            <div class="rounded-lg bg-primary-800/30 p-3">
+              <div class="text-xs font-semibold text-primary-200">AI Pipeline</div>
+              <div class="text-[10px] text-navy-300 mt-1">Fireflies webhook, Gatekeeper (Haiku), Extractor (Sonnet)</div>
+            </div>
+            <div class="rounded-lg bg-primary-800/30 p-3">
+              <div class="text-xs font-semibold text-primary-200">Embeddings</div>
+              <div class="text-[10px] text-navy-300 mt-1">Cohere embed-v4, 1024-dim, hybrid RRF search</div>
+            </div>
+            <div class="rounded-lg bg-primary-800/30 p-3">
+              <div class="text-xs font-semibold text-primary-200">MCP Tools</div>
+              <div class="text-[10px] text-navy-300 mt-1">12 tools with source attribution + confidence</div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-primary-700/50 text-[11px] text-primary-300">
+            <span class="font-semibold">Output:</span> Meetings flow in via Fireflies, get processed by AI, and are queryable via MCP within 30 seconds
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECTOR -->
+      <div class="max-w-5xl mx-auto flex flex-col items-center mb-4">
+        <div class="phase-connector h-12"></div>
+        <div class="px-4 py-1.5 rounded-full bg-navy-800 border border-navy-600 text-[10px] text-navy-300 -mt-2">
+          Foundation: data pipeline works &#10003; &rarr; Now make it usable + trustworthy
+        </div>
+      </div>
+
+      <!-- PHASE 2: v2 -->
+      <div class="max-w-5xl mx-auto mb-4">
+        <div class="rounded-2xl bg-amber-900/20 border-2 border-amber-500/40 p-6 glow-amber relative">
+          <div class="absolute -top-3 left-6 px-3 py-0.5 bg-amber-500 text-navy-900 text-xs font-bold rounded-full pulse">NEXT</div>
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-white">v2 — Review & Dashboard</h3>
+              <p class="text-amber-200 text-sm mt-1">"Het team verifieert en ziet alles"</p>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-navy-400">Must complete before v3</div>
+              <div class="text-xs text-amber-300 font-medium">Verified content = foundation</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3 mt-4">
+            <div class="rounded-lg bg-navy-800/50 border border-amber-500/20 p-3">
+              <div class="text-xs font-semibold text-amber-200">Verification Gate</div>
+              <div class="text-[10px] text-navy-300 mt-1">Add verification_status to meetings + extractions. Draft &rarr; verified flow. MCP filters on verified only.</div>
+            </div>
+            <div class="rounded-lg bg-navy-800/50 border border-amber-500/20 p-3">
+              <div class="text-xs font-semibold text-amber-200">Review Queue UI</div>
+              <div class="text-[10px] text-navy-300 mt-1">Approve, edit, or reject meetings and their extractions. Fast and intuitive — not a bottleneck.</div>
+            </div>
+            <div class="rounded-lg bg-navy-800/50 border border-amber-500/20 p-3">
+              <div class="text-xs font-semibold text-amber-200">Dashboard Pages</div>
+              <div class="text-[10px] text-navy-300 mt-1">Project overview (all projects + status). Meeting detail (transcript + extractions). Staleness indicators.</div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-amber-700/30">
+            <div class="text-[11px] text-amber-300 font-semibold mb-2">Why this must come first:</div>
+            <div class="grid grid-cols-3 gap-2 text-[10px] text-navy-300">
+              <div class="flex items-start gap-1.5"><span class="text-amber-400 mt-0.5">&#9658;</span> Client portal needs verified content to show</div>
+              <div class="flex items-start gap-1.5"><span class="text-amber-400 mt-0.5">&#9658;</span> AI actions need trustworthy data to act on</div>
+              <div class="flex items-start gap-1.5"><span class="text-amber-400 mt-0.5">&#9658;</span> Team needs visual overview before adding more sources</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECTOR -->
+      <div class="max-w-5xl mx-auto flex flex-col items-center mb-4">
+        <div class="phase-connector h-12"></div>
+        <div class="px-4 py-1.5 rounded-full bg-navy-800 border border-navy-600 text-[10px] text-navy-300 -mt-2">
+          Foundation: verified truth + visual dashboard &#10003; &rarr; Now expose to clients + add sources
+        </div>
+      </div>
+
+      <!-- PHASE 3: v3 -->
+      <div class="max-w-5xl mx-auto mb-4">
+        <div class="rounded-2xl bg-blue-900/20 border-2 border-blue-500/30 p-6 opacity-70 relative">
+          <div class="absolute -top-3 left-6 px-3 py-0.5 bg-blue-500/80 text-white text-xs font-bold rounded-full">FUTURE</div>
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-white">v3 — Client Portal & Second Source</h3>
+              <p class="text-blue-200 text-sm mt-1">"Klanten zien hun project, tweede bron aangesloten"</p>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-navy-400">Must complete before v4</div>
+              <div class="text-xs text-blue-300 font-medium">Client trust + multi-source</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-4 gap-3 mt-4">
+            <div class="rounded-lg bg-navy-800/40 p-3">
+              <div class="text-xs font-semibold text-blue-200">Client Portal</div>
+              <div class="text-[10px] text-navy-300 mt-1">Read-only per org. Phase tracker, summaries, action items.</div>
+            </div>
+            <div class="rounded-lg bg-navy-800/40 p-3">
+              <div class="text-xs font-semibold text-blue-200">RLS Policies</div>
+              <div class="text-[10px] text-navy-300 mt-1">Row-level security on all tables. Role-based access.</div>
+            </div>
+            <div class="rounded-lg bg-navy-800/40 p-3">
+              <div class="text-xs font-semibold text-blue-200">Second Source</div>
+              <div class="text-[10px] text-navy-300 mt-1">Google Docs or Email. Same pipeline pattern.</div>
+            </div>
+            <div class="rounded-lg bg-navy-800/40 p-3">
+              <div class="text-xs font-semibold text-blue-200">Curator Agent</div>
+              <div class="text-[10px] text-navy-300 mt-1">Nightly: drift detection, contradictions, staleness.</div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-blue-700/20">
+            <div class="text-[11px] text-blue-300 font-semibold mb-2">Why this must come before v4:</div>
+            <div class="grid grid-cols-3 gap-2 text-[10px] text-navy-300">
+              <div class="flex items-start gap-1.5"><span class="text-blue-400 mt-0.5">&#9658;</span> AI actions need multi-source context for useful output</div>
+              <div class="flex items-start gap-1.5"><span class="text-blue-400 mt-0.5">&#9658;</span> Client trust builds confidence to automate more</div>
+              <div class="flex items-start gap-1.5"><span class="text-blue-400 mt-0.5">&#9658;</span> RLS is prerequisite for external access</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECTOR -->
+      <div class="max-w-5xl mx-auto flex flex-col items-center mb-4">
+        <div class="phase-connector h-12"></div>
+        <div class="px-4 py-1.5 rounded-full bg-navy-800 border border-navy-600 text-[10px] text-navy-300 -mt-2">
+          Foundation: multi-source + client-facing + drift detection &#10003; &rarr; Now let AI act
+        </div>
+      </div>
+
+      <!-- PHASE 4: v4+ -->
+      <div class="max-w-5xl mx-auto">
+        <div class="rounded-2xl bg-navy-800/30 border-2 border-navy-600 p-6 opacity-50 relative">
+          <div class="absolute -top-3 left-6 px-3 py-0.5 bg-navy-600 text-navy-200 text-xs font-bold rounded-full">VISION</div>
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-white">v4+ — Cockpit & AI Actions</h3>
+              <p class="text-navy-300 text-sm mt-1">"AI voert taken uit vanuit de cockpit"</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-5 gap-3 mt-4">
+            <div class="rounded-lg bg-navy-700/40 p-3">
+              <div class="text-xs font-semibold text-navy-200">Flow Control</div>
+              <div class="text-[10px] text-navy-400 mt-1">Full cockpit with operational command center</div>
+            </div>
+            <div class="rounded-lg bg-navy-700/40 p-3">
+              <div class="text-xs font-semibold text-navy-200">AI Actions</div>
+              <div class="text-[10px] text-navy-400 mt-1">Draft emails, create tasks, start code jobs</div>
+            </div>
+            <div class="rounded-lg bg-navy-700/40 p-3">
+              <div class="text-xs font-semibold text-navy-200">Project Mgmt</div>
+              <div class="text-[10px] text-navy-400 mt-1">Sprints, timelines, resource planning</div>
+            </div>
+            <div class="rounded-lg bg-navy-700/40 p-3">
+              <div class="text-xs font-semibold text-navy-200">Analyst Agent</div>
+              <div class="text-[10px] text-navy-400 mt-1">Cross-source patterns, trends, risks</div>
+            </div>
+            <div class="rounded-lg bg-navy-700/40 p-3">
+              <div class="text-xs font-semibold text-navy-200">Notifications</div>
+              <div class="text-[10px] text-navy-400 mt-1">Slack + email alerts via Dispatcher</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== TAB 4: KNOWLEDGE GRAPH ==================== -->
+    <div id="panel-entities" class="tab-panel max-w-7xl mx-auto px-6 pb-16 hidden">
+
+      <div class="text-center mb-10">
+        <h2 class="text-xl font-bold text-white">Knowledge Graph</h2>
+        <p class="text-navy-300 text-sm mt-1">How entities relate — the foundation of the verified knowledge base</p>
+      </div>
+
+      <!-- Legend -->
+      <div class="max-w-5xl mx-auto mb-6 flex gap-4 text-[11px]">
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-primary-500/40 border border-primary-500"></span> <span class="text-navy-200">Core entity (v1)</span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/40"></span> <span class="text-navy-200">Junction table (v1)</span></div>
+        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-navy-700 border border-navy-500 opacity-50"></span> <span class="text-navy-200">Future entity (v3+)</span></div>
+        <div class="flex items-center gap-2"><span class="text-primary-400">&#8594;</span> <span class="text-navy-200">1:N relationship</span></div>
+        <div class="flex items-center gap-2"><span class="text-amber-400">&#8596;</span> <span class="text-navy-200">M:N relationship</span></div>
+      </div>
+
+      <div class="max-w-5xl mx-auto">
+        <!-- Row 1: Top-level entities -->
+        <div class="grid grid-cols-3 gap-6 mb-6">
+
+          <!-- Organization -->
+          <div class="rounded-xl bg-primary-900/30 border-2 border-primary-500/40 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-bold text-white text-sm">organizations</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-primary-500/30 text-primary-300">v1</span>
+            </div>
+            <div class="space-y-1 text-[11px] font-mono">
+              <div class="text-amber-300">PK id <span class="text-navy-400 font-sans">uuid</span></div>
+              <div class="text-navy-200">name <span class="text-navy-400 font-sans">text UNIQUE</span></div>
+              <div class="text-navy-200">aliases <span class="text-navy-400 font-sans">text[]</span></div>
+              <div class="text-navy-200">type <span class="text-navy-400 font-sans">client|partner|supplier|other</span></div>
+              <div class="text-navy-200">status <span class="text-navy-400 font-sans">prospect|active|inactive</span></div>
+              <div class="text-navy-200">contact_person, email</div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-navy-700 text-[10px] text-navy-400">
+              Has many: projects, meetings, extractions
+            </div>
+          </div>
+
+          <!-- Projects -->
+          <div class="rounded-xl bg-primary-900/30 border-2 border-primary-500/40 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-bold text-white text-sm">projects</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-primary-500/30 text-primary-300">v1</span>
+            </div>
+            <div class="space-y-1 text-[11px] font-mono">
+              <div class="text-amber-300">PK id <span class="text-navy-400 font-sans">uuid</span></div>
+              <div class="text-blue-300">FK organization_id <span class="text-navy-400 font-sans">&rarr; organizations</span></div>
+              <div class="text-navy-200">name <span class="text-navy-400 font-sans">text UNIQUE</span></div>
+              <div class="text-navy-200">aliases <span class="text-navy-400 font-sans">text[]</span></div>
+              <div class="text-navy-200">status <span class="text-navy-400 font-sans">lead|discovery|...|maintenance</span></div>
+              <div class="text-navy-200">embedding <span class="text-navy-400 font-sans">vector(1024)</span></div>
+              <div class="text-amber-300/50 mt-1">+ phase <span class="text-navy-400 font-sans">(v2)</span></div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-navy-700 text-[10px] text-navy-400">
+              Has many: extractions. M:N with meetings.
+            </div>
+          </div>
+
+          <!-- People -->
+          <div class="rounded-xl bg-primary-900/30 border-2 border-primary-500/40 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-bold text-white text-sm">people</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-primary-500/30 text-primary-300">v1</span>
+            </div>
+            <div class="space-y-1 text-[11px] font-mono">
+              <div class="text-amber-300">PK id <span class="text-navy-400 font-sans">uuid</span></div>
+              <div class="text-navy-200">name <span class="text-navy-400 font-sans">text</span></div>
+              <div class="text-navy-200">email <span class="text-navy-400 font-sans">text UNIQUE</span></div>
+              <div class="text-navy-200">team, role <span class="text-navy-400 font-sans">text</span></div>
+              <div class="text-navy-200">embedding <span class="text-navy-400 font-sans">vector(1024)</span></div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-navy-700 text-[10px] text-navy-400">
+              M:N with meetings (via meeting_participants)
+            </div>
+          </div>
+        </div>
+
+        <!-- Relationship indicators -->
+        <div class="flex justify-around text-[10px] text-navy-400 mb-2 px-12">
+          <div class="text-center"><span class="text-primary-400">&#8595;</span> 1:N</div>
+          <div class="text-center"><span class="text-amber-400">&#8595;</span> M:N</div>
+          <div class="text-center"><span class="text-amber-400">&#8595;</span> M:N</div>
+        </div>
+
+        <!-- Row 2: Meetings (central) -->
+        <div class="max-w-2xl mx-auto mb-6">
+          <div class="rounded-xl bg-primary-900/30 border-2 border-primary-500/40 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-bold text-white text-sm">meetings</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-primary-500/30 text-primary-300">v1</span>
+            </div>
+            <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] font-mono">
+              <div class="text-amber-300">PK id <span class="text-navy-400 font-sans">uuid</span></div>
+              <div class="text-navy-200">fireflies_id <span class="text-navy-400 font-sans">text UNIQUE</span></div>
+              <div class="text-blue-300">FK organization_id <span class="text-navy-400 font-sans">&rarr; organizations</span></div>
+              <div class="text-navy-200">title, date, summary, transcript</div>
+              <div class="text-navy-200">meeting_type <span class="text-navy-400 font-sans">7 types</span></div>
+              <div class="text-navy-200">party_type <span class="text-navy-400 font-sans">client|partner|internal|other</span></div>
+              <div class="text-navy-200">relevance_score <span class="text-navy-400 font-sans">float</span></div>
+              <div class="text-navy-200">raw_fireflies <span class="text-navy-400 font-sans">jsonb (audit trail)</span></div>
+              <div class="text-navy-200">embedding <span class="text-navy-400 font-sans">vector(1024)</span></div>
+              <div class="text-navy-200">search_vector <span class="text-navy-400 font-sans">tsvector (Dutch)</span></div>
+              <div class="text-amber-300/50 col-span-2 mt-1">+ verification_status, verified_by, verified_at <span class="text-navy-400 font-sans">(v2)</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Junction tables row -->
+        <div class="grid grid-cols-2 gap-6 max-w-2xl mx-auto mb-6">
+          <div class="rounded-lg bg-amber-900/10 border border-amber-500/20 p-3 text-center">
+            <div class="text-xs font-semibold text-amber-200">meeting_projects</div>
+            <div class="text-[10px] text-navy-400 font-mono mt-1">meeting_id + project_id (PK)</div>
+          </div>
+          <div class="rounded-lg bg-amber-900/10 border border-amber-500/20 p-3 text-center">
+            <div class="text-xs font-semibold text-amber-200">meeting_participants</div>
+            <div class="text-[10px] text-navy-400 font-mono mt-1">meeting_id + person_id (PK)</div>
+          </div>
+        </div>
+
+        <!-- Relationship indicator -->
+        <div class="text-center text-[10px] text-navy-400 mb-2"><span class="text-primary-400">&#8595;</span> 1:N (meeting has many extractions)</div>
+
+        <!-- Row 3: Extractions -->
+        <div class="max-w-3xl mx-auto mb-8">
+          <div class="rounded-xl bg-primary-900/30 border-2 border-primary-500/40 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-bold text-white text-sm">extractions</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-primary-500/30 text-primary-300">v1</span>
+            </div>
+            <div class="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] font-mono">
+              <div class="text-amber-300">PK id <span class="text-navy-400 font-sans">uuid</span></div>
+              <div class="text-blue-300">FK meeting_id <span class="text-navy-400 font-sans">&rarr; meetings CASCADE</span></div>
+              <div class="text-navy-200">type <span class="text-navy-400 font-sans">decision|action_item|need|insight</span></div>
+              <div class="text-navy-200">content <span class="text-navy-400 font-sans">text NOT NULL</span></div>
+              <div class="text-navy-200">confidence <span class="text-navy-400 font-sans">float 0.0-1.0</span></div>
+              <div class="text-navy-200">transcript_ref <span class="text-navy-400 font-sans">text (source quote)</span></div>
+              <div class="text-navy-200">metadata <span class="text-navy-400 font-sans">jsonb (type-specific)</span></div>
+              <div class="text-blue-300">FK organization_id, project_id</div>
+              <div class="text-navy-200">corrected_by, corrected_at</div>
+              <div class="text-navy-200">embedding <span class="text-navy-400 font-sans">vector(1024)</span></div>
+              <div class="text-amber-300/50 col-span-2 mt-1">+ verification_status, verified_by, verified_at <span class="text-navy-400 font-sans">(v2)</span></div>
+            </div>
+            <!-- Metadata per type -->
+            <div class="mt-3 pt-3 border-t border-navy-700 grid grid-cols-4 gap-2">
+              <div class="rounded bg-navy-800/50 p-2 text-center">
+                <div class="text-[10px] text-primary-300 font-medium">decision</div>
+                <div class="text-[9px] text-navy-400 mt-1">made_by, date, context</div>
+              </div>
+              <div class="rounded bg-navy-800/50 p-2 text-center">
+                <div class="text-[10px] text-primary-300 font-medium">action_item</div>
+                <div class="text-[9px] text-navy-400 mt-1">assignee, due_date, status</div>
+              </div>
+              <div class="rounded bg-navy-800/50 p-2 text-center">
+                <div class="text-[10px] text-primary-300 font-medium">need</div>
+                <div class="text-[9px] text-navy-400 mt-1">(content is the statement)</div>
+              </div>
+              <div class="rounded bg-navy-800/50 p-2 text-center">
+                <div class="text-[10px] text-primary-300 font-medium">insight</div>
+                <div class="text-[9px] text-navy-400 mt-1">category</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Future entities -->
+        <div class="text-xs font-semibold text-navy-500 uppercase tracking-wider mb-3 text-center">Future Entities (v3+)</div>
+        <div class="grid grid-cols-3 gap-4 max-w-3xl mx-auto opacity-40">
+          <div class="rounded-xl bg-navy-800/40 border border-navy-600 p-4">
+            <div class="font-semibold text-navy-200 text-sm mb-2">documents</div>
+            <div class="space-y-1 text-[10px] text-navy-400 font-mono">
+              <div>title, source, source_url</div>
+              <div>content, document_type</div>
+              <div>FK project_id, organization_id</div>
+              <div>verification_status</div>
+              <div>embedding vector(1024)</div>
+            </div>
+          </div>
+          <div class="rounded-xl bg-navy-800/40 border border-navy-600 p-4">
+            <div class="font-semibold text-navy-200 text-sm mb-2">messages</div>
+            <div class="space-y-1 text-[10px] text-navy-400 font-mono">
+              <div>source (slack|email)</div>
+              <div>thread_id, sender_id</div>
+              <div>content</div>
+              <div>FK project_id, organization_id</div>
+              <div>embedding vector(1024)</div>
+            </div>
+          </div>
+          <div class="rounded-xl bg-navy-800/40 border border-navy-600 p-4">
+            <div class="font-semibold text-navy-200 text-sm mb-2">sprints</div>
+            <div class="space-y-1 text-[10px] text-navy-400 font-mono">
+              <div>FK project_id</div>
+              <div>name, goal, number</div>
+              <div>status, start/end date</div>
+              <div>retrospective</div>
+              <div>reusable (boolean)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="max-w-7xl mx-auto px-6 py-8 border-t border-navy-800 mt-8">
+      <div class="flex justify-between text-[11px] text-navy-500">
+        <div>Jouw AI Partner &mdash; Platform Architecture v1.0</div>
+        <div>Source of truth: <code class="text-navy-400">docs/specs/platform-spec.md</code></div>
+        <div>Generated: 2026-03-31</div>
+      </div>
+    </div>
+
+    <!-- TAB SWITCHING LOGIC -->
+    <script>
+      function showTab(name) {
+        // Hide all panels
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+        // Deactivate all tabs
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('tab-active');
+          b.classList.add('text-navy-300');
+        });
+        // Show selected panel
+        document.getElementById('panel-' + name).classList.remove('hidden');
+        // Activate selected tab
+        const tab = document.getElementById('tab-' + name);
+        tab.classList.add('tab-active');
+        tab.classList.remove('text-navy-300');
+      }
+    </script>
+  </body>
+</html>

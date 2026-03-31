@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI-first knowledge platform that ingests company data from multiple sources (Fireflies, Google Docs, Slack, Gmail), processes it through specialized AI agents, and exposes it via an MCP server for any LLM client. Target: 5–25 users across engineering, marketing, sales, leadership.
+AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes company data — starting with meetings — processes it through AI agents, and exposes it via MCP server + web dashboard. Full spec: `docs/specs/platform-spec.md`.
+
+**Current state:** v1 (meetings pipeline) complete. v2 (review gate + dashboard) next.
+**Team:** 6 people, 3 internal reviewers (Stef, Wouter, Ege). Platform maintained by Stef (non-coder) via Claude Code.
+**Verification model:** All content must be human-verified before becoming queryable truth (review gate).
 
 ## Tech Stack
 
@@ -19,62 +23,74 @@ AI-first knowledge platform that ingests company data from multiple sources (Fir
 ## Commands
 
 ```bash
-npm run dev          # Start dev server (Turbopack)
-npm run build        # Production build
-npm run lint         # ESLint (Next.js core web vitals + TypeScript)
+npm run dev          # Start all workspaces (Turbopack via Turborepo)
+npm run build        # Production build (all workspaces)
+npm run lint         # ESLint (all workspaces)
+npm run type-check   # TypeScript check (all workspaces)
 ```
 
-## Project Structure
+## Project Structure (Monorepo)
 
 ```
-src/
-├── app/
-│   ├── (auth)/                  # Publieke routes (geen auth vereist)
-│   │   ├── login/page.tsx
-│   │   └── reset-password/page.tsx
-│   ├── (dashboard)/             # Beschermde routes
-│   │   ├── layout.tsx           # Shell: sidebar + header
-│   │   ├── page.tsx             # Dashboard home
-│   │   └── [feature]/           # Feature-specifieke routes
-│   │       ├── page.tsx         # Overzichtspagina (Server Component)
-│   │       ├── [id]/page.tsx    # Detailpagina
-│   │       ├── loading.tsx      # Suspense fallback
-│   │       └── error.tsx        # Error boundary
-│   ├── api/                     # Route handlers (alleen voor webhooks/externe calls)
-│   ├── layout.tsx               # Root layout (providers, fonts, metadata)
-│   └── globals.css              # Tailwind 4 config + design tokens
+/
+├── apps/
+│   ├── cockpit/                   # Next.js 16 dashboard app
+│   │   ├── src/
+│   │   │   ├── app/               # Routes (dashboard, login, api)
+│   │   │   ├── components/        # UI + feature components
+│   │   │   ├── lib/utils.ts       # cn() helper (app-specific)
+│   │   │   └── middleware.ts      # Auth route guards
+│   │   ├── next.config.ts         # transpilePackages for @repo/*
+│   │   └── package.json
+│   │
+│   └── portal/                    # v3: Client portal (placeholder)
 │
-├── components/
-│   ├── ui/                      # shadcn/ui componenten (NIET handmatig wijzigen)
-│   ├── shared/                  # Herbruikbare project-componenten
-│   ├── layout/                  # Layout-specifieke componenten (sidebar, header, nav)
-│   └── [feature]/               # Feature-specifieke componenten
+├── packages/
+│   ├── database/                  # Shared: Supabase clients, queries, mutations, types
+│   │   └── src/
+│   │       ├── supabase/          # client.ts, server.ts, admin.ts
+│   │       ├── queries/           # Read functions (get*, list*)
+│   │       ├── mutations/         # Write functions (insert*, update*)
+│   │       └── types/             # database.ts (generated)
+│   │
+│   ├── ai/                        # Shared: Agents, embeddings, pipeline
+│   │   └── src/
+│   │       ├── agents/            # gatekeeper.ts, extractor.ts
+│   │       ├── pipeline/          # gatekeeper-pipeline, entity-resolution, embed, save, re-embed
+│   │       ├── validations/       # Zod schemas for agents + fireflies
+│   │       ├── embeddings.ts      # Cohere embed-v4
+│   │       ├── fireflies.ts       # Fireflies GraphQL client
+│   │       └── transcript-processor.ts
+│   │
+│   └── mcp/                       # Shared: MCP server + tools
+│       └── src/
+│           ├── server.ts          # createMcpServer()
+│           └── tools/             # 10 MCP tools + utils
 │
-├── lib/
-│   ├── supabase/
-│   │   ├── client.ts            # Browser client
-│   │   ├── server.ts            # Server client (cookie handling)
-│   │   └── admin.ts             # Service role (alleen server-side)
-│   ├── agents/                  # AI agent modules (gatekeeper, curator, etc.)
-│   ├── queries/                 # Database queries, gegroepeerd per domein
-│   ├── validations/             # Zod schemas, gegroepeerd per domein
-│   ├── hooks/                   # Custom React hooks
-│   ├── utils/                   # Formatting, constants
-│   └── types/
-│       ├── database.ts          # Supabase generated types (niet handmatig wijzigen)
-│       └── app.ts               # App-specifieke types en interfaces
+├── supabase/                      # Shared across apps (stays at root)
+│   ├── migrations/
+│   ├── functions/
+│   └── seed/
 │
-├── actions/                     # Server Actions, gegroepeerd per domein
-├── middleware.ts                # Route guards + auth redirects
-│
-supabase/
-├── migrations/                  # SQL migrations (versioneerd, chronologisch)
-├── functions/                   # Supabase Edge Functions
-└── seed/                        # Seed data scripts
-│
-sprints/
-├── done/                        # Afgeronde sprints
-└── backlog/                     # Upcoming sprints
+├── turbo.json                     # Turborepo task config
+├── package.json                   # Root workspace config
+└── CLAUDE.md
+```
+
+### Import Conventions
+
+```typescript
+// Cross-package imports (shared code)
+import { getAdminClient } from "@repo/database/supabase/admin";
+import { listMeetings } from "@repo/database/queries/meetings";
+import { insertMeeting } from "@repo/database/mutations/meetings";
+import { embedText } from "@repo/ai/embeddings";
+import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
+import { createMcpServer } from "@repo/mcp/server";
+
+// App-internal imports (within cockpit)
+import { MeetingCard } from "@/components/meetings/meeting-card";
+import { cn } from "@/lib/utils";
 ```
 
 **Wanneer nieuwe folders:** feature-folder in `components/` bij 2+ eigen componenten. Component naar `shared/` zodra het op 2+ plekken gebruikt wordt.
@@ -83,24 +99,33 @@ sprints/
 
 ### Supabase Clients
 
-- `src/lib/supabase/server.ts` — Server-side client with cookie handling (use in Server Components/Route Handlers)
-- `src/lib/supabase/client.ts` — Browser-side client (use in Client Components)
+- `packages/database/src/supabase/server.ts` — Server-side client with cookie handling (use in Server Components/Route Handlers)
+- `packages/database/src/supabase/client.ts` — Browser-side client (use in Client Components)
+- `packages/database/src/supabase/admin.ts` — Service role singleton (server-side only, for pipelines/MCP)
 - `NEXT_PUBLIC_` env vars only for URL and anon key; service role key stays server-only
 
 ### Agent System (database-first communication)
 
 Agents write to the database, not to each other. This ensures audit trail + replay capability.
 
-| Agent      | Model       | Purpose                                                                           |
-| ---------- | ----------- | --------------------------------------------------------------------------------- |
-| Gatekeeper | Haiku       | Filter & score incoming content (0.0–1.0), extract structured data in single call |
-| Curator    | Sonnet      | Nightly: dedupe, staleness, contradictions                                        |
-| Analyst    | Opus        | Daily: cross-source patterns, trends, risk flagging                               |
-| Dispatcher | Haiku/rules | Route insights/alerts to Slack, email                                             |
+**Built (v1):**
+
+| Agent      | Model     | Purpose                                                                           |
+| ---------- | --------- | --------------------------------------------------------------------------------- |
+| Gatekeeper | Haiku 4.5 | Classify meetings: meeting_type, party_type, relevance_score                      |
+| Extractor  | Sonnet    | Extract decisions, action_items, needs, insights with confidence + transcript_ref |
+
+**Planned (v3+, NOT built):**
+
+| Agent      | Model       | Purpose                                             |
+| ---------- | ----------- | --------------------------------------------------- |
+| Curator    | Sonnet      | Nightly: dedupe, staleness, contradictions          |
+| Analyst    | Opus        | Daily: cross-source patterns, trends, risk flagging |
+| Dispatcher | Haiku/rules | Route insights/alerts to Slack, email               |
 
 ### Key Design Principles
 
-- **Garbage in, garbage out** — Gatekeeper is the critical quality gate
+- **Verification before truth** — all content is human-reviewed before becoming queryable
 - **Err on keeping** — quarantine uncertain content, never silently discard
 - **Right-size the model** — match model cost/capability to task complexity
 - **Database as communication bus** — all agent coordination via DB rows
@@ -120,7 +145,7 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 - **Geen `select('*')`.** Selecteer alleen kolommen die je nodig hebt.
 - **Geen queries in loops (N+1).** Gebruik Supabase joins voor relaties.
-- **Centraliseer queries in `lib/queries/`.** Eén plek per domein.
+- **Centraliseer queries in `packages/database/src/queries/`.** Eén plek per domein. Mutations in `packages/database/src/mutations/`.
 - **Filter op de database.** Niet ophalen en dan in JS filteren.
 - **Pagination bij grote datasets.** Gebruik `.range()`.
 - **Seed data is idempotent.** Altijd `ON CONFLICT DO UPDATE`.
@@ -129,7 +154,7 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 1. **Middleware** — route bescherming (v1: alleen auth check, role-based komt in v3).
 2. **Zod validatie in Server Actions** — valideer álle input vóór de database call.
-3. **RLS policies op elke tabel** — v1 uitzondering: RLS komt in v3. Iedereen ziet alles.
+3. **RLS policies op elke tabel** — accepted risk: RLS deferred to v3 (client portal). Small team, everyone sees everything. See `docs/security/audit-report.md`.
 
 - Frontend checks zijn voor UX, niet voor security.
 - Service role client alleen server-side, alleen voor admin/seed taken.
@@ -182,7 +207,8 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 - Sprints are in `sprints/`: `done/` for completed, `backlog/` for upcoming
 - When a sprint is completed, move its file from `sprints/backlog/` to `sprints/done/`
 - Each sprint file references requirement IDs (FUNC-xxx, DATA-xxx, AI-xxx, MCP-xxx, RULE-xxx) from `docs/specs/requirements.md`
-- Full PRD is in `docs/specs/meeting-processing-review.md` (archived v1: `docs/archive/prd-knowledge-platform-v1.md`)
+- Full platform spec: `docs/specs/platform-spec.md` (single source of truth)
+- Archived docs in `docs/archive/` (PRD v1, PRD v2, business model v1)
 
 ## Next.js 16 Warning
 
@@ -190,4 +216,7 @@ This uses Next.js 16 which has breaking changes from earlier versions. Read the 
 
 ## Path Aliases
 
-`@/*` maps to `./src/*` — use this for all imports.
+- `@/*` maps to `./src/*` within `apps/cockpit/` — use for app-internal imports only
+- `@repo/database/*` — shared database package (queries, mutations, supabase clients, types)
+- `@repo/ai/*` — shared AI package (agents, pipeline, embeddings, fireflies)
+- `@repo/mcp/*` — shared MCP package (server, tools)
