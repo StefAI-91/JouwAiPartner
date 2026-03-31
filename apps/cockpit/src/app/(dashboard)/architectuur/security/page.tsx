@@ -173,9 +173,7 @@ const integrations: IntegrationFlow[] = [
     ],
     endpoints: [
       "Gatekeeper — Claude Haiku 4.5 (classificatie bij ingest)",
-      "Extractor — Claude Sonnet 4.5 (extractie bij ingest)",
-      "Zoekdecompositie — Claude Haiku 4.5 (bij /api/ask)",
-      "Antwoordsynthese — Claude Haiku 4.5 (bij /api/ask)",
+      "Extractor — Claude Sonnet (extractie bij ingest)",
     ],
     risks: [
       "Volledige transcripts (incl. klantdata) worden naar Anthropic gestuurd",
@@ -275,7 +273,7 @@ const integrations: IntegrationFlow[] = [
     ],
     risks: [
       "Service role key geeft volledige database-toegang zonder RLS",
-      "Geen Row Level Security (RLS) policies actief op tabellen",
+      "Geen Row Level Security (RLS) policies actief — accepted risk tot v3 (client portal). Klein team, iedereen ziet alles.",
       "Alle geauthenticeerde gebruikers kunnen alle data zien",
     ],
   },
@@ -288,9 +286,9 @@ const integrations: IntegrationFlow[] = [
     region: "Vercel Edge (afhankelijk van deployment regio)",
     credentials: [
       {
-        name: "Geen authenticatie",
-        type: "Open endpoint",
-        sensitivity: "Kritiek risico",
+        name: "Supabase session cookie",
+        type: "User auth (via Supabase SSR)",
+        sensitivity: "Hoog",
       },
     ],
     dataOut: [
@@ -318,13 +316,13 @@ const integrations: IntegrationFlow[] = [
       },
     ],
     endpoints: [
-      "/api/mcp — POST (tool calls), GET (405), DELETE (no-op)",
-      "7 tools: search_knowledge, get_meeting_summary, get_decisions, get_action_items, get_organizations, get_projects, get_people",
+      "/api/mcp — POST (stateless HTTP transport, vereist Supabase user auth)",
+      "10 tools: search_knowledge, get_meeting_summary, get_decisions, get_action_items, get_organization_overview, list_meetings, get_organizations, get_projects, get_people, correct_extraction",
     ],
     risks: [
-      "Endpoint heeft GEEN authenticatie — iedereen met de URL kan alle data opvragen",
-      "Alle tools draaien op admin client (service role) zonder RLS",
-      "Geen rate limiting of toegangsbeheer",
+      "Alle tools draaien op admin client (service role) zonder RLS — ingelogde gebruiker kan alle data opvragen",
+      "Geen rate limiting op MCP endpoint",
+      "correct_extraction tool kan extracties muteren vanuit AI-client",
     ],
   },
 ];
@@ -341,6 +339,7 @@ const storedDataTables = [
       "transcript (volledige gesproken tekst)",
       "summary (samenvatting met mogelijk gevoelige inhoud)",
       "raw_fireflies (volledig origineel Fireflies response)",
+      "verification_status, verified_by, verified_at (review metadata)",
     ],
     retention: "Onbeperkt (geen retentiebeleid)",
   },
@@ -351,6 +350,8 @@ const storedDataTables = [
       "content (extractie-inhoud, kan namen/bedragen bevatten)",
       "metadata (assignee, deadline, client naam)",
       "transcript_ref (exact citaat uit transcript)",
+      "corrected_by, corrected_at (correctie-audit trail)",
+      "verification_status, verified_by, verified_at (review metadata)",
     ],
     retention: "Onbeperkt (geen retentiebeleid)",
   },
@@ -375,7 +376,19 @@ const storedDataTables = [
   {
     table: "projects",
     description: "Projecten gekoppeld aan organisaties",
-    ppiFields: ["name (kan klantnaam bevatten)"],
+    ppiFields: ["name (kan klantnaam bevatten)", "aliases (alternatieve namen)"],
+    retention: "Onbeperkt (geen retentiebeleid)",
+  },
+  {
+    table: "meeting_participants / meeting_projects",
+    description: "Koppeltabellen (meeting ↔ personen/projecten)",
+    ppiFields: ["meeting_id, person_id, project_id (relatie-informatie)"],
+    retention: "Onbeperkt (geen retentiebeleid)",
+  },
+  {
+    table: "mcp_queries",
+    description: "Usage tracking van MCP tool calls",
+    ppiFields: ["query (zoekvragen van gebruikers)", "tool_name, user_id"],
     retention: "Onbeperkt (geen retentiebeleid)",
   },
 ];
@@ -609,12 +622,14 @@ export default function SecurityDatamappingPage() {
             Het platform verwerkt meeting-transcripts van klantgesprekken en interne overleggen.
             Data stroomt door <strong>5 systemen</strong>: Fireflies (bron), Anthropic Claude
             (AI-verwerking), Cohere (embeddings), Supabase (opslag, EU-Frankfurt) en ons MCP
-            endpoint (toegang voor AI-clients).
+            endpoint (toegang voor AI-clients). Alle API endpoints zijn beveiligd met authenticatie
+            (Supabase auth, HMAC of Bearer token).
           </p>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">5 externe integraties</Badge>
             <Badge variant="outline">6 API keys/secrets</Badge>
-            <Badge variant="outline">8 database-tabellen</Badge>
+            <Badge variant="outline">9 database-tabellen</Badge>
+            <Badge variant="outline">10 MCP tools</Badge>
             <Badge variant="outline">Opslag: EU-Frankfurt</Badge>
           </div>
         </CardContent>
@@ -685,6 +700,35 @@ export default function SecurityDatamappingPage() {
         </Card>
       </div>
 
+      {/* Completed items */}
+      <Card className="border-green-200 dark:border-green-800/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base text-green-700 dark:text-green-400">
+            <Shield className="h-4 w-4" />
+            Afgerond
+          </CardTitle>
+          <CardDescription>Security verbeteringen doorgevoerd in v1 sprints</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {[
+              "Authenticatie op /api/mcp (Supabase user auth vereist)",
+              "/api/search en /api/ask verwijderd — functionaliteit via MCP tools",
+              "CRON_SECRET verplicht voor /api/cron/* en /api/ingest/*",
+              "Security headers: X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy",
+              "Webhook HMAC-SHA256 validatie op Fireflies webhook",
+              "Test endpoints geblokkeerd in productie (NODE_ENV check)",
+              "Monorepo: gedeelde code gescheiden in packages (database, ai, mcp)",
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-2 text-xs">
+                <span className="mt-0.5 shrink-0 text-green-600">&#10003;</span>
+                <span className="text-muted-foreground">{item}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Action items */}
       <Card className="border-orange-200 dark:border-orange-800/50">
         <CardHeader>
@@ -698,24 +742,28 @@ export default function SecurityDatamappingPage() {
           <div className="space-y-2">
             {[
               {
-                priority: "kritiek",
-                item: "Authenticatie toevoegen op /api/search, /api/ask en /api/mcp",
-              },
-              {
-                priority: "kritiek",
-                item: "CRON_SECRET verplicht maken (niet optioneel)",
+                priority: "hoog",
+                item: "Zod validatie toevoegen in database mutations (runtime input-validatie ontbreekt)",
               },
               {
                 priority: "hoog",
-                item: "Security headers toevoegen (CSP, X-Frame-Options, HSTS)",
+                item: "Rate limiting op MCP en webhook endpoints",
               },
               {
                 priority: "hoog",
-                item: "Rate limiting op publieke API endpoints",
+                item: "Content Security Policy (CSP) header toevoegen",
               },
               {
                 priority: "hoog",
-                item: "Audit logging voor data-toegang",
+                item: "Audit logging voor data-toegang en MCP tool calls",
+              },
+              {
+                priority: "midden",
+                item: "RLS policies activeren op alle Supabase tabellen (gepland voor v3 client portal)",
+              },
+              {
+                priority: "midden",
+                item: "MCP tools migreren van admin client naar user-scoped queries",
               },
               {
                 priority: "midden",
@@ -724,10 +772,6 @@ export default function SecurityDatamappingPage() {
               {
                 priority: "midden",
                 item: "Offboarding procedure: API keys roteren, data verwijderen per organisatie",
-              },
-              {
-                priority: "midden",
-                item: "RLS policies activeren op alle Supabase tabellen",
               },
             ].map(({ priority, item }) => (
               <div key={item} className="flex items-start gap-2 text-xs">
