@@ -1,6 +1,54 @@
 import { getAdminClient } from "../supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export interface MeetingDetail {
+  id: string;
+  title: string | null;
+  date: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  transcript: string | null;
+  summary: string | null;
+  verification_status: string;
+  verified_at: string | null;
+  verifier: { full_name: string | null } | null;
+  organization: { name: string } | null;
+  meeting_participants: { person: { id: string; name: string } }[];
+  extractions: {
+    id: string;
+    type: string;
+    content: string;
+    confidence: number | null;
+    transcript_ref: string | null;
+  }[];
+}
+
+export async function getVerifiedMeetingById(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<MeetingDetail | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      `id, title, date, meeting_type, party_type, transcript, summary,
+       verification_status, verified_at,
+       verifier:profiles!meetings_verified_by_fkey(full_name),
+       organization:organizations(name),
+       meeting_participants(person:people(id, name)),
+       extractions(id, type, content, confidence, transcript_ref)`,
+    )
+    .eq("id", meetingId)
+    .eq("verification_status", "verified")
+    .single();
+
+  if (error) {
+    console.error("[getVerifiedMeetingById]", error.message);
+    return null;
+  }
+  return data as unknown as MeetingDetail;
+}
+
 export interface RecentMeeting {
   id: string;
   title: string | null;
@@ -8,6 +56,7 @@ export interface RecentMeeting {
   participants: string[] | null;
   relevance_score: number | null;
   meeting_type: string | null;
+  verification_status: string | null;
 }
 
 export async function listRecentMeetings(
@@ -17,7 +66,7 @@ export async function listRecentMeetings(
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("meetings")
-    .select("id, title, date, participants, relevance_score, meeting_type")
+    .select("id, title, date, participants, relevance_score, meeting_type, verification_status")
     .order("date", { ascending: false, nullsFirst: false })
     .limit(limit);
 
