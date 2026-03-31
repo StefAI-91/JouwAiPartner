@@ -1,4 +1,27 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
+
+export interface PersonListItem {
+  id: string;
+  name: string;
+  email: string | null;
+  team: string | null;
+  role: string | null;
+}
+
+/**
+ * List all people ordered by name.
+ */
+export async function listPeople(client?: SupabaseClient): Promise<PersonListItem[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("people")
+    .select("id, name, email, team, role")
+    .order("name");
+
+  if (error || !data) return [];
+  return data;
+}
 
 export async function getStalePeople(limit: number = 50) {
   const { data, error } = await getAdminClient()
