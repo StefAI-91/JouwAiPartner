@@ -56,6 +56,7 @@ export interface RecentMeeting {
   participants: string[] | null;
   relevance_score: number | null;
   meeting_type: string | null;
+  verification_status: string | null;
 }
 
 export async function listRecentMeetings(
@@ -65,7 +66,7 @@ export async function listRecentMeetings(
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("meetings")
-    .select("id, title, date, participants, relevance_score, meeting_type")
+    .select("id, title, date, participants, relevance_score, meeting_type, verification_status")
     .order("date", { ascending: false, nullsFirst: false })
     .limit(limit);
 
