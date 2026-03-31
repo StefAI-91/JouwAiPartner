@@ -11,7 +11,7 @@ export function registerDecisionTools(server: McpServer) {
     {
       project: z.string().optional().describe("Filter by project name"),
       date_from: z.string().optional().describe("Start date (ISO format, e.g. 2026-03-01)"),
-      date_to: z.string().optional().describe("End date (ISO format, e.g. 2026-03-31)"),
+      date_to: z.string().optional().describe("End date, inclusive (ISO format, e.g. 2026-03-31)"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
     },
     async ({ project, date_from, date_to, limit }) => {
@@ -39,7 +39,8 @@ export function registerDecisionTools(server: McpServer) {
         query = query.gte("created_at", date_from);
       }
       if (date_to) {
-        query = query.lte("created_at", date_to);
+        const endOfDay = date_to.includes("T") ? date_to : `${date_to}T23:59:59.999Z`;
+        query = query.lte("created_at", endOfDay);
       }
 
       if (project) {
