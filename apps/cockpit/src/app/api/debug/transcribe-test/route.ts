@@ -116,15 +116,14 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * Truncate buffer to the last complete MP3 frame.
- * MP3 frame sync: 0xFF followed by 0xE0-0xFF (11 sync bits set).
- * Scans backwards from end to find the last frame header.
+ * Strip ID3 tags and truncate to last complete MP3 frame.
+ * Returns raw MP3 frame data without metadata headers that may
+ * contain duration info conflicting with truncated content.
  */
 function truncateToMp3Frame(buf: Buffer<ArrayBuffer>): Buffer<ArrayBuffer> {
-  // Skip ID3v2 tag at the start if present
+  // Strip ID3v2 tag at the start if present
   let dataStart = 0;
   if (buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) {
-    // ID3v2 size is syncsafe integer in bytes 6-9
     const size =
       ((buf[6] & 0x7f) << 21) |
       ((buf[7] & 0x7f) << 14) |
@@ -133,14 +132,24 @@ function truncateToMp3Frame(buf: Buffer<ArrayBuffer>): Buffer<ArrayBuffer> {
     dataStart = 10 + size;
   }
 
-  // Scan backwards from end to find last frame sync (0xFF 0xE0+)
-  for (let i = buf.byteLength - 2; i > dataStart; i--) {
+  // Find first actual MP3 frame sync after ID3
+  let frameStart = dataStart;
+  for (let i = dataStart; i < buf.byteLength - 1; i++) {
     if (buf[i] === 0xff && (buf[i + 1] & 0xe0) === 0xe0) {
-      // Found a frame sync — truncate here (exclude this partial frame)
-      return Buffer.from(buf.buffer, buf.byteOffset, i);
+      frameStart = i;
+      break;
     }
   }
 
-  // Fallback: return as-is
-  return buf;
+  // Scan backwards from end to find last complete frame sync
+  let frameEnd = buf.byteLength;
+  for (let i = buf.byteLength - 2; i > frameStart; i--) {
+    if (buf[i] === 0xff && (buf[i + 1] & 0xe0) === 0xe0) {
+      frameEnd = i;
+      break;
+    }
+  }
+
+  // Return raw MP3 frames without ID3 header
+  return Buffer.from(buf.buffer, buf.byteOffset + frameStart, frameEnd - frameStart);
 }
