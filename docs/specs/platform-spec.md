@@ -724,7 +724,7 @@ Sprints 001-007. All completed.
 - No client portal
 - No additional data sources beyond Fireflies
 
-### v2 — Review & Dashboard (NEXT)
+### v2 — Review & Dashboard — COMPLETE (2026-04-01)
 
 Make the platform visually usable and add the verification gate. Full PRD: `docs/specs/v2-review-dashboard.md`.
 

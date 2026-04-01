@@ -2,16 +2,21 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
-import { escapeLike } from "./utils";
+import { escapeLike, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds } from "./utils";
 
 export function registerOrganizationOverviewTools(server: McpServer) {
   server.tool(
     "get_organization_overview",
-    "Haal een compleet overzicht op van een organisatie: basisgegevens, gekoppelde projecten, recente meetings, en extracties (besluiten, actiepunten, inzichten, behoeften). Ideaal voor vragen als 'Geef me alles over klant X'.",
+    "Haal een compleet overzicht op van een organisatie: basisgegevens, gekoppelde projecten, recente geverifieerde meetings, en extracties. Retourneert standaard alleen geverifieerde content. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern).",
     {
       organization_name: z.string().describe("Naam (of deel van naam) van de organisatie"),
+      include_drafts: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Include unverified (draft) content. Only for internal review purposes."),
     },
-    async ({ organization_name }) => {
+    async ({ organization_name, include_drafts }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(supabase, "get_organization_overview", organization_name);
 
@@ -40,19 +45,31 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         .eq("organization_id", org.id)
         .order("name");
 
-      const { data: meetings } = await supabase
+      let meetingsQuery = supabase
         .from("meetings")
-        .select("id, title, date, meeting_type, party_type, relevance_score, summary")
+        .select("id, title, date, meeting_type, party_type, relevance_score, summary, verification_status, verified_by, verified_at")
         .eq("organization_id", org.id)
         .order("date", { ascending: false })
         .limit(20);
 
-      const { data: extractions } = await supabase
+      if (!include_drafts) {
+        meetingsQuery = meetingsQuery.eq("verification_status", "verified");
+      }
+
+      const { data: meetings } = await meetingsQuery;
+
+      let extractionsQuery = supabase
         .from("extractions")
-        .select("type, content, confidence, metadata, transcript_ref, corrected_by, meeting_id")
+        .select("type, content, confidence, metadata, transcript_ref, corrected_by, meeting_id, verification_status, verified_by, verified_at")
         .eq("organization_id", org.id)
         .order("created_at", { ascending: false })
         .limit(50);
+
+      if (!include_drafts) {
+        extractionsQuery = extractionsQuery.eq("verification_status", "verified");
+      }
+
+      const { data: extractions } = await extractionsQuery;
 
       interface OverviewProject {
         id: string;
@@ -69,6 +86,9 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         party_type: "client" | "partner" | "internal" | "other" | null;
         relevance_score: number | null;
         summary: string | null;
+        verification_status: string | null;
+        verified_by: string | null;
+        verified_at: string | null;
       }
 
       interface OverviewExtraction {
@@ -79,7 +99,18 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         transcript_ref: string | null;
         corrected_by: string | null;
         meeting_id: string;
+        verification_status: string | null;
+        verified_by: string | null;
+        verified_at: string | null;
       }
+
+      const typedMeetings = (meetings || []) as unknown as OverviewMeeting[];
+      const typedExtractions = (extractions || []) as unknown as OverviewExtraction[];
+
+      const profileMap = await lookupProfileNames(
+        supabase,
+        collectVerifiedByIds([...typedMeetings, ...typedExtractions]),
+      );
 
       const sections: string[] = [];
 
@@ -101,14 +132,21 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       }
 
       sections.push("", "## Recente meetings");
-      if (meetings && meetings.length > 0) {
-        (meetings as unknown as OverviewMeeting[]).forEach((m: OverviewMeeting, i: number) => {
+      if (typedMeetings.length > 0) {
+        typedMeetings.forEach((m: OverviewMeeting, i: number) => {
           const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
+          const status = formatVerificatieStatus(
+            m.verification_status,
+            m.verified_by ? profileMap[m.verified_by] || null : null,
+            m.verified_at,
+            null,
+            null,
+          );
           sections.push(
-            `${i + 1}. **${m.title}** — ${dateStr} (${m.meeting_type || "onbekend type"})`,
+            `${i + 1}. **${m.title}** — ${dateStr} (${m.meeting_type || "onbekend type"}) | ${status}`,
           );
           if (m.summary) {
-            const short = m.summary.length > 150 ? m.summary.slice(0, 150) + "…" : m.summary;
+            const short = m.summary.length > 150 ? m.summary.slice(0, 150) + "..." : m.summary;
             sections.push(`   ${short}`);
           }
           sections.push(`   Meeting ID: ${m.id}`);
@@ -118,9 +156,9 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       }
 
       sections.push("", "## Extracties");
-      if (extractions && extractions.length > 0) {
+      if (typedExtractions.length > 0) {
         const grouped: Record<string, OverviewExtraction[]> = {};
-        for (const e of extractions as unknown as OverviewExtraction[]) {
+        for (const e of typedExtractions) {
           if (!grouped[e.type]) grouped[e.type] = [];
           grouped[e.type].push(e);
         }
@@ -136,6 +174,13 @@ export function registerOrganizationOverviewTools(server: McpServer) {
           const label = typeLabels[type] || type;
           sections.push("", `### ${label} (${items.length})`);
           items.forEach((item: OverviewExtraction, i: number) => {
+            const status = formatVerificatieStatus(
+              item.verification_status,
+              item.verified_by ? profileMap[item.verified_by] || null : null,
+              item.verified_at,
+              item.confidence,
+              item.corrected_by,
+            );
             const meta: string[] = [];
             if (item.metadata?.assignee) meta.push(`Eigenaar: ${item.metadata.assignee}`);
             if (item.metadata?.deadline) meta.push(`Deadline: ${item.metadata.deadline}`);
@@ -143,6 +188,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
             if (item.metadata?.urgency) meta.push(`Urgentie: ${item.metadata.urgency}`);
 
             sections.push(`${i + 1}. ${item.content}`);
+            sections.push(`   ${status}`);
             if (meta.length > 0) sections.push(`   ${meta.join(" | ")}`);
             if (item.transcript_ref) sections.push(`   Citaat: "${item.transcript_ref}"`);
           });
@@ -153,7 +199,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       sections.push(
         "",
-        `**Totaal:** ${projects?.length || 0} projecten, ${meetings?.length || 0} meetings, ${extractions?.length || 0} extracties`,
+        `**Totaal:** ${projects?.length || 0} projecten, ${typedMeetings.length} meetings, ${typedExtractions.length} extracties`,
       );
 
       return {
