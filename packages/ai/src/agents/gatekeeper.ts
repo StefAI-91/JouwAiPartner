@@ -31,25 +31,19 @@ Je bepaalt:
    FALLBACK:
    - other: past echt nergens in
 
-3. PARTY TYPE: met wie was de meeting?
-   - Als ALLE deelnemers INTERN zijn → party_type = "internal"
-   - Als er EXTERNE deelnemers zijn, bepaal op basis van relatie:
-     - client: meeting met een (potentiële) klant
-     - partner: meeting met een partner/leverancier
-     - other: onduidelijk
-
-4. ORGANIZATION NAME: welke externe organisatie was betrokken?
-   - Geef de organisatienaam als het een client/partner meeting is
-   - null als het een interne meeting is
+3. ORGANIZATION NAME: welke externe organisatie was betrokken?
+   - Geef de organisatienaam als er ONBEKENDE externe deelnemers zijn
+   - null als alle deelnemers INTERN zijn of als de organisatie al bekend is (EXTERN label bevat org)
 
 BELANGRIJK: Je doet GEEN extractie van besluiten, actiepunten of andere inhoud.
-Je classificeert alleen.`;
+Je classificeert alleen. Party type wordt NIET door jou bepaald.`;
 
 export interface ParticipantInfo {
   raw: string;
   label: "internal" | "external" | "unknown";
   matchedName?: string;
   organizationName?: string | null;
+  organizationType?: string | null;
 }
 
 export async function runGatekeeper(
@@ -75,12 +69,9 @@ export async function runGatekeeper(
         .join("\n")
     : null;
 
-  const allInternal = metadata.participants?.every((p) => p.label === "internal") ?? false;
-
   const contextPrefix = [
     metadata.title ? `Titel: ${metadata.title}` : null,
     participantLines ? `Deelnemers:\n${participantLines}` : null,
-    allInternal ? `OPMERKING: Alle deelnemers zijn intern. party_type moet "internal" zijn.` : null,
     metadata.date ? `Datum: ${metadata.date}` : null,
   ]
     .filter(Boolean)

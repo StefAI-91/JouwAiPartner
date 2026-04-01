@@ -4,6 +4,46 @@ import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
 import { getAllKnownPeople } from "@repo/database/queries/people";
 import { resolveOrganization } from "@repo/ai/pipeline/entity-resolution";
 import type { ParticipantInfo } from "@repo/ai/agents/gatekeeper";
+import type { PartyType } from "@repo/ai/validations/gatekeeper";
+import type { KnownPerson } from "@repo/database/queries/people";
+
+function classifyParticipantsSync(
+  participants: string[],
+  knownPeople: KnownPerson[],
+): ParticipantInfo[] {
+  return participants.map((raw) => {
+    const normalized = raw.toLowerCase().trim();
+
+    const match = knownPeople.find(
+      (p) => p.email && p.email.toLowerCase() === normalized,
+    ) ?? knownPeople.find(
+      (p) => p.name.toLowerCase() === normalized,
+    );
+
+    if (!match) return { raw, label: "unknown" as const };
+    if (match.team) return { raw, label: "internal" as const, matchedName: match.name };
+    return {
+      raw,
+      label: "external" as const,
+      matchedName: match.name,
+      organizationName: match.organization_name,
+      organizationType: match.organization_type,
+    };
+  });
+}
+
+function determinePartyType(participants: ParticipantInfo[]): PartyType {
+  if (participants.length === 0) return "other";
+  if (participants.every((p) => p.label === "internal")) return "internal";
+
+  const knownExternal = participants.find(
+    (p) => p.label === "external" && p.organizationType,
+  );
+  if (knownExternal?.organizationType === "client") return "client";
+  if (knownExternal?.organizationType === "partner") return "partner";
+
+  return "other";
+}
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -15,7 +55,6 @@ export async function POST(req: NextRequest) {
 
   const db = getAdminClient();
 
-  // Fetch all meetings with their summary + participants
   const { data: meetings, error } = await db
     .from("meetings")
     .select("id, title, date, participants, summary, meeting_type, party_type, relevance_score, raw_fireflies")
@@ -25,7 +64,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch meetings" }, { status: 500 });
   }
 
-  // Pre-fetch all known people once
   const knownPeople = await getAllKnownPeople();
 
   const results: {
@@ -33,43 +71,37 @@ export async function POST(req: NextRequest) {
     title: string | null;
     old: { meeting_type: string | null; party_type: string | null; relevance_score: number | null };
     new: { meeting_type: string; party_type: string; relevance_score: number };
+    party_type_source: string;
     changed: boolean;
   }[] = [];
 
   for (const meeting of meetings) {
     const participants: string[] = meeting.participants ?? [];
 
-    // Classify participants using known people
-    const classifiedParticipants: ParticipantInfo[] = participants.map((raw: string) => {
-      const normalized = raw.toLowerCase().trim();
+    // Classify participants
+    const classifiedParticipants = classifyParticipantsSync(participants, knownPeople);
 
-      const match = knownPeople.find(
-        (p) => p.email && p.email.toLowerCase() === normalized,
-      ) ?? knownPeople.find(
-        (p) => p.name.toLowerCase() === normalized,
-      );
+    // Determine party_type deterministically
+    const partyType = determinePartyType(classifiedParticipants);
+    const partyTypeSource = classifiedParticipants.some(
+      (p) => p.label === "external" && p.organizationType,
+    ) ? "deterministic" : partyType === "internal" ? "deterministic" : "gatekeeper_fallback";
 
-      if (!match) return { raw, label: "unknown" as const };
-      if (match.team) return { raw, label: "internal" as const, matchedName: match.name };
-      return {
-        raw,
-        label: "external" as const,
-        matchedName: match.name,
-        organizationName: match.organization_name,
-      };
-    });
-
-    // Run Gatekeeper with enriched participants
-    const result = await runGatekeeper(meeting.summary ?? "", {
+    // Run Gatekeeper for meeting_type + relevance + org name
+    const gkResult = await runGatekeeper(meeting.summary ?? "", {
       title: meeting.title,
       participants: classifiedParticipants,
       date: meeting.date,
     });
 
-    // Resolve organization
-    const orgResult = await resolveOrganization(result.organization_name);
+    // Resolve organization — known org first, Gatekeeper fallback
+    const knownOrg = classifiedParticipants.find(
+      (p) => p.label === "external" && p.organizationName,
+    );
+    const orgNameToResolve = knownOrg?.organizationName ?? gkResult.organization_name;
+    const orgResult = await resolveOrganization(orgNameToResolve);
 
-    // Update meeting with new classification
+    // Update meeting
     const rawFireflies = (meeting.raw_fireflies as Record<string, unknown>) ?? {};
     rawFireflies.pipeline = {
       ...(rawFireflies.pipeline as Record<string, unknown> ?? {}),
@@ -78,13 +110,14 @@ export async function POST(req: NextRequest) {
         label: p.label,
         matched_name: p.matchedName ?? null,
         organization_name: p.organizationName ?? null,
+        organization_type: p.organizationType ?? null,
       })),
+      party_type_source: partyTypeSource,
       gatekeeper: {
-        meeting_type: result.meeting_type,
-        party_type: result.party_type,
-        relevance_score: result.relevance_score,
-        reason: result.reason,
-        organization_name: result.organization_name,
+        meeting_type: gkResult.meeting_type,
+        relevance_score: gkResult.relevance_score,
+        reason: gkResult.reason,
+        organization_name: gkResult.organization_name,
       },
       reclassified_at: new Date().toISOString(),
     };
@@ -92,19 +125,19 @@ export async function POST(req: NextRequest) {
     await db
       .from("meetings")
       .update({
-        meeting_type: result.meeting_type,
-        party_type: result.party_type,
-        relevance_score: result.relevance_score,
+        meeting_type: gkResult.meeting_type,
+        party_type: partyType,
+        relevance_score: gkResult.relevance_score,
         organization_id: orgResult.organization_id,
-        unmatched_organization_name: orgResult.matched ? null : result.organization_name,
+        unmatched_organization_name: orgResult.matched ? null : orgNameToResolve,
         raw_fireflies: rawFireflies,
       })
       .eq("id", meeting.id);
 
     const changed =
-      meeting.meeting_type !== result.meeting_type ||
-      meeting.party_type !== result.party_type ||
-      meeting.relevance_score !== result.relevance_score;
+      meeting.meeting_type !== gkResult.meeting_type ||
+      meeting.party_type !== partyType ||
+      meeting.relevance_score !== gkResult.relevance_score;
 
     results.push({
       id: meeting.id,
@@ -115,10 +148,11 @@ export async function POST(req: NextRequest) {
         relevance_score: meeting.relevance_score,
       },
       new: {
-        meeting_type: result.meeting_type,
-        party_type: result.party_type,
-        relevance_score: result.relevance_score,
+        meeting_type: gkResult.meeting_type,
+        party_type: partyType,
+        relevance_score: gkResult.relevance_score,
       },
+      party_type_source: partyTypeSource,
       changed,
     });
   }

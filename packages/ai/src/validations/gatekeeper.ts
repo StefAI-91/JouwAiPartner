@@ -14,6 +14,9 @@ export const MEETING_TYPES = [
 
 export type MeetingType = (typeof MEETING_TYPES)[number];
 
+export const PARTY_TYPES = ["client", "partner", "internal", "other"] as const;
+export type PartyType = (typeof PARTY_TYPES)[number];
+
 export const GatekeeperSchema = z.object({
   relevance_score: z
     .number()
@@ -24,14 +27,11 @@ export const GatekeeperSchema = z.object({
   meeting_type: z
     .enum(MEETING_TYPES)
     .describe("The type/format of this meeting"),
-  party_type: z
-    .enum(["client", "partner", "internal", "other"])
-    .describe("Who was the meeting with? client/partner/internal/other"),
   organization_name: z
     .string()
     .nullable()
     .describe(
-      "Name of the external organization involved (client/partner). Null if internal-only meeting.",
+      "Name of the external organization involved. Null if internal-only meeting or if already known.",
     ),
 });
 

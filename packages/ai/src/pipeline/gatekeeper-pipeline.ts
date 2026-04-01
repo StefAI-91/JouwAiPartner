@@ -1,6 +1,7 @@
 import { runGatekeeper, ParticipantInfo } from "../agents/gatekeeper";
 import { runExtractor, ExtractorOutput } from "../agents/extractor";
 import { GatekeeperOutput } from "../validations/gatekeeper";
+import type { PartyType } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
 import { findPeopleByEmails, getAllKnownPeople } from "@repo/database/queries/people";
@@ -23,7 +24,7 @@ interface MeetingInput {
  * Classify participants as internal/external by matching against the people table.
  * Match order: email → full name (case-insensitive).
  * - Has team → internal
- * - In people table without team → external (known contact, includes org name)
+ * - In people table without team → external (known contact, includes org name + type)
  * - Not in people table → unknown
  */
 async function classifyParticipants(participants: string[]): Promise<ParticipantInfo[]> {
@@ -32,7 +33,6 @@ async function classifyParticipants(participants: string[]): Promise<Participant
   return participants.map((raw) => {
     const normalized = raw.toLowerCase().trim();
 
-    // Match on email
     const match = knownPeople.find(
       (p) => p.email && p.email.toLowerCase() === normalized,
     ) ?? knownPeople.find(
@@ -52,8 +52,29 @@ async function classifyParticipants(participants: string[]): Promise<Participant
       label: "external" as const,
       matchedName: match.name,
       organizationName: match.organization_name,
+      organizationType: match.organization_type,
     };
   });
+}
+
+/**
+ * Determine party_type deterministically from classified participants.
+ * - All internal → "internal"
+ * - Known external with org type → use org type (client/partner)
+ * - Unknown externals, no org → "other"
+ */
+function determinePartyType(participants: ParticipantInfo[]): PartyType {
+  if (participants.length === 0) return "other";
+  if (participants.every((p) => p.label === "internal")) return "internal";
+
+  // Find the first external participant with a known org type
+  const knownExternal = participants.find(
+    (p) => p.label === "external" && p.organizationType,
+  );
+  if (knownExternal?.organizationType === "client") return "client";
+  if (knownExternal?.organizationType === "partner") return "partner";
+
+  return "other";
 }
 
 /**
@@ -87,19 +108,23 @@ interface PipelineResult {
 /**
  * Full meeting processing pipeline:
  * 1. Classify participants as internal/external (people table lookup)
- * 2. Gatekeeper: classify meeting type, party, relevance
- * 3. Resolve organization
- * 4. Insert meeting (always — no rejection)
- * 5. Link participants
- * 6. Extractor: extract decisions, action items, needs, insights
- * 7. Save extractions to unified table
- * 8. Embed meeting + extractions
+ * 2. Determine party_type deterministically from participants + org type
+ * 3. Gatekeeper: classify meeting_type, relevance, org name (AI)
+ * 4. Resolve organization
+ * 5. Insert meeting (always — no rejection)
+ * 6. Link participants
+ * 7. Extractor: extract decisions, action items, needs, insights
+ * 8. Save extractions to unified table
+ * 9. Embed meeting + extractions
  */
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
   // Step 1: Classify participants as internal/external
   const classifiedParticipants = await classifyParticipants(input.participants);
 
-  // Step 2: Classify meeting with Gatekeeper
+  // Step 2: Determine party_type deterministically from participants
+  const partyType = determinePartyType(classifiedParticipants);
+
+  // Step 3: Classify meeting with Gatekeeper (meeting_type, relevance, org name)
   const gatekeeperResult = await runGatekeeper(input.summary, {
     title: input.title,
     participants: classifiedParticipants,
@@ -107,10 +132,14 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     topics: input.topics,
   });
 
-  // Step 3: Resolve organization
-  const orgResult = await resolveOrganization(gatekeeperResult.organization_name);
+  // Step 4: Resolve organization — use known org from participants first, fallback to Gatekeeper
+  const knownOrg = classifiedParticipants.find(
+    (p) => p.label === "external" && p.organizationName,
+  );
+  const orgNameToResolve = knownOrg?.organizationName ?? gatekeeperResult.organization_name;
+  const orgResult = await resolveOrganization(orgNameToResolve);
 
-  // Step 4a: Build raw_fireflies JSONB (original Fireflies data + pipeline metadata)
+  // Step 5a: Build raw_fireflies JSONB (original Fireflies data + pipeline metadata)
   const rawFireflies: Record<string, unknown> = {
     ...(input.raw_fireflies ?? {}),
     pipeline: {
@@ -119,10 +148,11 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         label: p.label,
         matched_name: p.matchedName ?? null,
         organization_name: p.organizationName ?? null,
+        organization_type: p.organizationType ?? null,
       })),
+      party_type_source: knownOrg ? "deterministic" : "gatekeeper_fallback",
       gatekeeper: {
         meeting_type: gatekeeperResult.meeting_type,
-        party_type: gatekeeperResult.party_type,
         relevance_score: gatekeeperResult.relevance_score,
         reason: gatekeeperResult.reason,
         organization_name: gatekeeperResult.organization_name,
@@ -131,7 +161,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     },
   };
 
-  // Step 4b: Insert meeting
+  // Step 5b: Insert meeting
   const insertResult = await insertMeeting({
     fireflies_id: input.fireflies_id,
     title: input.title,
@@ -140,10 +170,10 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     summary: input.summary,
     transcript: input.transcript,
     meeting_type: gatekeeperResult.meeting_type,
-    party_type: gatekeeperResult.party_type,
+    party_type: partyType,
     relevance_score: gatekeeperResult.relevance_score,
     organization_id: orgResult.organization_id,
-    unmatched_organization_name: orgResult.matched ? null : gatekeeperResult.organization_name,
+    unmatched_organization_name: orgResult.matched ? null : orgNameToResolve,
     raw_fireflies: rawFireflies,
     embedding_stale: true,
     verification_status: "draft",
@@ -176,7 +206,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     extractorResult = await runExtractor(input.transcript, {
       title: input.title,
       meeting_type: gatekeeperResult.meeting_type,
-      party_type: gatekeeperResult.party_type,
+      party_type: partyType,
       participants: input.participants,
       summary: input.summary,
     });
