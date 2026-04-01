@@ -114,11 +114,31 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 2. Build Fireflies full text
+    // 2. Probe audio to diagnose issues
+    const audioRes = await fetch(ff.audio_url);
+    const audioContentType = audioRes.headers.get("content-type");
+    const audioBytes = Buffer.from(await audioRes.arrayBuffer());
+    const audioSizeMB = (audioBytes.byteLength / 1024 / 1024).toFixed(2);
+    const audioHeader = audioBytes.slice(0, 16).toString("hex");
+
+    // If mode=probe, return audio diagnostics only
+    if (mode === "probe") {
+      return NextResponse.json({
+        audio_url: ff.audio_url.substring(0, 80) + "...",
+        download_status: audioRes.status,
+        content_type: audioContentType,
+        size_mb: audioSizeMB,
+        first_16_bytes_hex: audioHeader,
+        is_mp3: audioHeader.startsWith("fff") || audioHeader.startsWith("4944"), // MP3 sync word or ID3 tag
+        is_html: audioBytes.slice(0, 5).toString().startsWith("<"),
+      });
+    }
+
+    // 3. Build Fireflies full text
     const ffText = ff.sentences.map((s) => s.text).join(" ");
     const ffWords = wordTokenize(ffText);
 
-    // 3. Transcribe with OpenAI
+    // 4. Transcribe with OpenAI
     const startOpenAI = Date.now();
     const openaiResult = await transcribeAudioUrl(ff.audio_url, {
       language: "nl",
