@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { listFirefliesTranscripts, fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
-import { getMeetingByFirefliesId } from "@repo/database/queries/meetings";
+import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/database/queries/meetings";
 import { isValidDuration, hasParticipants } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 import { runReEmbedWorker } from "@repo/ai/pipeline/re-embed-worker";
@@ -59,6 +59,22 @@ export async function POST(req: NextRequest) {
         reason: "already_imported",
       });
       continue;
+    }
+
+    // Dedup — Fireflies creates separate transcripts per team member for the same meeting.
+    // Check if a meeting with the same title and date already exists.
+    if (item.title && item.date) {
+      const dateStr = new Date(Number(item.date)).toISOString();
+      const duplicate = await getMeetingByTitleAndDate(item.title, dateStr);
+      if (duplicate) {
+        results.push({
+          id: item.id,
+          title: item.title,
+          status: "skipped",
+          reason: `duplicate_meeting (exists as ${duplicate.id})`,
+        });
+        continue;
+      }
     }
 
     // Fetch full transcript

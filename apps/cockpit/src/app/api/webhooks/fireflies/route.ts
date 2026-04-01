@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
-import { getMeetingByFirefliesId } from "@repo/database/queries/meetings";
+import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/database/queries/meetings";
 import { isValidDuration, hasParticipants } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 
@@ -42,6 +42,15 @@ export async function POST(req: NextRequest) {
 
   if (!transcript) {
     return NextResponse.json({ error: "Failed to fetch transcript" }, { status: 502 });
+  }
+
+  // Dedup — Fireflies creates separate transcripts per team member for the same meeting.
+  if (transcript.title && transcript.date) {
+    const dateStr = new Date(Number(transcript.date)).toISOString();
+    const duplicate = await getMeetingByTitleAndDate(transcript.title, dateStr);
+    if (duplicate) {
+      return NextResponse.json({ skipped: true, reason: "duplicate_meeting", existing_id: duplicate.id });
+    }
   }
 
   // Pre-filter: duration < 2 minutes (test calls, accidental recordings)
