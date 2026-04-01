@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
  * MP3 frame sync: 0xFF followed by 0xE0-0xFF (11 sync bits set).
  * Scans backwards from end to find the last frame header.
  */
-function truncateToMp3Frame(buf: Buffer): Buffer {
+function truncateToMp3Frame(buf: Buffer<ArrayBuffer>): Buffer<ArrayBuffer> {
   // Skip ID3v2 tag at the start if present
   let dataStart = 0;
   if (buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) {
@@ -137,7 +137,7 @@ function truncateToMp3Frame(buf: Buffer): Buffer {
   for (let i = buf.byteLength - 2; i > dataStart; i--) {
     if (buf[i] === 0xff && (buf[i + 1] & 0xe0) === 0xe0) {
       // Found a frame sync — truncate here (exclude this partial frame)
-      return buf.subarray(0, i);
+      return Buffer.from(buf.buffer, buf.byteOffset, i);
     }
   }
 
