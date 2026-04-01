@@ -20,6 +20,22 @@ interface Section {
   raw: string; // original markdown including heading
 }
 
+// Match ## headings or standalone **bold** lines (sub-sections)
+const HEADING_PATTERN = /^#{1,3}\s+/;
+const BOLD_SECTION_PATTERN = /^-?\s*\*\*(.+?)\*\*/;
+
+function isSectionStart(line: string): string | null {
+  const headingMatch = line.match(HEADING_PATTERN);
+  if (headingMatch) {
+    return line.replace(HEADING_PATTERN, "").replace(/\*\*/g, "").trim();
+  }
+  const boldMatch = line.match(BOLD_SECTION_PATTERN);
+  if (boldMatch) {
+    return boldMatch[1].trim();
+  }
+  return null;
+}
+
 function parseSections(markdown: string): Section[] {
   const lines = markdown.split("\n");
   const sections: Section[] = [];
@@ -38,12 +54,10 @@ function parseSections(markdown: string): Section[] {
   }
 
   for (const line of lines) {
-    if (line.match(/^#{1,3}\s+/)) {
+    const sectionHeading = isSectionStart(line);
+    if (sectionHeading) {
       flush();
-      currentHeading = line
-        .replace(/^#{1,3}\s+/, "")
-        .replace(/\*\*/g, "")
-        .trim();
+      currentHeading = sectionHeading;
       currentLines = [line];
     } else {
       currentLines.push(line);
