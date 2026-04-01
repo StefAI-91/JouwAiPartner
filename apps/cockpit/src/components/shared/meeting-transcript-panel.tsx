@@ -21,12 +21,14 @@ interface MeetingTranscriptPanelProps {
   };
   headerExtra?: React.ReactNode;
   activeTranscriptRef?: string | null;
+  onSummaryEdit?: (content: string) => void;
 }
 
 export function MeetingTranscriptPanel({
   meeting,
   headerExtra,
   activeTranscriptRef,
+  onSummaryEdit,
 }: MeetingTranscriptPanelProps) {
   const participants = meeting.meeting_participants.map((mp) => mp.person.name);
 
@@ -65,7 +67,11 @@ export function MeetingTranscriptPanel({
 
       {meeting.summary && (
         <div className="mb-6">
-          <MarkdownSummary content={meeting.summary} />
+          <MarkdownSummary
+            content={meeting.summary}
+            editable={!!onSummaryEdit}
+            onEdit={onSummaryEdit}
+          />
         </div>
       )}
 

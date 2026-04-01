@@ -51,9 +51,15 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
     return EXTRACTION_TYPE_ORDER[0];
   });
   const [activeTranscriptRef, setActiveTranscriptRef] = useState<string | null>(null);
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [summaryEdit, setSummaryEdit] = useState<string | null>(null);
 
   const handleEdit = useCallback((id: string, content: string) => {
     setEdits((prev) => new Map(prev).set(id, content));
+  }, []);
+
+  const handleDelete = useCallback((id: string) => {
+    setDeletedIds((prev) => new Set(prev).add(id));
   }, []);
 
   const handleRefClick = useCallback((ref: string) => {
@@ -100,9 +106,10 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
     router.push("/review");
   }
 
-  // Group extractions by type
+  // Group extractions by type (excluding deleted)
+  const activeExtractions = meeting.extractions.filter((e) => !deletedIds.has(e.id));
   const grouped = new Map<string, Extraction[]>();
-  for (const ext of meeting.extractions) {
+  for (const ext of activeExtractions) {
     const list = grouped.get(ext.type) ?? [];
     list.push(ext);
     grouped.set(ext.type, list);
@@ -123,7 +130,11 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
-      <MeetingTranscriptPanel meeting={meeting} activeTranscriptRef={activeTranscriptRef} />
+      <MeetingTranscriptPanel
+        meeting={meeting}
+        activeTranscriptRef={activeTranscriptRef}
+        onSummaryEdit={setSummaryEdit}
+      />
 
       {/* Right panel: Extractions with tabs (45%) */}
       <div className="flex-1 overflow-y-auto lg:w-[45%] lg:flex-none">
@@ -168,6 +179,7 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
               key={ext.id}
               extraction={ext}
               onEdit={handleEdit}
+              onDelete={handleDelete}
               onRefClick={handleRefClick}
             />
           ))}
@@ -180,8 +192,8 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
       </div>
 
       <ReviewActionBar
-        extractionCount={meeting.extractions.length}
-        editCount={edits.size}
+        extractionCount={activeExtractions.length}
+        editCount={edits.size + deletedIds.size + (summaryEdit !== null ? 1 : 0)}
         onApprove={handleApprove}
         onReject={handleReject}
         loading={loading}

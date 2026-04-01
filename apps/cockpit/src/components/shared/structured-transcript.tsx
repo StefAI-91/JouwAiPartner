@@ -263,7 +263,7 @@ export function StructuredTranscript({
       <div
         ref={containerRef}
         className="relative overflow-hidden transition-[max-height] duration-300 ease-in-out"
-        style={{ maxHeight: shouldExpand ? "none" : "200px" }}
+        style={{ maxHeight: shouldExpand ? "none" : "0px" }}
       >
         <div className="space-y-3">
           {blocks.map((block) => (
@@ -291,21 +291,7 @@ export function StructuredTranscript({
             </div>
           ))}
         </div>
-
-        {!shouldExpand && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent" />
-        )}
       </div>
-
-      {!shouldExpand && (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="mt-2 text-xs font-medium text-primary hover:underline"
-        >
-          Toon volledig transcript
-        </button>
-      )}
     </div>
   );
 }

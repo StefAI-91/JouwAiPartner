@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
 import {
   EXTRACTION_TYPE_COLORS,
@@ -17,10 +18,17 @@ interface ExtractionCardProps {
   };
   readOnly?: boolean;
   onEdit?: (id: string, content: string) => void;
+  onDelete?: (id: string) => void;
   onRefClick?: (ref: string) => void;
 }
 
-export function ExtractionCard({ extraction, readOnly, onEdit, onRefClick }: ExtractionCardProps) {
+export function ExtractionCard({
+  extraction,
+  readOnly,
+  onEdit,
+  onDelete,
+  onRefClick,
+}: ExtractionCardProps) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(extraction.content);
   const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
@@ -35,20 +43,48 @@ export function ExtractionCard({ extraction, readOnly, onEdit, onRefClick }: Ext
 
   return (
     <div
-      className="rounded-xl bg-white p-4 shadow-sm"
+      className="group/card relative rounded-xl bg-white p-4 shadow-sm"
       style={{ borderLeft: `3px solid ${config.color}` }}
     >
-      {Icon && (
-        <div className="mb-2 flex items-center gap-1.5">
-          <Icon className="size-3.5" style={{ color: config.color }} />
-          <span
-            className="text-[10px] font-medium uppercase tracking-wide"
-            style={{ color: config.color }}
-          >
-            {config.label}
-          </span>
-        </div>
-      )}
+      {/* Top row: type label + action buttons */}
+      <div className="mb-2 flex items-center justify-between">
+        {Icon && (
+          <div className="flex items-center gap-1.5">
+            <Icon className="size-3.5" style={{ color: config.color }} />
+            <span
+              className="text-[10px] font-medium uppercase tracking-wide"
+              style={{ color: config.color }}
+            >
+              {config.label}
+            </span>
+          </div>
+        )}
+
+        {!readOnly && !editing && (
+          <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover/card:opacity-100">
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              title="Bewerken"
+            >
+              <Pencil className="size-3.5" />
+            </button>
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(extraction.id)}
+                className="rounded-md p-1 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
+                title="Verwijderen"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
       {!readOnly && editing ? (
         <textarea
           value={content}
