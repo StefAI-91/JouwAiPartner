@@ -88,8 +88,11 @@ export async function GET(req: NextRequest) {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
     // Step 4: Build Fireflies text for same time range
-    const openaiDuration = result.duration ?? 0;
-    const ffSentences = ff.sentences.filter((s) => s.start_time <= openaiDuration);
+    // "json" format doesn't return duration — cast to access it safely
+    const openaiDuration = (result as Record<string, unknown>).duration as number ?? 0;
+    const ffSentences = openaiDuration > 0
+      ? ff.sentences.filter((s) => s.start_time <= openaiDuration)
+      : ff.sentences; // fallback: use all sentences if no duration
     const ffText = ffSentences.map((s) => s.text).join(" ");
     const openaiText = result.text;
 
