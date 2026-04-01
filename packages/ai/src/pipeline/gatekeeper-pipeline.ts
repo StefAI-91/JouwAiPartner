@@ -98,6 +98,7 @@ async function matchParticipants(meetingId: string, participants: string[]): Pro
 
 interface PipelineResult {
   gatekeeper: GatekeeperOutput;
+  partyType: PartyType;
   extractor: ExtractorOutput | null;
   meetingId: string | null;
   extractions_saved: number;
@@ -184,6 +185,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     console.error("Meeting insert error:", insertResult.error);
     return {
       gatekeeper: gatekeeperResult,
+      partyType,
       extractor: null,
       meetingId: null,
       extractions_saved: 0,
@@ -259,6 +261,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
 
   return {
     gatekeeper: gatekeeperResult,
+    partyType,
     extractor: extractorResult,
     meetingId,
     extractions_saved: extractionsSaved,

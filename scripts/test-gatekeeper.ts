@@ -73,7 +73,7 @@ async function main() {
   console.log("=== RESULTAAT ===\n");
   console.log(`Score: ${pipelineResult.gatekeeper.relevance_score}`);
   console.log(`Meeting type: ${pipelineResult.gatekeeper.meeting_type}`);
-  console.log(`Party type: ${pipelineResult.gatekeeper.party_type}`);
+  console.log(`Party type: ${pipelineResult.partyType}`);
   console.log(`Organisatie: ${pipelineResult.gatekeeper.organization_name ?? "(intern)"}`);
   console.log(`Reden: ${pipelineResult.gatekeeper.reason}`);
   console.log(`Extracties: ${pipelineResult.extractions_saved}`);
