@@ -24,22 +24,28 @@ export interface AudioProbe {
  * Probe audio URL without downloading — returns content-type and size.
  */
 export async function probeAudioUrl(audioUrl: string): Promise<AudioProbe> {
-  // Some CDNs don't support HEAD, so do a range request for first byte
   const res = await fetch(audioUrl, {
     headers: { Range: "bytes=0-0" },
   });
-  const contentLength = res.headers.get("content-length") ?? res.headers.get("content-range")?.split("/")[1] ?? null;
+  const contentLength =
+    res.headers.get("content-range")?.split("/")[1] ??
+    res.headers.get("content-length") ??
+    null;
   return {
     status: res.status,
     content_type: res.headers.get("content-type"),
     content_length: contentLength,
-    size_mb: contentLength ? Math.round((Number(contentLength) / 1024 / 1024) * 100) / 100 : null,
+    size_mb: contentLength
+      ? Math.round((Number(contentLength) / 1024 / 1024) * 100) / 100
+      : null,
   };
 }
 
+const MAX_BYTES = 24 * 1024 * 1024; // 24MB — under OpenAI's 25MB limit
+
 /**
  * Download audio from URL and transcribe with OpenAI gpt-4o-transcribe.
- * Returns full text + timestamped segments.
+ * If the file is larger than 24MB, downloads only the first 24MB via Range request.
  */
 export async function transcribeAudioUrl(
   audioUrl: string,
@@ -48,42 +54,35 @@ export async function transcribeAudioUrl(
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is not set");
 
-  // Download audio
-  const audioResponse = await fetch(audioUrl);
-  if (!audioResponse.ok) {
-    throw new Error(`Failed to download audio: ${audioResponse.status} ${audioResponse.statusText}`);
+  // First, try Range request to limit download size
+  const audioResponse = await fetch(audioUrl, {
+    headers: { Range: `bytes=0-${MAX_BYTES - 1}` },
+  });
+
+  // If server doesn't support Range (returns 200 instead of 206), we get full file
+  if (!audioResponse.ok && audioResponse.status !== 206) {
+    throw new Error(
+      `Failed to download audio: ${audioResponse.status} ${audioResponse.statusText}`,
+    );
   }
 
-  const contentType = audioResponse.headers.get("content-type") ?? "audio/mpeg";
   let audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
 
-  const MAX_SIZE = 24 * 1024 * 1024; // 24MB to stay safely under OpenAI's 25MB limit
-  const originalSizeMB = (audioBuffer.byteLength / 1024 / 1024).toFixed(2);
-  let truncated = false;
+  const fullSize = audioResponse.headers.get("content-range")?.split("/")[1];
+  const originalSizeMB = fullSize
+    ? Number(fullSize) / 1024 / 1024
+    : audioBuffer.byteLength / 1024 / 1024;
+  const truncated = audioBuffer.byteLength < (fullSize ? Number(fullSize) : Infinity);
 
-  if (audioBuffer.byteLength > MAX_SIZE) {
-    // MP3 is a streaming format — truncating gives valid audio (just shorter)
-    audioBuffer = audioBuffer.subarray(0, MAX_SIZE);
-    truncated = true;
+  // Safety: still truncate if Range wasn't honored
+  if (audioBuffer.byteLength > MAX_BYTES) {
+    audioBuffer = audioBuffer.subarray(0, MAX_BYTES);
   }
 
-  // Determine extension from content-type or URL
-  const urlPath = new URL(audioUrl).pathname.toLowerCase();
-  let ext = "mp3";
-  if (contentType.includes("mp4") || contentType.includes("m4a") || urlPath.endsWith(".m4a")) {
-    ext = "m4a";
-  } else if (contentType.includes("wav") || urlPath.endsWith(".wav")) {
-    ext = "wav";
-  } else if (contentType.includes("webm") || urlPath.endsWith(".webm")) {
-    ext = "webm";
-  } else if (contentType.includes("ogg") || urlPath.endsWith(".ogg")) {
-    ext = "ogg";
-  } else if (contentType.includes("flac") || urlPath.endsWith(".flac")) {
-    ext = "flac";
-  }
-
-  // Use OpenAI's toFile helper for proper multipart upload
-  const file = await toFile(audioBuffer, `meeting.${ext}`, { type: contentType });
+  // Force audio/mpeg MIME type — OpenAI may reject non-standard types like "audio/mp3"
+  const file = await toFile(audioBuffer, "meeting.mp3", {
+    type: "audio/mpeg",
+  });
 
   const openai = new OpenAI({ apiKey });
 
@@ -106,6 +105,6 @@ export async function transcribeAudioUrl(
     language: transcription.language ?? "nl",
     duration: transcription.duration ?? 0,
     truncated,
-    originalSizeMB: Number(originalSizeMB),
+    originalSizeMB: Math.round(originalSizeMB * 100) / 100,
   };
 }

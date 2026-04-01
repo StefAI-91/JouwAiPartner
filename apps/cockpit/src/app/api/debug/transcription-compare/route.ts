@@ -214,12 +214,15 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error ? err.stack : undefined;
-    // Return 200 so the error detail is visible via simple fetch tools
+    // Include OpenAI error details if available
+    const openaiError = err && typeof err === "object" && "status" in err
+      ? { status: (err as Record<string, unknown>).status, type: (err as Record<string, unknown>).type }
+      : undefined;
     return NextResponse.json({
       error: "Transcription comparison failed",
       detail: message,
-      stack,
+      openai_error: openaiError,
+      deploy_commit: "905f911+range",
     });
   }
 }
