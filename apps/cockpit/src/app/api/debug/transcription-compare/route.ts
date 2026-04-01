@@ -54,92 +54,108 @@ export async function GET(req: NextRequest) {
   }
 
   // ── With ID: run comparison ─────────────────────────────────────
-  const startTotal = Date.now();
+  try {
+    const startTotal = Date.now();
 
-  // 1. Fetch Fireflies transcript
-  const ff = await fetchFirefliesTranscript(meetingId);
-  if (!ff) {
-    return NextResponse.json(
-      { error: "Transcript niet gevonden in Fireflies" },
-      { status: 404 },
-    );
-  }
+    // Check env vars
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: "OPENAI_API_KEY is not set in environment" },
+        { status: 500 },
+      );
+    }
 
-  if (!ff.audio_url) {
-    return NextResponse.json(
-      {
-        error: "Geen audio_url beschikbaar voor dit transcript",
-        hint: "Zet Audio Storage aan in app.fireflies.ai → Settings",
-        transcript: {
-          id: ff.id,
-          title: ff.title,
-          date: new Date(Number(ff.date)).toISOString(),
-          participants: ff.participants,
-          sentences: ff.sentences.length,
+    // 1. Fetch Fireflies transcript
+    const ff = await fetchFirefliesTranscript(meetingId);
+    if (!ff) {
+      return NextResponse.json(
+        { error: "Transcript niet gevonden in Fireflies" },
+        { status: 404 },
+      );
+    }
+
+    if (!ff.audio_url) {
+      return NextResponse.json(
+        {
+          error: "Geen audio_url beschikbaar voor dit transcript",
+          hint: "Zet Audio Storage aan in app.fireflies.ai → Settings",
+          transcript: {
+            id: ff.id,
+            title: ff.title,
+            date: new Date(Number(ff.date)).toISOString(),
+            participants: ff.participants,
+            sentences: ff.sentences.length,
+          },
         },
+        { status: 422 },
+      );
+    }
+
+    // 2. Build Fireflies full text
+    const ffText = ff.sentences.map((s) => s.text).join(" ");
+    const ffWords = wordTokenize(ffText);
+
+    // 3. Transcribe with OpenAI
+    const startOpenAI = Date.now();
+    const openaiResult = await transcribeAudioUrl(ff.audio_url, {
+      language: "nl",
+      prompt: `Meeting transcript. Deelnemers: ${ff.participants.join(", ")}`,
+    });
+    const openaiDuration = ((Date.now() - startOpenAI) / 1000).toFixed(1);
+    const openaiWords = wordTokenize(openaiResult.text);
+
+    // 4. Compute WER
+    const wer = computeWER(ffWords, openaiWords);
+
+    // 5. Build response
+    const totalDuration = ((Date.now() - startTotal) / 1000).toFixed(1);
+
+    return NextResponse.json({
+      meeting: {
+        id: ff.id,
+        title: ff.title,
+        date: new Date(Number(ff.date)).toISOString(),
+        participants: ff.participants,
+        audio_url: ff.audio_url,
+        video_url: ff.video_url,
       },
-      { status: 422 },
+      fireflies: {
+        word_count: ffWords.length,
+        sentence_count: ff.sentences.length,
+        sample: ffWords.slice(0, 150).join(" "),
+      },
+      openai: {
+        model: "gpt-4o-transcribe",
+        language_detected: openaiResult.language,
+        audio_duration_seconds: openaiResult.duration,
+        word_count: openaiWords.length,
+        segment_count: openaiResult.segments.length,
+        transcription_time: `${openaiDuration}s`,
+        sample: openaiWords.slice(0, 150).join(" "),
+      },
+      comparison: {
+        word_error_rate: `${(wer * 100).toFixed(1)}%`,
+        word_error_rate_raw: wer,
+        word_count_diff: Math.abs(openaiWords.length - ffWords.length),
+        verdict:
+          wer < 0.1
+            ? "Zeer goede overeenkomst (<10% WER)"
+            : wer < 0.2
+              ? "Redelijke overeenkomst (10-20% WER)"
+              : "Significant verschil (>20% WER)",
+      },
+      timing: {
+        total: `${totalDuration}s`,
+        openai_transcription: `${openaiDuration}s`,
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      { error: "Transcription comparison failed", detail: message },
+      { status: 500 },
     );
   }
-
-  // 2. Build Fireflies full text
-  const ffText = ff.sentences.map((s) => s.text).join(" ");
-  const ffWords = wordTokenize(ffText);
-
-  // 3. Transcribe with OpenAI
-  const startOpenAI = Date.now();
-  const openaiResult = await transcribeAudioUrl(ff.audio_url, {
-    language: "nl",
-    prompt: `Meeting transcript. Deelnemers: ${ff.participants.join(", ")}`,
-  });
-  const openaiDuration = ((Date.now() - startOpenAI) / 1000).toFixed(1);
-  const openaiWords = wordTokenize(openaiResult.text);
-
-  // 4. Compute WER
-  const wer = computeWER(ffWords, openaiWords);
-
-  // 5. Build response
-  const totalDuration = ((Date.now() - startTotal) / 1000).toFixed(1);
-
-  return NextResponse.json({
-    meeting: {
-      id: ff.id,
-      title: ff.title,
-      date: new Date(Number(ff.date)).toISOString(),
-      participants: ff.participants,
-      audio_url: ff.audio_url,
-      video_url: ff.video_url,
-    },
-    fireflies: {
-      word_count: ffWords.length,
-      sentence_count: ff.sentences.length,
-      sample: ffWords.slice(0, 150).join(" "),
-    },
-    openai: {
-      model: "gpt-4o-transcribe",
-      language_detected: openaiResult.language,
-      audio_duration_seconds: openaiResult.duration,
-      word_count: openaiWords.length,
-      segment_count: openaiResult.segments.length,
-      transcription_time: `${openaiDuration}s`,
-      sample: openaiWords.slice(0, 150).join(" "),
-    },
-    comparison: {
-      word_error_rate: `${(wer * 100).toFixed(1)}%`,
-      word_error_rate_raw: wer,
-      word_count_diff: Math.abs(openaiWords.length - ffWords.length),
-      verdict:
-        wer < 0.1
-          ? "Zeer goede overeenkomst (<10% WER)"
-          : wer < 0.2
-            ? "Redelijke overeenkomst (10-20% WER)"
-            : "Significant verschil (>20% WER)",
-    },
-    timing: {
-      total: `${totalDuration}s`,
-      openai_transcription: `${openaiDuration}s`,
-    },
-  });
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
