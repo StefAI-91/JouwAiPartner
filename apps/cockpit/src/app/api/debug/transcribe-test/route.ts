@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
 
     // Step 4: Build Fireflies text for same time range
     // "json" format doesn't return duration — cast to access it safely
-    const openaiDuration = (result as Record<string, unknown>).duration as number ?? 0;
+    const openaiDuration = (result as unknown as Record<string, unknown>).duration as number ?? 0;
     const ffSentences = openaiDuration > 0
       ? ff.sentences.filter((s) => s.start_time <= openaiDuration)
       : ff.sentences; // fallback: use all sentences if no duration
