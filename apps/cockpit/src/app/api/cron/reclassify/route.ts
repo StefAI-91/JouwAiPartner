@@ -7,12 +7,20 @@ import type { ParticipantInfo } from "@repo/ai/agents/gatekeeper";
 import type { PartyType } from "@repo/ai/validations/gatekeeper";
 import type { KnownPerson } from "@repo/database/queries/people";
 
+const INTERNAL_DOMAINS = ["jouwaipartner.nl", "jaip.nl"];
+
 function classifyParticipantsSync(
-  participants: string[],
+  rawParticipants: string[],
   knownPeople: KnownPerson[],
 ): ParticipantInfo[] {
-  return participants.map((raw) => {
-    const normalized = raw.toLowerCase().trim();
+  // Split comma-separated participant strings + deduplicate
+  const participants = rawParticipants.flatMap((p) =>
+    p.includes(",") ? p.split(",").map((s) => s.trim()).filter(Boolean) : [p],
+  );
+  const unique = [...new Set(participants.map((p) => p.toLowerCase().trim()))];
+
+  return unique.map((normalized) => {
+    const raw = normalized;
 
     const match = knownPeople.find(
       (p) => p.email && p.email.toLowerCase() === normalized,
@@ -20,15 +28,24 @@ function classifyParticipantsSync(
       (p) => p.name.toLowerCase() === normalized,
     );
 
-    if (!match) return { raw, label: "unknown" as const };
-    if (match.team) return { raw, label: "internal" as const, matchedName: match.name };
-    return {
-      raw,
-      label: "external" as const,
-      matchedName: match.name,
-      organizationName: match.organization_name,
-      organizationType: match.organization_type,
-    };
+    if (match) {
+      if (match.team) return { raw, label: "internal" as const, matchedName: match.name };
+      return {
+        raw,
+        label: "external" as const,
+        matchedName: match.name,
+        organizationName: match.organization_name,
+        organizationType: match.organization_type,
+      };
+    }
+
+    // Fallback: check if email domain is internal
+    const domain = raw.includes("@") ? raw.split("@")[1] : null;
+    if (domain && INTERNAL_DOMAINS.includes(domain)) {
+      return { raw, label: "internal" as const };
+    }
+
+    return { raw, label: "unknown" as const };
   });
 }
 

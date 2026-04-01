@@ -20,40 +20,59 @@ interface MeetingInput {
   raw_fireflies?: Record<string, unknown>;
 }
 
+// Email domains that are always internal (regardless of people table)
+const INTERNAL_DOMAINS = ["jouwaipartner.nl", "jaip.nl"];
+
 /**
  * Classify participants as internal/external by matching against the people table.
- * Match order: email → full name (case-insensitive).
+ * Comma-separated participant strings are split first.
+ * Match order: email in people → name in people → internal domain fallback.
  * - Has team → internal
  * - In people table without team → external (known contact, includes org name + type)
+ * - Email domain is internal → internal (fallback for unregistered team emails)
  * - Not in people table → unknown
  */
-async function classifyParticipants(participants: string[]): Promise<ParticipantInfo[]> {
+async function classifyParticipants(rawParticipants: string[]): Promise<ParticipantInfo[]> {
   const knownPeople = await getAllKnownPeople();
 
-  return participants.map((raw) => {
-    const normalized = raw.toLowerCase().trim();
+  // Split comma-separated participant strings into individual entries
+  const participants = rawParticipants.flatMap((p) =>
+    p.includes(",") ? p.split(",").map((s) => s.trim()).filter(Boolean) : [p],
+  );
 
+  // Deduplicate
+  const unique = [...new Set(participants.map((p) => p.toLowerCase().trim()))];
+
+  return unique.map((normalized) => {
+    const raw = normalized;
+
+    // Match on email in people table
     const match = knownPeople.find(
       (p) => p.email && p.email.toLowerCase() === normalized,
     ) ?? knownPeople.find(
       (p) => p.name.toLowerCase() === normalized,
     );
 
-    if (!match) {
-      return { raw, label: "unknown" as const };
+    if (match) {
+      if (match.team) {
+        return { raw, label: "internal" as const, matchedName: match.name };
+      }
+      return {
+        raw,
+        label: "external" as const,
+        matchedName: match.name,
+        organizationName: match.organization_name,
+        organizationType: match.organization_type,
+      };
     }
 
-    if (match.team) {
-      return { raw, label: "internal" as const, matchedName: match.name };
+    // Fallback: check if email domain is internal
+    const domain = raw.includes("@") ? raw.split("@")[1] : null;
+    if (domain && INTERNAL_DOMAINS.includes(domain)) {
+      return { raw, label: "internal" as const };
     }
 
-    return {
-      raw,
-      label: "external" as const,
-      matchedName: match.name,
-      organizationName: match.organization_name,
-      organizationType: match.organization_type,
-    };
+    return { raw, label: "unknown" as const };
   });
 }
 
