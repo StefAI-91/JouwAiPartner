@@ -65,9 +65,10 @@ export async function GET(req: NextRequest) {
     const openai = new OpenAI({ apiKey });
 
     const startTime = Date.now();
+    const model = req.nextUrl.searchParams.get("model") ?? "gpt-4o-transcribe";
     const result = await openai.audio.transcriptions.create({
       file,
-      model: "whisper-1",
+      model,
       language: "nl",
       response_format: "verbose_json",
       timestamp_granularities: ["segment"],
@@ -94,7 +95,7 @@ export async function GET(req: NextRequest) {
         openai_duration_minutes: Math.round(openaiDuration / 60),
       },
       transcription: {
-        model: "whisper-1",
+        model,
         elapsed: `${elapsed}s`,
         openai_words: openaiWordCount,
         fireflies_words: ffWordCount,
