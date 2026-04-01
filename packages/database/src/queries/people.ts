@@ -33,24 +33,34 @@ export async function getStalePeople(limit: number = 50) {
   return data;
 }
 
-export interface InternalPerson {
+export interface KnownPerson {
   id: string;
   name: string;
   email: string | null;
+  team: string | null;
+  organization_id: string | null;
+  organization_name: string | null;
 }
 
 /**
- * Get all internal team members (people with a team assigned).
+ * Get all known people with their organization name.
  * Used by the Gatekeeper pipeline to classify participants as internal/external.
+ * Internal = has a team. External = no team but has organization_id.
  */
-export async function getInternalPeople(): Promise<InternalPerson[]> {
+export async function getAllKnownPeople(): Promise<KnownPerson[]> {
   const { data, error } = await getAdminClient()
     .from("people")
-    .select("id, name, email")
-    .not("team", "is", null);
+    .select("id, name, email, team, organization_id, organizations(name)");
 
   if (error || !data) return [];
-  return data;
+  return data.map((p) => ({
+    id: p.id,
+    name: p.name,
+    email: p.email,
+    team: p.team,
+    organization_id: p.organization_id,
+    organization_name: (p.organizations as { name: string } | null)?.name ?? null,
+  }));
 }
 
 /**

@@ -3,7 +3,7 @@ import { runExtractor, ExtractorOutput } from "../agents/extractor";
 import { GatekeeperOutput } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
-import { findPeopleByEmails, getInternalPeople } from "@repo/database/queries/people";
+import { findPeopleByEmails, getAllKnownPeople } from "@repo/database/queries/people";
 import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
 import { saveExtractions } from "./save-extractions";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
@@ -22,31 +22,37 @@ interface MeetingInput {
 /**
  * Classify participants as internal/external by matching against the people table.
  * Match order: email → full name (case-insensitive).
- * Unmatched participants are labeled "unknown" (treated as external by the Gatekeeper).
+ * - Has team → internal
+ * - In people table without team → external (known contact, includes org name)
+ * - Not in people table → unknown
  */
 async function classifyParticipants(participants: string[]): Promise<ParticipantInfo[]> {
-  const internalPeople = await getInternalPeople();
+  const knownPeople = await getAllKnownPeople();
 
   return participants.map((raw) => {
     const normalized = raw.toLowerCase().trim();
 
     // Match on email
-    const emailMatch = internalPeople.find(
+    const match = knownPeople.find(
       (p) => p.email && p.email.toLowerCase() === normalized,
-    );
-    if (emailMatch) {
-      return { raw, label: "internal" as const, matchedName: emailMatch.name };
-    }
-
-    // Match on full name (case-insensitive)
-    const nameMatch = internalPeople.find(
+    ) ?? knownPeople.find(
       (p) => p.name.toLowerCase() === normalized,
     );
-    if (nameMatch) {
-      return { raw, label: "internal" as const, matchedName: nameMatch.name };
+
+    if (!match) {
+      return { raw, label: "unknown" as const };
     }
 
-    return { raw, label: "unknown" as const };
+    if (match.team) {
+      return { raw, label: "internal" as const, matchedName: match.name };
+    }
+
+    return {
+      raw,
+      label: "external" as const,
+      matchedName: match.name,
+      organizationName: match.organization_name,
+    };
   });
 }
 
@@ -112,6 +118,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         raw: p.raw,
         label: p.label,
         matched_name: p.matchedName ?? null,
+        organization_name: p.organizationName ?? null,
       })),
       gatekeeper: {
         meeting_type: gatekeeperResult.meeting_type,

@@ -49,6 +49,7 @@ export interface ParticipantInfo {
   raw: string;
   label: "internal" | "external" | "unknown";
   matchedName?: string;
+  organizationName?: string | null;
 }
 
 export async function runGatekeeper(
@@ -63,9 +64,13 @@ export async function runGatekeeper(
   const participantLines = metadata.participants?.length
     ? metadata.participants
         .map((p) => {
-          const tag = p.label === "internal" ? "INTERN" : p.label === "external" ? "EXTERN" : "ONBEKEND";
           const name = p.matchedName ?? p.raw;
-          return `- ${name} (${tag})`;
+          if (p.label === "internal") return `- ${name} (INTERN)`;
+          if (p.label === "external") {
+            const orgSuffix = p.organizationName ? ` - ${p.organizationName}` : "";
+            return `- ${name} (EXTERN${orgSuffix})`;
+          }
+          return `- ${name} (ONBEKEND)`;
         })
         .join("\n")
     : null;
