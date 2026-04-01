@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
-import { resolveProjectIds, resolveOrganizationIds } from "./utils";
+import { escapeLike, resolveProjectIds, resolveOrganizationIds } from "./utils";
 
 export function registerListMeetingsTools(server: McpServer) {
   server.tool(
