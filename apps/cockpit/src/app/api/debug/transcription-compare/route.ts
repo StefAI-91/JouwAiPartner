@@ -1,28 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
+
+// Allow up to 5 minutes for long audio files
+export const maxDuration = 300;
 import {
   listFirefliesTranscripts,
   fetchFirefliesTranscript,
 } from "@repo/ai/fireflies";
 import { transcribeAudioUrl } from "@repo/ai/transcribe";
 
-// Only allow in development
-function isDev() {
-  return process.env.NODE_ENV === "development";
+function verifyAuth(req: NextRequest): boolean {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+
+  // Support both ?secret= query param (easy browser testing) and Bearer token
+  const querySecret = req.nextUrl.searchParams.get("secret");
+  if (querySecret === secret) return true;
+
+  const authHeader = req.headers.get("authorization");
+  return authHeader === `Bearer ${secret}`;
 }
 
 /**
- * GET /api/debug/transcription-compare
+ * GET /api/debug/transcription-compare?secret=<CRON_SECRET>
  *   → Lists recent Fireflies transcripts (pick one to compare)
  *
- * GET /api/debug/transcription-compare?id=<fireflies_meeting_id>
+ * GET /api/debug/transcription-compare?secret=<CRON_SECRET>&id=<fireflies_meeting_id>
  *   → Fetches audio, transcribes with OpenAI, compares with Fireflies
  */
 export async function GET(req: NextRequest) {
-  if (!isDev()) {
-    return NextResponse.json(
-      { error: "Only available in development" },
-      { status: 403 },
-    );
+  if (!verifyAuth(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const meetingId = req.nextUrl.searchParams.get("id");
@@ -30,13 +37,14 @@ export async function GET(req: NextRequest) {
   // ── No ID: list recent transcripts ──────────────────────────────
   if (!meetingId) {
     const transcripts = await listFirefliesTranscripts(10);
+    const secret = req.nextUrl.searchParams.get("secret") ?? "";
 
     const items = transcripts.map((t) => ({
       id: t.id,
       title: t.title,
       date: new Date(Number(t.date)).toISOString(),
       participants: t.participants,
-      test_url: `/api/debug/transcription-compare?id=${t.id}`,
+      test_url: `/api/debug/transcription-compare?secret=${secret}&id=${t.id}`,
     }));
 
     return NextResponse.json({
