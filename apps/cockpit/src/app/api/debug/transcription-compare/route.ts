@@ -6,7 +6,7 @@ import {
   listFirefliesTranscripts,
   fetchFirefliesTranscript,
 } from "@repo/ai/fireflies";
-import { transcribeAudioUrl } from "@repo/ai/transcribe";
+import { transcribeAudioUrl, probeAudioUrl } from "@repo/ai/transcribe";
 
 function verifyAuth(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
@@ -73,12 +73,7 @@ export async function GET(req: NextRequest) {
       let audioProbe = null;
       if (ff.audio_url) {
         try {
-          const probe = await fetch(ff.audio_url, { method: "HEAD" });
-          audioProbe = {
-            status: probe.status,
-            content_type: probe.headers.get("content-type"),
-            content_length: probe.headers.get("content-length"),
-          };
+          audioProbe = await probeAudioUrl(ff.audio_url);
         } catch (e) {
           audioProbe = { error: e instanceof Error ? e.message : String(e) };
         }
