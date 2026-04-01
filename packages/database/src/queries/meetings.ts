@@ -99,6 +99,32 @@ export async function getMeetingByTitleAndDate(title: string, date: string) {
   return data;
 }
 
+export interface MeetingForReclassify {
+  id: string;
+  title: string;
+  date: string | null;
+  participants: string[];
+  summary: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  relevance_score: number | null;
+  raw_fireflies: Record<string, unknown> | null;
+}
+
+/**
+ * List meetings for reclassification, ordered by date descending.
+ */
+export async function listMeetingsForReclassify(limit: number = 50): Promise<MeetingForReclassify[]> {
+  const { data, error } = await getAdminClient()
+    .from("meetings")
+    .select("id, title, date, participants, summary, meeting_type, party_type, relevance_score, raw_fireflies")
+    .order("date", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data as MeetingForReclassify[];
+}
+
 export async function getMeetingExtractions(meetingId: string) {
   const { data, error } = await getAdminClient()
     .from("extractions")

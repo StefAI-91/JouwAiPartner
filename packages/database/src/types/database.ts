@@ -77,6 +77,7 @@ export interface Database {
           email: string | null;
           team: string | null;
           role: string | null;
+          organization_id: string | null;
           embedding: string | null;
           embedding_stale: boolean;
           created_at: string;
@@ -88,6 +89,7 @@ export interface Database {
           email?: string | null;
           team?: string | null;
           role?: string | null;
+          organization_id?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean;
           created_at?: string;
@@ -99,6 +101,7 @@ export interface Database {
           email?: string | null;
           team?: string | null;
           role?: string | null;
+          organization_id?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean;
           created_at?: string;

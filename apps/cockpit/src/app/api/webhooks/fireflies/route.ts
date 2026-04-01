@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     success: !!pipelineResult.meetingId,
     meetingId: pipelineResult.meetingId,
     meeting_type: pipelineResult.gatekeeper.meeting_type,
-    party_type: pipelineResult.gatekeeper.party_type,
+    party_type: pipelineResult.partyType,
     relevance_score: pipelineResult.gatekeeper.relevance_score,
     extractions_saved: pipelineResult.extractions_saved,
     embedded: pipelineResult.embedded,

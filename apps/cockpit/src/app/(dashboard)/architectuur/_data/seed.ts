@@ -1,16 +1,30 @@
 export const seedSection = {
   simpleExplanation:
-    "Het systeem is voorgeladen met jullie echte organisaties, teamleden en projecten. Zo kan het platform meteen namen herkennen wanneer ze in meetings voorkomen.",
+    "Het systeem is voorgeladen met jullie echte organisaties, teamleden en projecten. Teamleden hebben een @jouwaipartner.nl email zodat de pipeline ze automatisch als intern herkent. Externe contacten zijn gekoppeld aan hun organisatie voor automatische party_type classificatie.",
   data: [
     {
       category: "Organisaties",
       items: ["Flowwijs (eigen)", "Ordus (klant)", "Effect op maat (klant)"],
     },
     {
-      category: "Team",
-      items: ["Stef Banninga", "Wouter van den Heuvel", "Ege", "Tibor", "Kenji", "Myrrh"],
+      category: "Team (intern)",
+      items: [
+        "Stef Banninga (leadership, stef@jouwaipartner.nl)",
+        "Wouter van den Heuvel (leadership, wouter@jouwaipartner.nl)",
+        "Ege (engineering, ege@jouwaipartner.nl)",
+        "Kenji (engineering, kenji@jouwaipartner.nl)",
+        "Myrrh (engineering, myrrh@jouwaipartner.nl)",
+        "Tibor (partner, geen team)",
+      ],
     },
-    { category: "Klanten", items: ["Bart Nelissen (Ordus)", "Fleur Timmerman (Effect op maat)"] },
+    {
+      category: "Externe contacten",
+      items: ["Bart Nelissen (Ordus, klant)", "Fleur Timmerman (Effect op maat, klant)"],
+    },
     { category: "Projecten", items: ["Ordus", "Fleur op zak", "HelperU"] },
+    {
+      category: "Interne domeinen",
+      items: ["@jouwaipartner.nl en @jaip.nl worden altijd als intern herkend"],
+    },
   ],
 };

@@ -33,6 +33,41 @@ export async function getStalePeople(limit: number = 50) {
   return data;
 }
 
+export interface KnownPerson {
+  id: string;
+  name: string;
+  email: string | null;
+  team: string | null;
+  organization_id: string | null;
+  organization_name: string | null;
+  organization_type: string | null;
+}
+
+/**
+ * Get all known people with their organization name and type.
+ * Used by the Gatekeeper pipeline to classify participants as internal/external.
+ * Internal = has a team. External = no team but has organization_id.
+ */
+export async function getAllKnownPeople(): Promise<KnownPerson[]> {
+  const { data, error } = await getAdminClient()
+    .from("people")
+    .select("id, name, email, team, organization_id, organizations(name, type)");
+
+  if (error || !data) return [];
+  return data.map((p) => {
+    const org = p.organizations as unknown as { name: string; type: string } | null;
+    return {
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      team: p.team,
+      organization_id: p.organization_id,
+      organization_name: org?.name ?? null,
+      organization_type: org?.type ?? null,
+    };
+  });
+}
+
 /**
  * Find people by their email addresses.
  * Returns a map of email -> person_id for matched emails.

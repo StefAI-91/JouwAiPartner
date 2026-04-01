@@ -1,12 +1,15 @@
 import { runGatekeeper } from "../agents/gatekeeper";
+import type { ParticipantInfo } from "../agents/gatekeeper";
 import { runExtractor, ExtractorOutput } from "../agents/extractor";
 import { GatekeeperOutput } from "../validations/gatekeeper";
+import type { PartyType } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
 import { findPeopleByEmails } from "@repo/database/queries/people";
 import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
 import { saveExtractions } from "./save-extractions";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
+import { classifyParticipants, determinePartyType } from "./participant-classifier";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -40,6 +43,7 @@ async function matchParticipants(meetingId: string, participants: string[]): Pro
 
 interface PipelineResult {
   gatekeeper: GatekeeperOutput;
+  partyType: PartyType;
   extractor: ExtractorOutput | null;
   meetingId: string | null;
   extractions_saved: number;
@@ -49,32 +53,52 @@ interface PipelineResult {
 
 /**
  * Full meeting processing pipeline:
- * 1. Gatekeeper: classify meeting type, party, relevance
- * 2. Insert meeting (always — no rejection)
- * 3. Match participants
- * 4. Extractor: extract decisions, action items, needs, insights
- * 5. Save extractions to unified table
- * 6. Embed meeting + extractions
+ * 1. Classify participants as internal/external (people table lookup)
+ * 2. Determine party_type deterministically from participants + org type
+ * 3. Gatekeeper: classify meeting_type, relevance, org name (AI)
+ * 4. Resolve organization
+ * 5. Insert meeting (always — no rejection)
+ * 6. Link participants
+ * 7. Extractor: extract decisions, action items, needs, insights
+ * 8. Save extractions to unified table
+ * 9. Embed meeting + extractions
  */
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
-  // Step 1: Classify with Gatekeeper
+  // Step 1: Classify participants as internal/external
+  const classifiedParticipants = await classifyParticipants(input.participants);
+
+  // Step 2: Determine party_type deterministically from participants
+  const partyType = determinePartyType(classifiedParticipants);
+
+  // Step 3: Classify meeting with Gatekeeper (meeting_type, relevance, org name)
   const gatekeeperResult = await runGatekeeper(input.summary, {
     title: input.title,
-    participants: input.participants,
+    participants: classifiedParticipants,
     date: input.date,
     topics: input.topics,
   });
 
-  // Step 2: Resolve organization
-  const orgResult = await resolveOrganization(gatekeeperResult.organization_name);
+  // Step 4: Resolve organization — use known org from participants first, fallback to Gatekeeper
+  const knownOrg = classifiedParticipants.find(
+    (p) => p.label === "external" && p.organizationName,
+  );
+  const orgNameToResolve = knownOrg?.organizationName ?? gatekeeperResult.organization_name;
+  const orgResult = await resolveOrganization(orgNameToResolve);
 
-  // Step 3: Build raw_fireflies JSONB (original Fireflies data + pipeline metadata)
+  // Step 5a: Build raw_fireflies JSONB (original Fireflies data + pipeline metadata)
   const rawFireflies: Record<string, unknown> = {
     ...(input.raw_fireflies ?? {}),
     pipeline: {
+      participant_classification: classifiedParticipants.map((p) => ({
+        raw: p.raw,
+        label: p.label,
+        matched_name: p.matchedName ?? null,
+        organization_name: p.organizationName ?? null,
+        organization_type: p.organizationType ?? null,
+      })),
+      party_type_source: knownOrg ? "deterministic" : "gatekeeper_fallback",
       gatekeeper: {
         meeting_type: gatekeeperResult.meeting_type,
-        party_type: gatekeeperResult.party_type,
         relevance_score: gatekeeperResult.relevance_score,
         reason: gatekeeperResult.reason,
         organization_name: gatekeeperResult.organization_name,
@@ -83,7 +107,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     },
   };
 
-  // Step 4: Insert meeting
+  // Step 5b: Insert meeting
   const insertResult = await insertMeeting({
     fireflies_id: input.fireflies_id,
     title: input.title,
@@ -92,10 +116,10 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     summary: input.summary,
     transcript: input.transcript,
     meeting_type: gatekeeperResult.meeting_type,
-    party_type: gatekeeperResult.party_type,
+    party_type: partyType,
     relevance_score: gatekeeperResult.relevance_score,
     organization_id: orgResult.organization_id,
-    unmatched_organization_name: orgResult.matched ? null : gatekeeperResult.organization_name,
+    unmatched_organization_name: orgResult.matched ? null : orgNameToResolve,
     raw_fireflies: rawFireflies,
     embedding_stale: true,
     verification_status: "draft",
@@ -106,6 +130,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     console.error("Meeting insert error:", insertResult.error);
     return {
       gatekeeper: gatekeeperResult,
+      partyType,
       extractor: null,
       meetingId: null,
       extractions_saved: 0,
@@ -116,10 +141,10 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
 
   meetingId = insertResult.data.id;
 
-  // Step 5: Match participants
+  // Step 5: Link participants
   await matchParticipants(meetingId, input.participants);
 
-  // Step 6: Run Extractor agent
+  // Step 6: Run Extractor
   let extractorResult: ExtractorOutput | null = null;
   let extractionsSaved = 0;
   let extractorError: string | null = null;
@@ -128,7 +153,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     extractorResult = await runExtractor(input.transcript, {
       title: input.title,
       meeting_type: gatekeeperResult.meeting_type,
-      party_type: gatekeeperResult.party_type,
+      party_type: partyType,
       participants: input.participants,
       summary: input.summary,
     });
@@ -150,7 +175,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       .update({ raw_fireflies: rawFireflies })
       .eq("id", meetingId);
 
-    // Step 7: Save extractions
+    // Step 7: Save extractions to unified table
     const saveResult = await saveExtractions(extractorResult, meetingId);
     extractionsSaved = saveResult.extractions_saved;
 
@@ -163,7 +188,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     extractorError = errMsg;
   }
 
-  // Step 8: Embed meeting + extractions
+  // Step 8: Embed meeting + extractions for vector search
   let embedded = false;
   let embedError: string | null = null;
   try {
@@ -181,6 +206,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
 
   return {
     gatekeeper: gatekeeperResult,
+    partyType,
     extractor: extractorResult,
     meetingId,
     extractions_saved: extractionsSaved,
