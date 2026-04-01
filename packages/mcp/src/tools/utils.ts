@@ -20,9 +20,7 @@ export function formatVerificatieStatus(
   correctedBy: string | null,
 ): string {
   if (verificationStatus === "verified") {
-    const dateStr = verifiedAt
-      ? new Date(verifiedAt).toLocaleDateString("nl-NL")
-      : null;
+    const dateStr = verifiedAt ? new Date(verifiedAt).toLocaleDateString("nl-NL") : null;
     if (verifiedByName && dateStr) {
       return `Verified by ${verifiedByName} on ${dateStr}`;
     }
@@ -61,27 +59,24 @@ export async function lookupProfileNames(
 ): Promise<Record<string, string>> {
   if (verifiedByIds.length === 0) return {};
 
-  const { data: profiles } = await supabase
+  const { data: profiles, error } = await supabase
     .from("profiles")
     .select("id, full_name")
     .in("id", verifiedByIds);
 
+  if (error) {
+    console.error("lookupProfileNames failed:", error.message);
+    return {};
+  }
+
   if (!profiles) return {};
 
-  return Object.fromEntries(
-    profiles.map((p) => [p.id, p.full_name || "Onbekend"]),
-  );
+  return Object.fromEntries(profiles.map((p) => [p.id, p.full_name || "Onbekend"]));
 }
 
 /**
  * Extract unique non-null verified_by UUIDs from an array of items.
  */
-export function collectVerifiedByIds(
-  items: { verified_by?: string | null }[],
-): string[] {
-  return [
-    ...new Set(
-      items.map((i) => i.verified_by).filter((id): id is string => id != null),
-    ),
-  ];
+export function collectVerifiedByIds(items: { verified_by?: string | null }[]): string[] {
+  return [...new Set(items.map((i) => i.verified_by).filter((id): id is string => id != null))];
 }

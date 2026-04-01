@@ -1,7 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { escapeLike, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds } from "./utils";
+import {
+  escapeLike,
+  formatVerificatieStatus,
+  lookupProfileNames,
+  collectVerifiedByIds,
+} from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
 export function registerActionTools(server: McpServer) {
@@ -104,16 +109,18 @@ export function registerActionTools(server: McpServer) {
         verification_status: string | null;
         verified_by: string | null;
         verified_at: string | null;
-        meeting: { id: string; title: string; date: string | null; participants: string[] | null } | null;
+        meeting: {
+          id: string;
+          title: string;
+          date: string | null;
+          participants: string[] | null;
+        } | null;
         organization: { name: string } | null;
         project: { name: string } | null;
       }
 
       const typedItems = items as unknown as ActionItem[];
-      const profileMap = await lookupProfileNames(
-        supabase,
-        collectVerifiedByIds(typedItems),
-      );
+      const profileMap = await lookupProfileNames(supabase, collectVerifiedByIds(typedItems));
 
       const formatted = typedItems.map((item: ActionItem, i: number) => {
         const meeting = item.meeting;

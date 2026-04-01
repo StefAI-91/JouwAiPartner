@@ -12,7 +12,10 @@ export function registerListMeetingsTools(server: McpServer) {
       organization: z.string().optional().describe("Filter op organisatienaam (partial match)"),
       project: z.string().optional().describe("Filter op projectnaam (partial match)"),
       date_from: z.string().optional().describe("Vanaf datum (ISO format, bijv. 2026-01-01)"),
-      date_to: z.string().optional().describe("Tot en met datum, inclusief (ISO format, bijv. 2026-03-31)"),
+      date_to: z
+        .string()
+        .optional()
+        .describe("Tot en met datum, inclusief (ISO format, bijv. 2026-03-31)"),
       meeting_type: z.string().optional().describe("Filter op meeting type"),
       party_type: z
         .enum(["client", "partner", "internal", "other"])
@@ -159,14 +162,21 @@ export function registerListMeetingsTools(server: McpServer) {
         verification_status: string | null;
       }
 
-      const formatted = (meetings as unknown as MeetingListItem[]).map((m: MeetingListItem, i: number) => {
-        const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
-        const orgName = m.organization?.name || m.unmatched_organization_name || "—";
-        const relevance = m.relevance_score ? ` | Relevantie: ${m.relevance_score.toFixed(2)}` : "";
-        const status = m.verification_status === "verified" ? "" : ` | Status: ${m.verification_status || "draft"}`;
+      const formatted = (meetings as unknown as MeetingListItem[]).map(
+        (m: MeetingListItem, i: number) => {
+          const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
+          const orgName = m.organization?.name || m.unmatched_organization_name || "—";
+          const relevance = m.relevance_score
+            ? ` | Relevantie: ${m.relevance_score.toFixed(2)}`
+            : "";
+          const status =
+            m.verification_status === "verified"
+              ? ""
+              : ` | Status: ${m.verification_status || "draft"}`;
 
-        return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}${status}\n   ID: ${m.id}`;
-      });
+          return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}${status}\n   ID: ${m.id}`;
+        },
+      );
 
       const paginationNote =
         meetings.length === limit

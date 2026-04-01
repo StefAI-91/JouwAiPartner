@@ -73,10 +73,7 @@ export function registerSearchTools(server: McpServer) {
       }
 
       const typedResults = results as unknown as SearchResult[];
-      const profileMap = await lookupProfileNames(
-        supabase,
-        collectVerifiedByIds(typedResults),
-      );
+      const profileMap = await lookupProfileNames(supabase, collectVerifiedByIds(typedResults));
 
       const formatted = typedResults.map((r: SearchResult, i: number) => {
         const sourceLabel = sourceLabels[r.source_type] || r.source_type;

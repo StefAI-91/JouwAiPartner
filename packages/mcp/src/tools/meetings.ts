@@ -1,7 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { escapeLike, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds } from "./utils";
+import {
+  escapeLike,
+  formatVerificatieStatus,
+  lookupProfileNames,
+  collectVerifiedByIds,
+} from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
 export function registerMeetingTools(server: McpServer) {
@@ -52,7 +57,13 @@ export function registerMeetingTools(server: McpServer) {
 
       const { data: meetings, error } = await query.limit(5);
 
-      if (error || !meetings || meetings.length === 0) {
+      if (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error: ${error.message}` }],
+        };
+      }
+
+      if (!meetings || meetings.length === 0) {
         return {
           content: [
             {
@@ -87,7 +98,12 @@ export function registerMeetingTools(server: McpServer) {
         content: string;
         confidence: number | null;
         transcript_ref: string | null;
-        metadata: { assignee?: string; deadline?: string; made_by?: string; urgency?: string } | null;
+        metadata: {
+          assignee?: string;
+          deadline?: string;
+          made_by?: string;
+          urgency?: string;
+        } | null;
         corrected_by: string | null;
         corrected_at: string | null;
         verification_status: string | null;
@@ -119,14 +135,8 @@ export function registerMeetingTools(server: McpServer) {
       }
 
       const typedMeetings = meetings as unknown as MeetingSummaryItem[];
-      const allItems = [
-        ...typedMeetings,
-        ...Object.values(extractionsByMeeting).flat(),
-      ];
-      const profileMap = await lookupProfileNames(
-        supabase,
-        collectVerifiedByIds(allItems),
-      );
+      const allItems = [...typedMeetings, ...Object.values(extractionsByMeeting).flat()];
+      const profileMap = await lookupProfileNames(supabase, collectVerifiedByIds(allItems));
 
       const formatted = typedMeetings.map((m: MeetingSummaryItem) => {
         const extractions = extractionsByMeeting[m.id] || [];

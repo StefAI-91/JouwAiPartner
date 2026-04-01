@@ -2,7 +2,12 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
-import { escapeLike, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds } from "./utils";
+import {
+  escapeLike,
+  formatVerificatieStatus,
+  lookupProfileNames,
+  collectVerifiedByIds,
+} from "./utils";
 
 export function registerOrganizationOverviewTools(server: McpServer) {
   server.tool(
@@ -47,7 +52,9 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       let meetingsQuery = supabase
         .from("meetings")
-        .select("id, title, date, meeting_type, party_type, relevance_score, summary, verification_status, verified_by, verified_at")
+        .select(
+          "id, title, date, meeting_type, party_type, relevance_score, summary, verification_status, verified_by, verified_at",
+        )
         .eq("organization_id", org.id)
         .order("date", { ascending: false })
         .limit(20);
@@ -56,11 +63,16 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         meetingsQuery = meetingsQuery.eq("verification_status", "verified");
       }
 
-      const { data: meetings } = await meetingsQuery;
+      const { data: meetings, error: meetingsError } = await meetingsQuery;
+      if (meetingsError) {
+        console.error("get_organization_overview meetings query failed:", meetingsError.message);
+      }
 
       let extractionsQuery = supabase
         .from("extractions")
-        .select("type, content, confidence, metadata, transcript_ref, corrected_by, meeting_id, verification_status, verified_by, verified_at")
+        .select(
+          "type, content, confidence, metadata, transcript_ref, corrected_by, meeting_id, verification_status, verified_by, verified_at",
+        )
         .eq("organization_id", org.id)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -69,7 +81,13 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         extractionsQuery = extractionsQuery.eq("verification_status", "verified");
       }
 
-      const { data: extractions } = await extractionsQuery;
+      const { data: extractions, error: extractionsError } = await extractionsQuery;
+      if (extractionsError) {
+        console.error(
+          "get_organization_overview extractions query failed:",
+          extractionsError.message,
+        );
+      }
 
       interface OverviewProject {
         id: string;
@@ -95,7 +113,12 @@ export function registerOrganizationOverviewTools(server: McpServer) {
         type: string;
         content: string;
         confidence: number | null;
-        metadata: { assignee?: string; deadline?: string; made_by?: string; urgency?: string } | null;
+        metadata: {
+          assignee?: string;
+          deadline?: string;
+          made_by?: string;
+          urgency?: string;
+        } | null;
         transcript_ref: string | null;
         corrected_by: string | null;
         meeting_id: string;
