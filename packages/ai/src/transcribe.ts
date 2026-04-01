@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 
 export interface TranscriptionResult {
   text: string;
@@ -28,13 +28,27 @@ export async function transcribeAudioUrl(
     throw new Error(`Failed to download audio: ${audioResponse.status} ${audioResponse.statusText}`);
   }
 
+  // Detect content type from response, fallback to mp3
+  const contentType = audioResponse.headers.get("content-type") ?? "audio/mpeg";
+  const ext = contentType.includes("mp4") || contentType.includes("m4a")
+    ? "m4a"
+    : contentType.includes("wav")
+      ? "wav"
+      : contentType.includes("webm")
+        ? "webm"
+        : contentType.includes("ogg")
+          ? "ogg"
+          : "mp3";
+
   const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
-  const audioFile = new File([audioBuffer], "meeting.mp3", { type: "audio/mpeg" });
+
+  // Use OpenAI's toFile helper for proper multipart upload in Node.js
+  const file = await toFile(audioBuffer, `meeting.${ext}`, { type: contentType });
 
   const openai = new OpenAI({ apiKey });
 
   const transcription = await openai.audio.transcriptions.create({
-    file: audioFile,
+    file,
     model: "gpt-4o-transcribe",
     language: options?.language ?? "nl",
     response_format: "verbose_json",

@@ -68,8 +68,22 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // mode=check: only return Fireflies info (no OpenAI call)
+    // mode=check: return Fireflies info + audio probe (no OpenAI call)
     if (mode === "check") {
+      let audioProbe = null;
+      if (ff.audio_url) {
+        try {
+          const probe = await fetch(ff.audio_url, { method: "HEAD" });
+          audioProbe = {
+            status: probe.status,
+            content_type: probe.headers.get("content-type"),
+            content_length: probe.headers.get("content-length"),
+          };
+        } catch (e) {
+          audioProbe = { error: e instanceof Error ? e.message : String(e) };
+        }
+      }
+
       return NextResponse.json({
         meeting: {
           id: ff.id,
@@ -80,6 +94,7 @@ export async function GET(req: NextRequest) {
           video_url: ff.video_url,
           sentences: ff.sentences.length,
         },
+        audio_probe: audioProbe,
         env: {
           OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "SET" : "NOT SET",
           FIREFLIES_API_KEY: process.env.FIREFLIES_API_KEY ? "SET" : "NOT SET",
