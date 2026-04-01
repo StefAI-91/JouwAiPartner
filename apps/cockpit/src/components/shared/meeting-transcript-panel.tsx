@@ -1,6 +1,9 @@
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { MarkdownSummary } from "@/components/shared/markdown-summary";
-import { StructuredTranscript } from "@/components/shared/structured-transcript";
+import {
+  StructuredTranscript,
+  type TranscriptSentence,
+} from "@/components/shared/structured-transcript";
 import { formatDateLong } from "@/lib/format";
 
 interface MeetingTranscriptPanelProps {
@@ -11,6 +14,7 @@ interface MeetingTranscriptPanelProps {
     party_type: string | null;
     transcript: string | null;
     summary: string | null;
+    raw_fireflies?: { sentences?: TranscriptSentence[] } | null;
     organization: { name: string } | null;
     meeting_participants: { person: { id: string; name: string } }[];
     extractions: { transcript_ref: string | null }[];
@@ -68,6 +72,7 @@ export function MeetingTranscriptPanel({
       {meeting.transcript ? (
         <StructuredTranscript
           transcript={meeting.transcript}
+          sentences={meeting.raw_fireflies?.sentences}
           transcriptRefs={transcriptRefs}
           activeRef={activeTranscriptRef}
         />

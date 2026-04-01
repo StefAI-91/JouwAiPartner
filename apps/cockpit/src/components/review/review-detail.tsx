@@ -31,6 +31,7 @@ interface ReviewDetailProps {
     party_type: string | null;
     transcript: string | null;
     summary: string | null;
+    raw_fireflies: Record<string, unknown> | null;
     organization: { name: string } | null;
     meeting_participants: { person: { id: string; name: string } }[];
     extractions: Extraction[];

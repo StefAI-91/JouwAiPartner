@@ -41,6 +41,7 @@ export interface ReviewMeetingDetail {
   party_type: string | null;
   transcript: string | null;
   summary: string | null;
+  raw_fireflies: Record<string, unknown> | null;
   organization: { name: string } | null;
   meeting_participants: { person: { id: string; name: string } }[];
   extractions: {
@@ -61,7 +62,7 @@ export async function getDraftMeetingById(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, summary,
+      `id, title, date, meeting_type, party_type, transcript, summary, raw_fireflies,
        organization:organizations(name),
        meeting_participants(person:people(id, name)),
        extractions(id, type, content, confidence, transcript_ref, metadata)`,

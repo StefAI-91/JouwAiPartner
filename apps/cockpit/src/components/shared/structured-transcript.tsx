@@ -3,8 +3,20 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { ChevronDown, ChevronUp, Clock } from "lucide-react";
 
+/** Structured sentence from Fireflies (stored in raw_fireflies.sentences) */
+export interface TranscriptSentence {
+  index: number;
+  text: string;
+  speaker_name: string;
+  start_time: number;
+  end_time: number;
+}
+
 interface StructuredTranscriptProps {
+  /** Flat transcript string (fallback) */
   transcript: string;
+  /** Structured sentences from Fireflies — preferred over transcript parsing */
+  sentences?: TranscriptSentence[] | null;
   transcriptRefs: Set<string>;
   activeRef?: string | null;
 }
@@ -16,7 +28,23 @@ interface TranscriptLine {
   rawIndex: number;
 }
 
-// Parse "Speaker Name:" pattern at the beginning of a line
+/** Convert structured Fireflies sentences to TranscriptLines */
+function sentencesToLines(sentences: TranscriptSentence[]): TranscriptLine[] {
+  return sentences.map((s, i) => {
+    const minutes = Math.floor(s.start_time / 60);
+    const seconds = Math.floor(s.start_time % 60);
+    const timestamp = `${minutes}:${String(seconds).padStart(2, "0")}`;
+
+    return {
+      speaker: s.speaker_name,
+      text: s.text,
+      timestamp,
+      rawIndex: i,
+    };
+  });
+}
+
+// Parse "Speaker Name:" pattern at the beginning of a line (fallback for old meetings)
 const SPEAKER_PATTERN =
   /^([A-Z][a-zÀ-ÿ]+(?:\s+(?:van\s+(?:de[rn]?\s+)?|de\s+)?[A-Z][a-zÀ-ÿ]+)*):\s*/;
 // Parse timestamps like (01:20) or (1:04:20)
@@ -152,6 +180,7 @@ function highlightRefs(text: string, refs: Set<string>, activeRef: string | null
 
 export function StructuredTranscript({
   transcript,
+  sentences,
   transcriptRefs,
   activeRef,
 }: StructuredTranscriptProps) {
@@ -159,14 +188,16 @@ export function StructuredTranscript({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { blocks, speakerMap } = useMemo(() => {
-    const lines = parseTranscript(transcript);
+    // Prefer structured sentences from Fireflies, fallback to regex parsing
+    const lines =
+      sentences && sentences.length > 0 ? sentencesToLines(sentences) : parseTranscript(transcript);
     const speakerMap = new Map<string, number>();
     // Pre-assign speaker colors
     for (const line of lines) {
       if (line.speaker) getSpeakerColor(line.speaker, speakerMap);
     }
     return { blocks: groupBySpeaker(lines), speakerMap };
-  }, [transcript]);
+  }, [transcript, sentences]);
 
   const shouldExpand = expanded || !!activeRef;
 
