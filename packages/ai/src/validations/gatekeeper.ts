@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+export const MEETING_TYPES = [
+  "strategy",
+  "one_on_one",
+  "team_sync",
+  "discovery",
+  "sales",
+  "project_kickoff",
+  "status_update",
+  "collaboration",
+  "other",
+] as const;
+
+export type MeetingType = (typeof MEETING_TYPES)[number];
+
 export const GatekeeperSchema = z.object({
   relevance_score: z
     .number()
@@ -8,15 +22,7 @@ export const GatekeeperSchema = z.object({
     ),
   reason: z.string().describe("Brief explanation of the scoring decision (one sentence)"),
   meeting_type: z
-    .enum([
-      "standup",
-      "sprint_review",
-      "strategy",
-      "client_call",
-      "internal",
-      "one_on_one",
-      "other",
-    ])
+    .enum(MEETING_TYPES)
     .describe("The type/format of this meeting"),
   party_type: z
     .enum(["client", "partner", "internal", "other"])

@@ -33,6 +33,26 @@ export async function getStalePeople(limit: number = 50) {
   return data;
 }
 
+export interface InternalPerson {
+  id: string;
+  name: string;
+  email: string | null;
+}
+
+/**
+ * Get all internal team members (people with a team assigned).
+ * Used by the Gatekeeper pipeline to classify participants as internal/external.
+ */
+export async function getInternalPeople(): Promise<InternalPerson[]> {
+  const { data, error } = await getAdminClient()
+    .from("people")
+    .select("id, name, email")
+    .not("team", "is", null);
+
+  if (error || !data) return [];
+  return data;
+}
+
 /**
  * Find people by their email addresses.
  * Returns a map of email -> person_id for matched emails.

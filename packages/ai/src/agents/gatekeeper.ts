@@ -7,6 +7,9 @@ export type { GatekeeperOutput };
 const SYSTEM_PROMPT = `Je bent de Gatekeeper: je classificeert meetings. Je extraheert NIETS.
 ALLE output moet in het Nederlands zijn (behalve enum-waarden).
 
+Je krijgt een deelnemerslijst met labels: INTERN, EXTERN, of ONBEKEND.
+Gebruik deze labels als feit — raad niet zelf wie intern of extern is.
+
 Je bepaalt:
 1. RELEVANTIE-SCORE (0.0–1.0): hoe waardevol is deze meeting voor het bedrijf?
    - 0.0–0.3: ruis (small talk, testgesprekken)
@@ -15,13 +18,25 @@ Je bepaalt:
    - 0.9–1.0: kritiek (besluiten, strategie, klantafspraken)
 
 2. MEETING TYPE: wat voor soort meeting is dit?
-   - standup, sprint_review, strategy, client_call, internal, one_on_one, other
+   INTERN:
+   - strategy: strategieoverleg, roadmap, visie
+   - one_on_one: 1-op-1 gesprekken
+   - team_sync: overige interne afstemming
+   EXTERN:
+   - discovery: verkennende call, kennismaking, kijken of je iets voor elkaar kunt betekenen
+   - sales: commercieel gesprek, offerte, onderhandeling
+   - project_kickoff: start van een nieuw project
+   - status_update: voortgangsoverleg, tussentijdse check
+   - collaboration: samenwerkingsbespreking, partnership
+   FALLBACK:
+   - other: past echt nergens in
 
 3. PARTY TYPE: met wie was de meeting?
-   - client: meeting met een klant
-   - partner: meeting met een partner/leverancier
-   - internal: alleen intern team
-   - other: overig
+   - Als ALLE deelnemers INTERN zijn → party_type = "internal"
+   - Als er EXTERNE deelnemers zijn, bepaal op basis van relatie:
+     - client: meeting met een (potentiële) klant
+     - partner: meeting met een partner/leverancier
+     - other: onduidelijk
 
 4. ORGANIZATION NAME: welke externe organisatie was betrokken?
    - Geef de organisatienaam als het een client/partner meeting is
@@ -30,18 +45,37 @@ Je bepaalt:
 BELANGRIJK: Je doet GEEN extractie van besluiten, actiepunten of andere inhoud.
 Je classificeert alleen.`;
 
+export interface ParticipantInfo {
+  raw: string;
+  label: "internal" | "external" | "unknown";
+  matchedName?: string;
+}
+
 export async function runGatekeeper(
   notes: string,
   metadata: {
     title?: string;
-    participants?: string[];
+    participants?: ParticipantInfo[];
     date?: string;
     topics?: string[];
   },
 ): Promise<GatekeeperOutput> {
+  const participantLines = metadata.participants?.length
+    ? metadata.participants
+        .map((p) => {
+          const tag = p.label === "internal" ? "INTERN" : p.label === "external" ? "EXTERN" : "ONBEKEND";
+          const name = p.matchedName ?? p.raw;
+          return `- ${name} (${tag})`;
+        })
+        .join("\n")
+    : null;
+
+  const allInternal = metadata.participants?.every((p) => p.label === "internal") ?? false;
+
   const contextPrefix = [
     metadata.title ? `Titel: ${metadata.title}` : null,
-    metadata.participants?.length ? `Deelnemers: ${metadata.participants.join(", ")}` : null,
+    participantLines ? `Deelnemers:\n${participantLines}` : null,
+    allInternal ? `OPMERKING: Alle deelnemers zijn intern. party_type moet "internal" zijn.` : null,
     metadata.date ? `Datum: ${metadata.date}` : null,
   ]
     .filter(Boolean)

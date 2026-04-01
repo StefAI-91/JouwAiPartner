@@ -5,31 +5,48 @@ import { ExtractorOutputSchema, ExtractorOutput } from "../validations/extractor
 export type { ExtractorOutput };
 
 const MEETING_TYPE_INSTRUCTIONS: Record<string, string> = {
-  client_call: `Focus extra op:
-- NEEDS: klantbehoeften, wensen, pijnpunten, gevraagde features
-- INSIGHTS met metadata.category = "client_feedback" of "market_signal"
-- ACTION_ITEMS met scope "project" en het juiste project
-- Metadata bij needs: {client, urgency: "high"|"medium"|"low"}`,
-
+  // Intern
   strategy: `Focus extra op:
 - DECISIONS: strategische besluiten, richting, prioriteiten
 - INSIGHTS met metadata.category = "strategic" of "risk"
 - Langetermijn-implicaties en risico's`,
 
-  standup: `Focus extra op:
-- ACTION_ITEMS: wie doet wat, blokkades
-- Korte, concrete items. Geen algemeenheden.
-- Metadata bij action_items: {assignee, deadline, scope, project}`,
-
-  sprint_review: `Focus extra op:
-- DECISIONS over sprint/project voortgang
-- ACTION_ITEMS voor volgende sprint
-- INSIGHTS over wat goed ging en wat beter kan`,
-
   one_on_one: `Focus extra op:
 - ACTION_ITEMS: afspraken, follow-ups
 - INSIGHTS met metadata.category = "people" of "growth"
 - Persoonlijke ontwikkelpunten`,
+
+  team_sync: `Focus extra op:
+- ACTION_ITEMS: wie doet wat, blokkades
+- Korte, concrete items. Geen algemeenheden.
+- Metadata bij action_items: {assignee, deadline, scope, project}`,
+
+  // Extern
+  discovery: `Focus extra op:
+- NEEDS: behoeften, wensen, pijnpunten van de potentiële klant/partner
+- INSIGHTS met metadata.category = "market_signal" of "client_feedback"
+- Metadata bij needs: {client, urgency: "high"|"medium"|"low"}`,
+
+  sales: `Focus extra op:
+- NEEDS: klantbehoeften, wensen, pijnpunten, gevraagde features
+- DECISIONS: afspraken over offerte, pricing, scope
+- INSIGHTS met metadata.category = "client_feedback" of "market_signal"
+- Metadata bij needs: {client, urgency: "high"|"medium"|"low"}`,
+
+  project_kickoff: `Focus extra op:
+- DECISIONS: scope-afspraken, planning, rolverdeling
+- ACTION_ITEMS met scope "project" en het juiste project
+- Metadata bij action_items: {assignee, deadline, scope, project}`,
+
+  status_update: `Focus extra op:
+- DECISIONS over project voortgang
+- ACTION_ITEMS: vervolgstappen, blokkades
+- INSIGHTS over wat goed ging en wat beter kan`,
+
+  collaboration: `Focus extra op:
+- DECISIONS: samenwerkingsafspraken, rolverdeling
+- NEEDS: wat beide partijen nodig hebben
+- ACTION_ITEMS: concrete vervolgstappen`,
 };
 
 const SYSTEM_PROMPT = `Je bent de Extractor: je haalt gestructureerde informatie uit meeting transcripten.
