@@ -164,10 +164,13 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json(
-      { error: "Transcription comparison failed", detail: message },
-      { status: 500 },
-    );
+    const stack = err instanceof Error ? err.stack : undefined;
+    // Return 200 so the error detail is visible via simple fetch tools
+    return NextResponse.json({
+      error: "Transcription comparison failed",
+      detail: message,
+      stack,
+    });
   }
 }
 
