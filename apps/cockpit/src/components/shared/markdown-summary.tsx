@@ -89,10 +89,9 @@ export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryPr
     return base.map((s, i) => {
       const override = overrides.get(i);
       if (override === undefined) return s;
-      const headingLine = s.raw.split("\n")[0];
-      const hasHeading = headingLine.match(/^#{1,3}\s+/);
-      const newRaw = hasHeading ? `${headingLine}\n${override}` : override;
-      return { heading: s.heading, body: override, raw: newRaw };
+      const heading = isSectionStart(override.split("\n")[0]) ?? s.heading;
+      const bodyLines = override.split("\n").slice(1).join("\n").trim();
+      return { heading, body: bodyLines || override, raw: override };
     });
   }, [content, overrides]);
 
@@ -100,7 +99,7 @@ export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryPr
     (index: number) => {
       setExpanded(true);
       setEditingIndex(index);
-      setEditValue(sections[index].body);
+      setEditValue(sections[index].raw);
     },
     [sections],
   );
@@ -113,18 +112,13 @@ export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryPr
   function saveEdit() {
     if (editingIndex === null) return;
 
-    setOverrides((prev) => new Map(prev).set(editingIndex, editValue.trim()));
+    const trimmed = editValue.trim();
+    setOverrides((prev) => new Map(prev).set(editingIndex, trimmed));
     setEditingIndex(null);
     setEditValue("");
 
     // Rebuild full markdown with the edit applied
-    const updated = sections.map((s, i) => {
-      if (i !== editingIndex) return s;
-      const headingLine = s.raw.split("\n")[0];
-      const hasHeading = headingLine.match(/^#{1,3}\s+/);
-      const newRaw = hasHeading ? `${headingLine}\n${editValue.trim()}` : editValue.trim();
-      return { ...s, body: editValue.trim(), raw: newRaw };
-    });
+    const updated = sections.map((s, i) => (i === editingIndex ? { ...s, raw: trimmed } : s));
 
     const newMarkdown = rebuildMarkdown(updated);
     if (newMarkdown !== content && onEdit) {
@@ -162,11 +156,6 @@ export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryPr
             <div key={index} className="group/section relative">
               {editingIndex === index ? (
                 <div className="rounded-lg border border-primary/30 bg-white p-3">
-                  {section.heading && (
-                    <p className="mb-2 text-sm font-semibold text-foreground/80">
-                      {section.heading}
-                    </p>
-                  )}
                   <textarea
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
