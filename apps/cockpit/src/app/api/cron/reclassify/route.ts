@@ -69,6 +69,8 @@ export async function POST(req: NextRequest) {
   const results: {
     id: string;
     title: string | null;
+    participants_raw: string[];
+    participants_classified: { raw: string; label: string; matched?: string }[];
     old: { meeting_type: string | null; party_type: string | null; relevance_score: number | null };
     new: { meeting_type: string; party_type: string; relevance_score: number };
     party_type_source: string;
@@ -142,6 +144,12 @@ export async function POST(req: NextRequest) {
     results.push({
       id: meeting.id,
       title: meeting.title,
+      participants_raw: participants,
+      participants_classified: classifiedParticipants.map((p) => ({
+        raw: p.raw,
+        label: p.label,
+        ...(p.matchedName ? { matched: p.matchedName } : {}),
+      })),
       old: {
         meeting_type: meeting.meeting_type,
         party_type: meeting.party_type,
