@@ -26,6 +26,26 @@ export async function insertMeeting(meeting: {
   return { success: true, data };
 }
 
+export async function updateMeetingClassification(
+  meetingId: string,
+  data: {
+    meeting_type: string;
+    party_type: string;
+    relevance_score: number;
+    organization_id: string | null;
+    unmatched_organization_name: string | null;
+    raw_fireflies: Record<string, unknown>;
+  },
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update(data)
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateMeetingProject(
   meetingId: string,
   projectId: string,

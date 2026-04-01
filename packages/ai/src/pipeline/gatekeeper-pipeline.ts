@@ -1,13 +1,15 @@
-import { runGatekeeper, ParticipantInfo } from "../agents/gatekeeper";
+import { runGatekeeper } from "../agents/gatekeeper";
+import type { ParticipantInfo } from "../agents/gatekeeper";
 import { runExtractor, ExtractorOutput } from "../agents/extractor";
 import { GatekeeperOutput } from "../validations/gatekeeper";
 import type { PartyType } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
-import { findPeopleByEmails, getAllKnownPeople } from "@repo/database/queries/people";
+import { findPeopleByEmails } from "@repo/database/queries/people";
 import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
 import { saveExtractions } from "./save-extractions";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
+import { classifyParticipants, determinePartyType } from "./participant-classifier";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -18,82 +20,6 @@ interface MeetingInput {
   topics: string[];
   transcript: string;
   raw_fireflies?: Record<string, unknown>;
-}
-
-// Email domains that are always internal (regardless of people table)
-const INTERNAL_DOMAINS = ["jouwaipartner.nl", "jaip.nl"];
-
-/**
- * Classify participants as internal/external by matching against the people table.
- * Comma-separated participant strings are split first.
- * Match order: email in people → name in people → internal domain fallback.
- * - Has team → internal
- * - In people table without team → external (known contact, includes org name + type)
- * - Email domain is internal → internal (fallback for unregistered team emails)
- * - Not in people table → unknown
- */
-async function classifyParticipants(rawParticipants: string[]): Promise<ParticipantInfo[]> {
-  const knownPeople = await getAllKnownPeople();
-
-  // Split comma-separated participant strings into individual entries
-  const participants = rawParticipants.flatMap((p) =>
-    p.includes(",") ? p.split(",").map((s) => s.trim()).filter(Boolean) : [p],
-  );
-
-  // Deduplicate
-  const unique = [...new Set(participants.map((p) => p.toLowerCase().trim()))];
-
-  return unique.map((normalized) => {
-    const raw = normalized;
-
-    // Match on email in people table
-    const match = knownPeople.find(
-      (p) => p.email && p.email.toLowerCase() === normalized,
-    ) ?? knownPeople.find(
-      (p) => p.name.toLowerCase() === normalized,
-    );
-
-    if (match) {
-      if (match.team) {
-        return { raw, label: "internal" as const, matchedName: match.name };
-      }
-      return {
-        raw,
-        label: "external" as const,
-        matchedName: match.name,
-        organizationName: match.organization_name,
-        organizationType: match.organization_type,
-      };
-    }
-
-    // Fallback: check if email domain is internal
-    const domain = raw.includes("@") ? raw.split("@")[1] : null;
-    if (domain && INTERNAL_DOMAINS.includes(domain)) {
-      return { raw, label: "internal" as const };
-    }
-
-    return { raw, label: "unknown" as const };
-  });
-}
-
-/**
- * Determine party_type deterministically from classified participants.
- * - All internal → "internal"
- * - Known external with org type → use org type (client/partner)
- * - Unknown externals, no org → "other"
- */
-function determinePartyType(participants: ParticipantInfo[]): PartyType {
-  if (participants.length === 0) return "other";
-  if (participants.every((p) => p.label === "internal")) return "internal";
-
-  // Find the first external participant with a known org type
-  const knownExternal = participants.find(
-    (p) => p.label === "external" && p.organizationType,
-  );
-  if (knownExternal?.organizationType === "client") return "client";
-  if (knownExternal?.organizationType === "partner") return "partner";
-
-  return "other";
 }
 
 /**
