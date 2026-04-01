@@ -10,9 +10,9 @@ export function registerPeopleTools(server: McpServer) {
     "get_people",
     "Haal mensen op (teamleden, klanten, contactpersonen). Zoek op naam, team of rol. Gebruik om te achterhalen wie er in het team zit of om een persoon te vinden.",
     {
-      search: z.string().optional().describe("Search by name (partial match)"),
-      team: z.string().optional().describe("Filter by team (e.g. 'engineering', 'leadership')"),
-      role: z.string().optional().describe("Filter by role (partial match)"),
+      search: z.string().max(255).optional().describe("Search by name (partial match)"),
+      team: z.string().max(100).optional().describe("Filter by team (e.g. 'engineering', 'leadership')"),
+      role: z.string().max(255).optional().describe("Filter by role (partial match)"),
     },
     async ({ search, team, role }) => {
       const supabase = getAdminClient();

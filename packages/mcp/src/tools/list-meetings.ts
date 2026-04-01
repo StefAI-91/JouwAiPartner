@@ -9,15 +9,15 @@ export function registerListMeetingsTools(server: McpServer) {
     "list_meetings",
     "Zoek en filter geverifieerde meetings op titel, organisatie, project, datum, type en partij. Gebruik `title_search` om meetings te vinden op (deel van) de titel. Dit is betrouwbaarder dan semantisch zoeken wanneer je specifieke meetings op naam zoekt. Retourneert standaard alleen geverifieerde meetings. Gebruik include_drafts=true voor ongeverifieerde meetings (alleen intern). Geeft een compacte lijst met titel, datum, type en organisatie.",
     {
-      title_search: z.string().optional().describe("Filter op meeting titel (partial match, case-insensitive)"),
-      organization: z.string().optional().describe("Filter op organisatienaam (partial match)"),
-      project: z.string().optional().describe("Filter op projectnaam (partial match)"),
-      date_from: z.string().optional().describe("Vanaf datum (ISO format, bijv. 2026-01-01)"),
+      title_search: z.string().max(255).optional().describe("Filter op meeting titel (partial match, case-insensitive)"),
+      organization: z.string().max(255).optional().describe("Filter op organisatienaam (partial match)"),
+      project: z.string().max(255).optional().describe("Filter op projectnaam (partial match)"),
+      date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional().describe("Vanaf datum (ISO format, bijv. 2026-01-01)"),
       date_to: z
-        .string()
+        .string().regex(/^\d{4}-\d{2}-\d{2}/)
         .optional()
         .describe("Tot en met datum, inclusief (ISO format, bijv. 2026-03-31)"),
-      meeting_type: z.string().optional().describe("Filter op meeting type"),
+      meeting_type: z.string().max(100).optional().describe("Filter op meeting type"),
       party_type: z
         .enum(["client", "partner", "internal", "other"])
         .optional()

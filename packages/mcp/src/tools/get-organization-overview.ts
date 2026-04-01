@@ -14,7 +14,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
     "get_organization_overview",
     "Haal een compleet overzicht op van een organisatie: basisgegevens, gekoppelde projecten, recente geverifieerde meetings, en extracties. Retourneert standaard alleen geverifieerde content. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern).",
     {
-      organization_name: z.string().describe("Naam (of deel van naam) van de organisatie"),
+      organization_name: z.string().max(255).describe("Naam (of deel van naam) van de organisatie"),
       include_drafts: z
         .boolean()
         .optional()
@@ -65,7 +65,9 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       const { data: meetings, error: meetingsError } = await meetingsQuery;
       if (meetingsError) {
-        console.error("get_organization_overview meetings query failed:", meetingsError.message);
+        return {
+          content: [{ type: "text" as const, text: `Error bij ophalen meetings: ${meetingsError.message}` }],
+        };
       }
 
       let extractionsQuery = supabase
@@ -83,10 +85,9 @@ export function registerOrganizationOverviewTools(server: McpServer) {
 
       const { data: extractions, error: extractionsError } = await extractionsQuery;
       if (extractionsError) {
-        console.error(
-          "get_organization_overview extractions query failed:",
-          extractionsError.message,
-        );
+        return {
+          content: [{ type: "text" as const, text: `Error bij ophalen extracties: ${extractionsError.message}` }],
+        };
       }
 
       interface OverviewProject {
