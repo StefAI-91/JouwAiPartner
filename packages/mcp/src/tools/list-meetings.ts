@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
-import { escapeLike } from "./utils";
+import { resolveProjectIds, resolveOrganizationIds } from "./utils";
 
 export function registerListMeetingsTools(server: McpServer) {
   server.tool(
@@ -65,59 +65,38 @@ export function registerListMeetingsTools(server: McpServer) {
       }
 
       if (organization) {
-        const { data: orgs } = await supabase
-          .from("organizations")
-          .select("id")
-          .ilike("name", `%${escapeLike(organization)}%`);
-
-        if (orgs && orgs.length > 0) {
-          const orgIds = orgs.map((o: { id: string }) => o.id);
-          query = query.in("organization_id", orgIds);
-        } else {
+        const orgIds = await resolveOrganizationIds(supabase, organization);
+        if (!orgIds) {
           return {
             content: [
-              {
-                type: "text" as const,
-                text: `Geen organisatie gevonden voor "${organization}".`,
-              },
+              { type: "text" as const, text: `Geen organisatie gevonden voor "${organization}".` },
             ],
           };
         }
+        query = query.in("organization_id", orgIds);
       }
 
       if (project) {
-        const { data: projects } = await supabase
-          .from("projects")
-          .select("id")
-          .ilike("name", `%${escapeLike(project)}%`);
+        const projectIds = await resolveProjectIds(supabase, project);
+        if (!projectIds) {
+          return {
+            content: [
+              { type: "text" as const, text: `Geen project gevonden voor "${project}".` },
+            ],
+          };
+        }
+        const { data: meetingProjects } = await supabase
+          .from("meeting_projects")
+          .select("meeting_id")
+          .in("project_id", projectIds);
 
-        if (projects && projects.length > 0) {
-          const projectIds = projects.map((p: { id: string }) => p.id);
-          const { data: meetingProjects } = await supabase
-            .from("meeting_projects")
-            .select("meeting_id")
-            .in("project_id", projectIds);
-
-          if (meetingProjects && meetingProjects.length > 0) {
-            const meetingIds = meetingProjects.map((mp: { meeting_id: string }) => mp.meeting_id);
-            query = query.in("id", meetingIds);
-          } else {
-            return {
-              content: [
-                {
-                  type: "text" as const,
-                  text: `Geen meetings gevonden voor project "${project}".`,
-                },
-              ],
-            };
-          }
+        if (meetingProjects && meetingProjects.length > 0) {
+          const meetingIds = meetingProjects.map((mp: { meeting_id: string }) => mp.meeting_id);
+          query = query.in("id", meetingIds);
         } else {
           return {
             content: [
-              {
-                type: "text" as const,
-                text: `Geen project gevonden voor "${project}".`,
-              },
+              { type: "text" as const, text: `Geen meetings gevonden voor project "${project}".` },
             ],
           };
         }

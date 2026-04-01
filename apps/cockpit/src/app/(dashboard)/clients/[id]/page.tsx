@@ -8,27 +8,9 @@ import { Building2, Mail, User, CheckCircle2, Clock, ChevronRight } from "lucide
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-const TYPE_COLORS: Record<string, string> = {
-  client: "bg-blue-100 text-blue-800",
-  partner: "bg-purple-100 text-purple-800",
-  supplier: "bg-orange-100 text-orange-800",
-  other: "bg-gray-100 text-gray-800",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-800",
-  prospect: "bg-amber-100 text-amber-800",
-  inactive: "bg-gray-100 text-gray-500",
-};
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { formatDate } from "@/lib/format";
+import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
+import { getMeetingHref } from "@/lib/meeting-href";
 
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>;
@@ -53,10 +35,10 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         </div>
         <h1 className="mt-1">{org.name}</h1>
         <div className="mt-2 flex items-center gap-2">
-          <Badge className={`text-xs ${TYPE_COLORS[org.type] ?? TYPE_COLORS.other}`}>
+          <Badge className={`text-xs ${ORG_TYPE_COLORS[org.type] ?? ORG_TYPE_COLORS.other}`}>
             {org.type}
           </Badge>
-          <Badge className={`text-xs ${STATUS_COLORS[org.status] ?? STATUS_COLORS.inactive}`}>
+          <Badge className={`text-xs ${ORG_STATUS_COLORS[org.status] ?? ORG_STATUS_COLORS.inactive}`}>
             {org.status}
           </Badge>
         </div>
@@ -126,11 +108,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
             <ul className="-mx-1">
               {org.meetings.map((meeting) => {
                 const isVerified = meeting.verification_status === "verified";
-                const href = isVerified
-                  ? `/meetings/${meeting.id}`
-                  : meeting.verification_status === "draft"
-                    ? `/review/${meeting.id}`
-                    : "#";
+                const href = getMeetingHref(meeting.id, meeting.verification_status);
                 return (
                   <li key={meeting.id}>
                     <Link

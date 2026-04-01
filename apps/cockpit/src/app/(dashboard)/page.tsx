@@ -8,7 +8,7 @@ import { listProjects } from "@repo/database/queries/projects";
 import { AttentionZone } from "@/components/dashboard/attention-zone";
 import { ProjectCard } from "@/components/projects/project-card";
 import { RecentVerifiedMeetings } from "@/components/dashboard/recent-verified-meetings";
-import { OpenActionsList } from "@/components/dashboard/open-actions-list";
+import { ActionItemsCard } from "@/components/dashboard/action-items-card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
       {/* Two-column bottom: recent meetings + open actions */}
       <div className="grid gap-6 md:grid-cols-2">
         <RecentVerifiedMeetings meetings={verifiedMeetings} />
-        <OpenActionsList items={actionItems} />
+        <ActionItemsCard items={actionItems} />
       </div>
     </div>
   );

@@ -5,28 +5,8 @@ import { listOrganizations } from "@repo/database/queries/organizations";
 import { Badge } from "@/components/ui/badge";
 import { Building2, CalendarDays, FolderKanban } from "lucide-react";
 import Link from "next/link";
-
-const TYPE_COLORS: Record<string, string> = {
-  client: "bg-blue-100 text-blue-800",
-  partner: "bg-purple-100 text-purple-800",
-  supplier: "bg-orange-100 text-orange-800",
-  other: "bg-gray-100 text-gray-800",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-800",
-  prospect: "bg-amber-100 text-amber-800",
-  inactive: "bg-gray-100 text-gray-500",
-};
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { formatDate } from "@/lib/format";
+import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 
 export default async function ClientsPage() {
   const supabase = await createClient();
@@ -61,11 +41,11 @@ export default async function ClientsPage() {
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-heading text-lg font-semibold leading-snug">{org.name}</h3>
                 <div className="flex shrink-0 gap-1.5">
-                  <Badge className={`text-[10px] ${TYPE_COLORS[org.type] ?? TYPE_COLORS.other}`}>
+                  <Badge className={`text-[10px] ${ORG_TYPE_COLORS[org.type] ?? ORG_TYPE_COLORS.other}`}>
                     {org.type}
                   </Badge>
                   <Badge
-                    className={`text-[10px] ${STATUS_COLORS[org.status] ?? STATUS_COLORS.inactive}`}
+                    className={`text-[10px] ${ORG_STATUS_COLORS[org.status] ?? ORG_STATUS_COLORS.inactive}`}
                   >
                     {org.status}
                   </Badge>

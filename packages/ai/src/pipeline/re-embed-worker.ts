@@ -1,8 +1,9 @@
 import { embedBatch } from "../embeddings";
-import { getStaleRows, StaleRow } from "@repo/database/queries/content";
+import { getStaleRows } from "@repo/database/queries/content";
 import { getMeetingExtractionsBatch } from "@repo/database/queries/meetings";
 import { getStalePeople } from "@repo/database/queries/people";
 import { batchUpdateEmbeddings } from "@repo/database/mutations/embeddings";
+import { buildMeetingEmbedText } from "./embed-text";
 
 const SIMPLE_EMBEDDABLE_TABLES = [
   { table: "extractions", contentField: "content" },
@@ -29,43 +30,6 @@ async function reEmbedTable(
   await batchUpdateEmbeddings(table, ids, embeddings);
 
   return staleRows.length;
-}
-
-/**
- * Build rich embed text for a meeting: title, participants, summary,
- * and extractions (decisions, action items, insights, needs).
- */
-function buildMeetingEmbedText(
-  meeting: StaleRow,
-  extractions: { type: string; content: string }[],
-): string {
-  const parts: string[] = [];
-
-  if (meeting.title) parts.push(`Meeting: ${meeting.title}`);
-  if (meeting.participants?.length) {
-    parts.push(`Deelnemers: ${meeting.participants.join(", ")}`);
-  }
-  if (meeting.summary) parts.push(`Samenvatting: ${meeting.summary}`);
-
-  const grouped: Record<string, string[]> = {};
-  for (const e of extractions) {
-    if (!grouped[e.type]) grouped[e.type] = [];
-    grouped[e.type].push(e.content);
-  }
-
-  const typeLabels: Record<string, string> = {
-    decision: "Besluiten",
-    action_item: "Actiepunten",
-    insight: "Inzichten",
-    need: "Behoeften",
-  };
-
-  for (const [type, items] of Object.entries(grouped)) {
-    const label = typeLabels[type] || type;
-    parts.push(`${label}:\n` + items.map((item) => `- ${item}`).join("\n"));
-  }
-
-  return parts.join("\n\n");
 }
 
 /**

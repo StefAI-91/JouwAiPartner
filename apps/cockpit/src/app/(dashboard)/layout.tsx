@@ -1,10 +1,10 @@
 import { createClient } from "@repo/database/supabase/server";
-import { getDraftMeetingCount } from "@repo/database/queries/review";
+import { getReviewQueueCount } from "@repo/database/queries/dashboard";
 import { BottomNav } from "@/components/layout/bottom-nav";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const reviewCount = await getDraftMeetingCount(supabase);
+  const reviewCount = await getReviewQueueCount(supabase);
 
   return (
     <div className="flex min-h-screen flex-col">

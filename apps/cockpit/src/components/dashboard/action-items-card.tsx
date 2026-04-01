@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { OpenActionItem } from "@repo/database/queries/action-items";
+import { formatDateShort } from "@/lib/format";
 
 interface ActionItemsCardProps {
   items: OpenActionItem[];
@@ -18,14 +19,6 @@ function getUrgency(dueDateStr: string | null): Urgency {
   if (diffDays < 0) return "overdue";
   if (diffDays <= 7) return "this-week";
   return "default";
-}
-
-function formatDueDate(dueDateStr: string | null): string {
-  if (!dueDateStr) return "";
-  return new Date(dueDateStr).toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "short",
-  });
 }
 
 const URGENCY_CLASSES: Record<Urgency, string> = {
@@ -74,7 +67,7 @@ export function ActionItemsCard({ items }: ActionItemsCardProps) {
                         className={`h-4 text-[10px] ${URGENCY_CLASSES[urgency]}`}
                       >
                         {urgency === "overdue" ? "Verlopen · " : ""}
-                        {formatDueDate(item.due_date)}
+                        {formatDateShort(item.due_date)}
                       </Badge>
                     )}
                   </div>

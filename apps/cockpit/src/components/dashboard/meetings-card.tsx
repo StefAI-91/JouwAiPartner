@@ -3,23 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Users, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import type { RecentMeeting } from "@repo/database/queries/meetings";
-
-function meetingHref(meeting: RecentMeeting): string {
-  if (meeting.verification_status === "verified") return `/meetings/${meeting.id}`;
-  if (meeting.verification_status === "draft") return `/review/${meeting.id}`;
-  return "#";
-}
+import { formatDateShort } from "@/lib/format";
+import { getMeetingHref } from "@/lib/meeting-href";
 
 interface MeetingsCardProps {
   meetings: RecentMeeting[];
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "short",
-  });
 }
 
 function relevanceColor(score: number | null): string {
@@ -85,7 +73,7 @@ export function MeetingsCard({ meetings }: MeetingsCardProps) {
               return (
                 <li key={meeting.id}>
                   <Link
-                    href={meetingHref(meeting)}
+                    href={getMeetingHref(meeting.id, meeting.verification_status)}
                     className="group flex items-center gap-3 rounded-lg px-2.5 py-3 transition-all hover:bg-muted/60 active:scale-[0.995]"
                   >
                     {/* Relevance ring */}
@@ -102,7 +90,7 @@ export function MeetingsCard({ meetings }: MeetingsCardProps) {
                       </div>
                       <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
                         {meeting.date && (
-                          <span>{formatDate(meeting.date)}</span>
+                          <span>{formatDateShort(meeting.date)}</span>
                         )}
                         {meeting.participants && meeting.participants.length > 0 && (
                           <span className="flex items-center gap-0.5">
