@@ -9,6 +9,8 @@ export interface TranscriptionResult {
   }[];
   language: string;
   duration: number;
+  truncated?: boolean;
+  originalSizeMB?: number;
 }
 
 export interface AudioProbe {
@@ -53,11 +55,16 @@ export async function transcribeAudioUrl(
   }
 
   const contentType = audioResponse.headers.get("content-type") ?? "audio/mpeg";
-  const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
+  let audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
 
-  const sizeMB = (audioBuffer.byteLength / 1024 / 1024).toFixed(2);
-  if (audioBuffer.byteLength > 25 * 1024 * 1024) {
-    throw new Error(`Audio file too large for OpenAI (${sizeMB}MB, max 25MB)`);
+  const MAX_SIZE = 24 * 1024 * 1024; // 24MB to stay safely under OpenAI's 25MB limit
+  const originalSizeMB = (audioBuffer.byteLength / 1024 / 1024).toFixed(2);
+  let truncated = false;
+
+  if (audioBuffer.byteLength > MAX_SIZE) {
+    // MP3 is a streaming format — truncating gives valid audio (just shorter)
+    audioBuffer = audioBuffer.subarray(0, MAX_SIZE);
+    truncated = true;
   }
 
   // Determine extension from content-type or URL
@@ -98,5 +105,7 @@ export async function transcribeAudioUrl(
     })),
     language: transcription.language ?? "nl",
     duration: transcription.duration ?? 0,
+    truncated,
+    originalSizeMB: Number(originalSizeMB),
   };
 }

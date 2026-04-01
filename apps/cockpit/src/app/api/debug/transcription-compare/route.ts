@@ -147,10 +147,23 @@ export async function GET(req: NextRequest) {
     const openaiDuration = ((Date.now() - startOpenAI) / 1000).toFixed(1);
     const openaiWords = wordTokenize(openaiResult.text);
 
-    // 4. Compute WER
-    const wer = computeWER(ffWords, openaiWords);
+    // If audio was truncated, only compare the portion OpenAI could transcribe
+    // Match Fireflies sentences to the same time range
+    const openaiDurationSec = openaiResult.duration;
+    let ffCompareWords = ffWords;
+    let ffCompareSentences = ff.sentences.length;
+    if (openaiResult.truncated && openaiDurationSec > 0) {
+      const ffPartial = ff.sentences.filter(
+        (s) => s.start_time <= openaiDurationSec,
+      );
+      ffCompareWords = wordTokenize(ffPartial.map((s) => s.text).join(" "));
+      ffCompareSentences = ffPartial.length;
+    }
 
-    // 5. Build response
+    // 5. Compute WER
+    const wer = computeWER(ffCompareWords, openaiWords);
+
+    // 6. Build response
     const totalDuration = ((Date.now() - startTotal) / 1000).toFixed(1);
 
     return NextResponse.json({
@@ -159,27 +172,34 @@ export async function GET(req: NextRequest) {
         title: ff.title,
         date: new Date(Number(ff.date)).toISOString(),
         participants: ff.participants,
-        audio_url: ff.audio_url,
+        audio_url: ff.audio_url ? ff.audio_url.substring(0, 80) + "..." : null,
         video_url: ff.video_url,
       },
       fireflies: {
-        word_count: ffWords.length,
-        sentence_count: ff.sentences.length,
-        sample: ffWords.slice(0, 150).join(" "),
+        word_count: ffCompareWords.length,
+        word_count_full: ffWords.length,
+        sentence_count: ffCompareSentences,
+        sentence_count_full: ff.sentences.length,
+        sample: ffCompareWords.slice(0, 150).join(" "),
       },
       openai: {
         model: "gpt-4o-transcribe",
         language_detected: openaiResult.language,
-        audio_duration_seconds: openaiResult.duration,
+        audio_duration_seconds: openaiDurationSec,
+        audio_truncated: openaiResult.truncated ?? false,
+        audio_original_size_mb: openaiResult.originalSizeMB,
         word_count: openaiWords.length,
         segment_count: openaiResult.segments.length,
         transcription_time: `${openaiDuration}s`,
         sample: openaiWords.slice(0, 150).join(" "),
       },
       comparison: {
+        note: openaiResult.truncated
+          ? `Audio was getrunceerd naar 24MB — vergelijking betreft eerste ~${Math.round(openaiDurationSec / 60)} minuten`
+          : "Volledige meeting vergeleken",
         word_error_rate: `${(wer * 100).toFixed(1)}%`,
         word_error_rate_raw: wer,
-        word_count_diff: Math.abs(openaiWords.length - ffWords.length),
+        word_count_diff: Math.abs(openaiWords.length - ffCompareWords.length),
         verdict:
           wer < 0.1
             ? "Zeer goede overeenkomst (<10% WER)"
