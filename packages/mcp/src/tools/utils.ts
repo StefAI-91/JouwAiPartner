@@ -1,3 +1,5 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 /**
  * Escape LIKE/ILIKE wildcard characters in user input.
  * Prevents % and _ from being interpreted as wildcards.
@@ -53,7 +55,8 @@ export function formatVerificatieStatus(
  * Returns a map of UUID -> full_name.
  */
 export async function lookupProfileNames(
-  supabase: { from: (table: string) => { select: (cols: string) => { in: (col: string, values: string[]) => Promise<{ data: { id: string; full_name: string | null }[] | null }> } } },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any>,
   verifiedByIds: string[],
 ): Promise<Record<string, string>> {
   if (verifiedByIds.length === 0) return {};
