@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// ElevenLabs Scribe v2 — full meeting transcription comparison
 export const maxDuration = 300;
 
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
