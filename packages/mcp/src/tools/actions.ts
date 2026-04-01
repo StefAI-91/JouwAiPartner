@@ -16,10 +16,10 @@ export function registerActionTools(server: McpServer) {
     "Haal geverifieerde actiepunten (taken, to-dos, afspraken) op uit meetings. Retourneert standaard alleen geverifieerde actiepunten. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern). Toont eigenaar, deadline, bronvermelding en verificatie-status.",
     {
       person: z
-        .string()
+        .string().max(255)
         .optional()
         .describe("Filter by person name (matches assignee in metadata or content)"),
-      project: z.string().optional().describe("Filter by project name"),
+      project: z.string().max(255).optional().describe("Filter by project name"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
       include_drafts: z
         .boolean()

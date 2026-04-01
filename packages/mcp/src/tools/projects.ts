@@ -10,8 +10,8 @@ export function registerProjectTools(server: McpServer) {
     "get_projects",
     "Haal projecten op, optioneel gefilterd op naam, organisatie of status. Toont projectnaam, aliassen, organisatie en status.",
     {
-      search: z.string().optional().describe("Search by project name or alias (partial match)"),
-      organization: z.string().optional().describe("Filter by organization name (partial match)"),
+      search: z.string().max(255).optional().describe("Search by project name or alias (partial match)"),
+      organization: z.string().max(255).optional().describe("Filter by organization name (partial match)"),
       status: z
         .enum(["lead", "active", "paused", "completed", "cancelled"])
         .optional()

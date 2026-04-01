@@ -8,9 +8,9 @@ import { trackMcpQuery } from "./usage-tracking";
 export function registerSearchTools(server: McpServer) {
   server.tool(
     "search_knowledge",
-    "Semantisch zoeken over alle geverifieerde content in de kennisbasis (meetings, besluiten, actiepunten, inzichten, behoeften). Retourneert standaard alleen geverifieerde content. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern). Resultaten bevatten bronvermelding, confidence en verificatie-status.",
+    "Semantisch zoeken over alle geverifieerde content in de kennisbasis (meetings, besluiten, actiepunten, inzichten, behoeften). Retourneert standaard alleen geverifieerde content. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern). Resultaten bevatten bronvermelding, confidence en verificatie-status. Let op: voor het ophalen van meetings op basis van titel of organisatienaam, gebruik `list_meetings` met `title_search` of `organization` filter. Semantisch zoeken kan resultaten missen die wel vindbaar zijn via exacte filters.",
     {
-      query: z.string().describe("The search query in natural language"),
+      query: z.string().max(500).describe("The search query in natural language"),
       limit: z.number().optional().default(10).describe("Max results to return (default 10)"),
       include_drafts: z
         .boolean()

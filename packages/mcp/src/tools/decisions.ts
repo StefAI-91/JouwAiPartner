@@ -14,9 +14,9 @@ export function registerDecisionTools(server: McpServer) {
     "get_decisions",
     "Haal geverifieerde besluiten op uit meetings. Retourneert standaard alleen geverifieerde besluiten. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern). Toont wie het besluit nam, bronvermelding en verificatie-status.",
     {
-      project: z.string().optional().describe("Filter by project name"),
-      date_from: z.string().optional().describe("Start date (ISO format, e.g. 2026-03-01)"),
-      date_to: z.string().optional().describe("End date, inclusive (ISO format, e.g. 2026-03-31)"),
+      project: z.string().max(255).optional().describe("Filter by project name"),
+      date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional().describe("Start date (ISO format, e.g. 2026-03-01)"),
+      date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional().describe("End date, inclusive (ISO format, e.g. 2026-03-31)"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
       include_drafts: z
         .boolean()

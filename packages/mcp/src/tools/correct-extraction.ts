@@ -11,7 +11,7 @@ export function registerCorrectExtractionTools(server: McpServer) {
     {
       extraction_id: z.string().describe("UUID van de extractie die gecorrigeerd moet worden"),
       content: z
-        .string()
+        .string().max(2000)
         .optional()
         .describe("Nieuwe content tekst (laat leeg om niet te wijzigen)"),
       metadata: z
@@ -25,7 +25,7 @@ export function registerCorrectExtractionTools(server: McpServer) {
         .describe(
           "Metadata velden om te overschrijven (alleen meegegeven velden worden gewijzigd)",
         ),
-      corrected_by_name: z.string().describe("Naam van de persoon die de correctie maakt"),
+      corrected_by_name: z.string().max(255).describe("Naam van de persoon die de correctie maakt"),
     },
     async ({ extraction_id, content, metadata, corrected_by_name }) => {
       const supabase = getAdminClient();

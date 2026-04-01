@@ -10,7 +10,7 @@ export function registerOrganizationTools(server: McpServer) {
     "get_organizations",
     "Haal een lijst van organisaties op (klanten, partners, leveranciers). Zoek op naam of filter op type/status. Voor een compleet overzicht van één organisatie met al haar meetings, projecten en extracties, gebruik get_organization_overview.",
     {
-      search: z.string().optional().describe("Search by name or alias (partial match)"),
+      search: z.string().max(255).optional().describe("Search by name or alias (partial match)"),
       type: z
         .enum(["client", "partner", "supplier", "other"])
         .optional()
