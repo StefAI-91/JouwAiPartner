@@ -59,7 +59,7 @@ export async function getAllKnownPeople(): Promise<KnownPerson[]> {
     email: p.email,
     team: p.team,
     organization_id: p.organization_id,
-    organization_name: (p.organizations as { name: string } | null)?.name ?? null,
+    organization_name: (p.organizations as unknown as { name: string } | null)?.name ?? null,
   }));
 }
 
