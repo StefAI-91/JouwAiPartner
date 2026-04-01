@@ -7,8 +7,9 @@ import { resolveProjectIds, resolveOrganizationIds } from "./utils";
 export function registerListMeetingsTools(server: McpServer) {
   server.tool(
     "list_meetings",
-    "Zoek en filter geverifieerde meetings op organisatie, project, datum, type en partij. Retourneert standaard alleen geverifieerde meetings. Gebruik include_drafts=true voor ongeverifieerde meetings (alleen intern). Geeft een compacte lijst met titel, datum, type en organisatie.",
+    "Zoek en filter geverifieerde meetings op titel, organisatie, project, datum, type en partij. Gebruik `title_search` om meetings te vinden op (deel van) de titel. Dit is betrouwbaarder dan semantisch zoeken wanneer je specifieke meetings op naam zoekt. Retourneert standaard alleen geverifieerde meetings. Gebruik include_drafts=true voor ongeverifieerde meetings (alleen intern). Geeft een compacte lijst met titel, datum, type en organisatie.",
     {
+      title_search: z.string().optional().describe("Filter op meeting titel (partial match, case-insensitive)"),
       organization: z.string().optional().describe("Filter op organisatienaam (partial match)"),
       project: z.string().optional().describe("Filter op projectnaam (partial match)"),
       date_from: z.string().optional().describe("Vanaf datum (ISO format, bijv. 2026-01-01)"),
@@ -34,6 +35,7 @@ export function registerListMeetingsTools(server: McpServer) {
         .describe("Include unverified (draft) meetings. Only for internal review purposes."),
     },
     async ({
+      title_search,
       organization,
       project,
       date_from,
@@ -46,7 +48,7 @@ export function registerListMeetingsTools(server: McpServer) {
     }) => {
       const supabase = getAdminClient();
 
-      const queryDesc = [organization, project, date_from, date_to, meeting_type, party_type]
+      const queryDesc = [title_search, organization, project, date_from, date_to, meeting_type, party_type]
         .filter(Boolean)
         .join(", ");
       await trackMcpQuery(supabase, "list_meetings", queryDesc || "all");
@@ -62,6 +64,10 @@ export function registerListMeetingsTools(server: McpServer) {
 
       if (!include_drafts) {
         query = query.eq("verification_status", "verified");
+      }
+
+      if (title_search) {
+        query = query.ilike("title", `%${escapeLike(title_search)}%`);
       }
 
       if (organization) {
