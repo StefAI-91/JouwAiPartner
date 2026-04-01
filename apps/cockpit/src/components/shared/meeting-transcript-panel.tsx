@@ -1,5 +1,6 @@
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
-import { highlightTranscript } from "@/lib/highlight-transcript";
+import { MarkdownSummary } from "@/components/shared/markdown-summary";
+import { StructuredTranscript } from "@/components/shared/structured-transcript";
 import { formatDateLong } from "@/lib/format";
 
 interface MeetingTranscriptPanelProps {
@@ -15,9 +16,14 @@ interface MeetingTranscriptPanelProps {
     extractions: { transcript_ref: string | null }[];
   };
   headerExtra?: React.ReactNode;
+  activeTranscriptRef?: string | null;
 }
 
-export function MeetingTranscriptPanel({ meeting, headerExtra }: MeetingTranscriptPanelProps) {
+export function MeetingTranscriptPanel({
+  meeting,
+  headerExtra,
+  activeTranscriptRef,
+}: MeetingTranscriptPanelProps) {
   const participants = meeting.meeting_participants.map((mp) => mp.person.name);
 
   const transcriptRefs = new Set(
@@ -38,9 +44,7 @@ export function MeetingTranscriptPanel({ meeting, headerExtra }: MeetingTranscri
         </div>
         <h1 className="mt-2">{meeting.title ?? "Untitled meeting"}</h1>
         {meeting.date && (
-          <p className="mt-1 text-sm text-muted-foreground">
-            {formatDateLong(meeting.date)}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{formatDateLong(meeting.date)}</p>
         )}
         {headerExtra}
       </div>
@@ -56,19 +60,17 @@ export function MeetingTranscriptPanel({ meeting, headerExtra }: MeetingTranscri
       )}
 
       {meeting.summary && (
-        <div className="mb-6 rounded-xl bg-muted/50 p-4">
-          <h3 className="mb-2 text-sm font-semibold">Summary</h3>
-          <p className="text-sm leading-relaxed text-muted-foreground">{meeting.summary}</p>
+        <div className="mb-6">
+          <MarkdownSummary content={meeting.summary} />
         </div>
       )}
 
       {meeting.transcript ? (
-        <div className="prose prose-sm max-w-none">
-          <h3 className="mb-3 text-sm font-semibold">Transcript</h3>
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">
-            {highlightTranscript(meeting.transcript, transcriptRefs)}
-          </div>
-        </div>
+        <StructuredTranscript
+          transcript={meeting.transcript}
+          transcriptRefs={transcriptRefs}
+          activeRef={activeTranscriptRef}
+        />
       ) : (
         <p className="text-sm text-muted-foreground">No transcript available</p>
       )}

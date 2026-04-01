@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
-import { EXTRACTION_TYPE_COLORS } from "@/components/shared/extraction-constants";
+import {
+  EXTRACTION_TYPE_COLORS,
+  EXTRACTION_TYPE_ICONS,
+} from "@/components/shared/extraction-constants";
 
 interface ExtractionCardProps {
   extraction: {
@@ -14,12 +17,14 @@ interface ExtractionCardProps {
   };
   readOnly?: boolean;
   onEdit?: (id: string, content: string) => void;
+  onRefClick?: (ref: string) => void;
 }
 
-export function ExtractionCard({ extraction, readOnly, onEdit }: ExtractionCardProps) {
+export function ExtractionCard({ extraction, readOnly, onEdit, onRefClick }: ExtractionCardProps) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(extraction.content);
   const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
+  const Icon = EXTRACTION_TYPE_ICONS[extraction.type];
 
   function handleSave() {
     setEditing(false);
@@ -33,6 +38,17 @@ export function ExtractionCard({ extraction, readOnly, onEdit }: ExtractionCardP
       className="rounded-xl bg-white p-4 shadow-sm"
       style={{ borderLeft: `3px solid ${config.color}` }}
     >
+      {Icon && (
+        <div className="mb-2 flex items-center gap-1.5">
+          <Icon className="size-3.5" style={{ color: config.color }} />
+          <span
+            className="text-[10px] font-medium uppercase tracking-wide"
+            style={{ color: config.color }}
+          >
+            {config.label}
+          </span>
+        </div>
+      )}
       {!readOnly && editing ? (
         <textarea
           value={content}
@@ -59,8 +75,11 @@ export function ExtractionCard({ extraction, readOnly, onEdit }: ExtractionCardP
       )}
 
       {extraction.transcript_ref && (
-        <blockquote className="mt-2 border-l-2 border-muted pl-3 text-xs italic text-muted-foreground">
-          {extraction.transcript_ref}
+        <blockquote
+          onClick={() => onRefClick?.(extraction.transcript_ref!)}
+          className={`mt-2 border-l-2 border-muted pl-3 text-xs italic text-muted-foreground ${onRefClick ? "cursor-pointer hover:border-primary hover:text-foreground/70 transition-colors" : ""}`}
+        >
+          &ldquo;{extraction.transcript_ref}&rdquo;
         </blockquote>
       )}
 
