@@ -121,12 +121,12 @@ export async function GET(req: NextRequest) {
         word_count: scribeWords.length,
         speakers_detected: speakers,
         transcription_time: `${elapsed}s`,
-        sample: scribeResult.text.substring(0, 800),
+        full_text: scribeResult.text,
       },
       fireflies: {
         word_count: ffWords.length,
         sentence_count: ffSentences.length,
-        sample: ffText.substring(0, 800),
+        full_text: ffText,
       },
       comparison: {
         word_count_diff: Math.abs(scribeWords.length - ffWords.length),
