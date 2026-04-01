@@ -2,17 +2,10 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, ChevronRight } from "lucide-react";
 import type { RecentVerifiedMeeting } from "@repo/database/queries/dashboard";
+import { formatDateShort } from "@/lib/format";
 
 interface RecentVerifiedMeetingsProps {
   meetings: RecentVerifiedMeeting[];
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "short",
-  });
 }
 
 export function RecentVerifiedMeetings({ meetings }: RecentVerifiedMeetingsProps) {
@@ -43,7 +36,7 @@ export function RecentVerifiedMeetings({ meetings }: RecentVerifiedMeetingsProps
                       {meeting.date && (
                         <span className="flex items-center gap-0.5">
                           <CalendarDays className="h-3 w-3" />
-                          {formatDate(meeting.date)}
+                          {formatDateShort(meeting.date)}
                         </span>
                       )}
                     </div>

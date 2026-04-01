@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
-
-const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  decision: { label: "Decision", color: "#3B82F6", bg: "#DBEAFE" },
-  action_item: { label: "Action Item", color: "#16A34A", bg: "#DCFCE7" },
-  need: { label: "Need", color: "#A855F7", bg: "#F3E8FF" },
-  insight: { label: "Insight", color: "#6B7280", bg: "#F3F4F6" },
-};
+import { EXTRACTION_TYPE_COLORS } from "@/components/shared/extraction-constants";
 
 interface ExtractionCardProps {
   extraction: {
@@ -25,7 +19,7 @@ interface ExtractionCardProps {
 export function ExtractionCard({ extraction, readOnly, onEdit }: ExtractionCardProps) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(extraction.content);
-  const config = TYPE_CONFIG[extraction.type] ?? TYPE_CONFIG.insight;
+  const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
 
   function handleSave() {
     setEditing(false);

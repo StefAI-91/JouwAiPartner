@@ -2,42 +2,7 @@ import { embedText, embedBatch } from "../embeddings";
 import { updateRowEmbedding, batchUpdateEmbeddings } from "@repo/database/mutations/embeddings";
 import { getMeetingExtractions } from "@repo/database/queries/meetings";
 import { getAdminClient } from "@repo/database/supabase/admin";
-
-/**
- * Build rich embed text for a meeting including its extractions.
- */
-function buildMeetingEmbedText(
-  meeting: { title: string; participants: string[]; summary: string },
-  extractions: { type: string; content: string }[],
-): string {
-  const parts: string[] = [];
-
-  parts.push(`Meeting: ${meeting.title}`);
-  if (meeting.participants.length) {
-    parts.push(`Deelnemers: ${meeting.participants.join(", ")}`);
-  }
-  if (meeting.summary) parts.push(`Samenvatting: ${meeting.summary}`);
-
-  const grouped: Record<string, string[]> = {};
-  for (const e of extractions) {
-    if (!grouped[e.type]) grouped[e.type] = [];
-    grouped[e.type].push(e.content);
-  }
-
-  const typeLabels: Record<string, string> = {
-    decision: "Besluiten",
-    action_item: "Actiepunten",
-    insight: "Inzichten",
-    need: "Behoeften",
-  };
-
-  for (const [type, items] of Object.entries(grouped)) {
-    const label = typeLabels[type] || type;
-    parts.push(`${label}:\n` + items.map((item) => `- ${item}`).join("\n"));
-  }
-
-  return parts.join("\n\n");
-}
+import { buildMeetingEmbedText } from "./embed-text";
 
 /**
  * Embed a meeting and all its extractions right after pipeline processing.

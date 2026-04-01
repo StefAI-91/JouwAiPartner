@@ -77,15 +77,6 @@ export async function getDraftMeetingById(
   return data as unknown as ReviewMeetingDetail;
 }
 
-export async function getDraftMeetingCount(client?: SupabaseClient): Promise<number> {
-  const db = client ?? getAdminClient();
-  const { count } = await db
-    .from("meetings")
-    .select("id", { count: "exact", head: true })
-    .eq("verification_status", "draft");
-  return count ?? 0;
-}
-
 export async function getReviewStats(
   client?: SupabaseClient,
 ): Promise<{ verifiedToday: number; totalVerified: number }> {

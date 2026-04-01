@@ -2,10 +2,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import {
-  escapeLike,
   formatVerificatieStatus,
   lookupProfileNames,
   collectVerifiedByIds,
+  resolveProjectIds,
 } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
@@ -59,24 +59,15 @@ export function registerDecisionTools(server: McpServer) {
       }
 
       if (project) {
-        const { data: projects } = await supabase
-          .from("projects")
-          .select("id")
-          .ilike("name", `%${escapeLike(project)}%`);
-
-        if (projects && projects.length > 0) {
-          const projectIds = projects.map((p: { id: string }) => p.id);
-          query = query.in("project_id", projectIds);
-        } else {
+        const projectIds = await resolveProjectIds(supabase, project);
+        if (!projectIds) {
           return {
             content: [
-              {
-                type: "text" as const,
-                text: `Geen project gevonden voor "${project}".`,
-              },
+              { type: "text" as const, text: `Geen project gevonden voor "${project}".` },
             ],
           };
         }
+        query = query.in("project_id", projectIds);
       }
 
       const { data: decisions, error } = await query.limit(limit);

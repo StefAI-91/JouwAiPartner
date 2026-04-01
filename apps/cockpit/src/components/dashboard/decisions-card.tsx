@@ -1,22 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { RecentDecision } from "@repo/database/queries/decisions";
+import { formatDateShort, truncate } from "@/lib/format";
 
 interface DecisionsCardProps {
   decisions: RecentDecision[];
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("nl-NL", {
-    day: "numeric",
-    month: "short",
-  });
-}
-
-function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength).trimEnd() + "…";
 }
 
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
@@ -57,7 +45,7 @@ export function DecisionsCard({ decisions }: DecisionsCardProps) {
                   {d.meeting_title && (
                     <span className="italic">{truncate(d.meeting_title, 40)}</span>
                   )}
-                  {d.date && <span>{formatDate(d.date)}</span>}
+                  {d.date && <span>{formatDateShort(d.date)}</span>}
                 </div>
               </li>
             ))}

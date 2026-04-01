@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
+import { getMeetingHref } from "@/lib/meeting-href";
 
 interface Meeting {
   id: string;
@@ -105,11 +106,7 @@ function MeetingsSection({ meetings }: { meetings: Meeting[] }) {
       {meetings.map((meeting) => (
         <Link
           key={meeting.id}
-          href={
-            meeting.verification_status === "verified"
-              ? `/meetings/${meeting.id}`
-              : `/review/${meeting.id}`
-          }
+          href={getMeetingHref(meeting.id, meeting.verification_status)}
           className="block rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
         >
           <div className="flex items-center justify-between">
