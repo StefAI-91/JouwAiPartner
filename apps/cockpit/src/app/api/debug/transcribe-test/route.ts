@@ -39,8 +39,10 @@ export async function GET(req: NextRequest) {
     if (!ff) return NextResponse.json({ error: "Transcript not found" });
     if (!ff.audio_url) return NextResponse.json({ error: "No audio_url", title: ff.title });
 
-    // Step 2: Download audio (Range request for first 24MB)
-    const MAX_BYTES = 24 * 1024 * 1024;
+    // Step 2: Download audio
+    // gpt-4o-transcribe limit: 25MB file size AND 1500 seconds (25 min) duration
+    // At ~192kbps MP3, 20 minutes ≈ 17MB — download 17MB to stay under both limits
+    const MAX_BYTES = 17 * 1024 * 1024;
     const audioRes = await fetch(ff.audio_url, {
       headers: { Range: `bytes=0-${MAX_BYTES - 1}` },
     });
@@ -72,12 +74,16 @@ export async function GET(req: NextRequest) {
 
     const startTime = Date.now();
     const model = req.nextUrl.searchParams.get("model") ?? "gpt-4o-transcribe";
+    const isWhisper = model === "whisper-1";
+
+    // gpt-4o-transcribe only supports "json" format; whisper-1 supports "verbose_json"
     const result = await openai.audio.transcriptions.create({
       file,
       model,
       language: "nl",
-      response_format: "verbose_json",
-      timestamp_granularities: ["segment"],
+      ...(isWhisper
+        ? { response_format: "verbose_json", timestamp_granularities: ["segment"] }
+        : { response_format: "json" }),
     });
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
