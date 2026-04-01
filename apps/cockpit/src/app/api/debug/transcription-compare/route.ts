@@ -54,16 +54,10 @@ export async function GET(req: NextRequest) {
   }
 
   // ── With ID: run comparison ─────────────────────────────────────
+  const mode = req.nextUrl.searchParams.get("mode"); // "check" = only fetch Fireflies info
+
   try {
     const startTotal = Date.now();
-
-    // Check env vars
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: "OPENAI_API_KEY is not set in environment" },
-        { status: 500 },
-      );
-    }
 
     // 1. Fetch Fireflies transcript
     const ff = await fetchFirefliesTranscript(meetingId);
@@ -72,6 +66,25 @@ export async function GET(req: NextRequest) {
         { error: "Transcript niet gevonden in Fireflies" },
         { status: 404 },
       );
+    }
+
+    // mode=check: only return Fireflies info (no OpenAI call)
+    if (mode === "check") {
+      return NextResponse.json({
+        meeting: {
+          id: ff.id,
+          title: ff.title,
+          date: new Date(Number(ff.date)).toISOString(),
+          participants: ff.participants,
+          audio_url: ff.audio_url,
+          video_url: ff.video_url,
+          sentences: ff.sentences.length,
+        },
+        env: {
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "SET" : "NOT SET",
+          FIREFLIES_API_KEY: process.env.FIREFLIES_API_KEY ? "SET" : "NOT SET",
+        },
+      });
     }
 
     if (!ff.audio_url) {
