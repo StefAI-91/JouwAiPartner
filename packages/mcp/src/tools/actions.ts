@@ -1,13 +1,18 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { escapeLike, formatVerificatieStatus } from "./utils";
+import {
+  escapeLike,
+  formatVerificatieStatus,
+  lookupProfileNames,
+  collectVerifiedByIds,
+} from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
 export function registerActionTools(server: McpServer) {
   server.tool(
     "get_action_items",
-    "Haal actiepunten (taken, to-dos, afspraken) op uit meetings. Toont eigenaar, deadline, bronvermelding en verificatie-status. Filter op persoon om iemands taken te zien, of op project voor projectspecifieke actiepunten.",
+    "Haal geverifieerde actiepunten (taken, to-dos, afspraken) op uit meetings. Retourneert standaard alleen geverifieerde actiepunten. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern). Toont eigenaar, deadline, bronvermelding en verificatie-status.",
     {
       person: z
         .string()
@@ -15,8 +20,13 @@ export function registerActionTools(server: McpServer) {
         .describe("Filter by person name (matches assignee in metadata or content)"),
       project: z.string().optional().describe("Filter by project name"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
+      include_drafts: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Include unverified (draft) content. Only for internal review purposes."),
     },
-    async ({ person, project, limit }) => {
+    async ({ person, project, limit, include_drafts }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(
         supabase,
@@ -29,6 +39,7 @@ export function registerActionTools(server: McpServer) {
         .select(
           `
           id, content, confidence, transcript_ref, metadata, corrected_by, corrected_at, created_at,
+          verification_status, verified_by, verified_at,
           meeting:meeting_id (id, title, date, participants),
           organization:organization_id (name),
           project:project_id (name)
@@ -36,6 +47,10 @@ export function registerActionTools(server: McpServer) {
         )
         .eq("type", "action_item")
         .order("created_at", { ascending: false });
+
+      if (!include_drafts) {
+        query = query.eq("verification_status", "verified");
+      }
 
       if (person) {
         const escaped = escapeLike(person);
@@ -91,26 +106,41 @@ export function registerActionTools(server: McpServer) {
         corrected_by: string | null;
         corrected_at: string | null;
         created_at: string;
-        meeting: { id: string; title: string; date: string | null; participants: string[] | null } | null;
+        verification_status: string | null;
+        verified_by: string | null;
+        verified_at: string | null;
+        meeting: {
+          id: string;
+          title: string;
+          date: string | null;
+          participants: string[] | null;
+        } | null;
         organization: { name: string } | null;
         project: { name: string } | null;
       }
 
-      const filtered = items as unknown as ActionItem[];
+      const typedItems = items as unknown as ActionItem[];
+      const profileMap = await lookupProfileNames(supabase, collectVerifiedByIds(typedItems));
 
-      const formatted = filtered.map((item: ActionItem, i: number) => {
+      const formatted = typedItems.map((item: ActionItem, i: number) => {
         const meeting = item.meeting;
         const dateStr = meeting?.date
           ? new Date(meeting.date).toLocaleDateString("nl-NL")
           : "onbekende datum";
         const projectName = item.project?.name || item.organization?.name || "geen project";
-        const status = formatVerificatieStatus(item.confidence, item.corrected_by);
+        const status = formatVerificatieStatus(
+          item.verification_status,
+          item.verified_by ? profileMap[item.verified_by] || null : null,
+          item.verified_at,
+          item.confidence,
+          item.corrected_by,
+        );
         const assignee = item.metadata?.assignee;
         const deadline = item.metadata?.deadline;
 
         return [
           `${i + 1}. **${item.content}**`,
-          `   ${status || ""}`,
+          `   ${status}`,
           assignee ? `   Eigenaar: ${assignee}` : null,
           deadline ? `   Deadline: ${deadline}` : null,
           `   Meeting: ${meeting?.title || "onbekend"} | Datum: ${dateStr}`,
@@ -125,7 +155,7 @@ export function registerActionTools(server: McpServer) {
         content: [
           {
             type: "text" as const,
-            text: `${filtered.length} actiepunten gevonden:\n\n${formatted.join("\n\n")}`,
+            text: `${typedItems.length} actiepunten gevonden:\n\n${formatted.join("\n\n")}`,
           },
         ],
       };

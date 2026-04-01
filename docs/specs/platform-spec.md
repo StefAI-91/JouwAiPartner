@@ -1,7 +1,7 @@
 # Platform Specification: Jouw AI Partner
 
-> **Status:** v1.0
-> **Date:** 2026-03-31
+> **Status:** v2.0
+> **Date:** 2026-04-01
 > **Owner:** Stef Banninga
 > **Replaces:** `meeting-processing-review.md` (PRD v2) + `business-model.md` (v1)
 
@@ -197,7 +197,7 @@ projects
 
 #### `meetings`
 
-Fireflies meeting transcripts with classification and organization link.
+Fireflies meeting transcripts with classification, organization link, and verification status.
 
 ```sql
 meetings
@@ -214,6 +214,9 @@ meetings
   unmatched_organization_name TEXT     -- when AI can't match to known org
   raw_fireflies JSONB                 -- original Fireflies response + Gatekeeper/Extractor output
   relevance_score FLOAT               -- Gatekeeper score, for ranking
+  verification_status TEXT NOT NULL DEFAULT 'draft'  -- 'draft' | 'verified' | 'rejected'
+  verified_by UUID FK -> profiles     -- who approved it
+  verified_at TIMESTAMPTZ             -- when it was approved
   search_vector TSVECTOR              -- full-text search, auto-update via trigger
   embedding VECTOR(1024)
   embedding_stale BOOLEAN DEFAULT TRUE
@@ -258,8 +261,11 @@ extractions
   transcript_ref TEXT                  -- quote from transcript for source attribution
   organization_id UUID FK -> organizations
   project_id UUID FK -> projects
-  corrected_by UUID FK -> profiles     -- NULL = AI extraction, filled = human-verified
+  corrected_by UUID FK -> profiles     -- NULL = AI extraction, filled = human-corrected
   corrected_at TIMESTAMPTZ
+  verification_status TEXT NOT NULL DEFAULT 'draft'  -- 'draft' | 'verified' | 'rejected'
+  verified_by UUID FK -> profiles     -- who approved it
+  verified_at TIMESTAMPTZ             -- when it was approved
   search_vector TSVECTOR              -- full-text search, auto-update via trigger
   embedding VECTOR(1024)
   embedding_stale BOOLEAN DEFAULT TRUE
@@ -312,30 +318,25 @@ meetings (many) >--< (many) people         [via meeting_participants]
 
 | Function                               | Purpose                                                                  |
 | -------------------------------------- | ------------------------------------------------------------------------ |
-| `search_all_content(query, limit)`     | Hybrid search (vector + full-text via RRF) across meetings + extractions |
+| `search_all_content(query, limit, verified_only)` | Hybrid search (vector + full-text via RRF) across meetings + extractions. `verified_only` defaults to TRUE — only verified content returned. |
 | `match_people(embedding)`              | Vector similarity for entity resolution                                  |
 | `match_projects(embedding)`            | Vector similarity for entity resolution                                  |
 | `search_meetings_by_participant(name)` | Fuzzy match + vector similarity                                          |
 
-### 4.5 Schema Extensions Needed (v2)
+### 4.5 Schema Extensions (v2 — BUILT)
 
-These fields need to be added to support the verification model:
+Verification fields added in v2 (sprint 009). Now live on both tables:
 
-**On `meetings`:**
+**On `meetings` and `extractions`:**
 | Field | Purpose |
 |-------|---------|
-| `verification_status` | `'draft'` \| `'verified'` — default `'draft'` |
+| `verification_status` TEXT NOT NULL DEFAULT 'draft' | `'draft'` \| `'verified'` \| `'rejected'` |
 | `verified_by` UUID FK -> profiles | Who approved it |
 | `verified_at` TIMESTAMPTZ | When it was approved |
 
-**On `extractions`:**
-| Field | Purpose |
-|-------|---------|
-| `verification_status` | `'draft'` \| `'verified'` — default `'draft'` |
-| `verified_by` UUID FK -> profiles | Who approved it (replaces corrected_by for new flow) |
-| `verified_at` TIMESTAMPTZ | When it was approved |
+Indexes `idx_meetings_verification_status` and `idx_extractions_verification_status` exist for query performance.
 
-> **Note:** The existing `corrected_by`/`corrected_at` fields on extractions handle post-verification corrections. The new `verification_status`/`verified_by`/`verified_at` fields handle the initial review gate. Both serve different purposes.
+> **Note:** The existing `corrected_by`/`corrected_at` fields on extractions handle post-verification corrections. The `verification_status`/`verified_by`/`verified_at` fields handle the initial review gate. Both serve different purposes.
 
 ### 4.6 Future Entities (v3+)
 
@@ -571,19 +572,21 @@ Processes records with `embedding_stale = true`. Runs every 5 minutes via pg_cro
 
 ### 9.1 Current Tools (built)
 
+All search and retrieve tools filter on `verification_status = 'verified'` by default. Each accepts an optional `include_drafts` parameter (default `false`) for internal review purposes. Output includes verification status (who verified, when).
+
 **Search:**
 | Tool | Purpose |
 |------|---------|
-| `search_knowledge` | Hybrid search (vector + full-text) over meetings + extractions with source attribution |
-| `get_decisions` | Filter extractions type='decision' with transcript_ref |
-| `get_action_items` | Filter extractions type='action_item' with metadata |
+| `search_knowledge` | Hybrid search (vector + full-text) over verified meetings + extractions with source attribution |
+| `get_decisions` | Filter verified extractions type='decision' with transcript_ref |
+| `get_action_items` | Filter verified extractions type='action_item' with metadata |
 
 **Retrieve:**
 | Tool | Purpose |
 |------|---------|
-| `get_meeting_summary` | Full meeting detail with meeting_type, party_type, organization, all extractions |
-| `get_organization_overview` | Complete org picture: meetings, extractions, projects, people (SQL joins) |
-| `list_meetings` | Filter on organization, project, date range, meeting_type, party_type + pagination |
+| `get_meeting_summary` | Full meeting detail with verification status, all extractions |
+| `get_organization_overview` | Complete org picture: verified meetings, extractions, projects |
+| `list_meetings` | Filter verified meetings on organization, project, date range, type + pagination |
 
 **Entities:**
 | Tool | Purpose |
@@ -602,13 +605,14 @@ Processes records with `embedding_stale = true`. Runs every 5 minutes via pg_cro
 |------|---------|
 | Usage tracking | Logs all MCP tool calls to `mcp_queries` table |
 
-### 9.2 V2 Changes Needed
+### 9.2 Verification Filter (v2 — BUILT)
 
-All search/retrieve tools must be updated to:
+All search/retrieve tools have been updated (sprint 014):
 
-- Filter on `verification_status = 'verified'` by default
-- Accept optional `include_drafts` parameter for cockpit use
-- Show verification status in output ("AI (confidence: 0.87)" or "verified by [name]")
+- [x] Filter on `verification_status = 'verified'` by default
+- [x] Accept optional `include_drafts` parameter (default `false`) for internal review
+- [x] Show verification status in output ("Verified by [name] on [date]" or "AI draft (confidence: 87%)")
+- [x] `search_all_content()` SQL function accepts `verified_only` parameter (default `TRUE`)
 
 ### 9.3 Future AI Actions (v3+)
 
@@ -622,25 +626,25 @@ All search/retrieve tools must be updated to:
 
 ## 10. Three Interfaces
 
-### 10.1 Cockpit (Internal — Stef, Wouter, Ege)
+### 10.1 Cockpit (Internal — Stef, Wouter, Ege) — BUILT (v2)
 
-The operational command center. Everything in one place.
+The operational command center. Next.js 16 App Router + Tailwind CSS v4 + shadcn/ui.
 
-**Sections:**
+**Built sections (v2):**
 
-- **Dashboard** — Overview of all projects, upcoming actions, pipeline health
-- **Review Queue** — Meetings and extractions awaiting verification (approve/edit/reject)
-- **Projects** — Per-project view with timeline, meetings, action items, decisions
-- **Clients** — Per-organization view (CRM-lite)
-- **People** — Team + contacts
-- **Pipeline** — Ingestion status, processing health
+- **Dashboard** (`/`) — Review attention zone (urgency color), project cards, recent verified meetings, open action items
+- **Review Queue** (`/review`) — Meetings and extractions awaiting verification (quick approve, detailed review, reject)
+- **Meetings** (`/meetings/[id]`) — Read-only meeting detail with verification badge, transcript highlights, extraction cards
+- **Projects** (`/projects`, `/projects/[id]`) — Project cards with status pipeline, detail with linked meetings/extractions
+- **Clients** (`/clients`, `/clients/[id]`) — Organization list with type badges, detail with linked projects/meetings
+- **People** (`/people`) — Team members and contacts list
 
 **Key interactions:**
 
-- Review and verify meeting extractions (approve/edit/reject)
-- Update project statuses
-- View action items across all projects
-- Trigger AI tasks (future: generate summary, write email draft)
+- Review and verify meeting extractions (approve/edit/reject) via review queue
+- View action items across all projects from dashboard
+- Browse projects, clients, and people
+- All 6 nav items in bottom bar work with active state highlighting
 
 ### 10.2 Client Portal (External — per client, v3+)
 
@@ -717,28 +721,27 @@ Sprints 001-007. All completed.
 - Basic auth + dashboard shell
 - Entity resolution (2-tier org, 3-tier project, email-based participant)
 
-**What v1 does NOT have:**
+**What v1 did NOT have (added in v2):**
 
-- No verification status / review gate (added in v2)
-- No frontend for viewing meetings, projects, or extractions
-- No client portal
-- No additional data sources beyond Fireflies
+- Verification status / review gate
+- Frontend cockpit (dashboard, review queue, meeting detail, projects, clients, people)
+- MCP verification filter (tools now default to verified content only)
 
-### v2 — Review & Dashboard (NEXT)
+### v2 — Review & Dashboard — COMPLETE (2026-04-01)
 
-Make the platform visually usable and add the verification gate. Full PRD: `docs/specs/v2-review-dashboard.md`.
+Made the platform visually usable and added the verification gate. Full PRD: `docs/specs/v2-review-dashboard.md`.
 
-**Scope (5 sprints):**
+**What was built (7 sprints, 008-014):**
 
-- v2-001: Monorepo setup (Turborepo) — restructure into apps/ + packages/
-- v2-002: DB migration (verification_status) + critical security fixes (SEC-001, SEC-003, SEC-004, SEC-005)
-- v2-003: Review queue UI (quick approve, detailed review, reject)
-- v2-004: Meeting detail page
-- v2-005: Projects overview + detail
-- v2-006: Dashboard + clients + people pages
-- v2-007: MCP verification filter + cleanup
+- [x] v2-001 (sprint 008): Monorepo setup (Turborepo) — restructured into apps/ + packages/
+- [x] v2-002 (sprint 009): DB migration (verification_status on meetings + extractions) + critical security fixes
+- [x] v2-003 (sprint 010): Review queue UI (quick approve, detailed review, reject)
+- [x] v2-004 (sprint 011): Meeting detail page (read-only, verification badge, transcript highlights)
+- [x] v2-005 (sprint 012): Projects overview + detail (status pipeline, linked meetings/extractions)
+- [x] v2-006 (sprint 013): Dashboard + clients + people pages
+- [x] v2-007 (sprint 014): MCP verification filter (all tools filter on verified, include_drafts param, status in output)
 
-**Migration strategy:** Existing content migrated to `verified`. Only new content starts as `draft`. MCP filter change is last sprint to avoid breaking current usage.
+**Migration strategy used:** Existing content migrated to `verified`. New content starts as `draft`. MCP filter was last sprint to avoid breaking existing usage.
 
 **NOT in v2:** Client portal, Slack/Docs/Email integration, AI-generated insights, sprint entity, Curator agent.
 
@@ -887,3 +890,5 @@ For full security assessment, see `docs/security/`.
 | 2026-03-31 | Build own project tool                    | No external tool needed, platform becomes the project management layer                                                                                |
 | 2026-03-31 | Knowledge drift detection as core feature | Real incident: 5 docs out of sync. System must detect its own staleness, not just client data.                                                        |
 | 2026-03-31 | Monorepo (Turborepo) for v2               | Prepare for client portal (v3). apps/cockpit + apps/portal share packages/database, packages/ai, packages/mcp. Set up early to avoid migration later. |
+| 2026-04-01 | MCP verification filter as last v2 sprint | Changed MCP tools last to avoid breaking existing usage during cockpit development. All tools now default to verified content.                         |
+| 2026-04-01 | v2 complete, v3 next                      | All 14 sprints done. Platform has end-to-end pipeline + cockpit + verification gate. Next: client portal + second data source.                        |

@@ -1,7 +1,7 @@
 # Milestones & Fases
 
 _Project: Jouw AI Partner_
-_Updated: 2026-03-31_
+_Updated: 2026-04-01_
 _Full spec: `docs/specs/platform-spec.md`_
 
 ---
@@ -158,18 +158,22 @@ All 7 sprints (001-007) are done. The meetings pipeline works end-to-end.
 
 ---
 
-## v2: Review & Dashboard (NEXT)
+## v2 Status: COMPLETE (2026-04-01)
 
 > **Goal:** Make the platform visually usable and add verification gate.
 > **Spec:** See `docs/specs/platform-spec.md` section 13 (v2 scope).
 
-**Scope:**
-
-- Add verification_status to meetings and extractions (draft -> verified)
-- Review queue UI (approve/edit/reject meetings and extractions)
-- Project overview page (all projects with status, meetings, action items)
-- Meeting detail page (view transcript, extractions, verify inline)
-- Update MCP tools to filter on verified content by default
+- [x] Monorepo setup (Turborepo) — apps/ + packages/ structure
+- [x] DB migration: verification_status on meetings and extractions (draft -> verified -> rejected)
+- [x] Critical security fixes (SEC-001, SEC-003, SEC-004, SEC-005)
+- [x] Review queue UI (quick approve, detailed review, reject)
+- [x] Meeting detail page (read-only, verification badge, transcript highlights)
+- [x] Projects overview + detail pages (status pipeline, linked meetings/extractions)
+- [x] Dashboard home with review attention zone, project cards, recent meetings, open actions
+- [x] Clients + People pages
+- [x] MCP tools filter on verified content by default
+- [x] MCP tools show verification status in output (verified by, date)
+- [x] search_all_content() SQL function with verified_only filter
 
 ---
 
@@ -194,10 +198,10 @@ FASE 2: Dagelijks bruikbaar          ▼
                                      │
                               DEMO: "Het team gebruikt dit elke dag"
                                      │
-v2: Review & Dashboard               ▼
-  [verification gate + cockpit UI]
+v2: Review & Dashboard — COMPLETE     ▼
+  [verification gate + cockpit UI + MCP filter]
                                      │
-                              DEMO: "Review queue, project overview, meeting detail"
+                              DEMO: "Review queue, project overview, meeting detail, verified MCP"
                                      │
 v3: Client Portal + Second Source    ▼
   [external portal + Google Docs/Email]

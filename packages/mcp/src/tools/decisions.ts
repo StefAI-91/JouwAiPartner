@@ -1,20 +1,30 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { escapeLike, formatVerificatieStatus } from "./utils";
+import {
+  escapeLike,
+  formatVerificatieStatus,
+  lookupProfileNames,
+  collectVerifiedByIds,
+} from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
 export function registerDecisionTools(server: McpServer) {
   server.tool(
     "get_decisions",
-    "Haal besluiten op uit meetings. Toont wie het besluit nam, bronvermelding en verificatie-status. Filter op project of datumbereik. Gebruik voor vragen als 'Welke besluiten zijn er genomen over X?'.",
+    "Haal geverifieerde besluiten op uit meetings. Retourneert standaard alleen geverifieerde besluiten. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern). Toont wie het besluit nam, bronvermelding en verificatie-status.",
     {
       project: z.string().optional().describe("Filter by project name"),
       date_from: z.string().optional().describe("Start date (ISO format, e.g. 2026-03-01)"),
       date_to: z.string().optional().describe("End date, inclusive (ISO format, e.g. 2026-03-31)"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
+      include_drafts: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Include unverified (draft) content. Only for internal review purposes."),
     },
-    async ({ project, date_from, date_to, limit }) => {
+    async ({ project, date_from, date_to, limit, include_drafts }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(
         supabase,
@@ -27,6 +37,7 @@ export function registerDecisionTools(server: McpServer) {
         .select(
           `
           id, content, confidence, transcript_ref, metadata, corrected_by, corrected_at, created_at,
+          verification_status, verified_by, verified_at,
           meeting:meeting_id (id, title, date, participants),
           organization:organization_id (name),
           project:project_id (name)
@@ -34,6 +45,10 @@ export function registerDecisionTools(server: McpServer) {
         )
         .eq("type", "decision")
         .order("created_at", { ascending: false });
+
+      if (!include_drafts) {
+        query = query.eq("verification_status", "verified");
+      }
 
       if (date_from) {
         query = query.gte("created_at", date_from);
@@ -92,25 +107,40 @@ export function registerDecisionTools(server: McpServer) {
         corrected_by: string | null;
         corrected_at: string | null;
         created_at: string;
-        meeting: { id: string; title: string; date: string | null; participants: string[] | null } | null;
+        verification_status: string | null;
+        verified_by: string | null;
+        verified_at: string | null;
+        meeting: {
+          id: string;
+          title: string;
+          date: string | null;
+          participants: string[] | null;
+        } | null;
         organization: { name: string } | null;
         project: { name: string } | null;
       }
 
-      const filtered = decisions as unknown as DecisionItem[];
+      const typedDecisions = decisions as unknown as DecisionItem[];
+      const profileMap = await lookupProfileNames(supabase, collectVerifiedByIds(typedDecisions));
 
-      const formatted = filtered.map((d: DecisionItem, i: number) => {
+      const formatted = typedDecisions.map((d: DecisionItem, i: number) => {
         const meeting = d.meeting;
         const dateStr = meeting?.date
           ? new Date(meeting.date).toLocaleDateString("nl-NL")
           : "onbekende datum";
         const projectName = d.project?.name || d.organization?.name || "geen project";
-        const status = formatVerificatieStatus(d.confidence, d.corrected_by);
+        const status = formatVerificatieStatus(
+          d.verification_status,
+          d.verified_by ? profileMap[d.verified_by] || null : null,
+          d.verified_at,
+          d.confidence,
+          d.corrected_by,
+        );
         const madeBy = d.metadata?.made_by;
 
         return [
           `${i + 1}. **${d.content}**`,
-          `   ${status || ""}`,
+          `   ${status}`,
           madeBy ? `   Besluit door: ${madeBy}` : null,
           `   Meeting: ${meeting?.title || "onbekend"} | Datum: ${dateStr}`,
           `   Project: ${projectName}`,
@@ -124,7 +154,7 @@ export function registerDecisionTools(server: McpServer) {
         content: [
           {
             type: "text" as const,
-            text: `${filtered.length} besluiten gevonden:\n\n${formatted.join("\n\n")}`,
+            text: `${typedDecisions.length} besluiten gevonden:\n\n${formatted.join("\n\n")}`,
           },
         ],
       };

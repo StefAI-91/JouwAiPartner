@@ -7,12 +7,15 @@ import { escapeLike } from "./utils";
 export function registerListMeetingsTools(server: McpServer) {
   server.tool(
     "list_meetings",
-    "Zoek en filter meetings op organisatie, project, datum, type en partij. Geeft een compacte lijst met titel, datum, type en organisatie. Gebruik voor vragen als 'Wanneer spraken we klant X laatst?' of 'Welke meetings hadden we deze maand?'.",
+    "Zoek en filter geverifieerde meetings op organisatie, project, datum, type en partij. Retourneert standaard alleen geverifieerde meetings. Gebruik include_drafts=true voor ongeverifieerde meetings (alleen intern). Geeft een compacte lijst met titel, datum, type en organisatie.",
     {
       organization: z.string().optional().describe("Filter op organisatienaam (partial match)"),
       project: z.string().optional().describe("Filter op projectnaam (partial match)"),
       date_from: z.string().optional().describe("Vanaf datum (ISO format, bijv. 2026-01-01)"),
-      date_to: z.string().optional().describe("Tot en met datum, inclusief (ISO format, bijv. 2026-03-31)"),
+      date_to: z
+        .string()
+        .optional()
+        .describe("Tot en met datum, inclusief (ISO format, bijv. 2026-03-31)"),
       meeting_type: z.string().optional().describe("Filter op meeting type"),
       party_type: z
         .enum(["client", "partner", "internal", "other"])
@@ -24,6 +27,11 @@ export function registerListMeetingsTools(server: McpServer) {
         .optional()
         .default(0)
         .describe("Aantal resultaten overslaan (voor pagination)"),
+      include_drafts: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Include unverified (draft) meetings. Only for internal review purposes."),
     },
     async ({
       organization,
@@ -34,6 +42,7 @@ export function registerListMeetingsTools(server: McpServer) {
       party_type,
       limit,
       offset,
+      include_drafts,
     }) => {
       const supabase = getAdminClient();
 
@@ -45,11 +54,15 @@ export function registerListMeetingsTools(server: McpServer) {
       let query = supabase
         .from("meetings")
         .select(
-          `id, title, date, meeting_type, party_type, relevance_score,
+          `id, title, date, meeting_type, party_type, relevance_score, verification_status,
            organization:organization_id (id, name),
            unmatched_organization_name`,
         )
         .order("date", { ascending: false });
+
+      if (!include_drafts) {
+        query = query.eq("verification_status", "verified");
+      }
 
       if (organization) {
         const { data: orgs } = await supabase
@@ -112,9 +125,6 @@ export function registerListMeetingsTools(server: McpServer) {
 
       if (date_from) query = query.gte("date", date_from);
       if (date_to) {
-        // date_to is inclusive: "2026-03-31" should include all meetings on that day.
-        // When only a date is provided (no time component), append end-of-day so the
-        // lte comparison covers the full day against the TIMESTAMPTZ column.
         const endOfDay = date_to.includes("T") ? date_to : `${date_to}T23:59:59.999Z`;
         query = query.lte("date", endOfDay);
       }
@@ -149,15 +159,24 @@ export function registerListMeetingsTools(server: McpServer) {
         relevance_score: number | null;
         organization: { id: string; name: string } | null;
         unmatched_organization_name: string | null;
+        verification_status: string | null;
       }
 
-      const formatted = (meetings as unknown as MeetingListItem[]).map((m: MeetingListItem, i: number) => {
-        const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
-        const orgName = m.organization?.name || m.unmatched_organization_name || "—";
-        const relevance = m.relevance_score ? ` | Relevantie: ${m.relevance_score.toFixed(2)}` : "";
+      const formatted = (meetings as unknown as MeetingListItem[]).map(
+        (m: MeetingListItem, i: number) => {
+          const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
+          const orgName = m.organization?.name || m.unmatched_organization_name || "—";
+          const relevance = m.relevance_score
+            ? ` | Relevantie: ${m.relevance_score.toFixed(2)}`
+            : "";
+          const status =
+            m.verification_status === "verified"
+              ? ""
+              : ` | Status: ${m.verification_status || "draft"}`;
 
-        return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}\n   ID: ${m.id}`;
-      });
+          return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}${status}\n   ID: ${m.id}`;
+        },
+      );
 
       const paginationNote =
         meetings.length === limit
