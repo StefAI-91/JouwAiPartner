@@ -9,6 +9,7 @@
     "./embeddings": "./src/embeddings.ts",
     "./fireflies": "./src/fireflies.ts",
     "./transcript-processor": "./src/transcript-processor.ts",
+    "./transcribe": "./src/transcribe.ts",
     "./validations/*": "./src/validations/*.ts"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
     "@repo/database": "*",
     "ai": "^6.0.138",
     "cohere-ai": "^7.21.0",
+    "openai": "^6.33.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

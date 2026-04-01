@@ -4,6 +4,8 @@ export interface FirefliesTranscript {
   id: string;
   title: string;
   date: string;
+  audio_url: string | null;
+  video_url: string | null;
   participants: string[];
   summary: {
     overview: string;
@@ -39,6 +41,8 @@ const TRANSCRIPT_QUERY = `
       id
       title
       date
+      audio_url
+      video_url
       participants
       summary {
         overview
