@@ -53,9 +53,15 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
-    const sizeMB = (audioBuffer.byteLength / 1024 / 1024).toFixed(2);
+    let audioBuffer = Buffer.from(await audioRes.arrayBuffer());
     const rangeUsed = audioRes.status === 206;
+
+    // Truncate on last valid MP3 frame boundary if needed
+    if (audioBuffer.byteLength > MAX_BYTES || rangeUsed) {
+      audioBuffer = truncateToMp3Frame(audioBuffer);
+    }
+
+    const sizeMB = (audioBuffer.byteLength / 1024 / 1024).toFixed(2);
 
     // Step 3: Send to OpenAI
     const apiKey = process.env.OPENAI_API_KEY;
@@ -105,6 +111,36 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: message, version: "v2" });
+    return NextResponse.json({ error: message, version: "v3" });
   }
+}
+
+/**
+ * Truncate buffer to the last complete MP3 frame.
+ * MP3 frame sync: 0xFF followed by 0xE0-0xFF (11 sync bits set).
+ * Scans backwards from end to find the last frame header.
+ */
+function truncateToMp3Frame(buf: Buffer): Buffer {
+  // Skip ID3v2 tag at the start if present
+  let dataStart = 0;
+  if (buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) {
+    // ID3v2 size is syncsafe integer in bytes 6-9
+    const size =
+      ((buf[6] & 0x7f) << 21) |
+      ((buf[7] & 0x7f) << 14) |
+      ((buf[8] & 0x7f) << 7) |
+      (buf[9] & 0x7f);
+    dataStart = 10 + size;
+  }
+
+  // Scan backwards from end to find last frame sync (0xFF 0xE0+)
+  for (let i = buf.byteLength - 2; i > dataStart; i--) {
+    if (buf[i] === 0xff && (buf[i + 1] & 0xe0) === 0xe0) {
+      // Found a frame sync — truncate here (exclude this partial frame)
+      return buf.subarray(0, i);
+    }
+  }
+
+  // Fallback: return as-is
+  return buf;
 }
