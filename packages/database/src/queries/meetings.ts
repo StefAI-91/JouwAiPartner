@@ -10,7 +10,7 @@ export interface MeetingDetail {
   transcript: string | null;
   transcript_elevenlabs: string | null;
   summary: string | null;
-  raw_fireflies: { sentences?: { speaker_name: string; text: string; start_time: number; end_time: number }[] } | null;
+  raw_fireflies: Record<string, unknown> | null;
   organization_id: string | null;
   verification_status: string;
   verified_at: string | null;
