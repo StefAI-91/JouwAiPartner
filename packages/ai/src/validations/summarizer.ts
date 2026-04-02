@@ -10,10 +10,7 @@ export const ThemeSchema = z.object({
 
 export const ParticipantProfileSchema = z.object({
   name: z.string().describe("Naam of speaker-label van de deelnemer"),
-  role: z
-    .string()
-    .nullable()
-    .describe("Rol of functie als genoemd/afgeleid, null als onbekend"),
+  role: z.string().nullable().describe("Rol of functie als genoemd/afgeleid, null als onbekend"),
   organization: z
     .string()
     .nullable()
@@ -21,25 +18,30 @@ export const ParticipantProfileSchema = z.object({
   stance: z
     .string()
     .nullable()
-    .describe("Houding/positie in het gesprek (bijv. 'enthousiast', 'kritisch', 'afwachtend'), null als onduidelijk"),
+    .describe(
+      "Houding/positie in het gesprek (bijv. 'enthousiast', 'kritisch', 'afwachtend'), null als onduidelijk",
+    ),
 });
 
 export const SummarizerOutputSchema = z.object({
-  kernpunten: z
-    .array(z.string())
-    .describe("3-7 kernpunten van de meeting, elk 1-2 zinnen"),
+  briefing: z
+    .string()
+    .describe(
+      "Narratieve samenvatting in 3-5 zinnen, alsof je een collega in 30 seconden bijpraat. " +
+        "Noem wie er spraken, met welke organisatie, wat het belangrijkste resultaat was, " +
+        "en of er vervolgacties zijn. Schrijf in verleden tijd, informeel maar professioneel.",
+    ),
+  kernpunten: z.array(z.string()).describe("3-7 kernpunten van de meeting, elk 1-2 zinnen"),
   deelnemers: z
     .array(ParticipantProfileSchema)
     .describe("Profiel per deelnemer op basis van het transcript"),
-  themas: z
-    .array(ThemeSchema)
-    .describe("1-6 besproken thema's met onderbouwende quotes"),
-  sfeer: z
-    .string()
-    .describe("Sfeer en dynamiek van het gesprek in 1-2 zinnen"),
+  themas: z.array(ThemeSchema).describe("1-6 besproken thema's met onderbouwende quotes"),
+  sfeer: z.string().describe("Sfeer en dynamiek van het gesprek in 1-2 zinnen"),
   context: z
     .string()
-    .describe("Achtergrond en relevantie: waarom is deze meeting belangrijk, wat ging eraan vooraf"),
+    .describe(
+      "Achtergrond en relevantie: waarom is deze meeting belangrijk, wat ging eraan vooraf",
+    ),
   vervolgstappen: z
     .array(z.string())
     .describe("Concrete vervolgstappen die uit de meeting voortkomen"),

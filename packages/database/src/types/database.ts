@@ -161,6 +161,7 @@ export interface Database {
           raw_elevenlabs: Json | null;
           audio_url: string | null;
           relevance_score: number | null;
+          ai_briefing: string | null;
           embedding: string | null;
           embedding_stale: boolean;
           verification_status: string;
@@ -187,6 +188,7 @@ export interface Database {
           raw_elevenlabs?: Json | null;
           audio_url?: string | null;
           relevance_score?: number | null;
+          ai_briefing?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean;
           verification_status?: string;
@@ -213,6 +215,7 @@ export interface Database {
           raw_elevenlabs?: Json | null;
           audio_url?: string | null;
           relevance_score?: number | null;
+          ai_briefing?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean;
           verification_status?: string;
