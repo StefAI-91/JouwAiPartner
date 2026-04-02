@@ -90,7 +90,9 @@ const PROSE_CLASSES = [
 ].join(" ");
 
 export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
+  );
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState("");
   // Track overrides per section index from user edits
