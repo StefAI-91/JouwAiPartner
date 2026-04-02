@@ -12,8 +12,8 @@ import type { PersonWithOrg } from "@repo/database/queries/people";
 interface MeetingDetailViewProps {
   meeting: MeetingDetail;
   allPeople: PersonWithOrg[];
-  organizations: { id: string; name: string; [key: string]: unknown }[];
-  projects: { id: string; name: string; [key: string]: unknown }[];
+  organizations: { id: string; name: string }[];
+  projects: { id: string; name: string }[];
 }
 
 export function MeetingDetailView({ meeting, allPeople, organizations, projects }: MeetingDetailViewProps) {
