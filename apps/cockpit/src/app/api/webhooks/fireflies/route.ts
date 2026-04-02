@@ -49,7 +49,11 @@ export async function POST(req: NextRequest) {
     const dateStr = new Date(Number(transcript.date)).toISOString();
     const duplicate = await getMeetingByTitleAndDate(transcript.title, dateStr);
     if (duplicate) {
-      return NextResponse.json({ skipped: true, reason: "duplicate_meeting", existing_id: duplicate.id });
+      return NextResponse.json({
+        skipped: true,
+        reason: "duplicate_meeting",
+        existing_id: duplicate.id,
+      });
     }
   }
 
@@ -87,6 +91,7 @@ export async function POST(req: NextRequest) {
       date: transcript.date,
       participants: transcript.participants,
       summary: transcript.summary,
+      sentences: transcript.sentences,
     },
   });
 

@@ -130,6 +130,7 @@ export async function POST(req: NextRequest) {
           date: transcript.date,
           participants: transcript.participants,
           summary: transcript.summary,
+          sentences: transcript.sentences,
         },
       });
 
