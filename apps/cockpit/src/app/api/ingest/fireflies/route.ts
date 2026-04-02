@@ -23,7 +23,10 @@ interface IngestResult {
   errors?: string[];
 }
 
-async function runIngest(limit: number) {
+// Vercel Pro allows up to 800s, set to 600s to be safe
+export const maxDuration = 600;
+
+async function runIngest(limit: number, maxNew: number = Infinity) {
 
   // Step 1: List recent transcripts from Fireflies
   const transcripts = await listFirefliesTranscripts(limit);
@@ -37,8 +40,11 @@ async function runIngest(limit: number) {
   }
 
   const results: IngestResult[] = [];
+  let importedCount = 0;
 
   for (const item of transcripts) {
+    // Stop processing if we've hit the max new meetings for this run
+    if (importedCount >= maxNew) break;
     // Idempotency — skip already imported (novelty check on fireflies_id)
     const existing = await getMeetingByFirefliesId(item.id);
     if (existing) {
@@ -125,11 +131,14 @@ async function runIngest(limit: number) {
         audio_url: transcript.audio_url ?? undefined,
       });
 
+      const imported = !!pipelineResult.meetingId;
+      if (imported) importedCount++;
+
       results.push({
         id: item.id,
         title: transcript.title,
-        status: pipelineResult.meetingId ? "imported" : "failed",
-        reason: pipelineResult.meetingId ? undefined : "insert_failed",
+        status: imported ? "imported" : "failed",
+        reason: imported ? undefined : "insert_failed",
         relevance_score: pipelineResult.gatekeeper.relevance_score,
         meeting_type: pipelineResult.gatekeeper.meeting_type,
         extractions_saved: pipelineResult.extractions_saved,
@@ -146,18 +155,18 @@ async function runIngest(limit: number) {
     }
   }
 
-  const imported = results.filter((r) => r.status === "imported").length;
+  const totalImported = results.filter((r) => r.status === "imported").length;
   const skipped = results.filter((r) => r.status === "skipped").length;
   const failed = results.filter((r) => r.status === "failed").length;
 
   // Generate embeddings for all stale rows
   let embedResult = null;
-  if (imported > 0) {
+  if (totalImported > 0) {
     embedResult = await runReEmbedWorker();
   }
 
   return {
-    summary: { total: results.length, imported, skipped, failed },
+    summary: { total: results.length, imported: totalImported, skipped, failed },
     embeddings: embedResult ? { processed: embedResult.total, byTable: embedResult.byTable } : null,
     results,
   };
@@ -175,7 +184,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await runIngest(20);
+  // Process max 1 new meeting per cron run to stay within Vercel timeout
+  const result = await runIngest(20, 1);
   return NextResponse.json(result);
 }
 
