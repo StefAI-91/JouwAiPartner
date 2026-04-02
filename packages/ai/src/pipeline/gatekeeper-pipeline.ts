@@ -63,9 +63,10 @@ interface PipelineResult {
  * 4. Resolve organization
  * 5. Insert meeting (always — no rejection)
  * 6. Link participants
- * 7. Extractor: extract decisions, action items, needs, insights
- * 8. Save extractions to unified table
- * 9. Embed meeting + extractions
+ * 7. ElevenLabs Scribe v2 transcription (non-blocking, richer Dutch transcript)
+ * 8. Extractor: extract decisions, action items, needs, insights (prefers ElevenLabs, fallback Fireflies)
+ * 9. Save extractions to unified table
+ * 10. Embed meeting + extractions
  */
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
   // Step 1: Classify participants as internal/external
@@ -149,13 +150,51 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   // Step 5: Link participants
   await matchParticipants(meetingId, input.participants);
 
-  // Step 6: Run Extractor
+  // Step 6: ElevenLabs Scribe v2 transcription (before Extractor — richer transcript)
+  let elevenlabsTranscribed = false;
+  let elevenlabsError: string | null = null;
+  let elevenlabsTranscript: string | null = null;
+
+  if (input.audio_url) {
+    try {
+      console.info("Starting ElevenLabs Scribe v2 transcription...");
+      const scribeResult = await transcribeWithElevenLabs(input.audio_url);
+      elevenlabsTranscript = formatScribeTranscript(scribeResult.words);
+
+      const updateResult = await updateMeetingElevenLabs(meetingId, {
+        transcript_elevenlabs: elevenlabsTranscript,
+        raw_elevenlabs: scribeResult.raw as unknown as Record<string, unknown>,
+        audio_url: input.audio_url,
+      });
+
+      if ("error" in updateResult) {
+        console.error("Failed to save ElevenLabs transcript:", updateResult.error);
+        elevenlabsError = updateResult.error;
+      } else {
+        elevenlabsTranscribed = true;
+        console.info(
+          `ElevenLabs Scribe v2: transcribed ${scribeResult.words.length} words, ` +
+            `language: ${scribeResult.languageCode} (${(scribeResult.languageProbability * 100).toFixed(1)}% confidence)`,
+        );
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error("ElevenLabs transcription failed (non-blocking):", errMsg);
+      elevenlabsError = errMsg;
+    }
+  }
+
+  // Step 7: Run Extractor — prefer ElevenLabs transcript (richer), fallback to Fireflies
+  const extractorTranscript = elevenlabsTranscript ?? input.transcript;
+  const transcriptSource = elevenlabsTranscript ? "elevenlabs" : "fireflies";
+  console.info(`Extractor using ${transcriptSource} transcript`);
+
   let extractorResult: ExtractorOutput | null = null;
   let extractionsSaved = 0;
   let extractorError: string | null = null;
 
   try {
-    extractorResult = await runExtractor(input.transcript, {
+    extractorResult = await runExtractor(extractorTranscript, {
       title: input.title,
       meeting_type: gatekeeperResult.meeting_type,
       party_type: partyType,
@@ -170,6 +209,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         extractions_count: extractorResult.extractions.length,
         entities: extractorResult.entities,
         primary_project: extractorResult.primary_project,
+        transcript_source: transcriptSource,
       },
     };
 
@@ -180,7 +220,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       .update({ raw_fireflies: rawFireflies })
       .eq("id", meetingId);
 
-    // Step 7: Save extractions to unified table
+    // Step 8: Save extractions to unified table
     const saveResult = await saveExtractions(extractorResult, meetingId);
     extractionsSaved = saveResult.extractions_saved;
 
@@ -193,7 +233,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     extractorError = errMsg;
   }
 
-  // Step 8: Embed meeting + extractions for vector search
+  // Step 9: Embed meeting + extractions for vector search
   let embedded = false;
   let embedError: string | null = null;
   try {
@@ -205,43 +245,10 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     embedError = errMsg;
   }
 
-  // Step 9: ElevenLabs Scribe v2 transcription (non-blocking)
-  let elevenlabsTranscribed = false;
-  let elevenlabsError: string | null = null;
-
-  if (input.audio_url) {
-    try {
-      console.info("Starting ElevenLabs Scribe v2 transcription...");
-      const scribeResult = await transcribeWithElevenLabs(input.audio_url);
-      const formattedTranscript = formatScribeTranscript(scribeResult.words);
-
-      const updateResult = await updateMeetingElevenLabs(meetingId, {
-        transcript_elevenlabs: formattedTranscript,
-        raw_elevenlabs: scribeResult.raw as unknown as Record<string, unknown>,
-        audio_url: input.audio_url,
-      });
-
-      if ("error" in updateResult) {
-        console.error("Failed to save ElevenLabs transcript:", updateResult.error);
-        elevenlabsError = updateResult.error;
-      } else {
-        elevenlabsTranscribed = true;
-        console.info(
-          `ElevenLabs Scribe v2: transcribed ${scribeResult.words.length} words, ` +
-          `language: ${scribeResult.languageCode} (${(scribeResult.languageProbability * 100).toFixed(1)}% confidence)`,
-        );
-      }
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      console.error("ElevenLabs transcription failed (non-blocking):", errMsg);
-      elevenlabsError = errMsg;
-    }
-  }
-
   const errors: string[] = [];
+  if (elevenlabsError) errors.push(`ElevenLabs: ${elevenlabsError}`);
   if (extractorError) errors.push(`Extractor: ${extractorError}`);
   if (embedError) errors.push(`Embedding: ${embedError}`);
-  if (elevenlabsError) errors.push(`ElevenLabs: ${elevenlabsError}`);
 
   return {
     gatekeeper: gatekeeperResult,
