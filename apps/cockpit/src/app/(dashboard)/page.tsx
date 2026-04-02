@@ -2,19 +2,15 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@repo/database/supabase/server";
 import {
-  getReviewQueueCount,
   listRecentVerifiedMeetings,
   listBriefingMeetings,
   getExtractionCountsByMeetingIds,
   getAiPulseData,
 } from "@repo/database/queries/dashboard";
 import { listOpenActionItems } from "@repo/database/queries/action-items";
-import { listProjects } from "@repo/database/queries/projects";
 import { Greeting } from "@/components/dashboard/greeting";
 import { AiPulseStrip } from "@/components/dashboard/ai-pulse-strip";
 import { MeetingCarousel } from "@/components/dashboard/meeting-carousel";
-import { AttentionZone } from "@/components/dashboard/attention-zone";
-import { ProjectCard } from "@/components/projects/project-card";
 import { RecentVerifiedMeetings } from "@/components/dashboard/recent-verified-meetings";
 import { ActionItemsCard } from "@/components/dashboard/action-items-card";
 
@@ -31,15 +27,12 @@ export default async function DashboardPage() {
   const userName = profileResult?.data?.full_name ?? null;
 
   // Fetch all dashboard data in parallel
-  const [reviewCount, briefingMeetings, verifiedMeetings, actionItems, projects, pulseData] =
-    await Promise.all([
-      getReviewQueueCount(supabase),
-      listBriefingMeetings(8, supabase),
-      listRecentVerifiedMeetings(5, supabase),
-      listOpenActionItems(10, supabase),
-      listProjects(supabase),
-      getAiPulseData(supabase),
-    ]);
+  const [briefingMeetings, verifiedMeetings, actionItems, pulseData] = await Promise.all([
+    listBriefingMeetings(8, supabase),
+    listRecentVerifiedMeetings(5, supabase),
+    listOpenActionItems(10, supabase),
+    getAiPulseData(supabase),
+  ]);
 
   // Batch-fetch extraction counts for carousel meetings (avoid N+1)
   const meetingIds = briefingMeetings.map((m) => m.id);
@@ -53,27 +46,10 @@ export default async function DashboardPage() {
         <AiPulseStrip data={pulseData} />
       </div>
 
-      {/* Attention zone — review queue */}
-      <AttentionZone reviewCount={reviewCount} />
-
       {/* Meeting briefing carousel */}
       <section>
         <h2 className="mb-4 text-lg font-semibold">Laatste briefings</h2>
         <MeetingCarousel meetings={briefingMeetings} extractionCounts={extractionCounts} />
-      </section>
-
-      {/* Project cards */}
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">Projecten</h2>
-        {projects.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nog geen projecten.</p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        )}
       </section>
 
       {/* Two-column bottom: recent meetings + open actions */}
