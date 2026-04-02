@@ -9,22 +9,28 @@ import {
   completeTask,
   dismissTask,
 } from "@repo/database/mutations/tasks";
+import { hasTaskForExtraction } from "@repo/database/queries/tasks";
 
 // ── Zod Schemas ──
 
 const optionalStringOrNull = z.string().nullable().optional();
+const optionalDateOrNull = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Ongeldig datumformaat (YYYY-MM-DD)")
+  .nullable()
+  .optional();
 
 const promoteToTaskSchema = z.object({
   extractionId: z.string().uuid(),
   title: z.string().min(1),
   assignedTo: optionalStringOrNull,
-  dueDate: optionalStringOrNull,
+  dueDate: optionalDateOrNull,
 });
 
 const updateTaskSchema = z.object({
   taskId: z.string().uuid(),
   assignedTo: optionalStringOrNull,
-  dueDate: optionalStringOrNull,
+  dueDate: optionalDateOrNull,
   title: z.string().min(1).optional(),
 });
 
@@ -56,6 +62,11 @@ export async function promoteToTaskAction(
   if (!userId) return { error: "Niet ingelogd" };
 
   const supabase = await createClient();
+
+  // Prevent duplicate tasks for the same extraction
+  const alreadyExists = await hasTaskForExtraction(parsed.data.extractionId, supabase);
+  if (alreadyExists) return { error: "Er bestaat al een taak voor dit actiepunt" };
+
   const result = await createTaskFromExtraction(
     {
       extraction_id: parsed.data.extractionId,

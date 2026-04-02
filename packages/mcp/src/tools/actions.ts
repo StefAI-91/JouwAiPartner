@@ -54,9 +54,19 @@ export function registerActionTools(server: McpServer) {
       }
 
       if (person) {
-        // Filter by assigned person name via join
+        // Resolve person IDs by name, then filter tasks by assigned_to
         const escaped = escapeLike(person);
-        query = query.or(`title.ilike.%${escaped}%`);
+        const { data: matchedPeople } = await supabase
+          .from("people")
+          .select("id")
+          .ilike("name", `%${escaped}%`);
+        const personIds = matchedPeople?.map((p) => p.id) ?? [];
+        if (personIds.length === 0) {
+          return {
+            content: [{ type: "text" as const, text: `Geen persoon gevonden voor "${person}".` }],
+          };
+        }
+        query = query.in("assigned_to", personIds);
       }
 
       const { data: tasks, error } = await query.limit(limit);

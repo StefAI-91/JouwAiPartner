@@ -1,20 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Pencil, Trash2, ListChecks, Check, UserCircle, Calendar } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Trash2, ListChecks } from "lucide-react";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
 import {
   EXTRACTION_TYPE_COLORS,
   EXTRACTION_TYPE_ICONS,
 } from "@/components/shared/extraction-constants";
-import { promoteToTaskAction } from "@/actions/tasks";
-
-interface PersonOption {
-  id: string;
-  name: string;
-  team: string | null;
-  organization_name: string | null;
-}
+import { PromoteTaskForm } from "./promote-task-form";
+import type { PersonWithOrg } from "@repo/database/queries/people";
 
 interface ExtractionCardProps {
   extraction: {
@@ -27,7 +21,7 @@ interface ExtractionCardProps {
   readOnly?: boolean;
   showPromote?: boolean;
   isPromoted?: boolean;
-  people?: PersonOption[];
+  people?: PersonWithOrg[];
   onEdit?: (id: string, content: string) => void;
   onDelete?: (id: string) => void;
   onRefClick?: (ref: string) => void;
@@ -47,34 +41,8 @@ export function ExtractionCard({
   const [content, setContent] = useState(extraction.content);
   const [promoted, setPromoted] = useState(isPromoted ?? false);
   const [showPromoteForm, setShowPromoteForm] = useState(false);
-  const [assignedTo, setAssignedTo] = useState<string | null>(null);
-  const [dueDate, setDueDate] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
   const Icon = EXTRACTION_TYPE_ICONS[extraction.type];
-
-  const [promoteError, setPromoteError] = useState<string | null>(null);
-
-  const teammates = people?.filter((p) => p.team) ?? [];
-  const clients = people?.filter((p) => !p.team) ?? [];
-
-  function handlePromote() {
-    setPromoteError(null);
-    startTransition(async () => {
-      const result = await promoteToTaskAction({
-        extractionId: extraction.id,
-        title: extraction.content,
-        assignedTo: assignedTo,
-        dueDate: dueDate,
-      });
-      if ("success" in result) {
-        setPromoted(true);
-        setShowPromoteForm(false);
-      } else {
-        setPromoteError(result.error);
-      }
-    });
-  }
 
   function handleSave() {
     setEditing(false);
@@ -166,7 +134,6 @@ export function ExtractionCard({
       <div className="mt-2 flex items-center justify-between">
         <ConfidenceBar confidence={extraction.confidence} />
 
-        {/* Promote button */}
         {canPromote && !showPromoteForm && (
           <button
             type="button"
@@ -178,7 +145,6 @@ export function ExtractionCard({
           </button>
         )}
 
-        {/* Promoted badge */}
         {showPromote && extraction.type === "action_item" && promoted && (
           <span className="flex shrink-0 items-center gap-1 rounded-md bg-green-100 px-2 py-1 text-[11px] font-medium text-green-700">
             <ListChecks className="size-3" />
@@ -187,86 +153,18 @@ export function ExtractionCard({
         )}
       </div>
 
-      {/* Inline promote form */}
+      {/* Promote form */}
       {canPromote && showPromoteForm && (
-        <div className="mt-3 rounded-lg border border-green-200 bg-green-50/50 p-3">
-          <p className="mb-2 text-[11px] font-medium text-green-800">Taak aanmaken</p>
-          <div className="flex flex-wrap items-end gap-2">
-            {/* Person selector */}
-            <div className="flex flex-col gap-1">
-              <label className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                <UserCircle className="size-3" />
-                Toewijzen aan
-              </label>
-              <select
-                value={assignedTo ?? ""}
-                onChange={(e) => setAssignedTo(e.target.value || null)}
-                className="h-7 rounded-md border border-input bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
-              >
-                <option value="">Niemand</option>
-                {teammates.length > 0 && (
-                  <optgroup label="Team">
-                    {teammates.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} — {p.team}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {clients.length > 0 && (
-                  <optgroup label="Klant">
-                    {clients.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                        {p.organization_name ? ` — ${p.organization_name}` : ""}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            </div>
-
-            {/* Due date */}
-            <div className="flex flex-col gap-1">
-              <label className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
-                <Calendar className="size-3" />
-                Deadline
-              </label>
-              <input
-                type="date"
-                value={dueDate ?? ""}
-                onChange={(e) => setDueDate(e.target.value || null)}
-                className="h-7 rounded-md border border-input bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-
-            {/* Actions */}
-            <button
-              type="button"
-              onClick={handlePromote}
-              disabled={isPending}
-              className="flex h-7 items-center gap-1 rounded-md bg-green-600 px-2.5 text-xs font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
-            >
-              <Check className="size-3" />
-              {isPending ? "Bezig..." : "Aanmaken"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowPromoteForm(false);
-                setAssignedTo(null);
-                setDueDate(null);
-                setPromoteError(null);
-              }}
-              className="flex h-7 items-center rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Annuleren
-            </button>
-          </div>
-          {promoteError && (
-            <p className="mt-2 text-xs text-red-600">{promoteError}</p>
-          )}
-        </div>
+        <PromoteTaskForm
+          extractionId={extraction.id}
+          title={extraction.content}
+          people={people ?? []}
+          onPromoted={() => {
+            setPromoted(true);
+            setShowPromoteForm(false);
+          }}
+          onCancel={() => setShowPromoteForm(false)}
+        />
       )}
     </div>
   );
