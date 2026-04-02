@@ -81,6 +81,9 @@ const PROSE_CLASSES = [
   // Lists: clear bullet styling with spacing between items
   "[&_ul]:my-1.5 [&_ul]:pl-4 [&_ul]:space-y-1",
   "[&_li]:text-sm [&_li]:leading-relaxed [&_li]:marker:text-foreground/30",
+  // Blockquotes: distinct visual block for transcript quotes
+  "[&_blockquote]:my-2 [&_blockquote]:ml-1 [&_blockquote]:rounded-md [&_blockquote]:border-l-2 [&_blockquote]:border-primary/20 [&_blockquote]:bg-primary/5 [&_blockquote]:px-3 [&_blockquote]:py-2 [&_blockquote]:not-italic",
+  "[&_blockquote_p]:text-[13px] [&_blockquote_p]:leading-relaxed [&_blockquote_p]:text-foreground/60 [&_blockquote_p]:my-0",
   // Paragraphs & inline
   "[&_p]:text-sm [&_p]:leading-relaxed [&_p]:my-1",
   "[&_strong]:text-foreground/80",
