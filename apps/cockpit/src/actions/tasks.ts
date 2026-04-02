@@ -12,17 +12,19 @@ import {
 
 // ── Zod Schemas ──
 
+const optionalStringOrNull = z.string().nullable().optional();
+
 const promoteToTaskSchema = z.object({
   extractionId: z.string().uuid(),
   title: z.string().min(1),
-  assignedTo: z.union([z.string().uuid(), z.literal(""), z.null()]).optional(),
-  dueDate: z.union([z.string(), z.literal(""), z.null()]).optional(),
+  assignedTo: optionalStringOrNull,
+  dueDate: optionalStringOrNull,
 });
 
 const updateTaskSchema = z.object({
   taskId: z.string().uuid(),
-  assignedTo: z.union([z.string().uuid(), z.literal(""), z.null()]).optional(),
-  dueDate: z.union([z.string(), z.literal(""), z.null()]).optional(),
+  assignedTo: optionalStringOrNull,
+  dueDate: optionalStringOrNull,
   title: z.string().min(1).optional(),
 });
 
