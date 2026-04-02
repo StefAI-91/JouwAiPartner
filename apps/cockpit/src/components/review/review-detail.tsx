@@ -44,8 +44,8 @@ interface ReviewDetailProps {
     extractions: Extraction[];
   };
   allPeople: { id: string; name: string; role: string | null; organization: { name: string } | null }[];
-  organizations: { id: string; name: string; [key: string]: unknown }[];
-  projects: { id: string; name: string; [key: string]: unknown }[];
+  organizations: { id: string; name: string }[];
+  projects: { id: string; name: string }[];
 }
 
 export function ReviewDetail({ meeting, allPeople, organizations, projects }: ReviewDetailProps) {
