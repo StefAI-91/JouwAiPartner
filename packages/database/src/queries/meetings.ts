@@ -8,6 +8,7 @@ export interface MeetingDetail {
   meeting_type: string | null;
   party_type: string | null;
   transcript: string | null;
+  transcript_elevenlabs: string | null;
   summary: string | null;
   verification_status: string;
   verified_at: string | null;
@@ -31,7 +32,7 @@ export async function getVerifiedMeetingById(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, summary,
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary,
        verification_status, verified_at,
        verifier:profiles!meetings_verified_by_fkey(full_name),
        organization:organizations(name),

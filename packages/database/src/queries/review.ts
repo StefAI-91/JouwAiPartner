@@ -40,6 +40,7 @@ export interface ReviewMeetingDetail {
   meeting_type: string | null;
   party_type: string | null;
   transcript: string | null;
+  transcript_elevenlabs: string | null;
   summary: string | null;
   raw_fireflies: Record<string, unknown> | null;
   organization: { name: string } | null;
@@ -62,7 +63,7 @@ export async function getDraftMeetingById(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, summary, raw_fireflies,
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
        organization:organizations(name),
        meeting_participants(person:people(id, name)),
        extractions(id, type, content, confidence, transcript_ref, metadata)`,

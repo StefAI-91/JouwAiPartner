@@ -20,6 +20,7 @@ export interface FirefliesTranscript {
     start_time: number;
     end_time: number;
   }[];
+  audio_url: string | null;
 }
 
 const LIST_TRANSCRIPTS_QUERY = `
@@ -40,6 +41,7 @@ const TRANSCRIPT_QUERY = `
       title
       date
       participants
+      audio_url
       summary {
         overview
         notes

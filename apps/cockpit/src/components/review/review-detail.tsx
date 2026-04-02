@@ -30,6 +30,7 @@ interface ReviewDetailProps {
     meeting_type: string | null;
     party_type: string | null;
     transcript: string | null;
+    transcript_elevenlabs?: string | null;
     summary: string | null;
     raw_fireflies: Record<string, unknown> | null;
     organization: { name: string } | null;
