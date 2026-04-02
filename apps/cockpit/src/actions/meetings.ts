@@ -53,8 +53,8 @@ const createProjectSchema = z.object({
 });
 
 const meetingParticipantSchema = z.object({
-  meetingId: z.string().uuid(),
-  personId: z.string().uuid(),
+  meetingId: z.string().min(1),
+  personId: z.string().min(1),
 });
 
 const createPersonSchema = z.object({
