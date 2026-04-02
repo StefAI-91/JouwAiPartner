@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
+import { timingSafeEqual } from "crypto";
 
 // ── Signing key ──────────────────────────────────────────────
 // Derived from OAUTH_SECRET env var (must be ≥32 chars).
@@ -132,7 +133,8 @@ export async function verifyCodeChallenge(
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
-  return base64url === codeChallenge;
+  if (base64url.length !== codeChallenge.length) return false;
+  return timingSafeEqual(Buffer.from(base64url), Buffer.from(codeChallenge));
 }
 
 // ── Issuer URL ───────────────────────────────────────────────

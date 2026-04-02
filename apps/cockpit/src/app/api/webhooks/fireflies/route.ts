@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/database/queries/meetings";
@@ -11,7 +11,8 @@ function verifyFirefliesSignature(rawBody: string, signature: string | null): bo
   if (!secret || !signature) return false;
 
   const expectedSignature = createHmac("sha256", secret).update(rawBody).digest("hex");
-  return signature === expectedSignature;
+  if (signature.length !== expectedSignature.length) return false;
+  return timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
 }
 
 export async function POST(req: NextRequest) {
@@ -27,8 +28,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = JSON.parse(rawBody);
-  const { meetingId, eventType } = payload;
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const { meetingId, eventType } = payload as { meetingId?: string; eventType?: string };
 
   // Only process completed transcriptions
   if (eventType !== "Transcription completed" || !meetingId) {
