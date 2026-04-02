@@ -14,7 +14,7 @@ import type { MeetingDetail } from "@repo/database/queries/meetings";
 
 interface MeetingDetailViewProps {
   meeting: MeetingDetail;
-  organizations: { id: string; name: string }[];
+  organizations: { id: string; name: string; type: string }[];
   projects: { id: string; name: string }[];
 }
 

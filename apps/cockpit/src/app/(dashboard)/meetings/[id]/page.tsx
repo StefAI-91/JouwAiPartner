@@ -7,11 +7,11 @@ import { MeetingDetailView } from "@/components/meetings/meeting-detail";
 
 async function getSelectOptions(supabase: Awaited<ReturnType<typeof createClient>>) {
   const [{ data: orgs }, { data: projects }] = await Promise.all([
-    supabase.from("organizations").select("id, name").order("name"),
+    supabase.from("organizations").select("id, name, type").order("name"),
     supabase.from("projects").select("id, name").order("name"),
   ]);
   return {
-    organizations: (orgs ?? []) as { id: string; name: string }[],
+    organizations: (orgs ?? []) as { id: string; name: string; type: string }[],
     projects: (projects ?? []) as { id: string; name: string }[],
   };
 }

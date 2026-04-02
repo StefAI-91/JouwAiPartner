@@ -18,6 +18,7 @@ import {
 interface Organization {
   id: string;
   name: string;
+  type: string;
 }
 
 interface Project {
@@ -45,6 +46,13 @@ const ORG_TYPES = [
   { value: "supplier", label: "Leverancier" },
   { value: "other", label: "Overig" },
 ] as const;
+
+const ORG_TYPE_LABELS: Record<string, string> = {
+  client: "klant",
+  partner: "partner",
+  supplier: "leverancier",
+  other: "overig",
+};
 
 // ── Modal ──
 
@@ -325,15 +333,15 @@ export function OrganizationSelector({
       <div className="group flex items-center gap-1.5">
         <Building2 className="size-3.5 text-muted-foreground" />
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Klant
+          Organisatie
         </span>
         <span className="text-sm">
-          {currentOrgName ?? <span className="text-muted-foreground">Geen klant gekoppeld</span>}
+          {currentOrgName ?? <span className="text-muted-foreground">Niet gekoppeld</span>}
         </span>
         <button
           onClick={() => setEditing(true)}
           className="rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
-          aria-label="Klant wijzigen"
+          aria-label="Organisatie wijzigen"
         >
           <Pencil className="size-3 text-muted-foreground" />
         </button>
@@ -352,13 +360,13 @@ export function OrganizationSelector({
             disabled={isPending}
             className="h-7 rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
           >
-            <option value="">Geen klant</option>
+            <option value="">Geen organisatie</option>
             {organizations.map((org) => (
               <option key={org.id} value={org.id}>
-                {org.name}
+                {org.name} ({ORG_TYPE_LABELS[org.type] ?? org.type})
               </option>
             ))}
-            <option value="__new__">+ Nieuwe klant aanmaken</option>
+            <option value="__new__">+ Nieuwe organisatie aanmaken</option>
           </select>
           <Button
             size="icon-sm"
@@ -434,7 +442,7 @@ function CreateOrganizationModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Nieuwe klant aanmaken">
+    <Modal open={open} onClose={onClose} title="Nieuwe organisatie aanmaken">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="org-name" className="mb-1 block text-sm font-medium">
