@@ -1,9 +1,6 @@
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import {
-  SummarizerOutputSchema,
-  SummarizerOutput,
-} from "../validations/summarizer";
+import { SummarizerOutputSchema, SummarizerOutput } from "../validations/summarizer";
 
 export type { SummarizerOutput };
 
@@ -11,6 +8,7 @@ const SYSTEM_PROMPT = `Je bent de Summarizer: je maakt rijke, gestructureerde sa
 ALLE output moet in het Nederlands zijn (behalve exacte quotes als het transcript deels in het Engels is).
 
 Je produceert:
+0. BRIEFING — Een narratieve samenvatting in 3-5 zinnen, alsof je een collega in 30 seconden bijpraat over deze meeting. Noem wie er spraken, met welke organisatie, wat het belangrijkste resultaat was, en of er vervolgacties zijn. Schrijf in verleden tijd, informeel maar professioneel. Dit is het EERSTE dat iemand leest op het dashboard.
 1. KERNPUNTEN — 3-7 belangrijkste punten van de meeting, elk 1-2 zinnen. Prioriteer: besluiten > concrete afspraken > inzichten > context.
 2. DEELNEMERS — Profiel per deelnemer: naam, rol, organisatie, houding. Afleiden uit het gesprek als het niet expliciet gezegd wordt.
 3. THEMA'S — De besproken onderwerpen, elk met een korte beschrijving en 1-3 letterlijke quotes uit het transcript.
@@ -19,6 +17,7 @@ Je produceert:
 6. VERVOLGSTAPPEN — Concrete next steps die uit het gesprek komen.
 
 REGELS:
+- De BRIEFING moet als een lopend verhaal lezen, NIET als bullet points. Denk: "Stef had een goed gesprek met Acme Corp over hun AI-plannen. Ze willen in Q3 starten met een pilot. Er zijn 2 concrete acties uitgezet."
 - Quotes moeten EXACT uit het transcript komen, niet geparafraseerd.
 - Wees concreet en specifiek, geen algemeenheden.
 - Als een thema niet expliciet besproken is, neem het dan niet op.
@@ -74,9 +73,7 @@ export function formatSummary(output: SummarizerOutput): string {
   const sections: string[] = [];
 
   // Kernpunten
-  sections.push(
-    "## Kernpunten\n" + output.kernpunten.map((k) => `- ${k}`).join("\n"),
-  );
+  sections.push("## Kernpunten\n" + output.kernpunten.map((k) => `- ${k}`).join("\n"));
 
   // Deelnemers
   const deelnemerLines = output.deelnemers.map((d) => {
@@ -103,10 +100,7 @@ export function formatSummary(output: SummarizerOutput): string {
 
   // Vervolgstappen
   if (output.vervolgstappen.length > 0) {
-    sections.push(
-      "## Vervolgstappen\n" +
-        output.vervolgstappen.map((v) => `- ${v}`).join("\n"),
-    );
+    sections.push("## Vervolgstappen\n" + output.vervolgstappen.map((v) => `- ${v}`).join("\n"));
   }
 
   return sections.join("\n\n");

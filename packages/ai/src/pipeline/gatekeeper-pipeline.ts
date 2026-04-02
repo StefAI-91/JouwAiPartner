@@ -87,9 +87,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   });
 
   // Step 4: Resolve organization — use known org from participants first, fallback to Gatekeeper
-  const knownOrg = classifiedParticipants.find(
-    (p) => p.label === "external" && p.organizationName,
-  );
+  const knownOrg = classifiedParticipants.find((p) => p.label === "external" && p.organizationName);
   const orgNameToResolve = knownOrg?.organizationName ?? gatekeeperResult.organization_name;
   const orgResult = await resolveOrganization(orgNameToResolve);
 
@@ -205,11 +203,11 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     });
     richSummary = formatSummary(summarizerOutput);
 
-    // Update meeting.summary with the rich AI-generated summary
+    // Update meeting.summary with the rich AI-generated summary + ai_briefing for dashboard
     const { getAdminClient } = await import("@repo/database/supabase/admin");
     await getAdminClient()
       .from("meetings")
-      .update({ summary: richSummary })
+      .update({ summary: richSummary, ai_briefing: summarizerOutput.briefing })
       .eq("id", meetingId);
 
     summarized = true;
