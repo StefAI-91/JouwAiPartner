@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   return Response.json({
     access_token: accessToken,
     token_type: "Bearer",
-    expires_in: 3600,
+    expires_in: 604800,
     scope: "mcp",
   });
 }

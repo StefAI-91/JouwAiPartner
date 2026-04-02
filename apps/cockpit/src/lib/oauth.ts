@@ -104,7 +104,7 @@ export async function signAccessToken(payload: {
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("1h")
+    .setExpirationTime("7d")
     .setIssuer("jouwaipartner")
     .sign(getSigningKey());
 }
