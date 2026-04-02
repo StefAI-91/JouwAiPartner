@@ -22,6 +22,7 @@ interface MeetingTranscriptPanelProps {
   };
   titleSlot?: React.ReactNode;
   organizationSlot?: React.ReactNode;
+  meetingTypeSlot?: React.ReactNode;
   headerExtra?: React.ReactNode;
   activeTranscriptRef?: string | null;
   onSummaryEdit?: (content: string) => void;
@@ -31,6 +32,7 @@ export function MeetingTranscriptPanel({
   meeting,
   titleSlot,
   organizationSlot,
+  meetingTypeSlot,
   headerExtra,
   activeTranscriptRef,
   onSummaryEdit,
@@ -52,7 +54,7 @@ export function MeetingTranscriptPanel({
               <span className="font-medium text-foreground/70">{meeting.organization.name}</span>
             )
           )}
-          <MeetingTypeBadge type={meeting.meeting_type} />
+          {meetingTypeSlot ?? <MeetingTypeBadge type={meeting.meeting_type} />}
           {meeting.party_type && <span>{meeting.party_type}</span>}
         </div>
         <div className="mt-2">

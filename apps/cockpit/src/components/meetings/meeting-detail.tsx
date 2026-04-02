@@ -6,6 +6,7 @@ import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-p
 import { EXTRACTION_TYPE_ORDER, EXTRACTION_TYPE_LABELS } from "@/components/shared/extraction-constants";
 import {
   EditableTitle,
+  MeetingTypeSelector,
   OrganizationSelector,
   ProjectLinker,
 } from "@/components/meetings/meeting-management";
@@ -34,6 +35,9 @@ export function MeetingDetailView({ meeting, organizations, projects }: MeetingD
         titleSlot={
           <EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />
         }
+        meetingTypeSlot={
+          <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />
+        }
         organizationSlot={
           <OrganizationSelector
             meetingId={meeting.id}
@@ -52,6 +56,7 @@ export function MeetingDetailView({ meeting, organizations, projects }: MeetingD
               meetingId={meeting.id}
               linkedProjects={linkedProjects}
               allProjects={projects}
+              organizations={organizations}
             />
           </div>
         }
