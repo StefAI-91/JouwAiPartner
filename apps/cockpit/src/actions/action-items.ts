@@ -20,7 +20,7 @@ export async function updateActionItemAssignmentAction(
 ): Promise<{ success: true } | { error: string }> {
   const parsed = updateAssignmentSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? "Ongeldige invoer" };
+    return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
   }
 
   const supabase = await createClient();
