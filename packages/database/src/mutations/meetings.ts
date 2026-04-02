@@ -46,6 +46,23 @@ export async function updateMeetingClassification(
   return { success: true };
 }
 
+export async function updateMeetingElevenLabs(
+  meetingId: string,
+  data: {
+    transcript_elevenlabs: string;
+    raw_elevenlabs: Record<string, unknown>;
+    audio_url?: string;
+  },
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update(data)
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateMeetingProject(
   meetingId: string,
   projectId: string,

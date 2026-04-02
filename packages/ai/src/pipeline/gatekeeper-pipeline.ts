@@ -10,6 +10,8 @@ import { linkMeetingParticipants } from "@repo/database/mutations/meeting-partic
 import { saveExtractions } from "./save-extractions";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
 import { classifyParticipants, determinePartyType } from "./participant-classifier";
+import { transcribeWithElevenLabs, formatScribeTranscript } from "../transcribe-elevenlabs";
+import { updateMeetingElevenLabs } from "@repo/database/mutations/meetings";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -20,6 +22,7 @@ interface MeetingInput {
   topics: string[];
   transcript: string;
   raw_fireflies?: Record<string, unknown>;
+  audio_url?: string;
 }
 
 /**
@@ -48,6 +51,7 @@ interface PipelineResult {
   meetingId: string | null;
   extractions_saved: number;
   embedded: boolean;
+  elevenlabs_transcribed: boolean;
   errors: string[];
 }
 
@@ -135,6 +139,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       meetingId: null,
       extractions_saved: 0,
       embedded: false,
+      elevenlabs_transcribed: false,
       errors: [`Meeting insert: ${insertResult.error}`],
     };
   }
@@ -200,9 +205,43 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     embedError = errMsg;
   }
 
+  // Step 9: ElevenLabs Scribe v2 transcription (non-blocking)
+  let elevenlabsTranscribed = false;
+  let elevenlabsError: string | null = null;
+
+  if (input.audio_url) {
+    try {
+      console.info("Starting ElevenLabs Scribe v2 transcription...");
+      const scribeResult = await transcribeWithElevenLabs(input.audio_url);
+      const formattedTranscript = formatScribeTranscript(scribeResult.words);
+
+      const updateResult = await updateMeetingElevenLabs(meetingId, {
+        transcript_elevenlabs: formattedTranscript,
+        raw_elevenlabs: scribeResult.raw as unknown as Record<string, unknown>,
+        audio_url: input.audio_url,
+      });
+
+      if ("error" in updateResult) {
+        console.error("Failed to save ElevenLabs transcript:", updateResult.error);
+        elevenlabsError = updateResult.error;
+      } else {
+        elevenlabsTranscribed = true;
+        console.info(
+          `ElevenLabs Scribe v2: transcribed ${scribeResult.words.length} words, ` +
+          `language: ${scribeResult.languageCode} (${(scribeResult.languageProbability * 100).toFixed(1)}% confidence)`,
+        );
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error("ElevenLabs transcription failed (non-blocking):", errMsg);
+      elevenlabsError = errMsg;
+    }
+  }
+
   const errors: string[] = [];
   if (extractorError) errors.push(`Extractor: ${extractorError}`);
   if (embedError) errors.push(`Embedding: ${embedError}`);
+  if (elevenlabsError) errors.push(`ElevenLabs: ${elevenlabsError}`);
 
   return {
     gatekeeper: gatekeeperResult,
@@ -211,6 +250,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     meetingId,
     extractions_saved: extractionsSaved,
     embedded,
+    elevenlabs_transcribed: elevenlabsTranscribed,
     errors,
   };
 }

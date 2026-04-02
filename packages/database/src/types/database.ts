@@ -157,6 +157,9 @@ export interface Database {
           organization_id: string | null;
           unmatched_organization_name: string | null;
           raw_fireflies: Json | null;
+          transcript_elevenlabs: string | null;
+          raw_elevenlabs: Json | null;
+          audio_url: string | null;
           relevance_score: number | null;
           embedding: string | null;
           embedding_stale: boolean;
@@ -180,6 +183,9 @@ export interface Database {
           organization_id?: string | null;
           unmatched_organization_name?: string | null;
           raw_fireflies?: Json | null;
+          transcript_elevenlabs?: string | null;
+          raw_elevenlabs?: Json | null;
+          audio_url?: string | null;
           relevance_score?: number | null;
           embedding?: string | null;
           embedding_stale?: boolean;
@@ -203,6 +209,9 @@ export interface Database {
           organization_id?: string | null;
           unmatched_organization_name?: string | null;
           raw_fireflies?: Json | null;
+          transcript_elevenlabs?: string | null;
+          raw_elevenlabs?: Json | null;
+          audio_url?: string | null;
           relevance_score?: number | null;
           embedding?: string | null;
           embedding_stale?: boolean;

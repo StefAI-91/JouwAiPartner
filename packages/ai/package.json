@@ -8,6 +8,7 @@
     "./pipeline/*": "./src/pipeline/*.ts",
     "./embeddings": "./src/embeddings.ts",
     "./fireflies": "./src/fireflies.ts",
+    "./transcribe-elevenlabs": "./src/transcribe-elevenlabs.ts",
     "./transcript-processor": "./src/transcript-processor.ts",
     "./validations/*": "./src/validations/*.ts"
   },

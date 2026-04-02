@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
       summary: transcript.summary,
       sentences: transcript.sentences,
     },
+    audio_url: transcript.audio_url ?? undefined,
   });
 
   return NextResponse.json({
@@ -103,5 +104,6 @@ export async function POST(req: NextRequest) {
     relevance_score: pipelineResult.gatekeeper.relevance_score,
     extractions_saved: pipelineResult.extractions_saved,
     embedded: pipelineResult.embedded,
+    elevenlabs_transcribed: pipelineResult.elevenlabs_transcribed,
   });
 }
