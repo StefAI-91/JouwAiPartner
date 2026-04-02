@@ -13,6 +13,7 @@ interface MeetingTranscriptPanelProps {
     meeting_type: string | null;
     party_type: string | null;
     transcript: string | null;
+    transcript_elevenlabs?: string | null;
     summary: string | null;
     raw_fireflies?: { sentences?: TranscriptSentence[] } | null;
     organization: { name: string } | null;
@@ -75,10 +76,10 @@ export function MeetingTranscriptPanel({
         </div>
       )}
 
-      {meeting.transcript ? (
+      {(meeting.transcript_elevenlabs || meeting.transcript) ? (
         <StructuredTranscript
-          transcript={meeting.transcript}
-          sentences={meeting.raw_fireflies?.sentences}
+          transcript={meeting.transcript_elevenlabs ?? meeting.transcript!}
+          sentences={meeting.transcript_elevenlabs ? undefined : meeting.raw_fireflies?.sentences}
           transcriptRefs={transcriptRefs}
           activeRef={activeTranscriptRef}
         />
