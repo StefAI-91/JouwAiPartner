@@ -5,6 +5,8 @@ import { createClient } from "@repo/database/supabase/server";
 import { getReviewQueueCount, listRecentVerifiedMeetings } from "@repo/database/queries/dashboard";
 import { listOpenActionItems } from "@repo/database/queries/action-items";
 import { listProjects } from "@repo/database/queries/projects";
+import Link from "next/link";
+import { Map } from "lucide-react";
 import { AttentionZone } from "@/components/dashboard/attention-zone";
 import { ProjectCard } from "@/components/projects/project-card";
 import { RecentVerifiedMeetings } from "@/components/dashboard/recent-verified-meetings";
@@ -22,11 +24,20 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
       {/* Page header */}
-      <div>
-        <h1>Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Overview of platform activity and pending tasks.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1>Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Overview of platform activity and pending tasks.
+          </p>
+        </div>
+        <Link
+          href="/roadmap"
+          className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+        >
+          <Map className="h-3.5 w-3.5" />
+          Roadmap
+        </Link>
       </div>
 
       {/* Attention zone — review queue */}
