@@ -20,12 +20,12 @@ import { createPerson } from "@repo/database/mutations/people";
 // ── Zod Schemas ──
 
 const updateTitleSchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: z.string().min(1),
   title: z.string().min(1, "Titel is verplicht").max(500),
 });
 
 const updateMeetingTypeSchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: z.string().min(1),
   meetingType: z.enum([
     "strategy", "one_on_one", "team_sync", "discovery",
     "sales", "project_kickoff", "status_update", "collaboration", "other",
@@ -33,13 +33,13 @@ const updateMeetingTypeSchema = z.object({
 });
 
 const updateOrganizationSchema = z.object({
-  meetingId: z.string().uuid(),
-  organizationId: z.string().uuid().nullable(),
+  meetingId: z.string().min(1),
+  organizationId: z.string().nullable(),
 });
 
 const meetingProjectSchema = z.object({
-  meetingId: z.string().uuid(),
-  projectId: z.string().uuid(),
+  meetingId: z.string().min(1),
+  projectId: z.string().min(1),
 });
 
 const createOrganizationSchema = z.object({
@@ -49,7 +49,7 @@ const createOrganizationSchema = z.object({
 
 const createProjectSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200),
-  organizationId: z.string().uuid().nullable().optional(),
+  organizationId: z.string().nullable().optional(),
 });
 
 const meetingParticipantSchema = z.object({
@@ -61,7 +61,7 @@ const createPersonSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200),
   email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
   role: z.string().max(200).nullable().optional(),
-  organizationId: z.string().uuid().nullable().optional(),
+  organizationId: z.string().nullable().optional(),
 });
 
 // ── Actions ──
