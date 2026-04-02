@@ -4,6 +4,9 @@ import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { transcribeWithElevenLabs, formatScribeTranscript } from "@repo/ai/transcribe-elevenlabs";
 import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
+import { runExtractor } from "@repo/ai/agents/extractor";
+import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
+import { embedMeetingWithExtractions } from "@repo/ai/pipeline/embed-pipeline";
 import { updateMeetingElevenLabs } from "@repo/database/mutations/meetings";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
@@ -89,6 +92,7 @@ export async function POST(req: NextRequest) {
   const summarizerTranscript = elevenlabsTranscript
     ?? chunkTranscript(transcript.sentences).map((c) => c.text).join("\n\n---\n\n");
   const transcriptSource = elevenlabsTranscript ? "elevenlabs" : "fireflies";
+  let richSummary: string | null = null;
 
   try {
     console.info(`Reprocess: Starting Summarizer (${transcriptSource})...`);
@@ -98,7 +102,7 @@ export async function POST(req: NextRequest) {
       party_type: meeting.party_type ?? "other",
       participants: meeting.participants ?? [],
     });
-    const richSummary = formatSummary(summarizerOutput);
+    richSummary = formatSummary(summarizerOutput);
 
     await getAdminClient()
       .from("meetings")
@@ -119,6 +123,64 @@ export async function POST(req: NextRequest) {
     const errMsg = err instanceof Error ? err.message : String(err);
     results.summarizer = { success: false, transcript_source: transcriptSource, error: errMsg };
     console.error("Reprocess: Summarizer failed:", errMsg);
+  }
+
+  // 5. Delete old extractions and re-run Extractor on the better transcript
+  const extractorTranscript = elevenlabsTranscript
+    ?? chunkTranscript(transcript.sentences).map((c) => c.text).join("\n\n---\n\n");
+  const extractorSummary = (results.summarizer as Record<string, unknown>)?.success
+    ? richSummary!
+    : transcript.summary?.notes ?? "";
+
+  try {
+    console.info(`Reprocess: Deleting old extractions for ${meeting.id}...`);
+    await getAdminClient()
+      .from("extractions")
+      .delete()
+      .eq("meeting_id", meeting.id);
+
+    console.info(`Reprocess: Running Extractor (${transcriptSource})...`);
+    const extractorResult = await runExtractor(extractorTranscript, {
+      title: meeting.title,
+      meeting_type: meeting.meeting_type ?? "unknown",
+      party_type: meeting.party_type ?? "other",
+      participants: meeting.participants ?? [],
+      summary: extractorSummary,
+    });
+
+    const saveResult = await saveExtractions(extractorResult, meeting.id);
+
+    results.extractor = {
+      success: true,
+      transcript_source: transcriptSource,
+      extractions_saved: saveResult.extractions_saved,
+      project_linked: saveResult.project_linked,
+      entities: extractorResult.entities,
+      primary_project: extractorResult.primary_project,
+    };
+    console.info(`Reprocess: Extractor done — ${saveResult.extractions_saved} extractions`);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    results.extractor = { success: false, error: errMsg };
+    console.error("Reprocess: Extractor failed:", errMsg);
+  }
+
+  // 6. Re-embed meeting + extractions
+  try {
+    console.info(`Reprocess: Re-embedding ${meeting.id}...`);
+    await getAdminClient()
+      .from("meetings")
+      .update({ embedding_stale: true })
+      .eq("id", meeting.id);
+
+    await embedMeetingWithExtractions(meeting.id);
+    results.embedded = true;
+    console.info("Reprocess: Embedding done");
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    results.embedded = false;
+    results.embed_error = errMsg;
+    console.error("Reprocess: Embedding failed:", errMsg);
   }
 
   return NextResponse.json(results);
