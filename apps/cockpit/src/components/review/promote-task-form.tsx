@@ -3,12 +3,12 @@
 import { useState, useTransition } from "react";
 import { Check, UserCircle, Calendar } from "lucide-react";
 import { promoteToTaskAction } from "@/actions/tasks";
-import type { PersonWithOrg } from "@repo/database/queries/people";
+import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface PromoteTaskFormProps {
   extractionId: string;
   title: string;
-  people: PersonWithOrg[];
+  people: PersonForAssignment[];
   onPromoted: () => void;
   onCancel: () => void;
 }

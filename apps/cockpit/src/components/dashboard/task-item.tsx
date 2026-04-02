@@ -10,7 +10,7 @@ import {
 } from "@/actions/tasks";
 import { UserCircle, Calendar, ChevronDown, Check, X, CircleCheck } from "lucide-react";
 import type { TaskRow } from "@repo/database/queries/tasks";
-import type { PersonWithOrg } from "@repo/database/queries/people";
+import type { PersonForAssignment } from "@repo/database/queries/people";
 
 type Urgency = "overdue" | "this-week" | "default";
 
@@ -38,8 +38,8 @@ export function TaskItem({
   clients,
 }: {
   task: TaskRow;
-  teammates: PersonWithOrg[];
-  clients: PersonWithOrg[];
+  teammates: PersonForAssignment[];
+  clients: PersonForAssignment[];
 }) {
   const [editing, setEditing] = useState(false);
   const [assignedTo, setAssignedTo] = useState(task.assigned_to);

@@ -3,11 +3,11 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { TaskItem } from "./task-item";
 import type { TaskRow } from "@repo/database/queries/tasks";
-import type { PersonWithOrg } from "@repo/database/queries/people";
+import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface TasksCardProps {
   tasks: TaskRow[];
-  people: PersonWithOrg[];
+  people: PersonForAssignment[];
 }
 
 export function TasksCard({ tasks, people }: TasksCardProps) {

@@ -8,7 +8,7 @@ import {
   EXTRACTION_TYPE_ICONS,
 } from "@/components/shared/extraction-constants";
 import { PromoteTaskForm } from "./promote-task-form";
-import type { PersonWithOrg } from "@repo/database/queries/people";
+import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface ExtractionCardProps {
   extraction: {
@@ -21,7 +21,7 @@ interface ExtractionCardProps {
   readOnly?: boolean;
   showPromote?: boolean;
   isPromoted?: boolean;
-  people?: PersonWithOrg[];
+  people?: PersonForAssignment[];
   onEdit?: (id: string, content: string) => void;
   onDelete?: (id: string) => void;
   onRefClick?: (ref: string) => void;
