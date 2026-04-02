@@ -69,14 +69,61 @@ export async function updateMeetingElevenLabs(
   return { success: true };
 }
 
-export async function updateMeetingProject(
+export async function updateMeetingTitle(
+  meetingId: string,
+  title: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ title })
+    .eq("id", meetingId);
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "Er bestaat al een meeting met deze titel op dezelfde dag" };
+    }
+    return { error: error.message };
+  }
+  return { success: true };
+}
+
+export async function updateMeetingOrganization(
+  meetingId: string,
+  organizationId: string | null,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ organization_id: organizationId })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function linkMeetingProject(
   meetingId: string,
   projectId: string,
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient()
-    .from("meetings")
-    .update({ project_id: projectId })
-    .eq("id", meetingId);
+    .from("meeting_projects")
+    .upsert(
+      { meeting_id: meetingId, project_id: projectId },
+      { onConflict: "meeting_id,project_id" },
+    );
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function unlinkMeetingProject(
+  meetingId: string,
+  projectId: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meeting_projects")
+    .delete()
+    .eq("meeting_id", meetingId)
+    .eq("project_id", projectId);
 
   if (error) return { error: error.message };
   return { success: true };

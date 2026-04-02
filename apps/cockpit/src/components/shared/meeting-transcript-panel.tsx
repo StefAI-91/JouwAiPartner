@@ -20,6 +20,8 @@ interface MeetingTranscriptPanelProps {
     meeting_participants: { person: { id: string; name: string } }[];
     extractions: { transcript_ref: string | null }[];
   };
+  titleSlot?: React.ReactNode;
+  organizationSlot?: React.ReactNode;
   headerExtra?: React.ReactNode;
   activeTranscriptRef?: string | null;
   onSummaryEdit?: (content: string) => void;
@@ -27,6 +29,8 @@ interface MeetingTranscriptPanelProps {
 
 export function MeetingTranscriptPanel({
   meeting,
+  titleSlot,
+  organizationSlot,
   headerExtra,
   activeTranscriptRef,
   onSummaryEdit,
@@ -43,13 +47,17 @@ export function MeetingTranscriptPanel({
     <div className="flex-1 overflow-y-auto border-r border-border/50 p-6 lg:w-[55%] lg:flex-none">
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {meeting.organization && (
-            <span className="font-medium text-foreground/70">{meeting.organization.name}</span>
+          {organizationSlot ?? (
+            meeting.organization && (
+              <span className="font-medium text-foreground/70">{meeting.organization.name}</span>
+            )
           )}
           <MeetingTypeBadge type={meeting.meeting_type} />
           {meeting.party_type && <span>{meeting.party_type}</span>}
         </div>
-        <h1 className="mt-2">{meeting.title ?? "Untitled meeting"}</h1>
+        <div className="mt-2">
+          {titleSlot ?? <h1>{meeting.title ?? "Untitled meeting"}</h1>}
+        </div>
         {meeting.date && (
           <p className="mt-1 text-sm text-muted-foreground">{formatDateLong(meeting.date)}</p>
         )}

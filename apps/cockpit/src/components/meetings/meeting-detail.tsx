@@ -4,9 +4,20 @@ import { ExtractionCard } from "@/components/review/extraction-card";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EXTRACTION_TYPE_ORDER, EXTRACTION_TYPE_LABELS } from "@/components/shared/extraction-constants";
+import {
+  EditableTitle,
+  OrganizationSelector,
+  ProjectLinker,
+} from "@/components/meetings/meeting-management";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 
-export function MeetingDetailView({ meeting }: { meeting: MeetingDetail }) {
+interface MeetingDetailViewProps {
+  meeting: MeetingDetail;
+  organizations: { id: string; name: string }[];
+  projects: { id: string; name: string }[];
+}
+
+export function MeetingDetailView({ meeting, organizations, projects }: MeetingDetailViewProps) {
   const grouped = new Map<string, MeetingDetail["extractions"]>();
   for (const ext of meeting.extractions) {
     const list = grouped.get(ext.type) ?? [];
@@ -14,15 +25,33 @@ export function MeetingDetailView({ meeting }: { meeting: MeetingDetail }) {
     grouped.set(ext.type, list);
   }
 
+  const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
         meeting={meeting}
+        titleSlot={
+          <EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />
+        }
+        organizationSlot={
+          <OrganizationSelector
+            meetingId={meeting.id}
+            currentOrgId={meeting.organization_id}
+            currentOrgName={meeting.organization?.name ?? null}
+            organizations={organizations}
+          />
+        }
         headerExtra={
-          <div className="mt-3">
+          <div className="mt-3 space-y-3">
             <VerificationBadge
               verifierName={meeting.verifier?.full_name ?? null}
               verifiedAt={meeting.verified_at}
+            />
+            <ProjectLinker
+              meetingId={meeting.id}
+              linkedProjects={linkedProjects}
+              allProjects={projects}
             />
           </div>
         }
