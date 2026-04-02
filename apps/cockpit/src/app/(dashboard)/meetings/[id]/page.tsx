@@ -6,11 +6,13 @@ import { getVerifiedMeetingById } from "@repo/database/queries/meetings";
 import { MeetingDetailView } from "@/components/meetings/meeting-detail";
 
 async function getSelectOptions(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const [{ data: orgs }, { data: projects }] = await Promise.all([
+  const [{ data: people }, { data: orgs }, { data: projects }] = await Promise.all([
+    supabase.from("people").select("id, name, role, organization:organizations(name)").order("name"),
     supabase.from("organizations").select("id, name, type").order("name"),
     supabase.from("projects").select("id, name").order("name"),
   ]);
   return {
+    people: (people ?? []) as { id: string; name: string; role: string | null; organization: { name: string } | null }[],
     organizations: (orgs ?? []) as { id: string; name: string; type: string }[],
     projects: (projects ?? []) as { id: string; name: string }[],
   };
@@ -30,6 +32,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
   return (
     <MeetingDetailView
       meeting={meeting}
+      allPeople={options.people}
       organizations={options.organizations}
       projects={options.projects}
     />

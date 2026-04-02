@@ -7,18 +7,19 @@ import { EXTRACTION_TYPE_ORDER, EXTRACTION_TYPE_LABELS } from "@/components/shar
 import {
   EditableTitle,
   MeetingTypeSelector,
-  OrganizationSelector,
+  PeopleSelector,
   ProjectLinker,
 } from "@/components/meetings/meeting-management";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 
 interface MeetingDetailViewProps {
   meeting: MeetingDetail;
+  allPeople: { id: string; name: string; role: string | null; organization: { name: string } | null }[];
   organizations: { id: string; name: string; type: string }[];
   projects: { id: string; name: string }[];
 }
 
-export function MeetingDetailView({ meeting, organizations, projects }: MeetingDetailViewProps) {
+export function MeetingDetailView({ meeting, allPeople, organizations, projects }: MeetingDetailViewProps) {
   const grouped = new Map<string, MeetingDetail["extractions"]>();
   for (const ext of meeting.extractions) {
     const list = grouped.get(ext.type) ?? [];
@@ -27,6 +28,7 @@ export function MeetingDetailView({ meeting, organizations, projects }: MeetingD
   }
 
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
+  const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
@@ -38,11 +40,11 @@ export function MeetingDetailView({ meeting, organizations, projects }: MeetingD
         meetingTypeSlot={
           <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />
         }
-        organizationSlot={
-          <OrganizationSelector
+        participantsSlot={
+          <PeopleSelector
             meetingId={meeting.id}
-            currentOrgId={meeting.organization_id}
-            currentOrgName={meeting.organization?.name ?? null}
+            linkedPeople={linkedPeople}
+            allPeople={allPeople}
             organizations={organizations}
           />
         }

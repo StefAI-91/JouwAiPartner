@@ -21,8 +21,8 @@ interface MeetingTranscriptPanelProps {
     extractions: { transcript_ref: string | null }[];
   };
   titleSlot?: React.ReactNode;
-  organizationSlot?: React.ReactNode;
   meetingTypeSlot?: React.ReactNode;
+  participantsSlot?: React.ReactNode;
   headerExtra?: React.ReactNode;
   activeTranscriptRef?: string | null;
   onSummaryEdit?: (content: string) => void;
@@ -31,8 +31,8 @@ interface MeetingTranscriptPanelProps {
 export function MeetingTranscriptPanel({
   meeting,
   titleSlot,
-  organizationSlot,
   meetingTypeSlot,
+  participantsSlot,
   headerExtra,
   activeTranscriptRef,
   onSummaryEdit,
@@ -58,16 +58,12 @@ export function MeetingTranscriptPanel({
         {meeting.date && (
           <p className="mt-1 text-sm text-muted-foreground">{formatDateLong(meeting.date)}</p>
         )}
-        {organizationSlot && <div className="mt-2">{organizationSlot}</div>}
-        {!organizationSlot && meeting.organization && (
-          <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground/70">{meeting.organization.name}</span>
-          </div>
-        )}
         {headerExtra}
       </div>
 
-      {participants.length > 0 && (
+      {participantsSlot ? (
+        <div className="mb-6">{participantsSlot}</div>
+      ) : participants.length > 0 ? (
         <div className="mb-6 flex flex-wrap gap-2">
           {participants.map((name) => (
             <span key={name} className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
@@ -75,7 +71,7 @@ export function MeetingTranscriptPanel({
             </span>
           ))}
         </div>
-      )}
+      ) : null}
 
       {meeting.summary && (
         <div className="mb-6">

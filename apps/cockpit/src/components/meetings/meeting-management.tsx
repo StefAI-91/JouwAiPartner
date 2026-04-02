@@ -1,29 +1,37 @@
 "use client";
 
 import { useState, useRef, useEffect, useTransition, type ReactNode } from "react";
-import { Pencil, Check, X, Building2, FolderKanban, Plus } from "lucide-react";
+import { Pencil, Check, X, Users, FolderKanban, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   updateMeetingTitleAction,
   updateMeetingTypeAction,
-  updateMeetingOrganizationAction,
   linkMeetingProjectAction,
   unlinkMeetingProjectAction,
-  createOrganizationAction,
+  linkMeetingParticipantAction,
+  unlinkMeetingParticipantAction,
   createProjectAction,
+  createPersonAction,
 } from "@/actions/meetings";
 
 // ── Types ──
 
-interface Organization {
+interface Person {
   id: string;
   name: string;
-  type: string;
+  role: string | null;
+  organization: { name: string } | null;
 }
 
 interface Project {
   id: string;
   name: string;
+}
+
+interface Organization {
+  id: string;
+  name: string;
+  type: string;
 }
 
 // ── Constants ──
@@ -39,20 +47,6 @@ const MEETING_TYPES = [
   { value: "collaboration", label: "Collaboration" },
   { value: "other", label: "Overig" },
 ] as const;
-
-const ORG_TYPES = [
-  { value: "client", label: "Klant" },
-  { value: "partner", label: "Partner" },
-  { value: "supplier", label: "Leverancier" },
-  { value: "other", label: "Overig" },
-] as const;
-
-const ORG_TYPE_LABELS: Record<string, string> = {
-  client: "klant",
-  partner: "partner",
-  supplier: "leverancier",
-  other: "overig",
-};
 
 // ── Modal ──
 
@@ -271,141 +265,185 @@ export function MeetingTypeSelector({
   );
 }
 
-// ── Organization Selector (with + create modal) ──
+// ── People Selector (multi-select with + create modal) ──
 
-export function OrganizationSelector({
+export function PeopleSelector({
   meetingId,
-  currentOrgId,
-  currentOrgName,
+  linkedPeople,
+  allPeople,
   organizations,
 }: {
   meetingId: string;
-  currentOrgId: string | null;
-  currentOrgName: string | null;
+  linkedPeople: { id: string; name: string }[];
+  allPeople: Person[];
   organizations: Organization[];
 }) {
-  const [editing, setEditing] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleChange(orgId: string) {
-    if (orgId === "__new__") {
+  const linkedIds = new Set(linkedPeople.map((p) => p.id));
+  const availablePeople = allPeople.filter((p) => !linkedIds.has(p.id));
+
+  function handleAdd(personId: string) {
+    if (personId === "__new__") {
       setShowCreate(true);
       return;
     }
-
+    if (!personId) return;
     setError(null);
-    const newOrgId = orgId === "" ? null : orgId;
 
     startTransition(async () => {
-      const result = await updateMeetingOrganizationAction({
-        meetingId,
-        organizationId: newOrgId,
-      });
+      const result = await linkMeetingParticipantAction({ meetingId, personId });
       if ("error" in result) {
         setError(result.error);
       } else {
-        setEditing(false);
+        setAdding(false);
       }
     });
   }
 
-  function handleCreated(newOrg: { id: string; name: string }) {
+  function handleRemove(personId: string) {
+    setError(null);
+    startTransition(async () => {
+      const result = await unlinkMeetingParticipantAction({ meetingId, personId });
+      if ("error" in result) {
+        setError(result.error);
+      }
+    });
+  }
+
+  function handleCreated(newPerson: { id: string; name: string }) {
     setShowCreate(false);
-    // After creating, immediately link it
     setError(null);
     startTransition(async () => {
-      const result = await updateMeetingOrganizationAction({
-        meetingId,
-        organizationId: newOrg.id,
-      });
+      const result = await linkMeetingParticipantAction({ meetingId, personId: newPerson.id });
       if ("error" in result) {
         setError(result.error);
       } else {
-        setEditing(false);
+        setAdding(false);
       }
     });
   }
 
-  if (!editing) {
-    return (
-      <div className="group flex items-center gap-1.5">
-        <Building2 className="size-3.5 text-muted-foreground" />
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Organisatie
-        </span>
-        <span className="text-sm">
-          {currentOrgName ?? <span className="text-muted-foreground">Niet gekoppeld</span>}
-        </span>
-        <button
-          onClick={() => setEditing(true)}
-          className="rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
-          aria-label="Organisatie wijzigen"
-        >
-          <Pencil className="size-3 text-muted-foreground" />
-        </button>
-      </div>
-    );
+  function personLabel(person: Person): string {
+    const parts = [person.name];
+    if (person.role) parts.push(person.role);
+    if (person.organization) parts.push(person.organization.name);
+    return parts.length > 1
+      ? `${person.name} (${[person.role, person.organization?.name].filter(Boolean).join(", ")})`
+      : person.name;
   }
 
   return (
     <>
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <Building2 className="size-3.5 text-muted-foreground" />
-          <select
-            value={currentOrgId ?? ""}
-            onChange={(e) => handleChange(e.target.value)}
-            disabled={isPending}
-            className="h-7 rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          >
-            <option value="">Geen organisatie</option>
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name} ({ORG_TYPE_LABELS[org.type] ?? org.type})
-              </option>
-            ))}
-            <option value="__new__">+ Nieuwe organisatie aanmaken</option>
-          </select>
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => {
-              setError(null);
-              setEditing(false);
-            }}
-            disabled={isPending}
-            aria-label="Annuleren"
-          >
-            <X className="size-3.5" />
-          </Button>
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Users className="size-3.5 text-muted-foreground" />
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Deelnemers
+          </span>
         </div>
+
+        {linkedPeople.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {linkedPeople.map((person) => (
+              <span
+                key={person.id}
+                className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
+              >
+                {person.name}
+                <button
+                  onClick={() => handleRemove(person.id)}
+                  disabled={isPending}
+                  className="rounded-full p-0.5 hover:bg-background/80"
+                  aria-label={`${person.name} verwijderen`}
+                >
+                  <X className="size-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {linkedPeople.length === 0 && !adding && (
+          <p className="text-xs text-muted-foreground">Geen deelnemers</p>
+        )}
+
+        {adding ? (
+          <div className="flex items-center gap-2">
+            <select
+              onChange={(e) => handleAdd(e.target.value)}
+              disabled={isPending}
+              defaultValue=""
+              className="h-7 max-w-xs rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+            >
+              <option value="" disabled>
+                Kies een persoon...
+              </option>
+              {availablePeople.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {personLabel(person)}
+                </option>
+              ))}
+              <option value="__new__">+ Nieuw persoon toevoegen</option>
+            </select>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => {
+                setError(null);
+                setAdding(false);
+              }}
+              disabled={isPending}
+              aria-label="Annuleren"
+            >
+              <X className="size-3.5" />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            size="xs"
+            variant="ghost"
+            onClick={() => setAdding(true)}
+            className="text-muted-foreground"
+          >
+            <Plus className="size-3" data-icon="inline-start" />
+            Deelnemer toevoegen
+          </Button>
+        )}
+
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
 
-      <CreateOrganizationModal
+      <CreatePersonModal
         open={showCreate}
         onClose={() => setShowCreate(false)}
         onCreated={handleCreated}
+        organizations={organizations}
       />
     </>
   );
 }
 
-// ── Create Organization Modal ──
+// ── Create Person Modal ──
 
-function CreateOrganizationModal({
+function CreatePersonModal({
   open,
   onClose,
   onCreated,
+  organizations,
 }: {
   open: boolean;
   onClose: () => void;
-  onCreated: (org: { id: string; name: string }) => void;
+  onCreated: (person: { id: string; name: string }) => void;
+  organizations: Organization[];
 }) {
   const [name, setName] = useState("");
-  const [type, setType] = useState<string>("client");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
+  const [organizationId, setOrganizationId] = useState<string>("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -413,7 +451,9 @@ function CreateOrganizationModal({
   useEffect(() => {
     if (open) {
       setName("");
-      setType("client");
+      setEmail("");
+      setRole("");
+      setOrganizationId("");
       setError(null);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
@@ -429,9 +469,11 @@ function CreateOrganizationModal({
 
     setError(null);
     startTransition(async () => {
-      const result = await createOrganizationAction({
+      const result = await createPersonAction({
         name: trimmed,
-        type: type as "client" | "partner" | "supplier" | "other",
+        email: email.trim() || null,
+        role: role.trim() || null,
+        organizationId: organizationId || null,
       });
       if ("error" in result) {
         setError(result.error);
@@ -442,36 +484,64 @@ function CreateOrganizationModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Nieuwe organisatie aanmaken">
+    <Modal open={open} onClose={onClose} title="Nieuw persoon toevoegen">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="org-name" className="mb-1 block text-sm font-medium">
+          <label htmlFor="person-name" className="mb-1 block text-sm font-medium">
             Naam
           </label>
           <input
             ref={inputRef}
-            id="org-name"
+            id="person-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={isPending}
-            placeholder="Bijv. Acme B.V."
+            placeholder="Bijv. Jan de Vries"
             className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
           />
         </div>
         <div>
-          <label htmlFor="org-type" className="mb-1 block text-sm font-medium">
-            Type
+          <label htmlFor="person-email" className="mb-1 block text-sm font-medium">
+            E-mail (optioneel)
+          </label>
+          <input
+            id="person-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isPending}
+            placeholder="jan@voorbeeld.nl"
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          />
+        </div>
+        <div>
+          <label htmlFor="person-role" className="mb-1 block text-sm font-medium">
+            Rol (optioneel)
+          </label>
+          <input
+            id="person-role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            disabled={isPending}
+            placeholder="Bijv. CTO, Developer, PM"
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          />
+        </div>
+        <div>
+          <label htmlFor="person-org" className="mb-1 block text-sm font-medium">
+            Organisatie (optioneel)
           </label>
           <select
-            id="org-type"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
+            id="person-org"
+            value={organizationId}
+            onChange={(e) => setOrganizationId(e.target.value)}
             disabled={isPending}
             className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
           >
-            {ORG_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            <option value="">Geen organisatie</option>
+            {organizations.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
               </option>
             ))}
           </select>
@@ -482,7 +552,7 @@ function CreateOrganizationModal({
             Annuleren
           </Button>
           <Button type="submit" disabled={isPending}>
-            Aanmaken
+            Toevoegen
           </Button>
         </div>
       </form>
@@ -541,7 +611,6 @@ export function ProjectLinker({
 
   function handleCreated(newProject: { id: string; name: string }) {
     setShowCreate(false);
-    // After creating, immediately link it
     setError(null);
     startTransition(async () => {
       const result = await linkMeetingProjectAction({ meetingId, projectId: newProject.id });
@@ -713,7 +782,7 @@ function CreateProjectModal({
         </div>
         <div>
           <label htmlFor="project-org" className="mb-1 block text-sm font-medium">
-            Klant (optioneel)
+            Organisatie (optioneel)
           </label>
           <select
             id="project-org"
@@ -722,7 +791,7 @@ function CreateProjectModal({
             disabled={isPending}
             className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
           >
-            <option value="">Geen klant</option>
+            <option value="">Geen organisatie</option>
             {organizations.map((org) => (
               <option key={org.id} value={org.id}>
                 {org.name}
