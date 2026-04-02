@@ -5,11 +5,9 @@ import {
   listRecentVerifiedMeetings,
   listBriefingMeetings,
   getExtractionCountsByMeetingIds,
-  getAiPulseData,
 } from "@repo/database/queries/dashboard";
 import { listOpenActionItems } from "@repo/database/queries/action-items";
 import { Greeting } from "@/components/dashboard/greeting";
-import { AiPulseStrip } from "@/components/dashboard/ai-pulse-strip";
 import { MeetingCarousel } from "@/components/dashboard/meeting-carousel";
 import { RecentVerifiedMeetings } from "@/components/dashboard/recent-verified-meetings";
 import { ActionItemsCard } from "@/components/dashboard/action-items-card";
@@ -27,11 +25,10 @@ export default async function DashboardPage() {
   const userName = profileResult?.data?.full_name ?? null;
 
   // Fetch all dashboard data in parallel
-  const [briefingMeetings, verifiedMeetings, actionItems, pulseData] = await Promise.all([
+  const [briefingMeetings, verifiedMeetings, actionItems] = await Promise.all([
     listBriefingMeetings(8, supabase),
     listRecentVerifiedMeetings(5, supabase),
     listOpenActionItems(10, supabase),
-    getAiPulseData(supabase),
   ]);
 
   // Batch-fetch extraction counts for carousel meetings (avoid N+1)
@@ -40,17 +37,11 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-      {/* Greeting + AI Pulse */}
-      <div className="space-y-4">
-        <Greeting userName={userName} />
-        <AiPulseStrip data={pulseData} />
-      </div>
+      {/* Greeting */}
+      <Greeting userName={userName} />
 
       {/* Meeting briefing carousel */}
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">Laatste briefings</h2>
-        <MeetingCarousel meetings={briefingMeetings} extractionCounts={extractionCounts} />
-      </section>
+      <MeetingCarousel meetings={briefingMeetings} extractionCounts={extractionCounts} />
 
       {/* Two-column bottom: recent meetings + open actions */}
       <div className="grid gap-6 md:grid-cols-2">
