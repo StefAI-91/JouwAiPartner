@@ -53,10 +53,13 @@ export function ExtractionCard({
   const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
   const Icon = EXTRACTION_TYPE_ICONS[extraction.type];
 
+  const [promoteError, setPromoteError] = useState<string | null>(null);
+
   const teammates = people?.filter((p) => p.team) ?? [];
   const clients = people?.filter((p) => !p.team) ?? [];
 
   function handlePromote() {
+    setPromoteError(null);
     startTransition(async () => {
       const result = await promoteToTaskAction({
         extractionId: extraction.id,
@@ -67,6 +70,8 @@ export function ExtractionCard({
       if ("success" in result) {
         setPromoted(true);
         setShowPromoteForm(false);
+      } else {
+        setPromoteError(result.error);
       }
     });
   }
@@ -251,12 +256,16 @@ export function ExtractionCard({
                 setShowPromoteForm(false);
                 setAssignedTo(null);
                 setDueDate(null);
+                setPromoteError(null);
               }}
               className="flex h-7 items-center rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Annuleren
             </button>
           </div>
+          {promoteError && (
+            <p className="mt-2 text-xs text-red-600">{promoteError}</p>
+          )}
         </div>
       )}
     </div>
