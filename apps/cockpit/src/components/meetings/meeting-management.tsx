@@ -324,8 +324,11 @@ export function OrganizationSelector({
     return (
       <div className="group flex items-center gap-1.5">
         <Building2 className="size-3.5 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
-          {currentOrgName ?? "Geen klant gekoppeld"}
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Klant
+        </span>
+        <span className="text-sm">
+          {currentOrgName ?? <span className="text-muted-foreground">Geen klant gekoppeld</span>}
         </span>
         <button
           onClick={() => setEditing(true)}
