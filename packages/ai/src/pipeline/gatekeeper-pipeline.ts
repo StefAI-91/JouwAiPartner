@@ -12,6 +12,7 @@ import { embedMeetingWithExtractions } from "./embed-pipeline";
 import { classifyParticipants, determinePartyType } from "./participant-classifier";
 import { transcribeWithElevenLabs, formatScribeTranscript } from "../transcribe-elevenlabs";
 import { updateMeetingElevenLabs } from "@repo/database/mutations/meetings";
+import { runSummarizer, formatSummary } from "../agents/summarizer";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -52,6 +53,7 @@ interface PipelineResult {
   extractions_saved: number;
   embedded: boolean;
   elevenlabs_transcribed: boolean;
+  summarized: boolean;
   errors: string[];
 }
 
@@ -64,9 +66,10 @@ interface PipelineResult {
  * 5. Insert meeting (always — no rejection)
  * 6. Link participants
  * 7. ElevenLabs Scribe v2 transcription (non-blocking, richer Dutch transcript)
- * 8. Extractor: extract decisions, action items, needs, insights (prefers ElevenLabs, fallback Fireflies)
- * 9. Save extractions to unified table
- * 10. Embed meeting + extractions
+ * 8. Summarizer: rich AI summary (replaces Fireflies summary, uses best transcript)
+ * 9. Extractor: extract decisions, action items, needs, insights (uses best transcript + rich summary)
+ * 10. Save extractions to unified table
+ * 11. Embed meeting + extractions
  */
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
   // Step 1: Classify participants as internal/external
@@ -141,6 +144,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       extractions_saved: 0,
       embedded: false,
       elevenlabs_transcribed: false,
+      summarized: false,
       errors: [`Meeting insert: ${insertResult.error}`],
     };
   }
@@ -184,9 +188,44 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     }
   }
 
-  // Step 7: Run Extractor — prefer ElevenLabs transcript (richer), fallback to Fireflies
-  const extractorTranscript = elevenlabsTranscript ?? input.transcript;
+  // Step 7: Summarizer — generate rich summary from best available transcript
+  const summarizerTranscript = elevenlabsTranscript ?? input.transcript;
   const transcriptSource = elevenlabsTranscript ? "elevenlabs" : "fireflies";
+  let summarized = false;
+  let summarizerError: string | null = null;
+  let richSummary: string | null = null;
+
+  try {
+    console.info(`Summarizer using ${transcriptSource} transcript`);
+    const summarizerOutput = await runSummarizer(summarizerTranscript, {
+      title: input.title,
+      meeting_type: gatekeeperResult.meeting_type,
+      party_type: partyType,
+      participants: input.participants,
+    });
+    richSummary = formatSummary(summarizerOutput);
+
+    // Update meeting.summary with the rich AI-generated summary
+    const { getAdminClient } = await import("@repo/database/supabase/admin");
+    await getAdminClient()
+      .from("meetings")
+      .update({ summary: richSummary })
+      .eq("id", meetingId);
+
+    summarized = true;
+    console.info(
+      `Summarizer: ${summarizerOutput.kernpunten.length} kernpunten, ` +
+        `${summarizerOutput.themas.length} thema's, ${summarizerOutput.deelnemers.length} deelnemers`,
+    );
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error("Summarizer failed (non-blocking):", errMsg);
+    summarizerError = errMsg;
+  }
+
+  // Step 8: Run Extractor — uses best transcript + rich summary as context
+  const extractorTranscript = summarizerTranscript;
+  const extractorSummary = richSummary ?? input.summary;
   console.info(`Extractor using ${transcriptSource} transcript`);
 
   let extractorResult: ExtractorOutput | null = null;
@@ -199,7 +238,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       meeting_type: gatekeeperResult.meeting_type,
       party_type: partyType,
       participants: input.participants,
-      summary: input.summary,
+      summary: extractorSummary,
     });
 
     // Add extractor output to raw_fireflies
@@ -220,7 +259,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       .update({ raw_fireflies: rawFireflies })
       .eq("id", meetingId);
 
-    // Step 8: Save extractions to unified table
+    // Step 9: Save extractions to unified table
     const saveResult = await saveExtractions(extractorResult, meetingId);
     extractionsSaved = saveResult.extractions_saved;
 
@@ -233,7 +272,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     extractorError = errMsg;
   }
 
-  // Step 9: Embed meeting + extractions for vector search
+  // Step 10: Embed meeting + extractions for vector search
   let embedded = false;
   let embedError: string | null = null;
   try {
@@ -247,6 +286,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
 
   const errors: string[] = [];
   if (elevenlabsError) errors.push(`ElevenLabs: ${elevenlabsError}`);
+  if (summarizerError) errors.push(`Summarizer: ${summarizerError}`);
   if (extractorError) errors.push(`Extractor: ${extractorError}`);
   if (embedError) errors.push(`Embedding: ${embedError}`);
 
@@ -258,6 +298,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     extractions_saved: extractionsSaved,
     embedded,
     elevenlabs_transcribed: elevenlabsTranscribed,
+    summarized,
     errors,
   };
 }

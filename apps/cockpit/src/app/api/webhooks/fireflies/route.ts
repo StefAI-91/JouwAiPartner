@@ -105,5 +105,6 @@ export async function POST(req: NextRequest) {
     extractions_saved: pipelineResult.extractions_saved,
     embedded: pipelineResult.embedded,
     elevenlabs_transcribed: pipelineResult.elevenlabs_transcribed,
+    summarized: pipelineResult.summarized,
   });
 }
