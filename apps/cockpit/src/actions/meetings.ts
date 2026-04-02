@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { createClient } from "@repo/database/supabase/server";
 import {
   updateMeetingTitle,
   updateMeetingType,
@@ -16,6 +17,16 @@ import {
   unlinkMeetingParticipant,
 } from "@repo/database/mutations/meeting-participants";
 import { createPerson } from "@repo/database/mutations/people";
+
+// ── Auth Helper ──
+
+async function getAuthenticatedUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
 
 // ── Zod Schemas ──
 
@@ -42,6 +53,11 @@ const meetingProjectSchema = z.object({
   projectId: z.string().min(1),
 });
 
+const meetingParticipantSchema = z.object({
+  meetingId: z.string().min(1),
+  personId: z.string().min(1),
+});
+
 const createOrganizationSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200),
   type: z.enum(["client", "partner", "supplier", "other"]).optional(),
@@ -50,11 +66,6 @@ const createOrganizationSchema = z.object({
 const createProjectSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200),
   organizationId: z.string().nullable().optional(),
-});
-
-const meetingParticipantSchema = z.object({
-  meetingId: z.string().min(1),
-  personId: z.string().min(1),
 });
 
 const createPersonSchema = z.object({
@@ -69,6 +80,9 @@ const createPersonSchema = z.object({
 export async function updateMeetingTitleAction(
   input: z.infer<typeof updateTitleSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
   const parsed = updateTitleSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
@@ -83,6 +97,9 @@ export async function updateMeetingTitleAction(
 export async function updateMeetingTypeAction(
   input: z.infer<typeof updateMeetingTypeSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
   const parsed = updateMeetingTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig meeting type" };
 
@@ -97,6 +114,9 @@ export async function updateMeetingTypeAction(
 export async function updateMeetingOrganizationAction(
   input: z.infer<typeof updateOrganizationSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
   const parsed = updateOrganizationSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
@@ -111,6 +131,9 @@ export async function updateMeetingOrganizationAction(
 export async function linkMeetingProjectAction(
   input: z.infer<typeof meetingProjectSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
   const parsed = meetingProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
@@ -125,6 +148,9 @@ export async function linkMeetingProjectAction(
 export async function unlinkMeetingProjectAction(
   input: z.infer<typeof meetingProjectSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
   const parsed = meetingProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
@@ -136,11 +162,46 @@ export async function unlinkMeetingProjectAction(
   return { success: true };
 }
 
+export async function linkMeetingParticipantAction(
+  input: z.infer<typeof meetingParticipantSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = meetingParticipantSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues.map((i) => i.message).join(", ") };
+
+  const result = await linkMeetingParticipant(parsed.data.meetingId, parsed.data.personId);
+  if ("error" in result) return result;
+
+  revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  return { success: true };
+}
+
+export async function unlinkMeetingParticipantAction(
+  input: z.infer<typeof meetingParticipantSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = meetingParticipantSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await unlinkMeetingParticipant(parsed.data.meetingId, parsed.data.personId);
+  if ("error" in result) return result;
+
+  revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  return { success: true };
+}
+
 // ── Create Organization ──
 
 export async function createOrganizationAction(
   input: z.infer<typeof createOrganizationSchema>,
 ): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
   const parsed = createOrganizationSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
@@ -159,6 +220,9 @@ export async function createOrganizationAction(
 export async function createProjectAction(
   input: z.infer<typeof createProjectSchema>,
 ): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
   const parsed = createProjectSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
@@ -172,37 +236,14 @@ export async function createProjectAction(
   return { success: true, data: result.data };
 }
 
-// ── People / Participants ──
-
-export async function linkMeetingParticipantAction(
-  input: z.infer<typeof meetingParticipantSchema>,
-): Promise<{ success: true } | { error: string }> {
-  const parsed = meetingParticipantSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues.map((i) => i.message).join(", ") };
-
-  const result = await linkMeetingParticipant(parsed.data.meetingId, parsed.data.personId);
-  if ("error" in result) return result;
-
-  revalidatePath(`/meetings/${parsed.data.meetingId}`);
-  return { success: true };
-}
-
-export async function unlinkMeetingParticipantAction(
-  input: z.infer<typeof meetingParticipantSchema>,
-): Promise<{ success: true } | { error: string }> {
-  const parsed = meetingParticipantSchema.safeParse(input);
-  if (!parsed.success) return { error: "Ongeldige invoer" };
-
-  const result = await unlinkMeetingParticipant(parsed.data.meetingId, parsed.data.personId);
-  if ("error" in result) return result;
-
-  revalidatePath(`/meetings/${parsed.data.meetingId}`);
-  return { success: true };
-}
+// ── Create Person ──
 
 export async function createPersonAction(
   input: z.infer<typeof createPersonSchema>,
 ): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
   const parsed = createPersonSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 

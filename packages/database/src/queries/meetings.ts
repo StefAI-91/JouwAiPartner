@@ -10,6 +10,7 @@ export interface MeetingDetail {
   transcript: string | null;
   transcript_elevenlabs: string | null;
   summary: string | null;
+  raw_fireflies: { sentences?: { speaker_name: string; text: string; start_time: number; end_time: number }[] } | null;
   organization_id: string | null;
   verification_status: string;
   verified_at: string | null;
@@ -34,7 +35,7 @@ export async function getVerifiedMeetingById(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary,
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
        organization_id, verification_status, verified_at,
        verifier:profiles!meetings_verified_by_fkey(full_name),
        organization:organizations(name),

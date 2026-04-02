@@ -91,7 +91,7 @@ export function MeetingTranscriptPanel({
           activeRef={activeTranscriptRef}
         />
       ) : (
-        <p className="text-sm text-muted-foreground">No transcript available</p>
+        <p className="text-sm text-muted-foreground">Geen transcript beschikbaar</p>
       )}
     </div>
   );
