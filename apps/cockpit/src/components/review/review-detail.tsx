@@ -16,6 +16,7 @@ import {
   EXTRACTION_TYPE_COLORS,
 } from "@/components/shared/extraction-constants";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
+import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface Extraction {
   id: string;
@@ -46,9 +47,11 @@ interface ReviewDetailProps {
   allPeople: { id: string; name: string; role: string | null; organization: { name: string } | null }[];
   organizations: { id: string; name: string }[];
   projects: { id: string; name: string }[];
+  promotedExtractionIds?: Set<string>;
+  peopleForAssignment?: PersonForAssignment[];
 }
 
-export function ReviewDetail({ meeting, allPeople, organizations, projects }: ReviewDetailProps) {
+export function ReviewDetail({ meeting, allPeople, organizations, projects, promotedExtractionIds, peopleForAssignment }: ReviewDetailProps) {
   const router = useRouter();
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
@@ -211,6 +214,9 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects }: Re
               onEdit={handleEdit}
               onDelete={handleDelete}
               onRefClick={handleRefClick}
+              showPromote
+              isPromoted={promotedExtractionIds?.has(ext.id)}
+              people={peopleForAssignment}
             />
           ))}
           {activeItems.length === 0 && (
