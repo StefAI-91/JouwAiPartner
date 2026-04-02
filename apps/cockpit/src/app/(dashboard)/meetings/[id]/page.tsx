@@ -12,7 +12,7 @@ async function getSelectOptions(supabase: Awaited<ReturnType<typeof createClient
     supabase.from("projects").select("id, name").order("name"),
   ]);
   return {
-    people: (people ?? []) as { id: string; name: string; role: string | null; organization: { name: string } | null }[],
+    people: (people ?? []) as unknown as { id: string; name: string; role: string | null; organization: { name: string } | null }[],
     organizations: (orgs ?? []) as { id: string; name: string; type: string }[],
     projects: (projects ?? []) as { id: string; name: string }[],
   };
