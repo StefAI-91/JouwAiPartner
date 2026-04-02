@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("x-hub-signature");
 
   if (!verifyFirefliesSignature(rawBody, signature)) {
+    console.error("[webhook/fireflies] Signature verification failed", {
+      hasSecret: !!process.env.FIREFLIES_WEBHOOK_SECRET,
+      hasSignature: !!signature,
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -77,34 +81,55 @@ export async function POST(req: NextRequest) {
   const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");
 
   // Run through full pipeline (Gatekeeper → insert → Extractor → save → embed)
-  const pipelineResult = await processMeeting({
-    fireflies_id: meetingId,
-    title: transcript.title,
-    date: transcript.date,
-    participants: transcript.participants,
-    summary: transcript.summary?.notes ?? "",
-    topics: transcript.summary?.topics_discussed ?? [],
-    transcript: chunkedTranscript,
-    raw_fireflies: {
+  try {
+    const pipelineResult = await processMeeting({
       fireflies_id: meetingId,
       title: transcript.title,
       date: transcript.date,
       participants: transcript.participants,
-      summary: transcript.summary,
-      sentences: transcript.sentences,
-    },
-    audio_url: transcript.audio_url ?? undefined,
-  });
+      summary: transcript.summary?.notes ?? "",
+      topics: transcript.summary?.topics_discussed ?? [],
+      transcript: chunkedTranscript,
+      raw_fireflies: {
+        fireflies_id: meetingId,
+        title: transcript.title,
+        date: transcript.date,
+        participants: transcript.participants,
+        summary: transcript.summary,
+        sentences: transcript.sentences,
+      },
+      audio_url: transcript.audio_url ?? undefined,
+    });
 
-  return NextResponse.json({
-    success: !!pipelineResult.meetingId,
-    meetingId: pipelineResult.meetingId,
-    meeting_type: pipelineResult.gatekeeper.meeting_type,
-    party_type: pipelineResult.partyType,
-    relevance_score: pipelineResult.gatekeeper.relevance_score,
-    extractions_saved: pipelineResult.extractions_saved,
-    embedded: pipelineResult.embedded,
-    elevenlabs_transcribed: pipelineResult.elevenlabs_transcribed,
-    summarized: pipelineResult.summarized,
-  });
+    if (pipelineResult.errors.length > 0) {
+      console.error("[webhook/fireflies] Pipeline completed with errors", {
+        meetingId: pipelineResult.meetingId,
+        title: transcript.title,
+        errors: pipelineResult.errors,
+      });
+    }
+
+    return NextResponse.json({
+      success: !!pipelineResult.meetingId,
+      meetingId: pipelineResult.meetingId,
+      meeting_type: pipelineResult.gatekeeper.meeting_type,
+      party_type: pipelineResult.partyType,
+      relevance_score: pipelineResult.gatekeeper.relevance_score,
+      extractions_saved: pipelineResult.extractions_saved,
+      embedded: pipelineResult.embedded,
+      elevenlabs_transcribed: pipelineResult.elevenlabs_transcribed,
+      summarized: pipelineResult.summarized,
+      errors: pipelineResult.errors.length > 0 ? pipelineResult.errors : undefined,
+    });
+  } catch (err) {
+    console.error("[webhook/fireflies] Pipeline crashed", {
+      fireflies_id: meetingId,
+      title: transcript.title,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return NextResponse.json(
+      { error: "Pipeline failed", detail: err instanceof Error ? err.message : "unknown" },
+      { status: 500 },
+    );
+  }
 }

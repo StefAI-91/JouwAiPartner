@@ -23,27 +23,17 @@ interface IngestResult {
   errors?: string[];
 }
 
-export async function POST(req: NextRequest) {
-  // Auth check
-  const authHeader = req.headers.get("authorization");
-  const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
-  if (!process.env.CRON_SECRET || authHeader !== expectedToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const body = await req.json().catch(() => ({}));
-  const parsed = ingestSchema.safeParse(body);
-  const limit = parsed.success ? parsed.data.limit : 20;
+async function runIngest(limit: number) {
 
   // Step 1: List recent transcripts from Fireflies
   const transcripts = await listFirefliesTranscripts(limit);
 
   if (transcripts.length === 0) {
-    return NextResponse.json({
+    return {
       summary: { total: 0, imported: 0, skipped: 0, failed: 0 },
       embeddings: null,
       results: [],
-    });
+    };
   }
 
   const results: IngestResult[] = [];
@@ -166,9 +156,39 @@ export async function POST(req: NextRequest) {
     embedResult = await runReEmbedWorker();
   }
 
-  return NextResponse.json({
+  return {
     summary: { total: results.length, imported, skipped, failed },
     embeddings: embedResult ? { processed: embedResult.total, byTable: embedResult.byTable } : null,
     results,
-  });
+  };
+}
+
+function verifyAuth(req: NextRequest): boolean {
+  const authHeader = req.headers.get("authorization");
+  const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
+  return !!(process.env.CRON_SECRET && authHeader === expectedToken);
+}
+
+// Vercel Cron calls GET automatically
+export async function GET(req: NextRequest) {
+  if (!verifyAuth(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const result = await runIngest(20);
+  return NextResponse.json(result);
+}
+
+// Manual ingest with configurable limit
+export async function POST(req: NextRequest) {
+  if (!verifyAuth(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const parsed = ingestSchema.safeParse(body);
+  const limit = parsed.success ? parsed.data.limit : 20;
+
+  const result = await runIngest(limit);
+  return NextResponse.json(result);
 }
