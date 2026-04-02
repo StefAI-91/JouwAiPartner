@@ -15,14 +15,14 @@ import {
 const promoteToTaskSchema = z.object({
   extractionId: z.string().uuid(),
   title: z.string().min(1),
-  assignedTo: z.string().uuid().nullable().optional(),
-  dueDate: z.string().nullable().optional(),
+  assignedTo: z.union([z.string().uuid(), z.literal(""), z.null()]).optional(),
+  dueDate: z.union([z.string(), z.literal(""), z.null()]).optional(),
 });
 
 const updateTaskSchema = z.object({
   taskId: z.string().uuid(),
-  assignedTo: z.string().uuid().nullable().optional(),
-  dueDate: z.string().nullable().optional(),
+  assignedTo: z.union([z.string().uuid(), z.literal(""), z.null()]).optional(),
+  dueDate: z.union([z.string(), z.literal(""), z.null()]).optional(),
   title: z.string().min(1).optional(),
 });
 
@@ -58,8 +58,8 @@ export async function promoteToTaskAction(
     {
       extraction_id: parsed.data.extractionId,
       title: parsed.data.title,
-      assigned_to: parsed.data.assignedTo ?? null,
-      due_date: parsed.data.dueDate ?? null,
+      assigned_to: parsed.data.assignedTo || null,
+      due_date: parsed.data.dueDate || null,
       created_by: userId,
     },
     supabase,
