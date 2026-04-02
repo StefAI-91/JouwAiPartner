@@ -39,8 +39,10 @@ export function registerActionTools(server: McpServer) {
         .from("extractions")
         .select(
           `
-          id, content, confidence, transcript_ref, metadata, corrected_by, corrected_at, created_at,
+          id, content, confidence, transcript_ref, metadata, due_date, assigned_to,
+          corrected_by, corrected_at, created_at,
           verification_status, verified_by, verified_at,
+          assigned_person:assigned_to (id, name, team),
           meeting:meeting_id (id, title, date, participants),
           organization:organization_id (name),
           project:project_id (name)
@@ -95,6 +97,9 @@ export function registerActionTools(server: McpServer) {
         confidence: number | null;
         transcript_ref: string | null;
         metadata: { assignee?: string; deadline?: string } | null;
+        due_date: string | null;
+        assigned_to: string | null;
+        assigned_person: { id: string; name: string; team: string | null } | null;
         corrected_by: string | null;
         corrected_at: string | null;
         created_at: string;
@@ -127,8 +132,10 @@ export function registerActionTools(server: McpServer) {
           item.confidence,
           item.corrected_by,
         );
-        const assignee = item.metadata?.assignee;
-        const deadline = item.metadata?.deadline;
+        const assignee = item.assigned_person
+          ? `${item.assigned_person.name}${item.assigned_person.team ? ` (${item.assigned_person.team})` : " (klant)"}`
+          : item.metadata?.assignee ?? null;
+        const deadline = item.due_date ?? item.metadata?.deadline ?? null;
 
         return [
           `${i + 1}. **${item.content}**`,

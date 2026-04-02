@@ -278,6 +278,8 @@ export interface Database {
           verification_status: string;
           verified_by: string | null;
           verified_at: string | null;
+          assigned_to: string | null;
+          due_date: string | null;
           search_vector: unknown | null;
           created_at: string;
         };
@@ -291,6 +293,8 @@ export interface Database {
           transcript_ref?: string | null;
           organization_id?: string | null;
           project_id?: string | null;
+          assigned_to?: string | null;
+          due_date?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean;
           corrected_by?: string | null;
@@ -311,6 +315,8 @@ export interface Database {
           transcript_ref?: string | null;
           organization_id?: string | null;
           project_id?: string | null;
+          assigned_to?: string | null;
+          due_date?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean;
           corrected_by?: string | null;

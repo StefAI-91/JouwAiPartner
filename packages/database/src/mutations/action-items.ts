@@ -1,21 +1,24 @@
 import { getAdminClient } from "../supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-export async function insertActionItem(item: {
-  description: string;
-  assignee: string | null;
-  due_date: string | null;
-  scope: string;
-  status: string;
-  source_type: string;
-  source_id: string;
-  project_id: string | null;
-}): Promise<{ success: true; id: string } | { error: string }> {
-  const { data, error } = await getAdminClient()
-    .from("action_items")
-    .insert(item)
-    .select("id")
-    .single();
+/**
+ * Update the assignment and/or due date of an action item (extraction).
+ */
+export async function updateActionItemAssignment(
+  extractionId: string,
+  updates: {
+    assigned_to?: string | null;
+    due_date?: string | null;
+  },
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db
+    .from("extractions")
+    .update(updates)
+    .eq("id", extractionId)
+    .eq("type", "action_item");
 
   if (error) return { error: error.message };
-  return { success: true, id: data.id };
+  return { success: true };
 }

@@ -44,6 +44,37 @@ export async function listPeopleWithOrg(client?: SupabaseClient): Promise<Person
   return data as unknown as PersonWithOrg[];
 }
 
+export interface PersonForAssignment {
+  id: string;
+  name: string;
+  team: string | null;
+  organization_name: string | null;
+}
+
+/**
+ * List all people with team and organization name (for task assignment dropdowns).
+ */
+export async function listPeopleForAssignment(
+  client?: SupabaseClient,
+): Promise<PersonForAssignment[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("people")
+    .select("id, name, team, organizations(name)")
+    .order("name");
+
+  if (error || !data) return [];
+  return data.map((p) => {
+    const org = p.organizations as unknown as { name: string } | null;
+    return {
+      id: p.id,
+      name: p.name,
+      team: p.team,
+      organization_name: org?.name ?? null,
+    };
+  });
+}
+
 export async function getStalePeople(limit: number = 50) {
   const { data, error } = await getAdminClient()
     .from("people")
