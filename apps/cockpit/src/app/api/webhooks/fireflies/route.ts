@@ -3,7 +3,7 @@ import { createHmac } from "crypto";
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/database/queries/meetings";
-import { isValidDuration, hasParticipants } from "@repo/ai/validations/fireflies";
+import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 
 function verifyFirefliesSignature(rawBody: string, signature: string | null): boolean {
@@ -69,11 +69,6 @@ export async function POST(req: NextRequest) {
       reason: "too_short",
       duration: durationCheck.duration,
     });
-  }
-
-  // Pre-filter: no participants
-  if (!hasParticipants(transcript.participants)) {
-    return NextResponse.json({ skipped: true, reason: "no_participants" });
   }
 
   // Chunk the transcript for storage

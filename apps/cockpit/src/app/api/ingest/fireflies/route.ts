@@ -3,7 +3,7 @@ import { z } from "zod";
 import { listFirefliesTranscripts, fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/database/queries/meetings";
-import { isValidDuration, hasParticipants } from "@repo/ai/validations/fireflies";
+import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 import { runReEmbedWorker } from "@repo/ai/pipeline/re-embed-worker";
 
@@ -93,16 +93,6 @@ async function runIngest(limit: number, maxNew: number = Infinity) {
         title: item.title,
         status: "skipped",
         reason: `too_short (${durationCheck.duration.toFixed(1)}min)`,
-      });
-      continue;
-    }
-
-    if (!hasParticipants(transcript.participants)) {
-      results.push({
-        id: item.id,
-        title: item.title,
-        status: "skipped",
-        reason: "no_participants",
       });
       continue;
     }
