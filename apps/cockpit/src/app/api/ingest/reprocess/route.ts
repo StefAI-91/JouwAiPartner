@@ -41,13 +41,19 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (meetingError || !meeting) {
-    return NextResponse.json({ error: `Meeting not found: ${meetingError?.message}` }, { status: 404 });
+    return NextResponse.json(
+      { error: `Meeting not found: ${meetingError?.message}` },
+      { status: 404 },
+    );
   }
 
   // 2. Fetch full transcript from Fireflies (to get audio_url)
   const transcript = await fetchFirefliesTranscript(fireflies_id);
   if (!transcript) {
-    return NextResponse.json({ error: "Failed to fetch transcript from Fireflies" }, { status: 502 });
+    return NextResponse.json(
+      { error: "Failed to fetch transcript from Fireflies" },
+      { status: 502 },
+    );
   }
 
   const audioUrl = transcript.audio_url;
@@ -89,8 +95,11 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Summarizer — use ElevenLabs transcript if available, fallback to Fireflies
-  const summarizerTranscript = elevenlabsTranscript
-    ?? chunkTranscript(transcript.sentences).map((c) => c.text).join("\n\n---\n\n");
+  const summarizerTranscript =
+    elevenlabsTranscript ??
+    chunkTranscript(transcript.sentences)
+      .map((c) => c.text)
+      .join("\n\n---\n\n");
   const transcriptSource = elevenlabsTranscript ? "elevenlabs" : "fireflies";
   let richSummary: string | null = null;
 
@@ -106,7 +115,7 @@ export async function POST(req: NextRequest) {
 
     await getAdminClient()
       .from("meetings")
-      .update({ summary: richSummary })
+      .update({ summary: richSummary, ai_briefing: summarizerOutput.briefing })
       .eq("id", meeting.id);
 
     results.summarizer = {
@@ -126,18 +135,18 @@ export async function POST(req: NextRequest) {
   }
 
   // 5. Delete old extractions and re-run Extractor on the better transcript
-  const extractorTranscript = elevenlabsTranscript
-    ?? chunkTranscript(transcript.sentences).map((c) => c.text).join("\n\n---\n\n");
+  const extractorTranscript =
+    elevenlabsTranscript ??
+    chunkTranscript(transcript.sentences)
+      .map((c) => c.text)
+      .join("\n\n---\n\n");
   const extractorSummary = (results.summarizer as Record<string, unknown>)?.success
     ? richSummary!
-    : transcript.summary?.notes ?? "";
+    : (transcript.summary?.notes ?? "");
 
   try {
     console.info(`Reprocess: Deleting old extractions for ${meeting.id}...`);
-    await getAdminClient()
-      .from("extractions")
-      .delete()
-      .eq("meeting_id", meeting.id);
+    await getAdminClient().from("extractions").delete().eq("meeting_id", meeting.id);
 
     console.info(`Reprocess: Running Extractor (${transcriptSource})...`);
     const extractorResult = await runExtractor(extractorTranscript, {
@@ -168,10 +177,7 @@ export async function POST(req: NextRequest) {
   // 6. Re-embed meeting + extractions
   try {
     console.info(`Reprocess: Re-embedding ${meeting.id}...`);
-    await getAdminClient()
-      .from("meetings")
-      .update({ embedding_stale: true })
-      .eq("id", meeting.id);
+    await getAdminClient().from("meetings").update({ embedding_stale: true }).eq("id", meeting.id);
 
     await embedMeetingWithExtractions(meeting.id);
     results.embedded = true;
