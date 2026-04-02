@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
           summary: transcript.summary,
           sentences: transcript.sentences,
         },
+        audio_url: transcript.audio_url ?? undefined,
       });
 
       results.push({
