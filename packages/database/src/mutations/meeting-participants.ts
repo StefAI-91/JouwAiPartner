@@ -22,3 +22,32 @@ export async function linkMeetingParticipants(
   if (error) return { error: error.message };
   return { success: true, linked: personIds.length };
 }
+
+export async function linkMeetingParticipant(
+  meetingId: string,
+  personId: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meeting_participants")
+    .upsert(
+      { meeting_id: meetingId, person_id: personId },
+      { onConflict: "meeting_id,person_id" },
+    );
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function unlinkMeetingParticipant(
+  meetingId: string,
+  personId: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meeting_participants")
+    .delete()
+    .eq("meeting_id", meetingId)
+    .eq("person_id", personId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}

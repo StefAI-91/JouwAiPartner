@@ -1,12 +1,22 @@
-"use client";
-
 import { ExtractionCard } from "@/components/review/extraction-card";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EXTRACTION_TYPE_ORDER, EXTRACTION_TYPE_LABELS } from "@/components/shared/extraction-constants";
+import { EditableTitle } from "@/components/meetings/editable-title";
+import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
+import { PeopleSelector } from "@/components/meetings/people-selector";
+import { ProjectLinker } from "@/components/meetings/project-linker";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
+import type { PersonWithOrg } from "@repo/database/queries/people";
 
-export function MeetingDetailView({ meeting }: { meeting: MeetingDetail }) {
+interface MeetingDetailViewProps {
+  meeting: MeetingDetail;
+  allPeople: PersonWithOrg[];
+  organizations: { id: string; name: string }[];
+  projects: { id: string; name: string }[];
+}
+
+export function MeetingDetailView({ meeting, allPeople, organizations, projects }: MeetingDetailViewProps) {
   const grouped = new Map<string, MeetingDetail["extractions"]>();
   for (const ext of meeting.extractions) {
     const list = grouped.get(ext.type) ?? [];
@@ -14,15 +24,38 @@ export function MeetingDetailView({ meeting }: { meeting: MeetingDetail }) {
     grouped.set(ext.type, list);
   }
 
+  const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
+  const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
         meeting={meeting}
+        titleSlot={
+          <EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />
+        }
+        meetingTypeSlot={
+          <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />
+        }
+        participantsSlot={
+          <PeopleSelector
+            meetingId={meeting.id}
+            linkedPeople={linkedPeople}
+            allPeople={allPeople}
+            organizations={organizations}
+          />
+        }
         headerExtra={
-          <div className="mt-3">
+          <div className="mt-3 space-y-3">
             <VerificationBadge
               verifierName={meeting.verifier?.full_name ?? null}
               verifiedAt={meeting.verified_at}
+            />
+            <ProjectLinker
+              meetingId={meeting.id}
+              linkedProjects={linkedProjects}
+              allProjects={projects}
+              organizations={organizations}
             />
           </div>
         }
@@ -30,9 +63,9 @@ export function MeetingDetailView({ meeting }: { meeting: MeetingDetail }) {
 
       {/* Right panel: Extractions (45%) */}
       <div className="flex-1 overflow-y-auto p-6 lg:w-[45%] lg:flex-none">
-        <h2 className="mb-4">Extractions</h2>
+        <h2 className="mb-4">Extracties</h2>
         {meeting.extractions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No extractions</p>
+          <p className="text-sm text-muted-foreground">Geen extracties</p>
         ) : (
           <div className="space-y-6">
             {EXTRACTION_TYPE_ORDER.map((type) => {

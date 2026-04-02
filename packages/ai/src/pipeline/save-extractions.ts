@@ -1,6 +1,6 @@
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { resolveAllEntities } from "./entity-resolution";
-import { updateMeetingProject } from "@repo/database/mutations/meetings";
+import { linkMeetingProject } from "@repo/database/mutations/meetings";
 import { ExtractorOutput, ExtractionItem } from "../validations/extractor";
 
 /**
@@ -40,7 +40,7 @@ export async function saveExtractions(
   }
 
   if (meetingProjectId) {
-    await updateMeetingProject(meetingId, meetingProjectId);
+    await linkMeetingProject(meetingId, meetingProjectId);
   }
 
   // Step 3: Build extraction rows for batch insert

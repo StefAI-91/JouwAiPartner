@@ -23,6 +23,27 @@ export async function listPeople(client?: SupabaseClient): Promise<PersonListIte
   return data;
 }
 
+export interface PersonWithOrg {
+  id: string;
+  name: string;
+  role: string | null;
+  organization: { name: string } | null;
+}
+
+/**
+ * List all people with organization name, for selector dropdowns.
+ */
+export async function listPeopleWithOrg(client?: SupabaseClient): Promise<PersonWithOrg[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("people")
+    .select("id, name, role, organization:organizations(name)")
+    .order("name");
+
+  if (error || !data) return [];
+  return data as unknown as PersonWithOrg[];
+}
+
 export async function getStalePeople(limit: number = 50) {
   const { data, error } = await getAdminClient()
     .from("people")
