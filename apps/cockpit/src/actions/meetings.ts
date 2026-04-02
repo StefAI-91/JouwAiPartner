@@ -178,7 +178,7 @@ export async function linkMeetingParticipantAction(
   input: z.infer<typeof meetingParticipantSchema>,
 ): Promise<{ success: true } | { error: string }> {
   const parsed = meetingParticipantSchema.safeParse(input);
-  if (!parsed.success) return { error: "Ongeldige invoer" };
+  if (!parsed.success) return { error: parsed.error.issues.map((i) => i.message).join(", ") };
 
   const result = await linkMeetingParticipant(parsed.data.meetingId, parsed.data.personId);
   if ("error" in result) return result;

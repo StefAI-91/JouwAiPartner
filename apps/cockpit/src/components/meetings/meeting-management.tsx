@@ -374,6 +374,7 @@ export function PeopleSelector({
         {adding ? (
           <div className="flex items-center gap-2">
             <select
+              key={linkedPeople.length}
               onChange={(e) => handleAdd(e.target.value)}
               disabled={isPending}
               defaultValue=""
