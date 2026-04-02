@@ -6,12 +6,12 @@ import {
   listBriefingMeetings,
   getExtractionCountsByMeetingIds,
 } from "@repo/database/queries/dashboard";
-import { listOpenActionItems } from "@repo/database/queries/action-items";
+import { listActiveTasks } from "@repo/database/queries/tasks";
 import { listPeopleForAssignment } from "@repo/database/queries/people";
 import { Greeting } from "@/components/dashboard/greeting";
 import { MeetingCarousel } from "@/components/dashboard/meeting-carousel";
 import { RecentVerifiedMeetings } from "@/components/dashboard/recent-verified-meetings";
-import { ActionItemsCard } from "@/components/dashboard/action-items-card";
+import { TasksCard } from "@/components/dashboard/tasks-card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -26,10 +26,10 @@ export default async function DashboardPage() {
   const userName = profileResult?.data?.full_name ?? null;
 
   // Fetch all dashboard data in parallel
-  const [briefingMeetings, verifiedMeetings, actionItems, people] = await Promise.all([
+  const [briefingMeetings, verifiedMeetings, tasks, people] = await Promise.all([
     listBriefingMeetings(8, supabase),
     listRecentVerifiedMeetings(5, supabase),
-    listOpenActionItems(10, supabase),
+    listActiveTasks(20, supabase),
     listPeopleForAssignment(supabase),
   ]);
 
@@ -45,10 +45,10 @@ export default async function DashboardPage() {
       {/* Meeting briefing carousel */}
       <MeetingCarousel meetings={briefingMeetings} extractionCounts={extractionCounts} />
 
-      {/* Two-column bottom: recent meetings + open actions */}
+      {/* Two-column bottom: recent meetings + tasks */}
       <div className="grid gap-6 md:grid-cols-2">
         <RecentVerifiedMeetings meetings={verifiedMeetings} />
-        <ActionItemsCard items={actionItems} people={people} />
+        <TasksCard tasks={tasks} people={people} />
       </div>
     </div>
   );

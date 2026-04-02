@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Pencil, Trash2, ListChecks } from "lucide-react";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
 import {
   EXTRACTION_TYPE_COLORS,
   EXTRACTION_TYPE_ICONS,
 } from "@/components/shared/extraction-constants";
+import { promoteToTaskAction } from "@/actions/tasks";
 
 interface ExtractionCardProps {
   extraction: {
@@ -17,6 +18,8 @@ interface ExtractionCardProps {
     transcript_ref: string | null;
   };
   readOnly?: boolean;
+  showPromote?: boolean;
+  isPromoted?: boolean;
   onEdit?: (id: string, content: string) => void;
   onDelete?: (id: string) => void;
   onRefClick?: (ref: string) => void;
@@ -25,14 +28,30 @@ interface ExtractionCardProps {
 export function ExtractionCard({
   extraction,
   readOnly,
+  showPromote,
+  isPromoted,
   onEdit,
   onDelete,
   onRefClick,
 }: ExtractionCardProps) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(extraction.content);
+  const [promoted, setPromoted] = useState(isPromoted ?? false);
+  const [isPending, startTransition] = useTransition();
   const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
   const Icon = EXTRACTION_TYPE_ICONS[extraction.type];
+
+  function handlePromote() {
+    startTransition(async () => {
+      const result = await promoteToTaskAction({
+        extractionId: extraction.id,
+        title: extraction.content,
+      });
+      if ("success" in result) {
+        setPromoted(true);
+      }
+    });
+  }
 
   function handleSave() {
     setEditing(false);
@@ -119,8 +138,25 @@ export function ExtractionCard({
         </blockquote>
       )}
 
-      <div className="mt-2">
+      <div className="mt-2 flex items-center justify-between">
         <ConfidenceBar confidence={extraction.confidence} />
+        {showPromote && extraction.type === "action_item" && !promoted && (
+          <button
+            type="button"
+            onClick={handlePromote}
+            disabled={isPending}
+            className="flex shrink-0 items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-[11px] font-medium text-green-700 transition-colors hover:bg-green-100 disabled:opacity-50"
+          >
+            <ListChecks className="size-3" />
+            {isPending ? "Bezig..." : "Maak taak"}
+          </button>
+        )}
+        {showPromote && extraction.type === "action_item" && promoted && (
+          <span className="flex shrink-0 items-center gap-1 rounded-md bg-green-100 px-2 py-1 text-[11px] font-medium text-green-700">
+            <ListChecks className="size-3" />
+            Taak aangemaakt
+          </span>
+        )}
       </div>
     </div>
   );

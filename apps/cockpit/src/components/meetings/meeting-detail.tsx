@@ -7,16 +7,25 @@ import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
-import type { PersonWithOrg } from "@repo/database/queries/people";
+import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
 
 interface MeetingDetailViewProps {
   meeting: MeetingDetail;
   allPeople: PersonWithOrg[];
   organizations: { id: string; name: string }[];
   projects: { id: string; name: string }[];
+  promotedExtractionIds?: Set<string>;
+  peopleForAssignment?: PersonForAssignment[];
 }
 
-export function MeetingDetailView({ meeting, allPeople, organizations, projects }: MeetingDetailViewProps) {
+export function MeetingDetailView({
+  meeting,
+  allPeople,
+  organizations,
+  projects,
+  promotedExtractionIds,
+  peopleForAssignment,
+}: MeetingDetailViewProps) {
   const grouped = new Map<string, MeetingDetail["extractions"]>();
   for (const ext of meeting.extractions) {
     const list = grouped.get(ext.type) ?? [];
@@ -78,7 +87,14 @@ export function MeetingDetailView({ meeting, allPeople, organizations, projects 
                   </h3>
                   <div className="space-y-3">
                     {items.map((ext) => (
-                      <ExtractionCard key={ext.id} extraction={ext} readOnly />
+                      <ExtractionCard
+                        key={ext.id}
+                        extraction={ext}
+                        readOnly
+                        showPromote
+                        isPromoted={promotedExtractionIds?.has(ext.id)}
+                        people={peopleForAssignment}
+                      />
                     ))}
                   </div>
                 </div>
