@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { listFirefliesTranscripts, fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
-import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/database/queries/meetings";
+import { getExistingFirefliesIds, getExistingMeetingsByTitleDates } from "@repo/database/queries/meetings";
 import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 import { runReEmbedWorker } from "@repo/ai/pipeline/re-embed-worker";
@@ -42,12 +42,19 @@ async function runIngest(limit: number, maxNew: number = Infinity) {
   const results: IngestResult[] = [];
   let importedCount = 0;
 
+  // Batch pre-fetch: check which fireflies_ids and title+date combos already exist (avoids N+1)
+  const existingFirefliesIds = await getExistingFirefliesIds(transcripts.map((t) => t.id));
+  const titleDatePairs = transcripts
+    .filter((t) => t.title && t.date)
+    .map((t) => ({ title: t.title, date: new Date(Number(t.date)).toISOString() }));
+  const existingTitleDates = await getExistingMeetingsByTitleDates(titleDatePairs);
+
   for (const item of transcripts) {
     // Stop processing if we've hit the max new meetings for this run
     if (importedCount >= maxNew) break;
-    // Idempotency — skip already imported (novelty check on fireflies_id)
-    const existing = await getMeetingByFirefliesId(item.id);
-    if (existing) {
+
+    // Idempotency — skip already imported (from batch lookup)
+    if (existingFirefliesIds.has(item.id)) {
       results.push({
         id: item.id,
         title: item.title,
@@ -57,17 +64,16 @@ async function runIngest(limit: number, maxNew: number = Infinity) {
       continue;
     }
 
-    // Dedup — Fireflies creates separate transcripts per team member for the same meeting.
-    // Check if a meeting with the same title and date already exists.
+    // Dedup — check title+date combo (from batch lookup)
     if (item.title && item.date) {
-      const dateStr = new Date(Number(item.date)).toISOString();
-      const duplicate = await getMeetingByTitleAndDate(item.title, dateStr);
-      if (duplicate) {
+      const dayStr = new Date(Number(item.date)).toISOString().slice(0, 10);
+      const duplicateId = existingTitleDates.get(`${item.title.toLowerCase()}|${dayStr}`);
+      if (duplicateId) {
         results.push({
           id: item.id,
           title: item.title,
           status: "skipped",
-          reason: `duplicate_meeting (exists as ${duplicate.id})`,
+          reason: `duplicate_meeting (exists as ${duplicateId})`,
         });
         continue;
       }
