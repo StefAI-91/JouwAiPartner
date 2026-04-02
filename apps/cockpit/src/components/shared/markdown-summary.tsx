@@ -72,8 +72,22 @@ function rebuildMarkdown(sections: Section[]): string {
   return sections.map((s) => s.raw).join("\n\n");
 }
 
-const PROSE_CLASSES =
-  "prose prose-sm max-w-none text-muted-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-foreground/80 [&_h2]:mt-4 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-foreground/70 [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:my-1 [&_ul]:pl-4 [&_li]:text-sm [&_li]:leading-relaxed [&_p]:text-sm [&_p]:leading-relaxed [&_p]:my-1 [&_strong]:text-foreground/80";
+const PROSE_CLASSES = [
+  "prose prose-sm max-w-none text-muted-foreground",
+  // H2: main section headers — bold anchors with top divider
+  "[&_h2]:text-[13px] [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-0 [&_h2]:mb-1.5 [&_h2]:tracking-tight",
+  // H3: sub-headers — compact, high contrast anchor points
+  "[&_h3]:text-[13px] [&_h3]:font-medium [&_h3]:text-foreground/80 [&_h3]:mt-2.5 [&_h3]:mb-1 [&_h3]:leading-snug",
+  // Lists: clear bullet styling with spacing between items
+  "[&_ul]:my-1.5 [&_ul]:pl-4 [&_ul]:space-y-1",
+  "[&_li]:text-sm [&_li]:leading-relaxed [&_li]:marker:text-foreground/30",
+  // Blockquotes: distinct visual block for transcript quotes
+  "[&_blockquote]:my-2 [&_blockquote]:ml-1 [&_blockquote]:rounded-md [&_blockquote]:border-l-2 [&_blockquote]:border-primary/20 [&_blockquote]:bg-primary/5 [&_blockquote]:px-3 [&_blockquote]:py-2 [&_blockquote]:not-italic",
+  "[&_blockquote_p]:text-[13px] [&_blockquote_p]:leading-relaxed [&_blockquote_p]:text-foreground/60 [&_blockquote_p]:my-0",
+  // Paragraphs & inline
+  "[&_p]:text-sm [&_p]:leading-relaxed [&_p]:my-1",
+  "[&_strong]:text-foreground/80",
+].join(" ");
 
 export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryProps) {
   const [expanded, setExpanded] = useState(false);
@@ -151,9 +165,18 @@ export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryPr
         className="relative overflow-hidden transition-[max-height] duration-300 ease-in-out"
         style={{ maxHeight: expanded ? "none" : `${COLLAPSED_MAX_HEIGHT}px` }}
       >
-        <div className="space-y-1">
-          {sections.map((section, index) => (
+        <div className="space-y-0">
+          {sections.map((section, index) => {
+            // Add divider before top-level sections (h2 or bold headers), skip first
+            const raw = section.raw.trimStart();
+            const isTopLevel = raw.startsWith("## ") || (!raw.startsWith("### ") && BOLD_SECTION_PATTERN.test(raw.split("\n")[0]));
+            const showDivider = isTopLevel && index > 0;
+
+            return (
             <div key={index} className="group/section relative">
+              {showDivider && (
+                <div className="mx-1 my-3 border-t border-border/50" />
+              )}
               {editingIndex === index ? (
                 <div className="rounded-lg border border-primary/30 bg-white p-3">
                   <textarea
@@ -201,7 +224,8 @@ export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryPr
                 </div>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {!expanded && (
