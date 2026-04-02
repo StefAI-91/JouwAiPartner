@@ -85,16 +85,19 @@ export async function getMeetingByFirefliesId(firefliesId: string) {
 }
 
 /**
- * Check if a meeting with the same title and date already exists.
+ * Check if a meeting with the same title on the same day already exists.
  * Fireflies creates separate transcripts per team member for the same meeting,
- * each with a unique fireflies_id. This catches those duplicates.
+ * each with a unique fireflies_id and slightly different timestamps.
+ * We compare on date only (not full timestamp) to catch these duplicates.
  */
 export async function getMeetingByTitleAndDate(title: string, date: string) {
+  const dayStr = date.slice(0, 10); // "YYYY-MM-DD"
   const { data } = await getAdminClient()
     .from("meetings")
     .select("id, fireflies_id")
-    .eq("title", title)
-    .eq("date", date)
+    .ilike("title", title)
+    .gte("date", `${dayStr}T00:00:00.000Z`)
+    .lt("date", `${dayStr}T23:59:59.999Z`)
     .limit(1)
     .maybeSingle();
   return data;

@@ -18,11 +18,17 @@ export async function insertMeeting(meeting: {
 }): Promise<{ success: true; data: { id: string } } | { error: string }> {
   const { data, error } = await getAdminClient()
     .from("meetings")
-    .insert(meeting)
+    .upsert(meeting, { onConflict: "fireflies_id", ignoreDuplicates: true })
     .select("id")
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    // Catch unique constraint violation from title+date index
+    if (error.code === "23505") {
+      return { error: `duplicate_meeting: meeting with title "${meeting.title}" already exists for this date` };
+    }
+    return { error: error.message };
+  }
   return { success: true, data };
 }
 
