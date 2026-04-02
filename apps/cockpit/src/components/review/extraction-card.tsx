@@ -61,7 +61,7 @@ export function ExtractionCard({
         )}
 
         {!readOnly && !editing && (
-          <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover/card:opacity-100">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setEditing(true)}
