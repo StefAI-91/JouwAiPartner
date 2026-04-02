@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { ExtractionCard } from "./extraction-card";
 import { ReviewActionBar } from "./review-action-bar";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
+import { EditableTitle } from "@/components/meetings/editable-title";
+import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
+import { PeopleSelector } from "@/components/meetings/people-selector";
+import { ProjectLinker } from "@/components/meetings/project-linker";
 import {
   EXTRACTION_TYPE_ORDER,
   EXTRACTION_TYPE_LABELS,
@@ -33,19 +37,23 @@ interface ReviewDetailProps {
     transcript_elevenlabs?: string | null;
     summary: string | null;
     raw_fireflies: Record<string, unknown> | null;
+    organization_id: string | null;
     organization: { name: string } | null;
     meeting_participants: { person: { id: string; name: string } }[];
+    meeting_projects: { project: { id: string; name: string } }[];
     extractions: Extraction[];
   };
+  allPeople: { id: string; name: string; role: string | null; organization: { name: string } | null }[];
+  organizations: { id: string; name: string; [key: string]: unknown }[];
+  projects: { id: string; name: string; [key: string]: unknown }[];
 }
 
-export function ReviewDetail({ meeting }: ReviewDetailProps) {
+export function ReviewDetail({ meeting, allPeople, organizations, projects }: ReviewDetailProps) {
   const router = useRouter();
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(() => {
-    // Default to first type that has items
     for (const type of EXTRACTION_TYPE_ORDER) {
       if (meeting.extractions.some((e) => e.type === type)) return type;
     }
@@ -65,7 +73,6 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
 
   const handleRefClick = useCallback((ref: string) => {
     setActiveTranscriptRef(ref);
-    // Clear after animation
     setTimeout(() => setActiveTranscriptRef(null), 3000);
   }, []);
 
@@ -107,7 +114,6 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
     router.push("/review");
   }
 
-  // Group extractions by type (excluding deleted)
   const activeExtractions = meeting.extractions.filter((e) => !deletedIds.has(e.id));
   const grouped = new Map<string, Extraction[]>();
   for (const ext of activeExtractions) {
@@ -116,7 +122,6 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
     grouped.set(ext.type, list);
   }
 
-  // Tabs with counts
   const tabs = EXTRACTION_TYPE_ORDER.filter(
     (type) => grouped.has(type) && grouped.get(type)!.length > 0,
   ).map((type) => ({
@@ -128,20 +133,45 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
   }));
 
   const activeItems = grouped.get(activeTab) ?? [];
+  const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
+  const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
         meeting={meeting}
+        titleSlot={
+          <EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />
+        }
+        meetingTypeSlot={
+          <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />
+        }
+        participantsSlot={
+          <PeopleSelector
+            meetingId={meeting.id}
+            linkedPeople={linkedPeople}
+            allPeople={allPeople}
+            organizations={organizations}
+          />
+        }
+        headerExtra={
+          <div className="mt-3">
+            <ProjectLinker
+              meetingId={meeting.id}
+              linkedProjects={linkedProjects}
+              allProjects={projects}
+              organizations={organizations}
+            />
+          </div>
+        }
         activeTranscriptRef={activeTranscriptRef}
         onSummaryEdit={setSummaryEdit}
       />
 
       {/* Right panel: Extractions with tabs (45%) */}
       <div className="flex-1 overflow-y-auto lg:w-[45%] lg:flex-none">
-        {/* Tab bar */}
         <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4">
-          <h2 className="mb-3 text-base font-semibold">Extractions</h2>
+          <h2 className="mb-3 text-base font-semibold">Extracties</h2>
           <div className="flex gap-1 overflow-x-auto pb-0">
             {tabs.map(({ type, label, count, Icon, color }) => {
               const isActive = type === activeTab;
@@ -173,7 +203,6 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
           </div>
         </div>
 
-        {/* Active tab content */}
         <div className="space-y-3 p-6">
           {activeItems.map((ext) => (
             <ExtractionCard
@@ -186,7 +215,7 @@ export function ReviewDetail({ meeting }: ReviewDetailProps) {
           ))}
           {activeItems.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No {EXTRACTION_TYPE_LABELS[activeTab]?.toLowerCase()} found
+              Geen {EXTRACTION_TYPE_LABELS[activeTab]?.toLowerCase()} gevonden
             </p>
           )}
         </div>
