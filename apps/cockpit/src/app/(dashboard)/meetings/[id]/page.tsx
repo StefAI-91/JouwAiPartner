@@ -34,7 +34,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
       allPeople={people}
       organizations={organizations}
       projects={projects}
-      promotedExtractionIds={promotedIds}
+      promotedExtractionIds={Array.from(promotedIds)}
       peopleForAssignment={peopleForAssignment}
     />
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExtractionCard } from "@/components/review/extraction-card";
+import { ExtractionCard } from "@/components/shared/extraction-card";
 import {
   EXTRACTION_TYPE_ORDER,
   EXTRACTION_TYPE_LABELS,
@@ -20,7 +20,7 @@ interface Extraction {
 
 interface ExtractionTabsPanelProps {
   extractions: Extraction[];
-  promotedExtractionIds?: Set<string>;
+  promotedExtractionIds?: string[];
   peopleForAssignment?: PersonForAssignment[];
 }
 
@@ -73,7 +73,7 @@ export function ExtractionTabsPanel({
                 onClick={() => setActiveTab(type)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs font-medium transition-colors ${
                   isActive
-                    ? "bg-white text-foreground shadow-sm"
+                    ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
@@ -101,7 +101,7 @@ export function ExtractionTabsPanel({
             extraction={ext}
             readOnly
             showPromote
-            isPromoted={promotedExtractionIds?.has(ext.id)}
+            isPromoted={promotedExtractionIds?.includes(ext.id)}
             people={peopleForAssignment}
           />
         ))}

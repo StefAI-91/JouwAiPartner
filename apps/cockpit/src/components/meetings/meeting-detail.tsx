@@ -13,7 +13,7 @@ interface MeetingDetailViewProps {
   allPeople: PersonWithOrg[];
   organizations: { id: string; name: string }[];
   projects: { id: string; name: string }[];
-  promotedExtractionIds?: Set<string>;
+  promotedExtractionIds?: string[];
   peopleForAssignment?: PersonForAssignment[];
 }
 
