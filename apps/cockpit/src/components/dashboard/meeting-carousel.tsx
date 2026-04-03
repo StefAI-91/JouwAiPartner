@@ -28,10 +28,31 @@ export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: Meetin
   const [current, setCurrent] = useState(0);
   const total = meetings.length;
 
+  const [fading, setFading] = useState(false);
+  const pendingIndex = useRef<number | null>(null);
+
   const goTo = useCallback(
-    (index: number) => setCurrent(((index % total) + total) % total),
-    [total],
+    (index: number) => {
+      const next = ((index % total) + total) % total;
+      if (next === current) return;
+      pendingIndex.current = next;
+      setFading(true);
+    },
+    [total, current],
   );
+
+  // When fade-out completes, swap slide and fade back in
+  useEffect(() => {
+    if (!fading) return;
+    const timer = setTimeout(() => {
+      if (pendingIndex.current !== null) {
+        setCurrent(pendingIndex.current);
+        pendingIndex.current = null;
+      }
+      setFading(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [fading]);
 
   // Auto-advance every 12s, pause on hover
   const [paused, setPaused] = useState(false);
@@ -125,7 +146,7 @@ export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: Meetin
         )}
 
         <Link href={`/meetings/${meeting.id}`} className="block">
-          <div className="px-8 pb-6 pt-7">
+          <div className={`px-8 pb-6 pt-7 transition-opacity duration-200 ${fading ? "opacity-0" : "opacity-100"}`}>
             {/* Header: title + meta */}
             <div className="mb-4 flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
