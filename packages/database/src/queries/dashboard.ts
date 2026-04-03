@@ -120,11 +120,11 @@ export async function listTodaysBriefingMeetings(
 
   const meetings = data as unknown as BriefingMeeting[];
 
-  // Pick the most recent day that has meetings
-  const mostRecentDate = meetings[0].date!;
-  const filtered = meetings.filter((m) => m.date === mostRecentDate);
+  // Pick the most recent day that has meetings (compare date portion only)
+  const mostRecentDay = meetings[0].date!.slice(0, 10);
+  const filtered = meetings.filter((m) => m.date?.slice(0, 10) === mostRecentDay);
 
-  const dayLabel = getDayLabel(mostRecentDate, todayStr);
+  const dayLabel = getDayLabel(mostRecentDay, todayStr);
 
   return { meetings: filtered, dayLabel };
 }
