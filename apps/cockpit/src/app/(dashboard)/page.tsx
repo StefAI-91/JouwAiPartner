@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@repo/database/supabase/server";
 import {
   listRecentVerifiedMeetings,
-  listBriefingMeetings,
+  listTodaysBriefingMeetings,
   getExtractionCountsByMeetingIds,
 } from "@repo/database/queries/dashboard";
 import { listActiveTasks } from "@repo/database/queries/tasks";
@@ -26,12 +26,14 @@ export default async function DashboardPage() {
   const userName = profileResult?.data?.full_name ?? null;
 
   // Fetch all dashboard data in parallel
-  const [briefingMeetings, verifiedMeetings, tasks, people] = await Promise.all([
-    listBriefingMeetings(8, supabase),
+  const [briefingResult, verifiedMeetings, tasks, people] = await Promise.all([
+    listTodaysBriefingMeetings(supabase),
     listRecentVerifiedMeetings(5, supabase),
     listActiveTasks(20, supabase),
     listPeopleForAssignment(supabase),
   ]);
+
+  const { meetings: briefingMeetings, dayLabel } = briefingResult;
 
   // Batch-fetch extraction counts for carousel meetings (avoid N+1)
   const meetingIds = briefingMeetings.map((m) => m.id);
@@ -43,7 +45,7 @@ export default async function DashboardPage() {
       <Greeting userName={userName} />
 
       {/* Meeting briefing carousel */}
-      <MeetingCarousel meetings={briefingMeetings} extractionCounts={extractionCounts} />
+      <MeetingCarousel meetings={briefingMeetings} extractionCounts={extractionCounts} dayLabel={dayLabel} />
 
       {/* Two-column bottom: recent meetings + tasks */}
       <div className="grid gap-6 md:grid-cols-2">

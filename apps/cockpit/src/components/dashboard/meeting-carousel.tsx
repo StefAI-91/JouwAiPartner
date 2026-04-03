@@ -11,6 +11,7 @@ import type { BriefingMeeting, ExtractionCounts } from "@repo/database/queries/d
 interface MeetingCarouselProps {
   meetings: BriefingMeeting[];
   extractionCounts: Record<string, ExtractionCounts>;
+  dayLabel: string;
 }
 
 const EXTRACTION_LABELS: Record<keyof ExtractionCounts, { label: string; className: string }> = {
@@ -23,7 +24,7 @@ const EXTRACTION_LABELS: Record<keyof ExtractionCounts, { label: string; classNa
   insight: { label: "inzichten", className: "bg-gray-500/15 text-gray-700 dark:text-gray-300" },
 };
 
-export function MeetingCarousel({ meetings, extractionCounts }: MeetingCarouselProps) {
+export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: MeetingCarouselProps) {
   const [current, setCurrent] = useState(0);
   const total = meetings.length;
 
@@ -44,7 +45,7 @@ export function MeetingCarousel({ meetings, extractionCounts }: MeetingCarouselP
     return (
       <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/50">
         <p className="text-sm text-muted-foreground">
-          Nog geen AI-briefings beschikbaar. Briefings verschijnen na het reviewen van meetings.
+          Geen meetings gevonden in de afgelopen 3 dagen.
         </p>
       </div>
     );
@@ -59,6 +60,14 @@ export function MeetingCarousel({ meetings, extractionCounts }: MeetingCarouselP
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-medium text-muted-foreground">
+          Meetings &middot; {dayLabel}
+        </h2>
+        <span className="text-xs text-muted-foreground/60">
+          {current + 1} / {total}
+        </span>
+      </div>
       <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10">
         {/* Navigation arrows — visible on hover */}
         {total > 1 && (
