@@ -9,34 +9,36 @@ export function escapeLike(input: string): string {
 }
 
 /**
- * Resolve project IDs by partial name match.
+ * Resolve project IDs by partial name OR alias match.
  * Returns null if no projects found, or an array of matching IDs.
  */
 export async function resolveProjectIds(
   supabase: SupabaseClient,
   projectName: string,
 ): Promise<string[] | null> {
+  const escaped = escapeLike(projectName);
   const { data: projects } = await supabase
     .from("projects")
     .select("id")
-    .ilike("name", `%${escapeLike(projectName)}%`);
+    .or(`name.ilike.%${escaped}%,aliases.cs.{${projectName}}`);
 
   if (!projects || projects.length === 0) return null;
   return projects.map((p: { id: string }) => p.id);
 }
 
 /**
- * Resolve organization IDs by partial name match.
+ * Resolve organization IDs by partial name OR alias match.
  * Returns null if no organizations found, or an array of matching IDs.
  */
 export async function resolveOrganizationIds(
   supabase: SupabaseClient,
   orgName: string,
 ): Promise<string[] | null> {
+  const escaped = escapeLike(orgName);
   const { data: orgs } = await supabase
     .from("organizations")
     .select("id")
-    .ilike("name", `%${escapeLike(orgName)}%`);
+    .or(`name.ilike.%${escaped}%,aliases.cs.{${orgName}}`);
 
   if (!orgs || orgs.length === 0) return null;
   return orgs.map((o: { id: string }) => o.id);

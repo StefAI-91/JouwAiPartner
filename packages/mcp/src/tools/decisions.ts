@@ -15,8 +15,8 @@ export function registerDecisionTools(server: McpServer) {
     "Haal geverifieerde besluiten op uit meetings. Retourneert standaard alleen geverifieerde besluiten. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern). Toont wie het besluit nam, bronvermelding en verificatie-status.",
     {
       project: z.string().max(255).optional().describe("Filter by project name"),
-      date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional().describe("Start date (ISO format, e.g. 2026-03-01)"),
-      date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional().describe("End date, inclusive (ISO format, e.g. 2026-03-31)"),
+      date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional().describe("Filter by meeting date from (ISO format, e.g. 2026-03-01)"),
+      date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional().describe("Filter by meeting date to, inclusive (ISO format, e.g. 2026-03-31)"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
       include_drafts: z
         .boolean()
@@ -32,13 +32,18 @@ export function registerDecisionTools(server: McpServer) {
         [project, date_from, date_to].filter(Boolean).join(", ") || "all",
       );
 
+      const needsDateFilter = !!(date_from || date_to);
+      const meetingJoin = needsDateFilter
+        ? "meeting:meeting_id!inner (id, title, date, participants)"
+        : "meeting:meeting_id (id, title, date, participants)";
+
       let query = supabase
         .from("extractions")
         .select(
           `
           id, content, confidence, transcript_ref, metadata, corrected_by, corrected_at, created_at,
           verification_status, verified_by, verified_at,
-          meeting:meeting_id (id, title, date, participants),
+          ${meetingJoin},
           organization:organization_id (name),
           project:project_id (name)
         `,
@@ -51,11 +56,11 @@ export function registerDecisionTools(server: McpServer) {
       }
 
       if (date_from) {
-        query = query.gte("created_at", date_from);
+        query = query.gte("meeting.date", date_from);
       }
       if (date_to) {
         const endOfDay = date_to.includes("T") ? date_to : `${date_to}T23:59:59.999Z`;
-        query = query.lte("created_at", endOfDay);
+        query = query.lte("meeting.date", endOfDay);
       }
 
       if (project) {

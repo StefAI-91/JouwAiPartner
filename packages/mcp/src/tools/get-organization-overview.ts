@@ -25,10 +25,11 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       const supabase = getAdminClient();
       await trackMcpQuery(supabase, "get_organization_overview", organization_name);
 
+      const escaped = escapeLike(organization_name);
       const { data: orgs, error: orgError } = await supabase
         .from("organizations")
         .select("id, name, aliases, type, contact_person, email, status")
-        .ilike("name", `%${escapeLike(organization_name)}%`)
+        .or(`name.ilike.%${escaped}%,aliases.cs.{${organization_name}}`)
         .limit(1);
 
       if (orgError || !orgs || orgs.length === 0) {

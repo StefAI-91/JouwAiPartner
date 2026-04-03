@@ -32,7 +32,10 @@ export function registerOrganizationTools(server: McpServer) {
 
       if (type) query = query.eq("type", type);
       if (status) query = query.eq("status", status);
-      if (search) query = query.ilike("name", `%${escapeLike(search)}%`);
+      if (search) {
+        const escaped = escapeLike(search);
+        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${search}}`);
+      }
 
       const { data, error } = await query.limit(50);
 

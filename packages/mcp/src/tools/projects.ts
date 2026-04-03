@@ -34,7 +34,10 @@ export function registerProjectTools(server: McpServer) {
         .order("name");
 
       if (status) query = query.eq("status", status);
-      if (search) query = query.ilike("name", `%${escapeLike(search)}%`);
+      if (search) {
+        const escaped = escapeLike(search);
+        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${search}}`);
+      }
 
       if (organization) {
         const { data: orgs } = await supabase
