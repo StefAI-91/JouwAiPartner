@@ -10,8 +10,13 @@ interface MeetingsListProps {
   meetings: VerifiedMeetingListItem[];
 }
 
+function formatMeetingType(type: string): string {
+  return type.replace(/_/g, " ");
+}
+
 function formatDayHeading(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("nl-NL", {
+    timeZone: "Europe/Amsterdam",
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -43,7 +48,6 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
 
-  // Derive unique filter options from the data
   const meetingTypes = useMemo(
     () => [...new Set(meetings.map((m) => m.meeting_type).filter(Boolean))] as string[],
     [meetings],
@@ -59,7 +63,6 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [meetings]);
 
-  // Apply filters
   const filtered = useMemo(() => {
     let result = meetings;
     if (selectedType) {
@@ -78,7 +81,6 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
     <div className="space-y-6">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Type filter */}
         <select
           value={selectedType ?? ""}
           onChange={(e) => setSelectedType(e.target.value || null)}
@@ -87,12 +89,11 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
           <option value="">Alle types</option>
           {meetingTypes.map((type) => (
             <option key={type} value={type}>
-              {type.replace(/_/g, " ")}
+              {formatMeetingType(type)}
             </option>
           ))}
         </select>
 
-        {/* Person filter */}
         <select
           value={selectedPerson ?? ""}
           onChange={(e) => setSelectedPerson(e.target.value || null)}
@@ -106,7 +107,6 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
           ))}
         </select>
 
-        {/* Clear filters */}
         {hasFilters && (
           <button
             onClick={() => {
@@ -120,7 +120,6 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
           </button>
         )}
 
-        {/* Result count when filtered */}
         {hasFilters && (
           <span className="text-xs text-muted-foreground">
             {filtered.length} van {meetings.length}
@@ -144,7 +143,7 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
                 <Link
                   key={meeting.id}
                   href={`/meetings/${meeting.id}`}
-                  className="group flex items-center gap-3 py-2.5 transition-colors hover:bg-muted/40 rounded-lg px-2"
+                  className="group flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-muted/40"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium leading-snug">
@@ -165,7 +164,7 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
                       )}
                       {meeting.meeting_type && (
                         <Badge variant="outline" className="h-4 text-[10px]">
-                          {meeting.meeting_type.replace(/_/g, " ")}
+                          {formatMeetingType(meeting.meeting_type)}
                         </Badge>
                       )}
                     </div>

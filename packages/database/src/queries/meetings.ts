@@ -90,21 +90,33 @@ export interface VerifiedMeetingListItem {
 
 export async function listVerifiedMeetings(
   client?: SupabaseClient,
-): Promise<VerifiedMeetingListItem[]> {
+  { limit = 50, offset = 0 }: { limit?: number; offset?: number } = {},
+): Promise<{ data: VerifiedMeetingListItem[]; total: number }> {
   const db = client ?? getAdminClient();
-  const { data, error } = await db
+  const { data, error, count } = await db
     .from("meetings")
-    .select("id, title, date, meeting_type, organization:organizations(name), meeting_participants(person:people(id, name))")
+    .select(
+      `id, title, date, meeting_type,
+       organization:organizations(name),
+       meeting_participants(person:people(id, name))`,
+      { count: "exact" },
+    )
     .eq("verification_status", "verified")
-    .order("date", { ascending: false, nullsFirst: false });
+    .order("date", { ascending: false, nullsFirst: false })
+    .range(offset, offset + limit - 1);
 
-  if (error || !data) return [];
-  return (data as unknown as (Omit<VerifiedMeetingListItem, "participants"> & { meeting_participants: { person: { id: string; name: string } }[] })[]).map(
-    ({ meeting_participants, ...rest }) => ({
-      ...rest,
-      participants: meeting_participants?.map((mp) => mp.person) ?? [],
-    }),
-  );
+  if (error) throw new Error(`Failed to load meetings: ${error.message}`);
+
+  const meetings = (
+    data as unknown as (Omit<VerifiedMeetingListItem, "participants"> & {
+      meeting_participants: { person: { id: string; name: string } }[];
+    })[]
+  ).map(({ meeting_participants, ...rest }) => ({
+    ...rest,
+    participants: meeting_participants?.map((mp) => mp.person) ?? [],
+  }));
+
+  return { data: meetings, total: count ?? meetings.length };
 }
 
 export async function getMeetingByFirefliesId(firefliesId: string) {

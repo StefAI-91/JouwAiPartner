@@ -1,13 +1,13 @@
 export const dynamic = "force-dynamic";
 
+import { Calendar } from "lucide-react";
 import { createClient } from "@repo/database/supabase/server";
 import { listVerifiedMeetings } from "@repo/database/queries/meetings";
 import { MeetingsList } from "@/components/meetings/meetings-list";
-import { Calendar } from "lucide-react";
 
 export default async function MeetingsPage() {
   const supabase = await createClient();
-  const meetings = await listVerifiedMeetings(supabase);
+  const { data: meetings, total } = await listVerifiedMeetings(supabase);
 
   if (meetings.length === 0) {
     return (
@@ -26,7 +26,7 @@ export default async function MeetingsPage() {
       <div>
         <h1>Meetings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {meetings.length} verified meeting{meetings.length !== 1 ? "s" : ""}
+          {total} verified meeting{total !== 1 ? "s" : ""}
         </p>
       </div>
 
