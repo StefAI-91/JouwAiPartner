@@ -11,12 +11,129 @@ import {
 import { trackMcpQuery } from "./usage-tracking";
 
 export function registerActionTools(server: McpServer) {
+  // ── Tool 1: get_tasks — promoted, actively tracked tasks ──
   server.tool(
-    "get_action_items",
-    "Haal geverifieerde actiepunten (taken, to-dos, afspraken) op uit meetings. Retourneert standaard alleen geverifieerde actiepunten. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern). Toont eigenaar, deadline, bronvermelding en verificatie-status.",
+    "get_tasks",
+    "Haal actieve taken op. Dit zijn gepromoveerde actiepunten uit meetings die actief worden bijgehouden. Toont eigenaar, deadline en status. Gebruik get_action_items voor alle ruwe actiepunten uit meeting extracties.",
     {
       person: z
-        .string().max(255)
+        .string()
+        .max(255)
+        .optional()
+        .describe("Filter by assigned person name"),
+      status: z
+        .enum(["active", "done", "all"])
+        .optional()
+        .default("active")
+        .describe("Task status filter (default: active)"),
+      limit: z.number().optional().default(20).describe("Max results (default 20)"),
+    },
+    async ({ person, status, limit }) => {
+      const supabase = getAdminClient();
+      await trackMcpQuery(
+        supabase,
+        "get_tasks",
+        [person, status].filter(Boolean).join(", ") || "all",
+      );
+
+      let query = supabase
+        .from("tasks")
+        .select(
+          `id, title, status, due_date, assigned_to, completed_at, created_at,
+           assigned_person:assigned_to (id, name, team)`,
+        )
+        .order("due_date", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: false });
+
+      if (status === "active") {
+        query = query.eq("status", "active");
+      } else if (status === "done") {
+        query = query.eq("status", "done");
+      } else {
+        query = query.in("status", ["active", "done"]);
+      }
+
+      if (person) {
+        // Resolve person IDs by name, then filter tasks by assigned_to
+        const escaped = escapeLike(person);
+        const { data: matchedPeople } = await supabase
+          .from("people")
+          .select("id")
+          .ilike("name", `%${escaped}%`);
+        const personIds = matchedPeople?.map((p) => p.id) ?? [];
+        if (personIds.length === 0) {
+          return {
+            content: [{ type: "text" as const, text: `Geen persoon gevonden voor "${person}".` }],
+          };
+        }
+        query = query.in("assigned_to", personIds);
+      }
+
+      const { data: tasks, error } = await query.limit(limit);
+
+      if (error) {
+        return {
+          content: [{ type: "text" as const, text: `Error: ${error.message}` }],
+        };
+      }
+
+      if (!tasks || tasks.length === 0) {
+        return {
+          content: [{ type: "text" as const, text: "Geen taken gevonden." }],
+        };
+      }
+
+      interface Task {
+        id: string;
+        title: string;
+        status: string;
+        due_date: string | null;
+        assigned_to: string | null;
+        assigned_person: { id: string; name: string; team: string | null } | null;
+        completed_at: string | null;
+        created_at: string;
+      }
+
+      const typedTasks = tasks as unknown as Task[];
+
+      const formatted = typedTasks.map((task: Task, i: number) => {
+        const assignee = task.assigned_person
+          ? `${task.assigned_person.name}${task.assigned_person.team ? ` (${task.assigned_person.team})` : " (klant)"}`
+          : null;
+        const statusLabel = task.status === "done" ? "Afgerond" : "Actief";
+
+        return [
+          `${i + 1}. **${task.title}**`,
+          `   Status: ${statusLabel}`,
+          assignee ? `   Eigenaar: ${assignee}` : null,
+          task.due_date ? `   Deadline: ${task.due_date}` : null,
+          task.completed_at
+            ? `   Afgerond: ${new Date(task.completed_at).toLocaleDateString("nl-NL")}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join("\n");
+      });
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `${typedTasks.length} taken gevonden:\n\n${formatted.join("\n\n")}`,
+          },
+        ],
+      };
+    },
+  );
+
+  // ── Tool 2: get_action_items — raw extraction data from meetings ──
+  server.tool(
+    "get_action_items",
+    "Haal ruwe actiepunten op uit meeting extracties. Dit zijn AI-geëxtraheerde items die mogelijk nog niet gepromoveerd zijn tot actieve taken. Gebruik get_tasks voor actief bijgehouden taken.",
+    {
+      person: z
+        .string()
+        .max(255)
         .optional()
         .describe("Filter by person name (matches assignee in metadata or content)"),
       project: z.string().max(255).optional().describe("Filter by project name"),
@@ -39,7 +156,8 @@ export function registerActionTools(server: McpServer) {
         .from("extractions")
         .select(
           `
-          id, content, confidence, transcript_ref, metadata, corrected_by, corrected_at, created_at,
+          id, content, confidence, transcript_ref, metadata,
+          corrected_by, corrected_at, created_at,
           verification_status, verified_by, verified_at,
           meeting:meeting_id (id, title, date, participants),
           organization:organization_id (name),
@@ -127,8 +245,8 @@ export function registerActionTools(server: McpServer) {
           item.confidence,
           item.corrected_by,
         );
-        const assignee = item.metadata?.assignee;
-        const deadline = item.metadata?.deadline;
+        const assignee = item.metadata?.assignee ?? null;
+        const deadline = item.metadata?.deadline ?? null;
 
         return [
           `${i + 1}. **${item.content}**`,

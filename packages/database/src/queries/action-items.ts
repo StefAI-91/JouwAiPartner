@@ -1,28 +1,37 @@
 import { getAdminClient } from "../supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export interface OpenActionItem {
+export interface ActionItemRow {
   id: string;
-  description: string;
-  assignee: string | null;
-  due_date: string | null;
-  scope: string | null;
-  status: string;
+  content: string;
+  metadata: { assignee?: string; deadline?: string; scope?: string } | null;
+  meeting: { id: string; title: string; date: string | null } | null;
+  project: { id: string; name: string } | null;
+  verification_status: string;
+  created_at: string;
 }
 
-export async function listOpenActionItems(
-  limit: number = 10,
+/**
+ * List verified action item extractions from meetings.
+ * These are raw AI-extracted items, not promoted tasks.
+ */
+export async function listVerifiedActionItems(
+  limit: number = 20,
   client?: SupabaseClient,
-): Promise<OpenActionItem[]> {
+): Promise<ActionItemRow[]> {
   const db = client ?? getAdminClient();
   const { data, error } = await db
-    .from("action_items")
-    .select("id, description, assignee, due_date, scope, status")
-    .eq("status", "open")
-    .order("due_date", { ascending: true, nullsFirst: false })
+    .from("extractions")
+    .select(
+      `id, content, metadata, verification_status, created_at,
+       meeting:meeting_id (id, title, date),
+       project:project_id (id, name)`,
+    )
+    .eq("type", "action_item")
+    .eq("verification_status", "verified")
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error || !data) return [];
-  return data as OpenActionItem[];
+  return data as unknown as ActionItemRow[];
 }

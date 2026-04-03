@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ListChecks } from "lucide-react";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
 import {
   EXTRACTION_TYPE_COLORS,
   EXTRACTION_TYPE_ICONS,
 } from "@/components/shared/extraction-constants";
+import { PromoteTaskForm } from "./promote-task-form";
+import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface ExtractionCardProps {
   extraction: {
@@ -17,6 +19,9 @@ interface ExtractionCardProps {
     transcript_ref: string | null;
   };
   readOnly?: boolean;
+  showPromote?: boolean;
+  isPromoted?: boolean;
+  people?: PersonForAssignment[];
   onEdit?: (id: string, content: string) => void;
   onDelete?: (id: string) => void;
   onRefClick?: (ref: string) => void;
@@ -25,12 +30,17 @@ interface ExtractionCardProps {
 export function ExtractionCard({
   extraction,
   readOnly,
+  showPromote,
+  isPromoted,
+  people,
   onEdit,
   onDelete,
   onRefClick,
 }: ExtractionCardProps) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(extraction.content);
+  const [promoted, setPromoted] = useState(isPromoted ?? false);
+  const [showPromoteForm, setShowPromoteForm] = useState(false);
   const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
   const Icon = EXTRACTION_TYPE_ICONS[extraction.type];
 
@@ -40,6 +50,8 @@ export function ExtractionCard({
       onEdit(extraction.id, content);
     }
   }
+
+  const canPromote = showPromote && extraction.type === "action_item" && !promoted;
 
   return (
     <div
@@ -119,9 +131,41 @@ export function ExtractionCard({
         </blockquote>
       )}
 
-      <div className="mt-2">
+      <div className="mt-2 flex items-center justify-between">
         <ConfidenceBar confidence={extraction.confidence} />
+
+        {canPromote && !showPromoteForm && (
+          <button
+            type="button"
+            onClick={() => setShowPromoteForm(true)}
+            className="flex shrink-0 items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-[11px] font-medium text-green-700 transition-colors hover:bg-green-100"
+          >
+            <ListChecks className="size-3" />
+            Maak taak
+          </button>
+        )}
+
+        {showPromote && extraction.type === "action_item" && promoted && (
+          <span className="flex shrink-0 items-center gap-1 rounded-md bg-green-100 px-2 py-1 text-[11px] font-medium text-green-700">
+            <ListChecks className="size-3" />
+            Taak aangemaakt
+          </span>
+        )}
       </div>
+
+      {/* Promote form */}
+      {canPromote && showPromoteForm && (
+        <PromoteTaskForm
+          extractionId={extraction.id}
+          title={extraction.content}
+          people={people ?? []}
+          onPromoted={() => {
+            setPromoted(true);
+            setShowPromoteForm(false);
+          }}
+          onCancel={() => setShowPromoteForm(false)}
+        />
+      )}
     </div>
   );
 }
