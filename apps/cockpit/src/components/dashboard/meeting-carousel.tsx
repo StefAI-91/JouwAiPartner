@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Building2, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,32 @@ export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: Meetin
     return () => clearInterval(timer);
   }, [current, paused, total, goTo]);
 
+  // Touch/swipe support
+  const touchStart = useRef<number | null>(null);
+  const touchDelta = useRef<number>(0);
+  const SWIPE_THRESHOLD = 50;
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStart.current = e.touches[0].clientX;
+    touchDelta.current = 0;
+    setPaused(true);
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStart.current === null) return;
+    touchDelta.current = e.touches[0].clientX - touchStart.current;
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (Math.abs(touchDelta.current) > SWIPE_THRESHOLD) {
+      if (touchDelta.current < 0) goTo(current + 1);
+      else goTo(current - 1);
+    }
+    touchStart.current = null;
+    touchDelta.current = 0;
+    setPaused(false);
+  }, [current, goTo]);
+
   if (total === 0) {
     return (
       <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/50">
@@ -68,7 +94,12 @@ export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: Meetin
           {current + 1} / {total}
         </span>
       </div>
-      <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10">
+      <div
+        className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 touch-pan-y"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {/* Navigation arrows — visible on hover */}
         {total > 1 && (
           <>
