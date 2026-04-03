@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ExtractionCard } from "./extraction-card";
+import { ExtractionCard } from "@/components/shared/extraction-card";
 import { ReviewActionBar } from "./review-action-bar";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EditableTitle } from "@/components/meetings/editable-title";
@@ -47,7 +47,7 @@ interface ReviewDetailProps {
   allPeople: { id: string; name: string; role: string | null; organization: { name: string } | null }[];
   organizations: { id: string; name: string }[];
   projects: { id: string; name: string }[];
-  promotedExtractionIds?: Set<string>;
+  promotedExtractionIds?: string[];
   peopleForAssignment?: PersonForAssignment[];
 }
 
@@ -185,7 +185,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
                   onClick={() => setActiveTab(type)}
                   className={`flex shrink-0 items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs font-medium transition-colors ${
                     isActive
-                      ? "bg-white text-foreground shadow-sm"
+                      ? "bg-card text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   }`}
                 >
@@ -215,7 +215,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
               onDelete={handleDelete}
               onRefClick={handleRefClick}
               showPromote
-              isPromoted={promotedExtractionIds?.has(ext.id)}
+              isPromoted={promotedExtractionIds?.includes(ext.id)}
               people={peopleForAssignment}
             />
           ))}

@@ -55,7 +55,7 @@ export function ExtractionCard({
 
   return (
     <div
-      className="group/card relative rounded-xl bg-white p-4 shadow-sm"
+      className="group/card relative rounded-xl bg-card p-4 shadow-sm"
       style={{ borderLeft: `3px solid ${config.color}` }}
     >
       {/* Top row: type label + action buttons */}
