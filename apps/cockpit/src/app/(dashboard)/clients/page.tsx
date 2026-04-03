@@ -25,7 +25,7 @@ export default async function ClientsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-2xl space-y-4 px-4 py-8">
       <div>
         <h1>Clients</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -33,13 +33,13 @@ export default async function ClientsPage() {
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="flex flex-col gap-4">
         {organizations.map((org) => (
           <Link key={org.id} href={`/clients/${org.id}`}>
-            <div className="rounded-[2rem] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+            <div className="rounded-2xl bg-white px-5 py-4 shadow-sm transition-shadow hover:shadow-md">
               {/* Name + badges */}
               <div className="flex items-start justify-between gap-3">
-                <h3 className="font-heading text-lg font-semibold leading-snug">{org.name}</h3>
+                <h3 className="font-heading text-base font-semibold leading-snug">{org.name}</h3>
                 <div className="flex shrink-0 gap-1.5">
                   <Badge className={`text-[10px] ${ORG_TYPE_COLORS[org.type] ?? ORG_TYPE_COLORS.other}`}>
                     {org.type}
@@ -53,7 +53,7 @@ export default async function ClientsPage() {
               </div>
 
               {/* Meta row */}
-              <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="mt-2.5 flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <FolderKanban className="h-3.5 w-3.5" />
                   {org.project_count} project{org.project_count !== 1 ? "s" : ""}
