@@ -85,7 +85,7 @@ export interface VerifiedMeetingListItem {
   date: string | null;
   meeting_type: string | null;
   organization: { name: string } | null;
-  participant_count: number;
+  participants: { id: string; name: string }[];
 }
 
 export async function listVerifiedMeetings(
@@ -94,15 +94,15 @@ export async function listVerifiedMeetings(
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("meetings")
-    .select("id, title, date, meeting_type, organization:organizations(name), meeting_participants(person_id)")
+    .select("id, title, date, meeting_type, organization:organizations(name), meeting_participants(person:people(id, name))")
     .eq("verification_status", "verified")
     .order("date", { ascending: false, nullsFirst: false });
 
   if (error || !data) return [];
-  return (data as unknown as (Omit<VerifiedMeetingListItem, "participant_count"> & { meeting_participants: { person_id: string }[] })[]).map(
+  return (data as unknown as (Omit<VerifiedMeetingListItem, "participants"> & { meeting_participants: { person: { id: string; name: string } }[] })[]).map(
     ({ meeting_participants, ...rest }) => ({
       ...rest,
-      participant_count: meeting_participants?.length ?? 0,
+      participants: meeting_participants?.map((mp) => mp.person) ?? [],
     }),
   );
 }
