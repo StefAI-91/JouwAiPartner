@@ -79,6 +79,34 @@ export async function listRecentMeetings(
   return data as RecentMeeting[];
 }
 
+export interface VerifiedMeetingListItem {
+  id: string;
+  title: string | null;
+  date: string | null;
+  meeting_type: string | null;
+  organization: { name: string } | null;
+  participant_count: number;
+}
+
+export async function listVerifiedMeetings(
+  client?: SupabaseClient,
+): Promise<VerifiedMeetingListItem[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select("id, title, date, meeting_type, organization:organizations(name), meeting_participants(person_id)")
+    .eq("verification_status", "verified")
+    .order("date", { ascending: false, nullsFirst: false });
+
+  if (error || !data) return [];
+  return (data as unknown as (Omit<VerifiedMeetingListItem, "participant_count"> & { meeting_participants: { person_id: string }[] })[]).map(
+    ({ meeting_participants, ...rest }) => ({
+      ...rest,
+      participant_count: meeting_participants?.length ?? 0,
+    }),
+  );
+}
+
 export async function getMeetingByFirefliesId(firefliesId: string) {
   const { data } = await getAdminClient()
     .from("meetings")
