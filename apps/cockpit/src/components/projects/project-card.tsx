@@ -16,22 +16,22 @@ interface ProjectCardProps {
 export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <Link href={`/projects/${project.id}`}>
-      <div className="rounded-[2rem] bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+      <div className="rounded-2xl bg-white px-5 py-4 shadow-sm transition-shadow hover:shadow-md">
         {/* Organization */}
         {project.organization && (
           <p className="text-xs font-medium text-foreground/70">{project.organization.name}</p>
         )}
 
         {/* Project name */}
-        <h3 className="mt-1 font-heading text-lg font-semibold leading-snug">{project.name}</h3>
+        <h3 className="mt-0.5 font-heading text-base font-semibold leading-snug">{project.name}</h3>
 
         {/* Status pipeline */}
-        <div className="mt-3">
+        <div className="mt-2.5">
           <StatusPipeline status={project.status} />
         </div>
 
         {/* Metrics row */}
-        <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
           {project.last_meeting_date && (
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3.5 w-3.5" />

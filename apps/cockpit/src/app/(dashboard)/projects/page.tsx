@@ -22,7 +22,7 @@ export default async function ProjectsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-2xl space-y-4 px-4 py-8">
       <div>
         <h1>Projects</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -30,7 +30,7 @@ export default async function ProjectsPage() {
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {projects.map((project) => (
           <ProjectCard key={project.id} project={project} />
         ))}
