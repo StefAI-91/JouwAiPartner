@@ -33,7 +33,7 @@ export default async function ClientsPage() {
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="flex flex-col gap-4">
         {organizations.map((org) => (
           <Link key={org.id} href={`/clients/${org.id}`}>
             <div className="rounded-2xl bg-white px-5 py-4 shadow-sm transition-shadow hover:shadow-md">
