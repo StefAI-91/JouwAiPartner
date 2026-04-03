@@ -8,7 +8,7 @@ export default async function LoginPage({
   const { returnTo } = await searchParams;
 
   return (
-    <div className="flex min-h-full">
+    <div className="flex min-h-dvh">
       {/* Left: Branded panel */}
       <div className="relative hidden w-1/2 overflow-hidden bg-primary lg:flex lg:flex-col lg:justify-between">
         {/* Decorative pattern */}
