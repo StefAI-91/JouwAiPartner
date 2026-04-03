@@ -108,9 +108,7 @@ export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: Meetin
       onMouseLeave={() => setPaused(false)}
     >
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-medium text-muted-foreground">
-          Meetings &middot; {dayLabel}
-        </h2>
+        <h2 className="text-sm font-medium text-muted-foreground">Meetings &middot; {dayLabel}</h2>
         <span className="text-xs text-muted-foreground/60">
           {current + 1} / {total}
         </span>
@@ -146,12 +144,14 @@ export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: Meetin
         )}
 
         <Link href={`/meetings/${meeting.id}`} className="block">
-          <div className={`px-8 pb-6 pt-7 transition-opacity duration-200 ${fading ? "opacity-0" : "opacity-100"}`}>
+          <div
+            className={`px-8 pb-6 pt-7 transition-opacity duration-200 ${fading ? "opacity-0" : "opacity-100"}`}
+          >
             {/* Header: title + meta */}
             <div className="mb-4 flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-lg font-semibold leading-snug">
-                  {meeting.title ?? "Untitled meeting"}
+                  {meeting.title ?? "Meeting zonder titel"}
                 </h3>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   {meeting.organization && (

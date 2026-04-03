@@ -112,7 +112,8 @@ export async function listTodaysBriefingMeetings(
     .not("ai_briefing", "is", null)
     .gte("date", threeDaysAgoStr)
     .lte("date", todayStr)
-    .order("date", { ascending: false, nullsFirst: false });
+    .order("date", { ascending: false, nullsFirst: false })
+    .limit(50);
 
   if (error || !data || data.length === 0) {
     return { meetings: [], dayLabel: "Vandaag" };
@@ -121,7 +122,10 @@ export async function listTodaysBriefingMeetings(
   const meetings = data as unknown as BriefingMeeting[];
 
   // Pick the most recent day that has meetings (compare date portion only)
-  const mostRecentDay = meetings[0].date!.slice(0, 10);
+  const mostRecentDay = meetings[0].date?.slice(0, 10);
+  if (!mostRecentDay) {
+    return { meetings: [], dayLabel: "Vandaag" };
+  }
   const filtered = meetings.filter((m) => m.date?.slice(0, 10) === mostRecentDay);
 
   const dayLabel = getDayLabel(mostRecentDay, todayStr);
