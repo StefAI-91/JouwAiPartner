@@ -1,8 +1,7 @@
-import { ExtractionCard } from "@/components/review/extraction-card";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
-import { EXTRACTION_TYPE_ORDER, EXTRACTION_TYPE_LABELS } from "@/components/shared/extraction-constants";
 import { EditableTitle } from "@/components/meetings/editable-title";
+import { ExtractionTabsPanel } from "@/components/meetings/extraction-tabs-panel";
 import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
@@ -26,13 +25,6 @@ export function MeetingDetailView({
   promotedExtractionIds,
   peopleForAssignment,
 }: MeetingDetailViewProps) {
-  const grouped = new Map<string, MeetingDetail["extractions"]>();
-  for (const ext of meeting.extractions) {
-    const list = grouped.get(ext.type) ?? [];
-    list.push(ext);
-    grouped.set(ext.type, list);
-  }
-
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
 
@@ -70,38 +62,13 @@ export function MeetingDetailView({
         }
       />
 
-      {/* Right panel: Extractions (45%) */}
-      <div className="flex-1 overflow-y-auto p-6 lg:w-[45%] lg:flex-none">
-        <h2 className="mb-4">Extracties</h2>
-        {meeting.extractions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Geen extracties</p>
-        ) : (
-          <div className="space-y-6">
-            {EXTRACTION_TYPE_ORDER.map((type) => {
-              const items = grouped.get(type);
-              if (!items || items.length === 0) return null;
-              return (
-                <div key={type}>
-                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                    {EXTRACTION_TYPE_LABELS[type]} ({items.length})
-                  </h3>
-                  <div className="space-y-3">
-                    {items.map((ext) => (
-                      <ExtractionCard
-                        key={ext.id}
-                        extraction={ext}
-                        readOnly
-                        showPromote
-                        isPromoted={promotedExtractionIds?.has(ext.id)}
-                        people={peopleForAssignment}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      {/* Right panel: Extractions with tabs (45%) */}
+      <div className="flex-1 overflow-y-auto lg:w-[45%] lg:flex-none">
+        <ExtractionTabsPanel
+          extractions={meeting.extractions}
+          promotedExtractionIds={promotedExtractionIds}
+          peopleForAssignment={peopleForAssignment}
+        />
       </div>
     </div>
   );
