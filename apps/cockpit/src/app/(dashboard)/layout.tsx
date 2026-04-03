@@ -9,7 +9,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex min-h-screen flex-col">
       {/* Mobile header */}
-      <header className="flex h-14 items-center border-b border-border/50 bg-white/60 px-4 backdrop-blur-sm">
+      <header className="flex h-14 items-center gap-2.5 border-b border-border/50 bg-white/60 px-4 backdrop-blur-sm">
+        <img
+          src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
+          alt="Jouw AI Partner"
+          className="h-6 w-auto"
+        />
         <span className="font-heading text-sm font-semibold text-primary">
           Knowledge Platform
         </span>
