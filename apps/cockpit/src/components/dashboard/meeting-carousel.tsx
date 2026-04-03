@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Building2, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import type { BriefingMeeting, ExtractionCounts } from "@repo/database/queries/d
 interface MeetingCarouselProps {
   meetings: BriefingMeeting[];
   extractionCounts: Record<string, ExtractionCounts>;
+  dayLabel: string;
 }
 
 const EXTRACTION_LABELS: Record<keyof ExtractionCounts, { label: string; className: string }> = {
@@ -23,14 +24,35 @@ const EXTRACTION_LABELS: Record<keyof ExtractionCounts, { label: string; classNa
   insight: { label: "inzichten", className: "bg-gray-500/15 text-gray-700 dark:text-gray-300" },
 };
 
-export function MeetingCarousel({ meetings, extractionCounts }: MeetingCarouselProps) {
+export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: MeetingCarouselProps) {
   const [current, setCurrent] = useState(0);
   const total = meetings.length;
 
+  const [fading, setFading] = useState(false);
+  const pendingIndex = useRef<number | null>(null);
+
   const goTo = useCallback(
-    (index: number) => setCurrent(((index % total) + total) % total),
-    [total],
+    (index: number) => {
+      const next = ((index % total) + total) % total;
+      if (next === current) return;
+      pendingIndex.current = next;
+      setFading(true);
+    },
+    [total, current],
   );
+
+  // When fade-out completes, swap slide and fade back in
+  useEffect(() => {
+    if (!fading) return;
+    const timer = setTimeout(() => {
+      if (pendingIndex.current !== null) {
+        setCurrent(pendingIndex.current);
+        pendingIndex.current = null;
+      }
+      setFading(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [fading]);
 
   // Auto-advance every 12s, pause on hover
   const [paused, setPaused] = useState(false);
@@ -40,11 +62,37 @@ export function MeetingCarousel({ meetings, extractionCounts }: MeetingCarouselP
     return () => clearInterval(timer);
   }, [current, paused, total, goTo]);
 
+  // Touch/swipe support
+  const touchStart = useRef<number | null>(null);
+  const touchDelta = useRef<number>(0);
+  const SWIPE_THRESHOLD = 50;
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStart.current = e.touches[0].clientX;
+    touchDelta.current = 0;
+    setPaused(true);
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStart.current === null) return;
+    touchDelta.current = e.touches[0].clientX - touchStart.current;
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (Math.abs(touchDelta.current) > SWIPE_THRESHOLD) {
+      if (touchDelta.current < 0) goTo(current + 1);
+      else goTo(current - 1);
+    }
+    touchStart.current = null;
+    touchDelta.current = 0;
+    setPaused(false);
+  }, [current, goTo]);
+
   if (total === 0) {
     return (
       <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card/50">
         <p className="text-sm text-muted-foreground">
-          Nog geen AI-briefings beschikbaar. Briefings verschijnen na het reviewen van meetings.
+          Geen meetings gevonden in de afgelopen 3 dagen.
         </p>
       </div>
     );
@@ -59,7 +107,18 @@ export function MeetingCarousel({ meetings, extractionCounts }: MeetingCarouselP
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-medium text-muted-foreground">Meetings &middot; {dayLabel}</h2>
+        <span className="text-xs text-muted-foreground/60">
+          {current + 1} / {total}
+        </span>
+      </div>
+      <div
+        className="overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10 touch-pan-y"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {/* Navigation arrows — visible on hover */}
         {total > 1 && (
           <>
@@ -85,12 +144,14 @@ export function MeetingCarousel({ meetings, extractionCounts }: MeetingCarouselP
         )}
 
         <Link href={`/meetings/${meeting.id}`} className="block">
-          <div className="px-8 pb-6 pt-7">
+          <div
+            className={`px-8 pb-6 pt-7 transition-opacity duration-200 ${fading ? "opacity-0" : "opacity-100"}`}
+          >
             {/* Header: title + meta */}
             <div className="mb-4 flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-lg font-semibold leading-snug">
-                  {meeting.title ?? "Untitled meeting"}
+                  {meeting.title ?? "Meeting zonder titel"}
                 </h3>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   {meeting.organization && (

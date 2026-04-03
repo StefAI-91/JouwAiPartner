@@ -81,6 +81,71 @@ export async function listBriefingMeetings(
   return data as unknown as BriefingMeeting[];
 }
 
+export interface TodaysBriefingResult {
+  meetings: BriefingMeeting[];
+  /** The label for the day shown: "Vandaag", "Gisteren", or a formatted date */
+  dayLabel: string;
+}
+
+/**
+ * List briefing meetings for today, falling back to yesterday, then the day before.
+ * Returns the most recent day (within 3 days) that has meetings.
+ */
+export async function listTodaysBriefingMeetings(
+  client?: SupabaseClient,
+): Promise<TodaysBriefingResult> {
+  const db = client ?? getAdminClient();
+  const today = new Date();
+  const threeDaysAgo = new Date(today);
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
+
+  const todayStr = today.toISOString().split("T")[0];
+  const threeDaysAgoStr = threeDaysAgo.toISOString().split("T")[0];
+
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      `id, title, date, ai_briefing, meeting_type, party_type,
+       organization:organizations(name)`,
+    )
+    .eq("verification_status", "verified")
+    .not("ai_briefing", "is", null)
+    .gte("date", threeDaysAgoStr)
+    .lte("date", todayStr)
+    .order("date", { ascending: false, nullsFirst: false })
+    .limit(50);
+
+  if (error || !data || data.length === 0) {
+    return { meetings: [], dayLabel: "Vandaag" };
+  }
+
+  const meetings = data as unknown as BriefingMeeting[];
+
+  // Pick the most recent day that has meetings (compare date portion only)
+  const mostRecentDay = meetings[0].date?.slice(0, 10);
+  if (!mostRecentDay) {
+    return { meetings: [], dayLabel: "Vandaag" };
+  }
+  const filtered = meetings.filter((m) => m.date?.slice(0, 10) === mostRecentDay);
+
+  const dayLabel = getDayLabel(mostRecentDay, todayStr);
+
+  return { meetings: filtered, dayLabel };
+}
+
+function getDayLabel(dateStr: string, todayStr: string): string {
+  if (dateStr === todayStr) return "Vandaag";
+
+  const today = new Date(todayStr);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (dateStr === yesterday.toISOString().split("T")[0]) return "Gisteren";
+
+  // Format as readable date
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
+}
+
 export interface ExtractionCounts {
   decision: number;
   action_item: number;
