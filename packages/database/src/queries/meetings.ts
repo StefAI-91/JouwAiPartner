@@ -79,6 +79,46 @@ export async function listRecentMeetings(
   return data as RecentMeeting[];
 }
 
+export interface VerifiedMeetingListItem {
+  id: string;
+  title: string | null;
+  date: string | null;
+  meeting_type: string | null;
+  organization: { name: string } | null;
+  participants: { id: string; name: string }[];
+}
+
+export async function listVerifiedMeetings(
+  client?: SupabaseClient,
+  { limit = 50, offset = 0 }: { limit?: number; offset?: number } = {},
+): Promise<{ data: VerifiedMeetingListItem[]; total: number }> {
+  const db = client ?? getAdminClient();
+  const { data, error, count } = await db
+    .from("meetings")
+    .select(
+      `id, title, date, meeting_type,
+       organization:organizations(name),
+       meeting_participants(person:people(id, name))`,
+      { count: "exact" },
+    )
+    .eq("verification_status", "verified")
+    .order("date", { ascending: false, nullsFirst: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw new Error(`Failed to load meetings: ${error.message}`);
+
+  const meetings = (
+    data as unknown as (Omit<VerifiedMeetingListItem, "participants"> & {
+      meeting_participants: { person: { id: string; name: string } }[];
+    })[]
+  ).map(({ meeting_participants, ...rest }) => ({
+    ...rest,
+    participants: meeting_participants?.map((mp) => mp.person) ?? [],
+  }));
+
+  return { data: meetings, total: count ?? meetings.length };
+}
+
 export async function getMeetingByFirefliesId(firefliesId: string) {
   const { data } = await getAdminClient()
     .from("meetings")
