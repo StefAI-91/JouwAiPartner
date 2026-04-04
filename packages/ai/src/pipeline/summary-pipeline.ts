@@ -33,26 +33,49 @@ export async function generateProjectSummaries(
 
     console.log(`[generateProjectSummaries] Generating summaries for "${project.name}" (${projectId})`);
 
-    // Get all verified extractions for this project
-    const { data: extractions, error: extError } = await db
+    // Get meeting IDs linked to this project via junction table
+    const { data: meetingLinks } = await db
+      .from("meeting_projects")
+      .select("meeting_id")
+      .eq("project_id", projectId);
+
+    const linkedMeetingIds = (meetingLinks ?? []).map((l) => l.meeting_id);
+
+    // Get extractions from two sources:
+    // 1. Directly linked via extractions.project_id
+    // 2. From meetings linked via meeting_projects (regardless of extraction.project_id)
+    const { data: directExtractions } = await db
       .from("extractions")
-      .select("type, content, meeting:meetings(title, date)")
+      .select("id, type, content, meeting:meetings(title, date)")
       .eq("project_id", projectId)
       .eq("verification_status", "verified");
 
-    if (extError) {
-      console.error(`[generateProjectSummaries] Failed to get extractions:`, extError.message);
-      return { success: false, error: extError.message };
+    let meetingExtractions: typeof directExtractions = [];
+    if (linkedMeetingIds.length > 0) {
+      const { data } = await db
+        .from("extractions")
+        .select("id, type, content, meeting:meetings(title, date)")
+        .in("meeting_id", linkedMeetingIds)
+        .eq("verification_status", "verified");
+      meetingExtractions = data;
     }
 
-    if (!extractions || extractions.length === 0) {
+    // Merge and deduplicate by extraction ID
+    const seen = new Set<string>();
+    const allExtractions = [...(directExtractions ?? []), ...(meetingExtractions ?? [])].filter((e) => {
+      if (seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
+    });
+
+    if (allExtractions.length === 0) {
       console.log(`[generateProjectSummaries] No verified extractions for project "${project.name}" — skipping`);
-      return { success: false, error: "Geen verified extracties gevonden voor dit project. Koppel eerst meetings aan dit project en zorg dat ze geverifieerd zijn." };
+      return { success: false, error: "Geen verified extracties gevonden. Koppel meetings aan dit project en zorg dat ze geverifieerd zijn." };
     }
 
-    console.log(`[generateProjectSummaries] Found ${extractions.length} verified extractions, calling AI...`);
+    console.log(`[generateProjectSummaries] Found ${allExtractions.length} verified extractions (${(directExtractions ?? []).length} direct, ${(meetingExtractions ?? []).length} via meetings), calling AI...`);
 
-    const formattedExtractions = extractions.map((e) => {
+    const formattedExtractions = allExtractions.map((e) => {
       const meeting = e.meeting as unknown as { title: string | null; date: string | null } | null;
       return {
         type: e.type,
