@@ -1,27 +1,33 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import Userback from '@userback/widget';
-import type { UserbackWidget } from '@userback/widget';
+import Script from 'next/script';
 
-const UserbackContext = createContext<UserbackWidget | null>(null);
-
-export function UserbackProvider({ children }: { children: React.ReactNode }) {
-  const [userback, setUserback] = useState<UserbackWidget | null>(null);
-
-  useEffect(() => {
-    const token = process.env.NEXT_PUBLIC_USERBACK_TOKEN || 'A-yzBT0sBbRpLUAfh9yVWo0jSgV';
-
-    Userback(token, { autohide: false })
-      .then(setUserback)
-      .catch((err) => console.error('[Userback] Failed to initialize:', err));
-  }, []);
-
-  return (
-    <UserbackContext.Provider value={userback}>
-      {children}
-    </UserbackContext.Provider>
-  );
+declare global {
+  interface Window {
+    Userback?: Record<string, unknown>;
+  }
 }
 
-export const useUserback = () => useContext(UserbackContext);
+const USERBACK_TOKEN = process.env.NEXT_PUBLIC_USERBACK_TOKEN || 'A-yzBT0sBbRpLUAfh9yVWo0jSgV';
+
+export function UserbackProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <Script
+        id="userback-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            window.Userback = window.Userback || {};
+            Userback.access_token = "${USERBACK_TOKEN}";
+          `,
+        }}
+      />
+      <Script
+        src="https://static.userback.io/widget/v1.js"
+        strategy="afterInteractive"
+      />
+      {children}
+    </>
+  );
+}
