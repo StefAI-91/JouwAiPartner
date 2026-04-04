@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Nunito, Fredoka, Geist_Mono } from "next/font/google";
+import { UserbackProvider } from "@/components/shared/userback-provider";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -34,7 +35,10 @@ export default function RootLayout({
       lang="nl"
       className={`${nunito.variable} ${fredoka.variable} ${geistMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col antialiased">{children}</body>
+      <body className="min-h-full flex flex-col antialiased">
+        {children}
+        <UserbackProvider />
+      </body>
     </html>
   );
 }
