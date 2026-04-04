@@ -3,11 +3,7 @@
 import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { formatDateShort } from "@/lib/format";
-import {
-  updateTaskAction,
-  completeTaskAction,
-  dismissTaskAction,
-} from "@/actions/tasks";
+import { updateTaskAction, completeTaskAction, dismissTaskAction } from "@/actions/tasks";
 import { UserCircle, Calendar, ChevronDown, Check, X, CircleCheck } from "lucide-react";
 import type { TaskRow } from "@repo/database/queries/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
@@ -95,7 +91,9 @@ export function TaskItem({
   const isCompleted = task.status === "done";
 
   return (
-    <li className={`flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0 ${isCompleted ? "opacity-60" : ""}`}>
+    <li
+      className={`flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0 ${isCompleted ? "opacity-60" : ""}`}
+    >
       <div className="flex items-start gap-2">
         {isCompleted ? (
           <CircleCheck className="mt-0.5 size-4 shrink-0 text-green-500" />
@@ -111,7 +109,11 @@ export function TaskItem({
           </button>
         )}
         <div className="flex-1">
-          <p className={`text-sm leading-snug ${isCompleted ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+          <p
+            className={`text-sm leading-snug ${isCompleted ? "line-through text-muted-foreground" : ""}`}
+          >
+            {task.title}
+          </p>
 
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             {task.assigned_person ? (

@@ -16,11 +16,7 @@ export function registerActionTools(server: McpServer) {
     "get_tasks",
     "Haal taken op. Dit zijn gepromoveerde actiepunten uit meetings die actief worden bijgehouden. Filter op persoon, status, deadline-week of afronddatum. Gebruik get_action_items voor alle ruwe actiepunten uit meeting extracties.",
     {
-      person: z
-        .string()
-        .max(255)
-        .optional()
-        .describe("Filter by assigned person name"),
+      person: z.string().max(255).optional().describe("Filter by assigned person name"),
       status: z
         .enum(["active", "done", "all"])
         .optional()
@@ -28,18 +24,26 @@ export function registerActionTools(server: McpServer) {
         .describe("Task status filter (default: active)"),
       due_from: z
         .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional()
-        .describe("Filter tasks with due_date >= this date (YYYY-MM-DD). Useful for 'what is due this week?'"),
+        .describe(
+          "Filter tasks with due_date >= this date (YYYY-MM-DD). Useful for 'what is due this week?'",
+        ),
       due_to: z
         .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional()
         .describe("Filter tasks with due_date <= this date (YYYY-MM-DD)"),
       completed_from: z
         .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional()
-        .describe("Filter done tasks completed on or after this date (YYYY-MM-DD). Useful for 'what was done last week?'"),
+        .describe(
+          "Filter done tasks completed on or after this date (YYYY-MM-DD). Useful for 'what was done last week?'",
+        ),
       completed_to: z
         .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
         .optional()
         .describe("Filter done tasks completed on or before this date (YYYY-MM-DD)"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
@@ -49,7 +53,9 @@ export function registerActionTools(server: McpServer) {
       await trackMcpQuery(
         supabase,
         "get_tasks",
-        [person, status, due_from, due_to, completed_from, completed_to].filter(Boolean).join(", ") || "all",
+        [person, status, due_from, due_to, completed_from, completed_to]
+          .filter(Boolean)
+          .join(", ") || "all",
       );
 
       let query = supabase
@@ -208,9 +214,7 @@ export function registerActionTools(server: McpServer) {
         const projectIds = await resolveProjectIds(supabase, project);
         if (!projectIds) {
           return {
-            content: [
-              { type: "text" as const, text: `Geen project gevonden voor "${project}".` },
-            ],
+            content: [{ type: "text" as const, text: `Geen project gevonden voor "${project}".` }],
           };
         }
         query = query.in("project_id", projectIds);

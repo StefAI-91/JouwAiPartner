@@ -6,7 +6,7 @@ import {
   listTodaysBriefingMeetings,
   getExtractionCountsByMeetingIds,
 } from "@repo/database/queries/dashboard";
-import { listActiveTasks, listAllTasks } from "@repo/database/queries/tasks";
+import { listAllTasks } from "@repo/database/queries/tasks";
 import { listPeopleForAssignment } from "@repo/database/queries/people";
 import { Greeting } from "@/components/dashboard/greeting";
 import { MeetingCarousel } from "@/components/dashboard/meeting-carousel";

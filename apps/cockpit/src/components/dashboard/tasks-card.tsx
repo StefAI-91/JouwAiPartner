@@ -61,7 +61,8 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
       if (urgencyFilter !== "all" && task.status === "active") {
         if (urgencyFilter === "no-deadline" && task.due_date) return false;
         if (urgencyFilter === "overdue" && getUrgency(task.due_date) !== "overdue") return false;
-        if (urgencyFilter === "this-week" && getUrgency(task.due_date) !== "this-week") return false;
+        if (urgencyFilter === "this-week" && getUrgency(task.due_date) !== "this-week")
+          return false;
       }
       return true;
     });
@@ -132,9 +133,7 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
           {urgencyCounts["this-week"] > 0 && (
             <button
               type="button"
-              onClick={() =>
-                setUrgencyFilter(urgencyFilter === "this-week" ? "all" : "this-week")
-              }
+              onClick={() => setUrgencyFilter(urgencyFilter === "this-week" ? "all" : "this-week")}
               className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
                 urgencyFilter === "this-week"
                   ? "bg-amber-500 text-white"
