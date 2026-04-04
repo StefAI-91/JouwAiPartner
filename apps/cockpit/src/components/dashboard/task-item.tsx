@@ -12,9 +12,9 @@ import { UserCircle, Calendar, ChevronDown, Check, X, CircleCheck } from "lucide
 import type { TaskRow } from "@repo/database/queries/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
-type Urgency = "overdue" | "this-week" | "default";
+export type Urgency = "overdue" | "this-week" | "default";
 
-function getUrgency(dueDateStr: string | null): Urgency {
+export function getUrgency(dueDateStr: string | null): Urgency {
   if (!dueDateStr) return "default";
   const due = new Date(dueDateStr);
   const now = new Date();
@@ -92,20 +92,26 @@ export function TaskItem({
 
   if (isDone) return null;
 
+  const isCompleted = task.status === "done";
+
   return (
-    <li className="flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0">
+    <li className={`flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0 ${isCompleted ? "opacity-60" : ""}`}>
       <div className="flex items-start gap-2">
-        <button
-          type="button"
-          onClick={handleComplete}
-          disabled={isPending}
-          className="mt-0.5 shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
-          title="Markeer als klaar"
-        >
-          <CircleCheck className="size-4" />
-        </button>
+        {isCompleted ? (
+          <CircleCheck className="mt-0.5 size-4 shrink-0 text-green-500" />
+        ) : (
+          <button
+            type="button"
+            onClick={handleComplete}
+            disabled={isPending}
+            className="mt-0.5 shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
+            title="Markeer als klaar"
+          >
+            <CircleCheck className="size-4" />
+          </button>
+        )}
         <div className="flex-1">
-          <p className="text-sm leading-snug">{task.title}</p>
+          <p className={`text-sm leading-snug ${isCompleted ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
 
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             {task.assigned_person ? (
@@ -128,7 +134,7 @@ export function TaskItem({
               </Badge>
             )}
 
-            {!editing && (
+            {!editing && !isCompleted && (
               <button
                 type="button"
                 onClick={() => setEditing(true)}
