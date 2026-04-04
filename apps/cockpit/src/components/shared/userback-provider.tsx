@@ -11,9 +11,14 @@ export function UserbackProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_USERBACK_TOKEN;
-    if (!token) return;
+    if (!token) {
+      console.warn('[Userback] NEXT_PUBLIC_USERBACK_TOKEN is not set');
+      return;
+    }
 
-    Userback(token, { autohide: false }).then(setUserback);
+    Userback(token, { autohide: false })
+      .then(setUserback)
+      .catch((err) => console.error('[Userback] Failed to initialize:', err));
   }, []);
 
   return (
