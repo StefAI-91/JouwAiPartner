@@ -25,6 +25,7 @@ const promoteToTaskSchema = z.object({
   title: z.string().min(1),
   assignedTo: optionalStringOrNull,
   dueDate: optionalDateOrNull,
+  alreadyDone: z.boolean().optional(),
 });
 
 const updateTaskSchema = z.object({
@@ -74,6 +75,7 @@ export async function promoteToTaskAction(
       assigned_to: parsed.data.assignedTo || null,
       due_date: parsed.data.dueDate || null,
       created_by: userId,
+      already_done: parsed.data.alreadyDone,
     },
     supabase,
   );

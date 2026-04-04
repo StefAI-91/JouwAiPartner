@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, UserCircle, Calendar, X } from "lucide-react";
+import { Check, CheckCircle2, UserCircle, Calendar, X } from "lucide-react";
 import { promoteToTaskAction } from "@/actions/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
@@ -22,6 +22,7 @@ export function PromoteTaskForm({
 }: PromoteTaskFormProps) {
   const [assignedTo, setAssignedTo] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState<string | null>(null);
+  const [alreadyDone, setAlreadyDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -36,6 +37,7 @@ export function PromoteTaskForm({
         title,
         assignedTo,
         dueDate,
+        alreadyDone: alreadyDone || undefined,
       });
       if ("success" in result) {
         onPromoted();
@@ -108,6 +110,23 @@ export function PromoteTaskForm({
               </button>
             )}
           </div>
+        </div>
+
+        {/* Already done toggle */}
+        <div className="flex flex-col gap-1">
+          <label className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+            <CheckCircle2 className="size-3" />
+            Status
+          </label>
+          <label className="flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-2 text-xs select-none">
+            <input
+              type="checkbox"
+              checked={alreadyDone}
+              onChange={(e) => setAlreadyDone(e.target.checked)}
+              className="accent-green-600"
+            />
+            Al afgerond
+          </label>
         </div>
 
         {/* Actions */}
