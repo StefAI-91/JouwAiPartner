@@ -67,23 +67,28 @@ export function ExtractionCard({
           <div className="flex items-center gap-1.5">
             <Icon className="size-3.5" style={{ color: config.color }} />
             {!readOnly && onTypeChange ? (
-              <select
-                value={currentType}
-                onChange={(e) => {
-                  const newType = e.target.value;
-                  setCurrentType(newType);
-                  onTypeChange(extraction.id, newType);
-                }}
-                className="appearance-none border-none bg-transparent text-[10px] font-medium uppercase tracking-wide outline-none cursor-pointer pr-3 hover:opacity-70"
-                style={{ color: config.color }}
-                title="Type wijzigen"
-              >
-                {Object.entries(EXTRACTION_TYPE_COLORS).map(([type, tc]) => (
-                  <option key={type} value={type}>
-                    {tc.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={currentType}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    setCurrentType(newType);
+                    onTypeChange(extraction.id, newType);
+                  }}
+                  className="appearance-none rounded-md border border-transparent bg-transparent py-0.5 pl-1 pr-5 text-[10px] font-medium uppercase tracking-wide outline-none cursor-pointer hover:border-border hover:bg-muted/50 focus:border-primary transition-colors"
+                  style={{ color: config.color }}
+                  title="Type wijzigen"
+                >
+                  {Object.entries(EXTRACTION_TYPE_COLORS).map(([type, tc]) => (
+                    <option key={type} value={type}>
+                      {tc.label}
+                    </option>
+                  ))}
+                </select>
+                <svg className="pointer-events-none absolute right-1 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </div>
             ) : (
               <span
                 className="text-[10px] font-medium uppercase tracking-wide"
