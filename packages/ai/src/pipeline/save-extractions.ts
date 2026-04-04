@@ -33,9 +33,20 @@ function buildExtractionRows(
   meetingProjectId: string | null,
 ) {
   return extractions.map((item: ExtractionItem) => {
+    // Only assign project_id if the extraction explicitly mentions a project,
+    // or if it's NOT a personal action item (personal items don't belong to a project)
     let projectId: string | null = null;
+
     if (item.project) {
-      projectId = entityResolutions.get(item.project) ?? null;
+      // Extraction explicitly references a project — resolve it
+      projectId = entityResolutions.get(item.project) ?? meetingProjectId;
+    } else if (item.type === "action_item" && item.scope === "personal") {
+      // Personal action items don't belong to the meeting's project
+      projectId = null;
+    } else {
+      // Decisions, needs, insights, and project-scoped action items
+      // without an explicit project reference inherit the meeting's project
+      projectId = meetingProjectId;
     }
 
     const metadata: Record<string, unknown> = {};
@@ -43,6 +54,10 @@ function buildExtractionRows(
     if (item.deadline) metadata.deadline = item.deadline;
     if (item.scope) metadata.scope = item.scope;
     if (item.project) metadata.project = item.project;
+    if (item.made_by) metadata.made_by = item.made_by;
+    if (item.client) metadata.client = item.client;
+    if (item.urgency) metadata.urgency = item.urgency;
+    if (item.category) metadata.category = item.category;
 
     return {
       meeting_id: meetingId,
@@ -51,7 +66,7 @@ function buildExtractionRows(
       confidence: item.confidence,
       transcript_ref: item.transcript_ref,
       metadata,
-      project_id: projectId || meetingProjectId,
+      project_id: projectId,
       embedding_stale: true,
       verification_status: "draft",
     };

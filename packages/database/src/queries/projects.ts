@@ -158,7 +158,7 @@ export async function getProjectById(
       return b.date.localeCompare(a.date);
     });
 
-  // Get extractions linked to this project
+  // Get verified extractions linked to this project
   const { data: extractions } = await db
     .from("extractions")
     .select(
@@ -166,6 +166,7 @@ export async function getProjectById(
        meeting:meetings(id, title)`,
     )
     .eq("project_id", projectId)
+    .eq("verification_status", "verified")
     .order("created_at", { ascending: false });
 
   // Get latest summaries
