@@ -24,6 +24,7 @@ interface ExtractionCardProps {
   people?: PersonForAssignment[];
   onEdit?: (id: string, content: string) => void;
   onDelete?: (id: string) => void;
+  onTypeChange?: (id: string, type: string) => void;
   onRefClick?: (ref: string) => void;
 }
 
@@ -35,14 +36,16 @@ export function ExtractionCard({
   people,
   onEdit,
   onDelete,
+  onTypeChange,
   onRefClick,
 }: ExtractionCardProps) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(extraction.content);
+  const [currentType, setCurrentType] = useState(extraction.type);
   const [promoted, setPromoted] = useState(isPromoted ?? false);
   const [showPromoteForm, setShowPromoteForm] = useState(false);
-  const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
-  const Icon = EXTRACTION_TYPE_ICONS[extraction.type];
+  const config = EXTRACTION_TYPE_COLORS[currentType] ?? EXTRACTION_TYPE_COLORS.insight;
+  const Icon = EXTRACTION_TYPE_ICONS[currentType];
 
   function handleSave() {
     setEditing(false);
@@ -51,7 +54,7 @@ export function ExtractionCard({
     }
   }
 
-  const canPromote = showPromote && extraction.type === "action_item" && !promoted;
+  const canPromote = showPromote && currentType === "action_item" && !promoted;
 
   return (
     <div
@@ -63,12 +66,32 @@ export function ExtractionCard({
         {Icon && (
           <div className="flex items-center gap-1.5">
             <Icon className="size-3.5" style={{ color: config.color }} />
-            <span
-              className="text-[10px] font-medium uppercase tracking-wide"
-              style={{ color: config.color }}
-            >
-              {config.label}
-            </span>
+            {!readOnly && onTypeChange ? (
+              <select
+                value={currentType}
+                onChange={(e) => {
+                  const newType = e.target.value;
+                  setCurrentType(newType);
+                  onTypeChange(extraction.id, newType);
+                }}
+                className="appearance-none border-none bg-transparent text-[10px] font-medium uppercase tracking-wide outline-none cursor-pointer pr-3 hover:opacity-70"
+                style={{ color: config.color }}
+                title="Type wijzigen"
+              >
+                {Object.entries(EXTRACTION_TYPE_COLORS).map(([type, tc]) => (
+                  <option key={type} value={type}>
+                    {tc.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span
+                className="text-[10px] font-medium uppercase tracking-wide"
+                style={{ color: config.color }}
+              >
+                {config.label}
+              </span>
+            )}
           </div>
         )}
 
@@ -145,7 +168,7 @@ export function ExtractionCard({
           </button>
         )}
 
-        {showPromote && extraction.type === "action_item" && promoted && (
+        {showPromote && currentType === "action_item" && promoted && (
           <span className="flex shrink-0 items-center gap-1 rounded-md bg-green-100 px-2 py-1 text-[11px] font-medium text-green-700">
             <ListChecks className="size-3" />
             Taak aangemaakt

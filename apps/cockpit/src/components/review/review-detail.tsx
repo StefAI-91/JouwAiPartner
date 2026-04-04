@@ -64,6 +64,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
   });
   const [activeTranscriptRef, setActiveTranscriptRef] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [typeChanges, setTypeChanges] = useState<Map<string, string>>(new Map());
   const [summaryEdit, setSummaryEdit] = useState<string | null>(null);
 
   const handleEdit = useCallback((id: string, content: string) => {
@@ -72,6 +73,10 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
 
   const handleDelete = useCallback((id: string) => {
     setDeletedIds((prev) => new Set(prev).add(id));
+  }, []);
+
+  const handleTypeChange = useCallback((id: string, type: string) => {
+    setTypeChanges((prev) => new Map(prev).set(id, type));
   }, []);
 
   const handleRefClick = useCallback((ref: string) => {
@@ -87,9 +92,17 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
       content,
     }));
 
+    const rejectedExtractionIds = Array.from(deletedIds);
+
+    const extractionTypeChanges = Array.from(typeChanges.entries())
+      .filter(([id]) => !deletedIds.has(id))
+      .map(([extractionId, type]) => ({ extractionId, type }));
+
     const result = await approveMeetingWithEditsAction({
       meetingId: meeting.id,
       extractionEdits: extractionEdits.length > 0 ? extractionEdits : undefined,
+      rejectedExtractionIds: rejectedExtractionIds.length > 0 ? rejectedExtractionIds : undefined,
+      typeChanges: extractionTypeChanges.length > 0 ? extractionTypeChanges : undefined,
     });
 
     if ("error" in result) {
@@ -213,6 +226,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
               extraction={ext}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onTypeChange={handleTypeChange}
               onRefClick={handleRefClick}
               showPromote
               isPromoted={promotedExtractionIds?.includes(ext.id)}
@@ -229,7 +243,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
 
       <ReviewActionBar
         extractionCount={activeExtractions.length}
-        editCount={edits.size + deletedIds.size + (summaryEdit !== null ? 1 : 0)}
+        editCount={edits.size + deletedIds.size + typeChanges.size + (summaryEdit !== null ? 1 : 0)}
         onApprove={handleApprove}
         onReject={handleReject}
         loading={loading}
