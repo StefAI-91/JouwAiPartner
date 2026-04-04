@@ -36,21 +36,23 @@ export default function RootLayout({
       className={`${nunito.variable} ${fredoka.variable} ${geistMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">
+        {children}
         <Script
-          id="userback-init"
+          id="userback"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.Userback = window.Userback || {};
-              Userback.access_token = "${process.env.NEXT_PUBLIC_USERBACK_TOKEN || 'A-yzBT0sBbRpLUAfh9yVWo0jSgV'}";
+              Userback.access_token = '${process.env.NEXT_PUBLIC_USERBACK_TOKEN || 'A-yzBT0sBbRpLUAfh9yVWo0jSgV'}';
+              (function(d) {
+                var s = d.createElement('script');
+                s.async = true;
+                s.src = 'https://static.userback.io/widget/v1.js';
+                (d.head || d.body).appendChild(s);
+              })(document);
             `,
           }}
         />
-        <Script
-          src="https://static.userback.io/widget/v1.js"
-          strategy="afterInteractive"
-        />
-        {children}
       </body>
     </html>
   );
