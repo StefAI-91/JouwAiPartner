@@ -3,7 +3,8 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@repo/database/supabase/server";
 import { listPeople } from "@repo/database/queries/people";
 import { Badge } from "@/components/ui/badge";
-import { Users, Mail } from "lucide-react";
+import { Users, Mail, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 export default async function PeoplePage() {
   const supabase = await createClient();
@@ -32,7 +33,11 @@ export default async function PeoplePage() {
 
       <div className="space-y-2">
         {people.map((person) => (
-          <div key={person.id} className="rounded-[2rem] bg-white p-5 shadow-sm">
+          <Link
+            key={person.id}
+            href={`/people/${person.id}`}
+            className="group block rounded-[2rem] bg-white p-5 shadow-sm transition-all hover:shadow-md"
+          >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-sm font-semibold">{person.name}</h3>
@@ -51,8 +56,9 @@ export default async function PeoplePage() {
                   )}
                 </div>
               </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5" />
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

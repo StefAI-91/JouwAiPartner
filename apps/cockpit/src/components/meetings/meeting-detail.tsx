@@ -68,6 +68,8 @@ export function MeetingDetailView({
           extractions={meeting.extractions}
           promotedExtractionIds={promotedExtractionIds}
           peopleForAssignment={peopleForAssignment}
+          meetingId={meeting.id}
+          editable
         />
       </div>
     </div>

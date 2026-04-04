@@ -71,3 +71,76 @@ export async function insertExtractions(
   if (error) return { error: error.message };
   return { success: true, count: rows.length };
 }
+
+export async function createExtraction(data: {
+  meeting_id: string;
+  type: string;
+  content: string;
+  confidence?: number | null;
+  transcript_ref?: string | null;
+  metadata?: Record<string, unknown>;
+  organization_id?: string | null;
+  project_id?: string | null;
+  verification_status?: string;
+}): Promise<{ success: true; data: { id: string } } | { error: string }> {
+  const { data: extraction, error } = await getAdminClient()
+    .from("extractions")
+    .insert({
+      meeting_id: data.meeting_id,
+      type: data.type,
+      content: data.content,
+      confidence: data.confidence ?? null,
+      transcript_ref: data.transcript_ref ?? null,
+      metadata: data.metadata ?? {},
+      organization_id: data.organization_id ?? null,
+      project_id: data.project_id ?? null,
+      verification_status: data.verification_status ?? "verified",
+      embedding_stale: true,
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: error.message };
+  return { success: true, data: extraction };
+}
+
+export async function updateExtraction(
+  extractionId: string,
+  data: {
+    content?: string;
+    metadata?: Record<string, unknown>;
+    transcript_ref?: string | null;
+    type?: string;
+  },
+  correctedBy?: string,
+): Promise<{ success: true } | { error: string }> {
+  const updateData: Record<string, unknown> = {
+    ...data,
+    embedding_stale: true,
+  };
+
+  if (correctedBy) {
+    updateData.corrected_by = correctedBy;
+    updateData.corrected_at = new Date().toISOString();
+  }
+
+  const { error } = await getAdminClient()
+    .from("extractions")
+    .update(updateData)
+    .eq("id", extractionId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function deleteExtraction(
+  extractionId: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("extractions")
+    .delete()
+    .eq("id", extractionId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}

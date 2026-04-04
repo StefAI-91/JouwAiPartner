@@ -180,3 +180,16 @@ export async function unlinkMeetingProject(
   if (error) return { error: error.message };
   return { success: true };
 }
+
+export async function deleteMeeting(
+  meetingId: string,
+): Promise<{ success: true } | { error: string }> {
+  // CASCADE handles extractions, meeting_projects, meeting_participants
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .delete()
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}

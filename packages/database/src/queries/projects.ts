@@ -84,6 +84,7 @@ export interface ProjectDetail {
   id: string;
   name: string;
   status: string;
+  organization_id: string | null;
   organization: { name: string } | null;
   meetings: {
     id: string;
@@ -112,7 +113,7 @@ export async function getProjectById(
   const { data: project, error } = await db
     .from("projects")
     .select(
-      `id, name, status,
+      `id, name, status, organization_id,
        organization:organizations(name)`,
     )
     .eq("id", projectId)
@@ -155,6 +156,7 @@ export async function getProjectById(
       id: string;
       name: string;
       status: string;
+      organization_id: string | null;
       organization: { name: string } | null;
     }),
     meetings,

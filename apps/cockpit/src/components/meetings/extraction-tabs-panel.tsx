@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { ExtractionCard } from "@/components/shared/extraction-card";
+import { EditableExtractionCard } from "@/components/meetings/editable-extraction-card";
+import { AddExtractionForm } from "@/components/meetings/add-extraction-form";
 import {
   EXTRACTION_TYPE_ORDER,
   EXTRACTION_TYPE_LABELS,
@@ -22,12 +24,16 @@ interface ExtractionTabsPanelProps {
   extractions: Extraction[];
   promotedExtractionIds?: string[];
   peopleForAssignment?: PersonForAssignment[];
+  meetingId?: string;
+  editable?: boolean;
 }
 
 export function ExtractionTabsPanel({
   extractions,
   promotedExtractionIds,
   peopleForAssignment,
+  meetingId,
+  editable,
 }: ExtractionTabsPanelProps) {
   const grouped = new Map<string, Extraction[]>();
   for (const ext of extractions) {
@@ -62,7 +68,10 @@ export function ExtractionTabsPanel({
   return (
     <>
       <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4">
-        <h2 className="mb-3 text-base font-semibold">Extracties</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-base font-semibold">Extracties</h2>
+          {editable && meetingId && <AddExtractionForm meetingId={meetingId} />}
+        </div>
         <div className="flex gap-1 overflow-x-auto pb-0">
           {tabs.map(({ type, label, count, Icon, color }) => {
             const isActive = type === activeTab;
@@ -95,16 +104,26 @@ export function ExtractionTabsPanel({
       </div>
 
       <div className="space-y-3 p-6">
-        {activeItems.map((ext) => (
-          <ExtractionCard
-            key={ext.id}
-            extraction={ext}
-            readOnly
-            showPromote
-            isPromoted={promotedExtractionIds?.includes(ext.id)}
-            people={peopleForAssignment}
-          />
-        ))}
+        {activeItems.map((ext) =>
+          editable && meetingId ? (
+            <EditableExtractionCard
+              key={ext.id}
+              extraction={ext}
+              meetingId={meetingId}
+              promotedExtractionIds={promotedExtractionIds}
+              peopleForAssignment={peopleForAssignment}
+            />
+          ) : (
+            <ExtractionCard
+              key={ext.id}
+              extraction={ext}
+              readOnly
+              showPromote
+              isPromoted={promotedExtractionIds?.includes(ext.id)}
+              people={peopleForAssignment}
+            />
+          ),
+        )}
         {activeItems.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
             Geen {EXTRACTION_TYPE_LABELS[activeTab]?.toLowerCase()} gevonden
