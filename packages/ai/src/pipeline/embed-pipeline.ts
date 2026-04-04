@@ -1,7 +1,10 @@
 import { embedText, embedBatch } from "../embeddings";
 import { updateRowEmbedding, batchUpdateEmbeddings } from "@repo/database/mutations/embeddings";
-import { getMeetingExtractions } from "@repo/database/queries/meetings";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import {
+  getMeetingExtractions,
+  getMeetingForEmbedding,
+  getExtractionIdsAndContent,
+} from "@repo/database/queries/meetings";
 import { buildMeetingEmbedText } from "./embed-text";
 
 /**
@@ -9,18 +12,12 @@ import { buildMeetingEmbedText } from "./embed-text";
  * Called synchronously after extraction to make content immediately searchable.
  */
 export async function embedMeetingWithExtractions(meetingId: string): Promise<void> {
-  // Fetch meeting data
-  const { data: meeting, error } = await getAdminClient()
-    .from("meetings")
-    .select("title, participants, summary")
-    .eq("id", meetingId)
-    .single();
-
-  if (error || !meeting) {
-    throw new Error(`Failed to fetch meeting ${meetingId}: ${error?.message}`);
+  const meeting = await getMeetingForEmbedding(meetingId);
+  if (!meeting) {
+    throw new Error(`Failed to fetch meeting ${meetingId} for embedding`);
   }
 
-  // Fetch extractions
+  // Fetch extractions for enriched embed text
   const extractions = await getMeetingExtractions(meetingId);
 
   // Embed meeting (enriched with extractions)
@@ -31,22 +28,16 @@ export async function embedMeetingWithExtractions(meetingId: string): Promise<vo
     throw new Error(`Failed to save meeting embedding: ${meetingResult.error}`);
   }
 
-  // Embed individual extractions in batch (fixes N+1: Q-01)
-  if (extractions.length > 0) {
-    const { data: extractionRows } = await getAdminClient()
-      .from("extractions")
-      .select("id, content")
-      .eq("meeting_id", meetingId);
+  // Embed individual extractions in batch
+  const extractionRows = await getExtractionIdsAndContent(meetingId);
+  if (extractionRows.length > 0) {
+    const texts = extractionRows.map((e) => e.content);
+    const embeddings = await embedBatch(texts);
+    const ids = extractionRows.map((e) => e.id);
 
-    if (extractionRows && extractionRows.length > 0) {
-      const texts = extractionRows.map((e) => e.content);
-      const embeddings = await embedBatch(texts);
-      const ids = extractionRows.map((e) => e.id);
-
-      const result = await batchUpdateEmbeddings("extractions", ids, embeddings);
-      if ("error" in result) {
-        console.error(`Failed to batch embed extractions for meeting ${meetingId}: ${result.error}`);
-      }
+    const result = await batchUpdateEmbeddings("extractions", ids, embeddings);
+    if ("error" in result) {
+      console.error(`Failed to batch embed extractions for meeting ${meetingId}: ${result.error}`);
     }
   }
 }

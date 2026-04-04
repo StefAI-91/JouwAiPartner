@@ -75,6 +75,35 @@ export async function listPeopleForAssignment(
   });
 }
 
+/**
+ * Find person IDs by partial name match (ILIKE).
+ * Used by MCP tools to resolve person name filters.
+ */
+export async function findPersonIdsByName(name: string): Promise<string[]> {
+  const escaped = name.replace(/%/g, "\\%").replace(/_/g, "\\_");
+  const { data } = await getAdminClient()
+    .from("people")
+    .select("id")
+    .ilike("name", `%${escaped}%`);
+
+  return data?.map((p) => p.id) ?? [];
+}
+
+/**
+ * Find a profile ID by partial name match.
+ * Used by MCP tools to resolve corrected_by names to user IDs.
+ */
+export async function findProfileIdByName(name: string): Promise<string | null> {
+  const escaped = name.replace(/%/g, "\\%").replace(/_/g, "\\_");
+  const { data } = await getAdminClient()
+    .from("profiles")
+    .select("id")
+    .ilike("full_name", `%${escaped}%`)
+    .limit(1);
+
+  return data?.[0]?.id ?? null;
+}
+
 export async function getStalePeople(limit: number = 50) {
   const { data, error } = await getAdminClient()
     .from("people")

@@ -1,57 +1,43 @@
-import { getAdminClient } from "@repo/database/supabase/admin";
 import { resolveAllEntities } from "./entity-resolution";
 import { linkMeetingProject } from "@repo/database/mutations/meetings";
+import { insertExtractions } from "@repo/database/mutations/extractions";
 import { ExtractorOutput, ExtractionItem } from "../validations/extractor";
 
 /**
- * Save all Extractor output to the unified `extractions` table.
- * Runs entity resolution for project/client linking.
+ * Resolve the primary project ID from entity resolutions.
  */
-export async function saveExtractions(
+function resolvePrimaryProject(
   extractorOutput: ExtractorOutput,
-  meetingId: string,
-): Promise<{
-  extractions_saved: number;
-  project_linked: boolean;
-}> {
-  // Step 1: Resolve entities (projects + clients) for linking
-  const entityResolutions = await resolveAllEntities(
-    extractorOutput.entities,
-    meetingId,
-    "meetings",
-  );
-
-  // Step 2: Determine and set meeting's primary project
-  let meetingProjectId: string | null = null;
-
+  entityResolutions: Map<string, string | null>,
+): string | null {
   if (extractorOutput.primary_project) {
-    meetingProjectId = entityResolutions.get(extractorOutput.primary_project) ?? null;
+    const resolved = entityResolutions.get(extractorOutput.primary_project);
+    if (resolved) return resolved;
   }
 
-  // Fallback: first resolved project
-  if (!meetingProjectId && extractorOutput.entities.projects.length > 0) {
-    for (const proj of extractorOutput.entities.projects) {
-      const resolved = entityResolutions.get(proj);
-      if (resolved) {
-        meetingProjectId = resolved;
-        break;
-      }
-    }
+  for (const proj of extractorOutput.entities.projects) {
+    const resolved = entityResolutions.get(proj);
+    if (resolved) return resolved;
   }
 
-  if (meetingProjectId) {
-    await linkMeetingProject(meetingId, meetingProjectId);
-  }
+  return null;
+}
 
-  // Step 3: Build extraction rows for batch insert
-  const rows = extractorOutput.extractions.map((item: ExtractionItem) => {
-    // Resolve project_id for project-scoped items
+/**
+ * Build extraction rows for batch insert from extractor output.
+ */
+function buildExtractionRows(
+  extractions: ExtractionItem[],
+  meetingId: string,
+  entityResolutions: Map<string, string | null>,
+  meetingProjectId: string | null,
+) {
+  return extractions.map((item: ExtractionItem) => {
     let projectId: string | null = null;
     if (item.type === "action_item" && item.project) {
       projectId = entityResolutions.get(item.project) ?? null;
     }
 
-    // Build metadata JSONB from flat fields
     const metadata: Record<string, unknown> = {};
     if (item.assignee) metadata.assignee = item.assignee;
     if (item.deadline) metadata.deadline = item.deadline;
@@ -74,13 +60,44 @@ export async function saveExtractions(
       verification_status: "draft",
     };
   });
+}
 
-  // Step 4: Batch insert all extractions
+/**
+ * Save all Extractor output to the unified `extractions` table.
+ * Runs entity resolution for project/client linking.
+ */
+export async function saveExtractions(
+  extractorOutput: ExtractorOutput,
+  meetingId: string,
+): Promise<{
+  extractions_saved: number;
+  project_linked: boolean;
+}> {
+  // Step 1: Resolve entities (projects + clients) for linking
+  const entityResolutions = await resolveAllEntities(
+    extractorOutput.entities,
+    meetingId,
+    "meetings",
+  );
+
+  // Step 2: Determine and link meeting's primary project
+  const meetingProjectId = resolvePrimaryProject(extractorOutput, entityResolutions);
+  if (meetingProjectId) {
+    await linkMeetingProject(meetingId, meetingProjectId);
+  }
+
+  // Step 3: Build and insert extraction rows
+  const rows = buildExtractionRows(
+    extractorOutput.extractions,
+    meetingId,
+    entityResolutions,
+    meetingProjectId,
+  );
+
   if (rows.length > 0) {
-    const { error } = await getAdminClient().from("extractions").insert(rows);
-
-    if (error) {
-      console.error("Failed to insert extractions:", error.message);
+    const result = await insertExtractions(rows);
+    if ("error" in result) {
+      console.error("Failed to insert extractions:", result.error);
       return { extractions_saved: 0, project_linked: !!meetingProjectId };
     }
   }

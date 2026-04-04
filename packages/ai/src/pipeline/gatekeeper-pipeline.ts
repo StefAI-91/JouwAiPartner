@@ -1,18 +1,18 @@
 import { runGatekeeper } from "../agents/gatekeeper";
 import type { ParticipantInfo } from "../agents/gatekeeper";
-import { runExtractor, ExtractorOutput } from "../agents/extractor";
+import type { ExtractorOutput } from "../agents/extractor";
 import { GatekeeperOutput } from "../validations/gatekeeper";
 import type { PartyType } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
 import { findPeopleByEmails } from "@repo/database/queries/people";
 import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
-import { saveExtractions } from "./save-extractions";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
 import { classifyParticipants, determinePartyType } from "./participant-classifier";
-import { transcribeWithElevenLabs, formatScribeTranscript } from "../transcribe-elevenlabs";
-import { updateMeetingElevenLabs } from "@repo/database/mutations/meetings";
-import { runSummarizer, formatSummary } from "../agents/summarizer";
+import { buildRawFireflies } from "./build-raw-fireflies";
+import { runTranscribeStep } from "./steps/transcribe";
+import { runSummarizeStep } from "./steps/summarize";
+import { runExtractStep } from "./steps/extract";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -59,26 +59,25 @@ interface PipelineResult {
 
 /**
  * Full meeting processing pipeline:
- * 1. Classify participants as internal/external (people table lookup)
- * 2. Determine party_type deterministically from participants + org type
+ * 1. Classify participants as internal/external
+ * 2. Determine party_type deterministically
  * 3. Gatekeeper: classify meeting_type, relevance, org name (AI)
  * 4. Resolve organization
- * 5. Insert meeting (always — no rejection)
+ * 5. Build metadata + insert meeting
  * 6. Link participants
- * 7. ElevenLabs Scribe v2 transcription (non-blocking, richer Dutch transcript)
- * 8. Summarizer: rich AI summary (replaces Fireflies summary, uses best transcript)
- * 9. Extractor: extract decisions, action items, needs, insights (uses best transcript + rich summary)
- * 10. Save extractions to unified table
- * 11. Embed meeting + extractions
+ * 7. ElevenLabs transcription (non-blocking)
+ * 8. Summarizer: rich AI summary
+ * 9. Extractor: extract decisions, action items, needs, insights
+ * 10. Embed meeting + extractions
  */
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
-  // Step 1: Classify participants as internal/external
-  const classifiedParticipants = await classifyParticipants(input.participants);
+  const errors: string[] = [];
 
-  // Step 2: Determine party_type deterministically from participants
+  // Step 1-2: Classify participants and determine party type
+  const classifiedParticipants = await classifyParticipants(input.participants);
   const partyType = determinePartyType(classifiedParticipants);
 
-  // Step 3: Classify meeting with Gatekeeper (meeting_type, relevance, org name)
+  // Step 3: Classify meeting with Gatekeeper AI
   const gatekeeperResult = await runGatekeeper(input.summary, {
     title: input.title,
     participants: classifiedParticipants,
@@ -86,32 +85,19 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     topics: input.topics,
   });
 
-  // Step 4: Resolve organization — use known org from participants first, fallback to Gatekeeper
+  // Step 4: Resolve organization
   const knownOrg = classifiedParticipants.find((p) => p.label === "external" && p.organizationName);
   const orgNameToResolve = knownOrg?.organizationName ?? gatekeeperResult.organization_name;
   const orgResult = await resolveOrganization(orgNameToResolve);
 
-  // Step 5a: Build raw_fireflies JSONB (original Fireflies data + pipeline metadata)
-  const rawFireflies: Record<string, unknown> = {
-    ...(input.raw_fireflies ?? {}),
-    pipeline: {
-      participant_classification: classifiedParticipants.map((p) => ({
-        raw: p.raw,
-        label: p.label,
-        matched_name: p.matchedName ?? null,
-        organization_name: p.organizationName ?? null,
-        organization_type: p.organizationType ?? null,
-      })),
-      party_type_source: knownOrg ? "deterministic" : "gatekeeper_fallback",
-      gatekeeper: {
-        meeting_type: gatekeeperResult.meeting_type,
-        relevance_score: gatekeeperResult.relevance_score,
-        reason: gatekeeperResult.reason,
-        organization_name: gatekeeperResult.organization_name,
-      },
-      processed_at: new Date().toISOString(),
-    },
-  };
+  // Step 5a: Build metadata
+  const partyTypeSource = knownOrg ? "deterministic" : "gatekeeper_fallback";
+  const rawFireflies = buildRawFireflies(
+    input.raw_fireflies,
+    classifiedParticipants,
+    gatekeeperResult,
+    partyTypeSource,
+  );
 
   // Step 5b: Insert meeting
   const insertResult = await insertMeeting({
@@ -131,7 +117,6 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     verification_status: "draft",
   });
 
-  let meetingId: string | null = null;
   if ("error" in insertResult) {
     console.error("Meeting insert error:", insertResult.error);
     return {
@@ -147,156 +132,61 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     };
   }
 
-  meetingId = insertResult.data.id;
+  const meetingId = insertResult.data.id;
 
-  // Step 5: Link participants
+  // Step 6: Link participants
   await matchParticipants(meetingId, input.participants);
 
-  // Step 6: ElevenLabs Scribe v2 transcription (before Extractor — richer transcript)
-  let elevenlabsTranscribed = false;
-  let elevenlabsError: string | null = null;
-  let elevenlabsTranscript: string | null = null;
+  // Step 7: ElevenLabs transcription
+  const transcribeResult = await runTranscribeStep(meetingId, input.audio_url);
+  if (transcribeResult.error) errors.push(`ElevenLabs: ${transcribeResult.error}`);
 
-  if (input.audio_url) {
-    try {
-      console.info("Starting ElevenLabs Scribe v2 transcription...");
-      const scribeResult = await transcribeWithElevenLabs(input.audio_url);
-      elevenlabsTranscript = formatScribeTranscript(scribeResult.words);
+  // Step 8: Summarizer
+  const bestTranscript = transcribeResult.transcript ?? input.transcript;
+  const transcriptSource = transcribeResult.transcript ? "elevenlabs" : "fireflies";
 
-      const updateResult = await updateMeetingElevenLabs(meetingId, {
-        transcript_elevenlabs: elevenlabsTranscript,
-        raw_elevenlabs: scribeResult.raw as unknown as Record<string, unknown>,
-        audio_url: input.audio_url,
-      });
+  const summarizeContext = {
+    title: input.title,
+    meeting_type: gatekeeperResult.meeting_type,
+    party_type: partyType,
+    participants: input.participants,
+  };
+  console.info(`Summarizer using ${transcriptSource} transcript`);
+  const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
+  if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
 
-      if ("error" in updateResult) {
-        console.error("Failed to save ElevenLabs transcript:", updateResult.error);
-        elevenlabsError = updateResult.error;
-      } else {
-        elevenlabsTranscribed = true;
-        console.info(
-          `ElevenLabs Scribe v2: transcribed ${scribeResult.words.length} words, ` +
-            `language: ${scribeResult.languageCode} (${(scribeResult.languageProbability * 100).toFixed(1)}% confidence)`,
-        );
-      }
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      console.error("ElevenLabs transcription failed (non-blocking):", errMsg);
-      elevenlabsError = errMsg;
-    }
-  }
-
-  // Step 7: Summarizer — generate rich summary from best available transcript
-  const summarizerTranscript = elevenlabsTranscript ?? input.transcript;
-  const transcriptSource = elevenlabsTranscript ? "elevenlabs" : "fireflies";
-  let summarized = false;
-  let summarizerError: string | null = null;
-  let richSummary: string | null = null;
-
-  try {
-    console.info(`Summarizer using ${transcriptSource} transcript`);
-    const summarizerOutput = await runSummarizer(summarizerTranscript, {
-      title: input.title,
-      meeting_type: gatekeeperResult.meeting_type,
-      party_type: partyType,
-      participants: input.participants,
-    });
-    richSummary = formatSummary(summarizerOutput);
-
-    // Update meeting.summary with the rich AI-generated summary + ai_briefing for dashboard
-    const { getAdminClient } = await import("@repo/database/supabase/admin");
-    await getAdminClient()
-      .from("meetings")
-      .update({ summary: richSummary, ai_briefing: summarizerOutput.briefing })
-      .eq("id", meetingId);
-
-    summarized = true;
-    console.info(
-      `Summarizer: ${summarizerOutput.kernpunten.length} kernpunten, ` +
-        `${summarizerOutput.themas.length} thema's, ${summarizerOutput.deelnemers.length} deelnemers`,
-    );
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    console.error("Summarizer failed (non-blocking):", errMsg);
-    summarizerError = errMsg;
-  }
-
-  // Step 8: Run Extractor — uses best transcript + rich summary as context
-  const extractorTranscript = summarizerTranscript;
-  const extractorSummary = richSummary ?? input.summary;
+  // Step 9: Extractor
+  const extractorSummary = summarizeResult.richSummary ?? input.summary;
   console.info(`Extractor using ${transcriptSource} transcript`);
+  const extractResult = await runExtractStep(
+    meetingId,
+    bestTranscript,
+    { ...summarizeContext, summary: extractorSummary },
+    rawFireflies,
+    transcriptSource,
+  );
+  if (extractResult.error) errors.push(`Extractor: ${extractResult.error}`);
 
-  let extractorResult: ExtractorOutput | null = null;
-  let extractionsSaved = 0;
-  let extractorError: string | null = null;
-
-  try {
-    extractorResult = await runExtractor(extractorTranscript, {
-      title: input.title,
-      meeting_type: gatekeeperResult.meeting_type,
-      party_type: partyType,
-      participants: input.participants,
-      summary: extractorSummary,
-    });
-
-    // Add extractor output to raw_fireflies
-    rawFireflies.pipeline = {
-      ...(rawFireflies.pipeline as Record<string, unknown>),
-      extractor: {
-        extractions_count: extractorResult.extractions.length,
-        entities: extractorResult.entities,
-        primary_project: extractorResult.primary_project,
-        transcript_source: transcriptSource,
-      },
-    };
-
-    // Update raw_fireflies with extractor metadata
-    const { getAdminClient } = await import("@repo/database/supabase/admin");
-    await getAdminClient()
-      .from("meetings")
-      .update({ raw_fireflies: rawFireflies })
-      .eq("id", meetingId);
-
-    // Step 9: Save extractions to unified table
-    const saveResult = await saveExtractions(extractorResult, meetingId);
-    extractionsSaved = saveResult.extractions_saved;
-
-    console.info(
-      `Extractor: ${extractionsSaved} extractions saved, project linked: ${saveResult.project_linked}`,
-    );
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    console.error("Extractor failed:", errMsg);
-    extractorError = errMsg;
-  }
-
-  // Step 10: Embed meeting + extractions for vector search
+  // Step 10: Embed meeting + extractions
   let embedded = false;
-  let embedError: string | null = null;
   try {
     await embedMeetingWithExtractions(meetingId);
     embedded = true;
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error("Embedding failed:", errMsg);
-    embedError = errMsg;
+    errors.push(`Embedding: ${errMsg}`);
   }
-
-  const errors: string[] = [];
-  if (elevenlabsError) errors.push(`ElevenLabs: ${elevenlabsError}`);
-  if (summarizerError) errors.push(`Summarizer: ${summarizerError}`);
-  if (extractorError) errors.push(`Extractor: ${extractorError}`);
-  if (embedError) errors.push(`Embedding: ${embedError}`);
 
   return {
     gatekeeper: gatekeeperResult,
     partyType,
-    extractor: extractorResult,
+    extractor: extractResult.extractorOutput,
     meetingId,
-    extractions_saved: extractionsSaved,
+    extractions_saved: extractResult.extractionsSaved,
     embedded,
-    elevenlabs_transcribed: elevenlabsTranscribed,
-    summarized,
+    elevenlabs_transcribed: transcribeResult.success,
+    summarized: summarizeResult.success,
     errors,
   };
 }

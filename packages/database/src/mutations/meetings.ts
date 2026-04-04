@@ -128,6 +128,45 @@ export async function linkMeetingProject(
   return { success: true };
 }
 
+export async function updateMeetingSummary(
+  meetingId: string,
+  summary: string,
+  aiBriefing: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ summary, ai_briefing: aiBriefing })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function updateMeetingRawFireflies(
+  meetingId: string,
+  rawFireflies: Record<string, unknown>,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ raw_fireflies: rawFireflies })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function markMeetingEmbeddingStale(
+  meetingId: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ embedding_stale: true })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function unlinkMeetingProject(
   meetingId: string,
   projectId: string,
