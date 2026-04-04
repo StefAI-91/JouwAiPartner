@@ -7,6 +7,7 @@ import { Building2, CalendarDays, FolderKanban } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
+import { AddOrganizationButton } from "@/components/clients/add-organization-button";
 
 export default async function ClientsPage() {
   const supabase = await createClient();
@@ -20,17 +21,23 @@ export default async function ClientsPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Organizations will appear here once meetings are processed.
         </p>
+        <div className="mt-6">
+          <AddOrganizationButton />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-8">
-      <div>
-        <h1>Clients</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {organizations.length} organization{organizations.length !== 1 ? "s" : ""}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1>Clients</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {organizations.length} organization{organizations.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <AddOrganizationButton />
       </div>
 
       <div className="flex flex-col gap-4">

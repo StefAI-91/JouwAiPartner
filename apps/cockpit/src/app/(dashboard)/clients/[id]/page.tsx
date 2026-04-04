@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import { formatDate } from "@/lib/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import { getMeetingHref } from "@/lib/meeting-href";
+import { EditOrganization } from "@/components/clients/edit-organization";
 
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>;
@@ -33,7 +34,10 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           </Link>
           <span>/</span>
         </div>
-        <h1 className="mt-1">{org.name}</h1>
+        <div className="mt-1 flex items-center gap-2">
+          <h1>{org.name}</h1>
+          <EditOrganization org={org} />
+        </div>
         <div className="mt-2 flex items-center gap-2">
           <Badge className={`text-xs ${ORG_TYPE_COLORS[org.type] ?? ORG_TYPE_COLORS.other}`}>
             {org.type}

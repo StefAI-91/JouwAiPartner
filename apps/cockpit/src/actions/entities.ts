@@ -1,0 +1,283 @@
+"use server";
+
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { createClient } from "@repo/database/supabase/server";
+import {
+  updateOrganization,
+  deleteOrganization,
+} from "@repo/database/mutations/organizations";
+import {
+  updateProject,
+  deleteProject,
+} from "@repo/database/mutations/projects";
+import {
+  updatePerson,
+  deletePerson,
+} from "@repo/database/mutations/people";
+import {
+  createExtraction,
+  updateExtraction,
+  deleteExtraction,
+} from "@repo/database/mutations/extractions";
+import { deleteMeeting } from "@repo/database/mutations/meetings";
+
+// ── Auth Helper ──
+
+async function getAuthenticatedUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
+
+// ── Zod Schemas ──
+
+const updateOrganizationSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, "Naam is verplicht").max(200).optional(),
+  type: z.enum(["client", "partner", "supplier", "other"]).optional(),
+  status: z.enum(["prospect", "active", "inactive"]).optional(),
+  contact_person: z.string().max(200).nullable().optional(),
+  email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
+});
+
+const updateProjectSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, "Naam is verplicht").max(200).optional(),
+  status: z
+    .enum([
+      "lead", "discovery", "proposal", "negotiation", "won",
+      "kickoff", "in_progress", "review", "completed",
+      "on_hold", "lost", "maintenance", "active",
+    ])
+    .optional(),
+  organization_id: z.string().uuid().nullable().optional(),
+});
+
+const updatePersonSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, "Naam is verplicht").max(200).optional(),
+  email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
+  role: z.string().max(200).nullable().optional(),
+  team: z.string().max(200).nullable().optional(),
+  organization_id: z.string().uuid().nullable().optional(),
+});
+
+const createExtractionSchema = z.object({
+  meeting_id: z.string().uuid(),
+  type: z.enum(["decision", "action_item", "need", "insight"]),
+  content: z.string().min(1, "Content is verplicht"),
+  transcript_ref: z.string().nullable().optional(),
+});
+
+const updateExtractionSchema = z.object({
+  id: z.string().uuid(),
+  content: z.string().min(1, "Content is verplicht").optional(),
+  type: z.enum(["decision", "action_item", "need", "insight"]).optional(),
+  transcript_ref: z.string().nullable().optional(),
+  meetingId: z.string().uuid().optional(),
+});
+
+const deleteSchema = z.object({
+  id: z.string().uuid(),
+});
+
+const deleteWithContextSchema = deleteSchema.extend({
+  meetingId: z.string().uuid().optional(),
+});
+
+// ── Organization Actions ──
+
+export async function updateOrganizationAction(
+  input: z.infer<typeof updateOrganizationSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = updateOrganizationSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const { id, ...data } = parsed.data;
+  const result = await updateOrganization(id, data);
+  if ("error" in result) return result;
+
+  revalidatePath(`/clients/${id}`);
+  revalidatePath("/clients");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteOrganizationAction(
+  input: z.infer<typeof deleteSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = deleteSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await deleteOrganization(parsed.data.id);
+  if ("error" in result) return result;
+
+  revalidatePath("/clients");
+  revalidatePath("/");
+  return { success: true };
+}
+
+// ── Project Actions ──
+
+export async function updateProjectAction(
+  input: z.infer<typeof updateProjectSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = updateProjectSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const { id, ...data } = parsed.data;
+  const result = await updateProject(id, data);
+  if ("error" in result) return result;
+
+  revalidatePath(`/projects/${id}`);
+  revalidatePath("/projects");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteProjectAction(
+  input: z.infer<typeof deleteSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = deleteSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await deleteProject(parsed.data.id);
+  if ("error" in result) return result;
+
+  revalidatePath("/projects");
+  revalidatePath("/");
+  return { success: true };
+}
+
+// ── Person Actions ──
+
+export async function updatePersonAction(
+  input: z.infer<typeof updatePersonSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = updatePersonSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const { id, ...data } = parsed.data;
+  const result = await updatePerson(id, data);
+  if ("error" in result) return result;
+
+  revalidatePath(`/people/${id}`);
+  revalidatePath("/people");
+  return { success: true };
+}
+
+export async function deletePersonAction(
+  input: z.infer<typeof deleteSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = deleteSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await deletePerson(parsed.data.id);
+  if ("error" in result) return result;
+
+  revalidatePath("/people");
+  return { success: true };
+}
+
+// ── Extraction Actions ──
+
+export async function createExtractionAction(
+  input: z.infer<typeof createExtractionSchema>,
+): Promise<{ success: true; data: { id: string } } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = createExtractionSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const result = await createExtraction({
+    meeting_id: parsed.data.meeting_id,
+    type: parsed.data.type,
+    content: parsed.data.content,
+    transcript_ref: parsed.data.transcript_ref ?? null,
+    confidence: 1.0, // manual = full confidence
+    verification_status: "verified",
+  });
+  if ("error" in result) return result;
+
+  revalidatePath(`/meetings/${parsed.data.meeting_id}`);
+  return { success: true, data: result.data };
+}
+
+export async function updateExtractionAction(
+  input: z.infer<typeof updateExtractionSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = updateExtractionSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const { id, meetingId, ...data } = parsed.data;
+  const result = await updateExtraction(id, data, user.id);
+  if ("error" in result) return result;
+
+  if (meetingId) {
+    revalidatePath(`/meetings/${meetingId}`);
+  }
+  return { success: true };
+}
+
+export async function deleteExtractionAction(
+  input: z.infer<typeof deleteWithContextSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = deleteWithContextSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await deleteExtraction(parsed.data.id);
+  if ("error" in result) return result;
+
+  if (parsed.data.meetingId) {
+    revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  }
+  return { success: true };
+}
+
+// ── Meeting Actions ──
+
+export async function deleteMeetingAction(
+  input: z.infer<typeof deleteSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = deleteSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await deleteMeeting(parsed.data.id);
+  if ("error" in result) return result;
+
+  revalidatePath("/meetings");
+  revalidatePath("/review");
+  revalidatePath("/");
+  return { success: true };
+}

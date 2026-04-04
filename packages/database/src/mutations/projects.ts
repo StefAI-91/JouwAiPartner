@@ -38,3 +38,37 @@ export async function updateProjectAliases(
   if (error) return { error: error.message };
   return { success: true };
 }
+
+export async function updateProject(
+  projectId: string,
+  data: {
+    name?: string;
+    status?: string;
+    organization_id?: string | null;
+  },
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("projects")
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq("id", projectId);
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: `Er bestaat al een project met deze naam` };
+    }
+    return { error: error.message };
+  }
+  return { success: true };
+}
+
+export async function deleteProject(
+  projectId: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("projects")
+    .delete()
+    .eq("id", projectId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
