@@ -10,34 +10,11 @@ import {
   dismissTask,
 } from "@repo/database/mutations/tasks";
 import { hasTaskForExtraction } from "@repo/database/queries/tasks";
-
-// ── Zod Schemas ──
-
-const optionalStringOrNull = z.string().nullable().optional();
-const optionalDateOrNull = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Ongeldig datumformaat (YYYY-MM-DD)")
-  .nullable()
-  .optional();
-
-const promoteToTaskSchema = z.object({
-  extractionId: z.string().uuid(),
-  title: z.string().min(1),
-  assignedTo: optionalStringOrNull,
-  dueDate: optionalDateOrNull,
-  alreadyDone: z.boolean().optional(),
-});
-
-const updateTaskSchema = z.object({
-  taskId: z.string().uuid(),
-  assignedTo: optionalStringOrNull,
-  dueDate: optionalDateOrNull,
-  title: z.string().min(1).optional(),
-});
-
-const taskIdSchema = z.object({
-  taskId: z.string().uuid(),
-});
+import {
+  promoteToTaskSchema,
+  updateTaskSchema,
+  taskIdSchema,
+} from "@/validations/tasks";
 
 // ── Helpers ──
 
