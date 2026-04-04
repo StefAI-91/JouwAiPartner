@@ -5,6 +5,7 @@ import { ExtractionTabsPanel } from "@/components/meetings/extraction-tabs-panel
 import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
+import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
 
@@ -32,6 +33,7 @@ export function MeetingDetailView({
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
         meeting={meeting}
+        actionsSlot={<CopyMeetingButton meeting={meeting} />}
         titleSlot={
           <EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />
         }
