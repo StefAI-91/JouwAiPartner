@@ -2,13 +2,18 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@repo/database/supabase/server";
 import { listPeople } from "@repo/database/queries/people";
+import { listOrganizations } from "@repo/database/queries/organizations";
 import { Badge } from "@/components/ui/badge";
 import { Users, Mail, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { AddPersonButton } from "@/components/people/add-person-button";
 
 export default async function PeoplePage() {
   const supabase = await createClient();
-  const people = await listPeople(supabase);
+  const [people, organizations] = await Promise.all([
+    listPeople(supabase),
+    listOrganizations(supabase),
+  ]);
 
   if (people.length === 0) {
     return (
@@ -18,17 +23,23 @@ export default async function PeoplePage() {
         <p className="mt-2 text-sm text-muted-foreground">
           People will appear here once meetings are processed.
         </p>
+        <div className="mt-6">
+          <AddPersonButton organizations={organizations.map((o) => ({ id: o.id, name: o.name }))} />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
-      <div>
-        <h1>People</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {people.length} team member{people.length !== 1 ? "s" : ""} and contacts
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1>People</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {people.length} team member{people.length !== 1 ? "s" : ""} and contacts
+          </p>
+        </div>
+        <AddPersonButton organizations={organizations.map((o) => ({ id: o.id, name: o.name }))} />
       </div>
 
       <div className="space-y-2">
