@@ -101,19 +101,13 @@ export function CopyMeetingButton({ meeting }: CopyMeetingButtonProps) {
     <button
       type="button"
       onClick={handleCopy}
-      className="flex items-center gap-1.5 rounded-md border border-border/60 bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       title="Kopieer meeting als markdown"
     >
       {copied ? (
-        <>
-          <Check className="size-3.5 text-green-600" />
-          Gekopieerd
-        </>
+        <Check className="size-3.5 text-green-600" />
       ) : (
-        <>
-          <Copy className="size-3.5" />
-          Kopieer samenvatting
-        </>
+        <Copy className="size-3.5" />
       )}
     </button>
   );

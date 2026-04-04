@@ -11,6 +11,7 @@ interface MarkdownSummaryProps {
   content: string;
   editable?: boolean;
   onEdit?: (content: string) => void;
+  headerAction?: React.ReactNode;
 }
 
 /** Split markdown into sections by ## headings */
@@ -89,7 +90,7 @@ const PROSE_CLASSES = [
   "[&_strong]:text-foreground/80",
 ].join(" ");
 
-export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryProps) {
+export function MarkdownSummary({ content, editable, onEdit, headerAction }: MarkdownSummaryProps) {
   const [expanded, setExpanded] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
   );
@@ -146,6 +147,8 @@ export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryPr
     <div className="rounded-xl bg-muted/50 p-4">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Summary</h3>
+        <div className="flex items-center gap-1">
+          {headerAction}
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
@@ -161,6 +164,7 @@ export function MarkdownSummary({ content, editable, onEdit }: MarkdownSummaryPr
             </>
           )}
         </button>
+        </div>
       </div>
 
       <div

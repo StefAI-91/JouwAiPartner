@@ -24,7 +24,7 @@ interface MeetingTranscriptPanelProps {
   meetingTypeSlot?: React.ReactNode;
   participantsSlot?: React.ReactNode;
   headerExtra?: React.ReactNode;
-  actionsSlot?: React.ReactNode;
+  summaryAction?: React.ReactNode;
   activeTranscriptRef?: string | null;
   onSummaryEdit?: (content: string) => void;
 }
@@ -35,7 +35,7 @@ export function MeetingTranscriptPanel({
   meetingTypeSlot,
   participantsSlot,
   headerExtra,
-  actionsSlot,
+  summaryAction,
   activeTranscriptRef,
   onSummaryEdit,
 }: MeetingTranscriptPanelProps) {
@@ -49,9 +49,6 @@ export function MeetingTranscriptPanel({
 
   return (
     <div className="flex-1 overflow-y-auto border-r border-border/50 p-6 lg:w-[55%] lg:flex-none">
-      {actionsSlot && (
-        <div className="mb-4 flex justify-end">{actionsSlot}</div>
-      )}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {meetingTypeSlot ?? <MeetingTypeBadge type={meeting.meeting_type} />}
@@ -84,6 +81,7 @@ export function MeetingTranscriptPanel({
             content={meeting.summary}
             editable={!!onSummaryEdit}
             onEdit={onSummaryEdit}
+            headerAction={summaryAction}
           />
         </div>
       )}

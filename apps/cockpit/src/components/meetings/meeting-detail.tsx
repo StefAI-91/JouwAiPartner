@@ -33,7 +33,6 @@ export function MeetingDetailView({
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
         meeting={meeting}
-        actionsSlot={<CopyMeetingButton meeting={meeting} />}
         titleSlot={
           <EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />
         }
@@ -48,6 +47,7 @@ export function MeetingDetailView({
             organizations={organizations}
           />
         }
+        summaryAction={<CopyMeetingButton meeting={meeting} />}
         headerExtra={
           <div className="mt-3 space-y-3">
             <VerificationBadge
