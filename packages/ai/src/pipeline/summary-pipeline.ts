@@ -47,7 +47,7 @@ export async function generateProjectSummaries(
 
     if (!extractions || extractions.length === 0) {
       console.log(`[generateProjectSummaries] No verified extractions for project "${project.name}" — skipping`);
-      return { success: true };
+      return { success: false, error: "Geen verified extracties gevonden voor dit project. Koppel eerst meetings aan dit project en zorg dat ze geverifieerd zijn." };
     }
 
     console.log(`[generateProjectSummaries] Found ${extractions.length} verified extractions, calling AI...`);
@@ -130,7 +130,7 @@ export async function generateOrgSummaries(
 
     if (!extractions || extractions.length === 0) {
       console.log(`[generateOrgSummaries] No verified extractions for org "${org.name}" — skipping`);
-      return { success: true };
+      return { success: false, error: "Geen verified extracties gevonden voor deze organisatie." };
     }
 
     const formattedExtractions = extractions.map((e) => {
