@@ -6,9 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes company data — starting with meetings — processes it through AI agents, and exposes it via MCP server + web dashboard. Full spec: `docs/specs/platform-spec.md`.
 
-**Current state:** v1 (meetings pipeline) complete. v2 (review gate + dashboard) next.
+**Current state:** v2 (review gate + dashboard) complete. 14 sprints done. Next: v3 (client portal + advanced features).
 **Team:** 6 people, 3 internal reviewers (Stef, Wouter, Ege). Platform maintained by Stef (non-coder) via Claude Code.
 **Verification model:** All content must be human-verified before becoming queryable truth (review gate).
+**Feedback:** Userback widget integrated for user feedback collection.
 
 ## Tech Stack
 
@@ -19,6 +20,7 @@ AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). 
 - **Validation:** Zod
 - **Hosting:** Vercel
 - **MCP Server:** Separate TypeScript/Node.js process
+- **Feedback:** Userback widget (`@userback/widget`)
 
 ## Commands
 
@@ -36,7 +38,8 @@ npm run type-check   # TypeScript check (all workspaces)
 ├── apps/
 │   ├── cockpit/                   # Next.js 16 dashboard app
 │   │   ├── src/
-│   │   │   ├── app/               # Routes (dashboard, login, api)
+│   │   │   ├── app/               # Routes (dashboard, login, api, review)
+│   │   │   ├── actions/           # Server Actions (tasks, entities, review, meetings)
 │   │   │   ├── components/        # UI + feature components
 │   │   │   ├── lib/utils.ts       # cn() helper (app-specific)
 │   │   │   └── middleware.ts      # Auth route guards
@@ -49,8 +52,8 @@ npm run type-check   # TypeScript check (all workspaces)
 │   ├── database/                  # Shared: Supabase clients, queries, mutations, types
 │   │   └── src/
 │   │       ├── supabase/          # client.ts, server.ts, admin.ts
-│   │       ├── queries/           # Read functions (get*, list*)
-│   │       ├── mutations/         # Write functions (insert*, update*)
+│   │       ├── queries/           # Read functions (meetings, tasks, dashboard, people, review, etc.)
+│   │       ├── mutations/         # Write functions (meetings, tasks, extractions, etc.)
 │   │       └── types/             # database.ts (generated)
 │   │
 │   ├── ai/                        # Shared: Agents, embeddings, pipeline
@@ -112,7 +115,7 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 | Agent      | Model     | Purpose                                                                           |
 | ---------- | --------- | --------------------------------------------------------------------------------- |
-| Gatekeeper | Haiku 4.5 | Classify meetings: meeting_type, party_type, relevance_score                      |
+| Gatekeeper | Haiku 4.5 | Classify meetings: meeting_type (12 types incl. team_sync, status_update, discovery, sales, strategy, etc.), party_type, relevance_score |
 | Extractor  | Sonnet    | Extract decisions, action_items, needs, insights with confidence + transcript_ref |
 
 **Planned (v3+, NOT built):**
@@ -123,12 +126,40 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 | Analyst    | Opus        | Daily: cross-source patterns, trends, risk flagging |
 | Dispatcher | Haiku/rules | Route insights/alerts to Slack, email               |
 
+### Tasks System (extractions vs tasks)
+
+Extractions = AI-extracted facts from meetings (decisions, action_items, needs, insights). Tasks = human-promoted action items with assignment and tracking. Separate tables, linked via `extraction_id`.
+
+- `extractions` — immutable AI output, lives in review flow
+- `tasks` — promoted from action_items, with `status` (active/done/dismissed), `assigned_to`, `due_date`
+- Mutations: `createTaskFromExtraction()`, `completeTask()`, `dismissTask()`
+- Queries: `listActiveTasks()`, `hasTaskForExtraction()`, `getPromotedExtractionIds()`
+
+### Review Flow
+
+Draft meetings go through human review before becoming verified. Reviewers can:
+- Approve/reject individual extractions
+- Change extraction types (e.g., action_item → decision)
+- Promote action items to tasks with assignment during review
+- MCP search filters on `verified_only` by default
+
+### Dashboard
+
+- **Meeting carousel** — auto-rotating verified meetings with AI briefings (`ai_briefing` column)
+- **AI pulse strip** — metrics: processed meetings, decisions, deadlines, open needs
+- **Tasks card** — filterable task list with urgency badges (overdue/this-week/open)
+
+### Manual CRUD
+
+Organizations, projects, people, and extractions are manually editable via inline forms. Server Actions in `apps/cockpit/src/actions/entities.ts`.
+
 ### Key Design Principles
 
 - **Verification before truth** — all content is human-reviewed before becoming queryable
 - **Err on keeping** — quarantine uncertain content, never silently discard
 - **Right-size the model** — match model cost/capability to task complexity
 - **Database as communication bus** — all agent coordination via DB rows
+- **Extractions are immutable** — AI output stays unchanged; tasks are the mutable action layer
 
 ## Regels
 
@@ -154,7 +185,7 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 1. **Middleware** — route bescherming (v1: alleen auth check, role-based komt in v3).
 2. **Zod validatie in Server Actions** — valideer álle input vóór de database call.
-3. **RLS policies op elke tabel** — accepted risk: RLS deferred to v3 (client portal). Small team, everyone sees everything. See `docs/security/audit-report.md`.
+3. **RLS policies op elke tabel** — basic RLS enabled on `tasks` and core tables (permissive for authenticated users). Fine-grained role-based RLS deferred to v3 (client portal). See `docs/security/audit-report.md`.
 
 - Frontend checks zijn voor UX, niet voor security.
 - Service role client alleen server-side, alleen voor admin/seed taken.
@@ -210,6 +241,20 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 - Full platform spec: `docs/specs/platform-spec.md` (single source of truth)
 - Archived docs in `docs/archive/` (PRD v1, PRD v2, business model v1)
 
+## Dashboard Routes (cockpit)
+
+| Route | Purpose |
+|---|---|
+| `/` | Dashboard home (carousel, AI pulse, tasks) |
+| `/meetings` | Meeting list with day grouping, type/participant filters |
+| `/meetings/[id]` | Meeting detail with extraction tabs |
+| `/review` | Review queue (draft meetings) |
+| `/review/[id]` | Review detail (approve/reject extractions, type changes) |
+| `/clients` | Organizations list + inline create |
+| `/projects` | Projects list + inline create |
+| `/people` | People list + inline create |
+| `/login` | Split-screen login page |
+
 ## Next.js 16 Warning
 
 This uses Next.js 16 which has breaking changes from earlier versions. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
@@ -220,3 +265,7 @@ This uses Next.js 16 which has breaking changes from earlier versions. Read the 
 - `@repo/database/*` — shared database package (queries, mutations, supabase clients, types)
 - `@repo/ai/*` — shared AI package (agents, pipeline, embeddings, fireflies)
 - `@repo/mcp/*` — shared MCP package (server, tools)
+
+## Environment Variables (new)
+
+- `NEXT_PUBLIC_USERBACK_TOKEN` — Userback feedback widget token (required for deployment)
