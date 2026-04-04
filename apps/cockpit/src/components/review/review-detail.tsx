@@ -96,7 +96,10 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
 
     const extractionTypeChanges = Array.from(typeChanges.entries())
       .filter(([id]) => !deletedIds.has(id))
-      .map(([extractionId, type]) => ({ extractionId, type }));
+      .map(([extractionId, type]) => ({
+        extractionId,
+        type: type as "decision" | "action_item" | "need" | "insight",
+      }));
 
     const result = await approveMeetingWithEditsAction({
       meetingId: meeting.id,
