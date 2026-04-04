@@ -223,7 +223,7 @@ function StatusPipeline({ status }: { status: string }) {
         let className = "rounded-full px-3 py-1 text-xs font-medium transition-colors ";
         if (isCurrent) className += "bg-[#006B3F] text-white";
         else if (isPast) className += "bg-[#006B3F]/15 text-[#006B3F]";
-        else className += "bg-muted text-muted-foreground/50";
+        else className += "bg-muted text-muted-foreground/65";
 
         return (
           <span key={step} className={className}>
@@ -297,28 +297,28 @@ export default function TestProjectPage() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Project Summary
           </h3>
-          <span className="text-[10px] text-muted-foreground/40">
+          <span className="text-[10px] text-muted-foreground/55">
             {timeAgo(PROJECT.summary.lastUpdated)} &middot; {PROJECT.summary.sourceCount} meetings
           </span>
         </div>
-        <p className="text-[15px] leading-relaxed text-foreground/75">{PROJECT.summary.content}</p>
+        <p className="text-[15px] leading-relaxed text-foreground/85">{PROJECT.summary.content}</p>
       </section>
 
       {/* ── Bedrijfsprofiel (collapsed) ── */}
       <section className="mb-8 rounded-lg bg-muted/40 px-5 py-4">
         <details className="group">
           <summary className="flex cursor-pointer items-center gap-2.5">
-            <Building2 className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <Building2 className="h-3.5 w-3.5 text-muted-foreground/65" />
             <span className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
               {PROJECT.organization.name}
             </span>
-            <ChevronRight className="h-3 w-3 text-muted-foreground/40 transition-transform group-open:rotate-90" />
+            <ChevronRight className="h-3 w-3 text-muted-foreground/55 transition-transform group-open:rotate-90" />
           </summary>
           <div className="mt-3 pl-6">
-            <p className="text-[15px] leading-relaxed text-foreground/75">
+            <p className="text-[15px] leading-relaxed text-foreground/85">
               {PROJECT.orgSummary.content}
             </p>
-            <p className="mt-2 text-[10px] text-muted-foreground/40">
+            <p className="mt-2 text-[10px] text-muted-foreground/55">
               Bijgewerkt {timeAgo(PROJECT.orgSummary.lastUpdated)}
             </p>
           </div>
@@ -331,7 +331,7 @@ export default function TestProjectPage() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Actiepunten
           </h3>
-          <div className="flex gap-3 text-xs text-muted-foreground/50 tabular-nums">
+          <div className="flex gap-3 text-xs text-muted-foreground/65 tabular-nums">
             {overdueCount > 0 && <span className="text-foreground/60">{overdueCount} overdue</span>}
             <span>{openCount} open</span>
             <span>{doneCount} af</span>
@@ -341,10 +341,10 @@ export default function TestProjectPage() {
         <div className="space-y-2">
           {ACTION_ITEMS.filter((a) => a.status !== "done").map((item) => (
             <div key={item.id} className="flex items-start gap-3 rounded-md bg-muted/30 px-3 py-3">
-              <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/25" />
+              <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm">{item.content}</p>
-                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground/50">
+                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground/65">
                   <span>{item.assignee}</span>
                   <span>&middot;</span>
                   {item.status === "overdue" ? (
@@ -365,7 +365,7 @@ export default function TestProjectPage() {
         {/* Done items */}
         {doneCount > 0 && (
           <details className="group mt-2">
-            <summary className="flex cursor-pointer items-center gap-1 py-2 text-xs text-muted-foreground/40 hover:text-muted-foreground/60">
+            <summary className="flex cursor-pointer items-center gap-1 py-2 text-xs text-muted-foreground/55 hover:text-muted-foreground/60">
               <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
               {doneCount} afgerond
             </summary>
@@ -397,7 +397,7 @@ export default function TestProjectPage() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Besluiten
           </h3>
-          <span className="text-xs text-muted-foreground/40 tabular-nums">{DECISIONS.length}</span>
+          <span className="text-xs text-muted-foreground/55 tabular-nums">{DECISIONS.length}</span>
         </div>
 
         <div className="space-y-2">
@@ -407,8 +407,8 @@ export default function TestProjectPage() {
               className="rounded-md bg-muted/30 px-3 py-3 border-l-2 border-[#006B3F]/20"
             >
               <p className="text-sm font-semibold">{decision.content}</p>
-              <p className="mt-1 text-[13px] text-muted-foreground/50">{decision.context}</p>
-              <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground/40">
+              <p className="mt-1 text-[13px] text-muted-foreground/65">{decision.context}</p>
+              <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground/55">
                 <span className="tabular-nums">{formatDateShort(decision.date)}</span>
                 <span>&middot;</span>
                 <span>{decision.madeBy}</span>
@@ -427,7 +427,7 @@ export default function TestProjectPage() {
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
               Open behoeften
             </h3>
-            <span className="text-xs text-muted-foreground/40 tabular-nums">
+            <span className="text-xs text-muted-foreground/55 tabular-nums">
               {NEEDS.length} open
             </span>
           </div>
@@ -436,7 +436,7 @@ export default function TestProjectPage() {
             {NEEDS.map((need) => (
               <div key={need.id} className="rounded-md bg-muted/30 px-3 py-3">
                 <p className="text-sm">{need.content}</p>
-                <p className="mt-1 text-xs text-muted-foreground/40">{need.source}</p>
+                <p className="mt-1 text-xs text-muted-foreground/55">{need.source}</p>
               </div>
             ))}
           </div>
@@ -449,7 +449,7 @@ export default function TestProjectPage() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Meetings
           </h3>
-          <span className="text-xs text-muted-foreground/40 tabular-nums">{MEETINGS.length}</span>
+          <span className="text-xs text-muted-foreground/55 tabular-nums">{MEETINGS.length}</span>
         </div>
 
         <div className="space-y-2">
@@ -460,11 +460,11 @@ export default function TestProjectPage() {
             >
               <div className="min-w-0 flex-1">
                 <p className="text-sm">{meeting.title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground/40">
+                <p className="mt-0.5 text-xs text-muted-foreground/55">
                   {meeting.participants.join(", ")}
                 </p>
               </div>
-              <div className="ml-4 flex items-center gap-3 text-xs text-muted-foreground/50 shrink-0">
+              <div className="ml-4 flex items-center gap-3 text-xs text-muted-foreground/65 shrink-0">
                 <span>{MEETING_TYPE_LABELS[meeting.type] ?? meeting.type}</span>
                 <span className="tabular-nums">{formatDateShort(meeting.date)}</span>
               </div>
