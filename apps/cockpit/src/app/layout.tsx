@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Nunito, Fredoka, Geist_Mono } from "next/font/google";
-import Script from "next/script";
+import { UserbackProvider } from "@/components/shared/userback-provider";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -37,22 +37,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col antialiased">
         {children}
-        <Script
-          id="userback"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.Userback = window.Userback || {};
-              Userback.access_token = '${process.env.NEXT_PUBLIC_USERBACK_TOKEN || 'A-yzBT0sBbRpLUAfh9yVWo0jSgV'}';
-              (function(d) {
-                var s = d.createElement('script');
-                s.async = true;
-                s.src = 'https://static.userback.io/widget/v1.js';
-                (d.head || d.body).appendChild(s);
-              })(document);
-            `,
-          }}
-        />
+        <UserbackProvider />
       </body>
     </html>
   );

@@ -1,33 +1,14 @@
 'use client';
 
-import Script from 'next/script';
+import { useEffect } from 'react';
+import Userback from '@userback/widget';
 
-declare global {
-  interface Window {
-    Userback?: Record<string, unknown>;
-  }
-}
+export function UserbackProvider() {
+  useEffect(() => {
+    Userback('A-yzBT0sBbRpLUAfh9yVWo0jSgV')
+      .then(() => console.log('[Userback] Widget loaded'))
+      .catch((err) => console.error('[Userback] Error:', err));
+  }, []);
 
-const USERBACK_TOKEN = process.env.NEXT_PUBLIC_USERBACK_TOKEN || 'A-yzBT0sBbRpLUAfh9yVWo0jSgV';
-
-export function UserbackProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <Script
-        id="userback-init"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            window.Userback = window.Userback || {};
-            Userback.access_token = "${USERBACK_TOKEN}";
-          `,
-        }}
-      />
-      <Script
-        src="https://static.userback.io/widget/v1.js"
-        strategy="afterInteractive"
-      />
-      {children}
-    </>
-  );
+  return null;
 }
