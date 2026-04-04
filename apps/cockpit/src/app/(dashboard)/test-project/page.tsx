@@ -261,7 +261,7 @@ export default function TestProjectPage() {
           {PROJECT.organization.name}
         </p>
 
-        <h1 className="mt-1">{PROJECT.name}</h1>
+        <h1 className="mt-1 text-[#006B3F]">{PROJECT.name}</h1>
 
         <div className="mt-3">
           <StatusPipeline status={PROJECT.status} />
@@ -291,10 +291,10 @@ export default function TestProjectPage() {
       </div>
 
       {/* ── AI Project Summary ── */}
-      <section className="mb-10">
+      <section className="mb-6 rounded-lg bg-[#006B3F]/[0.03] px-5 py-4">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="h-3.5 w-3.5 text-[#006B3F]/60" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Project Summary
           </h3>
           <span className="text-[10px] text-muted-foreground/40">
@@ -305,16 +305,16 @@ export default function TestProjectPage() {
       </section>
 
       {/* ── Bedrijfsprofiel (collapsed) ── */}
-      <section className="mb-10">
+      <section className="mb-8 rounded-lg bg-muted/40 px-5 py-4">
         <details className="group">
-          <summary className="flex cursor-pointer items-center gap-2.5 py-2">
+          <summary className="flex cursor-pointer items-center gap-2.5">
             <Building2 className="h-3.5 w-3.5 text-muted-foreground/50" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
               {PROJECT.organization.name}
             </span>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40 transition-transform group-open:rotate-90" />
           </summary>
-          <div className="mt-2 pl-6">
+          <div className="mt-3 pl-6">
             <p className="text-[15px] leading-relaxed text-foreground/75">
               {PROJECT.orgSummary.content}
             </p>
@@ -325,13 +325,10 @@ export default function TestProjectPage() {
         </details>
       </section>
 
-      {/* ── Divider ── */}
-      <hr className="mb-8 border-border/40" />
-
       {/* ── Actiepunten ── */}
-      <section className="mb-10">
-        <div className="flex items-baseline justify-between mb-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+      <section className="mb-6 rounded-lg border border-border/30 px-5 py-4">
+        <div className="flex items-baseline justify-between mb-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Actiepunten
           </h3>
           <div className="flex gap-3 text-xs text-muted-foreground/50 tabular-nums">
@@ -390,9 +387,9 @@ export default function TestProjectPage() {
       </section>
 
       {/* ── Besluiten ── */}
-      <section className="mb-10">
-        <div className="flex items-baseline justify-between mb-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+      <section className="mb-6 rounded-lg border border-border/30 px-5 py-4">
+        <div className="flex items-baseline justify-between mb-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Besluiten
           </h3>
           <span className="text-xs text-muted-foreground/40 tabular-nums">{DECISIONS.length}</span>
@@ -417,9 +414,9 @@ export default function TestProjectPage() {
 
       {/* ── Open behoeften ── */}
       {NEEDS.length > 0 && (
-        <section className="mb-10">
-          <div className="flex items-baseline justify-between mb-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+        <section className="mb-6 rounded-lg border border-border/30 px-5 py-4">
+          <div className="flex items-baseline justify-between mb-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
               Open behoeften
             </h3>
             <span className="text-xs text-muted-foreground/40 tabular-nums">
@@ -439,9 +436,9 @@ export default function TestProjectPage() {
       )}
 
       {/* ── Meetings ── */}
-      <section className="mb-10">
-        <div className="flex items-baseline justify-between mb-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+      <section className="mb-6 rounded-lg border border-border/30 px-5 py-4">
+        <div className="flex items-baseline justify-between mb-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Meetings
           </h3>
           <span className="text-xs text-muted-foreground/40 tabular-nums">{MEETINGS.length}</span>
