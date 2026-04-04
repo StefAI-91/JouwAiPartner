@@ -10,11 +10,7 @@ export function UserbackProvider({ children }: { children: React.ReactNode }) {
   const [userback, setUserback] = useState<UserbackWidget | null>(null);
 
   useEffect(() => {
-    const token = process.env.NEXT_PUBLIC_USERBACK_TOKEN;
-    if (!token) {
-      console.warn('[Userback] NEXT_PUBLIC_USERBACK_TOKEN is not set');
-      return;
-    }
+    const token = process.env.NEXT_PUBLIC_USERBACK_TOKEN || 'A-yzBT0sBbRpLUAfh9yVWo0jSgV';
 
     Userback(token, { autohide: false })
       .then(setUserback)
