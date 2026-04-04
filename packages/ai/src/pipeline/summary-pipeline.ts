@@ -41,49 +41,33 @@ export async function generateProjectSummaries(
 
     const linkedMeetingIds = (meetingLinks ?? []).map((l) => l.meeting_id);
 
-    // Get extractions from two sources:
-    // 1. Directly linked via extractions.project_id
-    // 2. From meetings linked via meeting_projects (regardless of extraction.project_id)
-    const { data: directExtractions } = await db
-      .from("extractions")
-      .select("id, type, content, meeting:meetings(title, date)")
-      .eq("project_id", projectId)
-      .eq("verification_status", "verified");
-
-    let meetingExtractions: typeof directExtractions = [];
-    if (linkedMeetingIds.length > 0) {
-      const { data } = await db
-        .from("extractions")
-        .select("id, type, content, meeting:meetings(title, date)")
-        .in("meeting_id", linkedMeetingIds)
-        .eq("verification_status", "verified");
-      meetingExtractions = data;
+    if (linkedMeetingIds.length === 0) {
+      console.log(`[generateProjectSummaries] No linked meetings for project "${project.name}" — skipping`);
+      return { success: false, error: "Geen meetings gekoppeld aan dit project." };
     }
 
-    // Merge and deduplicate by extraction ID
-    const seen = new Set<string>();
-    const allExtractions = [...(directExtractions ?? []), ...(meetingExtractions ?? [])].filter((e) => {
-      if (seen.has(e.id)) return false;
-      seen.add(e.id);
-      return true;
-    });
+    // Get verified meetings with their summaries
+    const { data: meetings } = await db
+      .from("meetings")
+      .select("id, title, date, ai_briefing, summary, meeting_type")
+      .in("id", linkedMeetingIds)
+      .eq("verification_status", "verified")
+      .order("date", { ascending: false });
 
-    if (allExtractions.length === 0) {
-      console.log(`[generateProjectSummaries] No verified extractions for project "${project.name}" — skipping`);
-      return { success: false, error: "Geen verified extracties gevonden. Koppel meetings aan dit project en zorg dat ze geverifieerd zijn." };
+    if (!meetings || meetings.length === 0) {
+      console.log(`[generateProjectSummaries] No verified meetings for project "${project.name}" — skipping`);
+      return { success: false, error: "Geen geverifieerde meetings gevonden voor dit project." };
     }
 
-    console.log(`[generateProjectSummaries] Found ${allExtractions.length} verified extractions (${(directExtractions ?? []).length} direct, ${(meetingExtractions ?? []).length} via meetings), calling AI...`);
+    console.log(`[generateProjectSummaries] Found ${meetings.length} verified meetings, calling AI...`);
 
-    const formattedExtractions = allExtractions.map((e) => {
-      const meeting = e.meeting as unknown as { title: string | null; date: string | null } | null;
-      return {
-        type: e.type,
-        content: e.content,
-        meetingTitle: meeting?.title ?? null,
-        meetingDate: meeting?.date ?? null,
-      };
-    });
+    const formattedMeetings = meetings.map((m) => ({
+      title: m.title,
+      date: m.date,
+      meetingType: m.meeting_type,
+      briefing: m.ai_briefing,
+      summary: m.summary,
+    }));
 
     // Get existing context summary to provide as reference
     const existingContext = await getLatestSummary("project", projectId, "context", db);
@@ -91,7 +75,7 @@ export async function generateProjectSummaries(
     // Generate both summaries
     const output = await runProjectSummarizer(
       project.name,
-      formattedExtractions,
+      formattedMeetings,
       existingContext?.content,
     );
 
@@ -139,38 +123,34 @@ export async function generateOrgSummaries(
 
     console.log(`[generateOrgSummaries] Generating summaries for "${org.name}" (${organizationId})`);
 
-    // Get all verified extractions for this organization
-    const { data: extractions, error: extError } = await db
-      .from("extractions")
-      .select("type, content, meeting:meetings(title, date)")
+    // Get verified meetings linked to this organization
+    const { data: meetings } = await db
+      .from("meetings")
+      .select("id, title, date, ai_briefing, summary, meeting_type")
       .eq("organization_id", organizationId)
-      .eq("verification_status", "verified");
+      .eq("verification_status", "verified")
+      .order("date", { ascending: false });
 
-    if (extError) {
-      console.error(`[generateOrgSummaries] Failed to get extractions:`, extError.message);
-      return { success: false, error: extError.message };
+    if (!meetings || meetings.length === 0) {
+      console.log(`[generateOrgSummaries] No verified meetings for org "${org.name}" — skipping`);
+      return { success: false, error: "Geen geverifieerde meetings gevonden voor deze organisatie." };
     }
 
-    if (!extractions || extractions.length === 0) {
-      console.log(`[generateOrgSummaries] No verified extractions for org "${org.name}" — skipping`);
-      return { success: false, error: "Geen verified extracties gevonden voor deze organisatie." };
-    }
+    console.log(`[generateOrgSummaries] Found ${meetings.length} verified meetings, calling AI...`);
 
-    const formattedExtractions = extractions.map((e) => {
-      const meeting = e.meeting as unknown as { title: string | null; date: string | null } | null;
-      return {
-        type: e.type,
-        content: e.content,
-        meetingTitle: meeting?.title ?? null,
-        meetingDate: meeting?.date ?? null,
-      };
-    });
+    const formattedMeetings = meetings.map((m) => ({
+      title: m.title,
+      date: m.date,
+      meetingType: m.meeting_type,
+      briefing: m.ai_briefing,
+      summary: m.summary,
+    }));
 
     const existingContext = await getLatestSummary("organization", organizationId, "context", db);
 
     const output = await runOrgSummarizer(
       org.name,
-      formattedExtractions,
+      formattedMeetings,
       existingContext?.content,
     );
 

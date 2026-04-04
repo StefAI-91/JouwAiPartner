@@ -9,23 +9,24 @@ import {
 
 export type { ProjectSummaryOutput, OrgSummaryOutput };
 
-const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert twee soorten samenvattingen op basis van verified extracties uit meetings.
+const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert twee soorten samenvattingen op basis van meeting-samenvattingen die bij dit project horen.
 
 1. CONTEXT — Een neutrale projectbeschrijving voor iemand die het project niet kent.
    Focus op: wat is het project, wie is de klant, welke technologie/aanpak, scope, wie werkt eraan, wanneer moet het af.
    Max 4-5 zinnen. Geen meningen, geen risico's, geen aanbevelingen. Puur feitelijk.
 
 2. BRIEFING — Een forward-looking analyse voor het actieve team.
-   Focus op: voortgang vs. deadline, openstaande actiepunten en hun status, risico's en blokkades, wat het team deze week zou moeten doen.
+   Focus op: voortgang vs. deadline, openstaande actiepunten en hun status, risico's en blokkades, wat het team nu zou moeten doen.
    Max 4-5 zinnen. Wees direct en actiegericht. Noem concrete namen, datums en items.
    Als er risico's zijn, geef een concrete aanbeveling.
 
 REGELS:
 - Schrijf in het Nederlands.
-- Baseer je ALLEEN op de aangeleverde extracties. Verzin niets.
+- Baseer je ALLEEN op de aangeleverde meeting-samenvattingen. Verzin niets.
+- Recente meetings wegen zwaarder voor de BRIEFING dan oudere.
 - Als er weinig data is, wees dan kort. Liever 2 goede zinnen dan 5 vage.`;
 
-const ORG_SYSTEM_PROMPT = `Je bent een klant-analist. Je genereert twee soorten samenvattingen over een organisatie op basis van verified extracties uit meetings.
+const ORG_SYSTEM_PROMPT = `Je bent een klant-analist. Je genereert twee soorten samenvattingen over een organisatie op basis van meeting-samenvattingen.
 
 1. CONTEXT — Een neutrale beschrijving van de organisatie.
    Focus op: wie is de klant, wat voor bedrijf, relatie met ons, lopende projecten, contactpersoon.
@@ -37,56 +38,46 @@ const ORG_SYSTEM_PROMPT = `Je bent een klant-analist. Je genereert twee soorten 
 
 REGELS:
 - Schrijf in het Nederlands.
-- Baseer je ALLEEN op de aangeleverde extracties. Verzin niets.
+- Baseer je ALLEEN op de aangeleverde meeting-samenvattingen. Verzin niets.
+- Recente meetings wegen zwaarder voor de BRIEFING.
 - Als er weinig data is, wees dan kort.`;
 
-interface ExtractionInput {
-  type: string;
-  content: string;
-  meetingTitle: string | null;
-  meetingDate: string | null;
+export interface MeetingInput {
+  title: string;
+  date: string | null;
+  meetingType: string | null;
+  briefing: string | null;
+  summary: string | null;
 }
 
-function formatExtractions(extractions: ExtractionInput[]): string {
-  if (extractions.length === 0) return "Geen extracties beschikbaar.";
+function formatMeetings(meetings: MeetingInput[]): string {
+  if (meetings.length === 0) return "Geen meetings beschikbaar.";
 
-  const grouped: Record<string, ExtractionInput[]> = {};
-  for (const e of extractions) {
-    (grouped[e.type] ??= []).push(e);
-  }
+  return meetings.map((m) => {
+    const header = [
+      m.title,
+      m.date,
+      m.meetingType,
+    ].filter(Boolean).join(" — ");
 
-  const sections: string[] = [];
-  const typeLabels: Record<string, string> = {
-    decision: "Besluiten",
-    action_item: "Actiepunten",
-    need: "Behoeften",
-    insight: "Inzichten",
-  };
+    const content = m.briefing || m.summary || "Geen samenvatting beschikbaar";
 
-  for (const [type, items] of Object.entries(grouped)) {
-    const label = typeLabels[type] ?? type;
-    const lines = items.map((i) => {
-      const source = [i.meetingTitle, i.meetingDate].filter(Boolean).join(" — ");
-      return `- ${i.content}${source ? ` (bron: ${source})` : ""}`;
-    });
-    sections.push(`### ${label}\n${lines.join("\n")}`);
-  }
-
-  return sections.join("\n\n");
+    return `### ${header}\n${content}`;
+  }).join("\n\n");
 }
 
 export async function runProjectSummarizer(
   projectName: string,
-  extractions: ExtractionInput[],
+  meetings: MeetingInput[],
   existingContext?: string | null,
 ): Promise<ProjectSummaryOutput> {
-  const extractionsText = formatExtractions(extractions);
+  const meetingsText = formatMeetings(meetings);
 
   const userContent = [
     `Project: ${projectName}`,
-    `Aantal extracties: ${extractions.length}`,
+    `Aantal meetings: ${meetings.length}`,
     existingContext ? `\nHuidige context samenvatting:\n${existingContext}` : "",
-    `\n--- EXTRACTIES ---\n${extractionsText}`,
+    `\n--- MEETING SAMENVATTINGEN ---\n${meetingsText}`,
   ].join("\n");
 
   const { object } = await generateObject({
@@ -109,16 +100,16 @@ export async function runProjectSummarizer(
 
 export async function runOrgSummarizer(
   orgName: string,
-  extractions: ExtractionInput[],
+  meetings: MeetingInput[],
   existingContext?: string | null,
 ): Promise<OrgSummaryOutput> {
-  const extractionsText = formatExtractions(extractions);
+  const meetingsText = formatMeetings(meetings);
 
   const userContent = [
     `Organisatie: ${orgName}`,
-    `Aantal extracties: ${extractions.length}`,
+    `Aantal meetings: ${meetings.length}`,
     existingContext ? `\nHuidige context samenvatting:\n${existingContext}` : "",
-    `\n--- EXTRACTIES ---\n${extractionsText}`,
+    `\n--- MEETING SAMENVATTINGEN ---\n${meetingsText}`,
   ].join("\n");
 
   const { object } = await generateObject({
