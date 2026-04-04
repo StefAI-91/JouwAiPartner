@@ -338,9 +338,9 @@ export default function TestProjectPage() {
           </div>
         </div>
 
-        <div className="divide-y divide-border/40">
+        <div className="space-y-2">
           {ACTION_ITEMS.filter((a) => a.status !== "done").map((item) => (
-            <div key={item.id} className="flex items-start gap-3 py-3">
+            <div key={item.id} className="flex items-start gap-3 rounded-md bg-muted/30 px-3 py-3">
               <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/25" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm">{item.content}</p>
@@ -362,14 +362,17 @@ export default function TestProjectPage() {
 
         {/* Done items */}
         {doneCount > 0 && (
-          <details className="group mt-1">
+          <details className="group mt-2">
             <summary className="flex cursor-pointer items-center gap-1 py-2 text-xs text-muted-foreground/40 hover:text-muted-foreground/60">
               <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
               {doneCount} afgerond
             </summary>
-            <div className="divide-y divide-border/30">
+            <div className="mt-1 space-y-1">
               {ACTION_ITEMS.filter((a) => a.status === "done").map((item) => (
-                <div key={item.id} className="flex items-start gap-3 py-3 opacity-40">
+                <div
+                  key={item.id}
+                  className="flex items-start gap-3 rounded-md px-3 py-2.5 opacity-40"
+                >
                   <Check className="mt-0.5 h-4 w-4 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm line-through">{item.content}</p>
@@ -395,9 +398,9 @@ export default function TestProjectPage() {
           <span className="text-xs text-muted-foreground/40 tabular-nums">{DECISIONS.length}</span>
         </div>
 
-        <div className="divide-y divide-border/40">
+        <div className="space-y-2">
           {DECISIONS.map((decision) => (
-            <div key={decision.id} className="py-3">
+            <div key={decision.id} className="rounded-md bg-muted/30 px-3 py-3">
               <p className="text-sm font-medium">{decision.content}</p>
               <p className="mt-1 text-[13px] text-muted-foreground/50">{decision.context}</p>
               <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground/40">
@@ -424,9 +427,9 @@ export default function TestProjectPage() {
             </span>
           </div>
 
-          <div className="divide-y divide-border/40">
+          <div className="space-y-2">
             {NEEDS.map((need) => (
-              <div key={need.id} className="py-3">
+              <div key={need.id} className="rounded-md bg-muted/30 px-3 py-3">
                 <p className="text-sm">{need.content}</p>
                 <p className="mt-1 text-xs text-muted-foreground/40">{need.source}</p>
               </div>
@@ -444,9 +447,12 @@ export default function TestProjectPage() {
           <span className="text-xs text-muted-foreground/40 tabular-nums">{MEETINGS.length}</span>
         </div>
 
-        <div className="divide-y divide-border/40">
+        <div className="space-y-2">
           {MEETINGS.map((meeting) => (
-            <div key={meeting.id} className="flex items-center justify-between py-3">
+            <div
+              key={meeting.id}
+              className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-3"
+            >
               <div className="min-w-0 flex-1">
                 <p className="text-sm">{meeting.title}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground/40">
