@@ -5,6 +5,7 @@ import { ExtractionTabsPanel } from "@/components/meetings/extraction-tabs-panel
 import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
+import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
 
@@ -46,6 +47,7 @@ export function MeetingDetailView({
             organizations={organizations}
           />
         }
+        summaryAction={<CopyMeetingButton meeting={meeting} />}
         headerExtra={
           <div className="mt-3 space-y-3">
             <VerificationBadge

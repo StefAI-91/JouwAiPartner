@@ -9,6 +9,7 @@ import { EditableTitle } from "@/components/meetings/editable-title";
 import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
+import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import {
   EXTRACTION_TYPE_ORDER,
   EXTRACTION_TYPE_LABELS,
@@ -183,6 +184,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
             />
           </div>
         }
+        summaryAction={<CopyMeetingButton meeting={meeting} />}
         activeTranscriptRef={activeTranscriptRef}
         onSummaryEdit={setSummaryEdit}
       />

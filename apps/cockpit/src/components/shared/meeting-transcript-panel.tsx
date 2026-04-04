@@ -24,6 +24,7 @@ interface MeetingTranscriptPanelProps {
   meetingTypeSlot?: React.ReactNode;
   participantsSlot?: React.ReactNode;
   headerExtra?: React.ReactNode;
+  summaryAction?: React.ReactNode;
   activeTranscriptRef?: string | null;
   onSummaryEdit?: (content: string) => void;
 }
@@ -34,6 +35,7 @@ export function MeetingTranscriptPanel({
   meetingTypeSlot,
   participantsSlot,
   headerExtra,
+  summaryAction,
   activeTranscriptRef,
   onSummaryEdit,
 }: MeetingTranscriptPanelProps) {
@@ -79,6 +81,7 @@ export function MeetingTranscriptPanel({
             content={meeting.summary}
             editable={!!onSummaryEdit}
             onEdit={onSummaryEdit}
+            headerAction={summaryAction}
           />
         </div>
       )}
