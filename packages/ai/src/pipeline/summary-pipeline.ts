@@ -26,18 +26,31 @@ export async function generateProjectSummaries(
       .eq("id", projectId)
       .single();
 
-    if (!project) return { success: false, error: "Project not found" };
+    if (!project) {
+      console.error(`[generateProjectSummaries] Project ${projectId} not found`);
+      return { success: false, error: "Project not found" };
+    }
+
+    console.log(`[generateProjectSummaries] Generating summaries for "${project.name}" (${projectId})`);
 
     // Get all verified extractions for this project
-    const { data: extractions } = await db
+    const { data: extractions, error: extError } = await db
       .from("extractions")
       .select("type, content, meeting:meetings(title, date)")
       .eq("project_id", projectId)
       .eq("verification_status", "verified");
 
-    if (!extractions || extractions.length === 0) {
-      return { success: true }; // nothing to summarize yet
+    if (extError) {
+      console.error(`[generateProjectSummaries] Failed to get extractions:`, extError.message);
+      return { success: false, error: extError.message };
     }
+
+    if (!extractions || extractions.length === 0) {
+      console.log(`[generateProjectSummaries] No verified extractions for project "${project.name}" — skipping`);
+      return { success: true };
+    }
+
+    console.log(`[generateProjectSummaries] Found ${extractions.length} verified extractions, calling AI...`);
 
     const formattedExtractions = extractions.map((e) => {
       const meeting = e.meeting as unknown as { title: string | null; date: string | null } | null;
@@ -96,16 +109,27 @@ export async function generateOrgSummaries(
       .eq("id", organizationId)
       .single();
 
-    if (!org) return { success: false, error: "Organization not found" };
+    if (!org) {
+      console.error(`[generateOrgSummaries] Organization ${organizationId} not found`);
+      return { success: false, error: "Organization not found" };
+    }
+
+    console.log(`[generateOrgSummaries] Generating summaries for "${org.name}" (${organizationId})`);
 
     // Get all verified extractions for this organization
-    const { data: extractions } = await db
+    const { data: extractions, error: extError } = await db
       .from("extractions")
       .select("type, content, meeting:meetings(title, date)")
       .eq("organization_id", organizationId)
       .eq("verification_status", "verified");
 
+    if (extError) {
+      console.error(`[generateOrgSummaries] Failed to get extractions:`, extError.message);
+      return { success: false, error: extError.message };
+    }
+
     if (!extractions || extractions.length === 0) {
+      console.log(`[generateOrgSummaries] No verified extractions for org "${org.name}" — skipping`);
       return { success: true };
     }
 
@@ -151,20 +175,29 @@ export async function generateOrgSummaries(
 export async function triggerSummariesForMeeting(
   meetingId: string,
 ): Promise<void> {
+  console.log(`[triggerSummaries] Starting for meeting ${meetingId}`);
   const db = getAdminClient();
 
   // Get project IDs linked to this meeting
-  const { data: projectLinks } = await db
+  const { data: projectLinks, error: plError } = await db
     .from("meeting_projects")
     .select("project_id")
     .eq("meeting_id", meetingId);
 
+  if (plError) {
+    console.error("[triggerSummaries] Failed to get project links:", plError.message);
+  }
+
   // Get organization IDs from extractions of this meeting
-  const { data: orgExtractions } = await db
+  const { data: orgExtractions, error: oeError } = await db
     .from("extractions")
     .select("organization_id")
     .eq("meeting_id", meetingId)
     .not("organization_id", "is", null);
+
+  if (oeError) {
+    console.error("[triggerSummaries] Failed to get org extractions:", oeError.message);
+  }
 
   const projectIds = [...new Set((projectLinks ?? []).map((l) => l.project_id))];
   const orgIds = [...new Set(
@@ -184,18 +217,28 @@ export async function triggerSummariesForMeeting(
     orgIds.push(meeting.organization_id);
   }
 
-  // Generate summaries in parallel (fire-and-forget style, errors logged)
-  const promises: Promise<unknown>[] = [];
+  console.log(`[triggerSummaries] Found ${projectIds.length} projects, ${orgIds.length} orgs for meeting ${meetingId}`);
 
-  for (const projectId of projectIds) {
-    promises.push(generateProjectSummaries(projectId, [meetingId]));
+  if (projectIds.length === 0 && orgIds.length === 0) {
+    console.log("[triggerSummaries] No linked projects or organizations — skipping summary generation");
+    return;
   }
 
-  for (const orgId of orgIds) {
-    promises.push(generateOrgSummaries(orgId, [meetingId]));
+  // Generate summaries in parallel
+  const results = await Promise.allSettled([
+    ...projectIds.map((id) => generateProjectSummaries(id, [meetingId])),
+    ...orgIds.map((id) => generateOrgSummaries(id, [meetingId])),
+  ]);
+
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.error("[triggerSummaries] Promise rejected:", result.reason);
+    } else if (!result.value.success) {
+      console.error("[triggerSummaries] Generation failed:", result.value.error);
+    }
   }
 
-  await Promise.allSettled(promises);
+  console.log(`[triggerSummaries] Completed for meeting ${meetingId}`);
 }
 
 // ── Helpers ──
