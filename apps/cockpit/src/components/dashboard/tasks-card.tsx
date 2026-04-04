@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskItem, getUrgency } from "./task-item";
-import { CircleCheck, AlertTriangle, Clock, Users } from "lucide-react";
+import { CircleCheck, AlertTriangle, Clock, X } from "lucide-react";
 import type { TaskRow } from "@repo/database/queries/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
-type PersonFilter = string | null; // person id or null for "all"
+type PersonFilter = string | null;
 type UrgencyFilter = "all" | "overdue" | "this-week" | "no-deadline";
 
 interface TasksCardProps {
@@ -34,7 +34,7 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
     return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   }, [tasks]);
 
-  // Counts for urgency badges
+  // Counts
   const urgencyCounts = useMemo(() => {
     const counts = { overdue: 0, "this-week": 0, "no-deadline": 0 };
     for (const task of tasks) {
@@ -50,83 +50,82 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
     return counts;
   }, [tasks]);
 
+  const activeCount = useMemo(() => tasks.filter((t) => t.status === "active").length, [tasks]);
   const doneCount = useMemo(() => tasks.filter((t) => t.status === "done").length, [tasks]);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
-      // Status filter
       if (!showDone && task.status === "done") return false;
       if (showDone && task.status !== "done") return false;
-
-      // Person filter
       if (personFilter && task.assigned_to !== personFilter) return false;
-
-      // Urgency filter (only for active tasks)
       if (urgencyFilter !== "all" && task.status === "active") {
         if (urgencyFilter === "no-deadline" && task.due_date) return false;
         if (urgencyFilter === "overdue" && getUrgency(task.due_date) !== "overdue") return false;
         if (urgencyFilter === "this-week" && getUrgency(task.due_date) !== "this-week") return false;
       }
-
       return true;
     });
   }, [tasks, personFilter, urgencyFilter, showDone]);
 
-  const activeFilters = (personFilter ? 1 : 0) + (urgencyFilter !== "all" ? 1 : 0);
+  const hasActiveFilter = personFilter !== null || urgencyFilter !== "all";
 
   function clearFilters() {
     setPersonFilter(null);
     setUrgencyFilter("all");
   }
 
+  // First name only for pills
+  function firstName(fullName: string) {
+    return fullName.split(" ")[0];
+  }
+
   return (
     <Card>
       <CardHeader className="border-b border-border/50">
-        <CardTitle>Taken</CardTitle>
-        <CardDescription>Actiepunten uit meetings</CardDescription>
+        <div className="flex items-baseline justify-between">
+          <CardTitle>Taken</CardTitle>
+          <span className="text-xs text-muted-foreground">
+            {activeCount} actief{doneCount > 0 ? ` · ${doneCount} afgerond` : ""}
+          </span>
+        </div>
       </CardHeader>
-      <CardContent className="pt-4">
-        {/* Filter pills */}
-        <div className="mb-3 flex flex-wrap items-center gap-1.5">
-          {/* Person filter */}
-          {assignedPeople.length > 0 && (
-            <div className="relative">
-              <select
-                value={personFilter ?? ""}
-                onChange={(e) => setPersonFilter(e.target.value || null)}
-                className={`h-7 appearance-none rounded-full border pl-7 pr-3 text-[11px] font-medium outline-none transition-colors ${
-                  personFilter
-                    ? "border-primary/30 bg-primary/10 text-primary"
-                    : "border-border bg-muted/50 text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                <option value="">Iedereen</option>
-                {assignedPeople.map(([id, name]) => (
-                  <option key={id} value={id}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              <Users className="pointer-events-none absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" />
-            </div>
+      <CardContent className="pt-3">
+        {/* Filter bar — horizontal scroll, no wrap */}
+        <div className="-mx-4 mb-2 flex items-center gap-1 overflow-x-auto px-4 pb-1 scrollbar-none">
+          {/* Person pills — one per person */}
+          {assignedPeople.length > 1 && (
+            <>
+              {assignedPeople.map(([id, name]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPersonFilter(personFilter === id ? null : id)}
+                  className={`flex h-6 shrink-0 items-center rounded-full px-2 text-[11px] font-medium transition-colors ${
+                    personFilter === id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {firstName(name)}
+                </button>
+              ))}
+              <div className="mx-0.5 h-3.5 w-px shrink-0 bg-border" />
+            </>
           )}
 
-          {/* Urgency pills */}
+          {/* Urgency pills — only show if count > 0 */}
           {urgencyCounts.overdue > 0 && (
             <button
               type="button"
               onClick={() => setUrgencyFilter(urgencyFilter === "overdue" ? "all" : "overdue")}
-              className={`flex h-7 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium transition-colors ${
+              className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
                 urgencyFilter === "overdue"
-                  ? "border-red-300 bg-red-50 text-red-700"
-                  : "border-border bg-muted/50 text-muted-foreground hover:bg-muted"
+                  ? "bg-red-600 text-white"
+                  : "bg-red-50 text-red-700 hover:bg-red-100"
               }`}
             >
-              <AlertTriangle className="size-3" />
-              Verlopen
-              <span className="ml-0.5 rounded-full bg-red-100 px-1.5 text-[10px] text-red-700">
-                {urgencyCounts.overdue}
-              </span>
+              <AlertTriangle className="size-2.5" />
+              {urgencyCounts.overdue}
             </button>
           )}
 
@@ -136,17 +135,14 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
               onClick={() =>
                 setUrgencyFilter(urgencyFilter === "this-week" ? "all" : "this-week")
               }
-              className={`flex h-7 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium transition-colors ${
+              className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
                 urgencyFilter === "this-week"
-                  ? "border-amber-300 bg-amber-50 text-amber-700"
-                  : "border-border bg-muted/50 text-muted-foreground hover:bg-muted"
+                  ? "bg-amber-500 text-white"
+                  : "bg-amber-50 text-amber-700 hover:bg-amber-100"
               }`}
             >
-              <Clock className="size-3" />
-              Deze week
-              <span className="ml-0.5 rounded-full bg-amber-100 px-1.5 text-[10px] text-amber-700">
-                {urgencyCounts["this-week"]}
-              </span>
+              <Clock className="size-2.5" />
+              {urgencyCounts["this-week"]}
             </button>
           )}
 
@@ -156,49 +152,42 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
               onClick={() =>
                 setUrgencyFilter(urgencyFilter === "no-deadline" ? "all" : "no-deadline")
               }
-              className={`flex h-7 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium transition-colors ${
+              className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
                 urgencyFilter === "no-deadline"
-                  ? "border-primary/30 bg-primary/10 text-primary"
-                  : "border-border bg-muted/50 text-muted-foreground hover:bg-muted"
+                  ? "bg-muted-foreground text-background"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
               }`}
             >
-              Geen deadline
-              <span className="ml-0.5 rounded-full bg-muted px-1.5 text-[10px]">
-                {urgencyCounts["no-deadline"]}
-              </span>
+              Open
+              <span className="text-[10px]">{urgencyCounts["no-deadline"]}</span>
             </button>
           )}
 
-          {/* Divider + done toggle */}
+          {/* Done toggle */}
           {doneCount > 0 && (
-            <>
-              <div className="mx-0.5 h-4 w-px bg-border" />
-              <button
-                type="button"
-                onClick={() => setShowDone(!showDone)}
-                className={`flex h-7 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium transition-colors ${
-                  showDone
-                    ? "border-green-300 bg-green-50 text-green-700"
-                    : "border-border bg-muted/50 text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                <CircleCheck className="size-3" />
-                Afgerond
-                <span className="ml-0.5 rounded-full bg-green-100 px-1.5 text-[10px] text-green-700">
-                  {doneCount}
-                </span>
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => setShowDone(!showDone)}
+              className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
+                showDone
+                  ? "bg-green-600 text-white"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <CircleCheck className="size-2.5" />
+              {doneCount}
+            </button>
           )}
 
-          {/* Clear filters */}
-          {activeFilters > 0 && (
+          {/* Clear */}
+          {hasActiveFilter && (
             <button
               type="button"
               onClick={clearFilters}
-              className="h-7 rounded-full px-2 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              className="flex h-6 shrink-0 items-center rounded-full px-1.5 text-muted-foreground transition-colors hover:text-foreground"
+              title="Wis filters"
             >
-              Wis filters
+              <X className="size-3" />
             </button>
           )}
         </div>
@@ -208,7 +197,7 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
           <p className="py-6 text-center text-sm text-muted-foreground">
             {showDone
               ? "Geen afgeronde taken."
-              : activeFilters > 0
+              : hasActiveFilter
                 ? "Geen taken voor dit filter."
                 : "Geen actieve taken. Promoveer actiepunten vanuit een meeting."}
           </p>
