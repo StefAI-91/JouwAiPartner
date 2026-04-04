@@ -14,7 +14,7 @@ export function registerActionTools(server: McpServer) {
   // ── Tool 1: get_tasks — promoted, actively tracked tasks ──
   server.tool(
     "get_tasks",
-    "Haal actieve taken op. Dit zijn gepromoveerde actiepunten uit meetings die actief worden bijgehouden. Toont eigenaar, deadline en status. Gebruik get_action_items voor alle ruwe actiepunten uit meeting extracties.",
+    "Haal taken op. Dit zijn gepromoveerde actiepunten uit meetings die actief worden bijgehouden. Filter op persoon, status, deadline-week of afronddatum. Gebruik get_action_items voor alle ruwe actiepunten uit meeting extracties.",
     {
       person: z
         .string()
@@ -26,14 +26,30 @@ export function registerActionTools(server: McpServer) {
         .optional()
         .default("active")
         .describe("Task status filter (default: active)"),
+      due_from: z
+        .string()
+        .optional()
+        .describe("Filter tasks with due_date >= this date (YYYY-MM-DD). Useful for 'what is due this week?'"),
+      due_to: z
+        .string()
+        .optional()
+        .describe("Filter tasks with due_date <= this date (YYYY-MM-DD)"),
+      completed_from: z
+        .string()
+        .optional()
+        .describe("Filter done tasks completed on or after this date (YYYY-MM-DD). Useful for 'what was done last week?'"),
+      completed_to: z
+        .string()
+        .optional()
+        .describe("Filter done tasks completed on or before this date (YYYY-MM-DD)"),
       limit: z.number().optional().default(20).describe("Max results (default 20)"),
     },
-    async ({ person, status, limit }) => {
+    async ({ person, status, due_from, due_to, completed_from, completed_to, limit }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(
         supabase,
         "get_tasks",
-        [person, status].filter(Boolean).join(", ") || "all",
+        [person, status, due_from, due_to, completed_from, completed_to].filter(Boolean).join(", ") || "all",
       );
 
       let query = supabase
@@ -54,7 +70,6 @@ export function registerActionTools(server: McpServer) {
       }
 
       if (person) {
-        // Resolve person IDs by name, then filter tasks by assigned_to
         const escaped = escapeLike(person);
         const { data: matchedPeople } = await supabase
           .from("people")
@@ -67,6 +82,19 @@ export function registerActionTools(server: McpServer) {
           };
         }
         query = query.in("assigned_to", personIds);
+      }
+
+      if (due_from) {
+        query = query.gte("due_date", due_from);
+      }
+      if (due_to) {
+        query = query.lte("due_date", due_to);
+      }
+      if (completed_from) {
+        query = query.gte("completed_at", `${completed_from}T00:00:00Z`);
+      }
+      if (completed_to) {
+        query = query.lte("completed_at", `${completed_to}T23:59:59Z`);
       }
 
       const { data: tasks, error } = await query.limit(limit);
