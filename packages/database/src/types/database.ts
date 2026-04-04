@@ -114,6 +114,11 @@ export interface Database {
           name: string;
           aliases: string[];
           organization_id: string | null;
+          description: string | null;
+          owner_id: string | null;
+          contact_person_id: string | null;
+          start_date: string | null;
+          deadline: string | null;
           status: string;
           embedding: string | null;
           embedding_stale: boolean;
@@ -125,6 +130,11 @@ export interface Database {
           name: string;
           aliases?: string[];
           organization_id?: string | null;
+          description?: string | null;
+          owner_id?: string | null;
+          contact_person_id?: string | null;
+          start_date?: string | null;
+          deadline?: string | null;
           status?: string;
           embedding?: string | null;
           embedding_stale?: boolean;
@@ -136,6 +146,11 @@ export interface Database {
           name?: string;
           aliases?: string[];
           organization_id?: string | null;
+          description?: string | null;
+          owner_id?: string | null;
+          contact_person_id?: string | null;
+          start_date?: string | null;
+          deadline?: string | null;
           status?: string;
           embedding?: string | null;
           embedding_stale?: boolean;
@@ -319,6 +334,38 @@ export interface Database {
           verified_by?: string | null;
           verified_at?: string | null;
           search_vector?: unknown | null;
+          created_at?: string;
+        };
+      };
+      summaries: {
+        Row: {
+          id: string;
+          entity_type: string;
+          entity_id: string;
+          summary_type: string;
+          content: string;
+          version: number;
+          source_meeting_ids: string[];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity_type: string;
+          entity_id: string;
+          summary_type: string;
+          content: string;
+          version?: number;
+          source_meeting_ids?: string[];
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          entity_type?: string;
+          entity_id?: string;
+          summary_type?: string;
+          content?: string;
+          version?: number;
+          source_meeting_ids?: string[];
           created_at?: string;
         };
       };

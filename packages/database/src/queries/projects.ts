@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
+import { getLatestSummary } from "./summaries";
 
 export interface ProjectListItem {
   id: string;
@@ -8,6 +9,8 @@ export interface ProjectListItem {
   organization: { name: string } | null;
   last_meeting_date: string | null;
   open_action_count: number;
+  deadline: string | null;
+  owner: { name: string } | null;
 }
 
 export async function listProjects(client?: SupabaseClient): Promise<ProjectListItem[]> {
@@ -17,8 +20,9 @@ export async function listProjects(client?: SupabaseClient): Promise<ProjectList
   const { data: projects, error } = await db
     .from("projects")
     .select(
-      `id, name, status,
-       organization:organizations(name)`,
+      `id, name, status, deadline,
+       organization:organizations(name),
+       owner:people!projects_owner_id_fkey(name)`,
     )
     .order("updated_at", { ascending: false });
 
@@ -68,7 +72,9 @@ export async function listProjects(client?: SupabaseClient): Promise<ProjectList
       id: string;
       name: string;
       status: string;
+      deadline: string | null;
       organization: { name: string } | null;
+      owner: { name: string } | null;
     }[]
   ).map((p) => ({
     id: p.id,
@@ -77,6 +83,8 @@ export async function listProjects(client?: SupabaseClient): Promise<ProjectList
     organization: p.organization,
     last_meeting_date: lastMeetingMap.get(p.id) ?? null,
     open_action_count: actionCountMap.get(p.id) ?? 0,
+    deadline: p.deadline,
+    owner: p.owner,
   }));
 }
 
@@ -84,8 +92,13 @@ export interface ProjectDetail {
   id: string;
   name: string;
   status: string;
+  description: string | null;
   organization_id: string | null;
   organization: { name: string } | null;
+  owner: { id: string; name: string } | null;
+  contact_person: { id: string; name: string } | null;
+  start_date: string | null;
+  deadline: string | null;
   meetings: {
     id: string;
     title: string | null;
@@ -102,6 +115,8 @@ export interface ProjectDetail {
     metadata: Record<string, unknown>;
     meeting: { id: string; title: string | null } | null;
   }[];
+  context_summary: { content: string; version: number; created_at: string } | null;
+  briefing_summary: { content: string; version: number; created_at: string } | null;
 }
 
 export async function getProjectById(
@@ -113,8 +128,10 @@ export async function getProjectById(
   const { data: project, error } = await db
     .from("projects")
     .select(
-      `id, name, status, organization_id,
-       organization:organizations(name)`,
+      `id, name, status, description, organization_id, start_date, deadline,
+       organization:organizations(name),
+       owner:people!projects_owner_id_fkey(id, name),
+       contact_person:people!projects_contact_person_id_fkey(id, name)`,
     )
     .eq("id", projectId)
     .single();
@@ -151,16 +168,44 @@ export async function getProjectById(
     .eq("project_id", projectId)
     .order("created_at", { ascending: false });
 
+  // Get latest summaries
+  const [contextSummary, briefingSummary] = await Promise.all([
+    getLatestSummary("project", projectId, "context", db),
+    getLatestSummary("project", projectId, "briefing", db),
+  ]);
+
+  const typedProject = project as unknown as {
+    id: string;
+    name: string;
+    status: string;
+    description: string | null;
+    organization_id: string | null;
+    start_date: string | null;
+    deadline: string | null;
+    organization: { name: string } | null;
+    owner: { id: string; name: string } | null;
+    contact_person: { id: string; name: string } | null;
+  };
+
   return {
-    ...(project as unknown as {
-      id: string;
-      name: string;
-      status: string;
-      organization_id: string | null;
-      organization: { name: string } | null;
-    }),
+    id: typedProject.id,
+    name: typedProject.name,
+    status: typedProject.status,
+    description: typedProject.description,
+    organization_id: typedProject.organization_id,
+    start_date: typedProject.start_date,
+    deadline: typedProject.deadline,
+    organization: typedProject.organization,
+    owner: typedProject.owner,
+    contact_person: typedProject.contact_person,
     meetings,
     extractions: (extractions ?? []) as unknown as ProjectDetail["extractions"],
+    context_summary: contextSummary
+      ? { content: contextSummary.content, version: contextSummary.version, created_at: contextSummary.created_at }
+      : null,
+    briefing_summary: briefingSummary
+      ? { content: briefingSummary.content, version: briefingSummary.version, created_at: briefingSummary.created_at }
+      : null,
   };
 }
 
