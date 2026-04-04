@@ -4,15 +4,10 @@ import {
   User,
   Users,
   Clock,
-  AlertTriangle,
-  CheckCircle2,
+  Check,
   Circle,
   ChevronRight,
   Sparkles,
-  MessageSquare,
-  Target,
-  FileText,
-  TrendingUp,
 } from "lucide-react";
 
 // ─── Mock Data ───────────────────────────────────────────────
@@ -138,7 +133,6 @@ const MEETINGS = [
     date: "2026-04-01",
     type: "status_update",
     participants: ["Wouter", "Jan de Vries"],
-    verified: true,
   },
   {
     id: "2",
@@ -146,7 +140,6 @@ const MEETINGS = [
     date: "2026-03-25",
     type: "review",
     participants: ["Ege", "Jan de Vries", "Piet Bakker"],
-    verified: true,
   },
   {
     id: "3",
@@ -154,7 +147,6 @@ const MEETINGS = [
     date: "2026-03-20",
     type: "internal_sync",
     participants: ["Stef", "Wouter", "Ege"],
-    verified: true,
   },
   {
     id: "4",
@@ -162,7 +154,6 @@ const MEETINGS = [
     date: "2026-02-21",
     type: "review",
     participants: ["Ege", "Jan de Vries"],
-    verified: true,
   },
   {
     id: "5",
@@ -170,16 +161,20 @@ const MEETINGS = [
     date: "2026-02-14",
     type: "discovery",
     participants: ["Stef", "Wouter", "Jan de Vries"],
-    verified: true,
   },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────
 
 function daysUntil(dateStr: string) {
-  const now = new Date("2026-04-04"); // mock "today"
+  const now = new Date("2026-04-04");
   const target = new Date(dateStr);
   return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function daysOverdue(dateStr: string) {
+  const days = -daysUntil(dateStr);
+  return days > 0 ? days : 0;
 }
 
 function formatDate(dateStr: string) {
@@ -240,18 +235,10 @@ function StatusPipeline({ status }: { status: string }) {
   );
 }
 
-// ─── Meeting Type Badge ──────────────────────────────────────
-
-const MEETING_TYPE_COLORS: Record<string, string> = {
-  status_update: "bg-blue-100 text-blue-700",
-  review: "bg-purple-100 text-purple-700",
-  internal_sync: "bg-gray-100 text-gray-700",
-  discovery: "bg-amber-100 text-amber-700",
-  sales: "bg-emerald-100 text-emerald-700",
-};
+// ─── Meeting Type ────────────────────────────────────────────
 
 const MEETING_TYPE_LABELS: Record<string, string> = {
-  status_update: "Status Update",
+  status_update: "Status",
   review: "Review",
   internal_sync: "Internal",
   discovery: "Discovery",
@@ -267,291 +254,220 @@ export default function TestProjectPage() {
   const doneCount = ACTION_ITEMS.filter((a) => a.status === "done").length;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-8">
       {/* ── Header ── */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Building2 className="h-3.5 w-3.5" />
-          <span className="font-medium">{PROJECT.organization.name}</span>
-          <ChevronRight className="h-3 w-3" />
-          <span>Project</span>
-        </div>
+      <div className="mb-10">
+        <p className="text-xs font-medium tracking-wide text-muted-foreground/60 uppercase">
+          {PROJECT.organization.name}
+        </p>
 
-        <h1 className="mt-2">{PROJECT.name}</h1>
+        <h1 className="mt-1">{PROJECT.name}</h1>
 
         <div className="mt-3">
           <StatusPipeline status={PROJECT.status} />
         </div>
 
-        {/* Meta row */}
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+        {/* Meta */}
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <User className="h-3.5 w-3.5" />
-            <span className="text-foreground font-medium">{PROJECT.owner}</span>
-            <span className="text-xs">(eigenaar)</span>
+            {PROJECT.owner}
           </span>
           <span className="flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5" />
-            <span className="text-foreground font-medium">{PROJECT.contactPerson}</span>
-            <span className="text-xs">(klant)</span>
+            {PROJECT.contactPerson}
           </span>
           <span className="flex items-center gap-1.5">
             <CalendarDays className="h-3.5 w-3.5" />
             {formatDate(PROJECT.startDate)} — {formatDate(PROJECT.deadline)}
           </span>
           <span
-            className={`flex items-center gap-1.5 font-medium ${daysLeft < 14 ? "text-amber-600" : "text-muted-foreground"}`}
+            className={`flex items-center gap-1.5 ${daysLeft < 14 ? "text-foreground/70" : ""}`}
           >
             <Clock className="h-3.5 w-3.5" />
-            {daysLeft > 0 ? `${daysLeft} dagen tot deadline` : "Deadline verstreken!"}
+            {daysLeft > 0 ? `${daysLeft}d tot deadline` : "Deadline verstreken"}
           </span>
         </div>
       </div>
 
       {/* ── AI Project Summary ── */}
-      <section className="mb-6">
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#006B3F]/10">
-                <Sparkles className="h-4 w-4 text-[#006B3F]" />
-              </div>
-              <h3 className="text-sm font-semibold">Project Summary</h3>
-            </div>
-            <span className="text-[10px] text-muted-foreground">
-              Bijgewerkt {timeAgo(PROJECT.summary.lastUpdated)} &middot;{" "}
-              {PROJECT.summary.sourceCount} meetings
-            </span>
-          </div>
-          <p className="text-sm leading-relaxed text-foreground/80">{PROJECT.summary.content}</p>
+      <section className="mb-10">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="h-3.5 w-3.5 text-[#006B3F]/60" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Project Summary
+          </h3>
+          <span className="text-[10px] text-muted-foreground/40">
+            {timeAgo(PROJECT.summary.lastUpdated)} &middot; {PROJECT.summary.sourceCount} meetings
+          </span>
         </div>
+        <p className="text-[15px] leading-relaxed text-foreground/75">{PROJECT.summary.content}</p>
       </section>
 
-      {/* ── Bedrijf Summary (collapsed) ── */}
-      <section className="mb-6">
+      {/* ── Bedrijfsprofiel (collapsed) ── */}
+      <section className="mb-10">
         <details className="group">
-          <summary className="flex cursor-pointer items-center gap-2 rounded-2xl bg-white px-5 py-4 shadow-sm transition-shadow hover:shadow-md">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
-              <Building2 className="h-4 w-4 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold">{PROJECT.organization.name}</h3>
-              <p className="text-xs text-muted-foreground">
-                Bedrijfsprofiel &middot; AI-samenvatting
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
+          <summary className="flex cursor-pointer items-center gap-2.5 py-2">
+            <Building2 className="h-3.5 w-3.5 text-muted-foreground/50" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+              {PROJECT.organization.name}
+            </span>
+            <ChevronRight className="h-3 w-3 text-muted-foreground/40 transition-transform group-open:rotate-90" />
           </summary>
-          <div className="mt-1 rounded-b-2xl bg-white px-5 pb-5 pt-2 shadow-sm">
-            <p className="text-sm leading-relaxed text-foreground/80">
+          <div className="mt-2 pl-6">
+            <p className="text-[15px] leading-relaxed text-foreground/75">
               {PROJECT.orgSummary.content}
             </p>
-            <p className="mt-2 text-[10px] text-muted-foreground">
+            <p className="mt-2 text-[10px] text-muted-foreground/40">
               Bijgewerkt {timeAgo(PROJECT.orgSummary.lastUpdated)}
             </p>
           </div>
         </details>
       </section>
 
+      {/* ── Divider ── */}
+      <hr className="mb-8 border-border/40" />
+
       {/* ── Actiepunten ── */}
-      <section className="mb-6">
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50">
-                <Target className="h-4 w-4 text-emerald-600" />
-              </div>
-              <h3 className="text-sm font-semibold">Actiepunten</h3>
-            </div>
-            <div className="flex gap-2 text-xs">
-              {overdueCount > 0 && (
-                <span className="rounded-full bg-red-100 px-2 py-0.5 font-medium text-red-700">
-                  {overdueCount} overdue
-                </span>
-              )}
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700">
-                {openCount} open
-              </span>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-700">
-                {doneCount} afgerond
-              </span>
-            </div>
+      <section className="mb-10">
+        <div className="flex items-baseline justify-between mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Actiepunten
+          </h3>
+          <div className="flex gap-3 text-xs text-muted-foreground/50 tabular-nums">
+            {overdueCount > 0 && <span className="text-foreground/60">{overdueCount} overdue</span>}
+            <span>{openCount} open</span>
+            <span>{doneCount} af</span>
           </div>
+        </div>
 
-          <div className="space-y-2">
-            {ACTION_ITEMS.filter((a) => a.status !== "done").map((item) => (
-              <div
-                key={item.id}
-                className={`flex items-start gap-3 rounded-xl px-3 py-3 ${
-                  item.status === "overdue" ? "bg-red-50/60" : "bg-muted/30"
-                }`}
-              >
-                {item.status === "overdue" ? (
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                ) : (
-                  <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/40" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{item.content}</p>
-                  <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-full bg-white px-2 py-0.5 shadow-sm">
-                      {item.assignee}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 ${
-                        item.status === "overdue"
-                          ? "bg-red-100 text-red-600 font-medium"
-                          : "bg-white shadow-sm"
-                      }`}
-                    >
-                      {formatDateShort(item.dueDate)}
-                    </span>
-                    <span className="text-muted-foreground/50">{item.source}</span>
-                  </div>
+        <div className="divide-y divide-border/40">
+          {ACTION_ITEMS.filter((a) => a.status !== "done").map((item) => (
+            <div key={item.id} className="flex items-start gap-3 py-3">
+              <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/25" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm">{item.content}</p>
+                <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground/50">
+                  <span>{item.assignee}</span>
+                  <span>&middot;</span>
+                  {item.status === "overdue" ? (
+                    <span className="text-foreground/60">{daysOverdue(item.dueDate)}d overdue</span>
+                  ) : (
+                    <span>{formatDateShort(item.dueDate)}</span>
+                  )}
+                  <span>&middot;</span>
+                  <span>{item.source}</span>
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
+        </div>
 
-            {/* Done items collapsed */}
-            {doneCount > 0 && (
-              <details className="group">
-                <summary className="mt-2 flex cursor-pointer items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                  <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
-                  {doneCount} afgeronde actiepunten
-                </summary>
-                <div className="mt-2 space-y-2">
-                  {ACTION_ITEMS.filter((a) => a.status === "done").map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-start gap-3 rounded-xl bg-muted/20 px-3 py-3 opacity-60"
-                    >
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm line-through">{item.content}</p>
-                        <div className="mt-1 flex gap-2 text-xs text-muted-foreground">
-                          <span>{item.assignee}</span>
-                          <span>{formatDateShort(item.dueDate)}</span>
-                        </div>
-                      </div>
+        {/* Done items */}
+        {doneCount > 0 && (
+          <details className="group mt-1">
+            <summary className="flex cursor-pointer items-center gap-1 py-2 text-xs text-muted-foreground/40 hover:text-muted-foreground/60">
+              <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
+              {doneCount} afgerond
+            </summary>
+            <div className="divide-y divide-border/30">
+              {ACTION_ITEMS.filter((a) => a.status === "done").map((item) => (
+                <div key={item.id} className="flex items-start gap-3 py-3 opacity-40">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm line-through">{item.content}</p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{item.assignee}</span>
+                      <span>&middot;</span>
+                      <span>{formatDateShort(item.dueDate)}</span>
                     </div>
-                  ))}
-                </div>
-              </details>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Besluiten ── */}
-      <section className="mb-6">
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
-              <FileText className="h-4 w-4 text-blue-600" />
-            </div>
-            <h3 className="text-sm font-semibold">Besluiten</h3>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              {DECISIONS.length}
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            {DECISIONS.map((decision) => (
-              <div
-                key={decision.id}
-                className="rounded-xl bg-muted/30 px-4 py-3"
-                style={{ borderLeft: "3px solid #3B82F6" }}
-              >
-                <p className="text-sm font-medium">{decision.content}</p>
-                <p className="mt-1 text-xs text-muted-foreground/70">{decision.context}</p>
-                <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                  <span>{formatDateShort(decision.date)}</span>
-                  <span>&middot;</span>
-                  <span>{decision.madeBy}</span>
-                  <span>&middot;</span>
-                  <span>{decision.source}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Open Behoeften ── */}
-      {NEEDS.length > 0 && (
-        <section className="mb-6">
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50">
-                <TrendingUp className="h-4 w-4 text-purple-600" />
-              </div>
-              <h3 className="text-sm font-semibold">Open behoeften</h3>
-              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-                {NEEDS.length} open
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              {NEEDS.map((need) => (
-                <div
-                  key={need.id}
-                  className="rounded-xl bg-purple-50/50 px-4 py-3"
-                  style={{ borderLeft: "3px solid #A855F7" }}
-                >
-                  <p className="text-sm">{need.content}</p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">{need.source}</p>
+                  </div>
                 </div>
               ))}
             </div>
+          </details>
+        )}
+      </section>
+
+      {/* ── Besluiten ── */}
+      <section className="mb-10">
+        <div className="flex items-baseline justify-between mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Besluiten
+          </h3>
+          <span className="text-xs text-muted-foreground/40 tabular-nums">{DECISIONS.length}</span>
+        </div>
+
+        <div className="divide-y divide-border/40">
+          {DECISIONS.map((decision) => (
+            <div key={decision.id} className="py-3">
+              <p className="text-sm font-medium">{decision.content}</p>
+              <p className="mt-1 text-[13px] text-muted-foreground/50">{decision.context}</p>
+              <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground/40">
+                <span className="tabular-nums">{formatDateShort(decision.date)}</span>
+                <span>&middot;</span>
+                <span>{decision.madeBy}</span>
+                <span>&middot;</span>
+                <span>{decision.source}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Open behoeften ── */}
+      {NEEDS.length > 0 && (
+        <section className="mb-10">
+          <div className="flex items-baseline justify-between mb-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+              Open behoeften
+            </h3>
+            <span className="text-xs text-muted-foreground/40 tabular-nums">
+              {NEEDS.length} open
+            </span>
+          </div>
+
+          <div className="divide-y divide-border/40">
+            {NEEDS.map((need) => (
+              <div key={need.id} className="py-3">
+                <p className="text-sm">{need.content}</p>
+                <p className="mt-1 text-xs text-muted-foreground/40">{need.source}</p>
+              </div>
+            ))}
           </div>
         </section>
       )}
 
       {/* ── Meetings ── */}
-      <section className="mb-6">
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100">
-              <MessageSquare className="h-4 w-4 text-gray-600" />
-            </div>
-            <h3 className="text-sm font-semibold">Meetings</h3>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              {MEETINGS.length}
-            </span>
-          </div>
+      <section className="mb-10">
+        <div className="flex items-baseline justify-between mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Meetings
+          </h3>
+          <span className="text-xs text-muted-foreground/40 tabular-nums">{MEETINGS.length}</span>
+        </div>
 
-          <div className="space-y-2">
-            {MEETINGS.map((meeting) => (
-              <div
-                key={meeting.id}
-                className="flex items-center justify-between rounded-xl bg-muted/30 px-4 py-3 transition-colors hover:bg-muted/50"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{meeting.title}</p>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{formatDateShort(meeting.date)}</span>
-                    <span>&middot;</span>
-                    <span>{meeting.participants.join(", ")}</span>
-                  </div>
-                </div>
-                <div className="ml-3 flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      MEETING_TYPE_COLORS[meeting.type] ?? "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {MEETING_TYPE_LABELS[meeting.type] ?? meeting.type}
-                  </span>
-                </div>
+        <div className="divide-y divide-border/40">
+          {MEETINGS.map((meeting) => (
+            <div key={meeting.id} className="flex items-center justify-between py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm">{meeting.title}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground/40">
+                  {meeting.participants.join(", ")}
+                </p>
               </div>
-            ))}
-          </div>
+              <div className="ml-4 flex items-center gap-3 text-xs text-muted-foreground/50 shrink-0">
+                <span>{MEETING_TYPE_LABELS[meeting.type] ?? meeting.type}</span>
+                <span className="tabular-nums">{formatDateShort(meeting.date)}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Footer note ── */}
-      <p className="text-center text-xs text-muted-foreground/50">
-        Prototype — alle data is mock data voor design review
+      {/* ── Footer ── */}
+      <p className="text-center text-[10px] text-muted-foreground/30">
+        Prototype — mock data voor design review
       </p>
     </div>
   );
