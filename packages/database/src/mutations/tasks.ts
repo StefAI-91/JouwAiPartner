@@ -11,19 +11,22 @@ export async function createTaskFromExtraction(
     assigned_to?: string | null;
     due_date?: string | null;
     created_by: string;
+    already_done?: boolean;
   },
   client?: SupabaseClient,
 ): Promise<{ success: true; id: string } | { error: string }> {
   const db = client ?? getAdminClient();
+  const isDone = input.already_done === true;
   const { data, error } = await db
     .from("tasks")
     .insert({
       extraction_id: input.extraction_id,
       title: input.title,
-      status: "active",
+      status: isDone ? "done" : "active",
       assigned_to: input.assigned_to ?? null,
       due_date: input.due_date ?? null,
       created_by: input.created_by,
+      ...(isDone ? { completed_at: new Date().toISOString() } : {}),
     })
     .select("id")
     .single();
