@@ -6,7 +6,7 @@ import {
   listTodaysBriefingMeetings,
   getExtractionCountsByMeetingIds,
 } from "@repo/database/queries/dashboard";
-import { listActiveTasks } from "@repo/database/queries/tasks";
+import { listAllTasks } from "@repo/database/queries/tasks";
 import { listPeopleForAssignment } from "@repo/database/queries/people";
 import { Greeting } from "@/components/dashboard/greeting";
 import { MeetingCarousel } from "@/components/dashboard/meeting-carousel";
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   const [briefingResult, verifiedMeetings, tasks, people] = await Promise.all([
     listTodaysBriefingMeetings(supabase),
     listRecentVerifiedMeetings(5, supabase),
-    listActiveTasks(20, supabase),
+    listAllTasks(50, supabase),
     listPeopleForAssignment(supabase),
   ]);
 
