@@ -348,7 +348,9 @@ export default function TestProjectPage() {
                   <span>{item.assignee}</span>
                   <span>&middot;</span>
                   {item.status === "overdue" ? (
-                    <span className="text-foreground/60">{daysOverdue(item.dueDate)}d overdue</span>
+                    <span className="font-medium text-[#006B3F]">
+                      {daysOverdue(item.dueDate)}d overdue
+                    </span>
                   ) : (
                     <span>{formatDateShort(item.dueDate)}</span>
                   )}
@@ -400,8 +402,11 @@ export default function TestProjectPage() {
 
         <div className="space-y-2">
           {DECISIONS.map((decision) => (
-            <div key={decision.id} className="rounded-md bg-muted/30 px-3 py-3">
-              <p className="text-sm font-medium">{decision.content}</p>
+            <div
+              key={decision.id}
+              className="rounded-md bg-muted/30 px-3 py-3 border-l-2 border-[#006B3F]/20"
+            >
+              <p className="text-sm font-semibold">{decision.content}</p>
               <p className="mt-1 text-[13px] text-muted-foreground/50">{decision.context}</p>
               <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground/40">
                 <span className="tabular-nums">{formatDateShort(decision.date)}</span>
