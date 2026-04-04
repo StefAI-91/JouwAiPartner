@@ -25,6 +25,8 @@ export async function verifyMeetingWithEdits(
   meetingId: string,
   userId: string,
   edits: { extractionId: string; content?: string; metadata?: Record<string, unknown> }[],
+  rejectedIds: string[] = [],
+  typeChanges: { extractionId: string; type: string }[] = [],
   client?: SupabaseClient,
 ): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
@@ -35,10 +37,17 @@ export async function verifyMeetingWithEdits(
     metadata: e.metadata ?? null,
   }));
 
+  const typeChangesJson = typeChanges.map((tc) => ({
+    extractionId: tc.extractionId,
+    type: tc.type,
+  }));
+
   const { error } = await db.rpc("verify_meeting", {
     p_meeting_id: meetingId,
     p_user_id: userId,
     p_edits: editsJson,
+    p_rejected_ids: rejectedIds,
+    p_type_changes: typeChangesJson,
   });
 
   if (error) return { error: error.message };

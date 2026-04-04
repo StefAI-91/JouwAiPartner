@@ -26,6 +26,15 @@ const verifyMeetingWithEditsSchema = z.object({
       }),
     )
     .optional(),
+  rejectedExtractionIds: z.array(z.string().uuid()).optional(),
+  typeChanges: z
+    .array(
+      z.object({
+        extractionId: z.string().uuid(),
+        type: z.enum(["decision", "action_item", "need", "insight"]),
+      }),
+    )
+    .optional(),
 });
 
 const rejectMeetingSchema = z.object({
@@ -75,6 +84,8 @@ export async function approveMeetingWithEditsAction(
     parsed.data.meetingId,
     user.id,
     parsed.data.extractionEdits ?? [],
+    parsed.data.rejectedExtractionIds ?? [],
+    parsed.data.typeChanges ?? [],
   );
   if ("error" in result) return result;
 

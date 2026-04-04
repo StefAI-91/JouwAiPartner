@@ -24,6 +24,7 @@ interface ExtractionCardProps {
   people?: PersonForAssignment[];
   onEdit?: (id: string, content: string) => void;
   onDelete?: (id: string) => void;
+  onTypeChange?: (id: string, type: string) => void;
   onRefClick?: (ref: string) => void;
 }
 
@@ -35,14 +36,16 @@ export function ExtractionCard({
   people,
   onEdit,
   onDelete,
+  onTypeChange,
   onRefClick,
 }: ExtractionCardProps) {
   const [editing, setEditing] = useState(false);
   const [content, setContent] = useState(extraction.content);
+  const [currentType, setCurrentType] = useState(extraction.type);
   const [promoted, setPromoted] = useState(isPromoted ?? false);
   const [showPromoteForm, setShowPromoteForm] = useState(false);
-  const config = EXTRACTION_TYPE_COLORS[extraction.type] ?? EXTRACTION_TYPE_COLORS.insight;
-  const Icon = EXTRACTION_TYPE_ICONS[extraction.type];
+  const config = EXTRACTION_TYPE_COLORS[currentType] ?? EXTRACTION_TYPE_COLORS.insight;
+  const Icon = EXTRACTION_TYPE_ICONS[currentType];
 
   function handleSave() {
     setEditing(false);
@@ -51,7 +54,7 @@ export function ExtractionCard({
     }
   }
 
-  const canPromote = showPromote && extraction.type === "action_item" && !promoted;
+  const canPromote = showPromote && currentType === "action_item" && !promoted;
 
   return (
     <div
@@ -63,12 +66,37 @@ export function ExtractionCard({
         {Icon && (
           <div className="flex items-center gap-1.5">
             <Icon className="size-3.5" style={{ color: config.color }} />
-            <span
-              className="text-[10px] font-medium uppercase tracking-wide"
-              style={{ color: config.color }}
-            >
-              {config.label}
-            </span>
+            {!readOnly && onTypeChange ? (
+              <div className="relative">
+                <select
+                  value={currentType}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    setCurrentType(newType);
+                    onTypeChange(extraction.id, newType);
+                  }}
+                  className="appearance-none rounded-md border border-transparent bg-transparent py-0.5 pl-1 pr-5 text-[10px] font-medium uppercase tracking-wide outline-none cursor-pointer hover:border-border hover:bg-muted/50 focus:border-primary transition-colors"
+                  style={{ color: config.color }}
+                  title="Type wijzigen"
+                >
+                  {Object.entries(EXTRACTION_TYPE_COLORS).map(([type, tc]) => (
+                    <option key={type} value={type}>
+                      {tc.label}
+                    </option>
+                  ))}
+                </select>
+                <svg className="pointer-events-none absolute right-1 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </div>
+            ) : (
+              <span
+                className="text-[10px] font-medium uppercase tracking-wide"
+                style={{ color: config.color }}
+              >
+                {config.label}
+              </span>
+            )}
           </div>
         )}
 
@@ -145,7 +173,7 @@ export function ExtractionCard({
           </button>
         )}
 
-        {showPromote && extraction.type === "action_item" && promoted && (
+        {showPromote && currentType === "action_item" && promoted && (
           <span className="flex shrink-0 items-center gap-1 rounded-md bg-green-100 px-2 py-1 text-[11px] font-medium text-green-700">
             <ListChecks className="size-3" />
             Taak aangemaakt
