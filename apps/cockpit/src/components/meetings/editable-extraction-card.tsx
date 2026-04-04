@@ -29,27 +29,38 @@ export function EditableExtractionCard({
   peopleForAssignment,
 }: EditableExtractionCardProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleEdit(id: string, content: string) {
+    setError(null);
     startTransition(async () => {
-      await updateExtractionAction({ id, content, meetingId });
+      const result = await updateExtractionAction({ id, content, meetingId });
+      if ("error" in result) setError(result.error);
     });
   }
 
-  function handleDelete(id: string) {
+  function handleDelete() {
     setDeleteOpen(true);
   }
 
   function confirmDelete() {
     startTransition(async () => {
-      await deleteExtractionAction({ id: extraction.id, meetingId });
-      setDeleteOpen(false);
+      const result = await deleteExtractionAction({ id: extraction.id, meetingId });
+      if ("error" in result) {
+        setError(result.error);
+        setDeleteOpen(false);
+      } else {
+        setDeleteOpen(false);
+      }
     });
   }
 
   return (
     <>
+      {error && (
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+      )}
       <ExtractionCard
         extraction={extraction}
         readOnly={false}

@@ -77,10 +77,15 @@ const updateExtractionSchema = z.object({
   content: z.string().min(1, "Content is verplicht").optional(),
   type: z.enum(["decision", "action_item", "need", "insight"]).optional(),
   transcript_ref: z.string().nullable().optional(),
+  meetingId: z.string().uuid().optional(),
 });
 
 const deleteSchema = z.object({
   id: z.string().uuid(),
+});
+
+const deleteWithContextSchema = deleteSchema.extend({
+  meetingId: z.string().uuid().optional(),
 });
 
 // ── Organization Actions ──
@@ -221,7 +226,7 @@ export async function createExtractionAction(
 }
 
 export async function updateExtractionAction(
-  input: z.infer<typeof updateExtractionSchema> & { meetingId?: string },
+  input: z.infer<typeof updateExtractionSchema>,
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
@@ -229,30 +234,30 @@ export async function updateExtractionAction(
   const parsed = updateExtractionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
-  const { id, ...data } = parsed.data;
+  const { id, meetingId, ...data } = parsed.data;
   const result = await updateExtraction(id, data, user.id);
   if ("error" in result) return result;
 
-  if (input.meetingId) {
-    revalidatePath(`/meetings/${input.meetingId}`);
+  if (meetingId) {
+    revalidatePath(`/meetings/${meetingId}`);
   }
   return { success: true };
 }
 
 export async function deleteExtractionAction(
-  input: z.infer<typeof deleteSchema> & { meetingId?: string },
+  input: z.infer<typeof deleteWithContextSchema>,
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
-  const parsed = deleteSchema.safeParse(input);
+  const parsed = deleteWithContextSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
   const result = await deleteExtraction(parsed.data.id);
   if ("error" in result) return result;
 
-  if (input.meetingId) {
-    revalidatePath(`/meetings/${input.meetingId}`);
+  if (parsed.data.meetingId) {
+    revalidatePath(`/meetings/${parsed.data.meetingId}`);
   }
   return { success: true };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
 import { createExtractionAction } from "@/actions/entities";
 import {
