@@ -54,6 +54,11 @@ const updateProjectSchema = z.object({
     ])
     .optional(),
   organization_id: z.string().uuid().nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
+  owner_id: z.string().uuid().nullable().optional(),
+  contact_person_id: z.string().uuid().nullable().optional(),
+  start_date: z.string().nullable().optional(),
+  deadline: z.string().nullable().optional(),
 });
 
 const updatePersonSchema = z.object({

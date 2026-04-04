@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, CircleCheck } from "lucide-react";
+import { CalendarDays, CircleCheck, User, Clock } from "lucide-react";
 import { StatusPipeline } from "./status-pipeline";
 
 interface ProjectCardProps {
@@ -10,10 +10,21 @@ interface ProjectCardProps {
     organization: { name: string } | null;
     last_meeting_date: string | null;
     open_action_count: number;
+    deadline: string | null;
+    owner: { name: string } | null;
   };
 }
 
+function daysUntil(dateStr: string) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 export function ProjectCard({ project }: ProjectCardProps) {
+  const daysLeft = project.deadline ? daysUntil(project.deadline) : null;
+
   return (
     <Link href={`/projects/${project.id}`}>
       <div className="rounded-2xl bg-white px-5 py-4 shadow-sm transition-shadow hover:shadow-md">
@@ -32,6 +43,22 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
         {/* Metrics row */}
         <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+          {project.owner && (
+            <span className="flex items-center gap-1">
+              <User className="h-3.5 w-3.5" />
+              {project.owner.name}
+            </span>
+          )}
+          {project.deadline && (
+            <span className={`flex items-center gap-1 ${daysLeft !== null && daysLeft < 14 ? "text-foreground/70" : ""}`}>
+              <Clock className="h-3.5 w-3.5" />
+              {daysLeft !== null && daysLeft > 0
+                ? `${daysLeft}d`
+                : daysLeft === 0
+                  ? "Vandaag"
+                  : "Overdue"}
+            </span>
+          )}
           {project.last_meeting_date && (
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3.5 w-3.5" />
