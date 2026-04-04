@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, UserCircle, Calendar } from "lucide-react";
+import { Check, UserCircle, Calendar, X } from "lucide-react";
 import { promoteToTaskAction } from "@/actions/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
@@ -88,13 +88,26 @@ export function PromoteTaskForm({
           <label className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
             <Calendar className="size-3" />
             Deadline
+            <span className="font-normal text-muted-foreground/70">(optioneel)</span>
           </label>
-          <input
-            type="date"
-            value={dueDate ?? ""}
-            onChange={(e) => setDueDate(e.target.value || null)}
-            className="h-7 rounded-md border border-input bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
-          />
+          <div className="flex items-center gap-1.5">
+            <input
+              type="date"
+              value={dueDate ?? ""}
+              onChange={(e) => setDueDate(e.target.value || null)}
+              className="h-7 rounded-md border border-input bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
+            />
+            {dueDate && (
+              <button
+                type="button"
+                onClick={() => setDueDate(null)}
+                className="flex h-7 items-center rounded-md px-1.5 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
+                title="Verwijder deadline"
+              >
+                <X className="size-3" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Actions */}

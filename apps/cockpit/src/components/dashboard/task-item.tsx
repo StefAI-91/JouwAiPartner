@@ -175,13 +175,27 @@ export function TaskItem({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-medium text-muted-foreground">Deadline</label>
-            <input
-              type="date"
-              value={dueDate ?? ""}
-              onChange={(e) => setDueDate(e.target.value || null)}
-              className="h-7 rounded-md border border-input bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
-            />
+            <label className="text-[10px] font-medium text-muted-foreground">
+              Deadline <span className="font-normal text-muted-foreground/70">(optioneel)</span>
+            </label>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date"
+                value={dueDate ?? ""}
+                onChange={(e) => setDueDate(e.target.value || null)}
+                className="h-7 rounded-md border border-input bg-background px-2 text-xs outline-none focus:ring-1 focus:ring-primary"
+              />
+              {dueDate && (
+                <button
+                  type="button"
+                  onClick={() => setDueDate(null)}
+                  className="flex h-7 items-center rounded-md px-1.5 text-muted-foreground transition-colors hover:text-foreground"
+                  title="Verwijder deadline"
+                >
+                  <X className="size-3" />
+                </button>
+              )}
+            </div>
           </div>
 
           <button
