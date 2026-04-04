@@ -8,39 +8,11 @@ import {
   verifyMeetingWithEdits,
   rejectMeeting,
 } from "@repo/database/mutations/review";
-
-// ── Zod Schemas ──
-
-const verifyMeetingSchema = z.object({
-  meetingId: z.string().uuid(),
-});
-
-const verifyMeetingWithEditsSchema = z.object({
-  meetingId: z.string().uuid(),
-  extractionEdits: z
-    .array(
-      z.object({
-        extractionId: z.string().uuid(),
-        content: z.string().optional(),
-        metadata: z.record(z.string(), z.unknown()).optional(),
-      }),
-    )
-    .optional(),
-  rejectedExtractionIds: z.array(z.string().uuid()).optional(),
-  typeChanges: z
-    .array(
-      z.object({
-        extractionId: z.string().uuid(),
-        type: z.enum(["decision", "action_item", "need", "insight"]),
-      }),
-    )
-    .optional(),
-});
-
-const rejectMeetingSchema = z.object({
-  meetingId: z.string().uuid(),
-  reason: z.string().min(1, "Reason is required"),
-});
+import {
+  verifyMeetingSchema,
+  verifyMeetingWithEditsSchema,
+  rejectMeetingSchema,
+} from "@/validations/review";
 
 // ── Helpers ──
 
