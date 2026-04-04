@@ -217,6 +217,31 @@ export async function listMeetingsForReclassify(limit: number = 50): Promise<Mee
   return data as MeetingForReclassify[];
 }
 
+export async function getMeetingForEmbedding(
+  meetingId: string,
+): Promise<{ title: string | null; participants: string[] | null; summary: string | null } | null> {
+  const { data, error } = await getAdminClient()
+    .from("meetings")
+    .select("title, participants, summary")
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data;
+}
+
+export async function getExtractionIdsAndContent(
+  meetingId: string,
+): Promise<{ id: string; content: string }[]> {
+  const { data, error } = await getAdminClient()
+    .from("extractions")
+    .select("id, content")
+    .eq("meeting_id", meetingId);
+
+  if (error || !data) return [];
+  return data;
+}
+
 export async function getMeetingExtractions(meetingId: string) {
   const { data, error } = await getAdminClient()
     .from("extractions")
