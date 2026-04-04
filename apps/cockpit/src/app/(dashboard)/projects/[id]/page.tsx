@@ -15,6 +15,7 @@ import { DecisionsList } from "@/components/projects/decisions-list";
 import { NeedsList } from "@/components/projects/needs-list";
 import { MeetingsList } from "@/components/projects/meetings-list";
 import { EditProject } from "@/components/projects/edit-project";
+import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -64,6 +65,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           organizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
           people={people.map((p) => ({ id: p.id, name: p.name }))}
         />
+      </div>
+
+      {/* Regenerate summary button */}
+      <div className="mb-4 flex justify-end">
+        <RegenerateSummaryButton entityType="project" entityId={project.id} />
       </div>
 
       {/* AI Project Summary */}
