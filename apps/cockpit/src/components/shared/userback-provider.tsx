@@ -13,7 +13,7 @@ export function UserbackProvider({ children }: { children: React.ReactNode }) {
     const token = process.env.NEXT_PUBLIC_USERBACK_TOKEN;
     if (!token) return;
 
-    Userback(token).then(setUserback);
+    Userback(token, { autohide: false }).then(setUserback);
   }, []);
 
   return (
