@@ -45,8 +45,15 @@ const updateTitleSchema = z.object({
 const updateMeetingTypeSchema = z.object({
   meetingId: z.string().min(1),
   meetingType: z.enum([
-    "strategy", "one_on_one", "team_sync", "discovery",
-    "sales", "project_kickoff", "status_update", "collaboration", "other",
+    "strategy",
+    "one_on_one",
+    "team_sync",
+    "discovery",
+    "sales",
+    "project_kickoff",
+    "status_update",
+    "collaboration",
+    "other",
   ]),
 });
 
@@ -254,28 +261,38 @@ export async function regenerateMeetingAction(
     const summarizerOutput = await runSummarizer(transcript, context);
     const richSummary = formatSummary(summarizerOutput);
 
-    const summaryResult = await updateMeetingSummary(meetingId, richSummary, summarizerOutput.briefing);
-    if ("error" in summaryResult) {
-      return { error: `Summary opslaan mislukt: ${summaryResult.error}` };
-    }
-
-    // Step 2: Delete old extractions
-    const deleteResult = await deleteExtractionsByMeetingId(meetingId);
-    if ("error" in deleteResult) {
-      return { error: `Oude extracties verwijderen mislukt: ${deleteResult.error}` };
-    }
-
-    // Step 3: Re-extract action items
+    // Step 2: Re-extract action items (before deleting old ones)
     const extractorOutput = await runExtractor(transcript, {
       ...context,
       summary: richSummary,
     });
 
-    // Step 4: Save new extractions
-    await saveExtractions(extractorOutput, meetingId);
+    // Step 3: Save summary (safe — overwrites existing, no data loss on failure)
+    const summaryResult = await updateMeetingSummary(
+      meetingId,
+      richSummary,
+      summarizerOutput.briefing,
+    );
+    if ("error" in summaryResult) {
+      return { error: `Summary opslaan mislukt: ${summaryResult.error}` };
+    }
+
+    // Step 4: Delete old extractions + save new ones (only after AI steps succeeded)
+    const deleteResult = await deleteExtractionsByMeetingId(meetingId);
+    if ("error" in deleteResult) {
+      return { error: `Oude extracties verwijderen mislukt: ${deleteResult.error}` };
+    }
+
+    const saveResult = await saveExtractions(extractorOutput, meetingId);
+    if (saveResult.extractions_saved === 0 && extractorOutput.extractions.length > 0) {
+      return { error: "Nieuwe extracties opslaan mislukt" };
+    }
 
     // Step 5: Mark meeting embedding as stale for re-embedding
-    await markMeetingEmbeddingStale(meetingId);
+    const staleResult = await markMeetingEmbeddingStale(meetingId);
+    if ("error" in staleResult) {
+      console.error("Failed to mark embedding stale:", staleResult.error);
+    }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     return { error: `Regeneratie mislukt: ${errMsg}` };
