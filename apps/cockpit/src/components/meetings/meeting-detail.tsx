@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
+import { useCallback } from "react";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EditableTitle } from "@/components/meetings/editable-title";
@@ -32,13 +32,13 @@ export function MeetingDetailView({
 }: MeetingDetailViewProps) {
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
-  const [, startTransition] = useTransition();
 
-  const handleSummaryEdit = useCallback((content: string) => {
-    startTransition(async () => {
-      await updateMeetingSummaryAction({ meetingId: meeting.id, summary: content });
-    });
-  }, [meeting.id, startTransition]);
+  const handleSummaryEdit = useCallback(async (content: string) => {
+    const result = await updateMeetingSummaryAction({ meetingId: meeting.id, summary: content });
+    if ("error" in result) {
+      console.error("[handleSummaryEdit] Save failed:", result.error);
+    }
+  }, [meeting.id]);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">

@@ -128,17 +128,24 @@ export function MarkdownSummary({ content, editable, onEdit, headerAction }: Mar
     if (editingIndex === null) return;
 
     const trimmed = editValue.trim();
+    const originalRaw = sections[editingIndex].raw;
+
+    // Only save if the user actually changed something
+    if (trimmed === originalRaw) {
+      setEditingIndex(null);
+      setEditValue("");
+      return;
+    }
+
     setOverrides((prev) => new Map(prev).set(editingIndex, trimmed));
     setEditingIndex(null);
     setEditValue("");
 
     // Rebuild full markdown with the edit applied
     const updated = sections.map((s, i) => (i === editingIndex ? { ...s, raw: trimmed } : s));
-
     const newMarkdown = rebuildMarkdown(updated);
-    if (newMarkdown !== content && onEdit) {
-      onEdit(newMarkdown);
-    }
+
+    onEdit?.(newMarkdown);
   }
 
   return (
