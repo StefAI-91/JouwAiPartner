@@ -14,9 +14,19 @@ export const updateProjectSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200).optional(),
   status: z
     .enum([
-      "lead", "discovery", "proposal", "negotiation", "won",
-      "kickoff", "in_progress", "review", "completed",
-      "on_hold", "lost", "maintenance", "active",
+      "lead",
+      "discovery",
+      "proposal",
+      "negotiation",
+      "won",
+      "kickoff",
+      "in_progress",
+      "review",
+      "completed",
+      "on_hold",
+      "lost",
+      "maintenance",
+      "active",
     ])
     .optional(),
   organization_id: z.string().uuid().nullable().optional(),
