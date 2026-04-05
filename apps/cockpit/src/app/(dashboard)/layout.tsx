@@ -1,6 +1,6 @@
 import { createClient } from "@repo/database/supabase/server";
 import { getReviewQueueCount } from "@repo/database/queries/dashboard";
-import { BottomNav } from "@/components/layout/bottom-nav";
+import { SideMenu } from "@/components/layout/side-menu";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -8,8 +8,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Mobile header */}
+      {/* Header with menu trigger */}
       <header className="flex h-14 items-center gap-2.5 border-b border-border/50 bg-white/60 px-4 backdrop-blur-sm">
+        <SideMenu reviewCount={reviewCount} />
         <img
           src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
           alt="Jouw AI Partner"
@@ -20,11 +21,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </span>
       </header>
 
-      {/* Page content — extra bottom padding for nav bar */}
-      <main className="flex-1 pb-28">{children}</main>
-
-      {/* Bottom navigation */}
-      <BottomNav reviewCount={reviewCount} />
+      {/* Page content */}
+      <main className="flex-1">{children}</main>
     </div>
   );
 }
