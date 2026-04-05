@@ -1,5 +1,4 @@
 import { getAdminClient } from "../supabase/admin";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface RecentDecision {
   id: string;
@@ -8,40 +7,6 @@ export interface RecentDecision {
   date: string | null;
   status: string | null;
   meeting_title: string | null;
-}
-
-export async function listRecentDecisions(
-  limit: number = 10,
-  client?: SupabaseClient,
-): Promise<RecentDecision[]> {
-  const db = client ?? getAdminClient();
-  const { data, error } = await db
-    .from("decisions")
-    .select("id, decision, made_by, date, status, source_id, source_type")
-    .order("date", { ascending: false, nullsFirst: false })
-    .limit(limit);
-
-  if (error || !data) return [];
-
-  // Batch-fetch meeting titles to avoid N+1
-  const meetingIds = data.filter((d) => d.source_type === "meeting").map((d) => d.source_id);
-
-  let meetingMap: Record<string, string> = {};
-  if (meetingIds.length > 0) {
-    const { data: meetings } = await db.from("meetings").select("id, title").in("id", meetingIds);
-    if (meetings) {
-      meetingMap = Object.fromEntries(meetings.map((m) => [m.id, m.title ?? ""]));
-    }
-  }
-
-  return data.map((d) => ({
-    id: d.id,
-    decision: d.decision,
-    made_by: d.made_by,
-    date: d.date,
-    status: d.status,
-    meeting_title: d.source_type === "meeting" ? (meetingMap[d.source_id] ?? null) : null,
-  }));
 }
 
 export async function matchDecisions(
@@ -85,11 +50,3 @@ export async function matchMeetings(
   }[];
 }
 
-export async function getMeetingTitle(meetingId: string) {
-  const { data } = await getAdminClient()
-    .from("meetings")
-    .select("title, date")
-    .eq("id", meetingId)
-    .single();
-  return data;
-}

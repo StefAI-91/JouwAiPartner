@@ -9,6 +9,7 @@ import { registerPeopleTools } from "./tools/people";
 import { registerOrganizationOverviewTools } from "./tools/get-organization-overview";
 import { registerListMeetingsTools } from "./tools/list-meetings";
 import { registerCorrectExtractionTools } from "./tools/correct-extraction";
+import { registerDecisionTools } from "./tools/decisions";
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -28,6 +29,7 @@ export function createMcpServer(): McpServer {
   registerOrganizationOverviewTools(server);
   registerListMeetingsTools(server);
   registerCorrectExtractionTools(server);
+  registerDecisionTools(server);
 
   // Register the system prompt as an MCP prompt
   server.prompt(
