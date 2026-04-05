@@ -115,7 +115,7 @@ export async function rejectMeetingAction(
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
 
-  const result = await rejectMeeting(parsed.data.meetingId, user.id, parsed.data.reason);
+  const result = await rejectMeeting(parsed.data.meetingId, user.id);
   if ("error" in result) return result;
 
   revalidatePath("/review");

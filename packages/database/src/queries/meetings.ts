@@ -64,21 +64,6 @@ export interface RecentMeeting {
   verification_status: string | null;
 }
 
-export async function listRecentMeetings(
-  limit: number = 10,
-  client?: SupabaseClient,
-): Promise<RecentMeeting[]> {
-  const db = client ?? getAdminClient();
-  const { data, error } = await db
-    .from("meetings")
-    .select("id, title, date, participants, relevance_score, meeting_type, verification_status")
-    .order("date", { ascending: false, nullsFirst: false })
-    .limit(limit);
-
-  if (error || !data) return [];
-  return data as RecentMeeting[];
-}
-
 export interface VerifiedMeetingListItem {
   id: string;
   title: string | null;

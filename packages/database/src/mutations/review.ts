@@ -57,7 +57,6 @@ export async function verifyMeetingWithEdits(
 export async function rejectMeeting(
   meetingId: string,
   userId: string,
-  _reason: string,
   client?: SupabaseClient,
 ): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
