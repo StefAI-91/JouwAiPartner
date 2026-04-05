@@ -1,3 +1,6 @@
+"use client";
+
+import { useCallback } from "react";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EditableTitle } from "@/components/meetings/editable-title";
@@ -6,6 +9,7 @@ import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
+import { updateMeetingSummaryAction } from "@/actions/meetings";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
 
@@ -29,6 +33,13 @@ export function MeetingDetailView({
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
 
+  const handleSummaryEdit = useCallback(async (content: string) => {
+    const result = await updateMeetingSummaryAction({ meetingId: meeting.id, summary: content });
+    if ("error" in result) {
+      console.error("[handleSummaryEdit] Save failed:", result.error);
+    }
+  }, [meeting.id]);
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
@@ -48,6 +59,7 @@ export function MeetingDetailView({
           />
         }
         summaryAction={<CopyMeetingButton meeting={meeting} />}
+        onSummaryEdit={handleSummaryEdit}
         headerExtra={
           <div className="mt-3 space-y-3">
             <VerificationBadge

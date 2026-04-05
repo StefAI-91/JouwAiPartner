@@ -8,6 +8,7 @@ import {
   updateMeetingType,
   updateMeetingOrganization,
   updateMeetingSummary,
+  updateMeetingSummaryOnly,
   markMeetingEmbeddingStale,
   linkMeetingProject,
   unlinkMeetingProject,
@@ -40,6 +41,11 @@ async function getAuthenticatedUser() {
 const updateTitleSchema = z.object({
   meetingId: z.string().min(1),
   title: z.string().min(1, "Titel is verplicht").max(500),
+});
+
+const updateSummarySchema = z.object({
+  meetingId: z.string().min(1),
+  summary: z.string().min(1, "Samenvatting is verplicht"),
 });
 
 const updateMeetingTypeSchema = z.object({
@@ -103,6 +109,24 @@ export async function updateMeetingTitleAction(
   const result = await updateMeetingTitle(parsed.data.meetingId, parsed.data.title);
   if ("error" in result) return result;
 
+  revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updateMeetingSummaryAction(
+  input: z.infer<typeof updateSummarySchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = updateSummarySchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const result = await updateMeetingSummaryOnly(parsed.data.meetingId, parsed.data.summary);
+  if ("error" in result) return result;
+
+  await markMeetingEmbeddingStale(parsed.data.meetingId);
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
   revalidatePath("/");
   return { success: true };

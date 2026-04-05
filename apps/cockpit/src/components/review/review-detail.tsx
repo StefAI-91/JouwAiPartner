@@ -11,7 +11,7 @@ import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
-import { regenerateMeetingAction } from "@/actions/meetings";
+import { regenerateMeetingAction, updateMeetingSummaryAction } from "@/actions/meetings";
 import { ListChecks, RefreshCw } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
@@ -56,6 +56,14 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
   const [activeTranscriptRef, setActiveTranscriptRef] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [summaryEdit, setSummaryEdit] = useState<string | null>(null);
+
+  const handleSummaryEdit = useCallback(async (content: string) => {
+    setSummaryEdit(content);
+    const result = await updateMeetingSummaryAction({ meetingId: meeting.id, summary: content });
+    if ("error" in result) {
+      console.error("[handleSummaryEdit] Save failed:", result.error);
+    }
+  }, [meeting.id]);
 
   const handleEdit = useCallback((id: string, content: string) => {
     setEdits((prev) => new Map(prev).set(id, content));
@@ -102,6 +110,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
       meetingId: meeting.id,
       extractionEdits: extractionEdits.length > 0 ? extractionEdits : undefined,
       rejectedExtractionIds: rejectedExtractionIds.length > 0 ? rejectedExtractionIds : undefined,
+      summaryEdit: summaryEdit ?? undefined,
     });
 
     if ("error" in result) {
@@ -167,7 +176,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
         }
         summaryAction={<CopyMeetingButton meeting={meeting} />}
         activeTranscriptRef={activeTranscriptRef}
-        onSummaryEdit={setSummaryEdit}
+        onSummaryEdit={handleSummaryEdit}
       />
 
       {/* Right panel: Action Items (45%) */}
