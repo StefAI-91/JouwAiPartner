@@ -1,9 +1,6 @@
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import {
-  WeeklySummaryOutputSchema,
-  type WeeklySummaryOutput,
-} from "../validations/weekly-summary";
+import { WeeklySummaryOutputSchema, type WeeklySummaryOutput } from "../validations/weekly-summary";
 
 export type { WeeklySummaryOutput };
 
@@ -56,7 +53,7 @@ export interface WeeklyProjectInput {
     due_date: string | null;
   }[];
   meetings_this_week: {
-    title: string;
+    title: string | null;
     date: string | null;
     meeting_type: string | null;
     summary: string | null;

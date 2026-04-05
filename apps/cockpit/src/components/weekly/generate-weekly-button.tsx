@@ -14,7 +14,7 @@ export function GenerateWeeklyButton() {
     try {
       const result = await generateWeeklySummaryAction({});
       if ("error" in result) {
-        setError(result.error);
+        setError(result.error ?? "Onbekende fout.");
       }
     } catch {
       setError("Er ging iets mis bij het genereren.");
