@@ -45,6 +45,11 @@ export async function updateProject(
     name?: string;
     status?: string;
     organization_id?: string | null;
+    description?: string | null;
+    owner_id?: string | null;
+    contact_person_id?: string | null;
+    start_date?: string | null;
+    deadline?: string | null;
   },
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient()
@@ -64,10 +69,7 @@ export async function updateProject(
 export async function deleteProject(
   projectId: string,
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
-    .from("projects")
-    .delete()
-    .eq("id", projectId);
+  const { error } = await getAdminClient().from("projects").delete().eq("id", projectId);
 
   if (error) return { error: error.message };
   return { success: true };

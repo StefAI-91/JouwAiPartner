@@ -8,6 +8,7 @@ import {
   verifyMeetingWithEdits,
   rejectMeeting,
 } from "@repo/database/mutations/review";
+import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary-pipeline";
 
 // ── Zod Schemas ──
 
@@ -66,6 +67,11 @@ export async function approveMeetingAction(
   const result = await verifyMeeting(parsed.data.meetingId, user.id);
   if ("error" in result) return result;
 
+  // Trigger summary generation in background (non-blocking)
+  triggerSummariesForMeeting(parsed.data.meetingId).catch((err) =>
+    console.error("[approveMeetingAction] Summary generation failed:", err),
+  );
+
   revalidatePath("/review");
   revalidatePath("/");
   return { success: true };
@@ -88,6 +94,11 @@ export async function approveMeetingWithEditsAction(
     parsed.data.typeChanges ?? [],
   );
   if ("error" in result) return result;
+
+  // Trigger summary generation in background (non-blocking)
+  triggerSummariesForMeeting(parsed.data.meetingId).catch((err) =>
+    console.error("[approveMeetingWithEditsAction] Summary generation failed:", err),
+  );
 
   revalidatePath("/review");
   revalidatePath(`/review/${parsed.data.meetingId}`);

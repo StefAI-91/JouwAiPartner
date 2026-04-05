@@ -3,18 +3,9 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
-import {
-  updateOrganization,
-  deleteOrganization,
-} from "@repo/database/mutations/organizations";
-import {
-  updateProject,
-  deleteProject,
-} from "@repo/database/mutations/projects";
-import {
-  updatePerson,
-  deletePerson,
-} from "@repo/database/mutations/people";
+import { updateOrganization, deleteOrganization } from "@repo/database/mutations/organizations";
+import { updateProject, deleteProject } from "@repo/database/mutations/projects";
+import { updatePerson, deletePerson } from "@repo/database/mutations/people";
 import {
   createExtraction,
   updateExtraction,
@@ -48,12 +39,27 @@ const updateProjectSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200).optional(),
   status: z
     .enum([
-      "lead", "discovery", "proposal", "negotiation", "won",
-      "kickoff", "in_progress", "review", "completed",
-      "on_hold", "lost", "maintenance", "active",
+      "lead",
+      "discovery",
+      "proposal",
+      "negotiation",
+      "won",
+      "kickoff",
+      "in_progress",
+      "review",
+      "completed",
+      "on_hold",
+      "lost",
+      "maintenance",
+      "active",
     ])
     .optional(),
   organization_id: z.string().uuid().nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
+  owner_id: z.string().uuid().nullable().optional(),
+  contact_person_id: z.string().uuid().nullable().optional(),
+  start_date: z.string().nullable().optional(),
+  deadline: z.string().nullable().optional(),
 });
 
 const updatePersonSchema = z.object({
