@@ -22,7 +22,9 @@ export async function getLatestSummary(
 
   const { data, error } = await db
     .from("summaries")
-    .select("id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, created_at")
+    .select(
+      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, created_at",
+    )
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)
     .eq("summary_type", summaryType)
@@ -49,7 +51,9 @@ export async function getSummaryHistory(
 
   const { data, error } = await db
     .from("summaries")
-    .select("id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, created_at")
+    .select(
+      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, created_at",
+    )
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)
     .eq("summary_type", summaryType)

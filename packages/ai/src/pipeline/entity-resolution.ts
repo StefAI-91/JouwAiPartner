@@ -32,9 +32,7 @@ async function resolveProjectWithCache(
 
   // Step 1: Exact match on name (case-insensitive)
   if (cachedProjects) {
-    const exactMatch = cachedProjects.find(
-      (p) => p.name.toLowerCase() === nameLower,
-    );
+    const exactMatch = cachedProjects.find((p) => p.name.toLowerCase() === nameLower);
     if (exactMatch) {
       return { matched: true, project_id: exactMatch.id, match_type: "exact" };
     }
@@ -51,9 +49,7 @@ async function resolveProjectWithCache(
 
     // Step 2: Alias match (exact only)
     const aliasMatch = cachedProjects.find((p) =>
-      p.aliases?.some(
-        (alias: string) => alias.toLowerCase() === nameLower,
-      ),
+      p.aliases?.some((alias: string) => alias.toLowerCase() === nameLower),
     );
     if (aliasMatch) {
       return {
@@ -112,9 +108,7 @@ export async function resolveAllEntities(
     const nameLower = name.toLowerCase();
 
     // Exact name match (case-insensitive)
-    const exactMatch = allProjects?.find(
-      (p) => p.name.toLowerCase() === nameLower,
-    );
+    const exactMatch = allProjects?.find((p) => p.name.toLowerCase() === nameLower);
     if (exactMatch) {
       resolutions.set(name, exactMatch.id);
       continue;
@@ -132,9 +126,7 @@ export async function resolveAllEntities(
 
     // Alias match (exact only)
     const aliasMatch = allProjects?.find((p) =>
-      p.aliases?.some(
-        (alias: string) => alias.toLowerCase() === nameLower,
-      ),
+      p.aliases?.some((alias: string) => alias.toLowerCase() === nameLower),
     );
     if (aliasMatch) {
       resolutions.set(name, aliasMatch.id);

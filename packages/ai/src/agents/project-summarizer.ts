@@ -53,17 +53,15 @@ export interface MeetingInput {
 function formatMeetings(meetings: MeetingInput[]): string {
   if (meetings.length === 0) return "Geen meetings beschikbaar.";
 
-  return meetings.map((m) => {
-    const header = [
-      m.title,
-      m.date,
-      m.meetingType,
-    ].filter(Boolean).join(" — ");
+  return meetings
+    .map((m) => {
+      const header = [m.title, m.date, m.meetingType].filter(Boolean).join(" — ");
 
-    const content = m.briefing || m.summary || "Geen samenvatting beschikbaar";
+      const content = m.briefing || m.summary || "Geen samenvatting beschikbaar";
 
-    return `### ${header}\n${content}`;
-  }).join("\n\n");
+      return `### ${header}\n${content}`;
+    })
+    .join("\n\n");
 }
 
 export async function runProjectSummarizer(

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, CircleCheck, User, Clock } from "lucide-react";
 import { StatusPipeline } from "./status-pipeline";
+import { daysUntil } from "@/lib/date-utils";
 
 interface ProjectCardProps {
   project: {
@@ -13,13 +14,6 @@ interface ProjectCardProps {
     deadline: string | null;
     owner: { name: string } | null;
   };
-}
-
-function daysUntil(dateStr: string) {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr);
-  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
@@ -50,7 +44,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
             </span>
           )}
           {project.deadline && (
-            <span className={`flex items-center gap-1 ${daysLeft !== null && daysLeft < 14 ? "text-foreground/70" : ""}`}>
+            <span
+              className={`flex items-center gap-1 ${daysLeft !== null && daysLeft < 14 ? "text-foreground/70" : ""}`}
+            >
               <Clock className="h-3.5 w-3.5" />
               {daysLeft !== null && daysLeft > 0
                 ? `${daysLeft}d`

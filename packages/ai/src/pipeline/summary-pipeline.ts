@@ -20,18 +20,16 @@ export async function generateProjectSummaries(
     const db = getAdminClient();
 
     // Get project name
-    const { data: project } = await db
-      .from("projects")
-      .select("name")
-      .eq("id", projectId)
-      .single();
+    const { data: project } = await db.from("projects").select("name").eq("id", projectId).single();
 
     if (!project) {
       console.error(`[generateProjectSummaries] Project ${projectId} not found`);
       return { success: false, error: "Project not found" };
     }
 
-    console.log(`[generateProjectSummaries] Generating summaries for "${project.name}" (${projectId})`);
+    console.log(
+      `[generateProjectSummaries] Generating summaries for "${project.name}" (${projectId})`,
+    );
 
     // Get meeting IDs linked to this project via junction table
     const { data: meetingLinks } = await db
@@ -42,7 +40,9 @@ export async function generateProjectSummaries(
     const linkedMeetingIds = (meetingLinks ?? []).map((l) => l.meeting_id);
 
     if (linkedMeetingIds.length === 0) {
-      console.log(`[generateProjectSummaries] No linked meetings for project "${project.name}" — skipping`);
+      console.log(
+        `[generateProjectSummaries] No linked meetings for project "${project.name}" — skipping`,
+      );
       return { success: false, error: "Geen meetings gekoppeld aan dit project." };
     }
 
@@ -55,11 +55,15 @@ export async function generateProjectSummaries(
       .order("date", { ascending: false });
 
     if (!meetings || meetings.length === 0) {
-      console.log(`[generateProjectSummaries] No verified meetings for project "${project.name}" — skipping`);
+      console.log(
+        `[generateProjectSummaries] No verified meetings for project "${project.name}" — skipping`,
+      );
       return { success: false, error: "Geen geverifieerde meetings gevonden voor dit project." };
     }
 
-    console.log(`[generateProjectSummaries] Found ${meetings.length} verified meetings, calling AI...`);
+    console.log(
+      `[generateProjectSummaries] Found ${meetings.length} verified meetings, calling AI...`,
+    );
 
     const formattedMeetings = meetings.map((m) => ({
       title: m.title,
@@ -80,9 +84,8 @@ export async function generateProjectSummaries(
     );
 
     // Get source meeting IDs
-    const sourceMeetingIds = meetingIds.length > 0
-      ? meetingIds
-      : await getProjectMeetingIds(projectId, db);
+    const sourceMeetingIds =
+      meetingIds.length > 0 ? meetingIds : await getProjectMeetingIds(projectId, db);
 
     // Save both summaries as new versions
     await Promise.all([
@@ -121,7 +124,9 @@ export async function generateOrgSummaries(
       return { success: false, error: "Organization not found" };
     }
 
-    console.log(`[generateOrgSummaries] Generating summaries for "${org.name}" (${organizationId})`);
+    console.log(
+      `[generateOrgSummaries] Generating summaries for "${org.name}" (${organizationId})`,
+    );
 
     // Get verified meetings linked to this organization
     const { data: meetings } = await db
@@ -133,7 +138,10 @@ export async function generateOrgSummaries(
 
     if (!meetings || meetings.length === 0) {
       console.log(`[generateOrgSummaries] No verified meetings for org "${org.name}" — skipping`);
-      return { success: false, error: "Geen geverifieerde meetings gevonden voor deze organisatie." };
+      return {
+        success: false,
+        error: "Geen geverifieerde meetings gevonden voor deze organisatie.",
+      };
     }
 
     console.log(`[generateOrgSummaries] Found ${meetings.length} verified meetings, calling AI...`);
@@ -148,19 +156,28 @@ export async function generateOrgSummaries(
 
     const existingContext = await getLatestSummary("organization", organizationId, "context", db);
 
-    const output = await runOrgSummarizer(
-      org.name,
-      formattedMeetings,
-      existingContext?.content,
-    );
+    const output = await runOrgSummarizer(org.name, formattedMeetings, existingContext?.content);
 
-    const sourceMeetingIds = meetingIds.length > 0
-      ? meetingIds
-      : await getOrgMeetingIds(organizationId, db);
+    const sourceMeetingIds =
+      meetingIds.length > 0 ? meetingIds : await getOrgMeetingIds(organizationId, db);
 
     await Promise.all([
-      createSummaryVersion("organization", organizationId, "context", output.context, sourceMeetingIds, db),
-      createSummaryVersion("organization", organizationId, "briefing", output.briefing, sourceMeetingIds, db),
+      createSummaryVersion(
+        "organization",
+        organizationId,
+        "context",
+        output.context,
+        sourceMeetingIds,
+        db,
+      ),
+      createSummaryVersion(
+        "organization",
+        organizationId,
+        "briefing",
+        output.briefing,
+        sourceMeetingIds,
+        db,
+      ),
     ]);
 
     return { success: true };
@@ -175,9 +192,7 @@ export async function generateOrgSummaries(
  * Trigger summary generation for all projects and organizations
  * linked to a specific meeting. Called after meeting verification.
  */
-export async function triggerSummariesForMeeting(
-  meetingId: string,
-): Promise<void> {
+export async function triggerSummariesForMeeting(meetingId: string): Promise<void> {
   console.log(`[triggerSummaries] Starting for meeting ${meetingId}`);
   const db = getAdminClient();
 
@@ -203,11 +218,13 @@ export async function triggerSummariesForMeeting(
   }
 
   const projectIds = [...new Set((projectLinks ?? []).map((l) => l.project_id))];
-  const orgIds = [...new Set(
-    (orgExtractions ?? [])
-      .map((e) => e.organization_id)
-      .filter((id): id is string => id !== null),
-  )];
+  const orgIds = [
+    ...new Set(
+      (orgExtractions ?? [])
+        .map((e) => e.organization_id)
+        .filter((id): id is string => id !== null),
+    ),
+  ];
 
   // Also check the meeting itself for organization_id
   const { data: meeting } = await db
@@ -220,10 +237,14 @@ export async function triggerSummariesForMeeting(
     orgIds.push(meeting.organization_id);
   }
 
-  console.log(`[triggerSummaries] Found ${projectIds.length} projects, ${orgIds.length} orgs for meeting ${meetingId}`);
+  console.log(
+    `[triggerSummaries] Found ${projectIds.length} projects, ${orgIds.length} orgs for meeting ${meetingId}`,
+  );
 
   if (projectIds.length === 0 && orgIds.length === 0) {
-    console.log("[triggerSummaries] No linked projects or organizations — skipping summary generation");
+    console.log(
+      "[triggerSummaries] No linked projects or organizations — skipping summary generation",
+    );
     return;
   }
 

@@ -5,10 +5,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/modal";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import {
-  updateProjectAction,
-  deleteProjectAction,
-} from "@/actions/entities";
+import { updateProjectAction, deleteProjectAction } from "@/actions/entities";
 
 interface EditProjectProps {
   project: {
@@ -27,9 +24,19 @@ interface EditProjectProps {
 }
 
 const PROJECT_STATUSES = [
-  "lead", "discovery", "proposal", "negotiation", "won",
-  "kickoff", "in_progress", "review", "completed",
-  "on_hold", "lost", "maintenance", "active",
+  "lead",
+  "discovery",
+  "proposal",
+  "negotiation",
+  "won",
+  "kickoff",
+  "in_progress",
+  "review",
+  "completed",
+  "on_hold",
+  "lost",
+  "maintenance",
+  "active",
 ] as const;
 
 const STATUS_LABELS: Record<string, string> = {
@@ -48,7 +55,12 @@ const STATUS_LABELS: Record<string, string> = {
   active: "Active",
 };
 
-export function EditProject({ project, organizationId, organizations, people = [] }: EditProjectProps) {
+export function EditProject({
+  project,
+  organizationId,
+  organizations,
+  people = [],
+}: EditProjectProps) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -70,7 +82,7 @@ export function EditProject({ project, organizationId, organizations, people = [
       const result = await updateProjectAction({
         id: project.id,
         name: name.trim(),
-        status: status as typeof PROJECT_STATUSES[number],
+        status: status as (typeof PROJECT_STATUSES)[number],
         organization_id: orgId || null,
         description: description.trim() || null,
         owner_id: ownerId || null,
@@ -127,9 +139,7 @@ export function EditProject({ project, organizationId, organizations, people = [
           }}
           className="space-y-4"
         >
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           <div>
             <label className="mb-1 block text-sm font-medium">Name</label>
@@ -161,7 +171,9 @@ export function EditProject({ project, organizationId, organizations, people = [
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
               {PROJECT_STATUSES.map((s) => (
-                <option key={s} value={s}>{STATUS_LABELS[s] ?? s}</option>
+                <option key={s} value={s}>
+                  {STATUS_LABELS[s] ?? s}
+                </option>
               ))}
             </select>
           </div>
@@ -175,7 +187,9 @@ export function EditProject({ project, organizationId, organizations, people = [
             >
               <option value="">No organization</option>
               {organizations.map((org) => (
-                <option key={org.id} value={org.id}>{org.name}</option>
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
               ))}
             </select>
           </div>
@@ -190,7 +204,9 @@ export function EditProject({ project, organizationId, organizations, people = [
               >
                 <option value="">No owner</option>
                 {people.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -204,7 +220,9 @@ export function EditProject({ project, organizationId, organizations, people = [
               >
                 <option value="">No contact person</option>
                 {people.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
             </div>

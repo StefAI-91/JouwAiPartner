@@ -3,10 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
-import {
-  generateProjectSummaries,
-  generateOrgSummaries,
-} from "@repo/ai/pipeline/summary-pipeline";
+import { generateProjectSummaries, generateOrgSummaries } from "@repo/ai/pipeline/summary-pipeline";
 
 const regenerateSchema = z.object({
   entityType: z.enum(["project", "organization"]),
@@ -32,9 +29,10 @@ export async function regenerateSummaryAction(
 
   const { entityType, entityId } = parsed.data;
 
-  const result = entityType === "project"
-    ? await generateProjectSummaries(entityId)
-    : await generateOrgSummaries(entityId);
+  const result =
+    entityType === "project"
+      ? await generateProjectSummaries(entityId)
+      : await generateOrgSummaries(entityId);
 
   if (!result.success) {
     return { error: result.error ?? "Samenvatting genereren mislukt" };

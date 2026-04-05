@@ -1,18 +1,10 @@
 import { Sparkles } from "lucide-react";
+import { timeAgo } from "@/lib/date-utils";
 
 interface ProjectSummaryProps {
   content: string | null;
   version?: number;
   createdAt?: string;
-}
-
-function timeAgo(dateStr: string) {
-  const now = new Date();
-  const date = new Date(dateStr);
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return "vandaag";
-  if (diffDays === 1) return "gisteren";
-  return `${diffDays} dagen geleden`;
 }
 
 export function ProjectSummary({ content, createdAt }: ProjectSummaryProps) {
@@ -24,17 +16,13 @@ export function ProjectSummary({ content, createdAt }: ProjectSummaryProps) {
           Project Summary
         </h3>
         {createdAt && (
-          <span className="text-[10px] text-muted-foreground/55">
-            {timeAgo(createdAt)}
-          </span>
+          <span className="text-[10px] text-muted-foreground/55">{timeAgo(createdAt)}</span>
         )}
       </div>
       {content ? (
         <p className="text-[15px] leading-relaxed text-foreground/85">{content}</p>
       ) : (
-        <p className="text-sm text-muted-foreground/60 italic">
-          Nog geen samenvatting beschikbaar
-        </p>
+        <p className="text-sm text-muted-foreground/60 italic">Nog geen samenvatting beschikbaar</p>
       )}
     </section>
   );

@@ -141,14 +141,28 @@ export async function getProjectById(
     return null;
   }
 
-  // Get linked meetings via junction table
-  const { data: meetingLinks } = await db
-    .from("meeting_projects")
-    .select("meeting:meetings(id, title, date, meeting_type, verification_status)")
-    .eq("project_id", projectId)
-    .order("created_at", { ascending: false });
+  // Run independent queries in parallel
+  const [meetingLinksResult, extractionsResult, contextSummary, briefingSummary] =
+    await Promise.all([
+      db
+        .from("meeting_projects")
+        .select("meeting:meetings(id, title, date, meeting_type, verification_status)")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false }),
+      db
+        .from("extractions")
+        .select(
+          `id, type, content, confidence, transcript_ref, metadata,
+         meeting:meetings(id, title)`,
+        )
+        .eq("project_id", projectId)
+        .eq("verification_status", "verified")
+        .order("created_at", { ascending: false }),
+      getLatestSummary("project", projectId, "context", db),
+      getLatestSummary("project", projectId, "briefing", db),
+    ]);
 
-  const meetings = (meetingLinks ?? [])
+  const meetings = (meetingLinksResult.data ?? [])
     .map((link) => link.meeting as unknown as ProjectDetail["meetings"][number])
     .filter(Boolean)
     .sort((a, b) => {
@@ -157,23 +171,6 @@ export async function getProjectById(
       if (!b.date) return -1;
       return b.date.localeCompare(a.date);
     });
-
-  // Get verified extractions linked to this project
-  const { data: extractions } = await db
-    .from("extractions")
-    .select(
-      `id, type, content, confidence, transcript_ref, metadata,
-       meeting:meetings(id, title)`,
-    )
-    .eq("project_id", projectId)
-    .eq("verification_status", "verified")
-    .order("created_at", { ascending: false });
-
-  // Get latest summaries
-  const [contextSummary, briefingSummary] = await Promise.all([
-    getLatestSummary("project", projectId, "context", db),
-    getLatestSummary("project", projectId, "briefing", db),
-  ]);
 
   const typedProject = project as unknown as {
     id: string;
@@ -200,12 +197,20 @@ export async function getProjectById(
     owner: typedProject.owner,
     contact_person: typedProject.contact_person,
     meetings,
-    extractions: (extractions ?? []) as unknown as ProjectDetail["extractions"],
+    extractions: (extractionsResult.data ?? []) as unknown as ProjectDetail["extractions"],
     context_summary: contextSummary
-      ? { content: contextSummary.content, version: contextSummary.version, created_at: contextSummary.created_at }
+      ? {
+          content: contextSummary.content,
+          version: contextSummary.version,
+          created_at: contextSummary.created_at,
+        }
       : null,
     briefing_summary: briefingSummary
-      ? { content: briefingSummary.content, version: briefingSummary.version, created_at: briefingSummary.created_at }
+      ? {
+          content: briefingSummary.content,
+          version: briefingSummary.version,
+          created_at: briefingSummary.created_at,
+        }
       : null,
   };
 }

@@ -69,10 +69,7 @@ export async function updateProject(
 export async function deleteProject(
   projectId: string,
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
-    .from("projects")
-    .delete()
-    .eq("id", projectId);
+  const { error } = await getAdminClient().from("projects").delete().eq("id", projectId);
 
   if (error) return { error: error.message };
   return { success: true };
