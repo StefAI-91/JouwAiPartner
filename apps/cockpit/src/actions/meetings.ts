@@ -239,7 +239,7 @@ export async function regenerateMeetingAction(
   }
 
   const participants = (
-    meeting.meeting_participants as { person: { name: string } }[]
+    meeting.meeting_participants as unknown as { person: { name: string } }[]
   ).map((mp) => mp.person.name);
 
   const context = {
