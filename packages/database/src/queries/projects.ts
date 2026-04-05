@@ -116,7 +116,12 @@ export interface ProjectDetail {
     meeting: { id: string; title: string | null } | null;
   }[];
   context_summary: { content: string; version: number; created_at: string } | null;
-  briefing_summary: { content: string; version: number; created_at: string } | null;
+  briefing_summary: {
+    content: string;
+    version: number;
+    created_at: string;
+    structured_content: Record<string, unknown> | null;
+  } | null;
 }
 
 export async function getProjectById(
@@ -210,6 +215,7 @@ export async function getProjectById(
           content: briefingSummary.content,
           version: briefingSummary.version,
           created_at: briefingSummary.created_at,
+          structured_content: briefingSummary.structured_content,
         }
       : null,
   };

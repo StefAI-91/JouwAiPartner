@@ -9,13 +9,14 @@ export interface SummaryRow {
   content: string;
   version: number;
   source_meeting_ids: string[];
+  structured_content: Record<string, unknown> | null;
   created_at: string;
 }
 
 export async function getLatestSummary(
-  entityType: "project" | "organization",
+  entityType: "project" | "organization" | "company",
   entityId: string,
-  summaryType: "context" | "briefing",
+  summaryType: "context" | "briefing" | "weekly",
   client?: SupabaseClient,
 ): Promise<SummaryRow | null> {
   const db = client ?? getAdminClient();
@@ -23,7 +24,7 @@ export async function getLatestSummary(
   const { data, error } = await db
     .from("summaries")
     .select(
-      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, created_at",
+      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, structured_content, created_at",
     )
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)
@@ -42,9 +43,9 @@ export async function getLatestSummary(
 }
 
 export async function getSummaryHistory(
-  entityType: "project" | "organization",
+  entityType: "project" | "organization" | "company",
   entityId: string,
-  summaryType: "context" | "briefing",
+  summaryType: "context" | "briefing" | "weekly",
   client?: SupabaseClient,
 ): Promise<SummaryRow[]> {
   const db = client ?? getAdminClient();
@@ -52,7 +53,7 @@ export async function getSummaryHistory(
   const { data, error } = await db
     .from("summaries")
     .select(
-      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, created_at",
+      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, structured_content, created_at",
     )
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)

@@ -2,12 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
 export async function createSummaryVersion(
-  entityType: "project" | "organization",
+  entityType: "project" | "organization" | "company",
   entityId: string,
-  summaryType: "context" | "briefing",
+  summaryType: "context" | "briefing" | "weekly",
   content: string,
   sourceMeetingIds: string[] = [],
   client?: SupabaseClient,
+  structuredContent?: Record<string, unknown> | null,
 ): Promise<{ success: true; data: { id: string; version: number } } | { error: string }> {
   const db = client ?? getAdminClient();
 
@@ -26,16 +27,21 @@ export async function createSummaryVersion(
 
     const nextVersion = existing ? existing.version + 1 : 1;
 
+    const insertRow: Record<string, unknown> = {
+      entity_type: entityType,
+      entity_id: entityId,
+      summary_type: summaryType,
+      content,
+      version: nextVersion,
+      source_meeting_ids: sourceMeetingIds,
+    };
+    if (structuredContent) {
+      insertRow.structured_content = structuredContent;
+    }
+
     const { data, error } = await db
       .from("summaries")
-      .insert({
-        entity_type: entityType,
-        entity_id: entityId,
-        summary_type: summaryType,
-        content,
-        version: nextVersion,
-        source_meeting_ids: sourceMeetingIds,
-      })
+      .insert(insertRow)
       .select("id, version")
       .single();
 

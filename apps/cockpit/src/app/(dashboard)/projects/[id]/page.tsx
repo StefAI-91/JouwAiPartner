@@ -11,6 +11,7 @@ import { ProjectSummary } from "@/components/projects/project-summary";
 import { ProjectBriefing } from "@/components/projects/project-briefing";
 import { EditProject } from "@/components/projects/edit-project";
 import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
+import { ProjectTimeline } from "@/components/projects/project-timeline";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,9 +25,22 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   if (!project) notFound();
 
+  // Extract timeline from briefing structured_content
+  const structuredContent = project.briefing_summary?.structured_content;
+  const timeline = (structuredContent && Array.isArray((structuredContent as Record<string, unknown>).timeline))
+    ? (structuredContent as Record<string, unknown>).timeline as {
+        date: string;
+        meeting_type: string;
+        title: string;
+        summary: string;
+        key_decisions: string[];
+        open_actions: string[];
+      }[]
+    : [];
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      {/* Header — same as current production */}
+      {/* Header */}
       <div className="mb-8">
         {project.organization && (
           <p className="text-sm font-medium text-foreground/70">{project.organization.name}</p>
@@ -45,7 +59,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* AI Summaries — new */}
+      {/* AI Summaries */}
       <div className="mb-6 space-y-4">
         <ProjectSummary
           content={project.context_summary?.content ?? null}
@@ -56,12 +70,13 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           content={project.briefing_summary?.content ?? null}
           createdAt={project.briefing_summary?.created_at}
         />
+        {timeline.length > 0 && <ProjectTimeline timeline={timeline} />}
         <div className="flex justify-end">
           <RegenerateSummaryButton entityType="project" entityId={project.id} />
         </div>
       </div>
 
-      {/* Tabs — same as current production */}
+      {/* Tabs */}
       <ProjectSections meetings={project.meetings} extractions={project.extractions} />
     </div>
   );
