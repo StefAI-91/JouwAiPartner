@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ExtractionCard } from "@/components/shared/extraction-card";
 import { EditableExtractionCard } from "@/components/meetings/editable-extraction-card";
 import { AddExtractionForm } from "@/components/meetings/add-extraction-form";
-import {
-  EXTRACTION_TYPE_ORDER,
-  EXTRACTION_TYPE_LABELS,
-  EXTRACTION_TYPE_ICONS,
-  EXTRACTION_TYPE_COLORS,
-} from "@/components/shared/extraction-constants";
+import { regenerateMeetingAction } from "@/actions/meetings";
+import { ListChecks, RefreshCw } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface Extraction {
@@ -35,76 +32,61 @@ export function ExtractionTabsPanel({
   meetingId,
   editable,
 }: ExtractionTabsPanelProps) {
-  const grouped = new Map<string, Extraction[]>();
-  for (const ext of extractions) {
-    const list = grouped.get(ext.type) ?? [];
-    list.push(ext);
-    grouped.set(ext.type, list);
-  }
+  const router = useRouter();
+  const [regenerating, setRegenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const tabs = EXTRACTION_TYPE_ORDER.filter(
-    (type) => grouped.has(type) && grouped.get(type)!.length > 0,
-  ).map((type) => ({
-    type,
-    label: EXTRACTION_TYPE_LABELS[type],
-    count: grouped.get(type)!.length,
-    Icon: EXTRACTION_TYPE_ICONS[type],
-    color: EXTRACTION_TYPE_COLORS[type]?.color ?? "#6B7280",
-  }));
+  const actionItems = extractions.filter((e) => e.type === "action_item");
 
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    for (const type of EXTRACTION_TYPE_ORDER) {
-      if (extractions.some((e) => e.type === type)) return type;
+  async function handleRegenerate() {
+    if (!meetingId) return;
+    setRegenerating(true);
+    setError(null);
+    const result = await regenerateMeetingAction({ meetingId });
+    if ("error" in result) {
+      setError(result.error);
+      setRegenerating(false);
+      return;
     }
-    return EXTRACTION_TYPE_ORDER[0];
-  });
-
-  const activeItems = grouped.get(activeTab) ?? [];
-
-  if (extractions.length === 0) {
-    return <p className="text-sm text-muted-foreground">Geen extracties</p>;
+    router.refresh();
+    setRegenerating(false);
   }
 
   return (
     <>
-      <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold">Extracties</h2>
-          {editable && meetingId && <AddExtractionForm meetingId={meetingId} />}
-        </div>
-        <div className="flex gap-1 overflow-x-auto pb-0">
-          {tabs.map(({ type, label, count, Icon, color }) => {
-            const isActive = type === activeTab;
-            return (
+      <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4 pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ListChecks className="size-4 text-green-600" />
+            <h2 className="text-base font-semibold">Actiepunten</h2>
+            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+              {actionItems.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {editable && meetingId && <AddExtractionForm meetingId={meetingId} />}
+            {meetingId && (
               <button
-                key={type}
                 type="button"
-                onClick={() => setActiveTab(type)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs font-medium transition-colors ${
-                  isActive
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
               >
-                {Icon && (
-                  <Icon className="size-3.5" style={{ color: isActive ? color : undefined }} />
-                )}
-                {label}
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                    isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {count}
-                </span>
+                <RefreshCw className={`size-3.5 ${regenerating ? "animate-spin" : ""}`} />
+                {regenerating ? "Bezig..." : "Regenereer"}
               </button>
-            );
-          })}
+            )}
+          </div>
         </div>
       </div>
 
       <div className="space-y-3 p-6">
-        {activeItems.map((ext) =>
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+            {error}
+          </div>
+        )}
+        {actionItems.map((ext) =>
           editable && meetingId ? (
             <EditableExtractionCard
               key={ext.id}
@@ -124,9 +106,9 @@ export function ExtractionTabsPanel({
             />
           ),
         )}
-        {activeItems.length === 0 && (
+        {actionItems.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            Geen {EXTRACTION_TYPE_LABELS[activeTab]?.toLowerCase()} gevonden
+            Geen actiepunten gevonden
           </p>
         )}
       </div>

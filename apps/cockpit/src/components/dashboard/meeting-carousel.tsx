@@ -15,13 +15,10 @@ interface MeetingCarouselProps {
 }
 
 const EXTRACTION_LABELS: Record<keyof ExtractionCounts, { label: string; className: string }> = {
-  decision: { label: "besluiten", className: "bg-blue-500/15 text-blue-700 dark:text-blue-300" },
   action_item: {
     label: "acties",
     className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
   },
-  need: { label: "behoeften", className: "bg-purple-500/15 text-purple-700 dark:text-purple-300" },
-  insight: { label: "inzichten", className: "bg-gray-500/15 text-gray-700 dark:text-gray-300" },
 };
 
 export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: MeetingCarouselProps) {

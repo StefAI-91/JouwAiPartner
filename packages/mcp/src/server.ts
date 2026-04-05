@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerSearchTools } from "./tools/search";
 import { registerMeetingTools } from "./tools/meetings";
 import { registerActionTools } from "./tools/actions";
-import { registerDecisionTools } from "./tools/decisions";
+
 import { registerOrganizationTools } from "./tools/organizations";
 import { registerProjectTools } from "./tools/projects";
 import { registerPeopleTools } from "./tools/people";
@@ -15,13 +15,13 @@ export function createMcpServer(): McpServer {
     name: "jouwaipartner-knowledge",
     version: "1.0.0",
     description:
-      "JouwAIPartner kennisbasis — organisaties, projecten, mensen, meetings, besluiten, actiepunten",
+      "JouwAIPartner kennisbasis — organisaties, projecten, mensen, meetings, actiepunten",
   });
 
   registerSearchTools(server);
   registerMeetingTools(server);
   registerActionTools(server);
-  registerDecisionTools(server);
+
   registerOrganizationTools(server);
   registerProjectTools(server);
   registerPeopleTools(server);
@@ -40,19 +40,18 @@ export function createMcpServer(): McpServer {
           content: {
             type: "text" as const,
             text: `Je hebt toegang tot de JouwAIPartner kennisbasis via MCP.
-Deze bevat meeting transcripts, besluiten, actiepunten, inzichten en behoeften.
+Deze bevat meeting samenvattingen (met besluiten, behoeften, signalen) en actiepunten.
 
 BELANGRIJK — bronvermelding en eerlijkheid:
-- Geef NOOIT een antwoord zonder bron. Elk feit moet herleidbaar zijn naar een meeting of extractie.
+- Geef NOOIT een antwoord zonder bron. Elk feit moet herleidbaar zijn naar een meeting.
 - Als je geen relevante bronnen vindt, zeg dat expliciet: "Hier heb ik geen informatie over in de kennisbasis."
 - Verzin geen informatie. Liever eerlijk "ik weet het niet" dan een onbetrouwbaar antwoord.
 
 Bij het beantwoorden van vragen:
 - Verwijs altijd naar de bron: meeting titel, datum, en indien beschikbaar het transcript-citaat.
-- Toon de verificatie-status: "AI (confidence: X%)" of "Geverifieerd" als een extractie gecorrigeerd is.
-- Als je meerdere relevante meetings vindt, geef de meest recente.
+- Meeting samenvattingen bevatten besluiten, behoeften, signalen en context als narratief. Gebruik get_meeting_summary of search_knowledge om deze informatie te vinden.
 - Bij actiepunten, vermeld altijd de eigenaar en deadline.
-- Bij besluiten, vermeld wie het besluit nam en wanneer.`,
+- Als je meerdere relevante meetings vindt, geef de meest recente.`,
           },
         },
       ],

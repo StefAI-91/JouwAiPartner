@@ -39,7 +39,7 @@ export async function runSummarizeStep(
 
     console.info(
       `Summarizer: ${summarizerOutput.kernpunten.length} kernpunten, ` +
-        `${summarizerOutput.themas.length} thema's, ${summarizerOutput.deelnemers.length} deelnemers`,
+        `${summarizerOutput.deelnemers.length} deelnemers, ${summarizerOutput.vervolgstappen.length} vervolgstappen`,
     );
     return { success: true, richSummary, error: null };
   } catch (err) {

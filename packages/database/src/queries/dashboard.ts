@@ -147,14 +147,11 @@ function getDayLabel(dateStr: string, todayStr: string): string {
 }
 
 export interface ExtractionCounts {
-  decision: number;
   action_item: number;
-  need: number;
-  insight: number;
 }
 
 /**
- * Get extraction counts for a set of meeting IDs (batch, avoids N+1).
+ * Get action item counts for a set of meeting IDs (batch, avoids N+1).
  */
 export async function getExtractionCountsByMeetingIds(
   meetingIds: string[],
@@ -164,7 +161,8 @@ export async function getExtractionCountsByMeetingIds(
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("extractions")
-    .select("meeting_id, type")
+    .select("meeting_id")
+    .eq("type", "action_item")
     .in("meeting_id", meetingIds);
 
   if (error || !data) return {};
@@ -172,18 +170,16 @@ export async function getExtractionCountsByMeetingIds(
   const counts: Record<string, ExtractionCounts> = {};
   for (const row of data) {
     const mid = row.meeting_id as string;
-    if (!counts[mid]) counts[mid] = { decision: 0, action_item: 0, need: 0, insight: 0 };
-    const t = row.type as keyof ExtractionCounts;
-    if (t in counts[mid]) counts[mid][t]++;
+    if (!counts[mid]) counts[mid] = { action_item: 0 };
+    counts[mid].action_item++;
   }
   return counts;
 }
 
 export interface AiPulseData {
   totalProcessed: number;
-  recentDecisions: number;
+  activeActions: number;
   upcomingDeadlines: number;
-  openNeeds: number;
 }
 
 /**
@@ -195,7 +191,7 @@ export async function getAiPulseData(client?: SupabaseClient): Promise<AiPulseDa
   const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const now = new Date().toISOString();
 
-  const [processedRes, decisionsRes, deadlinesRes, needsRes] = await Promise.all([
+  const [processedRes, actionsRes, deadlinesRes] = await Promise.all([
     db
       .from("meetings")
       .select("id", { count: "exact", head: true })
@@ -204,8 +200,8 @@ export async function getAiPulseData(client?: SupabaseClient): Promise<AiPulseDa
     db
       .from("extractions")
       .select("id", { count: "exact", head: true })
-      .eq("type", "decision")
-      .gte("created_at", sevenDaysAgo),
+      .eq("type", "action_item")
+      .eq("verification_status", "verified"),
     db
       .from("extractions")
       .select("id", { count: "exact", head: true })
@@ -213,13 +209,11 @@ export async function getAiPulseData(client?: SupabaseClient): Promise<AiPulseDa
       .not("metadata->deadline", "is", null)
       .gte("metadata->deadline", now)
       .lte("metadata->deadline", sevenDaysFromNow),
-    db.from("extractions").select("id", { count: "exact", head: true }).eq("type", "need"),
   ]);
 
   return {
     totalProcessed: processedRes.count ?? 0,
-    recentDecisions: decisionsRes.count ?? 0,
+    activeActions: actionsRes.count ?? 0,
     upcomingDeadlines: deadlinesRes.count ?? 0,
-    openNeeds: needsRes.count ?? 0,
   };
 }
