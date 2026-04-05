@@ -28,10 +28,10 @@ export function GenerateWeeklyButton() {
       <button
         onClick={handleGenerate}
         disabled={loading}
-        className="inline-flex items-center gap-2 rounded-lg bg-[#006B3F] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#005a35] disabled:opacity-50 transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-lg bg-[#006B3F] px-3 py-2 text-xs font-medium text-white hover:bg-[#005a35] disabled:opacity-50 transition-colors whitespace-nowrap"
       >
-        <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-        {loading ? "Bezig met genereren..." : "Weekoverzicht genereren"}
+        <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+        {loading ? "Genereren..." : "Genereren"}
       </button>
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
     </div>
