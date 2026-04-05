@@ -12,9 +12,7 @@ describe("isValidDuration", () => {
   });
 
   it("returns valid for meetings of exactly 2 minutes", () => {
-    const sentences = [
-      { start_time: 0, end_time: 120 },
-    ];
+    const sentences = [{ start_time: 0, end_time: 120 }];
     const result = isValidDuration(sentences);
     expect(result.valid).toBe(true);
     expect(result.duration).toBe(2);

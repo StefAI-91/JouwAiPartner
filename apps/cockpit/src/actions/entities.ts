@@ -3,24 +3,24 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
-import {
-  updateOrganization,
-  deleteOrganization,
-} from "@repo/database/mutations/organizations";
-import {
-  updateProject,
-  deleteProject,
-} from "@repo/database/mutations/projects";
-import {
-  updatePerson,
-  deletePerson,
-} from "@repo/database/mutations/people";
+import { updateOrganization, deleteOrganization } from "@repo/database/mutations/organizations";
+import { updateProject, deleteProject } from "@repo/database/mutations/projects";
+import { updatePerson, deletePerson } from "@repo/database/mutations/people";
 import {
   createExtraction,
   updateExtraction,
   deleteExtraction,
 } from "@repo/database/mutations/extractions";
 import { deleteMeeting } from "@repo/database/mutations/meetings";
+import {
+  updateOrganizationSchema,
+  updateProjectSchema,
+  updatePersonSchema,
+  createExtractionSchema,
+  updateExtractionSchema,
+  deleteSchema,
+  deleteWithContextSchema,
+} from "@/validations/entities";
 
 // ── Auth Helper ──
 
@@ -31,16 +31,6 @@ async function getAuthenticatedUser() {
   } = await supabase.auth.getUser();
   return user;
 }
-
-import {
-  updateOrganizationSchema,
-  updateProjectSchema,
-  updatePersonSchema,
-  createExtractionSchema,
-  updateExtractionSchema,
-  deleteSchema,
-  deleteWithContextSchema,
-} from "@/validations/entities";
 
 // ── Organization Actions ──
 

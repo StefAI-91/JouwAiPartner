@@ -33,9 +33,7 @@ export function createNextCacheMock() {
  * Get all paths that were passed to revalidatePath.
  */
 export function getRevalidatePathCalls(): string[] {
-  return revalidatePathMock.mock.calls.map(
-    (call: unknown[]) => call[0] as string,
-  );
+  return revalidatePathMock.mock.calls.map((call: unknown[]) => call[0] as string);
 }
 
 /**

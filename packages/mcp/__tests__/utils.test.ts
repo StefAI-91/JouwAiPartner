@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  escapeLike,
-  formatVerificatieStatus,
-  collectVerifiedByIds,
-} from "../src/tools/utils";
+import { escapeLike, formatVerificatieStatus, collectVerifiedByIds } from "../src/tools/utils";
 
 describe("escapeLike", () => {
   it("escapes % characters", () => {

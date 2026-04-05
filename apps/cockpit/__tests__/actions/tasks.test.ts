@@ -19,12 +19,9 @@ import { getTestClient } from "../../../../packages/database/__tests__/helpers/t
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
 
-// Conditionally skip if no DB is available
-const supabaseUrl =
-  process.env.TEST_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-const describeWithDb = supabaseUrl ? describe : describe.skip;
+import { describeWithDb } from "../helpers/describe-with-db";
 
-describeWithDb("Task Server Actions (integration)", () => {
+describeWithDb("Task Server Actions (integration)")("Task Server Actions (integration)", () => {
   beforeEach(async () => {
     mockAuthenticated(TEST_IDS.userId);
     resetNextMocks();
@@ -187,11 +184,7 @@ describeWithDb("Task Server Actions (integration)", () => {
       expect(result).toEqual({ success: true });
 
       const db = getTestClient();
-      const { data } = await db
-        .from("tasks")
-        .select("status")
-        .eq("id", TEST_IDS.task)
-        .single();
+      const { data } = await db.from("tasks").select("status").eq("id", TEST_IDS.task).single();
       expect(data?.status).toBe("dismissed");
     });
   });

@@ -17,17 +17,6 @@ import {
   unlinkMeetingParticipant,
 } from "@repo/database/mutations/meeting-participants";
 import { createPerson } from "@repo/database/mutations/people";
-
-// ── Auth Helper ──
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
-
 import {
   updateTitleSchema,
   updateMeetingTypeSchema,
@@ -38,6 +27,16 @@ import {
   createProjectSchema,
   createPersonSchema,
 } from "@/validations/meetings";
+
+// ── Auth Helper ──
+
+async function getAuthenticatedUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
 
 // ── Actions ──
 

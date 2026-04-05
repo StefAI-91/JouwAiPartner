@@ -57,7 +57,9 @@ describe("createMcpServer", () => {
   it("registers all 11 expected tools", () => {
     const server = createMcpServer();
     // Access internal _registeredTools map
-    const registeredTools = (server as Record<string, unknown>)._registeredTools as Map<string, unknown> | Record<string, unknown>;
+    const registeredTools = (server as Record<string, unknown>)._registeredTools as
+      | Map<string, unknown>
+      | Record<string, unknown>;
 
     let toolNames: string[];
     if (registeredTools instanceof Map) {
@@ -74,7 +76,9 @@ describe("createMcpServer", () => {
 
   it("registers the kennisbasis-context prompt", () => {
     const server = createMcpServer();
-    const registeredPrompts = (server as Record<string, unknown>)._registeredPrompts as Map<string, unknown> | Record<string, unknown>;
+    const registeredPrompts = (server as Record<string, unknown>)._registeredPrompts as
+      | Map<string, unknown>
+      | Record<string, unknown>;
 
     let promptNames: string[];
     if (registeredPrompts instanceof Map) {
