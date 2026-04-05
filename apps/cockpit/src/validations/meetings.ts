@@ -8,8 +8,15 @@ export const updateTitleSchema = z.object({
 export const updateMeetingTypeSchema = z.object({
   meetingId: z.string().min(1),
   meetingType: z.enum([
-    "strategy", "one_on_one", "team_sync", "discovery",
-    "sales", "project_kickoff", "status_update", "collaboration", "other",
+    "strategy",
+    "one_on_one",
+    "team_sync",
+    "discovery",
+    "sales",
+    "project_kickoff",
+    "status_update",
+    "collaboration",
+    "other",
   ]),
 });
 
