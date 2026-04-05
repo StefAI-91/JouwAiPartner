@@ -2,19 +2,42 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
-import { escapeLike, resolveProjectIds, resolveOrganizationIds } from "./utils";
+import {
+  escapeLike,
+  resolveProjectIds,
+  resolveOrganizationIds,
+  resolveMeetingIdsByParticipant,
+} from "./utils";
 
 export function registerListMeetingsTools(server: McpServer) {
   server.tool(
     "list_meetings",
-    "Zoek en filter geverifieerde meetings op titel, organisatie, project, datum, type en partij. Gebruik `title_search` om meetings te vinden op (deel van) de titel. Dit is betrouwbaarder dan semantisch zoeken wanneer je specifieke meetings op naam zoekt. Retourneert standaard alleen geverifieerde meetings. Gebruik include_drafts=true voor ongeverifieerde meetings (alleen intern). Geeft een compacte lijst met titel, datum, type en organisatie.",
+    "Zoek en filter geverifieerde meetings op titel, organisatie, project, datum, type, partij en deelnemer. Gebruik `participant` om meetings te vinden waar een specifiek persoon aan deelnam (bijv. 'Wouter'). Gebruik `title_search` om meetings te vinden op (deel van) de titel. Dit is betrouwbaarder dan semantisch zoeken wanneer je specifieke meetings op naam zoekt. Retourneert standaard alleen geverifieerde meetings. Gebruik include_drafts=true voor ongeverifieerde meetings (alleen intern). Geeft een compacte lijst met titel, datum, type en organisatie.",
     {
-      title_search: z.string().max(255).optional().describe("Filter op meeting titel (partial match, case-insensitive)"),
-      organization: z.string().max(255).optional().describe("Filter op organisatienaam (partial match)"),
+      title_search: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Filter op meeting titel (partial match, case-insensitive)"),
+      participant: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Filter op deelnemer/persoon (partial match op naam, bijv. 'Wouter')"),
+      organization: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Filter op organisatienaam (partial match)"),
       project: z.string().max(255).optional().describe("Filter op projectnaam (partial match)"),
-      date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional().describe("Vanaf datum (ISO format, bijv. 2026-01-01)"),
+      date_from: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}/)
+        .optional()
+        .describe("Vanaf datum (ISO format, bijv. 2026-01-01)"),
       date_to: z
-        .string().regex(/^\d{4}-\d{2}-\d{2}/)
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}/)
         .optional()
         .describe("Tot en met datum, inclusief (ISO format, bijv. 2026-03-31)"),
       meeting_type: z.string().max(100).optional().describe("Filter op meeting type"),
@@ -36,6 +59,7 @@ export function registerListMeetingsTools(server: McpServer) {
     },
     async ({
       title_search,
+      participant,
       organization,
       project,
       date_from,
@@ -48,7 +72,16 @@ export function registerListMeetingsTools(server: McpServer) {
     }) => {
       const supabase = getAdminClient();
 
-      const queryDesc = [title_search, organization, project, date_from, date_to, meeting_type, party_type]
+      const queryDesc = [
+        title_search,
+        participant,
+        organization,
+        project,
+        date_from,
+        date_to,
+        meeting_type,
+        party_type,
+      ]
         .filter(Boolean)
         .join(", ");
       await trackMcpQuery(supabase, "list_meetings", queryDesc || "all");
@@ -56,7 +89,7 @@ export function registerListMeetingsTools(server: McpServer) {
       let query = supabase
         .from("meetings")
         .select(
-          `id, title, date, meeting_type, party_type, relevance_score, verification_status,
+          `id, title, date, meeting_type, party_type, relevance_score, verification_status, participants,
            organization:organization_id (id, name),
            unmatched_organization_name`,
         )
@@ -68,6 +101,21 @@ export function registerListMeetingsTools(server: McpServer) {
 
       if (title_search) {
         query = query.ilike("title", `%${escapeLike(title_search)}%`);
+      }
+
+      if (participant) {
+        const meetingIds = await resolveMeetingIdsByParticipant(supabase, participant);
+        if (!meetingIds) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Geen meetings gevonden met deelnemer "${participant}".`,
+              },
+            ],
+          };
+        }
+        query = query.in("id", meetingIds);
       }
 
       if (organization) {
@@ -86,9 +134,7 @@ export function registerListMeetingsTools(server: McpServer) {
         const projectIds = await resolveProjectIds(supabase, project);
         if (!projectIds) {
           return {
-            content: [
-              { type: "text" as const, text: `Geen project gevonden voor "${project}".` },
-            ],
+            content: [{ type: "text" as const, text: `Geen project gevonden voor "${project}".` }],
           };
         }
         const { data: meetingProjects } = await supabase
@@ -142,6 +188,7 @@ export function registerListMeetingsTools(server: McpServer) {
         meeting_type: string | null;
         party_type: "client" | "partner" | "internal" | "other" | null;
         relevance_score: number | null;
+        participants: string[] | null;
         organization: { id: string; name: string } | null;
         unmatched_organization_name: string | null;
         verification_status: string | null;
@@ -159,7 +206,9 @@ export function registerListMeetingsTools(server: McpServer) {
               ? ""
               : ` | Status: ${m.verification_status || "draft"}`;
 
-          return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}${status}\n   ID: ${m.id}`;
+          const participants = m.participants?.join(", ") || "—";
+
+          return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}${status}\n   Deelnemers: ${participants}\n   ID: ${m.id}`;
         },
       );
 
