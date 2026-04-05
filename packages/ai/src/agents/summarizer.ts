@@ -27,7 +27,9 @@ const MEETING_TYPE_INSTRUCTIONS: Record<string, string> = {
 - Klantbehoeften, pijnpunten, wensen
 - Budget- en tijdlijn-signalen (als genoemd)
 - Wie beslist er, wie moet overtuigd worden
-- Technische context en huidige systemen`,
+- Technische context en huidige systemen
+- Methode of werkwijze van de klant: als de klant uitlegt HOE ze werken, welke methodiek ze hanteren, of welk model ze gebruiken, beschrijf dit expliciet — het bepaalt productontwerp
+- Go-to-market signalen: hoe komt de klant aan gebruikers, welke groeidynamiek beschrijven ze`,
 
   sales: `Focus extra op:
 - Scope en pricing afspraken
@@ -65,22 +67,25 @@ Je produceert:
    - **Besluit:** voor genomen besluiten (wie nam het, was het wederzijds?)
    - **Behoefte:** voor klantbehoeften, wensen, pijnpunten
    - **Afspraak:** voor concrete afspraken tussen partijen
-   - **Signaal:** voor opvallende observaties, marktinformatie, trends
+   - **Signaal:** voor opvallende observaties, marktinformatie, trends, groeidynamieken
    - **Risico:** voor waarschuwingssignalen, blokkades, zorgen
+   - **Visie:** voor langetermijnrichting, strategische ambities, groeipad — dingen die geen concreet besluit zijn maar wel de koers bepalen
    Punten zonder duidelijke categorie krijgen GEEN label.
 
    Voeg relevante exacte quotes uit het transcript inline toe tussen aanhalingstekens waar dat waarde toevoegt. Niet elk punt hoeft een quote — alleen waar het de bron ondersteunt.
 
 3. DEELNEMERS — Profiel per deelnemer: naam, rol, organisatie, houding. Afleiden uit het gesprek als het niet expliciet gezegd wordt.
 
-4. VERVOLGSTAPPEN — Concrete next steps die uit het gesprek komen. Formaat: "Actie — eigenaar, deadline" als eigenaar en/of deadline bekend zijn.
+   STRIKTE REGEL: Als een rol, functietitel of organisatienaam NIET letterlijk in het transcript wordt genoemd, schrijf dan "Niet genoemd in transcript". Vul NOOIT een organisatienaam, rol of functie in die je niet direct uit het transcript kunt herleiden. Raden of afleiden uit andere bronnen is NIET toegestaan.
+
+4. VERVOLGSTAPPEN — Concrete next steps die uit het gesprek komen. Formaat: "Actie — eigenaar, deadline" als eigenaar en/of deadline bekend zijn. Dit is de ENIGE sectie voor acties. Maak GEEN aparte "Actiepunten" sectie aan.
 
 REGELS:
 - De BRIEFING moet als een lopend verhaal lezen, NIET als bullet points.
 - Kernpunten zijn geordend op belang, niet op volgorde in het gesprek.
 - Wees concreet en specifiek, geen algemeenheden.
 - Quotes moeten EXACT uit het transcript komen, niet geparafraseerd.
-- Deelnemerprofielen: gebruik wat je kunt afleiden uit het gesprek.
+- Deelnemerprofielen: gebruik wat je kunt afleiden uit het gesprek. Wat niet in het transcript staat, is "Niet genoemd in transcript".
 - Vervolgstappen: alleen concrete acties, geen vage intenties.
 - Als iets niet besproken is, neem het niet op. Verzin geen context.`;
 
