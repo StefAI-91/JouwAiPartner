@@ -79,6 +79,36 @@ export async function completeTask(
 }
 
 /**
+ * Create a manual task (not linked to an extraction).
+ */
+export async function createManualTask(
+  input: {
+    title: string;
+    assigned_to?: string | null;
+    due_date?: string | null;
+    created_by: string;
+  },
+  client?: SupabaseClient,
+): Promise<{ success: true; id: string } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("tasks")
+    .insert({
+      extraction_id: null,
+      title: input.title,
+      status: "active",
+      assigned_to: input.assigned_to ?? null,
+      due_date: input.due_date ?? null,
+      created_by: input.created_by,
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: error.message };
+  return { success: true, id: data.id };
+}
+
+/**
  * Dismiss a task (not relevant / mistake).
  */
 export async function dismissTask(

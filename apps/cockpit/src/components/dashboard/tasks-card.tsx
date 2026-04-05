@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskItem, getUrgency } from "./task-item";
-import { CircleCheck, AlertTriangle, Clock, X } from "lucide-react";
+import { CircleCheck, AlertTriangle, Clock, X, ArrowRight } from "lucide-react";
 import type { TaskRow } from "@repo/database/queries/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
@@ -85,9 +86,13 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
       <CardHeader className="border-b border-border/50">
         <div className="flex items-baseline justify-between">
           <CardTitle>Taken</CardTitle>
-          <span className="text-xs text-muted-foreground">
+          <Link
+            href="/tasks"
+            className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
             {activeCount} actief{doneCount > 0 ? ` · ${doneCount} afgerond` : ""}
-          </span>
+            <ArrowRight className="size-3" />
+          </Link>
         </div>
       </CardHeader>
       <CardContent className="pt-3">

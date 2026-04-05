@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
 import {
   createTaskFromExtraction,
+  createManualTask,
   updateTask,
   completeTask,
   dismissTask,
@@ -33,6 +34,12 @@ const updateTaskSchema = z.object({
   assignedTo: optionalStringOrNull,
   dueDate: optionalDateOrNull,
   title: z.string().min(1).optional(),
+});
+
+const createTaskSchema = z.object({
+  title: z.string().min(1, "Titel is verplicht"),
+  assignedTo: optionalStringOrNull,
+  dueDate: optionalDateOrNull,
 });
 
 const taskIdSchema = z.object({
@@ -83,7 +90,37 @@ export async function promoteToTaskAction(
   if ("error" in result) return result;
 
   revalidatePath("/");
+  revalidatePath("/tasks");
   revalidatePath("/meetings");
+  return result;
+}
+
+export async function createTaskAction(
+  input: z.infer<typeof createTaskSchema>,
+): Promise<{ success: true; id: string } | { error: string }> {
+  const parsed = createTaskSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+  }
+
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return { error: "Niet ingelogd" };
+
+  const supabase = await createClient();
+  const result = await createManualTask(
+    {
+      title: parsed.data.title,
+      assigned_to: parsed.data.assignedTo || null,
+      due_date: parsed.data.dueDate || null,
+      created_by: userId,
+    },
+    supabase,
+  );
+
+  if ("error" in result) return result;
+
+  revalidatePath("/");
+  revalidatePath("/tasks");
   return result;
 }
 
@@ -112,6 +149,7 @@ export async function updateTaskAction(
   if ("error" in result) return result;
 
   revalidatePath("/");
+  revalidatePath("/tasks");
   return result;
 }
 
@@ -132,6 +170,7 @@ export async function completeTaskAction(
   if ("error" in result) return result;
 
   revalidatePath("/");
+  revalidatePath("/tasks");
   return result;
 }
 
@@ -152,5 +191,6 @@ export async function dismissTaskAction(
   if ("error" in result) return result;
 
   revalidatePath("/");
+  revalidatePath("/tasks");
   return result;
 }

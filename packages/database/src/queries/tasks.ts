@@ -96,3 +96,46 @@ export async function listAllTasks(
   if (error || !data) return [];
   return data as unknown as TaskRow[];
 }
+
+// ── Extended task type with context (for /tasks page) ──
+
+export interface TaskRowWithContext extends TaskRow {
+  extraction: {
+    id: string;
+    meeting_id: string;
+    meeting: { id: string; title: string | null } | null;
+    project: { id: string; name: string } | null;
+    organization: { id: string; name: string } | null;
+  } | null;
+}
+
+/**
+ * List all tasks with project, organization and meeting context.
+ * Used on the dedicated /tasks page.
+ */
+export async function listTasksWithContext(
+  limit: number = 100,
+  client?: SupabaseClient,
+): Promise<TaskRowWithContext[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("tasks")
+    .select(
+      `id, title, status, due_date, assigned_to, extraction_id, created_at, completed_at,
+       assigned_person:assigned_to (id, name, team),
+       extraction:extraction_id (
+         id, meeting_id,
+         meeting:meeting_id (id, title),
+         project:project_id (id, name),
+         organization:organization_id (id, name)
+       )`,
+    )
+    .in("status", ["active", "done"])
+    .order("status", { ascending: true })
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data as unknown as TaskRowWithContext[];
+}
