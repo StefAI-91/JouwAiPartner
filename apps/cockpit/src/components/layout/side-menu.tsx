@@ -10,6 +10,7 @@ import {
   Building2,
   Users,
   Menu,
+  CalendarDays,
 } from "lucide-react";
 import {
   Sheet,
@@ -33,6 +34,7 @@ export function SideMenu({ reviewCount }: { reviewCount?: number }) {
 
   const navItems: NavItem[] = [
     { href: "/", label: "Home", icon: Home },
+    { href: "/weekly", label: "Weekly", icon: CalendarDays },
     { href: "/review", label: "Review", icon: ClipboardCheck, badge: reviewCount },
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/meetings", label: "Meetings", icon: Calendar },
@@ -42,11 +44,7 @@ export function SideMenu({ reviewCount }: { reviewCount?: number }) {
 
   return (
     <Sheet>
-      <SheetTrigger
-        render={
-          <Button variant="ghost" size="icon-lg" className="shrink-0" />
-        }
-      >
+      <SheetTrigger render={<Button variant="ghost" size="icon-lg" className="shrink-0" />}>
         <Menu className="h-6 w-6" />
         <span className="sr-only">Open menu</span>
       </SheetTrigger>
