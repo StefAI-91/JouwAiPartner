@@ -8,6 +8,7 @@ import {
   verifyMeetingWithEdits,
   rejectMeeting,
 } from "@repo/database/mutations/review";
+import { updateMeetingSummaryOnly } from "@repo/database/mutations/meetings";
 import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary-pipeline";
 
 // ── Zod Schemas ──
@@ -36,6 +37,7 @@ const verifyMeetingWithEditsSchema = z.object({
       }),
     )
     .optional(),
+  summaryEdit: z.string().optional(),
 });
 
 const rejectMeetingSchema = z.object({
@@ -85,6 +87,15 @@ export async function approveMeetingWithEditsAction(
 
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
+
+  // Save summary edit before verification (so it's persisted regardless)
+  if (parsed.data.summaryEdit) {
+    const summaryResult = await updateMeetingSummaryOnly(
+      parsed.data.meetingId,
+      parsed.data.summaryEdit,
+    );
+    if ("error" in summaryResult) return summaryResult;
+  }
 
   const result = await verifyMeetingWithEdits(
     parsed.data.meetingId,

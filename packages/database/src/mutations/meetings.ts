@@ -142,6 +142,19 @@ export async function updateMeetingSummary(
   return { success: true };
 }
 
+export async function updateMeetingSummaryOnly(
+  meetingId: string,
+  summary: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ summary })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateMeetingRawFireflies(
   meetingId: string,
   rawFireflies: Record<string, unknown>,

@@ -102,6 +102,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
       meetingId: meeting.id,
       extractionEdits: extractionEdits.length > 0 ? extractionEdits : undefined,
       rejectedExtractionIds: rejectedExtractionIds.length > 0 ? rejectedExtractionIds : undefined,
+      summaryEdit: summaryEdit ?? undefined,
     });
 
     if ("error" in result) {
