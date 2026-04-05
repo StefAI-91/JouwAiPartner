@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ClipboardCheck, FolderKanban, Calendar, Building2, Users } from "lucide-react";
+import { Home, ClipboardCheck, FolderKanban, Calendar, Building2, Users, CalendarDays } from "lucide-react";
 
 interface NavItem {
   href: string;
@@ -16,6 +16,7 @@ export function BottomNav({ reviewCount }: { reviewCount?: number }) {
 
   const navItems: NavItem[] = [
     { href: "/", label: "Home", icon: Home },
+    { href: "/weekly", label: "Weekly", icon: CalendarDays },
     { href: "/review", label: "Review", icon: ClipboardCheck, badge: reviewCount },
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/meetings", label: "Meetings", icon: Calendar },

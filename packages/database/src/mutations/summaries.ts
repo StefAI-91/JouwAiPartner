@@ -2,9 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
 export async function createSummaryVersion(
-  entityType: "project" | "organization",
+  entityType: "project" | "organization" | "company",
   entityId: string,
-  summaryType: "context" | "briefing",
+  summaryType: "context" | "briefing" | "weekly",
   content: string,
   sourceMeetingIds: string[] = [],
   client?: SupabaseClient,
