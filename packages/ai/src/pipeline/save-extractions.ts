@@ -54,10 +54,6 @@ function buildExtractionRows(
     if (item.deadline) metadata.deadline = item.deadline;
     if (item.scope) metadata.scope = item.scope;
     if (item.project) metadata.project = item.project;
-    if (item.made_by) metadata.made_by = item.made_by;
-    if (item.client) metadata.client = item.client;
-    if (item.urgency) metadata.urgency = item.urgency;
-    if (item.category) metadata.category = item.category;
 
     return {
       meeting_id: meetingId,
