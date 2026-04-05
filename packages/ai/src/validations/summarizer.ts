@@ -26,11 +26,12 @@ export const SummarizerOutputSchema = z.object({
   kernpunten: z
     .array(z.string())
     .describe(
-      "5-10 kernpunten van de meeting, geordend op belang. " +
+      "Alle inhoudelijke kernpunten van de meeting, geordend op belang. " +
+        "Aantal schaalt mee met inhoudelijke dichtheid: 5 voor een standup, 12-20 voor een discovery/kickoff. " +
         "Elk punt begint met een bold label als het een duidelijke categorie heeft: " +
-        '**Besluit:** ..., **Behoefte:** ..., **Signaal:** ..., **Risico:** ..., **Afspraak:** ... ' +
+        "**Besluit:** ..., **Behoefte:** ..., **Signaal:** ..., **Risico:** ..., **Afspraak:** ..., **Visie:** ..., **Context:** ..., **Voorbeeld:** ... " +
         "Punten zonder duidelijke categorie hebben geen label. " +
-        "Voeg relevante quotes inline toe tussen aanhalingstekens waar dat waarde toevoegt.",
+        "Voeg ruimhartig exacte quotes inline toe tussen aanhalingstekens — informatieverlies is erger dan een te lange samenvatting.",
     ),
   deelnemers: z
     .array(ParticipantProfileSchema)
