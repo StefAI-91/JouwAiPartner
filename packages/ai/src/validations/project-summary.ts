@@ -1,15 +1,11 @@
 import { z } from "zod";
 
 export const TimelineEntrySchema = z.object({
-  date: z
-    .string()
-    .describe("Datum van de meeting in YYYY-MM-DD formaat."),
+  date: z.string().describe("Datum van de meeting in YYYY-MM-DD formaat."),
   meeting_type: z
     .string()
     .describe("Type meeting, bijv. discovery, team_sync, status_update, sales, etc."),
-  title: z
-    .string()
-    .describe("Titel van de meeting."),
+  title: z.string().describe("Titel van de meeting."),
   summary: z
     .string()
     .describe(

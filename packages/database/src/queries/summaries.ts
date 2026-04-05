@@ -14,9 +14,9 @@ export interface SummaryRow {
 }
 
 export async function getLatestSummary(
-  entityType: "project" | "organization",
+  entityType: "project" | "organization" | "company",
   entityId: string,
-  summaryType: "context" | "briefing",
+  summaryType: "context" | "briefing" | "weekly",
   client?: SupabaseClient,
 ): Promise<SummaryRow | null> {
   const db = client ?? getAdminClient();
@@ -43,9 +43,9 @@ export async function getLatestSummary(
 }
 
 export async function getSummaryHistory(
-  entityType: "project" | "organization",
+  entityType: "project" | "organization" | "company",
   entityId: string,
-  summaryType: "context" | "briefing",
+  summaryType: "context" | "briefing" | "weekly",
   client?: SupabaseClient,
 ): Promise<SummaryRow[]> {
   const db = client ?? getAdminClient();

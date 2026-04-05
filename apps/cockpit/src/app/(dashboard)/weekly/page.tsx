@@ -43,13 +43,11 @@ export default async function WeeklyPage() {
       </div>
 
       {structuredContent ? (
-        <WeeklySummaryView data={structuredContent} createdAt={summary!.created_at} />
+        <WeeklySummaryView data={structuredContent} createdAt={summary?.created_at ?? ""} />
       ) : (
         <div className="rounded-xl border border-dashed border-muted-foreground/20 bg-muted/30 p-12 text-center">
           <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/30" />
-          <h2 className="mt-4 text-lg font-medium text-foreground/70">
-            Nog geen weekoverzicht
-          </h2>
+          <h2 className="mt-4 text-lg font-medium text-foreground/70">Nog geen weekoverzicht</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Klik op &ldquo;Weekoverzicht genereren&rdquo; om het eerste overzicht te maken.
           </p>

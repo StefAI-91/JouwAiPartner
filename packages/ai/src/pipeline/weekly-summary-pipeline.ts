@@ -28,17 +28,17 @@ export async function generateWeeklySummary(
     const end = weekEnd ?? sunday.toISOString().split("T")[0];
 
     const weekLabel = `${start} t/m ${end}`;
-    console.log(`[generateWeeklySummary] Generating for ${weekLabel}`);
+    console.warn(`[generateWeeklySummary] Generating for ${weekLabel}`);
 
     // Collect data for all active projects
     const projectData = await getWeeklyProjectData(start, end, db);
 
     if (projectData.length === 0) {
-      console.log("[generateWeeklySummary] No active projects found — skipping");
+      console.warn("[generateWeeklySummary] No active projects found — skipping");
       return { success: false, error: "Geen actieve projecten gevonden." };
     }
 
-    console.log(
+    console.warn(
       `[generateWeeklySummary] Collected data for ${projectData.length} projects, calling AI...`,
     );
 
@@ -59,21 +59,13 @@ export async function generateWeeklySummary(
       focus_next_week: output.focus_next_week,
     };
 
-    // Collect all meeting IDs from this week's projects
-    const meetingIds: string[] = [];
-    for (const p of projectData) {
-      for (const m of p.meetings_this_week) {
-        // meetings_this_week doesn't have id, but that's ok - source_meeting_ids is optional context
-      }
-    }
-
     // Save as company-wide weekly summary
     const result = await createSummaryVersion(
       "company",
       COMPANY_ENTITY_ID,
       "weekly",
       textContent,
-      meetingIds,
+      [],
       db,
       structuredContent,
     );
@@ -83,7 +75,7 @@ export async function generateWeeklySummary(
       return { success: false, error: result.error };
     }
 
-    console.log(
+    console.warn(
       `[generateWeeklySummary] Saved weekly summary v${result.data.version} for ${weekLabel}`,
     );
     return { success: true };

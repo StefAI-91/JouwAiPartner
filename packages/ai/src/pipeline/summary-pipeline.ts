@@ -91,7 +91,7 @@ export async function generateProjectSummaries(
     // Timeline is stored as structured_content on the briefing summary
     const timelineData = output.timeline.length > 0 ? { timeline: output.timeline } : null;
 
-    await Promise.all([
+    const [contextResult, briefingResult] = await Promise.all([
       createSummaryVersion("project", projectId, "context", output.context, sourceMeetingIds, db),
       createSummaryVersion(
         "project",
@@ -103,6 +103,15 @@ export async function generateProjectSummaries(
         timelineData,
       ),
     ]);
+
+    if ("error" in contextResult) {
+      console.error(`[generateProjectSummaries] Failed to save context:`, contextResult.error);
+      return { success: false, error: contextResult.error };
+    }
+    if ("error" in briefingResult) {
+      console.error(`[generateProjectSummaries] Failed to save briefing:`, briefingResult.error);
+      return { success: false, error: briefingResult.error };
+    }
 
     return { success: true };
   } catch (error) {
@@ -172,7 +181,7 @@ export async function generateOrgSummaries(
     const sourceMeetingIds =
       meetingIds.length > 0 ? meetingIds : await getOrgMeetingIds(organizationId, db);
 
-    await Promise.all([
+    const [contextResult, briefingResult] = await Promise.all([
       createSummaryVersion(
         "organization",
         organizationId,
@@ -190,6 +199,15 @@ export async function generateOrgSummaries(
         db,
       ),
     ]);
+
+    if ("error" in contextResult) {
+      console.error(`[generateOrgSummaries] Failed to save context:`, contextResult.error);
+      return { success: false, error: contextResult.error };
+    }
+    if ("error" in briefingResult) {
+      console.error(`[generateOrgSummaries] Failed to save briefing:`, briefingResult.error);
+      return { success: false, error: briefingResult.error };
+    }
 
     return { success: true };
   } catch (error) {

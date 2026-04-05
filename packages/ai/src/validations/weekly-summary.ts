@@ -1,12 +1,8 @@
 import { z } from "zod";
 
 export const ProjectHealthSchema = z.object({
-  project_id: z
-    .string()
-    .describe("UUID van het project."),
-  project_name: z
-    .string()
-    .describe("Naam van het project."),
+  project_id: z.string().describe("UUID van het project."),
+  project_name: z.string().describe("Naam van het project."),
   status: z
     .enum(["groen", "oranje", "rood"])
     .describe(
@@ -18,9 +14,7 @@ export const ProjectHealthSchema = z.object({
       "2-3 zinnen over hoe dit project ervoor staat. Combineer de briefing met task-status. " +
         "Benoem voortgang, risico's en wat er deze week is gebeurd.",
     ),
-  risks: z
-    .array(z.string())
-    .describe("Concrete risico's voor dit project. Leeg als er geen zijn."),
+  risks: z.array(z.string()).describe("Concrete risico's voor dit project. Leeg als er geen zijn."),
   recommendations: z
     .array(z.string())
     .describe(
@@ -40,7 +34,9 @@ export const WeeklySummaryOutputSchema = z.object({
     ),
   project_health: z
     .array(ProjectHealthSchema)
-    .describe("Per actief project een gezondheidscheck. Gesorteerd: rood eerst, dan oranje, dan groen."),
+    .describe(
+      "Per actief project een gezondheidscheck. Gesorteerd: rood eerst, dan oranje, dan groen.",
+    ),
   cross_project_risks: z
     .array(z.string())
     .describe(
