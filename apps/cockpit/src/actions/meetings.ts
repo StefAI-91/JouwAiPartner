@@ -7,9 +7,12 @@ import {
   updateMeetingTitle,
   updateMeetingType,
   updateMeetingOrganization,
+  updateMeetingSummary,
+  markMeetingEmbeddingStale,
   linkMeetingProject,
   unlinkMeetingProject,
 } from "@repo/database/mutations/meetings";
+import { deleteExtractionsByMeetingId } from "@repo/database/mutations/extractions";
 import { createOrganization } from "@repo/database/mutations/organizations";
 import { createProject } from "@repo/database/mutations/projects";
 import {
@@ -17,6 +20,10 @@ import {
   unlinkMeetingParticipant,
 } from "@repo/database/mutations/meeting-participants";
 import { createPerson } from "@repo/database/mutations/people";
+import { getAdminClient } from "@repo/database/supabase/admin";
+import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
+import { runExtractor } from "@repo/ai/agents/extractor";
+import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
 
 // ── Auth Helper ──
 
@@ -191,6 +198,93 @@ export async function unlinkMeetingParticipantAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  return { success: true };
+}
+
+// ── Regenerate Summary + Action Items ──
+
+const regenerateSchema = z.object({
+  meetingId: z.string().min(1),
+});
+
+export async function regenerateMeetingAction(
+  input: z.infer<typeof regenerateSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = regenerateSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const { meetingId } = parsed.data;
+
+  // Fetch meeting with transcript and context
+  const supabase = getAdminClient();
+  const { data: meeting, error: fetchError } = await supabase
+    .from("meetings")
+    .select(
+      `id, title, meeting_type, party_type, transcript, transcript_elevenlabs,
+       meeting_participants(person:people(name))`,
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (fetchError || !meeting) {
+    return { error: "Meeting niet gevonden" };
+  }
+
+  const transcript = (meeting.transcript_elevenlabs || meeting.transcript) as string | null;
+  if (!transcript) {
+    return { error: "Geen transcript beschikbaar voor deze meeting" };
+  }
+
+  const participants = (
+    meeting.meeting_participants as { person: { name: string } }[]
+  ).map((mp) => mp.person.name);
+
+  const context = {
+    title: (meeting.title as string) || "Onbekend",
+    meeting_type: (meeting.meeting_type as string) || "other",
+    party_type: (meeting.party_type as string) || "other",
+    participants,
+  };
+
+  try {
+    // Step 1: Regenerate summary
+    const summarizerOutput = await runSummarizer(transcript, context);
+    const richSummary = formatSummary(summarizerOutput);
+
+    const summaryResult = await updateMeetingSummary(meetingId, richSummary, summarizerOutput.briefing);
+    if ("error" in summaryResult) {
+      return { error: `Summary opslaan mislukt: ${summaryResult.error}` };
+    }
+
+    // Step 2: Delete old extractions
+    const deleteResult = await deleteExtractionsByMeetingId(meetingId);
+    if ("error" in deleteResult) {
+      return { error: `Oude extracties verwijderen mislukt: ${deleteResult.error}` };
+    }
+
+    // Step 3: Re-extract action items
+    const extractorOutput = await runExtractor(transcript, {
+      ...context,
+      summary: richSummary,
+    });
+
+    // Step 4: Save new extractions
+    await saveExtractions(extractorOutput, meetingId);
+
+    // Step 5: Mark meeting embedding as stale for re-embedding
+    await markMeetingEmbeddingStale(meetingId);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return { error: `Regeneratie mislukt: ${errMsg}` };
+  }
+
+  revalidatePath(`/meetings/${meetingId}`);
+  revalidatePath(`/review/${meetingId}`);
+  revalidatePath("/review");
+  revalidatePath("/");
   return { success: true };
 }
 

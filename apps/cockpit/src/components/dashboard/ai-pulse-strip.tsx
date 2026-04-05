@@ -1,4 +1,4 @@
-import { Brain, Lightbulb, Timer, Sparkles } from "lucide-react";
+import { Brain, ListChecks, Timer } from "lucide-react";
 import type { AiPulseData } from "@repo/database/queries/dashboard";
 
 interface AiPulseStripProps {
@@ -15,12 +15,12 @@ const PULSE_ITEMS = [
         : "Geen nieuwe meetings deze week",
   },
   {
-    key: "decisions" as const,
-    icon: Lightbulb,
+    key: "actions" as const,
+    icon: ListChecks,
     format: (d: AiPulseData) =>
-      d.recentDecisions > 0
-        ? `${d.recentDecisions} besluit${d.recentDecisions !== 1 ? "en" : ""} vastgelegd`
-        : "Geen nieuwe besluiten",
+      d.activeActions > 0
+        ? `${d.activeActions} actiepunt${d.activeActions !== 1 ? "en" : ""} vastgelegd`
+        : "Geen actiepunten",
   },
   {
     key: "deadlines" as const,
@@ -29,14 +29,6 @@ const PULSE_ITEMS = [
       d.upcomingDeadlines > 0
         ? `${d.upcomingDeadlines} deadline${d.upcomingDeadlines !== 1 ? "s" : ""} komende week`
         : "Geen deadlines komende week",
-  },
-  {
-    key: "needs" as const,
-    icon: Sparkles,
-    format: (d: AiPulseData) =>
-      d.openNeeds > 0
-        ? `${d.openNeeds} openstaande behoefte${d.openNeeds !== 1 ? "n" : ""}`
-        : "Geen openstaande behoeften",
   },
 ];
 

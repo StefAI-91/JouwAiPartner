@@ -10,13 +10,9 @@ import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
-import {
-  EXTRACTION_TYPE_ORDER,
-  EXTRACTION_TYPE_LABELS,
-  EXTRACTION_TYPE_ICONS,
-  EXTRACTION_TYPE_COLORS,
-} from "@/components/shared/extraction-constants";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
+import { regenerateMeetingAction } from "@/actions/meetings";
+import { ListChecks, RefreshCw } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface Extraction {
@@ -55,17 +51,10 @@ interface ReviewDetailProps {
 export function ReviewDetail({ meeting, allPeople, organizations, projects, promotedExtractionIds, peopleForAssignment }: ReviewDetailProps) {
   const router = useRouter();
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
-  const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
+  const [loading, setLoading] = useState<"approve" | "reject" | "regenerate" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    for (const type of EXTRACTION_TYPE_ORDER) {
-      if (meeting.extractions.some((e) => e.type === type)) return type;
-    }
-    return EXTRACTION_TYPE_ORDER[0];
-  });
   const [activeTranscriptRef, setActiveTranscriptRef] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-  const [typeChanges, setTypeChanges] = useState<Map<string, string>>(new Map());
   const [summaryEdit, setSummaryEdit] = useState<string | null>(null);
 
   const handleEdit = useCallback((id: string, content: string) => {
@@ -76,14 +65,28 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
     setDeletedIds((prev) => new Set(prev).add(id));
   }, []);
 
-  const handleTypeChange = useCallback((id: string, type: string) => {
-    setTypeChanges((prev) => new Map(prev).set(id, type));
-  }, []);
-
   const handleRefClick = useCallback((ref: string) => {
     setActiveTranscriptRef(ref);
     setTimeout(() => setActiveTranscriptRef(null), 3000);
   }, []);
+
+  async function handleRegenerate() {
+    setLoading("regenerate");
+    setError(null);
+
+    const result = await regenerateMeetingAction({ meetingId: meeting.id });
+
+    if ("error" in result) {
+      setError(result.error);
+      setLoading(null);
+      return;
+    }
+    router.refresh();
+    setLoading(null);
+    setEdits(new Map());
+    setDeletedIds(new Set());
+    setSummaryEdit(null);
+  }
 
   async function handleApprove() {
     setLoading("approve");
@@ -95,18 +98,10 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
 
     const rejectedExtractionIds = Array.from(deletedIds);
 
-    const extractionTypeChanges = Array.from(typeChanges.entries())
-      .filter(([id]) => !deletedIds.has(id))
-      .map(([extractionId, type]) => ({
-        extractionId,
-        type: type as "decision" | "action_item" | "need" | "insight",
-      }));
-
     const result = await approveMeetingWithEditsAction({
       meetingId: meeting.id,
       extractionEdits: extractionEdits.length > 0 ? extractionEdits : undefined,
       rejectedExtractionIds: rejectedExtractionIds.length > 0 ? rejectedExtractionIds : undefined,
-      typeChanges: extractionTypeChanges.length > 0 ? extractionTypeChanges : undefined,
     });
 
     if ("error" in result) {
@@ -134,25 +129,11 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
     router.push("/review");
   }
 
+  const actionItems = meeting.extractions.filter(
+    (e) => e.type === "action_item" && !deletedIds.has(e.id),
+  );
   const activeExtractions = meeting.extractions.filter((e) => !deletedIds.has(e.id));
-  const grouped = new Map<string, Extraction[]>();
-  for (const ext of activeExtractions) {
-    const list = grouped.get(ext.type) ?? [];
-    list.push(ext);
-    grouped.set(ext.type, list);
-  }
 
-  const tabs = EXTRACTION_TYPE_ORDER.filter(
-    (type) => grouped.has(type) && grouped.get(type)!.length > 0,
-  ).map((type) => ({
-    type,
-    label: EXTRACTION_TYPE_LABELS[type],
-    count: grouped.get(type)!.length,
-    Icon: EXTRACTION_TYPE_ICONS[type],
-    color: EXTRACTION_TYPE_COLORS[type]?.color ?? "#6B7280",
-  }));
-
-  const activeItems = grouped.get(activeTab) ?? [];
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
 
@@ -189,58 +170,45 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
         onSummaryEdit={setSummaryEdit}
       />
 
-      {/* Right panel: Extractions with tabs (45%) */}
+      {/* Right panel: Action Items (45%) */}
       <div className="flex-1 overflow-y-auto lg:w-[45%] lg:flex-none">
-        <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4">
-          <h2 className="mb-3 text-base font-semibold">Extracties</h2>
-          <div className="flex gap-1 overflow-x-auto pb-0">
-            {tabs.map(({ type, label, count, Icon, color }) => {
-              const isActive = type === activeTab;
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setActiveTab(type)}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-t-lg px-3 py-2 text-xs font-medium transition-colors ${
-                    isActive
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  {Icon && (
-                    <Icon className="size-3.5" style={{ color: isActive ? color : undefined }} />
-                  )}
-                  {label}
-                  <span
-                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                      isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+        <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4 pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ListChecks className="size-4 text-green-600" />
+              <h2 className="text-base font-semibold">Actiepunten</h2>
+              <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                {actionItems.length}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleRegenerate}
+              disabled={loading === "regenerate"}
+              className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+            >
+              <RefreshCw className={`size-3.5 ${loading === "regenerate" ? "animate-spin" : ""}`} />
+              {loading === "regenerate" ? "Bezig..." : "Regenereer"}
+            </button>
           </div>
         </div>
 
         <div className="space-y-3 p-6">
-          {activeItems.map((ext) => (
+          {actionItems.map((ext) => (
             <ExtractionCard
               key={ext.id}
               extraction={ext}
               onEdit={handleEdit}
               onDelete={handleDelete}
-              onTypeChange={handleTypeChange}
               onRefClick={handleRefClick}
               showPromote
               isPromoted={promotedExtractionIds?.includes(ext.id)}
               people={peopleForAssignment}
             />
           ))}
-          {activeItems.length === 0 && (
+          {actionItems.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Geen {EXTRACTION_TYPE_LABELS[activeTab]?.toLowerCase()} gevonden
+              Geen actiepunten gevonden
             </p>
           )}
         </div>
@@ -248,10 +216,10 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
 
       <ReviewActionBar
         extractionCount={activeExtractions.length}
-        editCount={edits.size + deletedIds.size + typeChanges.size + (summaryEdit !== null ? 1 : 0)}
+        editCount={edits.size + deletedIds.size + (summaryEdit !== null ? 1 : 0)}
         onApprove={handleApprove}
         onReject={handleReject}
-        loading={loading}
+        loading={loading === "approve" ? "approve" : loading === "reject" ? "reject" : null}
         error={error}
       />
     </div>

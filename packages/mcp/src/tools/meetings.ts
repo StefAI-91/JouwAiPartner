@@ -12,7 +12,7 @@ import { trackMcpQuery } from "./usage-tracking";
 export function registerMeetingTools(server: McpServer) {
   server.tool(
     "get_meeting_summary",
-    "Haal de volledige samenvatting op voor een specifieke meeting: metadata, deelnemers, en alle extracties (besluiten, actiepunten, inzichten, behoeften) met bronvermelding. Retourneert standaard alleen geverifieerde meetings. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern).",
+    "Haal de volledige samenvatting op voor een specifieke meeting: metadata, rijke samenvatting (met besluiten, behoeften, signalen als narratief), en actiepunten. Retourneert standaard alleen geverifieerde meetings. Gebruik include_drafts=true voor ongeverifieerde content (alleen intern).",
     {
       meeting_id: z
         .string()
@@ -164,45 +164,26 @@ export function registerMeetingTools(server: McpServer) {
           m.summary || "Geen samenvatting beschikbaar.",
         ];
 
-        if (extractions && extractions.length > 0) {
-          const grouped: Record<string, typeof extractions> = {};
-          for (const e of extractions) {
-            if (!grouped[e.type]) grouped[e.type] = [];
-            grouped[e.type].push(e);
-          }
+        const actionItems = extractions.filter((e: ExtractionItem) => e.type === "action_item");
+        if (actionItems.length > 0) {
+          sections.push("", `### Actiepunten`);
+          actionItems.forEach((item: ExtractionItem, i: number) => {
+            const status = formatVerificatieStatus(
+              item.verification_status,
+              item.verified_by ? profileMap[item.verified_by] || null : null,
+              item.verified_at,
+              item.confidence,
+              item.corrected_by,
+            );
+            const meta: string[] = [];
+            if (item.metadata?.assignee) meta.push(`Eigenaar: ${item.metadata.assignee}`);
+            if (item.metadata?.deadline) meta.push(`Deadline: ${item.metadata.deadline}`);
 
-          const typeLabels: Record<string, string> = {
-            decision: "Besluiten",
-            action_item: "Actiepunten",
-            insight: "Inzichten",
-            need: "Behoeften",
-          };
-
-          for (const [type, items] of Object.entries(grouped)) {
-            const label = typeLabels[type] || type;
-            sections.push("", `### ${label}`);
-            items.forEach((item: ExtractionItem, i: number) => {
-              const status = formatVerificatieStatus(
-                item.verification_status,
-                item.verified_by ? profileMap[item.verified_by] || null : null,
-                item.verified_at,
-                item.confidence,
-                item.corrected_by,
-              );
-              const meta: string[] = [];
-              if (item.metadata?.assignee) meta.push(`Eigenaar: ${item.metadata.assignee}`);
-              if (item.metadata?.deadline) meta.push(`Deadline: ${item.metadata.deadline}`);
-              if (item.metadata?.made_by) meta.push(`Door: ${item.metadata.made_by}`);
-              if (item.metadata?.urgency) meta.push(`Urgentie: ${item.metadata.urgency}`);
-
-              sections.push(`${i + 1}. ${item.content}`);
-              sections.push(`   ${status}`);
-              if (meta.length > 0) sections.push(`   ${meta.join(" | ")}`);
-              if (item.transcript_ref) sections.push(`   Citaat: "${item.transcript_ref}"`);
-            });
-          }
-        } else {
-          sections.push("", "Nog geen extracties beschikbaar.");
+            sections.push(`${i + 1}. ${item.content}`);
+            sections.push(`   ${status}`);
+            if (meta.length > 0) sections.push(`   ${meta.join(" | ")}`);
+            if (item.transcript_ref) sections.push(`   Citaat: "${item.transcript_ref}"`);
+          });
         }
 
         sections.push("", `**Meeting ID:** ${m.id}`);
