@@ -1,10 +1,13 @@
 import { vi } from "vitest";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Mock `@repo/database/supabase/server` so that `createClient()` returns
- * a fake Supabase client with a controllable `auth.getUser()`.
+ * a Supabase client with a controllable `auth.getUser()`.
  *
- * Call this in your test file's top-level `vi.mock()` or in `beforeEach`.
+ * Two modes:
+ * - `createServerMock()` — fully mocked client (unit tests)
+ * - `createIntegrationServerMock()` — real DB client with mock auth (integration tests)
  */
 
 let _mockUser: { id: string; email?: string } | null = null;
@@ -32,7 +35,7 @@ export function getMockUser() {
 
 /**
  * Create the vi.mock factory for `@repo/database/supabase/server`.
- * Use this in your test file:
+ * Returns a fully mocked client (no real DB). Good for unit tests.
  *
  * ```ts
  * vi.mock("@repo/database/supabase/server", () => createServerMock());
@@ -56,5 +59,43 @@ export function createServerMock() {
         single: vi.fn(async () => ({ data: null, error: null })),
       })),
     })),
+  };
+}
+
+/**
+ * Create the vi.mock factory for integration tests.
+ * Returns a real Supabase client (using service role key) with mock auth layer.
+ * This allows Server Actions to perform real DB operations against the test database.
+ *
+ * ```ts
+ * vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
+ * ```
+ */
+export function createIntegrationServerMock() {
+  const url =
+    process.env.TEST_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  return {
+    createClient: vi.fn(async () => {
+      if (!url || !key) {
+        throw new Error("Missing Supabase test env vars for integration tests");
+      }
+      const realClient = createSupabaseClient(url, key);
+      return new Proxy(realClient, {
+        get(target, prop) {
+          if (prop === "auth") {
+            return {
+              getUser: vi.fn(async () => ({
+                data: { user: _mockUser },
+                error: null,
+              })),
+            };
+          }
+          return Reflect.get(target, prop);
+        },
+      });
+    }),
   };
 }
