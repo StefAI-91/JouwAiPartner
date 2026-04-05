@@ -25,17 +25,6 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
 import { runExtractor } from "@repo/ai/agents/extractor";
 import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
-
-// ── Auth Helper ──
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
-
 import {
   updateTitleSchema,
   updateSummarySchema,
@@ -48,6 +37,16 @@ import {
   createPersonSchema,
   regenerateSchema,
 } from "@/validations/meetings";
+
+// ── Auth Helper ──
+
+async function getAuthenticatedUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
 
 // ── Actions ──
 

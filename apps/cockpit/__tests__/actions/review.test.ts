@@ -17,11 +17,9 @@ import { getTestClient } from "../../../../packages/database/__tests__/helpers/t
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
 
-const supabaseUrl =
-  process.env.TEST_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-const describeWithDb = supabaseUrl ? describe : describe.skip;
+import { describeWithDb } from "../helpers/describe-with-db";
 
-describeWithDb("Review Server Actions (integration)", () => {
+describeWithDb("Review Server Actions (integration)")("Review Server Actions (integration)", () => {
   beforeEach(async () => {
     mockAuthenticated(TEST_IDS.userId);
     resetNextMocks();

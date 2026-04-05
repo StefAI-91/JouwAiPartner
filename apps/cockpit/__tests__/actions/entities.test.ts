@@ -19,11 +19,9 @@ import { getTestClient } from "../../../../packages/database/__tests__/helpers/t
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
 
-const supabaseUrl =
-  process.env.TEST_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-const describeWithDb = supabaseUrl ? describe : describe.skip;
+import { describeWithDb } from "../helpers/describe-with-db";
 
-describeWithDb("Entity Server Actions (integration)", () => {
+describeWithDb("Entity Server Actions (integration)")("Entity Server Actions (integration)", () => {
   beforeEach(async () => {
     mockAuthenticated(TEST_IDS.userId);
     resetNextMocks();
@@ -91,11 +89,7 @@ describeWithDb("Entity Server Actions (integration)", () => {
       const result = await deleteOrganizationAction({ id: extraOrgId });
       expect(result).toEqual({ success: true });
 
-      const { data } = await db
-        .from("organizations")
-        .select("id")
-        .eq("id", extraOrgId)
-        .single();
+      const { data } = await db.from("organizations").select("id").eq("id", extraOrgId).single();
       expect(data).toBeNull();
     });
   });
