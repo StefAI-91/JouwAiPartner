@@ -45,6 +45,57 @@ export async function resolveOrganizationIds(
 }
 
 /**
+ * Resolve meeting IDs by participant name.
+ * Checks both the meeting_participants join table (linked people)
+ * and the participants text array on meetings (unlinked Fireflies names).
+ * Returns null if no meetings found, or an array of matching meeting IDs.
+ */
+export async function resolveMeetingIdsByParticipant(
+  supabase: SupabaseClient,
+  participantName: string,
+): Promise<string[] | null> {
+  const escaped = escapeLike(participantName);
+  const meetingIds = new Set<string>();
+
+  // Strategy 1: Match via meeting_participants join table (linked people)
+  const { data: people } = await supabase.from("people").select("id").ilike("name", `%${escaped}%`);
+
+  if (people && people.length > 0) {
+    const personIds = people.map((p: { id: string }) => p.id);
+    const { data: mpMatches } = await supabase
+      .from("meeting_participants")
+      .select("meeting_id")
+      .in("person_id", personIds);
+
+    if (mpMatches) {
+      for (const mp of mpMatches) {
+        meetingIds.add((mp as { meeting_id: string }).meeting_id);
+      }
+    }
+  }
+
+  // Strategy 2: Match via participants text array (unlinked names from Fireflies)
+  // Fetch all meetings and filter in JS since PostgREST doesn't support
+  // case-insensitive partial match on array elements
+  const lowerName = participantName.toLowerCase();
+  const { data: allMeetings } = await supabase
+    .from("meetings")
+    .select("id, participants")
+    .not("participants", "is", null);
+
+  if (allMeetings) {
+    for (const m of allMeetings as { id: string; participants: string[] }[]) {
+      if (m.participants?.some((p) => p.toLowerCase().includes(lowerName))) {
+        meetingIds.add(m.id);
+      }
+    }
+  }
+
+  if (meetingIds.size === 0) return null;
+  return [...meetingIds];
+}
+
+/**
  * Format verification status for MCP tool output.
  * Shows verification info: who verified and when, or draft/AI status.
  */
