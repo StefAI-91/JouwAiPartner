@@ -346,6 +346,7 @@ export interface Database {
           content: string;
           version: number;
           source_meeting_ids: string[];
+          structured_content: Record<string, unknown> | null;
           created_at: string;
         };
         Insert: {
@@ -356,6 +357,7 @@ export interface Database {
           content: string;
           version?: number;
           source_meeting_ids?: string[];
+          structured_content?: Record<string, unknown> | null;
           created_at?: string;
         };
         Update: {
@@ -366,6 +368,7 @@ export interface Database {
           content?: string;
           version?: number;
           source_meeting_ids?: string[];
+          structured_content?: Record<string, unknown> | null;
           created_at?: string;
         };
       };

@@ -88,9 +88,20 @@ export async function generateProjectSummaries(
       meetingIds.length > 0 ? meetingIds : await getProjectMeetingIds(projectId, db);
 
     // Save both summaries as new versions
+    // Timeline is stored as structured_content on the briefing summary
+    const timelineData = output.timeline.length > 0 ? { timeline: output.timeline } : null;
+
     await Promise.all([
       createSummaryVersion("project", projectId, "context", output.context, sourceMeetingIds, db),
-      createSummaryVersion("project", projectId, "briefing", output.briefing, sourceMeetingIds, db),
+      createSummaryVersion(
+        "project",
+        projectId,
+        "briefing",
+        output.briefing,
+        sourceMeetingIds,
+        db,
+        timelineData,
+      ),
     ]);
 
     return { success: true };

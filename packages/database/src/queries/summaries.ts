@@ -9,6 +9,7 @@ export interface SummaryRow {
   content: string;
   version: number;
   source_meeting_ids: string[];
+  structured_content: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -23,7 +24,7 @@ export async function getLatestSummary(
   const { data, error } = await db
     .from("summaries")
     .select(
-      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, created_at",
+      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, structured_content, created_at",
     )
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)
@@ -52,7 +53,7 @@ export async function getSummaryHistory(
   const { data, error } = await db
     .from("summaries")
     .select(
-      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, created_at",
+      "id, entity_type, entity_id, summary_type, content, version, source_meeting_ids, structured_content, created_at",
     )
     .eq("entity_type", entityType)
     .eq("entity_id", entityId)

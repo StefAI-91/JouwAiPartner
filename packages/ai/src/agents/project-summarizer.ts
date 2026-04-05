@@ -9,7 +9,7 @@ import {
 
 export type { ProjectSummaryOutput, OrgSummaryOutput };
 
-const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert twee soorten samenvattingen op basis van meeting-samenvattingen die bij dit project horen.
+const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert drie outputs op basis van meeting-samenvattingen die bij dit project horen.
 
 1. CONTEXT — Een neutrale projectbeschrijving voor iemand die het project niet kent.
    Focus op: wat is het project, wie is de klant, welke technologie/aanpak, scope, wie werkt eraan, wanneer moet het af.
@@ -20,11 +20,24 @@ const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert twee so
    Max 4-5 zinnen. Wees direct en actiegericht. Noem concrete namen, datums en items.
    Als er risico's zijn, geef een concrete aanbeveling.
 
+3. TIMELINE — Een chronologisch overzicht van alle meetings, van oud naar nieuw.
+   Per meeting geef je:
+   - date: de datum (YYYY-MM-DD)
+   - meeting_type: het type meeting
+   - title: de titel van de meeting
+   - summary: één zin over het belangrijkste resultaat of de belangrijkste uitkomst
+   - key_decisions: concrete besluiten (leeg als er geen waren)
+   - open_actions: actiepunten die nog niet zijn afgerond (leeg als er geen zijn)
+
+   De timeline vertelt het projectverhaal: hoe het project zich ontwikkelt, waar het kantelde,
+   welke besluiten tot veranderingen leidden. Laat het verloop zien, niet alleen de feiten.
+
 REGELS:
 - Schrijf in het Nederlands.
 - Baseer je ALLEEN op de aangeleverde meeting-samenvattingen. Verzin niets.
 - Recente meetings wegen zwaarder voor de BRIEFING dan oudere.
-- Als er weinig data is, wees dan kort. Liever 2 goede zinnen dan 5 vage.`;
+- Als er weinig data is, wees dan kort. Liever 2 goede zinnen dan 5 vage.
+- De TIMELINE bevat ALLE aangeleverde meetings, gesorteerd van oud naar nieuw.`;
 
 const ORG_SYSTEM_PROMPT = `Je bent een klant-analist. Je genereert twee soorten samenvattingen over een organisatie op basis van meeting-samenvattingen.
 
