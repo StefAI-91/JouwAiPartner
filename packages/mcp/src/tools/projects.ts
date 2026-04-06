@@ -4,14 +4,23 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 
 import { trackMcpQuery } from "./usage-tracking";
 import { escapeLike } from "./utils";
+import { getSegmentCountsByProjectIds } from "@repo/database/queries/meeting-project-summaries";
 
 export function registerProjectTools(server: McpServer) {
   server.tool(
     "get_projects",
     "Haal projecten op, optioneel gefilterd op naam, organisatie of status. Toont projectnaam, aliassen, organisatie en status.",
     {
-      search: z.string().max(255).optional().describe("Search by project name or alias (partial match)"),
-      organization: z.string().max(255).optional().describe("Filter by organization name (partial match)"),
+      search: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Search by project name or alias (partial match)"),
+      organization: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Filter by organization name (partial match)"),
       status: z
         .enum(["lead", "active", "paused", "completed", "cancelled"])
         .optional()
@@ -84,10 +93,15 @@ export function registerProjectTools(server: McpServer) {
         organization: { name: string } | null;
       }
 
+      const projectIds = (filtered as unknown as ProjectItem[]).map((p) => p.id);
+      const segmentCounts = await getSegmentCountsByProjectIds(projectIds);
+
       const formatted = (filtered as unknown as ProjectItem[]).map((p: ProjectItem, i: number) => {
         const aliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
         const orgName = p.organization?.name || "geen organisatie";
-        return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}`;
+        const segCount = segmentCounts.get(p.id) ?? 0;
+        const segInfo = segCount > 0 ? ` | Segments: ${segCount} meetings with segments` : "";
+        return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}${segInfo}`;
       });
 
       return {

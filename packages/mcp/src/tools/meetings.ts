@@ -8,6 +8,7 @@ import {
   collectVerifiedByIds,
 } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
+import { getSegmentsByMeetingId } from "@repo/database/queries/meeting-project-summaries";
 
 export function registerMeetingTools(server: McpServer) {
   server.tool(
@@ -18,7 +19,11 @@ export function registerMeetingTools(server: McpServer) {
         .string()
         .optional()
         .describe("UUID of the meeting (from search results or list_meetings)"),
-      title_search: z.string().max(255).optional().describe("Search meetings by title (partial match)"),
+      title_search: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Search meetings by title (partial match)"),
       include_drafts: z
         .boolean()
         .optional()
@@ -189,6 +194,26 @@ export function registerMeetingTools(server: McpServer) {
         sections.push("", `**Meeting ID:** ${m.id}`);
         return sections.join("\n");
       });
+
+      // Fetch segments for each meeting and append
+      for (let i = 0; i < typedMeetings.length; i++) {
+        const segments = await getSegmentsByMeetingId(typedMeetings[i].id, supabase);
+        if (segments.length > 0) {
+          const segLines = ["\n---\n### Project-segmenten"];
+          for (const seg of segments) {
+            const name = seg.project_name ?? seg.project_name_raw ?? "Algemeen";
+            segLines.push(
+              `**[${name}]** (${seg.kernpunten.length} kernpunten, ${seg.vervolgstappen.length} vervolgstappen)`,
+            );
+            for (const k of seg.kernpunten) segLines.push(`- ${k}`);
+            if (seg.vervolgstappen.length > 0) {
+              segLines.push("Vervolgstappen:");
+              for (const v of seg.vervolgstappen) segLines.push(`- ${v}`);
+            }
+          }
+          formatted[i] += "\n" + segLines.join("\n");
+        }
+      }
 
       return {
         content: [

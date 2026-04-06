@@ -47,3 +47,53 @@ export async function getSegmentsByMeetingId(
     };
   });
 }
+
+/**
+ * Get segment counts per meeting (for list_meetings MCP tool).
+ */
+export async function getSegmentCountsByMeetingIds(
+  meetingIds: string[],
+  client?: SupabaseClient,
+): Promise<Map<string, number>> {
+  if (meetingIds.length === 0) return new Map();
+  const db = client ?? getAdminClient();
+
+  const { data } = await db
+    .from("meeting_project_summaries")
+    .select("meeting_id")
+    .in("meeting_id", meetingIds);
+
+  const counts = new Map<string, number>();
+  if (data) {
+    for (const row of data) {
+      counts.set(row.meeting_id, (counts.get(row.meeting_id) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
+/**
+ * Get segment count per project (for get_projects MCP tool).
+ */
+export async function getSegmentCountsByProjectIds(
+  projectIds: string[],
+  client?: SupabaseClient,
+): Promise<Map<string, number>> {
+  if (projectIds.length === 0) return new Map();
+  const db = client ?? getAdminClient();
+
+  const { data } = await db
+    .from("meeting_project_summaries")
+    .select("project_id")
+    .in("project_id", projectIds);
+
+  const counts = new Map<string, number>();
+  if (data) {
+    for (const row of data) {
+      if (row.project_id) {
+        counts.set(row.project_id, (counts.get(row.project_id) ?? 0) + 1);
+      }
+    }
+  }
+  return counts;
+}
