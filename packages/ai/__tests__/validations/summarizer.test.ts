@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  SummarizerOutputSchema,
-  ThemeSchema,
-  ParticipantProfileSchema,
-} from "../../src/validations/summarizer";
+import { SummarizerOutputSchema, ParticipantProfileSchema } from "../../src/validations/summarizer";
 
 const validOutput = {
   briefing: "Stef en Wouter bespraken de platformstrategie voor Q2.",
@@ -11,9 +7,6 @@ const validOutput = {
   deelnemers: [
     { name: "Stef", role: "Lead", organization: "JouwAiPartner", stance: "enthousiast" },
   ],
-  themas: [{ title: "Testing", summary: "Migratie naar Vitest", quotes: ["Let's use Vitest"] }],
-  sfeer: "Constructief en energiek",
-  context: "Vervolg op de Q1 review meeting",
   vervolgstappen: ["Setup Vitest", "Schrijf tests"],
 };
 
@@ -37,55 +30,14 @@ describe("SummarizerOutputSchema", () => {
     expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
   });
 
-  it("rejects missing sfeer", () => {
-    const { sfeer: _, ...rest } = validOutput;
-    expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
-  });
-
-  it("rejects missing context", () => {
-    const { context: _, ...rest } = validOutput;
+  it("rejects missing deelnemers", () => {
+    const { deelnemers: _, ...rest } = validOutput;
     expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
   });
 
   it("rejects missing vervolgstappen", () => {
     const { vervolgstappen: _, ...rest } = validOutput;
     expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
-  });
-
-  it("rejects missing deelnemers", () => {
-    const { deelnemers: _, ...rest } = validOutput;
-    expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
-  });
-
-  it("rejects missing themas", () => {
-    const { themas: _, ...rest } = validOutput;
-    expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
-  });
-});
-
-describe("ThemeSchema", () => {
-  it("accepts valid theme with title, summary, quotes", () => {
-    const result = ThemeSchema.safeParse({
-      title: "AI Strategy",
-      summary: "Discussion about AI",
-      quotes: ["AI is the future"],
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.title).toBe("AI Strategy");
-    }
-  });
-
-  it("accepts empty quotes array", () => {
-    expect(ThemeSchema.safeParse({ title: "T", summary: "S", quotes: [] }).success).toBe(true);
-  });
-
-  it("rejects missing title", () => {
-    expect(ThemeSchema.safeParse({ summary: "S", quotes: [] }).success).toBe(false);
-  });
-
-  it("rejects missing summary", () => {
-    expect(ThemeSchema.safeParse({ title: "T", quotes: [] }).success).toBe(false);
   });
 });
 

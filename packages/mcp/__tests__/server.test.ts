@@ -18,6 +18,18 @@ vi.mock("@repo/database/mutations/extractions", () => ({
   getExtractionForCorrection: vi.fn(async () => null),
   correctExtraction: vi.fn(async () => ({ success: true })),
   deleteExtractionsByMeetingId: vi.fn(async () => ({ success: true })),
+  insertExtractions: vi.fn(async () => ({ success: true })),
+}));
+
+vi.mock("@repo/database/mutations/tasks", () => ({
+  createTaskFromExtraction: vi.fn(async () => ({ success: true, id: "test" })),
+  updateTask: vi.fn(async () => ({ success: true })),
+  completeTask: vi.fn(async () => ({ success: true })),
+  dismissTask: vi.fn(async () => ({ success: true })),
+}));
+
+vi.mock("@repo/database/mutations/meetings", () => ({
+  insertManualMeeting: vi.fn(async () => ({ success: true })),
 }));
 
 import { createMcpServer } from "../src/server";
@@ -34,6 +46,11 @@ const EXPECTED_TOOLS = [
   "get_organization_overview",
   "list_meetings",
   "correct_extraction",
+  "log_client_update",
+  "create_task",
+  "complete_task",
+  "update_task",
+  "dismiss_task",
 ];
 
 describe("createMcpServer", () => {
@@ -54,7 +71,7 @@ describe("createMcpServer", () => {
     }
   });
 
-  it("registers all 11 expected tools", () => {
+  it("registers all 16 expected tools", () => {
     const server = createMcpServer();
     // Access internal _registeredTools map
     const registeredTools = (server as Record<string, unknown>)._registeredTools as
