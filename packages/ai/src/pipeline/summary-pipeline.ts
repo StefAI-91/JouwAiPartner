@@ -1,5 +1,6 @@
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { getLatestSummary } from "@repo/database/queries/summaries";
+import { getSegmentsByProjectId } from "@repo/database/queries/meeting-project-summaries";
 import { createSummaryVersion } from "@repo/database/mutations/summaries";
 import { runProjectSummarizer, runOrgSummarizer } from "../agents/project-summarizer";
 
@@ -73,14 +74,18 @@ export async function generateProjectSummaries(
       summary: m.summary,
     }));
 
+    // Get project-specific segments (kernpunten per meeting)
+    const segments = await getSegmentsByProjectId(projectId, db);
+
     // Get existing context summary to provide as reference
     const existingContext = await getLatestSummary("project", projectId, "context", db);
 
-    // Generate both summaries
+    // Generate both summaries (with segment data for precision)
     const output = await runProjectSummarizer(
       project.name,
       formattedMeetings,
       existingContext?.content,
+      segments,
     );
 
     // Get source meeting IDs
