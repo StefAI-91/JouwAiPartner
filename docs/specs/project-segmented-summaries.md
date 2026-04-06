@@ -67,22 +67,32 @@ identified_projects: {
 
 > "Match alleen aan bekende projecten als je daar zeker van bent. Als een project wordt besproken dat niet in de lijst staat, geef dan de naam uit het transcript met `project_id: null`. Verzin geen match — liever `null` dan een foute koppeling."
 
+**Gatekeeper is leidend voor de projectlijst.** De Gatekeeper bepaalt welke projecten in de meeting voorkomen. De Extractor (Sonnet) ontvangt deze lijst als constraint maar mag `null` toewijzen als hij vindt dat een extractie niet bij een van de projecten past — de Extractor heeft immers het volledige transcript en kan meer context hebben. De Extractor mag echter geen **nieuwe** projecten toevoegen.
+
 **Voordeel:** Eén keer matchen, meerdere keer profiteren — zowel Tagger als Extractor ontvangen dezelfde project-context van de Gatekeeper.
 
 ### 3.1 Summarizer: ongewijzigd
 
 De Summarizer (Claude Sonnet) blijft ongewijzigd. Hij produceert kernpunten en vervolgstappen als platte `string[]` arrays, zoals nu. De project-tagging wordt afgesplitst naar een aparte Tagger-stap (zie 3.1b). Dit houdt de Summarizer gefocust op één taak: kwalitatief samenvatten.
 
-### 3.1b Tagger: project-tags per kernpunt (nieuwe agent)
+### 3.1b Tagger: project-tags per kernpunt (rule-based, geen LLM)
 
-De Tagger (Claude Haiku) is een aparte, lichtgewicht stap die na de Summarizer draait. Hij ontvangt de kernpunten en vervolgstappen van de Summarizer plus de `identified_projects` lijst van de Gatekeeper, en tagt elk item met een project (of `null` voor algemeen).
+De Tagger is een **deterministische, rule-based stap** die na de Summarizer draait. Geen LLM-call — de Gatekeeper heeft de projecten al geïdentificeerd, de Tagger hoeft alleen te matchen welk kernpunt bij welk project hoort.
 
-**Waarom apart van de Summarizer:**
+**Waarom rule-based in plaats van LLM:**
 
-- **Kwaliteitsbehoud** — de Summarizer hoeft niet twee cognitieve taken tegelijk te doen (samenvatten + classificeren)
-- **Testbaar in isolatie** — je kunt de Tagger los valideren zonder de hele pipeline
-- **Goedkoper** — Haiku is ~10x goedkoper dan Sonnet; tagging is pattern matching, geen redenering
-- **Vervangbaar** — later eventueel te vervangen door rule-based matching
+- **Sneller & goedkoper** — geen extra API-call, matching draait in <50ms
+- **Deterministisch** — zelfde input geeft altijd zelfde output, makkelijker te debuggen
+- **Minder pipeline-complexiteit** — 3 LLM-calls (Gatekeeper + Summarizer + Extractor) ipv 4
+- **Voldoende voor de taak** — matching van een kernpunt-string tegen 2-5 projectnamen is pattern matching, geen redenering
+- **Upgrade-pad** — als rule-based matching onvoldoende blijkt na de eerste 50 meetings, kan alsnog een Haiku-agent worden toegevoegd
+
+**Matching-strategie (in volgorde):**
+
+1. **Exact match** — projectnaam of alias komt letterlijk voor in het kernpunt (case-insensitive)
+2. **Substring match** — projectnaam is onderdeel van een langere zin
+3. **Keyword overlap** — woorden uit de projectnaam komen voor in het kernpunt (minimaal 2 van 3 woorden)
+4. **Geen match** → `null` (naar "Algemeen")
 
 **Input:**
 
@@ -107,7 +117,14 @@ De Tagger (Claude Haiku) is een aparte, lichtgewicht stap die na de Summarizer d
 }
 ```
 
-**Prompt-instructies voor wanneer wél/niet taggen:**
+**Confidence-toekenning:**
+
+- 1.0: exact match op projectnaam
+- 0.9: exact match op alias
+- 0.8: substring match
+- 0.6: keyword overlap (valt onder drempel → naar "Algemeen")
+
+**Tagging-regels (zelfde als voorheen, nu als code-logica):**
 
 Tag WEL als:
 
@@ -122,12 +139,7 @@ Tag NIET als:
 - Het een tool, platform of dienst is die je gebruikt (tenzij het project daarover gaat)
 - Het een eenmalige namedrop is zonder inhoudelijke context
 
-Confidence per tag:
-
-- 1.0: project wordt expliciet als werkcontext benoemd
-- 0.7-0.9: project is duidelijk afgeleid uit de context
-- 0.4-0.6: project wordt genoemd maar relatie tot kernpunt is zwak
-- Bij twijfel: niet taggen (`null`)
+> **Opmerking:** De "tag niet"-regels zijn moeilijker rule-based af te vangen. In v1 accepteren we dat sommige terloopse vermeldingen getagd worden — de confidence-drempel (≥0.7) en de review gate vangen dit op. Als dit in de praktijk te veel ruis oplevert, upgraden we naar een Haiku-agent.
 
 ### 3.2 Pipeline: segmenten bouwen
 
@@ -141,6 +153,8 @@ Meeting "Team Sync 3 april"
 └── Segment "Algemeen"         → 1 kernpunt (null-project)
 ```
 
+**Meetings zonder projecten:** Als de Gatekeeper 0 projecten identificeert (bv. een interne team sync zonder projectcontext), slaat de Tagger-stap over en worden alle kernpunten en vervolgstappen in één "Algemeen" segment geplaatst. Er wordt dan alleen een `meeting_project_summaries` row aangemaakt met `project_id = NULL` en `project_name_raw = NULL`.
+
 **Confidence-drempel:** Tags met confidence < 0.7 worden automatisch naar "Algemeen" verplaatst. Alleen tags >= 0.7 worden als project-segment behandeld. De drempel is configureerbaar via een database-instelling zodat deze getuned kan worden na de eerste 50 meetings.
 
 **Entity resolution:** Grotendeels al gedaan door de Gatekeeper (project_id meegeleverd). Voor projecten met `project_id: null` valt de pipeline terug op entity resolution (exact match → substring → alias → embedding similarity).
@@ -149,20 +163,20 @@ Meeting "Team Sync 3 april"
 
 Nieuwe tabel:
 
-| Kolom              | Type              | Doel                                                                                                                                      |
-| ------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | UUID              | PK                                                                                                                                        |
-| `meeting_id`       | UUID              | FK → meetings                                                                                                                             |
-| `project_id`       | UUID, nullable    | FK → projects (null = onbekend of algemeen)                                                                                               |
-| `project_name_raw` | text              | Originele string van de AI (altijd bewaren)                                                                                               |
-| `is_general`       | boolean GENERATED | `GENERATED ALWAYS AS (project_id IS NULL AND project_name_raw IS NULL) STORED` — voorkomt dat `is_general` en `project_id` uit sync raken |
-| `kernpunten`       | text[]            | Array van kernpunt-strings voor dit project                                                                                               |
-| `vervolgstappen`   | text[]            | Array van vervolgstap-strings voor dit project                                                                                            |
-| `summary_text`     | text              | Geformateerde tekst van dit segment (voor embedding)                                                                                      |
-| `embedding`        | vector(1024)      | Cohere embed-v4 embedding van summary_text                                                                                                |
-| `embedding_stale`  | boolean           | `DEFAULT true` — wordt `false` na (her)berekening                                                                                         |
-| `search_vector`    | tsvector          | Voor full-text search, via trigger op `summary_text`                                                                                      |
-| `created_at`       | timestamptz       |                                                                                                                                           |
+| Kolom              | Type              | Doel                                                                                                                                                      |
+| ------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | UUID              | PK                                                                                                                                                        |
+| `meeting_id`       | UUID              | FK → meetings                                                                                                                                             |
+| `project_id`       | UUID, nullable    | FK → projects (null = onbekend of algemeen)                                                                                                               |
+| `project_name_raw` | text              | Originele string van de AI (altijd bewaren)                                                                                                               |
+| `is_general`       | boolean GENERATED | `GENERATED ALWAYS AS (project_id IS NULL) STORED` — een segment is "Algemeen" zodra er geen project gekoppeld is, ongeacht of er een ruwe naam bewaard is |
+| `kernpunten`       | text[]            | Array van kernpunt-strings voor dit project                                                                                                               |
+| `vervolgstappen`   | text[]            | Array van vervolgstap-strings voor dit project                                                                                                            |
+| `summary_text`     | text              | Geformateerde tekst van dit segment (voor embedding)                                                                                                      |
+| `embedding`        | vector(1024)      | Cohere embed-v4 embedding van summary_text                                                                                                                |
+| `embedding_stale`  | boolean           | `DEFAULT true` — wordt `false` na (her)berekening                                                                                                         |
+| `search_vector`    | tsvector          | Voor full-text search, via trigger op `summary_text`                                                                                                      |
+| `created_at`       | timestamptz       |                                                                                                                                                           |
 
 De **volledige samenvatting** (`meeting.summary`, `meeting.ai_briefing`) blijft ongewijzigd. De segmenten zijn een afgeleide voor precisie-zoeken en project-context.
 
@@ -189,6 +203,16 @@ Elk segment krijgt een eigen embedding via Cohere embed-v4. De meeting-brede emb
 const segmentTexts = segments.map((s) => s.summary_text);
 const embeddings = await embedBatch(segmentTexts, "search_document");
 ```
+
+### 3.4b Re-embedding strategie
+
+De `embedding_stale` kolom op `meeting_project_summaries` wordt `false` gezet na initiële berekening. Re-embedding wordt getriggerd wanneer:
+
+- Een segment wordt gewijzigd via de review gate (project-koppeling gewijzigd, kernpunten verplaatst)
+- Een segment wordt achteraf gecorrigeerd op de meeting detail pagina
+- De bestaande `re-embed` pipeline stap wordt uitgebreid om ook `meeting_project_summaries WHERE embedding_stale = true` mee te nemen
+
+De re-embed stap draait als achtergrondproces (zoals nu voor meetings) en verwerkt stale segmenten in batches via `embedBatch()`.
 
 ### 3.5 Foutcorrectie: drie vangnetten
 
@@ -253,7 +277,7 @@ De Extractor ontvangt de Gatekeeper's `identified_projects` als **constraint** (
 
 **Prompt-instructie voor de Extractor:**
 
-> "De volgende projecten zijn geïdentificeerd in deze meeting: [lijst]. Gebruik ALLEEN deze projectnamen bij het toewijzen van een project aan extracties. Als een extractie niet bij een van deze projecten hoort, laat project dan null. Voeg GEEN nieuwe projectnamen toe."
+> "De volgende projecten zijn geïdentificeerd in deze meeting: [lijst]. Gebruik ALLEEN deze projectnamen bij het toewijzen van een project aan extracties. Als een extractie niet bij een van deze projecten hoort, laat project dan null. Voeg GEEN nieuwe projectnamen toe. Je mag null toewijzen als je vindt dat een extractie niet bij een project past, ook al staat het project in de lijst."
 
 ### Verandert niet
 
@@ -278,15 +302,29 @@ Bij een query **zonder `project_id`**:
 
 - Zoek zoals nu over `meeting.summary` embedding (backwards compatible)
 
+### 5.1b Search-architectuur: twee paden, geen UNION
+
+De `search_all_content()` RPC gebruikt **twee aparte query-paden** in plaats van een `UNION ALL`:
+
+- **Pad 1 (met `project_id`):** Query gaat naar `meeting_project_summaries` met `project_id` filter + vector similarity op segment-embeddings
+- **Pad 2 (zonder `project_id`):** Query gaat naar `meetings` zoals nu (backwards compatible)
+
+**Waarom geen UNION ALL:**
+
+- UNION verandert de ranking-logica — segment-scores en meeting-scores zijn niet direct vergelijkbaar
+- Twee paden zijn eenvoudiger te testen, debuggen en tunen
+- Geen risico op regressie in bestaande zoekresultaten
+- Later eventueel samen te voegen als de ranking-logica bewezen stabiel is
+
 ### 5.2 Aan te passen tools
 
 **High priority (zoek-impact):**
 
-| Tool                       | Bestand                              | Wijziging                                                                                                                     |
-| -------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `search_knowledge`         | `packages/mcp/src/tools/search.ts`   | Segment-embeddings toevoegen aan hybrid search results. Nieuw source type `"project_summary"` met project-naam in output.     |
-| `search_all_content()` RPC | `supabase/migrations/`               | `UNION ALL` clause voor `meeting_project_summaries` in zowel vector- als FTS-CTE's. Nieuw veld `project_id` in RETURNS TABLE. |
-| `get_meeting_summary`      | `packages/mcp/src/tools/meetings.ts` | Per-project segmenten tonen als extra sectie na de volledige samenvatting.                                                    |
+| Tool                       | Bestand                              | Wijziging                                                                                                                 |
+| -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `search_knowledge`         | `packages/mcp/src/tools/search.ts`   | Segment-embeddings toevoegen aan hybrid search results. Nieuw source type `"project_summary"` met project-naam in output. |
+| `search_all_content()` RPC | `supabase/migrations/`               | **Twee aparte query-paden** in plaats van UNION ALL (zie 5.1b). Nieuw veld `project_id` in RETURNS TABLE.                 |
+| `get_meeting_summary`      | `packages/mcp/src/tools/meetings.ts` | Per-project segmenten tonen als extra sectie na de volledige samenvatting.                                                |
 
 **Medium priority (discovery):**
 
@@ -323,7 +361,7 @@ Aanbeveling: start met lazy voor nieuwe meetings, batch later als de prompt stab
 2. **Gatekeeper** — schema uitbreiden + database-context ophalen + prompt aanpassen (project-identificatie)
 3. **Tagger** — nieuwe agent (Haiku): ontvangt kernpunten + identified_projects, retourneert getagde kernpunten
 4. **Extractor** — `entities.projects` en `primary_project` verwijderen uit output, project-constraint uit Gatekeeper-lijst ontvangen
-5. **Pipeline** — orchestratie: Gatekeeper → Summarizer (ongewijzigd) → Tagger → segmenten bouwen → Extractor (met constraint) → `embedBatch()` voor segmenten → opslaan
+5. **Pipeline** — orchestratie: Gatekeeper → Summarizer (ongewijzigd) → Tagger (rule-based) → segmenten bouwen → Extractor (met constraint) → `embedBatch()` voor segmenten → opslaan. **Graceful degradation:** als de Tagger faalt, worden alle kernpunten in één "Algemeen" segment geplaatst en gaat de rest van de pipeline gewoon door. Elke stap heeft een eigen error boundary — een fout in segmentering mag de extractie niet blokkeren.
 6. **Review UI** — segment-weergave + twee acties: koppel aan project, verwijder tag
 7. **MCP/Zoeken** — `project_id` parameter op `search_knowledge`, segment-level querying
 
@@ -341,11 +379,13 @@ Gatekeeper (Haiku) — classificatie + project-identificatie
     ↓
 Summarizer (Sonnet) — ongewijzigd, produceert kernpunten als string[]
     ↓
-Tagger (Haiku) — tagt kernpunten met projecten uit Gatekeeper-lijst
-    ↓
+Tagger (rule-based) — matcht kernpunten aan projecten via string matching (geen LLM)
+    ↓                   ⚠️ Bij fout: alles naar "Algemeen", pipeline gaat door
 Pipeline — bouwt segmenten, confidence-filter (>= 0.7)
-    ↓
-Extractor (Sonnet) — extracties met project-constraint uit Gatekeeper
+    ↓                   📝 0 projecten: skip tagger, alles "Algemeen"
+Extractor (Sonnet) — extracties met project-constraint (mag null toewijzen)
     ↓
 embedBatch() — alle segment-embeddings in één Cohere call
+    ↓
+re-embed — stale segmenten worden meegenomen in bestaande re-embed achtergrondproces
 ```
