@@ -24,6 +24,8 @@ Een meeting-samenvatting is opsplitsbaar per project. Bij het zoeken op een proj
 
 De Gatekeeper (Claude Haiku) draait als eerste stap in de pipeline en leest het hele transcript. Naast de bestaande classificatie (meeting_type, relevance_score, organization_name) identificeert hij nu ook welke **projecten, organisaties en mensen** in de meeting besproken worden.
 
+**Gatekeeper is leidend voor project-identificatie.** De bestaande entity resolution in de pipeline draait alleen als fallback voor projecten waar de Gatekeeper `project_id: null` retourneert. Bij conflict wint de Gatekeeper.
+
 **Database-context ophalen (vóór de Gatekeeper-call):**
 
 De pipeline haalt vooraf bekende entiteiten op uit de database en injecteert deze als context in de Gatekeeper-prompt:
@@ -65,22 +67,44 @@ identified_projects: {
 
 > "Match alleen aan bekende projecten als je daar zeker van bent. Als een project wordt besproken dat niet in de lijst staat, geef dan de naam uit het transcript met `project_id: null`. Verzin geen match — liever `null` dan een foute koppeling."
 
-**Voordeel:** Eén keer matchen, meerdere keer profiteren — zowel Summarizer als Extractor ontvangen dezelfde project-context van de Gatekeeper.
+**Voordeel:** Eén keer matchen, meerdere keer profiteren — zowel Tagger als Extractor ontvangen dezelfde project-context van de Gatekeeper.
 
-### 3.1 Summarizer: project-tags per kernpunt
+### 3.1 Summarizer: ongewijzigd
 
-De Summarizer (Claude Sonnet) ontvangt de `identified_projects` lijst van de Gatekeeper en tagt elk kernpunt en elke vervolgstap met een project uit die lijst (of `null` voor algemeen).
+De Summarizer (Claude Sonnet) blijft ongewijzigd. Hij produceert kernpunten en vervolgstappen als platte `string[]` arrays, zoals nu. De project-tagging wordt afgesplitst naar een aparte Tagger-stap (zie 3.1b). Dit houdt de Summarizer gefocust op één taak: kwalitatief samenvatten.
 
-**Schema-wijziging:**
+### 3.1b Tagger: project-tags per kernpunt (nieuwe agent)
+
+De Tagger (Claude Haiku) is een aparte, lichtgewicht stap die na de Summarizer draait. Hij ontvangt de kernpunten en vervolgstappen van de Summarizer plus de `identified_projects` lijst van de Gatekeeper, en tagt elk item met een project (of `null` voor algemeen).
+
+**Waarom apart van de Summarizer:**
+
+- **Kwaliteitsbehoud** — de Summarizer hoeft niet twee cognitieve taken tegelijk te doen (samenvatten + classificeren)
+- **Testbaar in isolatie** — je kunt de Tagger los valideren zonder de hele pipeline
+- **Goedkoper** — Haiku is ~10x goedkoper dan Sonnet; tagging is pattern matching, geen redenering
+- **Vervangbaar** — later eventueel te vervangen door rule-based matching
+
+**Input:**
 
 ```typescript
-// Huidig
-kernpunten: string[]
-vervolgstappen: string[]
+{
+  kernpunten: string[],              // Van de Summarizer
+  vervolgstappen: string[],          // Van de Summarizer
+  identified_projects: {             // Van de Gatekeeper
+    project_name: string,
+    project_id: string | null,
+    confidence: number
+  }[]
+}
+```
 
-// Nieuw
-kernpunten: { content: string, project: string | null, confidence: number }[]
-vervolgstappen: { content: string, project: string | null }[]
+**Output:**
+
+```typescript
+{
+  kernpunten: { content: string, project: string | null, confidence: number }[]
+  vervolgstappen: { content: string, project: string | null }[]
+}
 ```
 
 **Prompt-instructies voor wanneer wél/niet taggen:**
@@ -107,7 +131,7 @@ Confidence per tag:
 
 ### 3.2 Pipeline: segmenten bouwen
 
-Na de Summarizer groepeert de pipeline kernpunten per project:
+Na de Tagger groepeert de pipeline kernpunten per project:
 
 ```
 Meeting "Team Sync 3 april"
@@ -117,7 +141,7 @@ Meeting "Team Sync 3 april"
 └── Segment "Algemeen"         → 1 kernpunt (null-project)
 ```
 
-**Confidence-drempel:** Tags met confidence < 0.5 worden automatisch naar "Algemeen" verplaatst. Alleen tags >= 0.5 worden als project-segment behandeld.
+**Confidence-drempel:** Tags met confidence < 0.7 worden automatisch naar "Algemeen" verplaatst. Alleen tags >= 0.7 worden als project-segment behandeld. De drempel is configureerbaar via een database-instelling zodat deze getuned kan worden na de eerste 50 meetings.
 
 **Entity resolution:** Grotendeels al gedaan door de Gatekeeper (project_id meegeleverd). Voor projecten met `project_id: null` valt de pipeline terug op entity resolution (exact match → substring → alias → embedding similarity).
 
@@ -155,19 +179,26 @@ Alle geresolvde projecten worden gelinkt (niet alleen `primary_project` zoals nu
 
 **Constraints:** `PRIMARY KEY (meeting_id, project_id)`, `ON DELETE CASCADE` op beide FK's.
 
-### 3.4 Embeddings: per segment
+### 3.4 Embeddings: per segment (gebatcht)
 
 Elk segment krijgt een eigen embedding via Cohere embed-v4. De meeting-brede embedding blijft ook bestaan. Bij vector search op een project-vraag worden de segment-embeddings doorzocht, niet de meeting-embedding.
+
+**Alle segment-embeddings worden in één `embedBatch()` call verwerkt.** Dit is niet goedkoper (Cohere rekent per token), maar wel 3-4x sneller dan losse calls per segment. De bestaande `embedBatch()` functie ondersteunt max 96 teksten per request, ruim voldoende.
+
+```typescript
+const segmentTexts = segments.map((s) => s.summary_text);
+const embeddings = await embedBatch(segmentTexts, "search_document");
+```
 
 ### 3.5 Foutcorrectie: drie vangnetten
 
 #### Vangnet 1: Prompt (voorkomt fouten)
 
-Strikte instructies in de Summarizer prompt over wanneer wél/niet taggen (zie 3.1).
+Strikte instructies in de Tagger prompt over wanneer wél/niet taggen (zie 3.1b).
 
 #### Vangnet 2: Pipeline (filtert fouten)
 
-- Confidence < 0.5 → automatisch naar "Algemeen"
+- Confidence < 0.7 (configureerbaar) → automatisch naar "Algemeen"
 - Entity in `ignored_entities` lijst → tag verwijderd, naar "Algemeen"
 
 #### Vangnet 3: Review gate (corrigeert fouten)
@@ -178,17 +209,20 @@ In de review UI ziet de reviewer per meeting de project-segmenten:
 Segmenten:
 ✅ Project Alpha (4 kernpunten)          → automatisch gematcht
 ⚠️ "dat nieuwe platform" (2 kernpunten)  → niet gematcht
-   → [Koppel aan project]  [Nieuw project aanmaken]  [Verwijder tag]
+   → [Koppel aan project]  [Verwijder tag]
 ✅ Algemeen (1 kernpunt)
 ```
 
-Acties voor de reviewer:
+Acties voor de reviewer (v1 — YAGNI):
 
 - **Koppel aan project** — selecteer bestaand project uit dropdown
-- **Nieuw project aanmaken** — maak project aan en koppel direct
 - **Verwijder tag** — kernpunten verplaatsen naar "Algemeen"
-- **Corrigeer** — verplaats kernpunt naar ander segment
-- **Samenvoegen** — als AI twee namen voor hetzelfde project gebruikte
+
+Uitgesteld naar later (pas bouwen als nodig blijkt):
+
+- ~~Nieuw project aanmaken~~ — kan via de bestaande projects pagina
+- ~~Corrigeer~~ — verplaats kernpunt naar ander segment
+- ~~Samenvoegen~~ — als AI twee namen voor hetzelfde project gebruikte
 
 #### Feedback-loop
 
@@ -211,9 +245,18 @@ Ignored entities tabel (of kolom op organizations):
 
 Op de meeting detail pagina een sectie "Project-segmenten" waar je dezelfde correctie-acties kunt doen als in de review gate. Niet alleen voor draft meetings, ook voor al-geverifieerde meetings.
 
-## 4. Wat er NIET verandert
+## 4. Wat er verandert en wat niet
 
-- **Extractor** — blijft hetzelfde, maar ontvangt nu `identified_projects` van de Gatekeeper voor betere project-koppeling
+### Verandert: Extractor ontvangt project-constraint
+
+De Extractor ontvangt de Gatekeeper's `identified_projects` als **constraint** (niet als hint). De Extractor kiest per extractie uit de aangeleverde projectlijst of `null`. De velden `entities.projects` en `primary_project` worden verwijderd uit de Extractor output — die verantwoordelijkheid ligt nu bij de Gatekeeper.
+
+**Prompt-instructie voor de Extractor:**
+
+> "De volgende projecten zijn geïdentificeerd in deze meeting: [lijst]. Gebruik ALLEEN deze projectnamen bij het toewijzen van een project aan extracties. Als een extractie niet bij een van deze projecten hoort, laat project dan null. Voeg GEEN nieuwe projectnamen toe."
+
+### Verandert niet
+
 - **Briefing** — blijft meeting-breed (30-seconden verhaal)
 - **Deelnemers** — blijven meeting-breed
 - **Volledige samenvatting** — `meeting.summary` en `meeting.ai_briefing` blijven bestaan
@@ -221,15 +264,17 @@ Op de meeting detail pagina een sectie "Project-segmenten" waar je dezelfde corr
 
 ## 5. MCP/Zoeken
 
-### 5.1 Routing-logica
+### 5.1 Routing-logica (expliciete parameter)
 
-Bij een **project-specifieke query** (project-naam of project-id in de vraag):
+De `search_knowledge` tool krijgt een optionele `project_id` parameter. Geen impliciete query-analyse nodig — de caller (Claude) geeft expliciet aan of hij project-specifiek zoekt.
+
+Bij een query **met `project_id`**:
 
 - Zoek in `meeting_project_summaries` waar `project_id` matcht
 - Return alleen dat segment, niet de hele meeting-samenvatting
 - Vector search gaat over segment-embeddings → hogere precision
 
-Bij een **algemene query** (geen project-context):
+Bij een query **zonder `project_id`**:
 
 - Zoek zoals nu over `meeting.summary` embedding (backwards compatible)
 
@@ -272,11 +317,35 @@ Aanbeveling: start met lazy voor nieuwe meetings, batch later als de prompt stab
 
 ## 7. Bouwvolgorde
 
-1. **Database** — migratie voor `meeting_project_summaries`, `meeting_projects` en `ignored_entities`
+### Fase 1: Segmentering (levert 80% van de waarde)
+
+1. **Database** — migratie voor `meeting_project_summaries`, `meeting_projects.source` kolom, `ignored_entities`, RLS policies op alle nieuwe tabellen
 2. **Gatekeeper** — schema uitbreiden + database-context ophalen + prompt aanpassen (project-identificatie)
-3. **Summarizer** — schema + prompt aanpassen (project-tags op basis van Gatekeeper-output)
-4. **Pipeline** — Gatekeeper-output doorgeven, segmenten bouwen, fallback entity resolution, opslaan, embedden
-5. **Review UI** — segment-weergave + correctie-acties + feedback-loop
-6. **Meeting detail UI** — segment-weergave + achteraf corrigeren
-7. **MCP/Zoeken** — segment-level querying
-8. **Batch migration** — optioneel: bestaande meetings opnieuw verwerken
+3. **Tagger** — nieuwe agent (Haiku): ontvangt kernpunten + identified_projects, retourneert getagde kernpunten
+4. **Extractor** — `entities.projects` en `primary_project` verwijderen uit output, project-constraint uit Gatekeeper-lijst ontvangen
+5. **Pipeline** — orchestratie: Gatekeeper → Summarizer (ongewijzigd) → Tagger → segmenten bouwen → Extractor (met constraint) → `embedBatch()` voor segmenten → opslaan
+6. **Review UI** — segment-weergave + twee acties: koppel aan project, verwijder tag
+7. **MCP/Zoeken** — `project_id` parameter op `search_knowledge`, segment-level querying
+
+### Fase 2: Feedback & verfijning (pas bouwen als fase 1 stabiel is)
+
+8. **Feedback-loop** — alias-toevoeging bij goedkeuring, `ignored_entities` bij afwijzing
+9. **Meeting detail UI** — segment-weergave + achteraf corrigeren
+10. **Geavanceerde review-acties** — samenvoegen, corrigeren, nieuw project aanmaken (alleen als nodig blijkt)
+11. **Batch migration** — optioneel: bestaande meetings opnieuw verwerken
+
+### Pipeline flow (nieuw)
+
+```
+Gatekeeper (Haiku) — classificatie + project-identificatie
+    ↓
+Summarizer (Sonnet) — ongewijzigd, produceert kernpunten als string[]
+    ↓
+Tagger (Haiku) — tagt kernpunten met projecten uit Gatekeeper-lijst
+    ↓
+Pipeline — bouwt segmenten, confidence-filter (>= 0.7)
+    ↓
+Extractor (Sonnet) — extracties met project-constraint uit Gatekeeper
+    ↓
+embedBatch() — alle segment-embeddings in één Cohere call
+```
