@@ -14,6 +14,11 @@ import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
 import { runExtractStep } from "./steps/extract";
+import { runTagger } from "./tagger";
+import { buildSegments } from "./segment-builder";
+import { embedBatch } from "../embeddings";
+import { insertMeetingProjectSummaries } from "@repo/database/mutations/meeting-project-summaries";
+import { updateSegmentEmbedding } from "@repo/database/mutations/meeting-project-summaries";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -53,6 +58,7 @@ interface PipelineResult {
   extractor: ExtractorOutput | null;
   meetingId: string | null;
   extractions_saved: number;
+  segments_saved: number;
   embedded: boolean;
   elevenlabs_transcribed: boolean;
   summarized: boolean;
@@ -134,6 +140,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       extractor: null,
       meetingId: null,
       extractions_saved: 0,
+      segments_saved: 0,
       embedded: false,
       elevenlabs_transcribed: false,
       summarized: false,
@@ -163,6 +170,61 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   console.info(`Summarizer using ${transcriptSource} transcript`);
   const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
   if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
+
+  // Step 8b: Tagger + Segment-bouw (RULE-015: error boundary, graceful degradation)
+  let segmentsSaved = 0;
+  if (summarizeResult.kernpunten.length > 0 || summarizeResult.vervolgstappen.length > 0) {
+    try {
+      const taggerOutput = runTagger({
+        kernpunten: summarizeResult.kernpunten,
+        vervolgstappen: summarizeResult.vervolgstappen,
+        identified_projects: identifiedProjects,
+      });
+
+      const segments = buildSegments(taggerOutput);
+
+      if (segments.length > 0) {
+        // Insert segments first (without embeddings)
+        const segmentRows = segments.map((s) => ({
+          meeting_id: meetingId,
+          project_id: s.project_id,
+          project_name_raw: s.project_name_raw,
+          kernpunten: s.kernpunten,
+          vervolgstappen: s.vervolgstappen,
+          summary_text: s.summary_text,
+        }));
+
+        const insertSegResult = await insertMeetingProjectSummaries(segmentRows);
+        if ("error" in insertSegResult) {
+          errors.push(`Segments insert: ${insertSegResult.error}`);
+        } else {
+          segmentsSaved = insertSegResult.ids.length;
+
+          // Embed all segments in a single batch call (FUNC-054)
+          try {
+            const texts = segments.map((s) => s.summary_text);
+            const embeddings = await embedBatch(texts);
+
+            // Update embeddings in parallel
+            await Promise.all(
+              insertSegResult.ids.map((id, i) => updateSegmentEmbedding(id, embeddings[i])),
+            );
+          } catch (embedErr) {
+            const msg = embedErr instanceof Error ? embedErr.message : String(embedErr);
+            console.error("Segment embedding failed (non-blocking):", msg);
+            errors.push(`Segment embedding: ${msg}`);
+          }
+        }
+      }
+
+      console.info(`Tagger: ${segmentsSaved} segments saved for meeting ${meetingId}`);
+    } catch (taggerErr) {
+      // RULE-015: Graceful degradation — log error, pipeline continues
+      const msg = taggerErr instanceof Error ? taggerErr.message : String(taggerErr);
+      console.error("Tagger failed (graceful degradation):", msg);
+      errors.push(`Tagger: ${msg}`);
+    }
+  }
 
   // Step 9: Extractor
   const extractorSummary = summarizeResult.richSummary ?? input.summary;
@@ -194,6 +256,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     extractor: extractResult.extractorOutput,
     meetingId,
     extractions_saved: extractResult.extractionsSaved,
+    segments_saved: segmentsSaved,
     embedded,
     elevenlabs_transcribed: transcribeResult.success,
     summarized: summarizeResult.success,
