@@ -240,27 +240,27 @@ export async function regenerateMeetingAction(
   };
 
   try {
-    // Step 1: Regenerate summary
-    const summarizerOutput = await runSummarizer(transcript, context);
+    // Step 1: Summarizer + entity context in parallel (saves ~10-15s)
+    const [summarizerOutput, entityContext] = await Promise.all([
+      runSummarizer(transcript, context),
+      buildEntityContext(),
+    ]);
     const richSummary = formatSummary(summarizerOutput);
 
-    // Step 2: Gatekeeper project-identificatie + entity context
-    const entityContext = await buildEntityContext();
-    const gatekeeperResult = await runGatekeeper(richSummary.slice(0, 3000), {
-      title: context.title,
-      entityContext: entityContext.contextString,
-    });
+    // Step 2: Gatekeeper + Extractor in parallel
+    // Gatekeeper uses summary for project-identification
+    // Extractor starts without project constraint, we'll link after
+    const [gatekeeperResult, extractorOutput] = await Promise.all([
+      runGatekeeper(richSummary.slice(0, 3000), {
+        title: context.title,
+        entityContext: entityContext.contextString,
+      }),
+      runExtractor(transcript, {
+        ...context,
+        summary: richSummary,
+      }),
+    ]);
     const identifiedProjects = gatekeeperResult.identified_projects;
-
-    // Step 3: Re-extract action items with project constraint
-    const extractorOutput = await runExtractor(transcript, {
-      ...context,
-      summary: richSummary,
-      identified_projects: identifiedProjects.map((p) => ({
-        project_name: p.project_name,
-        project_id: p.project_id,
-      })),
-    });
 
     // Step 4: Save summary (safe — overwrites existing, no data loss on failure)
     const summaryResult = await updateMeetingSummary(

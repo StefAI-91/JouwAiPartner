@@ -1,3 +1,5 @@
+export const maxDuration = 120;
+
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
