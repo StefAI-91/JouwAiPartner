@@ -107,15 +107,100 @@ Confidence per tag:
 
 ### 3.2 Pipeline: segmenten bouwen
 
-Na de Summarizer groepeert de pipeline kernpunten per project:
+De splitsing in project-segmenten gebeurt in twee stappen: de **Summarizer** (AI) tagt elk kernpunt, en de **pipeline** (code, geen AI) groepeert ze.
+
+#### Voorbeeld: van transcript tot segmenten
+
+**Stap 1 — Gatekeeper identificeert projecten:**
+
+De Gatekeeper ontvangt het transcript + bekende projecten uit de database en geeft terug:
+
+```json
+{
+  "identified_projects": [
+    { "project_name": "Jansen Klantportaal", "project_id": "uuid-123", "confidence": 1.0 },
+    { "project_name": "IntraNext Migratie", "project_id": "uuid-456", "confidence": 0.8 }
+  ]
+}
+```
+
+**Stap 2 — Summarizer tagt kernpunten:**
+
+De Summarizer ontvangt het transcript + de `identified_projects` lijst en produceert:
+
+```json
+{
+  "kernpunten": [
+    {
+      "content": "**Besluit:** Design voor het klantportaal is goedgekeurd, development start volgende week",
+      "project": "Jansen Klantportaal",
+      "confidence": 1.0
+    },
+    {
+      "content": "**Risico:** De API van het oude systeem kan niet direct gekoppeld worden, er is een adapter nodig",
+      "project": "IntraNext Migratie",
+      "confidence": 0.9
+    },
+    {
+      "content": "**Behoefte:** Jansen wil een self-service dashboard voor hun eindgebruikers",
+      "project": "Jansen Klantportaal",
+      "confidence": 0.8
+    },
+    {
+      "content": "**Signaal:** Wouter heeft volgende maand minder beschikbaarheid door vakantie",
+      "project": null,
+      "confidence": 0
+    },
+    {
+      "content": "**Afspraak:** IntraNext levert testdata aan vóór 15 april",
+      "project": "IntraNext Migratie",
+      "confidence": 1.0
+    }
+  ],
+  "vervolgstappen": [
+    {
+      "content": "Wireframes klantportaal delen met Jansen — Ege, vóór vrijdag",
+      "project": "Jansen Klantportaal"
+    },
+    {
+      "content": "Adapter-opzet uitwerken — Wouter, volgende sprint",
+      "project": "IntraNext Migratie"
+    },
+    { "content": "Vakantieoverdracht plannen — Wouter, deze week", "project": null }
+  ]
+}
+```
+
+**Stap 3 — Pipeline groepeert tot segmenten (code, geen AI):**
+
+De pipeline groepeert de Summarizer-output per project-naam en koppelt aan de `project_id` uit de Gatekeeper:
 
 ```
 Meeting "Team Sync 3 april"
-├── Volledige samenvatting     → meeting.summary (zoals nu)
-├── Segment "Project Alpha"    → 4 kernpunten + 2 vervolgstappen
-├── Segment "Project Beta"     → 2 kernpunten + 1 vervolgstap
-└── Segment "Algemeen"         → 1 kernpunt (null-project)
+├── Volledige samenvatting (zoals nu)  → meeting.summary
+│
+├── Segment "Jansen Klantportaal" (project_id: uuid-123)
+│   ├── Kernpunten:
+│   │   ├── **Besluit:** Design goedgekeurd, development start volgende week
+│   │   └── **Behoefte:** Self-service dashboard voor eindgebruikers
+│   └── Vervolgstappen:
+│       └── Wireframes delen met Jansen — Ege, vóór vrijdag
+│
+├── Segment "IntraNext Migratie" (project_id: uuid-456)
+│   ├── Kernpunten:
+│   │   ├── **Risico:** API kan niet direct gekoppeld, adapter nodig
+│   │   └── **Afspraak:** IntraNext levert testdata vóór 15 april
+│   └── Vervolgstappen:
+│       └── Adapter-opzet uitwerken — Wouter, volgende sprint
+│
+└── Segment "Algemeen" (project_id: null)
+    ├── Kernpunten:
+    │   └── **Signaal:** Wouter minder beschikbaar volgende maand
+    └── Vervolgstappen:
+        └── Vakantieoverdracht plannen — Wouter, deze week
 ```
+
+Elk segment wordt opgeslagen als een rij in `meeting_project_summaries` met een eigen embedding.
 
 **Confidence-drempel:** Tags met confidence < 0.5 worden automatisch naar "Algemeen" verplaatst. Alleen tags >= 0.5 worden als project-segment behandeld.
 
