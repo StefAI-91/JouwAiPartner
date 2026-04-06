@@ -14,6 +14,8 @@ import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/re
 import { regenerateMeetingAction, updateMeetingSummaryAction } from "@/actions/meetings";
 import { ListChecks, RefreshCw } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
+import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
+import { SegmentList } from "./segment-list";
 
 interface Extraction {
   id: string;
@@ -41,14 +43,28 @@ interface ReviewDetailProps {
     meeting_projects: { project: { id: string; name: string } }[];
     extractions: Extraction[];
   };
-  allPeople: { id: string; name: string; role: string | null; organization: { name: string } | null }[];
+  allPeople: {
+    id: string;
+    name: string;
+    role: string | null;
+    organization: { name: string } | null;
+  }[];
   organizations: { id: string; name: string }[];
   projects: { id: string; name: string }[];
   promotedExtractionIds?: string[];
   peopleForAssignment?: PersonForAssignment[];
+  segments?: MeetingSegment[];
 }
 
-export function ReviewDetail({ meeting, allPeople, organizations, projects, promotedExtractionIds, peopleForAssignment }: ReviewDetailProps) {
+export function ReviewDetail({
+  meeting,
+  allPeople,
+  organizations,
+  projects,
+  promotedExtractionIds,
+  peopleForAssignment,
+  segments,
+}: ReviewDetailProps) {
   const router = useRouter();
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState<"approve" | "reject" | "regenerate" | null>(null);
@@ -57,13 +73,16 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [summaryEdit, setSummaryEdit] = useState<string | null>(null);
 
-  const handleSummaryEdit = useCallback(async (content: string) => {
-    setSummaryEdit(content);
-    const result = await updateMeetingSummaryAction({ meetingId: meeting.id, summary: content });
-    if ("error" in result) {
-      console.error("[handleSummaryEdit] Save failed:", result.error);
-    }
-  }, [meeting.id]);
+  const handleSummaryEdit = useCallback(
+    async (content: string) => {
+      setSummaryEdit(content);
+      const result = await updateMeetingSummaryAction({ meetingId: meeting.id, summary: content });
+      if ("error" in result) {
+        console.error("[handleSummaryEdit] Save failed:", result.error);
+      }
+    },
+    [meeting.id],
+  );
 
   const handleEdit = useCallback((id: string, content: string) => {
     setEdits((prev) => new Map(prev).set(id, content));
@@ -150,9 +169,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
         meeting={meeting}
-        titleSlot={
-          <EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />
-        }
+        titleSlot={<EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />}
         meetingTypeSlot={
           <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />
         }
@@ -203,6 +220,11 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
         </div>
 
         <div className="space-y-3 p-6 pb-24">
+          {segments && segments.length > 0 && (
+            <div className="mb-4">
+              <SegmentList segments={segments} projects={projects} meetingId={meeting.id} />
+            </div>
+          )}
           {actionItems.map((ext) => (
             <ExtractionCard
               key={ext.id}
