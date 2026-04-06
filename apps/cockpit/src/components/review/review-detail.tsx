@@ -202,7 +202,7 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
           </div>
         </div>
 
-        <div className="space-y-3 p-6">
+        <div className="space-y-3 p-6 pb-24">
           {actionItems.map((ext) => (
             <ExtractionCard
               key={ext.id}
@@ -224,8 +224,9 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
       </div>
 
       <ReviewActionBar
-        extractionCount={activeExtractions.length}
-        editCount={edits.size + deletedIds.size + (summaryEdit !== null ? 1 : 0)}
+        totalExtractions={meeting.extractions.length}
+        deletedCount={deletedIds.size}
+        editCount={edits.size + (summaryEdit !== null ? 1 : 0)}
         onApprove={handleApprove}
         onReject={handleReject}
         loading={loading === "approve" ? "approve" : loading === "reject" ? "reject" : null}

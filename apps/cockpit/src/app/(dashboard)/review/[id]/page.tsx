@@ -8,6 +8,8 @@ import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
 import { getPromotedExtractionIds } from "@repo/database/queries/tasks";
 import { ReviewDetail } from "@/components/review/review-detail";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 export default async function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,7 +31,17 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
   const promotedIds = await getPromotedExtractionIds(actionItemIds, supabase);
 
   return (
-    <ReviewDetail
+    <div>
+      <div className="border-b border-border/50 px-6 py-2">
+        <Link
+          href="/review"
+          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" />
+          Terug naar review
+        </Link>
+      </div>
+      <ReviewDetail
       meeting={meeting}
       allPeople={people}
       organizations={organizations}
@@ -37,5 +49,6 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
       promotedExtractionIds={Array.from(promotedIds)}
       peopleForAssignment={peopleForAssignment}
     />
+    </div>
   );
 }
