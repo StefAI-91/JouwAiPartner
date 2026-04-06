@@ -28,14 +28,14 @@ export default async function WeeklyPage() {
   } | null;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-8 flex items-start justify-between">
+    <div className="mx-auto max-w-3xl px-4 pb-32 pt-6">
+      <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-[#006B3F]/60" />
-            <h1>Weekoverzicht</h1>
+            <h1 className="text-xl font-bold tracking-tight">Weekoverzicht</h1>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground">
             AI-gegenereerd management dashboard met projectstatus, risico&apos;s en aanbevelingen.
           </p>
         </div>
@@ -49,7 +49,7 @@ export default async function WeeklyPage() {
           <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/30" />
           <h2 className="mt-4 text-lg font-medium text-foreground/70">Nog geen weekoverzicht</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Klik op &ldquo;Weekoverzicht genereren&rdquo; om het eerste overzicht te maken.
+            Klik op &ldquo;Genereren&rdquo; om het eerste overzicht te maken.
           </p>
         </div>
       )}
