@@ -191,10 +191,14 @@ export interface MeetingForReclassify {
 /**
  * List meetings for reclassification, ordered by date descending.
  */
-export async function listMeetingsForReclassify(limit: number = 50): Promise<MeetingForReclassify[]> {
+export async function listMeetingsForReclassify(
+  limit: number = 50,
+): Promise<MeetingForReclassify[]> {
   const { data, error } = await getAdminClient()
     .from("meetings")
-    .select("id, title, date, participants, summary, meeting_type, party_type, relevance_score, raw_fireflies")
+    .select(
+      "id, title, date, participants, summary, meeting_type, party_type, relevance_score, raw_fireflies",
+    )
     .order("date", { ascending: false })
     .limit(limit);
 
@@ -261,4 +265,40 @@ export async function getMeetingExtractionsBatch(
   }
 
   return result;
+}
+
+export interface MeetingForBatchSegmentation {
+  id: string;
+  title: string;
+  summary: string | null;
+  transcript: string | null;
+  date: string | null;
+  organization_id: string | null;
+}
+
+/**
+ * Get verified meetings that have no segments yet.
+ * Used by the batch migration script (sprint 028).
+ */
+export async function getVerifiedMeetingsWithoutSegments(): Promise<MeetingForBatchSegmentation[]> {
+  const db = getAdminClient();
+
+  // Get all meeting IDs that already have segments
+  const { data: existingSegments } = await db
+    .from("meeting_project_summaries")
+    .select("meeting_id");
+
+  const segmentedMeetingIds = new Set(existingSegments?.map((s) => s.meeting_id) ?? []);
+
+  // Get all verified meetings
+  const { data: meetings, error } = await db
+    .from("meetings")
+    .select("id, title, summary, transcript, date, organization_id")
+    .eq("verification_status", "verified")
+    .order("date", { ascending: false });
+
+  if (error || !meetings) return [];
+
+  // Filter out meetings that already have segments
+  return meetings.filter((m) => !segmentedMeetingIds.has(m.id)) as MeetingForBatchSegmentation[];
 }
