@@ -8,15 +8,16 @@ import { createClient } from "@repo/database/supabase/server";
 const defineTool = tool as any;
 
 export async function POST(req: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return new Response("Unauthorized", { status: 401 });
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const body = await req.json();
-  const messages: UIMessage[] = body.messages;
-  const meetingId: string | undefined = body.meetingId;
+    const body = await req.json();
+    const messages: UIMessage[] = body.messages;
+    const meetingId: string | undefined = body.meetingId;
 
   if (!meetingId || typeof meetingId !== "string") {
     return new Response("Missing meetingId", { status: 400 });
@@ -185,5 +186,13 @@ Wees beknopt maar grondig. Stel gerichte vragen. Citeer het transcript waar rele
     stopWhen: stepCountIs(5),
   });
 
-  return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error("[chat/review] Error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }

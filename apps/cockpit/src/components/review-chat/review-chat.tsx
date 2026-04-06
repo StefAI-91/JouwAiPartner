@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Send,
@@ -13,6 +13,7 @@ import {
   Pencil,
   ListTodo,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReviewMeetingDetail } from "@repo/database/queries/review";
@@ -25,11 +26,20 @@ export function ReviewChat({ meeting }: ReviewChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
 
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/chat/review",
-      body: { meetingId: meeting.id },
-    }),
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/chat/review",
+        body: { meetingId: meeting.id },
+      }),
+    [meeting.id],
+  );
+
+  const { messages, sendMessage, status, error } = useChat({
+    transport,
+    onError: (err) => {
+      console.error("[ReviewChat] Error:", err);
+    },
   });
 
   const isLoading = status === "streaming" || status === "submitted";
@@ -112,6 +122,16 @@ export function ReviewChat({ meeting }: ReviewChatProps) {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
               <span>Aan het nadenken...</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              <div>
+                <p className="font-medium">Er ging iets mis</p>
+                <p className="mt-1 text-xs opacity-80">{error.message}</p>
+              </div>
             </div>
           )}
         </div>
