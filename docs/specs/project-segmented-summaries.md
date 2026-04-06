@@ -20,9 +20,56 @@ Een meeting-samenvatting is opsplitsbaar per project. Bij het zoeken op een proj
 
 ## 3. Ontwerp
 
+### 3.0 Gatekeeper: project-identificatie (nieuwe stap)
+
+De Gatekeeper (Claude Haiku) draait als eerste stap in de pipeline en leest het hele transcript. Naast de bestaande classificatie (meeting_type, relevance_score, organization_name) identificeert hij nu ook welke **projecten, organisaties en mensen** in de meeting besproken worden.
+
+**Database-context ophalen (vóór de Gatekeeper-call):**
+
+De pipeline haalt vooraf bekende entiteiten op uit de database en injecteert deze als context in de Gatekeeper-prompt:
+
+```
+Bekende projecten:
+- "Jansen Klantportaal" (organisatie: Jansen & Co, aliassen: "het portaal", "klantplatform")
+- "IntraNext Migratie" (organisatie: IntraNext, aliassen: "de migratie")
+
+Bekende organisaties:
+- "Jansen & Co" (aliassen: "Jansen")
+- "IntraNext BV" (aliassen: "IntraNext")
+
+Bekende personen:
+- "Pieter de Vries" (organisatie: Jansen & Co)
+- "Anna Bakker" (organisatie: IntraNext)
+```
+
+**Filtering:** Alleen actieve projecten. Bij meetings met bekende deelnemers: prioriteit aan projecten van hun organisaties.
+
+**Schema-uitbreiding Gatekeeper:**
+
+```typescript
+// Bestaand (ongewijzigd)
+relevance_score: number
+reason: string
+meeting_type: MeetingType
+organization_name: string | null
+
+// Nieuw
+identified_projects: {
+  project_name: string,       // Naam zoals gematcht of uit transcript
+  project_id: string | null,  // UUID als gematcht aan DB, null als onbekend
+  confidence: number           // 0.0–1.0
+}[]
+```
+
+**Anti-hallucinatie instructie in de prompt:**
+
+> "Match alleen aan bekende projecten als je daar zeker van bent. Als een project wordt besproken dat niet in de lijst staat, geef dan de naam uit het transcript met `project_id: null`. Verzin geen match — liever `null` dan een foute koppeling."
+
+**Voordeel:** Eén keer matchen, meerdere keer profiteren — zowel Summarizer als Extractor ontvangen dezelfde project-context van de Gatekeeper.
+
 ### 3.1 Summarizer: project-tags per kernpunt
 
-De Summarizer (Claude Sonnet) tagt elk kernpunt en elke vervolgstap met een project-naam (string) of `null` (algemeen).
+De Summarizer (Claude Sonnet) ontvangt de `identified_projects` lijst van de Gatekeeper en tagt elk kernpunt en elke vervolgstap met een project uit die lijst (of `null` voor algemeen).
 
 **Schema-wijziging:**
 
@@ -72,7 +119,7 @@ Meeting "Team Sync 3 april"
 
 **Confidence-drempel:** Tags met confidence < 0.5 worden automatisch naar "Algemeen" verplaatst. Alleen tags >= 0.5 worden als project-segment behandeld.
 
-**Entity resolution:** Elke project-naam string gaat door de bestaande entity resolution (exact match → substring → alias → embedding similarity). Resultaat: `project_id` of `null` (onbekend).
+**Entity resolution:** Grotendeels al gedaan door de Gatekeeper (project_id meegeleverd). Voor projecten met `project_id: null` valt de pipeline terug op entity resolution (exact match → substring → alias → embedding similarity).
 
 ### 3.3 Opslag: `meeting_project_summaries`
 
@@ -166,8 +213,7 @@ Op de meeting detail pagina een sectie "Project-segmenten" waar je dezelfde corr
 
 ## 4. Wat er NIET verandert
 
-- **Extractor** — blijft hetzelfde, koppelt al per action_item aan een project
-- **Gatekeeper** — geen wijzigingen
+- **Extractor** — blijft hetzelfde, maar ontvangt nu `identified_projects` van de Gatekeeper voor betere project-koppeling
 - **Briefing** — blijft meeting-breed (30-seconden verhaal)
 - **Deelnemers** — blijven meeting-breed
 - **Volledige samenvatting** — `meeting.summary` en `meeting.ai_briefing` blijven bestaan
@@ -226,10 +272,11 @@ Aanbeveling: start met lazy voor nieuwe meetings, batch later als de prompt stab
 
 ## 7. Bouwvolgorde
 
-1. **Database** — migratie voor `meeting_project_summaries` en `ignored_entities`
-2. **Summarizer** — schema + prompt aanpassen (project-tags)
-3. **Pipeline** — segmenten bouwen, entity resolution, opslaan, embedden
-4. **Review UI** — segment-weergave + correctie-acties + feedback-loop
-5. **Meeting detail UI** — segment-weergave + achteraf corrigeren
-6. **MCP/Zoeken** — segment-level querying
-7. **Batch migration** — optioneel: bestaande meetings opnieuw samenvatten
+1. **Database** — migratie voor `meeting_project_summaries`, `meeting_projects` en `ignored_entities`
+2. **Gatekeeper** — schema uitbreiden + database-context ophalen + prompt aanpassen (project-identificatie)
+3. **Summarizer** — schema + prompt aanpassen (project-tags op basis van Gatekeeper-output)
+4. **Pipeline** — Gatekeeper-output doorgeven, segmenten bouwen, fallback entity resolution, opslaan, embedden
+5. **Review UI** — segment-weergave + correctie-acties + feedback-loop
+6. **Meeting detail UI** — segment-weergave + achteraf corrigeren
+7. **MCP/Zoeken** — segment-level querying
+8. **Batch migration** — optioneel: bestaande meetings opnieuw verwerken
