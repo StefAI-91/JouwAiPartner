@@ -256,7 +256,7 @@ export async function regenerateMeetingAction(
       return { error: `Oude extracties verwijderen mislukt: ${deleteResult.error}` };
     }
 
-    const saveResult = await saveExtractions(extractorOutput, meetingId);
+    const saveResult = await saveExtractions(extractorOutput, meetingId, []);
     if (saveResult.extractions_saved === 0 && extractorOutput.extractions.length > 0) {
       return { error: "Nieuwe extracties opslaan mislukt" };
     }

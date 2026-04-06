@@ -235,6 +235,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     { ...summarizeContext, summary: extractorSummary },
     rawFireflies,
     transcriptSource,
+    identifiedProjects,
   );
   if (extractResult.error) errors.push(`Extractor: ${extractResult.error}`);
 

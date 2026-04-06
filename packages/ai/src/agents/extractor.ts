@@ -42,8 +42,8 @@ REGELS:
   - 0.0: geen quote gevonden of transcript_ref matcht niet
 - Wees SELECTIEF: liever 3 sterke actiepunten dan 10 zwakke.
 - Geen trivialiteiten (smalltalk, logistiek zoals "volgende meeting om 10 uur").
-- Entities: noem alle projecten en klanten/externe organisaties die besproken zijn.
-- primary_project: het hoofdproject van de meeting, null als er geen duidelijk hoofdproject is.`;
+- Entities: noem alle klanten/externe organisaties die besproken zijn.
+- Project-toewijzing per extractie: gebruik ALLEEN de aangeleverde projectnamen. Voeg GEEN nieuwe projectnamen toe. Gebruik null als een extractie niet bij een project past.`;
 
 /**
  * Run the Extractor agent on a meeting transcript.
@@ -57,9 +57,23 @@ export async function runExtractor(
     party_type: string;
     participants: string[];
     summary: string;
+    identified_projects?: { project_name: string; project_id: string | null }[];
   },
 ): Promise<ExtractorOutput> {
   const typeInstructions = MEETING_TYPE_INSTRUCTIONS[context.meeting_type] ?? "";
+
+  // Build project constraint section if projects are identified
+  let projectConstraint = "";
+  if (context.identified_projects && context.identified_projects.length > 0) {
+    const projectList = context.identified_projects.map((p) => `- ${p.project_name}`).join("\n");
+    projectConstraint =
+      `\n\n--- PROJECT-CONSTRAINT ---\n` +
+      `De volgende projecten zijn geidentificeerd in deze meeting:\n${projectList}\n\n` +
+      `Gebruik ALLEEN deze projectnamen bij het toewijzen van een project aan extracties. ` +
+      `Als een extractie niet bij een van deze projecten hoort, laat project dan null. ` +
+      `Voeg GEEN nieuwe projectnamen toe. Je mag null toewijzen als je vindt dat een extractie ` +
+      `niet bij een project past, ook al staat het project in de lijst.`;
+  }
 
   const contextPrefix = [
     `Titel: ${context.title}`,
@@ -85,7 +99,7 @@ export async function runExtractor(
       },
       {
         role: "user",
-        content: `${contextPrefix}\n\n--- TRANSCRIPT ---\n${transcript}`,
+        content: `${contextPrefix}${projectConstraint}\n\n--- TRANSCRIPT ---\n${transcript}`,
       },
     ],
   });

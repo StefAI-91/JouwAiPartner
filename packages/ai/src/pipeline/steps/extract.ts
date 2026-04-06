@@ -1,6 +1,7 @@
 import { runExtractor, ExtractorOutput } from "../../agents/extractor";
 import { saveExtractions } from "../save-extractions";
 import { updateMeetingRawFireflies } from "@repo/database/mutations/meetings";
+import type { IdentifiedProject } from "../../validations/gatekeeper";
 
 export interface ExtractResult {
   success: boolean;
@@ -25,9 +26,16 @@ export async function runExtractStep(
   },
   rawFireflies: Record<string, unknown>,
   transcriptSource: string,
+  identifiedProjects: IdentifiedProject[],
 ): Promise<ExtractResult> {
   try {
-    const extractorResult = await runExtractor(transcript, context);
+    const extractorResult = await runExtractor(transcript, {
+      ...context,
+      identified_projects: identifiedProjects.map((p) => ({
+        project_name: p.project_name,
+        project_id: p.project_id,
+      })),
+    });
 
     // Add extractor output to raw_fireflies pipeline metadata
     const updatedRawFireflies = {
@@ -37,7 +45,6 @@ export async function runExtractStep(
         extractor: {
           extractions_count: extractorResult.extractions.length,
           entities: extractorResult.entities,
-          primary_project: extractorResult.primary_project,
           transcript_source: transcriptSource,
         },
       },
@@ -45,10 +52,10 @@ export async function runExtractStep(
 
     await updateMeetingRawFireflies(meetingId, updatedRawFireflies);
 
-    const saveResult = await saveExtractions(extractorResult, meetingId);
+    const saveResult = await saveExtractions(extractorResult, meetingId, identifiedProjects);
 
     console.info(
-      `Extractor: ${saveResult.extractions_saved} extractions saved, project linked: ${saveResult.project_linked}`,
+      `Extractor: ${saveResult.extractions_saved} extractions saved, ${saveResult.projects_linked} projects linked`,
     );
 
     return {

@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     : { success: false, transcript_source: transcriptSource, error: summarizeResult.error };
 
   // 5. Delete old extractions and re-run Extractor
-  const extractorSummary = summarizeResult.richSummary ?? (transcript.summary?.notes ?? "");
+  const extractorSummary = summarizeResult.richSummary ?? transcript.summary?.notes ?? "";
 
   try {
     console.info(`Reprocess: Deleting old extractions for ${meeting.id}...`);
@@ -111,15 +111,14 @@ export async function POST(req: NextRequest) {
       summary: extractorSummary,
     });
 
-    const saveResult = await saveExtractions(extractorResult, meeting.id);
+    const saveResult = await saveExtractions(extractorResult, meeting.id, []);
 
     results.extractor = {
       success: true,
       transcript_source: transcriptSource,
       extractions_saved: saveResult.extractions_saved,
-      project_linked: saveResult.project_linked,
+      projects_linked: saveResult.projects_linked,
       entities: extractorResult.entities,
-      primary_project: extractorResult.primary_project,
     };
     console.info(`Reprocess: Extractor done — ${saveResult.extractions_saved} extractions`);
   } catch (err) {
