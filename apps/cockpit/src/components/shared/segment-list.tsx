@@ -52,8 +52,10 @@ function SegmentCard({
   const [removing, setRemoving] = useState(false);
 
   const isUnknown = !segment.project_id && segment.project_name_raw && !segment.is_general;
+  const isLinked = !!segment.project_id && !segment.is_general;
   const displayName = segment.project_name ?? segment.project_name_raw ?? "Algemeen";
   const totalItems = segment.kernpunten.length + segment.vervolgstappen.length;
+  const showActions = (isUnknown || isLinked) && !segment.is_general;
 
   async function handleLink(projectId: string) {
     setLinking(true);
@@ -131,8 +133,8 @@ function SegmentCard({
         </div>
       )}
 
-      {/* Actions for unknown segments */}
-      {isUnknown && (
+      {/* Actions for non-general segments: link to project or remove tag */}
+      {showActions && (
         <div className="mt-2 flex items-center gap-2 border-t border-border/30 pt-2">
           <select
             className="h-7 flex-1 rounded border border-border bg-background px-2 text-xs disabled:opacity-50"
@@ -143,7 +145,7 @@ function SegmentCard({
             }}
           >
             <option value="" disabled>
-              Koppel aan project...
+              {isLinked ? "Herlink aan project..." : "Koppel aan project..."}
             </option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
