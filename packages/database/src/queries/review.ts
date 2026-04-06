@@ -82,6 +82,30 @@ export async function getDraftMeetingById(
   return data as unknown as ReviewMeetingDetail;
 }
 
+export async function getMeetingForReviewChat(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<ReviewMeetingDetail | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
+       organization_id, organization:organizations(name),
+       meeting_participants(person:people(id, name)),
+       meeting_projects(project:projects(id, name)),
+       extractions(id, type, content, confidence, transcript_ref, metadata)`,
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (error) {
+    console.error("[getMeetingForReviewChat]", error.message);
+    return null;
+  }
+  return data as unknown as ReviewMeetingDetail;
+}
+
 export async function getReviewStats(
   client?: SupabaseClient,
 ): Promise<{ verifiedToday: number; totalVerified: number }> {
