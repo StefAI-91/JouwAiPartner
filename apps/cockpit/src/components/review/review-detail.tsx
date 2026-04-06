@@ -12,7 +12,8 @@ import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
 import { regenerateMeetingAction, updateMeetingSummaryAction } from "@/actions/meetings";
-import { ListChecks, RefreshCw } from "lucide-react";
+import { ArrowLeft, ListChecks, RefreshCw } from "lucide-react";
+import Link from "next/link";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface Extraction {
@@ -148,6 +149,17 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
+      {/* Back navigation */}
+      <div className="absolute left-6 top-4 z-20">
+        <Link
+          href="/review"
+          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Terug naar review
+        </Link>
+      </div>
+
       <MeetingTranscriptPanel
         meeting={meeting}
         titleSlot={
@@ -224,8 +236,9 @@ export function ReviewDetail({ meeting, allPeople, organizations, projects, prom
       </div>
 
       <ReviewActionBar
-        extractionCount={activeExtractions.length}
-        editCount={edits.size + deletedIds.size + (summaryEdit !== null ? 1 : 0)}
+        totalExtractions={meeting.extractions.length}
+        deletedCount={deletedIds.size}
+        editCount={edits.size + (summaryEdit !== null ? 1 : 0)}
         onApprove={handleApprove}
         onReject={handleReject}
         loading={loading === "approve" ? "approve" : loading === "reject" ? "reject" : null}
