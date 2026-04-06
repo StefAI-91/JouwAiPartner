@@ -57,11 +57,17 @@ export function ProjectSections({ meetings, extractions, segments = [] }: Projec
     needs_insights: needsInsights.length,
   };
 
+  // Only show tabs that have content (always show meetings)
+  const visibleTabs = TABS.filter((tab) => {
+    if (tab === "meetings") return true;
+    return counts[tab] > 0;
+  });
+
   return (
     <div>
       {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto border-b border-border/50 pb-px">
-        {TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
