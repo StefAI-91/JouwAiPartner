@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, AlertTriangle, Trash2, ShieldCheck } from "lucide-react";
+import { Check, AlertTriangle, ShieldCheck } from "lucide-react";
 
 interface ReviewActionBarProps {
   totalExtractions: number;
