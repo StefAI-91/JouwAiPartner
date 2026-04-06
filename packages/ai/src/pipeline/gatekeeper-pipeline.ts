@@ -2,9 +2,10 @@ import { runGatekeeper } from "../agents/gatekeeper";
 import type { ParticipantInfo } from "../agents/gatekeeper";
 import type { ExtractorOutput } from "../agents/extractor";
 import { GatekeeperOutput } from "../validations/gatekeeper";
-import type { PartyType } from "../validations/gatekeeper";
+import type { PartyType, IdentifiedProject } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
+import { buildEntityContext } from "./context-injection";
 import { findPeopleByEmails } from "@repo/database/queries/people";
 import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
@@ -48,6 +49,7 @@ async function matchParticipants(meetingId: string, participants: string[]): Pro
 interface PipelineResult {
   gatekeeper: GatekeeperOutput;
   partyType: PartyType;
+  identifiedProjects: IdentifiedProject[];
   extractor: ExtractorOutput | null;
   meetingId: string | null;
   extractions_saved: number;
@@ -73,17 +75,23 @@ interface PipelineResult {
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
   const errors: string[] = [];
 
-  // Step 1-2: Classify participants and determine party type
-  const classifiedParticipants = await classifyParticipants(input.participants);
+  // Step 1-2: Classify participants and determine party type + fetch entity context (parallel)
+  const [classifiedParticipants, entityContext] = await Promise.all([
+    classifyParticipants(input.participants),
+    buildEntityContext(),
+  ]);
   const partyType = determinePartyType(classifiedParticipants);
 
-  // Step 3: Classify meeting with Gatekeeper AI
+  // Step 3: Classify meeting with Gatekeeper AI (with entity context for project identification)
   const gatekeeperResult = await runGatekeeper(input.summary, {
     title: input.title,
     participants: classifiedParticipants,
     date: input.date,
     topics: input.topics,
+    entityContext: entityContext.contextString,
   });
+
+  const identifiedProjects = gatekeeperResult.identified_projects;
 
   // Step 4: Resolve organization
   const knownOrg = classifiedParticipants.find((p) => p.label === "external" && p.organizationName);
@@ -122,6 +130,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     return {
       gatekeeper: gatekeeperResult,
       partyType,
+      identifiedProjects,
       extractor: null,
       meetingId: null,
       extractions_saved: 0,
@@ -181,6 +190,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   return {
     gatekeeper: gatekeeperResult,
     partyType,
+    identifiedProjects,
     extractor: extractResult.extractorOutput,
     meetingId,
     extractions_saved: extractResult.extractionsSaved,

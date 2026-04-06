@@ -4,8 +4,8 @@ import { GatekeeperSchema, GatekeeperOutput } from "../validations/gatekeeper";
 
 export type { GatekeeperOutput };
 
-const SYSTEM_PROMPT = `Je bent de Gatekeeper: je classificeert meetings. Je extraheert NIETS.
-ALLE output moet in het Nederlands zijn (behalve enum-waarden).
+const SYSTEM_PROMPT = `Je bent de Gatekeeper: je classificeert meetings en identificeert projecten. Je extraheert NIETS.
+ALLE output moet in het Nederlands zijn (behalve enum-waarden en project_id UUIDs).
 
 Je krijgt een deelnemerslijst met labels: INTERN, EXTERN, of ONBEKEND.
 Gebruik deze labels als feit — raad niet zelf wie intern of extern is.
@@ -35,8 +35,17 @@ Je bepaalt:
    - Geef de organisatienaam als er ONBEKENDE externe deelnemers zijn
    - null als alle deelnemers INTERN zijn of als de organisatie al bekend is (EXTERN label bevat org)
 
+4. PROJECT-IDENTIFICATIE: welke projecten worden in deze meeting besproken?
+   - Je krijgt een lijst met bekende projecten (inclusief aliassen en organisatie).
+   - Als een besproken project matcht met een bekend project, gebruik dan het bijbehorende project_id.
+   - Als een project besproken wordt dat NIET in de lijst staat, geef dan de naam uit het transcript met project_id: null.
+   - Geef per project een confidence score (0.0-1.0).
+   - Als er geen projecten besproken worden, retourneer een lege array.
+
+   Match alleen aan bekende projecten als je daar zeker van bent. Als een project wordt besproken dat niet in de lijst staat, geef dan de naam uit het transcript met project_id: null. Verzin geen match -- liever null dan een foute koppeling.
+
 BELANGRIJK: Je doet GEEN extractie van besluiten, actiepunten of andere inhoud.
-Je classificeert alleen. Party type wordt NIET door jou bepaald.`;
+Je classificeert en identificeert alleen. Party type wordt NIET door jou bepaald.`;
 
 export interface ParticipantInfo {
   raw: string;
@@ -53,6 +62,7 @@ export async function runGatekeeper(
     participants?: ParticipantInfo[];
     date?: string;
     topics?: string[];
+    entityContext?: string;
   },
 ): Promise<GatekeeperOutput> {
   const participantLines = metadata.participants?.length
@@ -81,6 +91,8 @@ export async function runGatekeeper(
     ? `\n\nBesproken onderwerpen:\n${metadata.topics.join(", ")}`
     : "";
 
+  const entitySection = metadata.entityContext ? `\n\n${metadata.entityContext}` : "";
+
   const { object } = await generateObject({
     model: anthropic("claude-haiku-4-5-20251001"),
     schema: GatekeeperSchema,
@@ -94,7 +106,7 @@ export async function runGatekeeper(
       },
       {
         role: "user",
-        content: `${contextPrefix}${topicsSection}\n\nMeeting Notes:\n${notes}`,
+        content: `${contextPrefix}${topicsSection}${entitySection}\n\nMeeting Notes:\n${notes}`,
       },
     ],
   });
