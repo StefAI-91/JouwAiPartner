@@ -245,16 +245,61 @@ export interface Database {
         Row: {
           meeting_id: string;
           project_id: string;
+          source: "ai" | "manual" | "review";
           created_at: string;
         };
         Insert: {
           meeting_id: string;
           project_id: string;
+          source?: "ai" | "manual" | "review";
           created_at?: string;
         };
         Update: {
           meeting_id?: string;
           project_id?: string;
+          source?: "ai" | "manual" | "review";
+          created_at?: string;
+        };
+      };
+      meeting_project_summaries: {
+        Row: {
+          id: string;
+          meeting_id: string;
+          project_id: string | null;
+          project_name_raw: string | null;
+          is_general: boolean;
+          kernpunten: string[];
+          vervolgstappen: string[];
+          summary_text: string;
+          embedding: string | null;
+          embedding_stale: boolean;
+          search_vector: unknown | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          meeting_id: string;
+          project_id?: string | null;
+          project_name_raw?: string | null;
+          kernpunten?: string[];
+          vervolgstappen?: string[];
+          summary_text: string;
+          embedding?: string | null;
+          embedding_stale?: boolean;
+          search_vector?: unknown | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          meeting_id?: string;
+          project_id?: string | null;
+          project_name_raw?: string | null;
+          kernpunten?: string[];
+          vervolgstappen?: string[];
+          summary_text?: string;
+          embedding?: string | null;
+          embedding_stale?: boolean;
+          search_vector?: unknown | null;
           created_at?: string;
         };
       };
@@ -408,6 +453,29 @@ export interface Database {
           completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      ignored_entities: {
+        Row: {
+          id: string;
+          organization_id: string;
+          entity_name: string;
+          entity_type: "project" | "organization" | "person";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          entity_name: string;
+          entity_type: "project" | "organization" | "person";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          entity_name?: string;
+          entity_type?: "project" | "organization" | "person";
+          created_at?: string;
         };
       };
     };
