@@ -25,6 +25,16 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
 import { runExtractor } from "@repo/ai/agents/extractor";
 import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
+import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
+import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
+import { runTagger } from "@repo/ai/pipeline/tagger";
+import { buildSegments } from "@repo/ai/pipeline/segment-builder";
+import { embedBatch } from "@repo/ai/embeddings";
+import {
+  insertMeetingProjectSummaries,
+  updateSegmentEmbedding,
+} from "@repo/database/mutations/meeting-project-summaries";
+import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import {
   updateTitleSchema,
   updateSummarySchema,
@@ -234,13 +244,25 @@ export async function regenerateMeetingAction(
     const summarizerOutput = await runSummarizer(transcript, context);
     const richSummary = formatSummary(summarizerOutput);
 
-    // Step 2: Re-extract action items (before deleting old ones)
+    // Step 2: Gatekeeper project-identificatie + entity context
+    const entityContext = await buildEntityContext();
+    const gatekeeperResult = await runGatekeeper(richSummary.slice(0, 3000), {
+      title: context.title,
+      entityContext: entityContext.contextString,
+    });
+    const identifiedProjects = gatekeeperResult.identified_projects;
+
+    // Step 3: Re-extract action items with project constraint
     const extractorOutput = await runExtractor(transcript, {
       ...context,
       summary: richSummary,
+      identified_projects: identifiedProjects.map((p) => ({
+        project_name: p.project_name,
+        project_id: p.project_id,
+      })),
     });
 
-    // Step 3: Save summary (safe — overwrites existing, no data loss on failure)
+    // Step 4: Save summary (safe — overwrites existing, no data loss on failure)
     const summaryResult = await updateMeetingSummary(
       meetingId,
       richSummary,
@@ -250,18 +272,73 @@ export async function regenerateMeetingAction(
       return { error: `Summary opslaan mislukt: ${summaryResult.error}` };
     }
 
-    // Step 4: Delete old extractions + save new ones (only after AI steps succeeded)
+    // Step 5: Delete old extractions + save new ones (only after AI steps succeeded)
     const deleteResult = await deleteExtractionsByMeetingId(meetingId);
     if ("error" in deleteResult) {
       return { error: `Oude extracties verwijderen mislukt: ${deleteResult.error}` };
     }
 
-    const saveResult = await saveExtractions(extractorOutput, meetingId, []);
+    const saveResult = await saveExtractions(extractorOutput, meetingId, identifiedProjects);
     if (saveResult.extractions_saved === 0 && extractorOutput.extractions.length > 0) {
       return { error: "Nieuwe extracties opslaan mislukt" };
     }
 
-    // Step 5: Mark meeting embedding as stale for re-embedding
+    // Step 6: Tagger + segment-bouw (delete old segments first, then rebuild)
+    const { data: meetingOrg } = await supabase
+      .from("meetings")
+      .select("organization_id")
+      .eq("id", meetingId)
+      .single();
+
+    // Delete existing segments for this meeting
+    await supabase.from("meeting_project_summaries").delete().eq("meeting_id", meetingId);
+
+    if (summarizerOutput.kernpunten.length > 0 || summarizerOutput.vervolgstappen.length > 0) {
+      try {
+        const ignoredNames = meetingOrg?.organization_id
+          ? await getIgnoredEntityNames(meetingOrg.organization_id, "project")
+          : new Set<string>();
+
+        const taggerOutput = runTagger({
+          kernpunten: summarizerOutput.kernpunten,
+          vervolgstappen: summarizerOutput.vervolgstappen,
+          identified_projects: identifiedProjects,
+          ignoredNames,
+        });
+
+        const segments = buildSegments(taggerOutput);
+
+        if (segments.length > 0) {
+          const segmentRows = segments.map((s) => ({
+            meeting_id: meetingId,
+            project_id: s.project_id,
+            project_name_raw: s.project_name_raw,
+            kernpunten: s.kernpunten,
+            vervolgstappen: s.vervolgstappen,
+            summary_text: s.summary_text,
+          }));
+
+          const insertSegResult = await insertMeetingProjectSummaries(segmentRows);
+          if (!("error" in insertSegResult)) {
+            // Embed segments
+            try {
+              const texts = segments.map((s) => s.summary_text);
+              const embeddings = await embedBatch(texts);
+              await Promise.all(
+                insertSegResult.ids.map((id, i) => updateSegmentEmbedding(id, embeddings[i])),
+              );
+            } catch (embedErr) {
+              console.error("Segment embedding failed (non-blocking):", embedErr);
+            }
+          }
+        }
+      } catch (taggerErr) {
+        // Graceful degradation: log error, continue
+        console.error("Tagger failed during regeneration (non-blocking):", taggerErr);
+      }
+    }
+
+    // Step 7: Mark meeting embedding as stale for re-embedding
     const staleResult = await markMeetingEmbeddingStale(meetingId);
     if ("error" in staleResult) {
       console.error("Failed to mark embedding stale:", staleResult.error);
