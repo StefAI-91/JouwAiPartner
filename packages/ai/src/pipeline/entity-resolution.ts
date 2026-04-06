@@ -89,8 +89,13 @@ async function resolveProjectWithCache(
  * Project resolution is now handled by the Gatekeeper (sprint 023).
  * Returns a map of client name -> organization_id (or null).
  */
+/**
+ * Resolve client entities from Extractor output.
+ * Skips names that are in the ignored_entities list (FUNC-093).
+ */
 export async function resolveClientEntities(
   clients: string[],
+  ignoredNames?: Set<string>,
 ): Promise<Map<string, string | null>> {
   const resolutions = new Map<string, string | null>();
   if (clients.length === 0) return resolutions;
@@ -99,6 +104,12 @@ export async function resolveClientEntities(
 
   for (const name of clients) {
     const nameLower = name.toLowerCase();
+
+    // FUNC-093: Skip resolution for ignored names
+    if (ignoredNames?.has(nameLower)) {
+      resolutions.set(name, null);
+      continue;
+    }
 
     const exactMatch = allOrgs.find((o) => o.name.toLowerCase() === nameLower);
     if (exactMatch) {

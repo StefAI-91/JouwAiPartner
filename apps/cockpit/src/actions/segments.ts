@@ -7,6 +7,9 @@ import {
   linkSegmentToProject,
   removeSegmentTag,
 } from "@repo/database/mutations/meeting-project-summaries";
+import { updateProjectAliases } from "@repo/database/mutations/projects";
+import { addIgnoredEntity } from "@repo/database/mutations/ignored-entities";
+import { getAdminClient } from "@repo/database/supabase/admin";
 
 const linkSegmentSchema = z.object({
   segmentId: z.string().uuid(),
@@ -27,6 +30,30 @@ async function requireAuth() {
   return user;
 }
 
+/**
+ * Get segment's project_name_raw for feedback actions.
+ */
+async function getSegmentNameRaw(segmentId: string): Promise<string | null> {
+  const { data } = await getAdminClient()
+    .from("meeting_project_summaries")
+    .select("project_name_raw")
+    .eq("id", segmentId)
+    .single();
+  return data?.project_name_raw ?? null;
+}
+
+/**
+ * Get meeting's organization_id for ignored_entities.
+ */
+async function getMeetingOrgId(meetingId: string): Promise<string | null> {
+  const { data } = await getAdminClient()
+    .from("meetings")
+    .select("organization_id")
+    .eq("id", meetingId)
+    .single();
+  return data?.organization_id ?? null;
+}
+
 export async function linkSegmentToProjectAction(
   input: z.infer<typeof linkSegmentSchema>,
 ): Promise<{ success: true } | { error: string }> {
@@ -36,8 +63,28 @@ export async function linkSegmentToProjectAction(
   const user = await requireAuth();
   if (!user) return { error: "Niet ingelogd" };
 
+  // Get project_name_raw before linking (for alias feedback)
+  const nameRaw = await getSegmentNameRaw(parsed.data.segmentId);
+
   const result = await linkSegmentToProject(parsed.data.segmentId, parsed.data.projectId);
   if ("error" in result) return result;
+
+  // FUNC-090: Auto-add project_name_raw as alias to the project
+  if (nameRaw) {
+    const { data: project } = await getAdminClient()
+      .from("projects")
+      .select("aliases")
+      .eq("id", parsed.data.projectId)
+      .single();
+
+    if (project) {
+      const currentAliases: string[] = project.aliases ?? [];
+      const alreadyExists = currentAliases.some((a) => a.toLowerCase() === nameRaw.toLowerCase());
+      if (!alreadyExists) {
+        await updateProjectAliases(parsed.data.projectId, [...currentAliases, nameRaw]);
+      }
+    }
+  }
 
   revalidatePath(`/review/${parsed.data.meetingId}`);
   return { success: true };
@@ -52,8 +99,22 @@ export async function removeSegmentTagAction(
   const user = await requireAuth();
   if (!user) return { error: "Niet ingelogd" };
 
+  // Get project_name_raw and meeting org_id before removing (for ignored_entity feedback)
+  const nameRaw = await getSegmentNameRaw(parsed.data.segmentId);
+  const orgId = await getMeetingOrgId(parsed.data.meetingId);
+
   const result = await removeSegmentTag(parsed.data.segmentId, parsed.data.meetingId);
   if ("error" in result) return result;
+
+  // FUNC-091: Auto-add project_name_raw to ignored_entities
+  if (nameRaw && orgId) {
+    const ignoreResult = await addIgnoredEntity(orgId, nameRaw, "project");
+    if ("error" in ignoreResult) {
+      console.error("Failed to add ignored entity:", ignoreResult.error);
+    }
+  } else if (nameRaw && !orgId) {
+    console.warn("Cannot add ignored entity: meeting has no organization_id");
+  }
 
   revalidatePath(`/review/${parsed.data.meetingId}`);
   return { success: true };

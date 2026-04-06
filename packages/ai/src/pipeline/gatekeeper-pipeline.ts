@@ -19,6 +19,7 @@ import { buildSegments } from "./segment-builder";
 import { embedBatch } from "../embeddings";
 import { insertMeetingProjectSummaries } from "@repo/database/mutations/meeting-project-summaries";
 import { updateSegmentEmbedding } from "@repo/database/mutations/meeting-project-summaries";
+import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -175,10 +176,17 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   let segmentsSaved = 0;
   if (summarizeResult.kernpunten.length > 0 || summarizeResult.vervolgstappen.length > 0) {
     try {
+      // Fetch ignored entity names for this meeting's organization
+      const orgId = orgResult.organization_id;
+      const ignoredNames = orgId
+        ? await getIgnoredEntityNames(orgId, "project")
+        : new Set<string>();
+
       const taggerOutput = runTagger({
         kernpunten: summarizeResult.kernpunten,
         vervolgstappen: summarizeResult.vervolgstappen,
         identified_projects: identifiedProjects,
+        ignoredNames,
       });
 
       const segments = buildSegments(taggerOutput);

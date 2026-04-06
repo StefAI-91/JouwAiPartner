@@ -11,6 +11,8 @@ export interface TaggerInput {
   kernpunten: string[];
   vervolgstappen: string[];
   identified_projects: IdentifiedProject[];
+  /** Lowercased names to skip during matching (from ignored_entities) */
+  ignoredNames?: Set<string>;
 }
 
 export interface TaggerOutput {
@@ -44,12 +46,19 @@ function normalize(text: string): string {
  * 3. Substring match (confidence 0.8)
  * 4. Keyword overlap >= 2/3 words (confidence 0.6)
  */
-function matchItem(itemText: string, projects: IdentifiedProject[]): MatchResult | null {
+function matchItem(
+  itemText: string,
+  projects: IdentifiedProject[],
+  ignoredNames?: Set<string>,
+): MatchResult | null {
   const normalizedItem = normalize(itemText);
   let bestMatch: MatchResult | null = null;
 
   for (const project of projects) {
     const normalizedName = normalize(project.project_name);
+
+    // FUNC-092: Skip matching for ignored names
+    if (ignoredNames?.has(normalizedName)) continue;
 
     // Strategy 1: Exact match — project name appears as whole word/phrase in item
     if (normalizedItem.includes(normalizedName)) {
@@ -101,9 +110,13 @@ function matchItem(itemText: string, projects: IdentifiedProject[]): MatchResult
 /**
  * Tag a list of items (kernpunten or vervolgstappen) against identified projects.
  */
-function tagItems(items: string[], projects: IdentifiedProject[]): TaggedItem[] {
+function tagItems(
+  items: string[],
+  projects: IdentifiedProject[],
+  ignoredNames?: Set<string>,
+): TaggedItem[] {
   return items.map((content) => {
-    const match = matchItem(content, projects);
+    const match = matchItem(content, projects, ignoredNames);
     if (match && match.confidence >= CONFIDENCE_THRESHOLD) {
       return {
         content,
@@ -145,7 +158,7 @@ export function runTagger(input: TaggerInput): TaggerOutput {
   }
 
   return {
-    kernpunten: tagItems(input.kernpunten, input.identified_projects),
-    vervolgstappen: tagItems(input.vervolgstappen, input.identified_projects),
+    kernpunten: tagItems(input.kernpunten, input.identified_projects, input.ignoredNames),
+    vervolgstappen: tagItems(input.vervolgstappen, input.identified_projects, input.ignoredNames),
   };
 }
