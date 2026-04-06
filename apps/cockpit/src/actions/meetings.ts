@@ -138,10 +138,11 @@ export async function linkMeetingProjectAction(
   const parsed = meetingProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
-  const result = await linkMeetingProject(parsed.data.meetingId, parsed.data.projectId);
+  const result = await linkMeetingProject(parsed.data.meetingId, parsed.data.projectId, "manual");
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/projects");
   return { success: true };
 }
@@ -159,6 +160,7 @@ export async function unlinkMeetingProjectAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/projects");
   return { success: true };
 }

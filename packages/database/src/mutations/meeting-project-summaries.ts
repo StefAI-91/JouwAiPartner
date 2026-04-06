@@ -47,12 +47,20 @@ export async function linkSegmentToProject(
   segmentId: string,
   projectId: string,
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
+  const { data, error } = await getAdminClient()
     .from("meeting_project_summaries")
     .update({ project_id: projectId, embedding_stale: true })
-    .eq("id", segmentId);
+    .eq("id", segmentId)
+    .select("id");
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[linkSegmentToProject] Update failed:", error.message, { segmentId, projectId });
+    return { error: error.message };
+  }
+  if (!data || data.length === 0) {
+    console.error("[linkSegmentToProject] No rows updated — segment not found:", segmentId);
+    return { error: "Segment niet gevonden" };
+  }
   return { success: true };
 }
 
