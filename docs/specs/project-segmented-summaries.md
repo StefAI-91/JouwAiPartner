@@ -22,7 +22,7 @@ Een meeting-samenvatting is opsplitsbaar per project. Bij het zoeken op een proj
 
 ### 3.1 Summarizer: project-tags per kernpunt
 
-De Summarizer tagt elk kernpunt en elke vervolgstap met een project-naam (string) of `null` (algemeen).
+De Summarizer (Claude Sonnet) tagt elk kernpunt en elke vervolgstap met een project-naam (string) of `null` (algemeen).
 
 **Schema-wijziging:**
 
@@ -78,22 +78,35 @@ Meeting "Team Sync 3 april"
 
 Nieuwe tabel:
 
-| Kolom              | Type           | Doel                                                         |
-| ------------------ | -------------- | ------------------------------------------------------------ |
-| `id`               | UUID           | PK                                                           |
-| `meeting_id`       | UUID           | FK → meetings                                                |
-| `project_id`       | UUID, nullable | FK → projects (null = onbekend of algemeen)                  |
-| `project_name_raw` | text           | Originele string van de AI (altijd bewaren)                  |
-| `is_general`       | boolean        | True als dit het "Algemeen" segment is (null-project punten) |
-| `kernpunten`       | text[]         | Array van kernpunt-strings voor dit project                  |
-| `vervolgstappen`   | text[]         | Array van vervolgstap-strings voor dit project               |
-| `summary_text`     | text           | Geformateerde tekst van dit segment (voor embedding)         |
-| `embedding`        | vector(1024)   | Cohere embed-v4 embedding van summary_text                   |
-| `created_at`       | timestamptz    |                                                              |
+| Kolom              | Type              | Doel                                                                                                                                      |
+| ------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`               | UUID              | PK                                                                                                                                        |
+| `meeting_id`       | UUID              | FK → meetings                                                                                                                             |
+| `project_id`       | UUID, nullable    | FK → projects (null = onbekend of algemeen)                                                                                               |
+| `project_name_raw` | text              | Originele string van de AI (altijd bewaren)                                                                                               |
+| `is_general`       | boolean GENERATED | `GENERATED ALWAYS AS (project_id IS NULL AND project_name_raw IS NULL) STORED` — voorkomt dat `is_general` en `project_id` uit sync raken |
+| `kernpunten`       | text[]            | Array van kernpunt-strings voor dit project                                                                                               |
+| `vervolgstappen`   | text[]            | Array van vervolgstap-strings voor dit project                                                                                            |
+| `summary_text`     | text              | Geformateerde tekst van dit segment (voor embedding)                                                                                      |
+| `embedding`        | vector(1024)      | Cohere embed-v4 embedding van summary_text                                                                                                |
+| `embedding_stale`  | boolean           | `DEFAULT true` — wordt `false` na (her)berekening                                                                                         |
+| `search_vector`    | tsvector          | Voor full-text search, via trigger op `summary_text`                                                                                      |
+| `created_at`       | timestamptz       |                                                                                                                                           |
 
 De **volledige samenvatting** (`meeting.summary`, `meeting.ai_briefing`) blijft ongewijzigd. De segmenten zijn een afgeleide voor precisie-zoeken en project-context.
 
-**`meeting_projects` junction tabel:** Alle geresolvde projecten worden gelinkt (niet alleen primary_project zoals nu).
+**`meeting_projects` junction tabel:**
+
+Alle geresolvde projecten worden gelinkt (niet alleen `primary_project` zoals nu).
+
+| Kolom        | Type        | Doel                                                      |
+| ------------ | ----------- | --------------------------------------------------------- |
+| `meeting_id` | UUID        | FK → meetings, deel van composite PK                      |
+| `project_id` | UUID        | FK → projects, deel van composite PK                      |
+| `source`     | text        | Hoe de koppeling ontstond: `"ai"`, `"manual"`, `"review"` |
+| `created_at` | timestamptz |                                                           |
+
+**Constraints:** `PRIMARY KEY (meeting_id, project_id)`, `ON DELETE CASCADE` op beide FK's.
 
 ### 3.4 Embeddings: per segment
 
@@ -137,11 +150,15 @@ Acties voor de reviewer:
 
 Ignored entities tabel (of kolom op organizations):
 
-| Kolom         | Type        | Doel                                                         |
-| ------------- | ----------- | ------------------------------------------------------------ |
-| `entity_name` | text        | De afgewezen naam (case-insensitive)                         |
-| `entity_type` | text        | "project" (later uitbreidbaar naar "organization", "person") |
-| `created_at`  | timestamptz |                                                              |
+| Kolom             | Type        | Doel                                                               |
+| ----------------- | ----------- | ------------------------------------------------------------------ |
+| `id`              | UUID        | PK                                                                 |
+| `organization_id` | UUID        | FK → organizations — scope per organisatie                         |
+| `entity_name`     | text        | De afgewezen naam (case-insensitive)                               |
+| `entity_type`     | text        | `"project"` (later uitbreidbaar naar `"organization"`, `"person"`) |
+| `created_at`      | timestamptz |                                                                    |
+
+**Constraints:** `UNIQUE (organization_id, entity_name, entity_type)`, `ON DELETE CASCADE` op organization FK.
 
 ### 3.6 Achteraf corrigeren (verified meetings)
 
@@ -158,15 +175,45 @@ Op de meeting detail pagina een sectie "Project-segmenten" waar je dezelfde corr
 
 ## 5. MCP/Zoeken
 
-Bij een project-specifieke query:
+### 5.1 Routing-logica
+
+Bij een **project-specifieke query** (project-naam of project-id in de vraag):
 
 - Zoek in `meeting_project_summaries` waar `project_id` matcht
 - Return alleen dat segment, niet de hele meeting-samenvatting
 - Vector search gaat over segment-embeddings → hogere precision
 
-Bij een algemene query:
+Bij een **algemene query** (geen project-context):
 
 - Zoek zoals nu over `meeting.summary` embedding (backwards compatible)
+
+### 5.2 Aan te passen tools
+
+**High priority (zoek-impact):**
+
+| Tool                       | Bestand                              | Wijziging                                                                                                                     |
+| -------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `search_knowledge`         | `packages/mcp/src/tools/search.ts`   | Segment-embeddings toevoegen aan hybrid search results. Nieuw source type `"project_summary"` met project-naam in output.     |
+| `search_all_content()` RPC | `supabase/migrations/`               | `UNION ALL` clause voor `meeting_project_summaries` in zowel vector- als FTS-CTE's. Nieuw veld `project_id` in RETURNS TABLE. |
+| `get_meeting_summary`      | `packages/mcp/src/tools/meetings.ts` | Per-project segmenten tonen als extra sectie na de volledige samenvatting.                                                    |
+
+**Medium priority (discovery):**
+
+| Tool                        | Bestand                                               | Wijziging                                               |
+| --------------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
+| `list_meetings`             | `packages/mcp/src/tools/list-meetings.ts`             | Aantal project-segmenten per meeting tonen.             |
+| `get_organization_overview` | `packages/mcp/src/tools/get-organization-overview.ts` | Sectie "Project-segmenten" toevoegen aan org-overzicht. |
+| `get_projects`              | `packages/mcp/src/tools/projects.ts`                  | Aantal segmenten per project tonen.                     |
+
+**Low priority (later):**
+
+| Tool                 | Bestand                                        | Wijziging                                                                        |
+| -------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| `get_decisions`      | `packages/mcp/src/tools/decisions.ts`          | Optioneel: beslissingen uit project-segmenten doorzoekbaar maken.                |
+| `get_action_items`   | `packages/mcp/src/tools/actions.ts`            | Optioneel: actiepunten uit segmenten doorzoekbaar maken.                         |
+| `correct_extraction` | `packages/mcp/src/tools/correct-extraction.ts` | Correctie-support voor segmenten (of als aparte `correct_project_summary` tool). |
+
+**Geen wijzigingen nodig:** `get_people`, `get_organizations`, task management tools, `log_client_update`.
 
 ## 6. Impact op bestaande data
 
