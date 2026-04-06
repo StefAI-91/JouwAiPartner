@@ -1,0 +1,223 @@
+import { describe, it, expect } from "vitest";
+import {
+  updateTitleSchema,
+  updateMeetingTypeSchema,
+  updateMeetingOrganizationSchema,
+  meetingProjectSchema,
+  meetingParticipantSchema,
+  createOrganizationSchema,
+  createProjectSchema,
+  createPersonSchema,
+} from "../../src/validations/meetings";
+
+describe("updateTitleSchema", () => {
+  it("accepts valid input and returns correct data", () => {
+    const result = updateTitleSchema.safeParse({
+      meetingId: "abc123",
+      title: "Sprint Review",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.title).toBe("Sprint Review");
+    }
+  });
+
+  it("rejects empty title", () => {
+    expect(updateTitleSchema.safeParse({ meetingId: "abc123", title: "" }).success).toBe(false);
+  });
+
+  it("rejects title longer than 500 characters", () => {
+    expect(
+      updateTitleSchema.safeParse({ meetingId: "abc123", title: "a".repeat(501) }).success,
+    ).toBe(false);
+  });
+
+  it("accepts title of exactly 500 characters", () => {
+    expect(
+      updateTitleSchema.safeParse({ meetingId: "abc123", title: "a".repeat(500) }).success,
+    ).toBe(true);
+  });
+
+  it("rejects empty meetingId", () => {
+    expect(updateTitleSchema.safeParse({ meetingId: "", title: "Valid" }).success).toBe(false);
+  });
+});
+
+describe("updateMeetingTypeSchema", () => {
+  it("accepts all valid enum values", () => {
+    const types = [
+      "strategy",
+      "one_on_one",
+      "team_sync",
+      "discovery",
+      "sales",
+      "project_kickoff",
+      "status_update",
+      "collaboration",
+      "other",
+    ];
+    for (const meetingType of types) {
+      expect(updateMeetingTypeSchema.safeParse({ meetingId: "abc", meetingType }).success).toBe(
+        true,
+      );
+    }
+  });
+
+  it("rejects invalid meeting type", () => {
+    expect(
+      updateMeetingTypeSchema.safeParse({ meetingId: "abc", meetingType: "invalid" }).success,
+    ).toBe(false);
+  });
+});
+
+describe("updateMeetingOrganizationSchema", () => {
+  it("accepts valid input with organizationId", () => {
+    const result = updateMeetingOrganizationSchema.safeParse({
+      meetingId: "abc123",
+      organizationId: "org-123",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts null for organizationId", () => {
+    expect(
+      updateMeetingOrganizationSchema.safeParse({
+        meetingId: "abc123",
+        organizationId: null,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects empty meetingId", () => {
+    expect(
+      updateMeetingOrganizationSchema.safeParse({
+        meetingId: "",
+        organizationId: null,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("meetingProjectSchema", () => {
+  it("accepts valid input", () => {
+    expect(meetingProjectSchema.safeParse({ meetingId: "abc", projectId: "proj" }).success).toBe(
+      true,
+    );
+  });
+
+  it("rejects empty meetingId", () => {
+    expect(meetingProjectSchema.safeParse({ meetingId: "", projectId: "proj" }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects empty projectId", () => {
+    expect(meetingProjectSchema.safeParse({ meetingId: "abc", projectId: "" }).success).toBe(false);
+  });
+});
+
+describe("meetingParticipantSchema", () => {
+  it("accepts valid input", () => {
+    expect(meetingParticipantSchema.safeParse({ meetingId: "abc", personId: "p1" }).success).toBe(
+      true,
+    );
+  });
+
+  it("rejects empty meetingId", () => {
+    expect(meetingParticipantSchema.safeParse({ meetingId: "", personId: "p1" }).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects empty personId", () => {
+    expect(meetingParticipantSchema.safeParse({ meetingId: "abc", personId: "" }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe("createOrganizationSchema", () => {
+  it("accepts valid input and returns correct data", () => {
+    const result = createOrganizationSchema.safeParse({
+      name: "New Corp",
+      type: "client",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.name).toBe("New Corp");
+    }
+  });
+
+  it("accepts without type", () => {
+    expect(createOrganizationSchema.safeParse({ name: "Corp" }).success).toBe(true);
+  });
+
+  it("rejects empty name", () => {
+    expect(createOrganizationSchema.safeParse({ name: "" }).success).toBe(false);
+  });
+
+  it("rejects name longer than 200 characters", () => {
+    expect(createOrganizationSchema.safeParse({ name: "a".repeat(201) }).success).toBe(false);
+  });
+
+  it("rejects invalid type enum value", () => {
+    expect(createOrganizationSchema.safeParse({ name: "Corp", type: "unknown" }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe("createProjectSchema", () => {
+  it("accepts valid input", () => {
+    expect(createProjectSchema.safeParse({ name: "Project", organizationId: "id" }).success).toBe(
+      true,
+    );
+  });
+
+  it("rejects empty name", () => {
+    expect(createProjectSchema.safeParse({ name: "" }).success).toBe(false);
+  });
+
+  it("rejects name longer than 200 characters", () => {
+    expect(createProjectSchema.safeParse({ name: "a".repeat(201) }).success).toBe(false);
+  });
+
+  it("accepts null for organizationId", () => {
+    expect(createProjectSchema.safeParse({ name: "P", organizationId: null }).success).toBe(true);
+  });
+});
+
+describe("createPersonSchema", () => {
+  it("accepts valid input and returns correct data", () => {
+    const result = createPersonSchema.safeParse({
+      name: "Jane Doe",
+      email: "jane@example.com",
+      role: "Developer",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.name).toBe("Jane Doe");
+      expect(result.data.email).toBe("jane@example.com");
+    }
+  });
+
+  it("rejects invalid email format", () => {
+    expect(createPersonSchema.safeParse({ name: "J", email: "bad" }).success).toBe(false);
+  });
+
+  it("rejects name longer than 200 characters", () => {
+    expect(createPersonSchema.safeParse({ name: "a".repeat(201) }).success).toBe(false);
+  });
+
+  it("rejects role longer than 200 characters", () => {
+    expect(createPersonSchema.safeParse({ name: "J", role: "a".repeat(201) }).success).toBe(false);
+  });
+
+  it("accepts null for email", () => {
+    expect(createPersonSchema.safeParse({ name: "J", email: null }).success).toBe(true);
+  });
+
+  it("accepts with only name", () => {
+    expect(createPersonSchema.safeParse({ name: "Jane" }).success).toBe(true);
+  });
+});
