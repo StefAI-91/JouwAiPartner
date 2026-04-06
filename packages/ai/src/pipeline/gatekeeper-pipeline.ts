@@ -186,6 +186,11 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         kernpunten: summarizeResult.kernpunten,
         vervolgstappen: summarizeResult.vervolgstappen,
         identified_projects: identifiedProjects,
+        knownProjects: entityContext.projects.map((p) => ({
+          id: p.id,
+          name: p.name,
+          aliases: p.aliases,
+        })),
         ignoredNames,
       });
 

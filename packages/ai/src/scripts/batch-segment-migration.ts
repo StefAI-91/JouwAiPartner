@@ -143,6 +143,11 @@ async function main() {
         kernpunten,
         vervolgstappen,
         identified_projects: identifiedProjects,
+        knownProjects: entityContext.projects.map((p) => ({
+          id: p.id,
+          name: p.name,
+          aliases: p.aliases,
+        })),
         ignoredNames,
       });
 

@@ -7,10 +7,18 @@ export interface TaggedItem {
   confidence: number;
 }
 
+export interface KnownProject {
+  id: string;
+  name: string;
+  aliases: string[];
+}
+
 export interface TaggerInput {
   kernpunten: string[];
   vervolgstappen: string[];
   identified_projects: IdentifiedProject[];
+  /** Known projects from DB — used as fallback when Gatekeeper misses a project */
+  knownProjects?: KnownProject[];
   /** Lowercased names to skip during matching (from ignored_entities) */
   ignoredNames?: Set<string>;
 }
@@ -37,68 +45,62 @@ function normalize(text: string): string {
 }
 
 /**
- * Try to match a text item against identified projects.
+ * Try to match a text item against a list of project candidates.
  * Returns the best match (highest confidence) or null.
- *
- * Strategies in priority order:
- * 1. Exact match on project name (confidence 1.0)
- * 2. Exact match on alias (confidence 0.9) — not applicable here since aliases come from DB, not Gatekeeper
- * 3. Substring match (confidence 0.8)
- * 4. Keyword overlap >= 2/3 words (confidence 0.6)
  */
-function matchItem(
-  itemText: string,
-  projects: IdentifiedProject[],
+function matchItemAgainstProjects(
+  normalizedItem: string,
+  candidates: { name: string; id: string | null; aliases?: string[] }[],
   ignoredNames?: Set<string>,
 ): MatchResult | null {
-  const normalizedItem = normalize(itemText);
   let bestMatch: MatchResult | null = null;
 
-  for (const project of projects) {
-    const normalizedName = normalize(project.project_name);
+  for (const candidate of candidates) {
+    const normalizedName = normalize(candidate.name);
 
-    // FUNC-092: Skip matching for ignored names
+    // Skip ignored names
     if (ignoredNames?.has(normalizedName)) continue;
 
-    // Strategy 1: Exact match — project name appears as whole word/phrase in item
-    if (normalizedItem.includes(normalizedName)) {
+    // Strategy 1: Exact match on name — project name appears in item
+    if (normalizedName.length >= 3 && normalizedItem.includes(normalizedName)) {
       const confidence = 1.0;
       if (!bestMatch || confidence > bestMatch.confidence) {
-        bestMatch = {
-          project_name: project.project_name,
-          project_id: project.project_id,
-          confidence,
-        };
+        bestMatch = { project_name: candidate.name, project_id: candidate.id, confidence };
       }
       continue;
     }
 
-    // Strategy 2: Substring match — check if significant part of name is in item
-    // (name has 2+ words and at least the core part appears)
+    // Strategy 1b: Exact match on alias (confidence 0.9)
+    if (candidate.aliases) {
+      for (const alias of candidate.aliases) {
+        const normalizedAlias = normalize(alias);
+        if (ignoredNames?.has(normalizedAlias)) continue;
+        if (normalizedAlias.length >= 3 && normalizedItem.includes(normalizedAlias)) {
+          const confidence = 0.9;
+          if (!bestMatch || confidence > bestMatch.confidence) {
+            bestMatch = { project_name: candidate.name, project_id: candidate.id, confidence };
+          }
+          break;
+        }
+      }
+      if (bestMatch?.confidence === 0.9) continue;
+    }
+
+    // Strategy 2: Keyword overlap for multi-word names
     const nameWords = normalizedName.split(" ").filter((w) => w.length > 2);
     if (nameWords.length >= 2) {
-      // Strategy 3: Keyword overlap — at least 2/3 of name words appear in item
       const matchCount = nameWords.filter((word) => normalizedItem.includes(word)).length;
       const ratio = matchCount / nameWords.length;
 
       if (ratio >= 1.0) {
-        // All words match but not as exact phrase — substring match
         const confidence = 0.8;
         if (!bestMatch || confidence > bestMatch.confidence) {
-          bestMatch = {
-            project_name: project.project_name,
-            project_id: project.project_id,
-            confidence,
-          };
+          bestMatch = { project_name: candidate.name, project_id: candidate.id, confidence };
         }
       } else if (ratio >= 2 / 3 && matchCount >= 2) {
         const confidence = 0.6;
         if (!bestMatch || confidence > bestMatch.confidence) {
-          bestMatch = {
-            project_name: project.project_name,
-            project_id: project.project_id,
-            confidence,
-          };
+          bestMatch = { project_name: candidate.name, project_id: candidate.id, confidence };
         }
       }
     }
@@ -108,15 +110,42 @@ function matchItem(
 }
 
 /**
- * Tag a list of items (kernpunten or vervolgstappen) against identified projects.
+ * Tag a list of items against identified projects + known DB projects as fallback.
  */
 function tagItems(
   items: string[],
-  projects: IdentifiedProject[],
+  identifiedProjects: IdentifiedProject[],
+  knownProjects: KnownProject[],
   ignoredNames?: Set<string>,
 ): TaggedItem[] {
+  // Build candidate lists
+  const gatekeeperCandidates = identifiedProjects.map((p) => ({
+    name: p.project_name,
+    id: p.project_id,
+  }));
+
+  const dbCandidates = knownProjects.map((p) => ({
+    name: p.name,
+    id: p.id,
+    aliases: p.aliases,
+  }));
+
   return items.map((content) => {
-    const match = matchItem(content, projects, ignoredNames);
+    const normalizedItem = normalize(content);
+
+    // First: match against Gatekeeper-identified projects (priority)
+    let match = matchItemAgainstProjects(normalizedItem, gatekeeperCandidates, ignoredNames);
+
+    // Fallback: match against known DB projects (catches what Gatekeeper missed)
+    if (!match || match.confidence < CONFIDENCE_THRESHOLD) {
+      const dbMatch = matchItemAgainstProjects(normalizedItem, dbCandidates, ignoredNames);
+      if (dbMatch && dbMatch.confidence >= CONFIDENCE_THRESHOLD) {
+        // DB fallback gets slightly lower confidence than Gatekeeper match
+        dbMatch.confidence = Math.min(dbMatch.confidence, 0.9);
+        match = dbMatch;
+      }
+    }
+
     if (match && match.confidence >= CONFIDENCE_THRESHOLD) {
       return {
         content,
@@ -134,13 +163,19 @@ function tagItems(
  * Rule-based Tagger: matches kernpunten and vervolgstappen to identified projects.
  * Deterministic, no LLM call, runs in <50ms.
  *
- * - If identified_projects is empty, all items go to "Algemeen" (RULE-016).
+ * Matching priority:
+ * 1. Gatekeeper-identified projects (highest priority)
+ * 2. Known DB projects by name/alias (fallback)
+ *
+ * - If identified_projects is empty AND no knownProjects, all items go to "Algemeen" (RULE-016).
  * - Items with confidence < 0.7 go to "Algemeen" (AI-036).
  * - On error, returns all items as "Algemeen" (RULE-015).
  */
 export function runTagger(input: TaggerInput): TaggerOutput {
-  // RULE-016: No projects identified -> skip tagging, everything to "Algemeen"
-  if (input.identified_projects.length === 0) {
+  const knownProjects = input.knownProjects ?? [];
+
+  // RULE-016: No projects at all -> skip tagging, everything to "Algemeen"
+  if (input.identified_projects.length === 0 && knownProjects.length === 0) {
     return {
       kernpunten: input.kernpunten.map((content) => ({
         content,
@@ -158,7 +193,17 @@ export function runTagger(input: TaggerInput): TaggerOutput {
   }
 
   return {
-    kernpunten: tagItems(input.kernpunten, input.identified_projects, input.ignoredNames),
-    vervolgstappen: tagItems(input.vervolgstappen, input.identified_projects, input.ignoredNames),
+    kernpunten: tagItems(
+      input.kernpunten,
+      input.identified_projects,
+      knownProjects,
+      input.ignoredNames,
+    ),
+    vervolgstappen: tagItems(
+      input.vervolgstappen,
+      input.identified_projects,
+      knownProjects,
+      input.ignoredNames,
+    ),
   };
 }

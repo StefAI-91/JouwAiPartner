@@ -305,6 +305,11 @@ export async function regenerateMeetingAction(
           kernpunten: summarizerOutput.kernpunten,
           vervolgstappen: summarizerOutput.vervolgstappen,
           identified_projects: identifiedProjects,
+          knownProjects: entityContext.projects.map((p) => ({
+            id: p.id,
+            name: p.name,
+            aliases: p.aliases,
+          })),
           ignoredNames,
         });
 
