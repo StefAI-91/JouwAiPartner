@@ -87,6 +87,7 @@ export async function linkSegmentToProjectAction(
   }
 
   revalidatePath(`/review/${parsed.data.meetingId}`);
+  revalidatePath(`/meetings/${parsed.data.meetingId}`);
   return { success: true };
 }
 
@@ -117,5 +118,6 @@ export async function removeSegmentTagAction(
   }
 
   revalidatePath(`/review/${parsed.data.meetingId}`);
+  revalidatePath(`/meetings/${parsed.data.meetingId}`);
   return { success: true };
 }

@@ -15,7 +15,7 @@ import { regenerateMeetingAction, updateMeetingSummaryAction } from "@/actions/m
 import { ListChecks, RefreshCw } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
-import { SegmentList } from "./segment-list";
+import { SegmentList } from "@/components/shared/segment-list";
 
 interface Extraction {
   id: string;
