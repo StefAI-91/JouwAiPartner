@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { createClient } from "@repo/database/supabase/server";
 import { getProjectById } from "@repo/database/queries/projects";
+import { getSegmentsByProjectId } from "@repo/database/queries/meeting-project-summaries";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listPeople } from "@repo/database/queries/people";
 import { StatusPipeline } from "@/components/projects/status-pipeline";
@@ -17,8 +18,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const supabase = await createClient();
 
-  const [project, organizations, people] = await Promise.all([
+  const [project, segments, organizations, people] = await Promise.all([
     getProjectById(id, supabase),
+    getSegmentsByProjectId(id, supabase),
     listOrganizations(supabase),
     listPeople(supabase),
   ]);
@@ -27,16 +29,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   // Extract timeline from briefing structured_content
   const structuredContent = project.briefing_summary?.structured_content;
-  const timeline = (structuredContent && Array.isArray((structuredContent as Record<string, unknown>).timeline))
-    ? (structuredContent as Record<string, unknown>).timeline as {
-        date: string;
-        meeting_type: string;
-        title: string;
-        summary: string;
-        key_decisions: string[];
-        open_actions: string[];
-      }[]
-    : [];
+  const timeline =
+    structuredContent && Array.isArray((structuredContent as Record<string, unknown>).timeline)
+      ? ((structuredContent as Record<string, unknown>).timeline as {
+          date: string;
+          meeting_type: string;
+          title: string;
+          summary: string;
+          key_decisions: string[];
+          open_actions: string[];
+        }[])
+      : [];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -77,7 +80,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       </div>
 
       {/* Tabs */}
-      <ProjectSections meetings={project.meetings} extractions={project.extractions} />
+      <ProjectSections
+        meetings={project.meetings}
+        extractions={project.extractions}
+        segments={segments}
+      />
     </div>
   );
 }

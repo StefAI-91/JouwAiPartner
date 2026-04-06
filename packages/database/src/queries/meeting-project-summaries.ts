@@ -97,3 +97,46 @@ export async function getSegmentCountsByProjectIds(
   }
   return counts;
 }
+
+export interface ProjectSegment {
+  id: string;
+  meeting_id: string;
+  meeting_title: string | null;
+  meeting_date: string | null;
+  kernpunten: string[];
+  vervolgstappen: string[];
+}
+
+/**
+ * Get all segments for a specific project, with meeting info.
+ * Used on the project detail page to show only project-relevant content.
+ */
+export async function getSegmentsByProjectId(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<ProjectSegment[]> {
+  const db = client ?? getAdminClient();
+
+  const { data, error } = await db
+    .from("meeting_project_summaries")
+    .select(
+      `id, meeting_id, kernpunten, vervolgstappen,
+       meeting:meetings(title, date)`,
+    )
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const meeting = row.meeting as unknown as { title: string | null; date: string | null } | null;
+    return {
+      id: row.id,
+      meeting_id: row.meeting_id,
+      meeting_title: meeting?.title ?? null,
+      meeting_date: meeting?.date ?? null,
+      kernpunten: row.kernpunten ?? [],
+      vervolgstappen: row.vervolgstappen ?? [],
+    };
+  });
+}
