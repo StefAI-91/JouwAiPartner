@@ -8,7 +8,6 @@ import {
   collectVerifiedByIds,
 } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
-import { getSegmentsByMeetingIds } from "@repo/database/queries/meeting-project-summaries";
 
 export function registerMeetingTools(server: McpServer) {
   server.tool(
@@ -195,27 +194,6 @@ export function registerMeetingTools(server: McpServer) {
         sections.push("", `**Meeting ID:** ${m.id}`);
         return sections.join("\n");
       });
-
-      // Batch fetch segments for all meetings (single query instead of N+1)
-      const segmentsByMeeting = await getSegmentsByMeetingIds(meetingIds, supabase);
-      for (let i = 0; i < typedMeetings.length; i++) {
-        const segments = segmentsByMeeting.get(typedMeetings[i].id) ?? [];
-        if (segments.length > 0) {
-          const segLines = ["\n---\n### Project-segmenten"];
-          for (const seg of segments) {
-            const name = seg.project_name ?? seg.project_name_raw ?? "Algemeen";
-            segLines.push(
-              `**[${name}]** (${seg.kernpunten.length} kernpunten, ${seg.vervolgstappen.length} vervolgstappen)`,
-            );
-            for (const k of seg.kernpunten) segLines.push(`- ${k}`);
-            if (seg.vervolgstappen.length > 0) {
-              segLines.push("Vervolgstappen:");
-              for (const v of seg.vervolgstappen) segLines.push(`- ${v}`);
-            }
-          }
-          formatted[i] += "\n" + segLines.join("\n");
-        }
-      }
 
       return {
         content: [
