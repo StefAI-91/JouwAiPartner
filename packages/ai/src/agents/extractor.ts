@@ -58,6 +58,7 @@ export async function runExtractor(
     participants: string[];
     summary: string;
     identified_projects?: { project_name: string; project_id: string | null }[];
+    entityContext?: string;
   },
 ): Promise<ExtractorOutput> {
   const typeInstructions = MEETING_TYPE_INSTRUCTIONS[context.meeting_type] ?? "";
@@ -82,6 +83,9 @@ export async function runExtractor(
     `Deelnemers: ${context.participants.join(", ")}`,
     context.summary ? `Samenvatting: ${context.summary}` : null,
     typeInstructions ? `\n--- TYPE-SPECIFIEKE INSTRUCTIES ---\n${typeInstructions}` : null,
+    context.entityContext
+      ? `\n--- BEKENDE PERSONEN & ENTITEITEN (uit database) ---\n${context.entityContext}\nGebruik deze namen voor het assignee-veld. Gebruik de EXACTE schrijfwijze uit deze lijst.`
+      : null,
   ]
     .filter(Boolean)
     .join("\n");
