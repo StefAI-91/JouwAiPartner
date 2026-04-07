@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { zUuid } from "./uuid";
 
 export const updateOrganizationSchema = z.object({
-  id: z.string().uuid(),
+  id: zUuid,
   name: z.string().min(1, "Naam is verplicht").max(200).optional(),
   type: z.enum(["client", "partner", "supplier", "other"]).optional(),
   status: z.enum(["prospect", "active", "inactive"]).optional(),
@@ -10,7 +11,7 @@ export const updateOrganizationSchema = z.object({
 });
 
 export const updateProjectSchema = z.object({
-  id: z.string().uuid(),
+  id: zUuid,
   name: z.string().min(1, "Naam is verplicht").max(200).optional(),
   status: z
     .enum([
@@ -29,42 +30,43 @@ export const updateProjectSchema = z.object({
       "active",
     ])
     .optional(),
-  organization_id: z.string().uuid().nullable().optional(),
+  organization_id: zUuid.nullable().optional(),
   description: z.string().max(2000).nullable().optional(),
-  owner_id: z.string().uuid().nullable().optional(),
-  contact_person_id: z.string().uuid().nullable().optional(),
+  owner_id: zUuid.nullable().optional(),
+  contact_person_id: zUuid.nullable().optional(),
   start_date: z.string().nullable().optional(),
   deadline: z.string().nullable().optional(),
+  github_url: z.string().url("Ongeldige URL").nullable().optional(),
 });
 
 export const updatePersonSchema = z.object({
-  id: z.string().uuid(),
+  id: zUuid,
   name: z.string().min(1, "Naam is verplicht").max(200).optional(),
   email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
   role: z.string().max(200).nullable().optional(),
   team: z.string().max(200).nullable().optional(),
-  organization_id: z.string().uuid().nullable().optional(),
+  organization_id: zUuid.nullable().optional(),
 });
 
 export const createExtractionSchema = z.object({
-  meeting_id: z.string().uuid(),
+  meeting_id: zUuid,
   type: z.enum(["decision", "action_item", "need", "insight"]),
   content: z.string().min(1, "Content is verplicht"),
   transcript_ref: z.string().nullable().optional(),
 });
 
 export const updateExtractionSchema = z.object({
-  id: z.string().uuid(),
+  id: zUuid,
   content: z.string().min(1, "Content is verplicht").optional(),
   type: z.enum(["decision", "action_item", "need", "insight"]).optional(),
   transcript_ref: z.string().nullable().optional(),
-  meetingId: z.string().uuid().optional(),
+  meetingId: zUuid.optional(),
 });
 
 export const deleteSchema = z.object({
-  id: z.string().uuid(),
+  id: zUuid,
 });
 
 export const deleteWithContextSchema = deleteSchema.extend({
-  meetingId: z.string().uuid().optional(),
+  meetingId: zUuid.optional(),
 });

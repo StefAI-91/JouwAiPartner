@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { zUuid } from "./uuid";
 
 export const optionalStringOrNull = z.string().nullable().optional();
 export const optionalDateOrNull = z
@@ -8,7 +9,7 @@ export const optionalDateOrNull = z
   .optional();
 
 export const promoteToTaskSchema = z.object({
-  extractionId: z.string().uuid(),
+  extractionId: zUuid,
   title: z.string().min(1),
   assignedTo: optionalStringOrNull,
   dueDate: optionalDateOrNull,
@@ -16,12 +17,12 @@ export const promoteToTaskSchema = z.object({
 });
 
 export const updateTaskSchema = z.object({
-  taskId: z.string().uuid(),
+  taskId: zUuid,
   assignedTo: optionalStringOrNull,
   dueDate: optionalDateOrNull,
   title: z.string().min(1).optional(),
 });
 
 export const taskIdSchema = z.object({
-  taskId: z.string().uuid(),
+  taskId: zUuid,
 });

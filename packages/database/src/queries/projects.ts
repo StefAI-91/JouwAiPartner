@@ -97,6 +97,7 @@ export interface ProjectDetail {
   name: string;
   status: string;
   description: string | null;
+  github_url: string | null;
   organization_id: string | null;
   organization: { name: string } | null;
   owner: { id: string; name: string } | null;
@@ -137,7 +138,7 @@ export async function getProjectById(
   const { data: project, error } = await db
     .from("projects")
     .select(
-      `id, name, status, description, organization_id, start_date, deadline,
+      `id, name, status, description, github_url, organization_id, start_date, deadline,
        organization:organizations(name),
        owner:people!projects_owner_id_fkey(id, name),
        contact_person:people!projects_contact_person_id_fkey(id, name)`,
@@ -186,6 +187,7 @@ export async function getProjectById(
     name: string;
     status: string;
     description: string | null;
+    github_url: string | null;
     organization_id: string | null;
     start_date: string | null;
     deadline: string | null;
@@ -199,6 +201,7 @@ export async function getProjectById(
     name: typedProject.name,
     status: typedProject.status,
     description: typedProject.description,
+    github_url: typedProject.github_url,
     organization_id: typedProject.organization_id,
     start_date: typedProject.start_date,
     deadline: typedProject.deadline,

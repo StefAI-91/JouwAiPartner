@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/modal";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -13,6 +13,7 @@ interface EditProjectProps {
     name: string;
     status: string;
     description?: string | null;
+    github_url?: string | null;
     start_date?: string | null;
     deadline?: string | null;
     owner?: { id: string; name: string } | null;
@@ -71,6 +72,7 @@ export function EditProject({
   const [status, setStatus] = useState(project.status);
   const [orgId, setOrgId] = useState(organizationId ?? "");
   const [description, setDescription] = useState(project.description ?? "");
+  const [githubUrl, setGithubUrl] = useState(project.github_url ?? "");
   const [ownerId, setOwnerId] = useState(project.owner?.id ?? "");
   const [contactPersonId, setContactPersonId] = useState(project.contact_person?.id ?? "");
   const [startDate, setStartDate] = useState(project.start_date ?? "");
@@ -85,6 +87,7 @@ export function EditProject({
         status: status as (typeof PROJECT_STATUSES)[number],
         organization_id: orgId || null,
         description: description.trim() || null,
+        github_url: githubUrl.trim() || null,
         owner_id: ownerId || null,
         contact_person_id: contactPersonId || null,
         start_date: startDate || null,
@@ -160,6 +163,17 @@ export function EditProject({
               rows={3}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
               placeholder="Project beschrijving..."
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">GitHub URL</label>
+            <input
+              type="url"
+              value={githubUrl}
+              onChange={(e) => setGithubUrl(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              placeholder="https://github.com/org/repo"
             />
           </div>
 

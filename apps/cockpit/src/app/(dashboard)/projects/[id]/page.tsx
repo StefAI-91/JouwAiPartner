@@ -6,6 +6,7 @@ import { getProjectById } from "@repo/database/queries/projects";
 import { getSegmentsByProjectId } from "@repo/database/queries/meeting-project-summaries";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listPeople } from "@repo/database/queries/people";
+import { ExternalLink } from "lucide-react";
 import { StatusPipeline } from "@/components/projects/status-pipeline";
 import { ProjectSections } from "@/components/projects/project-sections";
 import { ProjectSummary } from "@/components/projects/project-summary";
@@ -57,6 +58,17 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             people={people.map((p) => ({ id: p.id, name: p.name }))}
           />
         </div>
+        {project.github_url && (
+          <a
+            href={project.github_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ExternalLink className="size-3.5" />
+            {project.github_url.replace(/^https?:\/\/(www\.)?github\.com\//, "")}
+          </a>
+        )}
         <div className="mt-3">
           <StatusPipeline status={project.status} size="lg" />
         </div>

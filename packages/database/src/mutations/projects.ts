@@ -50,6 +50,7 @@ export async function updateProject(
     contact_person_id?: string | null;
     start_date?: string | null;
     deadline?: string | null;
+    github_url?: string | null;
   },
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient()
