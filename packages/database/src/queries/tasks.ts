@@ -9,6 +9,7 @@ export interface TaskRow {
   assigned_to: string | null;
   assigned_person: { id: string; name: string; team: string | null } | null;
   extraction_id: string | null;
+  extraction: { meeting_id: string } | null;
   created_at: string;
   completed_at: string | null;
 }
@@ -25,7 +26,8 @@ export async function listActiveTasks(
     .from("tasks")
     .select(
       `id, title, status, due_date, assigned_to, extraction_id, created_at, completed_at,
-       assigned_person:assigned_to (id, name, team)`,
+       assigned_person:assigned_to (id, name, team),
+       extraction:extraction_id (meeting_id)`,
     )
     .eq("status", "active")
     .order("due_date", { ascending: true, nullsFirst: false })
@@ -85,7 +87,8 @@ export async function listAllTasks(
     .from("tasks")
     .select(
       `id, title, status, due_date, assigned_to, extraction_id, created_at, completed_at,
-       assigned_person:assigned_to (id, name, team)`,
+       assigned_person:assigned_to (id, name, team),
+       extraction:extraction_id (meeting_id)`,
     )
     .in("status", ["active", "done"])
     .order("status", { ascending: true }) // active first
