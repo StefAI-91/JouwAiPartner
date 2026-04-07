@@ -167,6 +167,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     meeting_type: gatekeeperResult.meeting_type,
     party_type: partyType,
     participants: input.participants,
+    entityContext: entityContext.contextString,
   };
   console.info(`Summarizer using ${transcriptSource} transcript`);
   const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);

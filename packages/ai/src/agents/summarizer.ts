@@ -112,6 +112,7 @@ export async function runSummarizer(
     meeting_type: string;
     party_type: string;
     participants: string[];
+    entityContext?: string;
   },
 ): Promise<SummarizerOutput> {
   const typeInstructions = MEETING_TYPE_INSTRUCTIONS[context.meeting_type] ?? "";
@@ -122,6 +123,9 @@ export async function runSummarizer(
     `Party: ${context.party_type}`,
     `Deelnemers: ${context.participants.join(", ")}`,
     typeInstructions ? `\n--- TYPE-SPECIFIEKE FOCUS ---\n${typeInstructions}` : null,
+    context.entityContext
+      ? `\n--- BEKENDE ENTITEITEN (uit database) ---\n${context.entityContext}\nGebruik deze namen en projectnamen als je ze herkent in het transcript. Gebruik de EXACTE schrijfwijze uit deze lijst, niet varianten uit het transcript.`
+      : null,
   ]
     .filter(Boolean)
     .join("\n");

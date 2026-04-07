@@ -21,6 +21,7 @@ export async function runSummarizeStep(
     meeting_type: string;
     party_type: string;
     participants: string[];
+    entityContext?: string;
   },
 ): Promise<SummarizeResult> {
   try {
