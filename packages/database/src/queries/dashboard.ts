@@ -111,7 +111,7 @@ export async function listTodaysBriefingMeetings(
     .eq("verification_status", "verified")
     .not("ai_briefing", "is", null)
     .gte("date", threeDaysAgoStr)
-    .lte("date", todayStr)
+    .lt("date", todayStr + "T23:59:59.999Z")
     .order("date", { ascending: false, nullsFirst: false })
     .limit(50);
 
