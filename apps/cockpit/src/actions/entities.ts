@@ -92,7 +92,12 @@ export async function updateProjectAction(
   if (!user) return { error: "Niet ingelogd" };
 
   const parsed = updateProjectSchema.safeParse(cleanInput(input));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const field = issue?.path?.join(".") || "onbekend";
+    console.error("[updateProjectAction] Validation failed:", JSON.stringify(parsed.error.issues));
+    return { error: `${field}: ${issue?.message ?? "Ongeldige invoer"}` };
+  }
 
   const { id, ...data } = parsed.data;
   const result = await updateProject(id, data);
