@@ -73,6 +73,7 @@ export async function updateMeetingTitleAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/");
   return { success: true };
 }
@@ -91,6 +92,7 @@ export async function updateMeetingSummaryAction(
 
   await markMeetingEmbeddingStale(parsed.data.meetingId);
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/");
   return { success: true };
 }
@@ -108,6 +110,7 @@ export async function updateMeetingTypeAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/");
   return { success: true };
 }
@@ -125,6 +128,7 @@ export async function updateMeetingOrganizationAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/clients");
   return { success: true };
 }
@@ -172,12 +176,16 @@ export async function linkMeetingParticipantAction(
   if (!user) return { error: "Niet ingelogd" };
 
   const parsed = meetingParticipantSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues.map((i) => i.message).join(", ") };
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+    return { error: `Ongeldige invoer (${fields.join(", ")})` };
+  }
 
   const result = await linkMeetingParticipant(parsed.data.meetingId, parsed.data.personId);
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   return { success: true };
 }
 
@@ -194,6 +202,7 @@ export async function unlinkMeetingParticipantAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   return { success: true };
 }
 

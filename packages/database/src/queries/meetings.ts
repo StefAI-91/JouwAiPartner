@@ -279,26 +279,15 @@ export interface MeetingForBatchSegmentation {
 /**
  * Get verified meetings that have no segments yet.
  * Used by the batch migration script (sprint 028).
+ * Uses a database RPC with NOT EXISTS for efficient filtering.
  */
 export async function getVerifiedMeetingsWithoutSegments(): Promise<MeetingForBatchSegmentation[]> {
   const db = getAdminClient();
 
-  // Get all meeting IDs that already have segments
-  const { data: existingSegments } = await db
-    .from("meeting_project_summaries")
-    .select("meeting_id");
+  const { data, error } = await db.rpc("get_meetings_without_segments", {
+    max_results: 500,
+  });
 
-  const segmentedMeetingIds = new Set(existingSegments?.map((s) => s.meeting_id) ?? []);
-
-  // Get all verified meetings
-  const { data: meetings, error } = await db
-    .from("meetings")
-    .select("id, title, summary, transcript, date, organization_id")
-    .eq("verification_status", "verified")
-    .order("date", { ascending: false });
-
-  if (error || !meetings) return [];
-
-  // Filter out meetings that already have segments
-  return meetings.filter((m) => !segmentedMeetingIds.has(m.id)) as MeetingForBatchSegmentation[];
+  if (error || !data) return [];
+  return data as MeetingForBatchSegmentation[];
 }

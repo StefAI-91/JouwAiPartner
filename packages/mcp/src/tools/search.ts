@@ -18,7 +18,13 @@ export function registerSearchTools(server: McpServer) {
         .describe(
           "Optional project ID to search within project-specific segments. When provided, searches segment-level embeddings for higher precision.",
         ),
-      limit: z.number().optional().default(10).describe("Max results to return (default 10)"),
+      limit: z
+        .number()
+        .min(1)
+        .max(50)
+        .optional()
+        .default(10)
+        .describe("Max results to return (default 10, max 50)"),
       include_drafts: z
         .boolean()
         .optional()

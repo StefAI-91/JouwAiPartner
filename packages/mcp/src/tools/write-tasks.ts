@@ -16,13 +16,18 @@ export function registerWriteTaskTools(server: McpServer) {
     "create_task",
     "Maak een nieuwe taak aan vanuit een extractie (actiepunt). De extractie moet al bestaan in de kennisbasis. Geef de naam van de aanmaker mee zodat de taak herleidbaar is.",
     {
-      extraction_id: z.string().describe("UUID van de extractie (actiepunt) waaruit de taak wordt aangemaakt"),
+      extraction_id: z
+        .string()
+        .uuid()
+        .describe("UUID van de extractie (actiepunt) waaruit de taak wordt aangemaakt"),
       title: z.string().max(500).describe("Titel van de taak"),
       assigned_to_name: z
         .string()
         .max(255)
         .optional()
-        .describe("Naam van de persoon aan wie de taak wordt toegewezen (wordt opgezocht in profielen)"),
+        .describe(
+          "Naam van de persoon aan wie de taak wordt toegewezen (wordt opgezocht in profielen)",
+        ),
       due_date: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -102,7 +107,7 @@ export function registerWriteTaskTools(server: McpServer) {
     "complete_task",
     "Markeer een taak als afgerond. De taak krijgt status 'done' en een voltooiingstijdstempel.",
     {
-      task_id: z.string().describe("UUID van de taak die afgerond moet worden"),
+      task_id: z.string().uuid().describe("UUID van de taak die afgerond moet worden"),
     },
     async ({ task_id }) => {
       const supabase = getAdminClient();
@@ -132,8 +137,12 @@ export function registerWriteTaskTools(server: McpServer) {
     "update_task",
     "Werk een bestaande taak bij. Je kunt de titel, toewijzing en/of deadline wijzigen. Geef alleen de velden mee die je wilt veranderen.",
     {
-      task_id: z.string().describe("UUID van de taak die bijgewerkt moet worden"),
-      title: z.string().max(500).optional().describe("Nieuwe titel (laat leeg om niet te wijzigen)"),
+      task_id: z.string().uuid().describe("UUID van de taak die bijgewerkt moet worden"),
+      title: z
+        .string()
+        .max(500)
+        .optional()
+        .describe("Nieuwe titel (laat leeg om niet te wijzigen)"),
       assigned_to_name: z
         .string()
         .max(255)
@@ -173,7 +182,10 @@ export function registerWriteTaskTools(server: McpServer) {
       if (Object.keys(updates).length === 0) {
         return {
           content: [
-            { type: "text" as const, text: "Geen wijzigingen opgegeven. Geef minimaal één veld mee om te wijzigen." },
+            {
+              type: "text" as const,
+              text: "Geen wijzigingen opgegeven. Geef minimaal één veld mee om te wijzigen.",
+            },
           ],
         };
       }
@@ -207,7 +219,7 @@ export function registerWriteTaskTools(server: McpServer) {
     "dismiss_task",
     "Wijs een taak af (niet relevant of per ongeluk aangemaakt). De taak krijgt status 'dismissed' en verdwijnt uit actieve lijsten.",
     {
-      task_id: z.string().describe("UUID van de taak die afgewezen moet worden"),
+      task_id: z.string().uuid().describe("UUID van de taak die afgewezen moet worden"),
     },
     async ({ task_id }) => {
       const supabase = getAdminClient();

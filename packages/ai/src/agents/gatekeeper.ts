@@ -95,6 +95,7 @@ export async function runGatekeeper(
 
   const { object } = await generateObject({
     model: anthropic("claude-haiku-4-5-20251001"),
+    maxRetries: 3,
     schema: GatekeeperSchema,
     messages: [
       {

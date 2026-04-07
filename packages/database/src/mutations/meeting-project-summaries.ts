@@ -13,11 +13,24 @@ interface SegmentInsert {
 
 /**
  * Insert meeting project summaries (segments) in batch.
+ * Idempotent: verwijdert eerst bestaande segmenten voor de meeting,
+ * zodat herverwerking geen duplicaten oplevert.
  */
 export async function insertMeetingProjectSummaries(
   segments: SegmentInsert[],
 ): Promise<{ success: true; ids: string[] } | { error: string }> {
   if (segments.length === 0) return { success: true, ids: [] };
+
+  const db = getAdminClient();
+  const meetingId = segments[0].meeting_id;
+
+  // Verwijder bestaande segmenten voor deze meeting (idempotentie)
+  const { error: deleteErr } = await db
+    .from("meeting_project_summaries")
+    .delete()
+    .eq("meeting_id", meetingId);
+
+  if (deleteErr) return { error: `Delete existing segments: ${deleteErr.message}` };
 
   const rows = segments.map((s) => ({
     meeting_id: s.meeting_id,
@@ -30,10 +43,7 @@ export async function insertMeetingProjectSummaries(
     embedding_stale: s.embedding_stale ?? true,
   }));
 
-  const { data, error } = await getAdminClient()
-    .from("meeting_project_summaries")
-    .insert(rows)
-    .select("id");
+  const { data, error } = await db.from("meeting_project_summaries").insert(rows).select("id");
 
   if (error) return { error: error.message };
   return { success: true, ids: (data ?? []).map((r) => r.id) };
@@ -66,96 +76,23 @@ export async function linkSegmentToProject(
 
 /**
  * Move items from a segment to the Algemeen segment and delete the empty one.
- * If no Algemeen segment exists for this meeting, creates one.
- * Sets embedding_stale=true on both affected segments.
+ * Uses a PostgreSQL function for transactional safety — all-or-nothing.
  */
 export async function removeSegmentTag(
   segmentId: string,
   meetingId: string,
 ): Promise<{ success: true } | { error: string }> {
-  const db = getAdminClient();
+  const { data, error } = await getAdminClient().rpc("merge_segment_to_general", {
+    p_segment_id: segmentId,
+    p_meeting_id: meetingId,
+  });
 
-  // Get the segment to remove
-  const { data: segment, error: fetchErr } = await db
-    .from("meeting_project_summaries")
-    .select("id, kernpunten, vervolgstappen")
-    .eq("id", segmentId)
-    .single();
+  if (error) return { error: error.message };
 
-  if (fetchErr || !segment) return { error: fetchErr?.message ?? "Segment niet gevonden" };
+  const result = data as { error?: string; success?: boolean };
+  if (result.error) return { error: result.error };
 
-  // Find existing Algemeen segment (project_id IS NULL and is_general = true)
-  const { data: generalSegments } = await db
-    .from("meeting_project_summaries")
-    .select("id, kernpunten, vervolgstappen, summary_text")
-    .eq("meeting_id", meetingId)
-    .is("project_id", null)
-    .neq("id", segmentId)
-    .limit(1);
-
-  const generalSegment = generalSegments?.[0];
-
-  if (generalSegment) {
-    // Merge items into existing Algemeen segment
-    const mergedKernpunten = [...(generalSegment.kernpunten ?? []), ...(segment.kernpunten ?? [])];
-    const mergedVervolgstappen = [
-      ...(generalSegment.vervolgstappen ?? []),
-      ...(segment.vervolgstappen ?? []),
-    ];
-    const summaryText = formatGeneralSummaryText(mergedKernpunten, mergedVervolgstappen);
-
-    const { error: updateErr } = await db
-      .from("meeting_project_summaries")
-      .update({
-        kernpunten: mergedKernpunten,
-        vervolgstappen: mergedVervolgstappen,
-        summary_text: summaryText,
-        embedding_stale: true,
-      })
-      .eq("id", generalSegment.id);
-
-    if (updateErr) return { error: updateErr.message };
-  } else {
-    // Create new Algemeen segment
-    const summaryText = formatGeneralSummaryText(
-      segment.kernpunten ?? [],
-      segment.vervolgstappen ?? [],
-    );
-
-    const { error: insertErr } = await db.from("meeting_project_summaries").insert({
-      meeting_id: meetingId,
-      project_id: null,
-      project_name_raw: null,
-      kernpunten: segment.kernpunten ?? [],
-      vervolgstappen: segment.vervolgstappen ?? [],
-      summary_text: summaryText,
-      embedding_stale: true,
-    });
-
-    if (insertErr) return { error: insertErr.message };
-  }
-
-  // Delete the now-empty segment
-  const { error: deleteErr } = await db
-    .from("meeting_project_summaries")
-    .delete()
-    .eq("id", segmentId);
-
-  if (deleteErr) return { error: deleteErr.message };
   return { success: true };
-}
-
-function formatGeneralSummaryText(kernpunten: string[], vervolgstappen: string[]): string {
-  const lines = ["Algemeen (niet project-specifiek):"];
-  if (kernpunten.length > 0) {
-    lines.push("Kernpunten:");
-    for (const k of kernpunten) lines.push(`- ${k}`);
-  }
-  if (vervolgstappen.length > 0) {
-    lines.push("Vervolgstappen:");
-    for (const v of vervolgstappen) lines.push(`- ${v}`);
-  }
-  return lines.join("\n");
 }
 
 /**

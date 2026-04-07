@@ -26,7 +26,7 @@ const BATCH_DELAY_MS = 2000;
 
 function log(msg: string) {
   const ts = new Date().toISOString().replace("T", " ").slice(0, 19);
-  console.log(`[${ts}] ${msg}`);
+  console.info(`[${ts}] ${msg}`);
 }
 
 function sleep(ms: number): Promise<void> {

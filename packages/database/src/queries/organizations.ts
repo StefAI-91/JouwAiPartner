@@ -15,13 +15,17 @@ export interface OrganizationListItem {
 /**
  * List all organizations with project count and last meeting date.
  */
-export async function listOrganizations(client?: SupabaseClient): Promise<OrganizationListItem[]> {
+export async function listOrganizations(
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<OrganizationListItem[]> {
   const db = client ?? getAdminClient();
 
   const { data: orgs, error } = await db
     .from("organizations")
     .select("id, name, type, status, contact_person, email")
-    .order("name");
+    .order("name")
+    .limit(options?.limit ?? 500);
 
   if (error || !orgs || orgs.length === 0) return [];
 

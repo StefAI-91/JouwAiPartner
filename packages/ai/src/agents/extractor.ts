@@ -88,6 +88,7 @@ export async function runExtractor(
 
   const { object } = await generateObject({
     model: anthropic("claude-sonnet-4-5-20250929"),
+    maxRetries: 3,
     schema: ExtractorOutputSchema,
     messages: [
       {

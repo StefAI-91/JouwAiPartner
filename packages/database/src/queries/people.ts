@@ -10,14 +10,18 @@ export interface PersonListItem {
 }
 
 /**
- * List all people ordered by name.
+ * List people ordered by name, with optional limit for scalability.
  */
-export async function listPeople(client?: SupabaseClient): Promise<PersonListItem[]> {
+export async function listPeople(
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<PersonListItem[]> {
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("people")
     .select("id, name, email, team, role")
-    .order("name");
+    .order("name")
+    .limit(options?.limit ?? 500);
 
   if (error || !data) return [];
   return data;
@@ -31,14 +35,18 @@ export interface PersonWithOrg {
 }
 
 /**
- * List all people with organization name, for selector dropdowns.
+ * List people with organization name, for selector dropdowns.
  */
-export async function listPeopleWithOrg(client?: SupabaseClient): Promise<PersonWithOrg[]> {
+export async function listPeopleWithOrg(
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<PersonWithOrg[]> {
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("people")
     .select("id, name, role, organization:organizations(name)")
-    .order("name");
+    .order("name")
+    .limit(options?.limit ?? 500);
 
   if (error || !data) return [];
   return data as unknown as PersonWithOrg[];

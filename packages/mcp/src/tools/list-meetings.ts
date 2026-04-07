@@ -46,7 +46,13 @@ export function registerListMeetingsTools(server: McpServer) {
         .enum(["client", "partner", "internal", "other"])
         .optional()
         .describe("Filter op partij type"),
-      limit: z.number().optional().default(20).describe("Max aantal resultaten (standaard 20)"),
+      limit: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .default(20)
+        .describe("Max aantal resultaten (standaard 20, max 100)"),
       offset: z
         .number()
         .optional()

@@ -11,10 +11,22 @@ export function registerPeopleTools(server: McpServer) {
     "Haal mensen op (teamleden, klanten, contactpersonen). Zoek op naam, team of rol. Gebruik om te achterhalen wie er in het team zit of om een persoon te vinden.",
     {
       search: z.string().max(255).optional().describe("Search by name (partial match)"),
-      team: z.string().max(100).optional().describe("Filter by team (e.g. 'engineering', 'leadership')"),
+      team: z
+        .string()
+        .max(100)
+        .optional()
+        .describe("Filter by team (e.g. 'engineering', 'leadership')"),
       role: z.string().max(255).optional().describe("Filter by role (partial match)"),
+      limit: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .default(50)
+        .describe("Max results (default 50, max 100)"),
+      offset: z.number().min(0).optional().default(0).describe("Skip results for pagination"),
     },
-    async ({ search, team, role }) => {
+    async ({ search, team, role, limit, offset }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(
         supabase,
@@ -28,7 +40,7 @@ export function registerPeopleTools(server: McpServer) {
       if (team) query = query.eq("team", team);
       if (role) query = query.ilike("role", `%${escapeLike(role)}%`);
 
-      const { data, error } = await query.limit(50);
+      const { data, error } = await query.range(offset, offset + limit - 1);
 
       if (error) {
         return {
