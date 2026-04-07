@@ -22,6 +22,19 @@ import {
   deleteWithContextSchema,
 } from "@/validations/entities";
 
+// ── Helpers ──
+
+/** Convert empty strings to null to prevent uuid/url validation errors */
+function cleanInput<T extends Record<string, unknown>>(input: T): T {
+  const cleaned = { ...input };
+  for (const key of Object.keys(cleaned)) {
+    if (cleaned[key] === "") {
+      (cleaned as Record<string, unknown>)[key] = null;
+    }
+  }
+  return cleaned;
+}
+
 // ── Auth Helper ──
 
 async function getAuthenticatedUser() {
@@ -40,7 +53,7 @@ export async function updateOrganizationAction(
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
-  const parsed = updateOrganizationSchema.safeParse(input);
+  const parsed = updateOrganizationSchema.safeParse(cleanInput(input));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
   const { id, ...data } = parsed.data;
@@ -78,7 +91,7 @@ export async function updateProjectAction(
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
-  const parsed = updateProjectSchema.safeParse(input);
+  const parsed = updateProjectSchema.safeParse(cleanInput(input));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
   const { id, ...data } = parsed.data;
@@ -116,7 +129,7 @@ export async function updatePersonAction(
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
-  const parsed = updatePersonSchema.safeParse(input);
+  const parsed = updatePersonSchema.safeParse(cleanInput(input));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
   const { id, ...data } = parsed.data;
