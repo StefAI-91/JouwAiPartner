@@ -1,25 +1,26 @@
 import { z } from "zod";
+import { zUuid } from "./uuid";
 
 export const verifyMeetingSchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: zUuid,
 });
 
 export const verifyMeetingWithEditsSchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: zUuid,
   extractionEdits: z
     .array(
       z.object({
-        extractionId: z.string().uuid(),
+        extractionId: zUuid,
         content: z.string().optional(),
         metadata: z.record(z.string(), z.unknown()).optional(),
       }),
     )
     .optional(),
-  rejectedExtractionIds: z.array(z.string().uuid()).optional(),
+  rejectedExtractionIds: z.array(zUuid).optional(),
   typeChanges: z
     .array(
       z.object({
-        extractionId: z.string().uuid(),
+        extractionId: zUuid,
         type: z.enum(["decision", "action_item", "need", "insight"]),
       }),
     )
@@ -28,6 +29,6 @@ export const verifyMeetingWithEditsSchema = z.object({
 });
 
 export const rejectMeetingSchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: zUuid,
   reason: z.string().min(1, "Reason is required"),
 });
