@@ -224,7 +224,7 @@ export async function regenerateMeetingAction(
   const { data: meeting, error: fetchError } = await supabase
     .from("meetings")
     .select(
-      `id, title, meeting_type, party_type, transcript, transcript_elevenlabs,
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
        meeting_participants(person:people(name))`,
     )
     .eq("id", meetingId)
@@ -269,6 +269,7 @@ export async function regenerateMeetingAction(
       runExtractor(transcript, {
         ...context,
         summary: richSummary,
+        meeting_date: (meeting.date as string) || new Date().toISOString().split("T")[0],
       }),
     ]);
     const identifiedProjects = gatekeeperResult.identified_projects;

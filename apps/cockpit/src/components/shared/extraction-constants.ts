@@ -14,3 +14,8 @@ export const EXTRACTION_TYPE_COLORS: Record<string, { label: string; color: stri
   {
     action_item: { label: "Actiepunt", color: "#16A34A", bg: "#DCFCE7" },
   };
+
+export const CATEGORY_BADGES: Record<string, { label: string; color: string; bg: string }> = {
+  wij_leveren: { label: "Wij leveren", color: "#1D4ED8", bg: "#DBEAFE" },
+  wij_volgen_op: { label: "Wij volgen op", color: "#B45309", bg: "#FEF3C7" },
+};

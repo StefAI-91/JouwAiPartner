@@ -9,6 +9,8 @@ interface PromoteTaskFormProps {
   extractionId: string;
   title: string;
   people: PersonForAssignment[];
+  defaultDueDate?: string | null;
+  defaultAssignee?: string | null;
   onPromoted: () => void;
   onCancel: () => void;
 }
@@ -17,11 +19,13 @@ export function PromoteTaskForm({
   extractionId,
   title,
   people,
+  defaultDueDate,
+  defaultAssignee,
   onPromoted,
   onCancel,
 }: PromoteTaskFormProps) {
-  const [assignedTo, setAssignedTo] = useState<string | null>(null);
-  const [dueDate, setDueDate] = useState<string | null>(null);
+  const [assignedTo, setAssignedTo] = useState<string | null>(defaultAssignee ?? null);
+  const [dueDate, setDueDate] = useState<string | null>(defaultDueDate ?? null);
   const [alreadyDone, setAlreadyDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
