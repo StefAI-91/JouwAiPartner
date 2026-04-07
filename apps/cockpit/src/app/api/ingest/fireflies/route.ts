@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { listFirefliesTranscripts, fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
-import { getExistingFirefliesIds, getExistingMeetingsByTitleDates } from "@repo/database/queries/meetings";
+import {
+  getExistingFirefliesIds,
+  getExistingMeetingsByTitleDates,
+} from "@repo/database/queries/meetings";
 import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 import { runReEmbedWorker } from "@repo/ai/pipeline/re-embed-worker";
@@ -27,7 +30,6 @@ interface IngestResult {
 export const maxDuration = 600;
 
 async function runIngest(limit: number, maxNew: number = Infinity) {
-
   // Step 1: List recent transcripts from Fireflies
   const transcripts = await listFirefliesTranscripts(limit);
 
@@ -113,6 +115,8 @@ async function runIngest(limit: number, maxNew: number = Infinity) {
         title: transcript.title,
         date: transcript.date,
         participants: transcript.participants,
+        organizer_email: transcript.organizer_email,
+        meeting_attendees: transcript.meeting_attendees ?? [],
         summary: transcript.summary?.notes ?? "",
         topics: transcript.summary?.topics_discussed ?? [],
         transcript: chunkedTranscript,
@@ -121,6 +125,8 @@ async function runIngest(limit: number, maxNew: number = Infinity) {
           title: transcript.title,
           date: transcript.date,
           participants: transcript.participants,
+          organizer_email: transcript.organizer_email,
+          meeting_attendees: transcript.meeting_attendees,
           summary: transcript.summary,
           sentences: transcript.sentences,
         },
