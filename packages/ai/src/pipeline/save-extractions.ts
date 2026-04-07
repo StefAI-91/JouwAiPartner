@@ -1,4 +1,3 @@
-import { resolveClientEntities } from "./entity-resolution";
 import { linkAllMeetingProjects } from "@repo/database/mutations/meetings";
 import { insertExtractions } from "@repo/database/mutations/extractions";
 import { ExtractorOutput, ExtractionItem } from "../validations/extractor";
@@ -82,20 +81,17 @@ export async function saveExtractions(
   extractions_saved: number;
   projects_linked: number;
 }> {
-  // Step 1: Resolve client entities (FUNC-061)
-  await resolveClientEntities(extractorOutput.entities.clients);
-
-  // Step 2: Link ALL Gatekeeper projects to meeting (FUNC-062, FUNC-063)
+  // Step 1: Link ALL Gatekeeper projects to meeting (FUNC-062, FUNC-063)
   const linkResult = await linkAllMeetingProjects(meetingId, identifiedProjects);
   if (linkResult.errors.length > 0) {
     console.error("Failed to link some projects:", linkResult.errors);
   }
 
-  // Step 3: Build project map + find primary for extraction assignment
+  // Step 2: Build project map + find primary for extraction assignment
   const projectMap = buildProjectMap(identifiedProjects);
   const primaryProjectId = findPrimaryProjectId(identifiedProjects);
 
-  // Step 4: Build and insert extraction rows
+  // Step 3: Build and insert extraction rows
   const rows = buildExtractionRows(
     extractorOutput.extractions,
     meetingId,

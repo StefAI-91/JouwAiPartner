@@ -8,7 +8,7 @@ import {
   collectVerifiedByIds,
 } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
-import { getSegmentsByMeetingId } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentsByMeetingIds } from "@repo/database/queries/meeting-project-summaries";
 
 export function registerMeetingTools(server: McpServer) {
   server.tool(
@@ -196,9 +196,10 @@ export function registerMeetingTools(server: McpServer) {
         return sections.join("\n");
       });
 
-      // Fetch segments for each meeting and append
+      // Batch fetch segments for all meetings (single query instead of N+1)
+      const segmentsByMeeting = await getSegmentsByMeetingIds(meetingIds, supabase);
       for (let i = 0; i < typedMeetings.length; i++) {
-        const segments = await getSegmentsByMeetingId(typedMeetings[i].id, supabase);
+        const segments = segmentsByMeeting.get(typedMeetings[i].id) ?? [];
         if (segments.length > 0) {
           const segLines = ["\n---\n### Project-segmenten"];
           for (const seg of segments) {

@@ -159,28 +159,30 @@ export async function linkMeetingProject(
 /**
  * Link all identified projects to a meeting with source='ai'.
  * Only links projects that have a resolved project_id.
+ * Uses a single batch upsert instead of individual queries (N+1 fix).
  */
 export async function linkAllMeetingProjects(
   meetingId: string,
   identifiedProjects: { project_id: string | null }[],
 ): Promise<{ linked: number; errors: string[] }> {
-  const errors: string[] = [];
-  let linked = 0;
-
   const projectsWithId = identifiedProjects.filter(
     (p): p is { project_id: string } => p.project_id !== null,
   );
 
-  for (const project of projectsWithId) {
-    const result = await linkMeetingProject(meetingId, project.project_id, "ai");
-    if ("error" in result) {
-      errors.push(result.error);
-    } else {
-      linked++;
-    }
-  }
+  if (projectsWithId.length === 0) return { linked: 0, errors: [] };
 
-  return { linked, errors };
+  const rows = projectsWithId.map((p) => ({
+    meeting_id: meetingId,
+    project_id: p.project_id,
+    source: "ai" as const,
+  }));
+
+  const { error } = await getAdminClient()
+    .from("meeting_projects")
+    .upsert(rows, { onConflict: "meeting_id,project_id" });
+
+  if (error) return { linked: 0, errors: [error.message] };
+  return { linked: rows.length, errors: [] };
 }
 
 export async function updateMeetingSummary(

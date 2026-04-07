@@ -98,6 +98,7 @@ function SegmentCard({
   const [expanded, setExpanded] = useState(false);
   const [linking, setLinking] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isUnknown = !segment.project_id && segment.project_name_raw && !segment.is_general;
   const displayName = segment.project_name ?? segment.project_name_raw ?? "Onbekend";
@@ -109,15 +110,29 @@ function SegmentCard({
 
   async function handleLink(projectId: string) {
     setLinking(true);
-    await linkSegmentToProjectAction({ segmentId: segment.id, projectId, meetingId });
+    setError(null);
+    const result = await linkSegmentToProjectAction({
+      segmentId: segment.id,
+      projectId,
+      meetingId,
+    });
     setLinking(false);
+    if ("error" in result) {
+      setError(result.error);
+      return;
+    }
     router.refresh();
   }
 
   async function handleRemoveTag() {
     setRemoving(true);
-    await removeSegmentTagAction({ segmentId: segment.id, meetingId });
+    setError(null);
+    const result = await removeSegmentTagAction({ segmentId: segment.id, meetingId });
     setRemoving(false);
+    if ("error" in result) {
+      setError(result.error);
+      return;
+    }
     router.refresh();
   }
 
@@ -148,6 +163,11 @@ function SegmentCard({
           )
         ) : null}
       </button>
+
+      {/* Error message */}
+      {error && (
+        <div className="mx-3 mb-2 rounded bg-red-50 px-2 py-1 text-xs text-red-600">{error}</div>
+      )}
 
       {/* Preview (always visible) */}
       {!expanded && previewItems.length > 0 && (
