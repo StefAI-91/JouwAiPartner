@@ -111,7 +111,7 @@ export function ReviewActionBar({
 
             <button
               onClick={onApprove}
-              disabled={loading === "approve" || approveCount === 0}
+              disabled={loading === "approve"}
               className="flex items-center gap-1.5 rounded-md bg-gradient-to-b from-brand to-brand-dark px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:shadow-md active:scale-[0.98] disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
             >
               <Check className="size-3.5" />
