@@ -11,7 +11,7 @@ export default async function MeetingsPage() {
 
   if (meetings.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+      <div className="px-4 py-16 text-center lg:px-10">
         <Calendar className="mx-auto h-10 w-10 text-muted-foreground/40" />
         <h2 className="mt-4 font-heading text-xl font-semibold">No meetings yet</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -22,7 +22,7 @@ export default async function MeetingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="space-y-6 px-4 py-8 lg:px-10">
       <div>
         <h1>Meetings</h1>
         <p className="mt-1 text-sm text-muted-foreground">

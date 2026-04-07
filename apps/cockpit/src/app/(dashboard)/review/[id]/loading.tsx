@@ -6,7 +6,7 @@ function SkeletonLine({ className }: { className?: string }) {
 
 export default function ReviewDetailLoading() {
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="space-y-6 px-4 py-8">
       {/* Header skeleton */}
       <div className="space-y-2">
         <SkeletonLine className="h-4 w-20" />

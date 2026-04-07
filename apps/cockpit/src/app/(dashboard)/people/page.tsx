@@ -17,7 +17,7 @@ export default async function PeoplePage() {
 
   if (people.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+      <div className="px-4 py-16 text-center lg:px-10">
         <Users className="mx-auto h-10 w-10 text-muted-foreground/40" />
         <h2 className="mt-4 font-heading text-xl font-semibold">No people yet</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -31,7 +31,7 @@ export default async function PeoplePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="space-y-6 px-4 py-8 lg:px-10">
       <div className="flex items-center justify-between">
         <div>
           <h1>People</h1>
@@ -42,7 +42,7 @@ export default async function PeoplePage() {
         <AddPersonButton organizations={organizations.map((o) => ({ id: o.id, name: o.name }))} />
       </div>
 
-      <div className="space-y-2">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {people.map((person) => (
           <Link
             key={person.id}

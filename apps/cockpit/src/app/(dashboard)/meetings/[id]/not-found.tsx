@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function MeetingNotFound() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+    <div className="px-4 py-16 text-center">
       <h2 className="font-heading text-xl font-semibold">Meeting not found</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         This meeting does not exist or has not been verified yet.

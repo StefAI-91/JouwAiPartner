@@ -40,12 +40,16 @@ export default async function DashboardPage() {
   const extractionCounts = await getExtractionCountsByMeetingIds(meetingIds, supabase);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+    <div className="space-y-8 px-4 py-8 lg:px-10">
       {/* Greeting */}
       <Greeting userName={userName} />
 
       {/* Meeting briefing carousel */}
-      <MeetingCarousel meetings={briefingMeetings} extractionCounts={extractionCounts} dayLabel={dayLabel} />
+      <MeetingCarousel
+        meetings={briefingMeetings}
+        extractionCounts={extractionCounts}
+        dayLabel={dayLabel}
+      />
 
       {/* Two-column bottom: recent meetings + tasks */}
       <div className="grid gap-6 md:grid-cols-2">
