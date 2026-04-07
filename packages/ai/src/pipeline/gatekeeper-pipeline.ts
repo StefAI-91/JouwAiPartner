@@ -21,11 +21,19 @@ import { insertMeetingProjectSummaries } from "@repo/database/mutations/meeting-
 import { updateSegmentEmbedding } from "@repo/database/mutations/meeting-project-summaries";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 
+interface MeetingAttendee {
+  displayName: string;
+  email: string;
+  name: string;
+}
+
 interface MeetingInput {
   fireflies_id: string;
   title: string;
   date: string;
   participants: string[];
+  organizer_email?: string | null;
+  meeting_attendees?: MeetingAttendee[];
   summary: string;
   topics: string[];
   transcript: string;
@@ -34,10 +42,38 @@ interface MeetingInput {
 }
 
 /**
- * Match participant emails to known people and link them to the meeting.
+ * Collect all unique participant emails from both participants array and
+ * structured meeting_attendees (which provides more reliable email data).
  */
-async function matchParticipants(meetingId: string, participants: string[]): Promise<number> {
-  const emails = participants.map((p) => p.toLowerCase().trim()).filter((p) => p.includes("@"));
+function collectParticipantEmails(participants: string[], attendees?: MeetingAttendee[]): string[] {
+  const emailSet = new Set<string>();
+
+  // Emails from participants array (legacy, sometimes unreliable)
+  for (const p of participants) {
+    const normalized = p.toLowerCase().trim();
+    if (normalized.includes("@")) emailSet.add(normalized);
+  }
+
+  // Emails from structured meeting_attendees (more reliable)
+  if (attendees) {
+    for (const a of attendees) {
+      if (a.email) emailSet.add(a.email.toLowerCase().trim());
+    }
+  }
+
+  return [...emailSet];
+}
+
+/**
+ * Match participant emails to known people and link them to the meeting.
+ * Uses meeting_attendees emails when available for more reliable matching.
+ */
+async function matchParticipants(
+  meetingId: string,
+  participants: string[],
+  attendees?: MeetingAttendee[],
+): Promise<number> {
+  const emails = collectParticipantEmails(participants, attendees);
   if (emails.length === 0) return 0;
 
   const emailToPersonId = await findPeopleByEmails(emails);
@@ -50,6 +86,29 @@ async function matchParticipants(meetingId: string, participants: string[]): Pro
     return 0;
   }
   return result.linked;
+}
+
+/**
+ * Merge participants array with structured meeting_attendees to get
+ * a more complete list of participant identifiers for classification.
+ * Attendee emails are preferred as they're more reliable than the
+ * raw participants strings.
+ */
+function mergeParticipantSources(participants: string[], attendees?: MeetingAttendee[]): string[] {
+  const seen = new Set(participants.map((p) => p.toLowerCase().trim()));
+  const merged = [...participants];
+
+  if (attendees) {
+    for (const a of attendees) {
+      const email = a.email?.toLowerCase().trim();
+      if (email && !seen.has(email)) {
+        merged.push(email);
+        seen.add(email);
+      }
+    }
+  }
+
+  return merged;
 }
 
 interface PipelineResult {
@@ -83,8 +142,13 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const errors: string[] = [];
 
   // Step 1-2: Classify participants and determine party type + fetch entity context (parallel)
+  // Merge meeting_attendees emails into participants for better classification
+  const allParticipantStrings = mergeParticipantSources(
+    input.participants,
+    input.meeting_attendees,
+  );
   const [classifiedParticipants, entityContext] = await Promise.all([
-    classifyParticipants(input.participants),
+    classifyParticipants(allParticipantStrings),
     buildEntityContext(),
   ]);
   const partyType = determinePartyType(classifiedParticipants);
@@ -130,6 +194,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     raw_fireflies: rawFireflies,
     embedding_stale: true,
     verification_status: "draft",
+    organizer_email: input.organizer_email ?? null,
   });
 
   if ("error" in insertResult) {
@@ -151,8 +216,8 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
 
   const meetingId = insertResult.data.id;
 
-  // Step 6: Link participants
-  await matchParticipants(meetingId, input.participants);
+  // Step 6: Link participants (uses meeting_attendees emails when available)
+  await matchParticipants(meetingId, input.participants, input.meeting_attendees);
 
   // Step 7: ElevenLabs transcription
   const transcribeResult = await runTranscribeStep(meetingId, input.audio_url);

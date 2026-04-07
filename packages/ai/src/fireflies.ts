@@ -1,10 +1,18 @@
 const FIREFLIES_API = "https://api.fireflies.ai/graphql";
 
+export interface FirefliesMeetingAttendee {
+  displayName: string;
+  email: string;
+  name: string;
+}
+
 export interface FirefliesTranscript {
   id: string;
   title: string;
   date: string;
   participants: string[];
+  organizer_email: string | null;
+  meeting_attendees: FirefliesMeetingAttendee[];
   summary: {
     overview: string;
     notes: string;
@@ -30,6 +38,7 @@ const LIST_TRANSCRIPTS_QUERY = `
       title
       date
       participants
+      organizer_email
     }
   }
 `;
@@ -41,6 +50,12 @@ const TRANSCRIPT_QUERY = `
       title
       date
       participants
+      organizer_email
+      meeting_attendees {
+        displayName
+        email
+        name
+      }
       audio_url
       summary {
         overview
@@ -94,6 +109,7 @@ export interface FirefliesListItem {
   title: string;
   date: string;
   participants: string[];
+  organizer_email: string | null;
 }
 
 export async function listFirefliesTranscripts(limit: number = 30): Promise<FirefliesListItem[]> {

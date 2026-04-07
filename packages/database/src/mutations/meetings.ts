@@ -15,6 +15,7 @@ export async function insertMeeting(meeting: {
   raw_fireflies?: Record<string, unknown> | null;
   embedding_stale: boolean;
   verification_status?: string;
+  organizer_email?: string | null;
 }): Promise<{ success: true; data: { id: string } } | { error: string }> {
   const { data, error } = await getAdminClient()
     .from("meetings")
