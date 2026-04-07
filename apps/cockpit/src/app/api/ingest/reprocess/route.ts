@@ -49,7 +49,9 @@ export async function POST(req: NextRequest) {
   // 1. Find existing meeting in DB
   const { data: meeting, error: meetingError } = await getAdminClient()
     .from("meetings")
-    .select("id, title, meeting_type, party_type, participants, organization_id, raw_fireflies")
+    .select(
+      "id, title, date, meeting_type, party_type, participants, organization_id, raw_fireflies",
+    )
     .eq("fireflies_id", fireflies_id)
     .single();
 
@@ -191,6 +193,7 @@ export async function POST(req: NextRequest) {
       party_type: meeting.party_type ?? "other",
       participants: meeting.participants ?? [],
       summary: extractorSummary,
+      meeting_date: meeting.date ?? new Date().toISOString().split("T")[0],
       identified_projects: identifiedProjects,
     });
 

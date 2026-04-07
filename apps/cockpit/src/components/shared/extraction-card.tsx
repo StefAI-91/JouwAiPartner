@@ -1,14 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, ListChecks } from "lucide-react";
+import { Pencil, Trash2, ListChecks, Clock, CalendarClock } from "lucide-react";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
 import {
   EXTRACTION_TYPE_COLORS,
   EXTRACTION_TYPE_ICONS,
+  CATEGORY_BADGES,
 } from "@/components/shared/extraction-constants";
 import { PromoteTaskForm } from "./promote-task-form";
 import type { PersonForAssignment } from "@repo/database/queries/people";
+
+interface ExtractionMetadata {
+  category?: "wij_leveren" | "wij_volgen_op";
+  assignee?: string;
+  deadline?: string;
+  suggested_deadline?: string;
+  effort_estimate?: "small" | "medium" | "large";
+  deadline_reasoning?: string;
+  scope?: string;
+  project?: string;
+}
 
 interface ExtractionCardProps {
   extraction: {
@@ -17,6 +29,7 @@ interface ExtractionCardProps {
     content: string;
     confidence: number | null;
     transcript_ref: string | null;
+    metadata?: ExtractionMetadata | null;
   };
   readOnly?: boolean;
   showPromote?: boolean;
@@ -122,6 +135,43 @@ export function ExtractionCard({
         </p>
       )}
 
+      {/* Category badge + metadata pills */}
+      {extraction.metadata && extraction.type === "action_item" && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {extraction.metadata.category && CATEGORY_BADGES[extraction.metadata.category] && (
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium"
+              style={{
+                color: CATEGORY_BADGES[extraction.metadata.category].color,
+                backgroundColor: CATEGORY_BADGES[extraction.metadata.category].bg,
+              }}
+            >
+              {CATEGORY_BADGES[extraction.metadata.category].label}
+            </span>
+          )}
+          {extraction.metadata.assignee && (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+              {extraction.metadata.assignee}
+            </span>
+          )}
+          {extraction.metadata.deadline ? (
+            <span className="flex items-center gap-0.5 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+              <Clock className="size-2.5" />
+              {extraction.metadata.deadline}
+            </span>
+          ) : extraction.metadata.suggested_deadline ? (
+            <span
+              className="flex items-center gap-0.5 rounded-full border border-dashed border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700"
+              title={extraction.metadata.deadline_reasoning ?? "AI-geschatte deadline"}
+            >
+              <CalendarClock className="size-2.5" />
+              {extraction.metadata.suggested_deadline}
+              <span className="font-normal text-amber-500">geschat</span>
+            </span>
+          ) : null}
+        </div>
+      )}
+
       {extraction.transcript_ref && (
         <blockquote
           onClick={() => onRefClick?.(extraction.transcript_ref!)}
@@ -159,6 +209,14 @@ export function ExtractionCard({
           extractionId={extraction.id}
           title={extraction.content}
           people={people ?? []}
+          defaultDueDate={extraction.metadata?.deadline ?? extraction.metadata?.suggested_deadline}
+          defaultAssignee={
+            extraction.metadata?.assignee
+              ? (people?.find(
+                  (p) => p.name.toLowerCase() === extraction.metadata?.assignee?.toLowerCase(),
+                )?.id ?? null)
+              : null
+          }
           onPromoted={() => {
             setPromoted(true);
             setShowPromoteForm(false);

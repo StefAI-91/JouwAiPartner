@@ -49,8 +49,12 @@ function buildExtractionRows(
     }
 
     const metadata: Record<string, unknown> = {};
+    if (item.category) metadata.category = item.category;
     if (item.assignee) metadata.assignee = item.assignee;
     if (item.deadline) metadata.deadline = item.deadline;
+    if (item.suggested_deadline) metadata.suggested_deadline = item.suggested_deadline;
+    if (item.effort_estimate) metadata.effort_estimate = item.effort_estimate;
+    if (item.deadline_reasoning) metadata.deadline_reasoning = item.deadline_reasoning;
     if (item.scope) metadata.scope = item.scope;
     if (item.project) metadata.project = item.project;
 

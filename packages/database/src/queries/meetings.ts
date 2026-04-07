@@ -24,6 +24,7 @@ export interface MeetingDetail {
     content: string;
     confidence: number | null;
     transcript_ref: string | null;
+    metadata: Record<string, unknown>;
   }[];
 }
 
@@ -41,7 +42,7 @@ export async function getVerifiedMeetingById(
        organization:organizations(name),
        meeting_participants(person:people(id, name)),
        meeting_projects(project:projects(id, name)),
-       extractions(id, type, content, confidence, transcript_ref)`,
+       extractions(id, type, content, confidence, transcript_ref, metadata)`,
     )
     .eq("id", meetingId)
     .eq("verification_status", "verified")

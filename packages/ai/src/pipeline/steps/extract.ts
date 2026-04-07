@@ -23,6 +23,7 @@ export async function runExtractStep(
     party_type: string;
     participants: string[];
     summary: string;
+    meeting_date: string;
     entityContext?: string;
   },
   rawFireflies: Record<string, unknown>,

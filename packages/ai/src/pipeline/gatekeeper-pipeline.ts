@@ -246,7 +246,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const extractResult = await runExtractStep(
     meetingId,
     bestTranscript,
-    { ...summarizeContext, summary: extractorSummary },
+    { ...summarizeContext, summary: extractorSummary, meeting_date: input.date },
     rawFireflies,
     transcriptSource,
     identifiedProjects,
