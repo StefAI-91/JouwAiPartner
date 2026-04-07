@@ -119,6 +119,7 @@ export interface Database {
           contact_person_id: string | null;
           start_date: string | null;
           deadline: string | null;
+          github_url: string | null;
           status: string;
           embedding: string | null;
           embedding_stale: boolean;
@@ -135,6 +136,7 @@ export interface Database {
           contact_person_id?: string | null;
           start_date?: string | null;
           deadline?: string | null;
+          github_url?: string | null;
           status?: string;
           embedding?: string | null;
           embedding_stale?: boolean;
@@ -151,6 +153,7 @@ export interface Database {
           contact_person_id?: string | null;
           start_date?: string | null;
           deadline?: string | null;
+          github_url?: string | null;
           status?: string;
           embedding?: string | null;
           embedding_stale?: boolean;

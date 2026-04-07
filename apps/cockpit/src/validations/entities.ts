@@ -35,6 +35,7 @@ export const updateProjectSchema = z.object({
   contact_person_id: z.string().uuid().nullable().optional(),
   start_date: z.string().nullable().optional(),
   deadline: z.string().nullable().optional(),
+  github_url: z.string().url("Ongeldige URL").nullable().optional(),
 });
 
 export const updatePersonSchema = z.object({
