@@ -1,12 +1,25 @@
 import { z } from "zod";
 
+/** Transform empty strings to null so uuid()/url() validators don't choke on "" */
+const emptyToNull = z.preprocess(
+  (v) => (v === "" ? null : v),
+  z.string().uuid().nullable().optional(),
+);
+const emptyToNullUrl = z.preprocess(
+  (v) => (v === "" ? null : v),
+  z.string().url("Ongeldige URL").nullable().optional(),
+);
+
 export const updateOrganizationSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, "Naam is verplicht").max(200).optional(),
   type: z.enum(["client", "partner", "supplier", "other"]).optional(),
   status: z.enum(["prospect", "active", "inactive"]).optional(),
   contact_person: z.string().max(200).nullable().optional(),
-  email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
+  email: z.preprocess(
+    (v) => (v === "" ? null : v),
+    z.string().email("Ongeldig e-mailadres").nullable().optional(),
+  ),
 });
 
 export const updateProjectSchema = z.object({
@@ -29,13 +42,13 @@ export const updateProjectSchema = z.object({
       "active",
     ])
     .optional(),
-  organization_id: z.string().uuid().nullable().optional(),
+  organization_id: emptyToNull,
   description: z.string().max(2000).nullable().optional(),
-  owner_id: z.string().uuid().nullable().optional(),
-  contact_person_id: z.string().uuid().nullable().optional(),
+  owner_id: emptyToNull,
+  contact_person_id: emptyToNull,
   start_date: z.string().nullable().optional(),
   deadline: z.string().nullable().optional(),
-  github_url: z.string().url("Ongeldige URL").nullable().optional(),
+  github_url: emptyToNullUrl,
 });
 
 export const updatePersonSchema = z.object({
@@ -44,7 +57,7 @@ export const updatePersonSchema = z.object({
   email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
   role: z.string().max(200).nullable().optional(),
   team: z.string().max(200).nullable().optional(),
-  organization_id: z.string().uuid().nullable().optional(),
+  organization_id: emptyToNull,
 });
 
 export const createExtractionSchema = z.object({
