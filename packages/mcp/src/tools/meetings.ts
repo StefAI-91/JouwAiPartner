@@ -17,6 +17,7 @@ export function registerMeetingTools(server: McpServer) {
     {
       meeting_id: z
         .string()
+        .uuid()
         .optional()
         .describe("UUID of the meeting (from search results or list_meetings)"),
       title_search: z

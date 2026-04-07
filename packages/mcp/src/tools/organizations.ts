@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
 import { trackMcpQuery } from "./usage-tracking";
-import { escapeLike } from "./utils";
+import { escapeLike, sanitizeForContains } from "./utils";
 
 export function registerOrganizationTools(server: McpServer) {
   server.tool(
@@ -34,7 +34,7 @@ export function registerOrganizationTools(server: McpServer) {
       if (status) query = query.eq("status", status);
       if (search) {
         const escaped = escapeLike(search);
-        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${search}}`);
+        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${sanitizeForContains(search)}}`);
       }
 
       const { data, error } = await query.limit(50);
@@ -63,13 +63,15 @@ export function registerOrganizationTools(server: McpServer) {
         status: "prospect" | "active" | "inactive";
       }
 
-      const formatted = (data as unknown as OrganizationItem[]).map((org: OrganizationItem, i: number) => {
-        const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
-        const contact = org.contact_person
-          ? `\n   Contact: ${org.contact_person}${org.email ? ` <${org.email}>` : ""}`
-          : "";
-        return `${i + 1}. **${org.name}**${aliases}\n   Type: ${org.type} | Status: ${org.status}${contact}`;
-      });
+      const formatted = (data as unknown as OrganizationItem[]).map(
+        (org: OrganizationItem, i: number) => {
+          const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
+          const contact = org.contact_person
+            ? `\n   Contact: ${org.contact_person}${org.email ? ` <${org.email}>` : ""}`
+            : "";
+          return `${i + 1}. **${org.name}**${aliases}\n   Type: ${org.type} | Status: ${org.status}${contact}`;
+        },
+      );
 
       return {
         content: [

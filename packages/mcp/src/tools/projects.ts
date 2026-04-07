@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
 import { trackMcpQuery } from "./usage-tracking";
-import { escapeLike } from "./utils";
+import { escapeLike, sanitizeForContains } from "./utils";
 import { getSegmentCountsByProjectIds } from "@repo/database/queries/meeting-project-summaries";
 
 export function registerProjectTools(server: McpServer) {
@@ -45,7 +45,7 @@ export function registerProjectTools(server: McpServer) {
       if (status) query = query.eq("status", status);
       if (search) {
         const escaped = escapeLike(search);
-        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${search}}`);
+        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${sanitizeForContains(search)}}`);
       }
 
       if (organization) {

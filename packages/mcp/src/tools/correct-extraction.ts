@@ -39,9 +39,13 @@ export function registerCorrectExtractionTools(server: McpServer) {
     "correct_extraction",
     "Corrigeer een extractie (besluit, actiepunt, inzicht, behoefte). Overschrijf de content en/of metadata. De correctie wordt gelogd met wie het gecorrigeerd heeft en wanneer, en de embedding wordt opnieuw berekend.",
     {
-      extraction_id: z.string().describe("UUID van de extractie die gecorrigeerd moet worden"),
+      extraction_id: z
+        .string()
+        .uuid()
+        .describe("UUID van de extractie die gecorrigeerd moet worden"),
       content: z
-        .string().max(2000)
+        .string()
+        .max(2000)
         .optional()
         .describe("Nieuwe content tekst (laat leeg om niet te wijzigen)"),
       metadata: z
@@ -69,9 +73,7 @@ export function registerCorrectExtractionTools(server: McpServer) {
       const existing = await getExtractionForCorrection(extraction_id);
       if (!existing) {
         return {
-          content: [
-            { type: "text" as const, text: `Extractie ${extraction_id} niet gevonden.` },
-          ],
+          content: [{ type: "text" as const, text: `Extractie ${extraction_id} niet gevonden.` }],
         };
       }
 

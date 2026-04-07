@@ -9,6 +9,14 @@ export function escapeLike(input: string): string {
 }
 
 /**
+ * Sanitize input for PostgREST array containment (cs) filter.
+ * Removes {, }, and , characters that could break the filter syntax.
+ */
+export function sanitizeForContains(input: string): string {
+  return input.replace(/[{},]/g, "");
+}
+
+/**
  * Resolve project IDs by partial name OR alias match.
  * Returns null if no projects found, or an array of matching IDs.
  */
@@ -17,10 +25,11 @@ export async function resolveProjectIds(
   projectName: string,
 ): Promise<string[] | null> {
   const escaped = escapeLike(projectName);
+  const sanitized = sanitizeForContains(projectName);
   const { data: projects } = await supabase
     .from("projects")
     .select("id")
-    .or(`name.ilike.%${escaped}%,aliases.cs.{${projectName}}`);
+    .or(`name.ilike.%${escaped}%,aliases.cs.{${sanitized}}`);
 
   if (!projects || projects.length === 0) return null;
   return projects.map((p: { id: string }) => p.id);
@@ -35,10 +44,11 @@ export async function resolveOrganizationIds(
   orgName: string,
 ): Promise<string[] | null> {
   const escaped = escapeLike(orgName);
+  const sanitized = sanitizeForContains(orgName);
   const { data: orgs } = await supabase
     .from("organizations")
     .select("id")
-    .or(`name.ilike.%${escaped}%,aliases.cs.{${orgName}}`);
+    .or(`name.ilike.%${escaped}%,aliases.cs.{${sanitized}}`);
 
   if (!orgs || orgs.length === 0) return null;
   return orgs.map((o: { id: string }) => o.id);
