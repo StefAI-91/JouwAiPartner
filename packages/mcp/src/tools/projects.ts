@@ -25,8 +25,16 @@ export function registerProjectTools(server: McpServer) {
         .enum(["lead", "active", "paused", "completed", "cancelled"])
         .optional()
         .describe("Filter by status"),
+      limit: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .default(50)
+        .describe("Max results (default 50, max 100)"),
+      offset: z.number().min(0).optional().default(0).describe("Skip results for pagination"),
     },
-    async ({ search, organization, status }) => {
+    async ({ search, organization, status, limit, offset }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(
         supabase,
@@ -69,7 +77,7 @@ export function registerProjectTools(server: McpServer) {
         }
       }
 
-      const { data, error } = await query.limit(50);
+      const { data, error } = await query.range(offset, offset + limit - 1);
 
       if (error) {
         return {

@@ -13,7 +13,10 @@ export interface ProjectListItem {
   owner: { name: string } | null;
 }
 
-export async function listProjects(client?: SupabaseClient): Promise<ProjectListItem[]> {
+export async function listProjects(
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<ProjectListItem[]> {
   const db = client ?? getAdminClient();
 
   // Get projects with organization
@@ -24,7 +27,8 @@ export async function listProjects(client?: SupabaseClient): Promise<ProjectList
        organization:organizations(name),
        owner:people!projects_owner_id_fkey(name)`,
     )
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .limit(options?.limit ?? 500);
 
   if (error) {
     console.error("[listProjects]", error.message);

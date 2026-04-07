@@ -56,53 +56,20 @@ export async function resolveOrganizationIds(
 
 /**
  * Resolve meeting IDs by participant name.
- * Checks both the meeting_participants join table (linked people)
- * and the participants text array on meetings (unlinked Fireflies names).
- * Returns null if no meetings found, or an array of matching meeting IDs.
+ * Uses a database RPC that combines linked people and raw participant arrays
+ * for efficient server-side filtering (no full table scan).
  */
 export async function resolveMeetingIdsByParticipant(
   supabase: SupabaseClient,
   participantName: string,
 ): Promise<string[] | null> {
-  const escaped = escapeLike(participantName);
-  const meetingIds = new Set<string>();
+  const { data, error } = await supabase.rpc("search_meetings_by_participant", {
+    p_name: participantName,
+    max_results: 500,
+  });
 
-  // Strategy 1: Match via meeting_participants join table (linked people)
-  const { data: people } = await supabase.from("people").select("id").ilike("name", `%${escaped}%`);
-
-  if (people && people.length > 0) {
-    const personIds = people.map((p: { id: string }) => p.id);
-    const { data: mpMatches } = await supabase
-      .from("meeting_participants")
-      .select("meeting_id")
-      .in("person_id", personIds);
-
-    if (mpMatches) {
-      for (const mp of mpMatches) {
-        meetingIds.add((mp as { meeting_id: string }).meeting_id);
-      }
-    }
-  }
-
-  // Strategy 2: Match via participants text array (unlinked names from Fireflies)
-  // Fetch all meetings and filter in JS since PostgREST doesn't support
-  // case-insensitive partial match on array elements
-  const lowerName = participantName.toLowerCase();
-  const { data: allMeetings } = await supabase
-    .from("meetings")
-    .select("id, participants")
-    .not("participants", "is", null);
-
-  if (allMeetings) {
-    for (const m of allMeetings as { id: string; participants: string[] }[]) {
-      if (m.participants?.some((p) => p.toLowerCase().includes(lowerName))) {
-        meetingIds.add(m.id);
-      }
-    }
-  }
-
-  if (meetingIds.size === 0) return null;
-  return [...meetingIds];
+  if (error || !data || data.length === 0) return null;
+  return data.map((row: { meeting_id: string }) => row.meeting_id);
 }
 
 /**

@@ -50,6 +50,7 @@ export async function getSegmentsByMeetingId(
 
 /**
  * Get segment counts per meeting (for list_meetings MCP tool).
+ * Selects only the grouping column with a safeguard limit.
  */
 export async function getSegmentCountsByMeetingIds(
   meetingIds: string[],
@@ -58,10 +59,13 @@ export async function getSegmentCountsByMeetingIds(
   if (meetingIds.length === 0) return new Map();
   const db = client ?? getAdminClient();
 
+  // Supabase JS doesn't support GROUP BY; fetch IDs and count in JS.
+  // Limit to 5000 rows as safeguard — at ~5 segments/meeting this covers 1000 meetings.
   const { data } = await db
     .from("meeting_project_summaries")
     .select("meeting_id")
-    .in("meeting_id", meetingIds);
+    .in("meeting_id", meetingIds)
+    .limit(5000);
 
   const counts = new Map<string, number>();
   if (data) {
@@ -74,6 +78,7 @@ export async function getSegmentCountsByMeetingIds(
 
 /**
  * Get segment count per project (for get_projects MCP tool).
+ * Selects only the grouping column with a safeguard limit.
  */
 export async function getSegmentCountsByProjectIds(
   projectIds: string[],
@@ -85,7 +90,8 @@ export async function getSegmentCountsByProjectIds(
   const { data } = await db
     .from("meeting_project_summaries")
     .select("project_id")
-    .in("project_id", projectIds);
+    .in("project_id", projectIds)
+    .limit(5000);
 
   const counts = new Map<string, number>();
   if (data) {
