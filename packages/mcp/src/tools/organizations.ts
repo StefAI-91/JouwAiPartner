@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
 import { trackMcpQuery } from "./usage-tracking";
-import { escapeLike } from "./utils";
+import { escapeLike, sanitizeForContains } from "./utils";
 
 export function registerOrganizationTools(server: McpServer) {
   server.tool(
@@ -16,8 +16,16 @@ export function registerOrganizationTools(server: McpServer) {
         .optional()
         .describe("Filter by type"),
       status: z.enum(["prospect", "active", "inactive"]).optional().describe("Filter by status"),
+      limit: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .default(50)
+        .describe("Max results (default 50, max 100)"),
+      offset: z.number().min(0).optional().default(0).describe("Skip results for pagination"),
     },
-    async ({ search, type, status }) => {
+    async ({ search, type, status, limit, offset }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(
         supabase,
@@ -34,10 +42,10 @@ export function registerOrganizationTools(server: McpServer) {
       if (status) query = query.eq("status", status);
       if (search) {
         const escaped = escapeLike(search);
-        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${search}}`);
+        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${sanitizeForContains(search)}}`);
       }
 
-      const { data, error } = await query.limit(50);
+      const { data, error } = await query.range(offset, offset + limit - 1);
 
       if (error) {
         return {
@@ -63,13 +71,15 @@ export function registerOrganizationTools(server: McpServer) {
         status: "prospect" | "active" | "inactive";
       }
 
-      const formatted = (data as unknown as OrganizationItem[]).map((org: OrganizationItem, i: number) => {
-        const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
-        const contact = org.contact_person
-          ? `\n   Contact: ${org.contact_person}${org.email ? ` <${org.email}>` : ""}`
-          : "";
-        return `${i + 1}. **${org.name}**${aliases}\n   Type: ${org.type} | Status: ${org.status}${contact}`;
-      });
+      const formatted = (data as unknown as OrganizationItem[]).map(
+        (org: OrganizationItem, i: number) => {
+          const aliases = org.aliases?.length > 0 ? ` (${org.aliases.join(", ")})` : "";
+          const contact = org.contact_person
+            ? `\n   Contact: ${org.contact_person}${org.email ? ` <${org.email}>` : ""}`
+            : "";
+          return `${i + 1}. **${org.name}**${aliases}\n   Type: ${org.type} | Status: ${org.status}${contact}`;
+        },
+      );
 
       return {
         content: [

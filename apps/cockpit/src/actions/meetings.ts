@@ -25,6 +25,16 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
 import { runExtractor } from "@repo/ai/agents/extractor";
 import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
+import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
+import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
+import { runTagger } from "@repo/ai/pipeline/tagger";
+import { buildSegments } from "@repo/ai/pipeline/segment-builder";
+import { embedBatch } from "@repo/ai/embeddings";
+import {
+  insertMeetingProjectSummaries,
+  updateSegmentEmbedding,
+} from "@repo/database/mutations/meeting-project-summaries";
+import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import {
   updateTitleSchema,
   updateSummarySchema,
@@ -63,6 +73,7 @@ export async function updateMeetingTitleAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/");
   return { success: true };
 }
@@ -81,6 +92,7 @@ export async function updateMeetingSummaryAction(
 
   await markMeetingEmbeddingStale(parsed.data.meetingId);
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/");
   return { success: true };
 }
@@ -98,6 +110,7 @@ export async function updateMeetingTypeAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/");
   return { success: true };
 }
@@ -115,6 +128,7 @@ export async function updateMeetingOrganizationAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/clients");
   return { success: true };
 }
@@ -128,10 +142,11 @@ export async function linkMeetingProjectAction(
   const parsed = meetingProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
-  const result = await linkMeetingProject(parsed.data.meetingId, parsed.data.projectId);
+  const result = await linkMeetingProject(parsed.data.meetingId, parsed.data.projectId, "manual");
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/projects");
   return { success: true };
 }
@@ -149,6 +164,7 @@ export async function unlinkMeetingProjectAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   revalidatePath("/projects");
   return { success: true };
 }
@@ -160,12 +176,16 @@ export async function linkMeetingParticipantAction(
   if (!user) return { error: "Niet ingelogd" };
 
   const parsed = meetingParticipantSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues.map((i) => i.message).join(", ") };
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+    return { error: `Ongeldige invoer (${fields.join(", ")})` };
+  }
 
   const result = await linkMeetingParticipant(parsed.data.meetingId, parsed.data.personId);
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   return { success: true };
 }
 
@@ -182,6 +202,7 @@ export async function unlinkMeetingParticipantAction(
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
   return { success: true };
 }
 
@@ -230,17 +251,29 @@ export async function regenerateMeetingAction(
   };
 
   try {
-    // Step 1: Regenerate summary
-    const summarizerOutput = await runSummarizer(transcript, context);
+    // Step 1: Summarizer + entity context in parallel (saves ~10-15s)
+    const [summarizerOutput, entityContext] = await Promise.all([
+      runSummarizer(transcript, context),
+      buildEntityContext(),
+    ]);
     const richSummary = formatSummary(summarizerOutput);
 
-    // Step 2: Re-extract action items (before deleting old ones)
-    const extractorOutput = await runExtractor(transcript, {
-      ...context,
-      summary: richSummary,
-    });
+    // Step 2: Gatekeeper + Extractor in parallel
+    // Gatekeeper uses summary for project-identification
+    // Extractor starts without project constraint, we'll link after
+    const [gatekeeperResult, extractorOutput] = await Promise.all([
+      runGatekeeper(richSummary.slice(0, 3000), {
+        title: context.title,
+        entityContext: entityContext.contextString,
+      }),
+      runExtractor(transcript, {
+        ...context,
+        summary: richSummary,
+      }),
+    ]);
+    const identifiedProjects = gatekeeperResult.identified_projects;
 
-    // Step 3: Save summary (safe — overwrites existing, no data loss on failure)
+    // Step 4: Save summary (safe — overwrites existing, no data loss on failure)
     const summaryResult = await updateMeetingSummary(
       meetingId,
       richSummary,
@@ -250,18 +283,78 @@ export async function regenerateMeetingAction(
       return { error: `Summary opslaan mislukt: ${summaryResult.error}` };
     }
 
-    // Step 4: Delete old extractions + save new ones (only after AI steps succeeded)
+    // Step 5: Delete old extractions + save new ones (only after AI steps succeeded)
     const deleteResult = await deleteExtractionsByMeetingId(meetingId);
     if ("error" in deleteResult) {
       return { error: `Oude extracties verwijderen mislukt: ${deleteResult.error}` };
     }
 
-    const saveResult = await saveExtractions(extractorOutput, meetingId);
+    const saveResult = await saveExtractions(extractorOutput, meetingId, identifiedProjects);
     if (saveResult.extractions_saved === 0 && extractorOutput.extractions.length > 0) {
       return { error: "Nieuwe extracties opslaan mislukt" };
     }
 
-    // Step 5: Mark meeting embedding as stale for re-embedding
+    // Step 6: Tagger + segment-bouw (delete old segments first, then rebuild)
+    const { data: meetingOrg } = await supabase
+      .from("meetings")
+      .select("organization_id")
+      .eq("id", meetingId)
+      .single();
+
+    // Delete existing segments for this meeting
+    await supabase.from("meeting_project_summaries").delete().eq("meeting_id", meetingId);
+
+    if (summarizerOutput.kernpunten.length > 0 || summarizerOutput.vervolgstappen.length > 0) {
+      try {
+        const ignoredNames = meetingOrg?.organization_id
+          ? await getIgnoredEntityNames(meetingOrg.organization_id, "project")
+          : new Set<string>();
+
+        const taggerOutput = runTagger({
+          kernpunten: summarizerOutput.kernpunten,
+          vervolgstappen: summarizerOutput.vervolgstappen,
+          identified_projects: identifiedProjects,
+          knownProjects: entityContext.projects.map((p) => ({
+            id: p.id,
+            name: p.name,
+            aliases: p.aliases,
+          })),
+          ignoredNames,
+        });
+
+        const segments = buildSegments(taggerOutput);
+
+        if (segments.length > 0) {
+          const segmentRows = segments.map((s) => ({
+            meeting_id: meetingId,
+            project_id: s.project_id,
+            project_name_raw: s.project_name_raw,
+            kernpunten: s.kernpunten,
+            vervolgstappen: s.vervolgstappen,
+            summary_text: s.summary_text,
+          }));
+
+          const insertSegResult = await insertMeetingProjectSummaries(segmentRows);
+          if (!("error" in insertSegResult)) {
+            // Embed segments
+            try {
+              const texts = segments.map((s) => s.summary_text);
+              const embeddings = await embedBatch(texts);
+              await Promise.all(
+                insertSegResult.ids.map((id, i) => updateSegmentEmbedding(id, embeddings[i])),
+              );
+            } catch (embedErr) {
+              console.error("Segment embedding failed (non-blocking):", embedErr);
+            }
+          }
+        }
+      } catch (taggerErr) {
+        // Graceful degradation: log error, continue
+        console.error("Tagger failed during regeneration (non-blocking):", taggerErr);
+      }
+    }
+
+    // Step 7: Mark meeting embedding as stale for re-embedding
     const staleResult = await markMeetingEmbeddingStale(meetingId);
     if ("error" in staleResult) {
       console.error("Failed to mark embedding stale:", staleResult.error);

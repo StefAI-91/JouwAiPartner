@@ -1,52 +1,51 @@
-import { resolveAllEntities } from "./entity-resolution";
-import { linkMeetingProject } from "@repo/database/mutations/meetings";
+import { linkAllMeetingProjects } from "@repo/database/mutations/meetings";
 import { insertExtractions } from "@repo/database/mutations/extractions";
 import { ExtractorOutput, ExtractionItem } from "../validations/extractor";
+import type { IdentifiedProject } from "../validations/gatekeeper";
 
 /**
- * Resolve the primary project ID from entity resolutions.
+ * Build a map of project_name -> project_id from Gatekeeper's identified projects.
  */
-function resolvePrimaryProject(
-  extractorOutput: ExtractorOutput,
-  entityResolutions: Map<string, string | null>,
-): string | null {
-  if (extractorOutput.primary_project) {
-    const resolved = entityResolutions.get(extractorOutput.primary_project);
-    if (resolved) return resolved;
+function buildProjectMap(identifiedProjects: IdentifiedProject[]): Map<string, string | null> {
+  const map = new Map<string, string | null>();
+  for (const p of identifiedProjects) {
+    map.set(p.project_name.toLowerCase(), p.project_id);
   }
+  return map;
+}
 
-  for (const proj of extractorOutput.entities.projects) {
-    const resolved = entityResolutions.get(proj);
-    if (resolved) return resolved;
-  }
-
-  return null;
+/**
+ * Find the primary project from identified projects (highest confidence with a resolved ID).
+ */
+function findPrimaryProjectId(identifiedProjects: IdentifiedProject[]): string | null {
+  const sorted = [...identifiedProjects]
+    .filter((p) => p.project_id !== null)
+    .sort((a, b) => b.confidence - a.confidence);
+  return sorted[0]?.project_id ?? null;
 }
 
 /**
  * Build extraction rows for batch insert from extractor output.
+ * Project assignment comes from Gatekeeper's identified projects (not Extractor).
  */
 function buildExtractionRows(
   extractions: ExtractionItem[],
   meetingId: string,
-  entityResolutions: Map<string, string | null>,
-  meetingProjectId: string | null,
+  projectMap: Map<string, string | null>,
+  primaryProjectId: string | null,
 ) {
   return extractions.map((item: ExtractionItem) => {
-    // Only assign project_id if the extraction explicitly mentions a project,
-    // or if it's NOT a personal action item (personal items don't belong to a project)
     let projectId: string | null = null;
 
     if (item.project) {
-      // Extraction explicitly references a project — resolve it
-      projectId = entityResolutions.get(item.project) ?? meetingProjectId;
+      // Extraction references a project name -> look up in Gatekeeper's project map
+      projectId = projectMap.get(item.project.toLowerCase()) ?? null;
     } else if (item.type === "action_item" && item.scope === "personal") {
-      // Personal action items don't belong to the meeting's project
+      // Personal action items don't belong to a project
       projectId = null;
     } else {
-      // Decisions, needs, insights, and project-scoped action items
-      // without an explicit project reference inherit the meeting's project
-      projectId = meetingProjectId;
+      // Project-scoped items without explicit project inherit the primary project
+      projectId = primaryProjectId;
     }
 
     const metadata: Record<string, unknown> = {};
@@ -71,46 +70,45 @@ function buildExtractionRows(
 
 /**
  * Save all Extractor output to the unified `extractions` table.
- * Runs entity resolution for project/client linking.
+ * Project-linking via Gatekeeper's identified_projects (FUNC-060).
+ * Client resolution still via Extractor entities (FUNC-061).
  */
 export async function saveExtractions(
   extractorOutput: ExtractorOutput,
   meetingId: string,
+  identifiedProjects: IdentifiedProject[],
 ): Promise<{
   extractions_saved: number;
-  project_linked: boolean;
+  projects_linked: number;
 }> {
-  // Step 1: Resolve entities (projects + clients) for linking
-  const entityResolutions = await resolveAllEntities(
-    extractorOutput.entities,
-    meetingId,
-    "meetings",
-  );
-
-  // Step 2: Determine and link meeting's primary project
-  const meetingProjectId = resolvePrimaryProject(extractorOutput, entityResolutions);
-  if (meetingProjectId) {
-    await linkMeetingProject(meetingId, meetingProjectId);
+  // Step 1: Link ALL Gatekeeper projects to meeting (FUNC-062, FUNC-063)
+  const linkResult = await linkAllMeetingProjects(meetingId, identifiedProjects);
+  if (linkResult.errors.length > 0) {
+    console.error("Failed to link some projects:", linkResult.errors);
   }
+
+  // Step 2: Build project map + find primary for extraction assignment
+  const projectMap = buildProjectMap(identifiedProjects);
+  const primaryProjectId = findPrimaryProjectId(identifiedProjects);
 
   // Step 3: Build and insert extraction rows
   const rows = buildExtractionRows(
     extractorOutput.extractions,
     meetingId,
-    entityResolutions,
-    meetingProjectId,
+    projectMap,
+    primaryProjectId,
   );
 
   if (rows.length > 0) {
     const result = await insertExtractions(rows);
     if ("error" in result) {
       console.error("Failed to insert extractions:", result.error);
-      return { extractions_saved: 0, project_linked: !!meetingProjectId };
+      return { extractions_saved: 0, projects_linked: linkResult.linked };
     }
   }
 
   return {
     extractions_saved: rows.length,
-    project_linked: !!meetingProjectId,
+    projects_linked: linkResult.linked,
   };
 }

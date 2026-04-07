@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+// Note: meetingId, projectId, personId etc. komen altijd uit database-sourced props
+// (niet uit vrije gebruikersinvoer). De database dwingt UUID types af op deze kolommen.
+// We gebruiken .min(1) i.p.v. .uuid() om edge cases in serialisatie te voorkomen.
+// Strikte .uuid() validatie zit op MCP tools waar LLMs vrije input sturen.
+
 export const updateTitleSchema = z.object({
   meetingId: z.string().min(1),
   title: z.string().min(1, "Titel is verplicht").max(500),

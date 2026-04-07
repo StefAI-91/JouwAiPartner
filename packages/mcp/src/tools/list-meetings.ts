@@ -8,6 +8,7 @@ import {
   resolveOrganizationIds,
   resolveMeetingIdsByParticipant,
 } from "./utils";
+import { getSegmentCountsByMeetingIds } from "@repo/database/queries/meeting-project-summaries";
 
 export function registerListMeetingsTools(server: McpServer) {
   server.tool(
@@ -45,7 +46,13 @@ export function registerListMeetingsTools(server: McpServer) {
         .enum(["client", "partner", "internal", "other"])
         .optional()
         .describe("Filter op partij type"),
-      limit: z.number().optional().default(20).describe("Max aantal resultaten (standaard 20)"),
+      limit: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .default(20)
+        .describe("Max aantal resultaten (standaard 20, max 100)"),
       offset: z
         .number()
         .optional()
@@ -194,6 +201,9 @@ export function registerListMeetingsTools(server: McpServer) {
         verification_status: string | null;
       }
 
+      const meetingIds = (meetings as unknown as MeetingListItem[]).map((m) => m.id);
+      const segmentCounts = await getSegmentCountsByMeetingIds(meetingIds);
+
       const formatted = (meetings as unknown as MeetingListItem[]).map(
         (m: MeetingListItem, i: number) => {
           const dateStr = m.date ? new Date(m.date).toLocaleDateString("nl-NL") : "Onbekend";
@@ -207,8 +217,10 @@ export function registerListMeetingsTools(server: McpServer) {
               : ` | Status: ${m.verification_status || "draft"}`;
 
           const participants = m.participants?.join(", ") || "—";
+          const segCount = segmentCounts.get(m.id);
+          const segInfo = segCount ? ` | Segments: ${segCount}` : "";
 
-          return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}${status}\n   Deelnemers: ${participants}\n   ID: ${m.id}`;
+          return `${offset + i + 1}. **${m.title}**\n   ${dateStr} | ${m.meeting_type || "—"} | ${m.party_type || "—"} | ${orgName}${relevance}${status}${segInfo}\n   Deelnemers: ${participants}\n   ID: ${m.id}`;
         },
       );
 

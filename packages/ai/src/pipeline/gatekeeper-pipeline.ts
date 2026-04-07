@@ -2,9 +2,10 @@ import { runGatekeeper } from "../agents/gatekeeper";
 import type { ParticipantInfo } from "../agents/gatekeeper";
 import type { ExtractorOutput } from "../agents/extractor";
 import { GatekeeperOutput } from "../validations/gatekeeper";
-import type { PartyType } from "../validations/gatekeeper";
+import type { PartyType, IdentifiedProject } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
+import { buildEntityContext } from "./context-injection";
 import { findPeopleByEmails } from "@repo/database/queries/people";
 import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
@@ -13,6 +14,12 @@ import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
 import { runExtractStep } from "./steps/extract";
+import { runTagger } from "./tagger";
+import { buildSegments } from "./segment-builder";
+import { embedBatch } from "../embeddings";
+import { insertMeetingProjectSummaries } from "@repo/database/mutations/meeting-project-summaries";
+import { updateSegmentEmbedding } from "@repo/database/mutations/meeting-project-summaries";
+import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 
 interface MeetingInput {
   fireflies_id: string;
@@ -48,9 +55,11 @@ async function matchParticipants(meetingId: string, participants: string[]): Pro
 interface PipelineResult {
   gatekeeper: GatekeeperOutput;
   partyType: PartyType;
+  identifiedProjects: IdentifiedProject[];
   extractor: ExtractorOutput | null;
   meetingId: string | null;
   extractions_saved: number;
+  segments_saved: number;
   embedded: boolean;
   elevenlabs_transcribed: boolean;
   summarized: boolean;
@@ -73,17 +82,23 @@ interface PipelineResult {
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
   const errors: string[] = [];
 
-  // Step 1-2: Classify participants and determine party type
-  const classifiedParticipants = await classifyParticipants(input.participants);
+  // Step 1-2: Classify participants and determine party type + fetch entity context (parallel)
+  const [classifiedParticipants, entityContext] = await Promise.all([
+    classifyParticipants(input.participants),
+    buildEntityContext(),
+  ]);
   const partyType = determinePartyType(classifiedParticipants);
 
-  // Step 3: Classify meeting with Gatekeeper AI
+  // Step 3: Classify meeting with Gatekeeper AI (with entity context for project identification)
   const gatekeeperResult = await runGatekeeper(input.summary, {
     title: input.title,
     participants: classifiedParticipants,
     date: input.date,
     topics: input.topics,
+    entityContext: entityContext.contextString,
   });
+
+  const identifiedProjects = gatekeeperResult.identified_projects;
 
   // Step 4: Resolve organization
   const knownOrg = classifiedParticipants.find((p) => p.label === "external" && p.organizationName);
@@ -122,9 +137,11 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     return {
       gatekeeper: gatekeeperResult,
       partyType,
+      identifiedProjects,
       extractor: null,
       meetingId: null,
       extractions_saved: 0,
+      segments_saved: 0,
       embedded: false,
       elevenlabs_transcribed: false,
       summarized: false,
@@ -155,6 +172,73 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
   if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
 
+  // Step 8b: Tagger + Segment-bouw (RULE-015: error boundary, graceful degradation)
+  let segmentsSaved = 0;
+  if (summarizeResult.kernpunten.length > 0 || summarizeResult.vervolgstappen.length > 0) {
+    try {
+      // Fetch ignored entity names for this meeting's organization
+      const orgId = orgResult.organization_id;
+      const ignoredNames = orgId
+        ? await getIgnoredEntityNames(orgId, "project")
+        : new Set<string>();
+
+      const taggerOutput = runTagger({
+        kernpunten: summarizeResult.kernpunten,
+        vervolgstappen: summarizeResult.vervolgstappen,
+        identified_projects: identifiedProjects,
+        knownProjects: entityContext.projects.map((p) => ({
+          id: p.id,
+          name: p.name,
+          aliases: p.aliases,
+        })),
+        ignoredNames,
+      });
+
+      const segments = buildSegments(taggerOutput);
+
+      if (segments.length > 0) {
+        // Insert segments first (without embeddings)
+        const segmentRows = segments.map((s) => ({
+          meeting_id: meetingId,
+          project_id: s.project_id,
+          project_name_raw: s.project_name_raw,
+          kernpunten: s.kernpunten,
+          vervolgstappen: s.vervolgstappen,
+          summary_text: s.summary_text,
+        }));
+
+        const insertSegResult = await insertMeetingProjectSummaries(segmentRows);
+        if ("error" in insertSegResult) {
+          errors.push(`Segments insert: ${insertSegResult.error}`);
+        } else {
+          segmentsSaved = insertSegResult.ids.length;
+
+          // Embed all segments in a single batch call (FUNC-054)
+          try {
+            const texts = segments.map((s) => s.summary_text);
+            const embeddings = await embedBatch(texts);
+
+            // Update embeddings in parallel
+            await Promise.all(
+              insertSegResult.ids.map((id, i) => updateSegmentEmbedding(id, embeddings[i])),
+            );
+          } catch (embedErr) {
+            const msg = embedErr instanceof Error ? embedErr.message : String(embedErr);
+            console.error("Segment embedding failed (non-blocking):", msg);
+            errors.push(`Segment embedding: ${msg}`);
+          }
+        }
+      }
+
+      console.info(`Tagger: ${segmentsSaved} segments saved for meeting ${meetingId}`);
+    } catch (taggerErr) {
+      // RULE-015: Graceful degradation — log error, pipeline continues
+      const msg = taggerErr instanceof Error ? taggerErr.message : String(taggerErr);
+      console.error("Tagger failed (graceful degradation):", msg);
+      errors.push(`Tagger: ${msg}`);
+    }
+  }
+
   // Step 9: Extractor
   const extractorSummary = summarizeResult.richSummary ?? input.summary;
   console.info(`Extractor using ${transcriptSource} transcript`);
@@ -164,6 +248,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     { ...summarizeContext, summary: extractorSummary },
     rawFireflies,
     transcriptSource,
+    identifiedProjects,
   );
   if (extractResult.error) errors.push(`Extractor: ${extractResult.error}`);
 
@@ -181,9 +266,11 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   return {
     gatekeeper: gatekeeperResult,
     partyType,
+    identifiedProjects,
     extractor: extractResult.extractorOutput,
     meetingId,
     extractions_saved: extractResult.extractionsSaved,
+    segments_saved: segmentsSaved,
     embedded,
     elevenlabs_transcribed: transcribeResult.success,
     summarized: summarizeResult.success,

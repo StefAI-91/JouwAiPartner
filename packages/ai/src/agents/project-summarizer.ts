@@ -63,6 +63,13 @@ export interface MeetingInput {
   summary: string | null;
 }
 
+export interface SegmentInput {
+  meeting_title: string | null;
+  meeting_date: string | null;
+  kernpunten: string[];
+  vervolgstappen: string[];
+}
+
 function formatMeetings(meetings: MeetingInput[]): string {
   if (meetings.length === 0) return "Geen meetings beschikbaar.";
 
@@ -77,22 +84,48 @@ function formatMeetings(meetings: MeetingInput[]): string {
     .join("\n\n");
 }
 
+function formatSegments(segments: SegmentInput[]): string {
+  if (segments.length === 0) return "";
+
+  const lines = segments.map((s) => {
+    const header = [s.meeting_title, s.meeting_date].filter(Boolean).join(" — ");
+    const parts: string[] = [`### ${header || "Meeting"}`];
+    if (s.kernpunten.length > 0) {
+      parts.push("Kernpunten:");
+      s.kernpunten.forEach((k) => parts.push(`- ${k}`));
+    }
+    if (s.vervolgstappen.length > 0) {
+      parts.push("Vervolgstappen:");
+      s.vervolgstappen.forEach((v) => parts.push(`- ${v}`));
+    }
+    return parts.join("\n");
+  });
+
+  return lines.join("\n\n");
+}
+
 export async function runProjectSummarizer(
   projectName: string,
   meetings: MeetingInput[],
   existingContext?: string | null,
+  segments?: SegmentInput[],
 ): Promise<ProjectSummaryOutput> {
   const meetingsText = formatMeetings(meetings);
+  const segmentsText = segments?.length ? formatSegments(segments) : "";
 
   const userContent = [
     `Project: ${projectName}`,
     `Aantal meetings: ${meetings.length}`,
     existingContext ? `\nHuidige context samenvatting:\n${existingContext}` : "",
+    segmentsText
+      ? `\n--- PROJECT-SPECIFIEKE KERNPUNTEN (per meeting) ---\nDit zijn de kernpunten en vervolgstappen die specifiek over dit project gaan. Gebruik deze als primaire bron — ze bevatten minder ruis dan de volledige meeting-samenvattingen.\n\n${segmentsText}`
+      : "",
     `\n--- MEETING SAMENVATTINGEN ---\n${meetingsText}`,
   ].join("\n");
 
   const { object } = await generateObject({
     model: anthropic("claude-haiku-4-5-20251001"),
+    maxRetries: 3,
     schema: ProjectSummaryOutputSchema,
     messages: [
       {
@@ -125,6 +158,7 @@ export async function runOrgSummarizer(
 
   const { object } = await generateObject({
     model: anthropic("claude-haiku-4-5-20251001"),
+    maxRetries: 3,
     schema: OrgSummaryOutputSchema,
     messages: [
       {

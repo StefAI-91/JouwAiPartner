@@ -13,14 +13,8 @@ export const ExtractionItemSchema = z.object({
     .nullable()
     .describe("Exact quote from transcript that supports this extraction. Null if not applicable."),
   assignee: z.string().nullable().describe("Who is responsible for this action item."),
-  deadline: z
-    .string()
-    .nullable()
-    .describe("Due date if mentioned. Null otherwise."),
-  scope: z
-    .enum(["project", "personal"])
-    .nullable()
-    .describe("Scope of the action item."),
+  deadline: z.string().nullable().describe("Due date if mentioned. Null otherwise."),
+  scope: z.enum(["project", "personal"]).nullable().describe("Scope of the action item."),
   project: z.string().nullable().describe("Related project name if applicable. Null otherwise."),
 });
 
@@ -29,13 +23,8 @@ export const ExtractorOutputSchema = z.object({
     .array(ExtractionItemSchema)
     .describe("All action items extracted from the meeting transcript"),
   entities: z.object({
-    projects: z.array(z.string()).describe("Project names mentioned in the meeting"),
     clients: z.array(z.string()).describe("Client/external organization names mentioned"),
   }),
-  primary_project: z
-    .string()
-    .nullable()
-    .describe("The main project discussed in this meeting, if any"),
 });
 
 export type ExtractionItem = z.infer<typeof ExtractionItemSchema>;

@@ -7,6 +7,7 @@ import { listPeopleWithOrg, listPeopleForAssignment } from "@repo/database/queri
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
 import { getPromotedExtractionIds } from "@repo/database/queries/tasks";
+import { getSegmentsByMeetingId } from "@repo/database/queries/meeting-project-summaries";
 import { ReviewDetail } from "@/components/review/review-detail";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -15,13 +16,15 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
   const { id } = await params;
   const supabase = await createClient();
 
-  const [meeting, people, peopleForAssignment, organizations, projects] = await Promise.all([
-    getDraftMeetingById(id, supabase),
-    listPeopleWithOrg(supabase),
-    listPeopleForAssignment(supabase),
-    listOrganizations(supabase),
-    listProjects(supabase),
-  ]);
+  const [meeting, people, peopleForAssignment, organizations, projects, segments] =
+    await Promise.all([
+      getDraftMeetingById(id, supabase),
+      listPeopleWithOrg(supabase),
+      listPeopleForAssignment(supabase),
+      listOrganizations(supabase),
+      listProjects(supabase),
+      getSegmentsByMeetingId(id, supabase),
+    ]);
 
   if (!meeting) notFound();
 
@@ -42,13 +45,14 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
         </Link>
       </div>
       <ReviewDetail
-      meeting={meeting}
-      allPeople={people}
-      organizations={organizations}
-      projects={projects}
-      promotedExtractionIds={Array.from(promotedIds)}
-      peopleForAssignment={peopleForAssignment}
-    />
+        meeting={meeting}
+        allPeople={people}
+        organizations={organizations}
+        projects={projects}
+        promotedExtractionIds={Array.from(promotedIds)}
+        peopleForAssignment={peopleForAssignment}
+        segments={segments}
+      />
     </div>
   );
 }

@@ -3,21 +3,38 @@ import { z } from "zod";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
 import { trackMcpQuery } from "./usage-tracking";
-import { escapeLike } from "./utils";
+import { escapeLike, sanitizeForContains } from "./utils";
+import { getSegmentCountsByProjectIds } from "@repo/database/queries/meeting-project-summaries";
 
 export function registerProjectTools(server: McpServer) {
   server.tool(
     "get_projects",
     "Haal projecten op, optioneel gefilterd op naam, organisatie of status. Toont projectnaam, aliassen, organisatie en status.",
     {
-      search: z.string().max(255).optional().describe("Search by project name or alias (partial match)"),
-      organization: z.string().max(255).optional().describe("Filter by organization name (partial match)"),
+      search: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Search by project name or alias (partial match)"),
+      organization: z
+        .string()
+        .max(255)
+        .optional()
+        .describe("Filter by organization name (partial match)"),
       status: z
         .enum(["lead", "active", "paused", "completed", "cancelled"])
         .optional()
         .describe("Filter by status"),
+      limit: z
+        .number()
+        .min(1)
+        .max(100)
+        .optional()
+        .default(50)
+        .describe("Max results (default 50, max 100)"),
+      offset: z.number().min(0).optional().default(0).describe("Skip results for pagination"),
     },
-    async ({ search, organization, status }) => {
+    async ({ search, organization, status, limit, offset }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(
         supabase,
@@ -36,7 +53,7 @@ export function registerProjectTools(server: McpServer) {
       if (status) query = query.eq("status", status);
       if (search) {
         const escaped = escapeLike(search);
-        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${search}}`);
+        query = query.or(`name.ilike.%${escaped}%,aliases.cs.{${sanitizeForContains(search)}}`);
       }
 
       if (organization) {
@@ -60,7 +77,7 @@ export function registerProjectTools(server: McpServer) {
         }
       }
 
-      const { data, error } = await query.limit(50);
+      const { data, error } = await query.range(offset, offset + limit - 1);
 
       if (error) {
         return {
@@ -84,10 +101,15 @@ export function registerProjectTools(server: McpServer) {
         organization: { name: string } | null;
       }
 
+      const projectIds = (filtered as unknown as ProjectItem[]).map((p) => p.id);
+      const segmentCounts = await getSegmentCountsByProjectIds(projectIds);
+
       const formatted = (filtered as unknown as ProjectItem[]).map((p: ProjectItem, i: number) => {
         const aliases = p.aliases?.length > 0 ? ` (${p.aliases.join(", ")})` : "";
         const orgName = p.organization?.name || "geen organisatie";
-        return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}`;
+        const segCount = segmentCounts.get(p.id) ?? 0;
+        const segInfo = segCount > 0 ? ` | Segments: ${segCount} meetings with segments` : "";
+        return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}${segInfo}`;
       });
 
       return {

@@ -4,6 +4,8 @@ import { updateMeetingSummary } from "@repo/database/mutations/meetings";
 export interface SummarizeResult {
   success: boolean;
   richSummary: string | null;
+  kernpunten: string[];
+  vervolgstappen: string[];
   error: string | null;
 }
 
@@ -34,17 +36,29 @@ export async function runSummarizeStep(
 
     if ("error" in updateResult) {
       console.error("Failed to save summary:", updateResult.error);
-      return { success: false, richSummary, error: updateResult.error };
+      return {
+        success: false,
+        richSummary,
+        kernpunten: summarizerOutput.kernpunten,
+        vervolgstappen: summarizerOutput.vervolgstappen,
+        error: updateResult.error,
+      };
     }
 
     console.info(
       `Summarizer: ${summarizerOutput.kernpunten.length} kernpunten, ` +
         `${summarizerOutput.deelnemers.length} deelnemers, ${summarizerOutput.vervolgstappen.length} vervolgstappen`,
     );
-    return { success: true, richSummary, error: null };
+    return {
+      success: true,
+      richSummary,
+      kernpunten: summarizerOutput.kernpunten,
+      vervolgstappen: summarizerOutput.vervolgstappen,
+      error: null,
+    };
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error("Summarizer failed (non-blocking):", errMsg);
-    return { success: false, richSummary: null, error: errMsg };
+    return { success: false, richSummary: null, kernpunten: [], vervolgstappen: [], error: errMsg };
   }
 }

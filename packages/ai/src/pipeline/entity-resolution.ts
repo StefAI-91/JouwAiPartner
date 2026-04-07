@@ -1,4 +1,4 @@
-import { embedText, embedBatch } from "../embeddings";
+import { embedText } from "../embeddings";
 import { getAllProjects, matchProjectsByEmbedding } from "@repo/database/queries/projects";
 import { updateProjectAliases } from "@repo/database/mutations/projects";
 import { getAllOrganizations } from "@repo/database/queries/organizations";
@@ -85,73 +85,47 @@ async function resolveProjectWithCache(
 }
 
 /**
- * Resolve all entities from a Gatekeeper output.
- * Returns a map of name -> project_id.
- * Pre-fetches all projects once to avoid N+1 queries.
+ * Resolve client entities from Extractor output.
+ * Project resolution is now handled by the Gatekeeper (sprint 023).
+ * Returns a map of client name -> organization_id (or null).
  */
-export async function resolveAllEntities(
-  entities: { projects: string[]; clients: string[] },
-  contentId: string,
-  contentTable: string,
+/**
+ * Resolve client entities from Extractor output.
+ * Skips names that are in the ignored_entities list (FUNC-093).
+ */
+export async function resolveClientEntities(
+  clients: string[],
+  ignoredNames?: Set<string>,
 ): Promise<Map<string, string | null>> {
   const resolutions = new Map<string, string | null>();
-  const allNames = [...new Set([...entities.projects, ...entities.clients])];
+  if (clients.length === 0) return resolutions;
 
-  if (allNames.length === 0) return resolutions;
+  const allOrgs = await getAllOrganizations();
 
-  // Pre-fetch all projects once (avoids N+1 in alias matching)
-  const allProjects = await getAllProjects();
-
-  // First pass: resolve via in-memory matching (exact + alias)
-  const unmatchedNames: string[] = [];
-  for (const name of allNames) {
+  for (const name of clients) {
     const nameLower = name.toLowerCase();
 
-    // Exact name match (case-insensitive)
-    const exactMatch = allProjects?.find((p) => p.name.toLowerCase() === nameLower);
+    // FUNC-093: Skip resolution for ignored names
+    if (ignoredNames?.has(nameLower)) {
+      resolutions.set(name, null);
+      continue;
+    }
+
+    const exactMatch = allOrgs.find((o) => o.name.toLowerCase() === nameLower);
     if (exactMatch) {
       resolutions.set(name, exactMatch.id);
       continue;
     }
 
-    // Substring match only for names >= 4 chars to avoid false positives
-    const substringMatch = allProjects?.find((p) => {
-      const pLower = p.name.toLowerCase();
-      return pLower.length >= 4 && (pLower.includes(nameLower) || nameLower.includes(pLower));
-    });
-    if (substringMatch) {
-      resolutions.set(name, substringMatch.id);
-      continue;
-    }
-
-    // Alias match (exact only)
-    const aliasMatch = allProjects?.find((p) =>
-      p.aliases?.some((alias: string) => alias.toLowerCase() === nameLower),
+    const aliasMatch = allOrgs.find((o) =>
+      o.aliases?.some((alias: string) => alias.toLowerCase() === nameLower),
     );
     if (aliasMatch) {
       resolutions.set(name, aliasMatch.id);
       continue;
     }
-    unmatchedNames.push(name);
-  }
 
-  // Second pass: batch embed all unmatched names at once (fixes Q-04)
-  if (unmatchedNames.length > 0) {
-    const embeddings = await embedBatch(unmatchedNames, "search_query");
-    for (let i = 0; i < unmatchedNames.length; i++) {
-      const name = unmatchedNames[i];
-      const embeddingMatches = await matchProjectsByEmbedding(embeddings[i]);
-      if (embeddingMatches && embeddingMatches.length > 0) {
-        const bestMatch = embeddingMatches[0];
-        const currentAliases = bestMatch.aliases || [];
-        if (!currentAliases.includes(name)) {
-          await updateProjectAliases(bestMatch.id, [...currentAliases, name]);
-        }
-        resolutions.set(name, bestMatch.id);
-      } else {
-        resolutions.set(name, null);
-      }
-    }
+    resolutions.set(name, null);
   }
 
   return resolutions;

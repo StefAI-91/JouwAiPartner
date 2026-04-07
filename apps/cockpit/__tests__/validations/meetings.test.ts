@@ -10,10 +10,13 @@ import {
   createPersonSchema,
 } from "../../src/validations/meetings";
 
+const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
+const VALID_UUID_2 = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+
 describe("updateTitleSchema", () => {
   it("accepts valid input and returns correct data", () => {
     const result = updateTitleSchema.safeParse({
-      meetingId: "abc123",
+      meetingId: VALID_UUID,
       title: "Sprint Review",
     });
     expect(result.success).toBe(true);
@@ -23,23 +26,27 @@ describe("updateTitleSchema", () => {
   });
 
   it("rejects empty title", () => {
-    expect(updateTitleSchema.safeParse({ meetingId: "abc123", title: "" }).success).toBe(false);
+    expect(updateTitleSchema.safeParse({ meetingId: VALID_UUID, title: "" }).success).toBe(false);
   });
 
   it("rejects title longer than 500 characters", () => {
     expect(
-      updateTitleSchema.safeParse({ meetingId: "abc123", title: "a".repeat(501) }).success,
+      updateTitleSchema.safeParse({ meetingId: VALID_UUID, title: "a".repeat(501) }).success,
     ).toBe(false);
   });
 
   it("accepts title of exactly 500 characters", () => {
     expect(
-      updateTitleSchema.safeParse({ meetingId: "abc123", title: "a".repeat(500) }).success,
+      updateTitleSchema.safeParse({ meetingId: VALID_UUID, title: "a".repeat(500) }).success,
     ).toBe(true);
   });
 
   it("rejects empty meetingId", () => {
     expect(updateTitleSchema.safeParse({ meetingId: "", title: "Valid" }).success).toBe(false);
+  });
+
+  it("accepts non-UUID meetingId (DB enforces UUID type)", () => {
+    expect(updateTitleSchema.safeParse({ meetingId: "abc123", title: "Valid" }).success).toBe(true);
   });
 });
 
@@ -57,15 +64,15 @@ describe("updateMeetingTypeSchema", () => {
       "other",
     ];
     for (const meetingType of types) {
-      expect(updateMeetingTypeSchema.safeParse({ meetingId: "abc", meetingType }).success).toBe(
-        true,
-      );
+      expect(
+        updateMeetingTypeSchema.safeParse({ meetingId: VALID_UUID, meetingType }).success,
+      ).toBe(true);
     }
   });
 
   it("rejects invalid meeting type", () => {
     expect(
-      updateMeetingTypeSchema.safeParse({ meetingId: "abc", meetingType: "invalid" }).success,
+      updateMeetingTypeSchema.safeParse({ meetingId: VALID_UUID, meetingType: "invalid" }).success,
     ).toBe(false);
   });
 });
@@ -73,8 +80,8 @@ describe("updateMeetingTypeSchema", () => {
 describe("updateMeetingOrganizationSchema", () => {
   it("accepts valid input with organizationId", () => {
     const result = updateMeetingOrganizationSchema.safeParse({
-      meetingId: "abc123",
-      organizationId: "org-123",
+      meetingId: VALID_UUID,
+      organizationId: VALID_UUID_2,
     });
     expect(result.success).toBe(true);
   });
@@ -82,7 +89,7 @@ describe("updateMeetingOrganizationSchema", () => {
   it("accepts null for organizationId", () => {
     expect(
       updateMeetingOrganizationSchema.safeParse({
-        meetingId: "abc123",
+        meetingId: VALID_UUID,
         organizationId: null,
       }).success,
     ).toBe(true);
@@ -100,39 +107,41 @@ describe("updateMeetingOrganizationSchema", () => {
 
 describe("meetingProjectSchema", () => {
   it("accepts valid input", () => {
-    expect(meetingProjectSchema.safeParse({ meetingId: "abc", projectId: "proj" }).success).toBe(
-      true,
-    );
+    expect(
+      meetingProjectSchema.safeParse({ meetingId: VALID_UUID, projectId: VALID_UUID_2 }).success,
+    ).toBe(true);
   });
 
   it("rejects empty meetingId", () => {
-    expect(meetingProjectSchema.safeParse({ meetingId: "", projectId: "proj" }).success).toBe(
+    expect(meetingProjectSchema.safeParse({ meetingId: "", projectId: VALID_UUID }).success).toBe(
       false,
     );
   });
 
   it("rejects empty projectId", () => {
-    expect(meetingProjectSchema.safeParse({ meetingId: "abc", projectId: "" }).success).toBe(false);
+    expect(meetingProjectSchema.safeParse({ meetingId: VALID_UUID, projectId: "" }).success).toBe(
+      false,
+    );
   });
 });
 
 describe("meetingParticipantSchema", () => {
   it("accepts valid input", () => {
-    expect(meetingParticipantSchema.safeParse({ meetingId: "abc", personId: "p1" }).success).toBe(
-      true,
-    );
+    expect(
+      meetingParticipantSchema.safeParse({ meetingId: VALID_UUID, personId: VALID_UUID_2 }).success,
+    ).toBe(true);
   });
 
   it("rejects empty meetingId", () => {
-    expect(meetingParticipantSchema.safeParse({ meetingId: "", personId: "p1" }).success).toBe(
-      false,
-    );
+    expect(
+      meetingParticipantSchema.safeParse({ meetingId: "", personId: VALID_UUID }).success,
+    ).toBe(false);
   });
 
   it("rejects empty personId", () => {
-    expect(meetingParticipantSchema.safeParse({ meetingId: "abc", personId: "" }).success).toBe(
-      false,
-    );
+    expect(
+      meetingParticipantSchema.safeParse({ meetingId: VALID_UUID, personId: "" }).success,
+    ).toBe(false);
   });
 });
 
@@ -169,9 +178,9 @@ describe("createOrganizationSchema", () => {
 
 describe("createProjectSchema", () => {
   it("accepts valid input", () => {
-    expect(createProjectSchema.safeParse({ name: "Project", organizationId: "id" }).success).toBe(
-      true,
-    );
+    expect(
+      createProjectSchema.safeParse({ name: "Project", organizationId: VALID_UUID }).success,
+    ).toBe(true);
   });
 
   it("rejects empty name", () => {

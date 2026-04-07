@@ -7,19 +7,22 @@ import { listPeopleWithOrg, listPeopleForAssignment } from "@repo/database/queri
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
 import { getPromotedExtractionIds } from "@repo/database/queries/tasks";
+import { getSegmentsByMeetingId } from "@repo/database/queries/meeting-project-summaries";
 import { MeetingDetailView } from "@/components/meetings/meeting-detail";
 
 export default async function MeetingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [meeting, people, peopleForAssignment, organizations, projects] = await Promise.all([
-    getVerifiedMeetingById(id, supabase),
-    listPeopleWithOrg(supabase),
-    listPeopleForAssignment(supabase),
-    listOrganizations(supabase),
-    listProjects(supabase),
-  ]);
+  const [meeting, people, peopleForAssignment, organizations, projects, segments] =
+    await Promise.all([
+      getVerifiedMeetingById(id, supabase),
+      listPeopleWithOrg(supabase),
+      listPeopleForAssignment(supabase),
+      listOrganizations(supabase),
+      listProjects(supabase),
+      getSegmentsByMeetingId(id, supabase),
+    ]);
 
   if (!meeting) notFound();
 
@@ -36,6 +39,7 @@ export default async function MeetingDetailPage({ params }: { params: Promise<{ 
       projects={projects}
       promotedExtractionIds={Array.from(promotedIds)}
       peopleForAssignment={peopleForAssignment}
+      segments={segments}
     />
   );
 }

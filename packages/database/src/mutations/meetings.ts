@@ -25,7 +25,9 @@ export async function insertMeeting(meeting: {
   if (error) {
     // Catch unique constraint violation from title+date index
     if (error.code === "23505") {
-      return { error: `duplicate_meeting: meeting with title "${meeting.title}" already exists for this date` };
+      return {
+        error: `duplicate_meeting: meeting with title "${meeting.title}" already exists for this date`,
+      };
     }
     return { error: error.message };
   }
@@ -77,10 +79,7 @@ export async function updateMeetingClassification(
     raw_fireflies: Record<string, unknown>;
   },
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
-    .from("meetings")
-    .update(data)
-    .eq("id", meetingId);
+  const { error } = await getAdminClient().from("meetings").update(data).eq("id", meetingId);
 
   if (error) return { error: error.message };
   return { success: true };
@@ -94,10 +93,7 @@ export async function updateMeetingElevenLabs(
     audio_url?: string;
   },
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
-    .from("meetings")
-    .update(data)
-    .eq("id", meetingId);
+  const { error } = await getAdminClient().from("meetings").update(data).eq("id", meetingId);
 
   if (error) return { error: error.message };
   return { success: true };
@@ -120,10 +116,7 @@ export async function updateMeetingTitle(
   meetingId: string,
   title: string,
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
-    .from("meetings")
-    .update({ title })
-    .eq("id", meetingId);
+  const { error } = await getAdminClient().from("meetings").update({ title }).eq("id", meetingId);
 
   if (error) {
     if (error.code === "23505") {
@@ -150,16 +143,46 @@ export async function updateMeetingOrganization(
 export async function linkMeetingProject(
   meetingId: string,
   projectId: string,
+  source: "ai" | "manual" | "review" = "ai",
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient()
     .from("meeting_projects")
     .upsert(
-      { meeting_id: meetingId, project_id: projectId },
+      { meeting_id: meetingId, project_id: projectId, source },
       { onConflict: "meeting_id,project_id" },
     );
 
   if (error) return { error: error.message };
   return { success: true };
+}
+
+/**
+ * Link all identified projects to a meeting with source='ai'.
+ * Only links projects that have a resolved project_id.
+ * Uses a single batch upsert instead of individual queries (N+1 fix).
+ */
+export async function linkAllMeetingProjects(
+  meetingId: string,
+  identifiedProjects: { project_id: string | null }[],
+): Promise<{ linked: number; errors: string[] }> {
+  const projectsWithId = identifiedProjects.filter(
+    (p): p is { project_id: string } => p.project_id !== null,
+  );
+
+  if (projectsWithId.length === 0) return { linked: 0, errors: [] };
+
+  const rows = projectsWithId.map((p) => ({
+    meeting_id: meetingId,
+    project_id: p.project_id,
+    source: "ai" as const,
+  }));
+
+  const { error } = await getAdminClient()
+    .from("meeting_projects")
+    .upsert(rows, { onConflict: "meeting_id,project_id" });
+
+  if (error) return { linked: 0, errors: [error.message] };
+  return { linked: rows.length, errors: [] };
 }
 
 export async function updateMeetingSummary(
@@ -180,10 +203,7 @@ export async function updateMeetingSummaryOnly(
   meetingId: string,
   summary: string,
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
-    .from("meetings")
-    .update({ summary })
-    .eq("id", meetingId);
+  const { error } = await getAdminClient().from("meetings").update({ summary }).eq("id", meetingId);
 
   if (error) return { error: error.message };
   return { success: true };
@@ -232,10 +252,7 @@ export async function deleteMeeting(
   meetingId: string,
 ): Promise<{ success: true } | { error: string }> {
   // CASCADE handles extractions, meeting_projects, meeting_participants
-  const { error } = await getAdminClient()
-    .from("meetings")
-    .delete()
-    .eq("id", meetingId);
+  const { error } = await getAdminClient().from("meetings").delete().eq("id", meetingId);
 
   if (error) return { error: error.message };
   return { success: true };

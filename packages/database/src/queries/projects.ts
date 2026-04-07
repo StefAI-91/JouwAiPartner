@@ -13,7 +13,10 @@ export interface ProjectListItem {
   owner: { name: string } | null;
 }
 
-export async function listProjects(client?: SupabaseClient): Promise<ProjectListItem[]> {
+export async function listProjects(
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<ProjectListItem[]> {
   const db = client ?? getAdminClient();
 
   // Get projects with organization
@@ -24,7 +27,8 @@ export async function listProjects(client?: SupabaseClient): Promise<ProjectList
        organization:organizations(name),
        owner:people!projects_owner_id_fkey(name)`,
     )
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .limit(options?.limit ?? 500);
 
   if (error) {
     console.error("[listProjects]", error.message);
@@ -234,6 +238,35 @@ export async function getProjectByNameIlike(name: string) {
 export async function getAllProjects() {
   const { data } = await getAdminClient().from("projects").select("id, name, aliases");
   return data;
+}
+
+export interface ActiveProjectForContext {
+  id: string;
+  name: string;
+  aliases: string[];
+  organization_name: string | null;
+}
+
+/**
+ * Get active projects (not completed/lost) with organization name.
+ * Used by Gatekeeper context-injection for project identification.
+ */
+export async function getActiveProjectsForContext(): Promise<ActiveProjectForContext[]> {
+  const { data, error } = await getAdminClient()
+    .from("projects")
+    .select("id, name, aliases, organization:organizations(name)")
+    .not("status", "in", '("completed","lost")');
+
+  if (error || !data) return [];
+  return data.map((p) => {
+    const org = p.organization as unknown as { name: string } | null;
+    return {
+      id: p.id,
+      name: p.name,
+      aliases: p.aliases ?? [],
+      organization_name: org?.name ?? null,
+    };
+  });
 }
 
 export async function matchProjectsByEmbedding(

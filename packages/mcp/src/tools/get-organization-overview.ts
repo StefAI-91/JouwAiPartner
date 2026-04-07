@@ -4,6 +4,7 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 import { trackMcpQuery } from "./usage-tracking";
 import {
   escapeLike,
+  sanitizeForContains,
   formatVerificatieStatus,
   lookupProfileNames,
   collectVerifiedByIds,
@@ -29,7 +30,7 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       const { data: orgs, error: orgError } = await supabase
         .from("organizations")
         .select("id, name, aliases, type, contact_person, email, status")
-        .or(`name.ilike.%${escaped}%,aliases.cs.{${organization_name}}`)
+        .or(`name.ilike.%${escaped}%,aliases.cs.{${sanitizeForContains(organization_name)}}`)
         .limit(1);
 
       if (orgError || !orgs || orgs.length === 0) {
@@ -67,7 +68,9 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       const { data: meetings, error: meetingsError } = await meetingsQuery;
       if (meetingsError) {
         return {
-          content: [{ type: "text" as const, text: `Error bij ophalen meetings: ${meetingsError.message}` }],
+          content: [
+            { type: "text" as const, text: `Error bij ophalen meetings: ${meetingsError.message}` },
+          ],
         };
       }
 
@@ -87,7 +90,12 @@ export function registerOrganizationOverviewTools(server: McpServer) {
       const { data: extractions, error: extractionsError } = await extractionsQuery;
       if (extractionsError) {
         return {
-          content: [{ type: "text" as const, text: `Error bij ophalen extracties: ${extractionsError.message}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `Error bij ophalen extracties: ${extractionsError.message}`,
+            },
+          ],
         };
       }
 

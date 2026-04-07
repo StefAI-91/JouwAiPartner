@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { ConfidenceBar } from "@/components/shared/confidence-bar";
 import { getMeetingHref } from "@/lib/meeting-href";
+import type { ProjectSegment } from "@repo/database/queries/meeting-project-summaries";
 
 interface Meeting {
   id: string;
@@ -24,10 +25,11 @@ interface Extraction {
   meeting: { id: string; title: string | null } | null;
 }
 
-const TABS = ["meetings", "action_items", "decisions", "needs_insights"] as const;
+const TABS = ["segments", "meetings", "action_items", "decisions", "needs_insights"] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<Tab, string> = {
+  segments: "Segmenten",
   meetings: "Meetings",
   action_items: "Action Items",
   decisions: "Decisions",
@@ -37,27 +39,35 @@ const TAB_LABELS: Record<Tab, string> = {
 interface ProjectSectionsProps {
   meetings: Meeting[];
   extractions: Extraction[];
+  segments?: ProjectSegment[];
 }
 
-export function ProjectSections({ meetings, extractions }: ProjectSectionsProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("meetings");
+export function ProjectSections({ meetings, extractions, segments = [] }: ProjectSectionsProps) {
+  const [activeTab, setActiveTab] = useState<Tab>(segments.length > 0 ? "segments" : "meetings");
 
   const actionItems = extractions.filter((e) => e.type === "action_item");
   const decisions = extractions.filter((e) => e.type === "decision");
   const needsInsights = extractions.filter((e) => e.type === "need" || e.type === "insight");
 
   const counts: Record<Tab, number> = {
+    segments: segments.length,
     meetings: meetings.length,
     action_items: actionItems.length,
     decisions: decisions.length,
     needs_insights: needsInsights.length,
   };
 
+  // Only show tabs that have content (always show meetings)
+  const visibleTabs = TABS.filter((tab) => {
+    if (tab === "meetings") return true;
+    return counts[tab] > 0;
+  });
+
   return (
     <div>
       {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto border-b border-border/50 pb-px">
-        {TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -79,6 +89,7 @@ export function ProjectSections({ meetings, extractions }: ProjectSectionsProps)
 
       {/* Tab content */}
       <div className="pt-6">
+        {activeTab === "segments" && <SegmentsSection segments={segments} />}
         {activeTab === "meetings" && <MeetingsSection meetings={meetings} />}
         {activeTab === "action_items" && (
           <ExtractionsSection items={actionItems} type="action_item" />
@@ -88,6 +99,77 @@ export function ProjectSections({ meetings, extractions }: ProjectSectionsProps)
           <ExtractionsSection items={needsInsights} type="needs_insights" />
         )}
       </div>
+    </div>
+  );
+}
+
+function SegmentsSection({ segments }: { segments: ProjectSegment[] }) {
+  if (segments.length === 0) {
+    return (
+      <p className="py-6 text-center text-sm text-muted-foreground">
+        Geen segmenten gevonden voor dit project
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {segments.map((segment) => {
+        const dateStr = segment.meeting_date
+          ? new Date(segment.meeting_date).toLocaleDateString("nl-NL", {
+              weekday: "short",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : null;
+
+        return (
+          <div key={segment.id} className="rounded-xl bg-white p-4 shadow-sm">
+            <div className="mb-2 flex items-center justify-between">
+              <Link
+                href={getMeetingHref(segment.meeting_id, "verified")}
+                className="text-sm font-semibold text-foreground hover:text-[#006B3F] hover:underline"
+              >
+                {segment.meeting_title ?? "Naamloze meeting"}
+              </Link>
+              {dateStr && <span className="text-xs text-muted-foreground">{dateStr}</span>}
+            </div>
+
+            {segment.kernpunten.length > 0 && (
+              <div className="mb-2">
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Kernpunten
+                </p>
+                <ul className="space-y-1">
+                  {segment.kernpunten.map((k, i) => (
+                    <li key={i} className="text-sm leading-relaxed text-foreground/80">
+                      <span className="mr-1.5 text-muted-foreground">•</span>
+                      {k}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {segment.vervolgstappen.length > 0 && (
+              <div>
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Vervolgstappen
+                </p>
+                <ul className="space-y-1">
+                  {segment.vervolgstappen.map((v, i) => (
+                    <li key={i} className="text-sm leading-relaxed text-foreground/80">
+                      <span className="mr-1.5 text-muted-foreground">→</span>
+                      {v}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

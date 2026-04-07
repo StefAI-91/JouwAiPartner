@@ -10,14 +10,18 @@ export interface PersonListItem {
 }
 
 /**
- * List all people ordered by name.
+ * List people ordered by name, with optional limit for scalability.
  */
-export async function listPeople(client?: SupabaseClient): Promise<PersonListItem[]> {
+export async function listPeople(
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<PersonListItem[]> {
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("people")
     .select("id, name, email, team, role")
-    .order("name");
+    .order("name")
+    .limit(options?.limit ?? 500);
 
   if (error || !data) return [];
   return data;
@@ -31,14 +35,18 @@ export interface PersonWithOrg {
 }
 
 /**
- * List all people with organization name, for selector dropdowns.
+ * List people with organization name, for selector dropdowns.
  */
-export async function listPeopleWithOrg(client?: SupabaseClient): Promise<PersonWithOrg[]> {
+export async function listPeopleWithOrg(
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<PersonWithOrg[]> {
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("people")
     .select("id, name, role, organization:organizations(name)")
-    .order("name");
+    .order("name")
+    .limit(options?.limit ?? 500);
 
   if (error || !data) return [];
   return data as unknown as PersonWithOrg[];
@@ -81,10 +89,7 @@ export async function listPeopleForAssignment(
  */
 export async function findPersonIdsByName(name: string): Promise<string[]> {
   const escaped = name.replace(/%/g, "\\%").replace(/_/g, "\\_");
-  const { data } = await getAdminClient()
-    .from("people")
-    .select("id")
-    .ilike("name", `%${escaped}%`);
+  const { data } = await getAdminClient().from("people").select("id").ilike("name", `%${escaped}%`);
 
   return data?.map((p) => p.id) ?? [];
 }
@@ -189,6 +194,32 @@ export async function getAllKnownPeople(): Promise<KnownPerson[]> {
  * Find people by their email addresses.
  * Returns a map of email -> person_id for matched emails.
  */
+export interface PersonForContext {
+  id: string;
+  name: string;
+  organization_name: string | null;
+}
+
+/**
+ * Get all people with their organization name.
+ * Used by Gatekeeper context-injection for entity context.
+ */
+export async function getPeopleForContext(): Promise<PersonForContext[]> {
+  const { data, error } = await getAdminClient()
+    .from("people")
+    .select("id, name, organization:organizations(name)");
+
+  if (error || !data) return [];
+  return data.map((p) => {
+    const org = p.organization as unknown as { name: string } | null;
+    return {
+      id: p.id,
+      name: p.name,
+      organization_name: org?.name ?? null,
+    };
+  });
+}
+
 export async function findPeopleByEmails(emails: string[]): Promise<Map<string, string>> {
   if (emails.length === 0) return new Map();
 
