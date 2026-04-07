@@ -28,7 +28,7 @@ export default async function WeeklyPage() {
   } | null;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pb-32 pt-6 lg:px-8">
+    <div className="px-4 pb-32 pt-6 lg:px-10">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">

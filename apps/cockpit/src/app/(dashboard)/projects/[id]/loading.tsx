@@ -1,6 +1,6 @@
 export default function ProjectDetailLoading() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="px-4 py-8">
       {/* Header skeleton */}
       <div className="mb-8">
         <div className="h-4 w-32 animate-pulse rounded bg-muted" />

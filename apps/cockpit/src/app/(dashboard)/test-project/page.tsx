@@ -254,7 +254,7 @@ export default function TestProjectPage() {
   const doneCount = ACTION_ITEMS.filter((a) => a.status === "done").length;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="px-4 py-8">
       {/* ── Header ── */}
       <div className="mb-10">
         <p className="text-xs font-medium tracking-wide text-muted-foreground/60 uppercase">

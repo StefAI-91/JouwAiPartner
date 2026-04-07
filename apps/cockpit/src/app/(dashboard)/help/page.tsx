@@ -214,7 +214,7 @@ const faqs = [
 
 export default function HelpPage() {
   return (
-    <div className="mx-auto max-w-4xl space-y-12 px-4 py-16">
+    <div className="space-y-12 px-4 py-16">
       {/* Header */}
       <div>
         <h1>Hoe werkt het platform?</h1>

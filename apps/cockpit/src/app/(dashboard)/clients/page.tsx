@@ -15,7 +15,7 @@ export default async function ClientsPage() {
 
   if (organizations.length === 0) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-16 text-center lg:px-8">
+      <div className="px-4 py-16 text-center lg:px-10">
         <Building2 className="mx-auto h-10 w-10 text-muted-foreground/40" />
         <h2 className="mt-4 font-heading text-xl font-semibold">No organizations yet</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -29,7 +29,7 @@ export default async function ClientsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4 px-4 py-8 lg:px-8">
+    <div className="space-y-4 px-4 py-8 lg:px-10">
       <div className="flex items-center justify-between">
         <div>
           <h1>Clients</h1>
@@ -40,7 +40,7 @@ export default async function ClientsPage() {
         <AddOrganizationButton />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {organizations.map((org) => (
           <Link key={org.id} href={`/clients/${org.id}`}>
             <div className="rounded-2xl bg-white px-5 py-4 shadow-sm transition-shadow hover:shadow-md">

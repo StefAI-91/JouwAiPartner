@@ -21,7 +21,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
   if (!person) notFound();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 lg:px-8">
+    <div className="space-y-6 px-4 py-8 lg:px-10">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">

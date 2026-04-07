@@ -17,7 +17,7 @@ export default async function ReviewPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 lg:px-8">
+    <div className="space-y-6 px-4 py-8 lg:px-10">
       <div>
         <h1>Review Queue</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -25,7 +25,7 @@ export default async function ReviewPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {meetings.map((meeting) => (
           <ReviewCard key={meeting.id} meeting={meeting} />
         ))}

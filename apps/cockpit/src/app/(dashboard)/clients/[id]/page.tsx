@@ -25,7 +25,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   if (!org) notFound();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-4 py-8 lg:px-8">
+    <div className="space-y-8 px-4 py-8 lg:px-10">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">

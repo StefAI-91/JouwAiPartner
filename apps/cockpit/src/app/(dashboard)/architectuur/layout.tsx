@@ -19,7 +19,7 @@ export default function ArchitectuurLayout({ children }: { children: React.React
   const pathname = usePathname();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 lg:px-8">
+    <div className="px-4 py-8 lg:px-10">
       {/* Tab navigation */}
       <nav className="mb-8 flex gap-1 rounded-lg border border-border bg-muted/30 p-1">
         {tabs.map(({ href, label, icon: Icon }) => {

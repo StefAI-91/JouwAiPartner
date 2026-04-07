@@ -1,6 +1,6 @@
 export default function ClientsLoading() {
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="space-y-6 px-4 py-8">
       <div>
         <div className="h-8 w-28 animate-pulse rounded-lg bg-muted" />
         <div className="mt-2 h-4 w-40 animate-pulse rounded-lg bg-muted" />

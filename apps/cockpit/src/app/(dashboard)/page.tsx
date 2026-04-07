@@ -40,7 +40,7 @@ export default async function DashboardPage() {
   const extractionCounts = await getExtractionCountsByMeetingIds(meetingIds, supabase);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 lg:px-8">
+    <div className="space-y-8 px-4 py-8 lg:px-10">
       {/* Greeting */}
       <Greeting userName={userName} />
 
