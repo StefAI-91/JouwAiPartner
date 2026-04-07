@@ -3,11 +3,15 @@ import { ExtractionItemSchema, ExtractorOutputSchema } from "../../src/validatio
 
 const validItem = {
   type: "action_item" as const,
+  category: "wij_leveren" as const,
   content: "Follow up with client about proposal",
   confidence: 0.9,
   transcript_ref: null,
   assignee: null,
   deadline: null,
+  suggested_deadline: null,
+  effort_estimate: "small" as const,
+  deadline_reasoning: "Geen expliciete deadline. Klein deliverable, +3 werkdagen vanaf meeting.",
   scope: null,
   project: null,
 };
@@ -47,6 +51,27 @@ describe("ExtractionItemSchema", () => {
     }
   });
 
+  it("accepts valid category values", () => {
+    for (const category of ["wij_leveren", "wij_volgen_op"]) {
+      expect(ExtractionItemSchema.safeParse({ ...validItem, category }).success).toBe(true);
+    }
+  });
+
+  it("rejects invalid category", () => {
+    expect(ExtractionItemSchema.safeParse({ ...validItem, category: "other" }).success).toBe(false);
+  });
+
+  it("accepts valid effort_estimate values", () => {
+    for (const effort_estimate of ["small", "medium", "large"]) {
+      expect(ExtractionItemSchema.safeParse({ ...validItem, effort_estimate }).success).toBe(true);
+    }
+  });
+
+  it("requires deadline_reasoning", () => {
+    const { deadline_reasoning, ...withoutReasoning } = validItem;
+    expect(ExtractionItemSchema.safeParse(withoutReasoning).success).toBe(false);
+  });
+
   it("accepts all nullable fields as null", () => {
     const result = ExtractionItemSchema.safeParse(validItem);
     expect(result.success).toBe(true);
@@ -58,6 +83,7 @@ describe("ExtractionItemSchema", () => {
       transcript_ref: "We need to complete the report",
       assignee: "John",
       deadline: "2025-02-01",
+      suggested_deadline: "2025-02-05",
       scope: "project",
       project: "Platform v2",
     });
