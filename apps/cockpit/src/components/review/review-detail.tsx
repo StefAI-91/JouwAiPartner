@@ -196,8 +196,14 @@ export function ReviewDetail({
         onSummaryEdit={handleSummaryEdit}
       />
 
-      {/* Right panel: Action Items (45%) */}
+      {/* Right panel: Segments + Action Items (45%) */}
       <div className="flex-1 overflow-y-auto lg:w-[45%] lg:flex-none">
+        {segments && segments.length > 0 && (
+          <div className="border-b border-border/50 px-6 py-4">
+            <SegmentList segments={segments} projects={projects} meetingId={meeting.id} />
+          </div>
+        )}
+
         <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -220,11 +226,6 @@ export function ReviewDetail({
         </div>
 
         <div className="space-y-3 p-6 pb-24">
-          {segments && segments.length > 0 && (
-            <div className="mb-4">
-              <SegmentList segments={segments} projects={projects} meetingId={meeting.id} />
-            </div>
-          )}
           {actionItems.map((ext) => (
             <ExtractionCard
               key={ext.id}
