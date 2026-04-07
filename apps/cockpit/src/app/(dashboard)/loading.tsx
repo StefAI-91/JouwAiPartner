@@ -25,7 +25,7 @@ function CardSkeleton() {
 
 export default function DashboardLoading() {
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 lg:px-8">
       <div className="space-y-2">
         <SkeletonLine className="h-8 w-40" />
         <SkeletonLine className="h-4 w-72" />

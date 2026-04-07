@@ -17,7 +17,7 @@ export default async function PeoplePage() {
 
   if (people.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+      <div className="mx-auto max-w-5xl px-4 py-16 text-center lg:px-8">
         <Users className="mx-auto h-10 w-10 text-muted-foreground/40" />
         <h2 className="mt-4 font-heading text-xl font-semibold">No people yet</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -31,7 +31,7 @@ export default async function PeoplePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 lg:px-8">
       <div className="flex items-center justify-between">
         <div>
           <h1>People</h1>

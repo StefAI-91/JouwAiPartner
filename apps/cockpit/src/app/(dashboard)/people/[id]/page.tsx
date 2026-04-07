@@ -21,7 +21,7 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
   if (!person) notFound();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 lg:px-8">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -62,7 +62,9 @@ export default async function PersonDetailPage({ params }: { params: Promise<{ i
       <div className="rounded-xl bg-card p-5 shadow-sm">
         <div className="flex items-center gap-2 text-sm">
           <Users className="h-4 w-4 text-muted-foreground" />
-          <span>Participated in {person.meeting_count} meeting{person.meeting_count !== 1 ? "s" : ""}</span>
+          <span>
+            Participated in {person.meeting_count} meeting{person.meeting_count !== 1 ? "s" : ""}
+          </span>
         </div>
       </div>
     </div>

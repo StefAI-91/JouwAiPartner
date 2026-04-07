@@ -25,7 +25,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   if (!org) notFound();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
+    <div className="mx-auto max-w-4xl space-y-8 px-4 py-8 lg:px-8">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -42,7 +42,9 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           <Badge className={`text-xs ${ORG_TYPE_COLORS[org.type] ?? ORG_TYPE_COLORS.other}`}>
             {org.type}
           </Badge>
-          <Badge className={`text-xs ${ORG_STATUS_COLORS[org.status] ?? ORG_STATUS_COLORS.inactive}`}>
+          <Badge
+            className={`text-xs ${ORG_STATUS_COLORS[org.status] ?? ORG_STATUS_COLORS.inactive}`}
+          >
             {org.status}
           </Badge>
         </div>
