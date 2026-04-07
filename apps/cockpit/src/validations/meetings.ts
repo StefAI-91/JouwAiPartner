@@ -1,17 +1,22 @@
 import { z } from "zod";
 
+// Note: meetingId, projectId, personId etc. komen altijd uit database-sourced props
+// (niet uit vrije gebruikersinvoer). De database dwingt UUID types af op deze kolommen.
+// We gebruiken .min(1) i.p.v. .uuid() om edge cases in serialisatie te voorkomen.
+// Strikte .uuid() validatie zit op MCP tools waar LLMs vrije input sturen.
+
 export const updateTitleSchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: z.string().min(1),
   title: z.string().min(1, "Titel is verplicht").max(500),
 });
 
 export const updateSummarySchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: z.string().min(1),
   summary: z.string().min(1, "Samenvatting is verplicht"),
 });
 
 export const updateMeetingTypeSchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: z.string().min(1),
   meetingType: z.enum([
     "strategy",
     "one_on_one",
@@ -26,18 +31,18 @@ export const updateMeetingTypeSchema = z.object({
 });
 
 export const updateMeetingOrganizationSchema = z.object({
-  meetingId: z.string().uuid(),
-  organizationId: z.string().uuid().nullable(),
+  meetingId: z.string().min(1),
+  organizationId: z.string().nullable(),
 });
 
 export const meetingProjectSchema = z.object({
-  meetingId: z.string().uuid(),
-  projectId: z.string().uuid(),
+  meetingId: z.string().min(1),
+  projectId: z.string().min(1),
 });
 
 export const meetingParticipantSchema = z.object({
-  meetingId: z.string().uuid(),
-  personId: z.string().uuid(),
+  meetingId: z.string().min(1),
+  personId: z.string().min(1),
 });
 
 export const createOrganizationSchema = z.object({
@@ -47,16 +52,16 @@ export const createOrganizationSchema = z.object({
 
 export const createProjectSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200),
-  organizationId: z.string().uuid().nullable().optional(),
+  organizationId: z.string().nullable().optional(),
 });
 
 export const createPersonSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200),
   email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
   role: z.string().max(200).nullable().optional(),
-  organizationId: z.string().uuid().nullable().optional(),
+  organizationId: z.string().nullable().optional(),
 });
 
 export const regenerateSchema = z.object({
-  meetingId: z.string().uuid(),
+  meetingId: z.string().min(1),
 });

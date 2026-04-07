@@ -45,10 +45,8 @@ describe("updateTitleSchema", () => {
     expect(updateTitleSchema.safeParse({ meetingId: "", title: "Valid" }).success).toBe(false);
   });
 
-  it("rejects non-UUID meetingId", () => {
-    expect(updateTitleSchema.safeParse({ meetingId: "abc123", title: "Valid" }).success).toBe(
-      false,
-    );
+  it("accepts non-UUID meetingId (DB enforces UUID type)", () => {
+    expect(updateTitleSchema.safeParse({ meetingId: "abc123", title: "Valid" }).success).toBe(true);
   });
 });
 
@@ -105,15 +103,6 @@ describe("updateMeetingOrganizationSchema", () => {
       }).success,
     ).toBe(false);
   });
-
-  it("rejects non-UUID organizationId", () => {
-    expect(
-      updateMeetingOrganizationSchema.safeParse({
-        meetingId: VALID_UUID,
-        organizationId: "not-a-uuid",
-      }).success,
-    ).toBe(false);
-  });
 });
 
 describe("meetingProjectSchema", () => {
@@ -129,10 +118,10 @@ describe("meetingProjectSchema", () => {
     );
   });
 
-  it("rejects non-UUID projectId", () => {
-    expect(
-      meetingProjectSchema.safeParse({ meetingId: VALID_UUID, projectId: "proj" }).success,
-    ).toBe(false);
+  it("rejects empty projectId", () => {
+    expect(meetingProjectSchema.safeParse({ meetingId: VALID_UUID, projectId: "" }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -149,9 +138,9 @@ describe("meetingParticipantSchema", () => {
     ).toBe(false);
   });
 
-  it("rejects non-UUID personId", () => {
+  it("rejects empty personId", () => {
     expect(
-      meetingParticipantSchema.safeParse({ meetingId: VALID_UUID, personId: "p1" }).success,
+      meetingParticipantSchema.safeParse({ meetingId: VALID_UUID, personId: "" }).success,
     ).toBe(false);
   });
 });
@@ -204,12 +193,6 @@ describe("createProjectSchema", () => {
 
   it("accepts null for organizationId", () => {
     expect(createProjectSchema.safeParse({ name: "P", organizationId: null }).success).toBe(true);
-  });
-
-  it("rejects non-UUID organizationId", () => {
-    expect(createProjectSchema.safeParse({ name: "P", organizationId: "not-uuid" }).success).toBe(
-      false,
-    );
   });
 });
 
