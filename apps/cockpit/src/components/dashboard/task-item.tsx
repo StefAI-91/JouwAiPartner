@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { formatDateShort } from "@/lib/format";
 import { updateTaskAction, completeTaskAction, dismissTaskAction } from "@/actions/tasks";
-import { UserCircle, Calendar, ChevronDown, Check, X, CircleCheck } from "lucide-react";
+import { Check, X, ChevronDown, CircleCheck, ExternalLink } from "lucide-react";
 import type { TaskRow } from "@repo/database/queries/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
@@ -21,12 +21,6 @@ export function getUrgency(dueDateStr: string | null): Urgency {
   if (diffDays <= 7) return "this-week";
   return "default";
 }
-
-const URGENCY_BADGE_VARIANTS: Record<Urgency, "destructive" | "secondary" | "outline"> = {
-  overdue: "destructive",
-  "this-week": "secondary",
-  default: "outline",
-};
 
 export function TaskItem({
   task,
@@ -45,6 +39,9 @@ export function TaskItem({
   const [error, setError] = useState<string | null>(null);
 
   const urgency = getUrgency(task.due_date);
+  const isCompleted = task.status === "done";
+  const meetingId = task.extraction?.meeting_id ?? null;
+  const projectName = task.extraction?.project?.name ?? null;
 
   function handleSave() {
     setError(null);
@@ -88,68 +85,96 @@ export function TaskItem({
 
   if (isDone) return null;
 
-  const isCompleted = task.status === "done";
+  const borderColor = isCompleted
+    ? "border-green-400"
+    : urgency === "overdue"
+      ? "border-red-500"
+      : urgency === "this-week"
+        ? "border-amber-400"
+        : "border-transparent";
+
+  const hoverBg = isCompleted
+    ? ""
+    : urgency === "overdue"
+      ? "hover:bg-red-50/50"
+      : urgency === "this-week"
+        ? "hover:bg-amber-50/50"
+        : "hover:bg-muted/30";
+
+  const dateColor =
+    urgency === "overdue"
+      ? "text-red-600"
+      : urgency === "this-week"
+        ? "text-amber-600"
+        : "text-muted-foreground";
+
+  const dateLabel = task.due_date
+    ? `${urgency === "overdue" ? "verlopen · " : ""}${formatDateShort(task.due_date)}`
+    : null;
 
   return (
-    <li
-      className={`flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0 ${isCompleted ? "opacity-60" : ""}`}
-    >
-      <div className="flex items-start gap-2">
+    <div className="group">
+      <div
+        className={`flex items-start gap-2.5 rounded-r-lg border-l-[3px] py-2 pl-3 pr-1 transition-colors ${borderColor} ${hoverBg} ${isCompleted ? "opacity-60" : ""}`}
+      >
+        {/* Checkbox / done icon */}
         {isCompleted ? (
-          <CircleCheck className="mt-0.5 size-4 shrink-0 text-green-500" />
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500">
+            <Check className="size-3 text-white" strokeWidth={3} />
+          </div>
         ) : (
           <button
             type="button"
             onClick={handleComplete}
             disabled={isPending}
-            className="mt-0.5 shrink-0 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-green-50 hover:text-green-600 disabled:opacity-50"
+            className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-muted-foreground/30 transition-colors hover:border-green-500 hover:bg-green-50 disabled:opacity-50"
             title="Markeer als klaar"
-          >
-            <CircleCheck className="size-4" />
-          </button>
+          />
         )}
-        <div className="flex-1">
+
+        {/* Content */}
+        <div className="min-w-0 flex-1">
           <p
-            className={`text-sm leading-snug ${isCompleted ? "line-through text-muted-foreground" : ""}`}
+            className={`text-sm leading-snug ${isCompleted ? "text-muted-foreground line-through" : ""}`}
           >
             {task.title}
           </p>
-
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-            {task.assigned_person ? (
-              <Badge variant="outline" className="h-5 gap-1 text-[10px]">
-                <UserCircle className="size-3" />
-                {task.assigned_person.name}
-                {task.assigned_person.team ? (
-                  <span className="text-muted-foreground">({task.assigned_person.team})</span>
-                ) : (
-                  <span className="text-muted-foreground">(klant)</span>
-                )}
-              </Badge>
-            ) : null}
-
-            {task.due_date && (
-              <Badge variant={URGENCY_BADGE_VARIANTS[urgency]} className="h-5 gap-1 text-[10px]">
-                <Calendar className="size-3" />
-                {urgency === "overdue" ? "Verlopen · " : ""}
-                {formatDateShort(task.due_date)}
-              </Badge>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            {projectName && (
+              <span className="text-[11px] font-medium text-muted-foreground">{projectName}</span>
             )}
-
-            {!editing && !isCompleted && (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="ml-auto rounded-md p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground [li:hover_&]:opacity-100"
-                title="Bewerken"
+            {projectName && dateLabel && (
+              <span className="text-[11px] text-muted-foreground/40">·</span>
+            )}
+            {dateLabel && (
+              <span className={`text-[11px] font-medium ${dateColor}`}>{dateLabel}</span>
+            )}
+            {meetingId && (
+              <Link
+                href={`/meetings/${meetingId}`}
+                className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
               >
-                <ChevronDown className="size-3.5" />
-              </button>
+                <ExternalLink className="size-2.5" />
+                meeting
+              </Link>
             )}
           </div>
         </div>
+
+        {/* Edit toggle */}
+        {!editing && !isCompleted && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="mt-1 shrink-0 rounded-md p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+            title="Bewerken"
+          >
+            <ChevronDown className="size-3.5" />
+          </button>
+        )}
       </div>
 
+      {/* Edit form */}
       {editing && (
         <div className="ml-6 mt-1 flex flex-wrap items-end gap-2 rounded-lg bg-muted/50 p-2">
           <div className="flex flex-col gap-1">
@@ -239,7 +264,7 @@ export function TaskItem({
         </div>
       )}
 
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-    </li>
+      {error && <p className="ml-6 mt-1 text-xs text-red-600">{error}</p>}
+    </div>
   );
 }

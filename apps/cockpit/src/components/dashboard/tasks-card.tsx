@@ -3,82 +3,90 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskItem, getUrgency } from "./task-item";
-import { CircleCheck, AlertTriangle, Clock, X } from "lucide-react";
 import type { TaskRow } from "@repo/database/queries/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
-
-type PersonFilter = string | null;
-type UrgencyFilter = "all" | "overdue" | "this-week" | "no-deadline";
 
 interface TasksCardProps {
   tasks: TaskRow[];
   people: PersonForAssignment[];
 }
 
+interface PersonGroup {
+  id: string | null;
+  name: string;
+  tasks: TaskRow[];
+}
+
 export function TasksCard({ tasks, people }: TasksCardProps) {
-  const [personFilter, setPersonFilter] = useState<PersonFilter>(null);
-  const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>("all");
   const [showDone, setShowDone] = useState(false);
 
   const teammates = people.filter((p) => p.team);
   const clients = people.filter((p) => !p.team);
 
-  // People who actually have tasks assigned
-  const assignedPeople = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const task of tasks) {
-      if (task.assigned_person) {
-        map.set(task.assigned_person.id, task.assigned_person.name);
-      }
-    }
-    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
-  }, [tasks]);
-
-  // Counts
-  const urgencyCounts = useMemo(() => {
-    const counts = { overdue: 0, "this-week": 0, "no-deadline": 0 };
-    for (const task of tasks) {
-      if (task.status !== "active") continue;
-      if (!task.due_date) {
-        counts["no-deadline"]++;
-      } else {
-        const u = getUrgency(task.due_date);
-        if (u === "overdue") counts.overdue++;
-        else if (u === "this-week") counts["this-week"]++;
-      }
-    }
-    return counts;
-  }, [tasks]);
-
   const activeCount = useMemo(() => tasks.filter((t) => t.status === "active").length, [tasks]);
   const doneCount = useMemo(() => tasks.filter((t) => t.status === "done").length, [tasks]);
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      if (!showDone && task.status === "done") return false;
-      if (showDone && task.status !== "done") return false;
-      if (personFilter && task.assigned_to !== personFilter) return false;
-      if (urgencyFilter !== "all" && task.status === "active") {
-        if (urgencyFilter === "no-deadline" && task.due_date) return false;
-        if (urgencyFilter === "overdue" && getUrgency(task.due_date) !== "overdue") return false;
-        if (urgencyFilter === "this-week" && getUrgency(task.due_date) !== "this-week")
-          return false;
+  const overdueCount = useMemo(() => {
+    return tasks.filter(
+      (t) => t.status === "active" && t.due_date && getUrgency(t.due_date) === "overdue",
+    ).length;
+  }, [tasks]);
+
+  // Group active tasks by person: teammates first, then "Klanten", then unassigned
+  const personGroups = useMemo(() => {
+    const activeTasks = tasks.filter((t) => t.status === "active");
+    const groups = new Map<string, TaskRow[]>();
+
+    for (const task of activeTasks) {
+      const key = task.assigned_to ?? "__unassigned__";
+      const existing = groups.get(key) ?? [];
+      existing.push(task);
+      groups.set(key, existing);
+    }
+
+    const result: PersonGroup[] = [];
+
+    // Teammates first (sorted by first name)
+    const teammateGroups: PersonGroup[] = [];
+    for (const [personId, personTasks] of groups) {
+      if (personId === "__unassigned__") continue;
+      const person = personTasks[0]?.assigned_person;
+      if (!person) continue;
+      if (person.team) {
+        teammateGroups.push({
+          id: personId,
+          name: person.name.split(" ")[0],
+          tasks: personTasks,
+        });
       }
-      return true;
-    });
-  }, [tasks, personFilter, urgencyFilter, showDone]);
+    }
+    teammateGroups.sort((a, b) => a.name.localeCompare(b.name));
+    result.push(...teammateGroups);
 
-  const hasActiveFilter = personFilter !== null || urgencyFilter !== "all";
+    // Client tasks grouped under "Klanten"
+    const clientTasks: TaskRow[] = [];
+    for (const [personId, personTasks] of groups) {
+      if (personId === "__unassigned__") continue;
+      const person = personTasks[0]?.assigned_person;
+      if (!person) continue;
+      if (!person.team) {
+        clientTasks.push(...personTasks);
+      }
+    }
+    if (clientTasks.length > 0) {
+      result.push({ id: "__clients__", name: "Klanten", tasks: clientTasks });
+    }
 
-  function clearFilters() {
-    setPersonFilter(null);
-    setUrgencyFilter("all");
-  }
+    // Unassigned
+    const unassigned = groups.get("__unassigned__");
+    if (unassigned && unassigned.length > 0) {
+      result.push({ id: null, name: "Niet toegewezen", tasks: unassigned });
+    }
 
-  // First name only for pills
-  function firstName(fullName: string) {
-    return fullName.split(" ")[0];
-  }
+    return result;
+  }, [tasks]);
+
+  const doneTasks = useMemo(() => tasks.filter((t) => t.status === "done"), [tasks]);
 
   return (
     <Card>
@@ -89,123 +97,76 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
             {activeCount} actief{doneCount > 0 ? ` · ${doneCount} afgerond` : ""}
           </span>
         </div>
-      </CardHeader>
-      <CardContent className="pt-3">
-        {/* Filter bar — horizontal scroll, no wrap */}
-        <div className="-mx-4 mb-2 flex items-center gap-1 overflow-x-auto px-4 pb-1 scrollbar-none">
-          {/* Person pills — one per person */}
-          {assignedPeople.length > 1 && (
-            <>
-              {assignedPeople.map(([id, name]) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setPersonFilter(personFilter === id ? null : id)}
-                  className={`flex h-6 shrink-0 items-center rounded-full px-2 text-[11px] font-medium transition-colors ${
-                    personFilter === id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/60 text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {firstName(name)}
-                </button>
-              ))}
-              <div className="mx-0.5 h-3.5 w-px shrink-0 bg-border" />
-            </>
-          )}
 
-          {/* Urgency pills — only show if count > 0 */}
-          {urgencyCounts.overdue > 0 && (
-            <button
-              type="button"
-              onClick={() => setUrgencyFilter(urgencyFilter === "overdue" ? "all" : "overdue")}
-              className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
-                urgencyFilter === "overdue"
-                  ? "bg-red-600 text-white"
-                  : "bg-red-50 text-red-700 hover:bg-red-100"
-              }`}
-            >
-              <AlertTriangle className="size-2.5" />
-              {urgencyCounts.overdue}
-            </button>
-          )}
-
-          {urgencyCounts["this-week"] > 0 && (
-            <button
-              type="button"
-              onClick={() => setUrgencyFilter(urgencyFilter === "this-week" ? "all" : "this-week")}
-              className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
-                urgencyFilter === "this-week"
-                  ? "bg-amber-500 text-white"
-                  : "bg-amber-50 text-amber-700 hover:bg-amber-100"
-              }`}
-            >
-              <Clock className="size-2.5" />
-              {urgencyCounts["this-week"]}
-            </button>
-          )}
-
-          {urgencyCounts["no-deadline"] > 0 && (
-            <button
-              type="button"
-              onClick={() =>
-                setUrgencyFilter(urgencyFilter === "no-deadline" ? "all" : "no-deadline")
-              }
-              className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
-                urgencyFilter === "no-deadline"
-                  ? "bg-muted-foreground text-background"
-                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              Open
-              <span className="text-[10px]">{urgencyCounts["no-deadline"]}</span>
-            </button>
-          )}
-
-          {/* Done toggle */}
+        {/* Toggle pills + urgentie indicator */}
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowDone(false)}
+            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              !showDone
+                ? "bg-foreground text-background"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            Actief
+          </button>
           {doneCount > 0 && (
             <button
               type="button"
-              onClick={() => setShowDone(!showDone)}
-              className={`flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-medium transition-colors ${
+              onClick={() => setShowDone(true)}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 showDone
-                  ? "bg-green-600 text-white"
+                  ? "bg-foreground text-background"
                   : "bg-muted/60 text-muted-foreground hover:bg-muted"
               }`}
             >
-              <CircleCheck className="size-2.5" />
-              {doneCount}
+              Afgerond
             </button>
           )}
-
-          {/* Clear */}
-          {hasActiveFilter && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="flex h-6 shrink-0 items-center rounded-full px-1.5 text-muted-foreground transition-colors hover:text-foreground"
-              title="Wis filters"
-            >
-              <X className="size-3" />
-            </button>
+          <div className="flex-1" />
+          {!showDone && overdueCount > 0 && (
+            <span className="flex items-center gap-1.5 text-xs font-medium text-red-600">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+              {overdueCount} verlopen
+            </span>
           )}
         </div>
+      </CardHeader>
 
-        {/* Task list */}
-        {filteredTasks.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            {showDone
-              ? "Geen afgeronde taken."
-              : hasActiveFilter
-                ? "Geen taken voor dit filter."
-                : "Geen actieve taken. Promoveer actiepunten vanuit een meeting."}
-          </p>
+      <CardContent className="pt-4">
+        {!showDone ? (
+          personGroups.length === 0 ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Geen actieve taken. Promoveer actiepunten vanuit een meeting.
+            </p>
+          ) : (
+            <div className="space-y-6">
+              {personGroups.map((group) => (
+                <div key={group.id ?? "__unassigned__"}>
+                  <div className="mb-3 flex items-baseline gap-2">
+                    <h3 className="text-lg font-semibold">{group.name}</h3>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {group.tasks.length} {group.tasks.length === 1 ? "taak" : "taken"}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    {group.tasks.map((task) => (
+                      <TaskItem key={task.id} task={task} teammates={teammates} clients={clients} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : doneTasks.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">Geen afgeronde taken.</p>
         ) : (
-          <ul className="divide-y divide-border/50">
-            {filteredTasks.map((task) => (
+          <div className="space-y-1">
+            {doneTasks.map((task) => (
               <TaskItem key={task.id} task={task} teammates={teammates} clients={clients} />
             ))}
-          </ul>
+          </div>
         )}
       </CardContent>
     </Card>

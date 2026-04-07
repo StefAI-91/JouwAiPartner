@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: Taken overzicht redesign</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 flex justify-center p-4">
+
+    <!-- COMPONENT: TasksCard -->
+    <div style="width: 390px;">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+
+        <!-- Header -->
+        <div class="px-5 pt-5 pb-3">
+          <div class="flex items-baseline justify-between">
+            <h2 class="text-xl font-bold text-gray-900">Taken</h2>
+            <span class="text-xs text-gray-400">7 actief · 10 afgerond</span>
+          </div>
+
+          <!-- Toggle pills + urgentie indicator -->
+          <div class="flex items-center gap-2 mt-3">
+            <button id="btn-actief" onclick="showTab('actief')"
+              class="tab-btn px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-gray-900 text-white">
+              Actief
+            </button>
+            <button id="btn-afgerond" onclick="showTab('afgerond')"
+              class="tab-btn px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-500 hover:bg-gray-200">
+              Afgerond
+            </button>
+            <div class="flex-1"></div>
+            <!-- Urgentie summary -->
+            <span id="urgentie-badge" class="flex items-center gap-1.5 text-xs font-medium text-red-600">
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              5 verlopen
+            </span>
+          </div>
+        </div>
+
+        <div class="h-px bg-gray-100"></div>
+
+        <!-- ACTIEF TAB -->
+        <div id="tab-actief" class="px-5 py-4">
+
+          <!-- SECTION: Wouter -->
+          <div class="mb-6">
+            <div class="flex items-baseline gap-2 mb-3">
+              <h3 class="text-lg font-semibold text-gray-900">Wouter</h3>
+              <span class="text-xs text-gray-400 font-medium">4 taken</span>
+            </div>
+
+            <div class="space-y-1">
+              <!-- Task: overdue -->
+              <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-red-500 rounded-r-lg hover:bg-red-50/50 transition-colors group">
+                <button class="mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900 leading-snug">Tekeningetje aanleveren: hoe werkt memory op studio-, assistent- en chatniveau</p>
+                  <span class="text-[11px] font-medium text-red-600 mt-0.5 inline-block">verlopen · 7 apr</span>
+                </div>
+              </div>
+
+              <!-- Task: overdue -->
+              <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-red-500 rounded-r-lg hover:bg-red-50/50 transition-colors group">
+                <button class="mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900 leading-snug">Teammeeting: bespreken wanneer switch naar multi agent orchestration</p>
+                  <span class="text-[11px] font-medium text-red-600 mt-0.5 inline-block">verlopen · 7 apr</span>
+                </div>
+              </div>
+
+              <!-- Task: overdue -->
+              <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-red-500 rounded-r-lg hover:bg-red-50/50 transition-colors group">
+                <button class="mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900 leading-snug">Checken haalbaarheid van drie cofounder modaliteiten</p>
+                  <span class="text-[11px] font-medium text-red-600 mt-0.5 inline-block">verlopen · 7 apr</span>
+                </div>
+              </div>
+
+              <!-- Task: this-week -->
+              <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-amber-400 rounded-r-lg hover:bg-amber-50/50 transition-colors group">
+                <button class="mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900 leading-snug">Geüpdatet roadmap voorstel delen volgende week</p>
+                  <span class="text-[11px] font-medium text-amber-600 mt-0.5 inline-block">14 apr</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION: Stef -->
+          <div class="mb-2">
+            <div class="flex items-baseline gap-2 mb-3">
+              <h3 class="text-lg font-semibold text-gray-900">Stef</h3>
+              <span class="text-xs text-gray-400 font-medium">3 taken</span>
+            </div>
+
+            <div class="space-y-1">
+              <!-- Task: overdue -->
+              <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-red-500 rounded-r-lg hover:bg-red-50/50 transition-colors group">
+                <button class="mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900 leading-snug">Geüpdatet roadmap voorstel maken met timing per feature</p>
+                  <span class="text-[11px] font-medium text-red-600 mt-0.5 inline-block">verlopen · 8 apr</span>
+                </div>
+              </div>
+
+              <!-- Task: overdue -->
+              <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-red-500 rounded-r-lg hover:bg-red-50/50 transition-colors group">
+                <button class="mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900 leading-snug">Wachten op feedback van Fleur na salesgesprek met Tibor</p>
+                  <span class="text-[11px] font-medium text-red-600 mt-0.5 inline-block">verlopen · 9 apr</span>
+                </div>
+              </div>
+
+              <!-- Task: this-week -->
+              <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-amber-400 rounded-r-lg hover:bg-amber-50/50 transition-colors group">
+                <button class="mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm text-gray-900 leading-snug">Dagelijks Circle support reacties plannen in agenda</p>
+                  <span class="text-[11px] font-medium text-amber-600 mt-0.5 inline-block">10 apr</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- AFGEROND TAB (hidden by default) -->
+        <div id="tab-afgerond" class="px-5 py-4 hidden">
+
+          <div class="space-y-1">
+            <!-- Done task 1 -->
+            <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-green-400 rounded-r-lg opacity-60">
+              <div class="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-400 leading-snug line-through">MCP server deployment naar Vercel afgerond</p>
+                <span class="text-[11px] text-gray-400 mt-0.5 inline-block">afgerond · 5 apr</span>
+              </div>
+            </div>
+
+            <!-- Done task 2 -->
+            <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-green-400 rounded-r-lg opacity-60">
+              <div class="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-400 leading-snug line-through">Review gate UI testen met Wouter en Ege</p>
+                <span class="text-[11px] text-gray-400 mt-0.5 inline-block">afgerond · 4 apr</span>
+              </div>
+            </div>
+
+            <!-- Done task 3 -->
+            <div class="flex items-start gap-2.5 py-2 pl-3 border-l-[3px] border-green-400 rounded-r-lg opacity-60">
+              <div class="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-400 leading-snug line-through">Dashboard carousel aansluiten op verified meetings</p>
+                <span class="text-[11px] text-gray-400 mt-0.5 inline-block">afgerond · 3 apr</span>
+              </div>
+            </div>
+
+            <p class="text-xs text-gray-400 text-center pt-3">+ 7 eerdere taken</p>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      function showTab(tab) {
+        // Toggle visibility
+        document.getElementById('tab-actief').classList.toggle('hidden', tab !== 'actief');
+        document.getElementById('tab-afgerond').classList.toggle('hidden', tab !== 'afgerond');
+
+        // Toggle urgentie badge
+        document.getElementById('urgentie-badge').classList.toggle('hidden', tab !== 'actief');
+
+        // Update button styles
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => {
+          const isActive = btn.id === `btn-${tab}`;
+          btn.className = `tab-btn px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            isActive
+              ? 'bg-gray-900 text-white'
+              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+          }`;
+        });
+      }
+    </script>
+  </body>
+</html>
