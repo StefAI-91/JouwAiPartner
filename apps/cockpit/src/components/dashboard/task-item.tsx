@@ -41,6 +41,7 @@ export function TaskItem({
   const urgency = getUrgency(task.due_date);
   const isCompleted = task.status === "done";
   const meetingId = task.extraction?.meeting_id ?? null;
+  const projectName = task.extraction?.project?.name ?? null;
 
   function handleSave() {
     setError(null);
@@ -138,7 +139,13 @@ export function TaskItem({
           >
             {task.title}
           </p>
-          <div className="mt-0.5 flex items-center gap-2">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            {projectName && (
+              <span className="text-[11px] font-medium text-muted-foreground">{projectName}</span>
+            )}
+            {projectName && dateLabel && (
+              <span className="text-[11px] text-muted-foreground/40">·</span>
+            )}
             {dateLabel && (
               <span className={`text-[11px] font-medium ${dateColor}`}>{dateLabel}</span>
             )}
