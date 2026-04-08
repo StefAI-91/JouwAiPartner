@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Nunito, Fredoka, Geist_Mono } from "next/font/google";
 import { UserbackProvider } from "@/components/shared/userback-provider";
 import "./globals.css";
@@ -20,6 +20,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   title: "Jouw AI Partner — Knowledge Platform",
   description: "AI-first knowledge platform voor jouw team",
@@ -35,7 +41,7 @@ export default function RootLayout({
       lang="nl"
       className={`${nunito.variable} ${fredoka.variable} ${geistMono.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col antialiased">
+      <body className="min-h-full flex flex-col antialiased overflow-x-hidden">
         {children}
         <UserbackProvider />
       </body>

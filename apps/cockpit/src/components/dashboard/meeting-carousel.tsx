@@ -142,7 +142,7 @@ export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: Meetin
 
         <Link href={`/meetings/${meeting.id}`} className="block">
           <div
-            className={`px-8 pb-6 pt-7 transition-opacity duration-200 ${fading ? "opacity-0" : "opacity-100"}`}
+            className={`px-4 pb-6 pt-7 sm:px-8 transition-opacity duration-200 ${fading ? "opacity-0" : "opacity-100"}`}
           >
             {/* Header: title + meta */}
             <div className="mb-4 flex items-start justify-between gap-4">
