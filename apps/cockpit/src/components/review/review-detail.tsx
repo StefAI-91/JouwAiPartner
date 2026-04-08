@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ExtractionCard } from "@/components/shared/extraction-card";
+import { FollowUpChecklist } from "@/components/shared/follow-up-checklist";
 import { ReviewActionBar } from "./review-action-bar";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EditableTitle } from "@/components/meetings/editable-title";
@@ -13,7 +13,7 @@ import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
 import { regenerateMeetingAction, updateMeetingSummaryAction } from "@/actions/meetings";
-import { ListChecks, RefreshCw } from "lucide-react";
+import { Mail, RefreshCw } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
 import { SegmentList } from "@/components/shared/segment-list";
@@ -211,9 +211,9 @@ export function ReviewDetail({
         <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ListChecks className="size-4 text-green-600" />
-              <h2 className="text-base font-semibold">Actiepunten</h2>
-              <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+              <Mail className="size-4 text-amber-500" />
+              <h2 className="text-base font-semibold">Opvolgsuggesties</h2>
+              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
                 {actionItems.length}
               </span>
             </div>
@@ -229,24 +229,14 @@ export function ReviewDetail({
           </div>
         </div>
 
-        <div className="space-y-3 p-6 pb-24">
-          {actionItems.map((ext) => (
-            <ExtractionCard
-              key={ext.id}
-              extraction={ext}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onRefClick={handleRefClick}
-              showPromote
-              isPromoted={promotedExtractionIds?.includes(ext.id)}
-              people={peopleForAssignment}
-            />
-          ))}
-          {actionItems.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Geen actiepunten gevonden
-            </p>
-          )}
+        <div className="p-6 pb-24">
+          <FollowUpChecklist
+            items={actionItems}
+            promotedIds={promotedExtractionIds}
+            people={peopleForAssignment}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         </div>
       </div>
 

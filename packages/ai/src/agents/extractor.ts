@@ -38,22 +38,26 @@ CATEGORIE 1: WACHTEN OP EXTERN (category: "wachten_op_extern")
 Een externe partij (klant, partner, leverancier) moet iets doen of aanleveren.
 - De eigenaar is NIET van JAIP
 - JAIP kan deze persoon mailen om op te volgen als het uitblijft
-- Voorbeelden:
-  - "Klant levert document/data/feedback aan"
-  - "Klant laat weten of ze akkoord gaan"
-  - "Partner stuurt offerte/voorstel/planning"
-  - "Wachten op beslissing van [naam]"
-- Formuleer als: "Opvolgen bij [naam/organisatie]: [wat] — nodig voor [onze vervolgstap]"
 
 CATEGORIE 2: WACHTEN OP BESLISSING (category: "wachten_op_beslissing")
 Iemand (intern of extern) moet nog een beslissing nemen die werk blokkeert.
 - Er is een specifiek persoon die de beslissing moet nemen
 - JAIP kan deze persoon mailen/aanspreken om de beslissing te forceren
-- Voorbeelden:
-  - "Er is nog geen keuze gemaakt over technologie/aanpak/planning"
-  - "Stef moet nog beslissen over budget"
-  - "Klant twijfelt nog tussen optie A en B"
-- Formuleer als: "Beslissing nodig van [naam]: [welke beslissing] — blokkeert [wat]"
+
+--- FORMULERING VAN CONTENT ---
+Schrijf de content als een KORTE, SIMPELE zin die beschrijft wat er opgevolgd moet worden.
+Maximaal 10-15 woorden. Schrijf het als een menselijke opvolg-vraag.
+
+Goede voorbeelden:
+- "PR-linkbuilding voorstel doorsturen"
+- "Urenbudget SEA verhogen en kosten herverdelen"
+- "Beslissing nemen over Windows licentie-type"
+- "Feedback aanleveren op wireframes"
+- "Akkoord geven op offerte"
+
+Slechte voorbeelden (te lang, te formeel):
+- "Opvolgen bij Laura: PR-linkbuilding voorstel voor Duitsland doorsturen (Windows 11 licentie, Windows 11 Pro, Windows 10 Enterprise focus) — nodig voor goedkeuring en plaatsingen"
+- "Beslissing nodig van Ron: urenbudget SEA verhogen + marketing-kosten herverdelen (Nederland omhoog, Duitsland omlaag) — nodig voor capaciteit Service 2025-licenties"
 
 --- EXPLICIET GEEN ACTIEPUNT ---
 - Interne taken van JAIP ("wij bouwen X", "ik maak het document af", "offerte schrijven")
