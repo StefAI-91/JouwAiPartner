@@ -13,13 +13,16 @@
     "./fireflies": "./src/fireflies.ts",
     "./transcribe-elevenlabs": "./src/transcribe-elevenlabs.ts",
     "./transcript-processor": "./src/transcript-processor.ts",
-    "./validations/*": "./src/validations/*.ts"
+    "./validations/*": "./src/validations/*.ts",
+    "./google-oauth": "./src/google-oauth.ts",
+    "./gmail": "./src/gmail.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.64",
     "@repo/database": "*",
     "ai": "^6.0.138",
     "cohere-ai": "^7.21.0",
+    "googleapis": "^171.4.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

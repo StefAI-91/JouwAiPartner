@@ -10,6 +10,7 @@ import {
   Building2,
   Users,
   BrainCircuit,
+  Mail,
 } from "lucide-react";
 
 interface NavItem {
@@ -28,6 +29,7 @@ export function BottomNav({ reviewCount }: { reviewCount?: number }) {
     { href: "/review", label: "Review", icon: ClipboardCheck, badge: reviewCount },
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/meetings", label: "Meetings", icon: Calendar },
+    { href: "/emails", label: "Emails", icon: Mail },
     { href: "/clients", label: "Clients", icon: Building2 },
     { href: "/people", label: "People", icon: Users },
   ];
