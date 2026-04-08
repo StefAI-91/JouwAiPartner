@@ -9,9 +9,7 @@ export async function deleteExtractionsByMeetingId(
   return { success: true };
 }
 
-export async function getExtractionForCorrection(
-  extractionId: string,
-): Promise<{
+export async function getExtractionForCorrection(extractionId: string): Promise<{
   id: string;
   content: string;
   metadata: Record<string, unknown> | null;
@@ -151,9 +149,11 @@ export async function deleteExtraction(
   return { success: true };
 }
 
+export type NeedStatus = "open" | "erkend" | "afgewezen" | "opgelost";
+
 export async function updateNeedStatus(
   needId: string,
-  status: string,
+  status: NeedStatus,
 ): Promise<{ success: true } | { error: string }> {
   const db = getAdminClient();
 

@@ -36,7 +36,7 @@ const CATEGORY_ORDER = ["tooling", "kennis", "capaciteit", "proces", "klant", "o
 
 /**
  * List needs grouped by category.
- * By default only shows "open" and "erkend" needs.
+ * By default only shows "open" and "erkend" needs (filtered on DB).
  */
 export async function listNeedsGroupedByCategory(
   client?: SupabaseClient,
@@ -44,7 +44,7 @@ export async function listNeedsGroupedByCategory(
 ): Promise<{ grouped: NeedsByCategory[]; total: number }> {
   const db = client ?? getAdminClient();
 
-  const { data, error } = await db
+  let query = db
     .from("extractions")
     .select(
       `id, content, metadata, created_at,
@@ -54,17 +54,19 @@ export async function listNeedsGroupedByCategory(
     .eq("verification_status", "verified")
     .order("created_at", { ascending: false });
 
+  if (!includeArchived) {
+    // Filter on database: only open + erkend (needs without status default to open)
+    query = query.or(
+      "metadata->>status.eq.open,metadata->>status.eq.erkend,metadata->>status.is.null",
+    );
+  }
+
+  const { data, error } = await query;
+
   if (error || !data) return { grouped: [], total: 0 };
 
-  const allNeeds = data as unknown as NeedRow[];
-
-  // Filter by status: default shows only open + erkend
-  const needs = includeArchived
-    ? allNeeds
-    : allNeeds.filter((n) => {
-        const status = n.metadata?.status ?? "open";
-        return status === "open" || status === "erkend";
-      });
+  // Supabase nested joins require cast — safe because we control the select columns
+  const needs = data as unknown as NeedRow[];
 
   // Group by category
   const categoryMap = new Map<string, NeedRow[]>();
@@ -89,20 +91,17 @@ export async function listNeedsGroupedByCategory(
 
 /**
  * Count active needs (open + erkend) for badge display.
+ * Filters on database level using metadata->>status.
  */
 export async function countNeeds(client?: SupabaseClient): Promise<number> {
   const db = client ?? getAdminClient();
 
-  const { data } = await db
+  const { count } = await db
     .from("extractions")
-    .select("metadata")
+    .select("id", { count: "exact", head: true })
     .eq("type", "need")
-    .eq("verification_status", "verified");
+    .eq("verification_status", "verified")
+    .or("metadata->>status.eq.open,metadata->>status.eq.erkend,metadata->>status.is.null");
 
-  if (!data) return 0;
-
-  return data.filter((row) => {
-    const status = (row.metadata as Record<string, unknown>)?.status ?? "open";
-    return status === "open" || status === "erkend";
-  }).length;
+  return count ?? 0;
 }
