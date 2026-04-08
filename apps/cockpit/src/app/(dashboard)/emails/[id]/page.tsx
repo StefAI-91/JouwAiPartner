@@ -7,6 +7,7 @@ import { createClient } from "@repo/database/supabase/server";
 import { getEmailById } from "@repo/database/queries/emails";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
+import { listPeople } from "@repo/database/queries/people";
 import { Badge } from "@/components/ui/badge";
 import { EmailLinkEditor } from "@/components/emails/email-link-editor";
 
@@ -31,10 +32,11 @@ function urgencyColor(urgency: string): string {
 export default async function EmailDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [email, organizations, projects] = await Promise.all([
+  const [email, organizations, projects, people] = await Promise.all([
     getEmailById(id, supabase),
     listOrganizations(supabase),
     listProjects(supabase),
+    listPeople(supabase),
   ]);
 
   if (!email) notFound();
@@ -98,6 +100,10 @@ export default async function EmailDetailPage({ params }: { params: Promise<{ id
         linkedProjects={email.projects}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
         allProjects={projects.map((p) => ({ id: p.id, name: p.name }))}
+        emailType={email.email_type ?? null}
+        partyType={email.party_type ?? null}
+        senderPerson={email.sender_person ?? null}
+        allPeople={people.map((p) => ({ id: p.id, name: p.name, role: p.role }))}
       />
 
       {/* Email body */}

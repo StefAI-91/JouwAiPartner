@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
-import { ConfidenceBar } from "@/components/shared/confidence-bar";
 import { getMeetingHref } from "@/lib/meeting-href";
+import { EmailsSection, type ProjectEmail } from "./project-emails-section";
+import { CombinedExtractionsSection, type CombinedItem } from "./combined-extractions-section";
 import type { ProjectSegment } from "@repo/database/queries/meeting-project-summaries";
 
 interface Meeting {
@@ -25,12 +26,30 @@ interface Extraction {
   meeting: { id: string; title: string | null } | null;
 }
 
-const TABS = ["segments", "meetings", "action_items", "decisions", "needs_insights"] as const;
+interface EmailExtraction {
+  id: string;
+  type: string;
+  content: string;
+  confidence: number | null;
+  source_ref: string | null;
+  metadata: Record<string, unknown>;
+  email: { id: string; subject: string | null } | null;
+}
+
+const TABS = [
+  "segments",
+  "meetings",
+  "emails",
+  "action_items",
+  "decisions",
+  "needs_insights",
+] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<Tab, string> = {
   segments: "Segmenten",
   meetings: "Meetings",
+  emails: "Emails",
   action_items: "Action Items",
   decisions: "Decisions",
   needs_insights: "Needs & Insights",
@@ -38,26 +57,43 @@ const TAB_LABELS: Record<Tab, string> = {
 
 interface ProjectSectionsProps {
   meetings: Meeting[];
+  emails: ProjectEmail[];
   extractions: Extraction[];
+  emailExtractions: EmailExtraction[];
   segments?: ProjectSegment[];
 }
 
-export function ProjectSections({ meetings, extractions, segments = [] }: ProjectSectionsProps) {
+export function ProjectSections({
+  meetings,
+  emails,
+  extractions,
+  emailExtractions,
+  segments = [],
+}: ProjectSectionsProps) {
   const [activeTab, setActiveTab] = useState<Tab>(segments.length > 0 ? "segments" : "meetings");
 
-  const actionItems = extractions.filter((e) => e.type === "action_item");
-  const decisions = extractions.filter((e) => e.type === "decision");
-  const needsInsights = extractions.filter((e) => e.type === "need" || e.type === "insight");
+  const allActionItems: CombinedItem[] = [
+    ...extractions.filter((e) => e.type === "action_item"),
+    ...emailExtractions.filter((e) => e.type === "action_item"),
+  ];
+  const allDecisions: CombinedItem[] = [
+    ...extractions.filter((e) => e.type === "decision"),
+    ...emailExtractions.filter((e) => e.type === "decision"),
+  ];
+  const allNeedsInsights: CombinedItem[] = [
+    ...extractions.filter((e) => e.type === "need" || e.type === "insight"),
+    ...emailExtractions.filter((e) => e.type === "need" || e.type === "insight"),
+  ];
 
   const counts: Record<Tab, number> = {
     segments: segments.length,
     meetings: meetings.length,
-    action_items: actionItems.length,
-    decisions: decisions.length,
-    needs_insights: needsInsights.length,
+    emails: emails.length,
+    action_items: allActionItems.length,
+    decisions: allDecisions.length,
+    needs_insights: allNeedsInsights.length,
   };
 
-  // Only show tabs that have content (always show meetings)
   const visibleTabs = TABS.filter((tab) => {
     if (tab === "meetings") return true;
     return counts[tab] > 0;
@@ -65,7 +101,6 @@ export function ProjectSections({ meetings, extractions, segments = [] }: Projec
 
   return (
     <div>
-      {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto border-b border-border/50 pb-px">
         {visibleTabs.map((tab) => (
           <button
@@ -87,16 +122,18 @@ export function ProjectSections({ meetings, extractions, segments = [] }: Projec
         ))}
       </div>
 
-      {/* Tab content */}
       <div className="pt-6">
         {activeTab === "segments" && <SegmentsSection segments={segments} />}
         {activeTab === "meetings" && <MeetingsSection meetings={meetings} />}
+        {activeTab === "emails" && <EmailsSection emails={emails} />}
         {activeTab === "action_items" && (
-          <ExtractionsSection items={actionItems} type="action_item" />
+          <CombinedExtractionsSection items={allActionItems} type="action_item" />
         )}
-        {activeTab === "decisions" && <ExtractionsSection items={decisions} type="decision" />}
+        {activeTab === "decisions" && (
+          <CombinedExtractionsSection items={allDecisions} type="decision" />
+        )}
         {activeTab === "needs_insights" && (
-          <ExtractionsSection items={needsInsights} type="needs_insights" />
+          <CombinedExtractionsSection items={allNeedsInsights} type="needs_insights" />
         )}
       </div>
     </div>
@@ -220,87 +257,6 @@ function MeetingsSection({ meetings }: { meetings: Meeting[] }) {
           </div>
         </Link>
       ))}
-    </div>
-  );
-}
-
-const TYPE_COLORS: Record<string, { border: string }> = {
-  action_item: { border: "#16A34A" },
-  decision: { border: "#3B82F6" },
-  need: { border: "#A855F7" },
-  insight: { border: "#6B7280" },
-};
-
-function ExtractionsSection({ items, type }: { items: Extraction[]; type: string }) {
-  if (items.length === 0) {
-    const labels: Record<string, string> = {
-      action_item: "No action items found",
-      decision: "No decisions found",
-      needs_insights: "No needs or insights found",
-    };
-    return (
-      <p className="py-6 text-center text-sm text-muted-foreground">
-        {labels[type] ?? "No items found"}
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {items.map((item) => {
-        const color = TYPE_COLORS[item.type] ?? TYPE_COLORS.insight;
-        return (
-          <div
-            key={item.id}
-            className="rounded-xl bg-white p-4 shadow-sm"
-            style={{ borderLeft: `3px solid ${color.border}` }}
-          >
-            <p className="text-sm leading-relaxed">{item.content}</p>
-
-            {/* Action item metadata */}
-            {item.type === "action_item" && item.metadata && (
-              <ActionItemMeta metadata={item.metadata} />
-            )}
-
-            {item.transcript_ref && (
-              <blockquote className="mt-2 border-l-2 border-muted pl-3 text-xs italic text-muted-foreground">
-                {item.transcript_ref}
-              </blockquote>
-            )}
-
-            <div className="mt-2 flex items-center justify-between">
-              <ConfidenceBar confidence={item.confidence} />
-              {item.meeting && (
-                <span className="text-[10px] text-muted-foreground">
-                  {item.meeting.title ?? "Untitled"}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function ActionItemMeta({ metadata }: { metadata: Record<string, unknown> }) {
-  const assignee = metadata.assignee ? String(metadata.assignee) : null;
-  const dueDate = metadata.due_date ? String(metadata.due_date) : null;
-  const status = metadata.status ? String(metadata.status) : null;
-
-  return (
-    <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-      {assignee && <span className="rounded-full bg-muted px-2 py-0.5">{assignee}</span>}
-      {dueDate && <span className="rounded-full bg-muted px-2 py-0.5">Due: {dueDate}</span>}
-      {status && (
-        <span
-          className={`rounded-full px-2 py-0.5 ${
-            status === "done" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-          }`}
-        >
-          {status}
-        </span>
-      )}
     </div>
   );
 }

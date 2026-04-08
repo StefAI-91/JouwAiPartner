@@ -94,6 +94,8 @@ export async function updateEmailClassification(
     unmatched_organization_name: string | null;
     relevance_score: number;
     is_processed: boolean;
+    email_type?: string | null;
+    party_type?: string | null;
   },
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient()
@@ -174,6 +176,45 @@ export async function rejectEmail(
     p_user_id: userId,
     p_reason: reason ?? null,
   });
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function updateEmailSenderPerson(
+  emailId: string,
+  senderPersonId: string | null,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("emails")
+    .update({ sender_person_id: senderPersonId, updated_at: new Date().toISOString() })
+    .eq("id", emailId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function updateEmailType(
+  emailId: string,
+  emailType: string | null,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("emails")
+    .update({ email_type: emailType, updated_at: new Date().toISOString() })
+    .eq("id", emailId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function updateEmailPartyType(
+  emailId: string,
+  partyType: string | null,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("emails")
+    .update({ party_type: partyType, updated_at: new Date().toISOString() })
+    .eq("id", emailId);
 
   if (error) return { error: error.message };
   return { success: true };

@@ -6,9 +6,11 @@ import { buildEntityContext } from "./context-injection";
 import { resolveOrganization } from "./entity-resolution";
 import {
   updateEmailClassification,
+  updateEmailSenderPerson,
   linkEmailProject,
   insertEmailExtractions,
 } from "@repo/database/mutations/emails";
+import { findPeopleByEmails } from "@repo/database/queries/people";
 import { embedText } from "../embeddings";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
@@ -86,6 +88,8 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
       organization_id: null,
       unmatched_organization_name: null,
       relevance_score: 0,
+      email_type: null,
+      party_type: null,
       is_processed: true,
     });
     return result;
@@ -102,11 +106,24 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
         organization_id: orgResult.organization_id,
         unmatched_organization_name: orgResult.matched ? null : orgName,
         relevance_score: result.classifier.relevance_score,
+        email_type: result.classifier.email_type,
+        party_type: result.classifier.party_type,
         is_processed: false, // not done yet
       });
     } catch (err) {
       result.errors.push(`Org resolution failed: ${err}`);
     }
+  }
+
+  // 3b. Auto-match sender to known person by email address
+  try {
+    const emailMap = await findPeopleByEmails([email.from_address.toLowerCase()]);
+    const matchedPersonId = emailMap.get(email.from_address.toLowerCase());
+    if (matchedPersonId) {
+      await updateEmailSenderPerson(email.id, matchedPersonId);
+    }
+  } catch (err) {
+    result.errors.push(`Sender person match failed: ${err}`);
   }
 
   // 4. Link identified projects
@@ -128,8 +145,8 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
   // 5. Extract insights (skip low-relevance emails)
   if (
     result.classifier.relevance_score >= 0.4 &&
-    result.classifier.email_category !== "newsletter" &&
-    result.classifier.email_category !== "notification"
+    result.classifier.email_type !== "newsletter" &&
+    result.classifier.email_type !== "notification"
   ) {
     try {
       result.extractor = await runEmailExtractor(
@@ -145,7 +162,7 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
         {
           identified_projects: identifiedProjects,
           organization_name: result.classifier.organization_name,
-          email_category: result.classifier.email_category,
+          email_type: result.classifier.email_type,
           entityContext: entityContext.contextString,
         },
       );
@@ -197,6 +214,8 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
       organization_id: result.organization_id,
       unmatched_organization_name: orgName && !result.organization_id ? orgName : null,
       relevance_score: result.classifier.relevance_score,
+      email_type: result.classifier.email_type,
+      party_type: result.classifier.party_type,
       is_processed: true,
     });
   } catch (err) {

@@ -14,22 +14,37 @@ Je bepaalt:
    - 0.6–0.8: relevant (project communicatie, klant updates)
    - 0.9–1.0: kritiek (besluiten, urgente verzoeken, contracten)
 
-2. EMAIL CATEGORY: wat voor soort email is dit?
+2. EMAIL TYPE: wat voor soort email is dit?
    - project_communication: directe project-gerelateerde communicatie
    - sales: commercieel, offerte, propositie
    - internal: intern overleg, team communicatie
-   - administrative: facturen, contracten, planning
+   - administrative: planning, algemeen administratief
+   - legal_finance: facturen, boekhouding, belastingzaken, contracten, juridisch advies
    - newsletter: nieuwsbrieven, marketing
    - notification: automated notificaties (GitHub, Vercel, etc.)
    - other: past echt nergens in
 
-3. ORGANIZATION NAME: welke externe organisatie is betrokken?
+   LET OP legal_finance: emails van/naar boekhouders, fiscalisten, advocaten, of over financiële/juridische zaken krijgen ALTIJD legal_finance als category.
+
+3. PARTY TYPE: welke rol heeft de afzender/belangrijkste externe partij?
+   - internal: afzender is een intern teamlid (check of naam/email in de bekende personen staat met een team)
+   - client: afzender is een klant
+   - accountant: afzender is een boekhouder (check rol in bekende personen)
+   - tax_advisor: afzender is een fiscalist/belastingadviseur (check rol in bekende personen)
+   - lawyer: afzender is een advocaat/jurist
+   - partner: afzender is van een partnerorganisatie
+   - other: anders of onbekend
+
+   BELANGRIJK: Gebruik de bekende personen lijst om de afzender te identificeren. Match op naam of email-adres. Als een persoon de rol "boekhouder" heeft → accountant. Rol "fiscalist" → tax_advisor.
+
+4. ORGANIZATION NAME: welke externe organisatie is betrokken?
    - null als het een interne email is
 
-4. PROJECT-IDENTIFICATIE: welke projecten worden in deze email besproken?
+5. PROJECT-IDENTIFICATIE: welke projecten worden in deze email besproken?
    - Match alleen aan bekende projecten als je daar zeker van bent
    - Als een project besproken wordt dat niet in de lijst staat, geef de naam met project_id: null
    - Liever null dan een foute koppeling
+   - Projectkoppeling is OPTIONEEL — niet elke email hoort bij een project
 
 BELANGRIJK: Je doet GEEN extractie van inhoud. Je classificeert alleen.`;
 

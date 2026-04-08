@@ -542,6 +542,9 @@ export interface Database {
           organization_id: string | null;
           unmatched_organization_name: string | null;
           relevance_score: number | null;
+          email_type: string | null;
+          party_type: string | null;
+          sender_person_id: string | null;
           is_processed: boolean;
           verification_status: string;
           verified_by: string | null;
@@ -572,6 +575,9 @@ export interface Database {
           organization_id?: string | null;
           unmatched_organization_name?: string | null;
           relevance_score?: number | null;
+          email_type?: string | null;
+          party_type?: string | null;
+          sender_person_id?: string | null;
           is_processed?: boolean;
           verification_status?: string;
           verified_by?: string | null;
@@ -602,6 +608,9 @@ export interface Database {
           organization_id?: string | null;
           unmatched_organization_name?: string | null;
           relevance_score?: number | null;
+          email_type?: string | null;
+          party_type?: string | null;
+          sender_person_id?: string | null;
           is_processed?: boolean;
           verification_status?: string;
           verified_by?: string | null;
