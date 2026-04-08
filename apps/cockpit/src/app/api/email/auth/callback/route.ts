@@ -6,6 +6,7 @@ import { createClient } from "@repo/database/supabase/server";
 /**
  * GET /api/email/auth/callback
  * Google OAuth callback — exchanges code for tokens and stores the account.
+ * Uses the same dynamic redirect URI as the auth route.
  */
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -29,8 +30,12 @@ export async function GET(request: NextRequest) {
   const userId = state ?? user.id;
 
   try {
+    // Build the same redirect URI that was used in the auth route
+    const origin = request.nextUrl.origin;
+    const redirectUri = `${origin}/api/email/auth/callback`;
+
     // Exchange authorization code for tokens
-    const tokens = await exchangeCodeForTokens(code);
+    const tokens = await exchangeCodeForTokens(code, redirectUri);
 
     // Get the email address of the connected account
     const email = await getAuthenticatedEmail(tokens.access_token);

@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getGoogleAuthUrl } from "@repo/ai/google-oauth";
 import { createClient } from "@repo/database/supabase/server";
 
 /**
  * GET /api/email/auth
  * Redirects to Google OAuth consent screen for Gmail access.
- * User must be authenticated.
+ * Dynamically builds the redirect URI from the request host so it works
+ * on any Vercel preview deployment.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -18,7 +19,9 @@ export async function GET() {
   }
 
   try {
-    const authUrl = getGoogleAuthUrl(user.id);
+    const origin = request.nextUrl.origin;
+    const redirectUri = `${origin}/api/email/auth/callback`;
+    const authUrl = getGoogleAuthUrl(redirectUri, user.id);
     return NextResponse.redirect(authUrl);
   } catch (err) {
     return NextResponse.json({ error: `Google OAuth not configured: ${err}` }, { status: 500 });

@@ -2,23 +2,24 @@ import { google } from "googleapis";
 
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
 
-function getOAuth2Client() {
+function getOAuth2Client(redirectUri?: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  const uri = redirectUri ?? process.env.GOOGLE_REDIRECT_URI;
 
-  if (!clientId || !clientSecret || !redirectUri) {
-    throw new Error("GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI must be set");
+  if (!clientId || !clientSecret) {
+    throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set");
   }
 
-  return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+  return new google.auth.OAuth2(clientId, clientSecret, uri);
 }
 
 /**
  * Generate the Google OAuth consent URL for Gmail readonly access.
+ * Accepts a dynamic redirectUri so it works on any Vercel preview deployment.
  */
-export function getGoogleAuthUrl(state?: string): string {
-  const client = getOAuth2Client();
+export function getGoogleAuthUrl(redirectUri: string, state?: string): string {
+  const client = getOAuth2Client(redirectUri);
   return client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
@@ -29,9 +30,10 @@ export function getGoogleAuthUrl(state?: string): string {
 
 /**
  * Exchange an authorization code for tokens.
+ * Must use the same redirectUri that was used to generate the auth URL.
  */
-export async function exchangeCodeForTokens(code: string) {
-  const client = getOAuth2Client();
+export async function exchangeCodeForTokens(code: string, redirectUri: string) {
+  const client = getOAuth2Client(redirectUri);
   const { tokens } = await client.getToken(code);
 
   if (!tokens.access_token || !tokens.refresh_token) {
