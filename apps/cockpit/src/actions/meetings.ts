@@ -6,6 +6,7 @@ import { createClient } from "@repo/database/supabase/server";
 import {
   updateMeetingTitle,
   updateMeetingType,
+  updateMeetingPartyType,
   updateMeetingOrganization,
   updateMeetingSummary,
   updateMeetingSummaryOnly,
@@ -39,6 +40,7 @@ import {
   updateTitleSchema,
   updateSummarySchema,
   updateMeetingTypeSchema,
+  updatePartyTypeSchema,
   updateMeetingOrganizationSchema as updateOrganizationSchema,
   meetingProjectSchema,
   meetingParticipantSchema,
@@ -107,6 +109,24 @@ export async function updateMeetingTypeAction(
   if (!parsed.success) return { error: "Ongeldig meeting type" };
 
   const result = await updateMeetingType(parsed.data.meetingId, parsed.data.meetingType);
+  if ("error" in result) return result;
+
+  revalidatePath(`/meetings/${parsed.data.meetingId}`);
+  revalidatePath(`/review/${parsed.data.meetingId}`);
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function updatePartyTypeAction(
+  input: z.infer<typeof updatePartyTypeSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = updatePartyTypeSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldig party type" };
+
+  const result = await updateMeetingPartyType(parsed.data.meetingId, parsed.data.partyType);
   if ("error" in result) return result;
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);

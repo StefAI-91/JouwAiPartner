@@ -113,6 +113,19 @@ export async function updateMeetingType(
   return { success: true };
 }
 
+export async function updateMeetingPartyType(
+  meetingId: string,
+  partyType: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ party_type: partyType })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateMeetingTitle(
   meetingId: string,
   title: string,

@@ -7,6 +7,7 @@ import { ReviewActionBar } from "./review-action-bar";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EditableTitle } from "@/components/meetings/editable-title";
 import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
+import { PartyTypeSelector } from "@/components/meetings/party-type-selector";
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
@@ -171,7 +172,10 @@ export function ReviewDetail({
         meeting={meeting}
         titleSlot={<EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />}
         meetingTypeSlot={
-          <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />
+          <div className="flex items-center gap-1.5">
+            <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />
+            <PartyTypeSelector meetingId={meeting.id} currentType={meeting.party_type} />
+          </div>
         }
         participantsSlot={
           <PeopleSelector
