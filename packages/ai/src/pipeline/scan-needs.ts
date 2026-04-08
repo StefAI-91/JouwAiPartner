@@ -92,9 +92,9 @@ export async function scanMeetingNeeds(meetingId: string): Promise<{
     return { scanned: false, needs_found: 0, skipped_reason: "meeting_not_found" };
   }
 
-  // Only scan internal meetings
-  if (meeting.party_type !== "internal") {
-    return { scanned: false, needs_found: 0, skipped_reason: "not_internal" };
+  // Only scan internal team syncs
+  if (meeting.meeting_type !== "team_sync" || meeting.party_type !== "internal") {
+    return { scanned: false, needs_found: 0, skipped_reason: "not_internal_team_sync" };
   }
 
   // Need a summary to scan
@@ -138,11 +138,12 @@ export async function scanAllUnscannedMeetings(): Promise<{
 }> {
   const db = getAdminClient();
 
-  // Get all verified internal meetings
+  // Get all verified internal team syncs
   const { data: meetings, error } = await db
     .from("meetings")
     .select("id")
     .eq("verification_status", "verified")
+    .eq("meeting_type", "team_sync")
     .eq("party_type", "internal")
     .not("summary", "is", null);
 
