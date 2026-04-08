@@ -179,6 +179,37 @@ export async function rejectEmail(
   return { success: true };
 }
 
+export async function updateEmailOrganization(
+  emailId: string,
+  organizationId: string | null,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("emails")
+    .update({
+      organization_id: organizationId,
+      unmatched_organization_name: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", emailId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function unlinkEmailProject(
+  emailId: string,
+  projectId: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("email_projects")
+    .delete()
+    .eq("email_id", emailId)
+    .eq("project_id", projectId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function insertEmailExtractions(
   rows: {
     email_id: string;

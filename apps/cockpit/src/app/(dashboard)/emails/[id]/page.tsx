@@ -1,11 +1,14 @@
 export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, FolderKanban, Paperclip, Clock } from "lucide-react";
+import { ArrowLeft, Paperclip, Clock } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@repo/database/supabase/server";
 import { getEmailById } from "@repo/database/queries/emails";
+import { listOrganizations } from "@repo/database/queries/organizations";
+import { listProjects } from "@repo/database/queries/projects";
 import { Badge } from "@/components/ui/badge";
+import { EmailLinkEditor } from "@/components/emails/email-link-editor";
 
 function formatExtractionType(type: string): string {
   const map: Record<string, string> = {
@@ -28,7 +31,11 @@ function urgencyColor(urgency: string): string {
 export default async function EmailDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const email = await getEmailById(id, supabase);
+  const [email, organizations, projects] = await Promise.all([
+    getEmailById(id, supabase),
+    listOrganizations(supabase),
+    listProjects(supabase),
+  ]);
 
   if (!email) notFound();
 
@@ -74,20 +81,7 @@ export default async function EmailDetailPage({ params }: { params: Promise<{ id
           )}
         </div>
 
-        {/* Organization & Projects */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {email.organization && (
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Building2 className="h-3 w-3" />
-              {email.organization.name}
-            </Badge>
-          )}
-          {email.projects.map((p) => (
-            <Badge key={p.id} variant="outline" className="flex items-center gap-1">
-              <FolderKanban className="h-3 w-3" />
-              {p.name}
-            </Badge>
-          ))}
           {email.verification_status === "draft" && (
             <Badge className="bg-amber-100 text-amber-700">Draft</Badge>
           )}
@@ -96,6 +90,15 @@ export default async function EmailDetailPage({ params }: { params: Promise<{ id
           )}
         </div>
       </div>
+
+      {/* Manual link editor */}
+      <EmailLinkEditor
+        emailId={email.id}
+        currentOrganization={email.organization}
+        linkedProjects={email.projects}
+        allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
+        allProjects={projects.map((p) => ({ id: p.id, name: p.name }))}
+      />
 
       {/* Email body */}
       <div className="rounded-xl border border-border bg-white p-6">
