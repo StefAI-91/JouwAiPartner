@@ -86,6 +86,8 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
       organization_id: null,
       unmatched_organization_name: null,
       relevance_score: 0,
+      email_type: null,
+      party_type: null,
       is_processed: true,
     });
     return result;
@@ -102,6 +104,8 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
         organization_id: orgResult.organization_id,
         unmatched_organization_name: orgResult.matched ? null : orgName,
         relevance_score: result.classifier.relevance_score,
+        email_type: result.classifier.email_category,
+        party_type: result.classifier.party_type,
         is_processed: false, // not done yet
       });
     } catch (err) {
@@ -197,6 +201,8 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
       organization_id: result.organization_id,
       unmatched_organization_name: orgName && !result.organization_id ? orgName : null,
       relevance_score: result.classifier.relevance_score,
+      email_type: result.classifier.email_category,
+      party_type: result.classifier.party_type,
       is_processed: true,
     });
   } catch (err) {

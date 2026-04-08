@@ -92,6 +92,8 @@ export interface EmailListItem {
   is_processed: boolean;
   verification_status: string;
   relevance_score: number | null;
+  email_type: string | null;
+  party_type: string | null;
   organization: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
 }
@@ -110,6 +112,7 @@ export async function listEmails(options: {
     .select(
       `id, gmail_id, subject, from_address, from_name, date, snippet, labels,
        has_attachments, is_processed, verification_status, relevance_score,
+       email_type, party_type,
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name))`,
       { count: "exact" },
@@ -147,6 +150,8 @@ export async function listEmails(options: {
     is_processed: row.is_processed as boolean,
     verification_status: row.verification_status as string,
     relevance_score: row.relevance_score as number | null,
+    email_type: row.email_type as string | null,
+    party_type: row.party_type as string | null,
     organization: row.organization as { id: string; name: string } | null,
     projects: ((row.projects as { project: { id: string; name: string } }[]) ?? []).map(
       (p) => p.project,
@@ -173,6 +178,8 @@ export interface EmailDetail {
   is_processed: boolean;
   verification_status: string;
   relevance_score: number | null;
+  email_type: string | null;
+  party_type: string | null;
   organization_id: string | null;
   organization: { id: string; name: string } | null;
   projects: { id: string; name: string; source: string }[];
@@ -198,7 +205,7 @@ export async function getEmailById(
     .select(
       `id, gmail_id, thread_id, subject, from_address, from_name, to_addresses, cc_addresses,
        date, body_text, snippet, labels, has_attachments, is_processed, verification_status,
-       relevance_score, organization_id,
+       relevance_score, email_type, party_type, organization_id,
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name), source),
        extractions:email_extractions(id, type, content, confidence, source_ref, project_id, verification_status, metadata)`,
@@ -281,7 +288,7 @@ export async function getDraftEmailById(
     .select(
       `id, gmail_id, thread_id, subject, from_address, from_name, to_addresses, cc_addresses,
        date, body_text, snippet, labels, has_attachments, is_processed, verification_status,
-       relevance_score, organization_id,
+       relevance_score, email_type, party_type, organization_id,
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name), source),
        extractions:email_extractions(id, type, content, confidence, source_ref, project_id, verification_status, metadata)`,

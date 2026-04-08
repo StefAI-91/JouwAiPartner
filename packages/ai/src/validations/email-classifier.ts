@@ -31,11 +31,17 @@ export const EmailClassifierSchema = z.object({
       "sales",
       "internal",
       "administrative",
+      "legal_finance",
       "newsletter",
       "notification",
       "other",
     ])
     .describe("The category of this email"),
+  party_type: z
+    .enum(["internal", "client", "accountant", "tax_advisor", "lawyer", "partner", "other"])
+    .describe(
+      "Role of the sender/main external party. Use known people DB to identify roles like accountant or tax_advisor. 'internal' if sender is a team member.",
+    ),
 });
 
 export type EmailClassifierOutput = z.infer<typeof EmailClassifierSchema>;

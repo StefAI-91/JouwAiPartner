@@ -57,11 +57,14 @@ export async function buildEntityContext(): Promise<EntityContext> {
     sections.push(`Bekende organisaties:\n${orgLines.join("\n")}`);
   }
 
-  // People section
+  // People section (with role + email for party_type identification)
   if (limitedPeople.length > 0) {
     const personLines = limitedPeople.map((p) => {
-      const orgSuffix = p.organization_name ? ` (organisatie: ${p.organization_name})` : "";
-      return `- "${p.name}"${orgSuffix}`;
+      const parts: string[] = [`"${p.name}"`];
+      if (p.role) parts.push(`rol: ${p.role}`);
+      if (p.email) parts.push(`email: ${p.email}`);
+      if (p.organization_name) parts.push(`organisatie: ${p.organization_name}`);
+      return `- ${parts.join(", ")}`;
     });
     sections.push(`Bekende personen:\n${personLines.join("\n")}`);
   }

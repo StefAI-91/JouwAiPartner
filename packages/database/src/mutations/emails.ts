@@ -94,6 +94,8 @@ export async function updateEmailClassification(
     unmatched_organization_name: string | null;
     relevance_score: number;
     is_processed: boolean;
+    email_type?: string | null;
+    party_type?: string | null;
   },
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient()

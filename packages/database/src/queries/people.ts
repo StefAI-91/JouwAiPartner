@@ -197,17 +197,20 @@ export async function getAllKnownPeople(): Promise<KnownPerson[]> {
 export interface PersonForContext {
   id: string;
   name: string;
+  email: string | null;
+  role: string | null;
   organization_name: string | null;
 }
 
 /**
- * Get all people with their organization name.
- * Used by Gatekeeper context-injection for entity context.
+ * Get all people with their organization name, role, and email.
+ * Used by Gatekeeper/Classifier context-injection for entity context
+ * and party_type identification (e.g. accountant, tax_advisor).
  */
 export async function getPeopleForContext(): Promise<PersonForContext[]> {
   const { data, error } = await getAdminClient()
     .from("people")
-    .select("id, name, organization:organizations(name)");
+    .select("id, name, email, role, organization:organizations(name)");
 
   if (error || !data) return [];
   return data.map((p) => {
@@ -215,6 +218,8 @@ export async function getPeopleForContext(): Promise<PersonForContext[]> {
     return {
       id: p.id,
       name: p.name,
+      email: p.email ?? null,
+      role: p.role ?? null,
       organization_name: org?.name ?? null,
     };
   });
