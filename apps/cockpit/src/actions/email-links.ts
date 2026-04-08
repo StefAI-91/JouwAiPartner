@@ -7,8 +7,15 @@ import {
   linkEmailProject,
   unlinkEmailProject,
   updateEmailOrganization,
+  updateEmailType,
+  updateEmailPartyType,
 } from "@repo/database/mutations/emails";
-import { emailProjectSchema, emailOrganizationSchema } from "@/validations/email-links";
+import {
+  emailProjectSchema,
+  emailOrganizationSchema,
+  emailTypeSchema,
+  emailPartyTypeSchema,
+} from "@/validations/email-links";
 
 async function getAuthenticatedUser() {
   const supabase = await createClient();
@@ -72,5 +79,41 @@ export async function updateEmailOrganizationAction(
   revalidatePath(`/review/email/${parsed.data.emailId}`);
   revalidatePath("/emails");
   revalidatePath("/clients");
+  return { success: true };
+}
+
+export async function updateEmailTypeAction(
+  input: z.infer<typeof emailTypeSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = emailTypeSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await updateEmailType(parsed.data.emailId, parsed.data.emailType);
+  if ("error" in result) return result;
+
+  revalidatePath(`/emails/${parsed.data.emailId}`);
+  revalidatePath(`/review/email/${parsed.data.emailId}`);
+  revalidatePath("/emails");
+  return { success: true };
+}
+
+export async function updateEmailPartyTypeAction(
+  input: z.infer<typeof emailPartyTypeSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = emailPartyTypeSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await updateEmailPartyType(parsed.data.emailId, parsed.data.partyType);
+  if ("error" in result) return result;
+
+  revalidatePath(`/emails/${parsed.data.emailId}`);
+  revalidatePath(`/review/email/${parsed.data.emailId}`);
+  revalidatePath("/emails");
   return { success: true };
 }

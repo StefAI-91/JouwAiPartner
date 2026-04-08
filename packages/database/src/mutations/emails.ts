@@ -181,6 +181,32 @@ export async function rejectEmail(
   return { success: true };
 }
 
+export async function updateEmailType(
+  emailId: string,
+  emailType: string | null,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("emails")
+    .update({ email_type: emailType, updated_at: new Date().toISOString() })
+    .eq("id", emailId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function updateEmailPartyType(
+  emailId: string,
+  partyType: string | null,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("emails")
+    .update({ party_type: partyType, updated_at: new Date().toISOString() })
+    .eq("id", emailId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateEmailOrganization(
   emailId: string,
   organizationId: string | null,

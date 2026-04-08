@@ -41,6 +41,8 @@ export default async function EmailReviewDetailPage({
         linkedProjects={email.projects}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
         allProjects={projects.map((p) => ({ id: p.id, name: p.name }))}
+        emailType={email.email_type ?? null}
+        partyType={email.party_type ?? null}
       />
 
       <EmailReviewDetail email={email} />

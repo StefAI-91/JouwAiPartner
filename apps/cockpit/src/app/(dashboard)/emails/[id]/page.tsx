@@ -98,6 +98,8 @@ export default async function EmailDetailPage({ params }: { params: Promise<{ id
         linkedProjects={email.projects}
         allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
         allProjects={projects.map((p) => ({ id: p.id, name: p.name }))}
+        emailType={email.email_type ?? null}
+        partyType={email.party_type ?? null}
       />
 
       {/* Email body */}
