@@ -1,3 +1,5 @@
+import type React from "react";
+
 /** Structured sentence from Fireflies (stored in raw_fireflies.sentences) */
 export interface TranscriptSentence {
   index: number;

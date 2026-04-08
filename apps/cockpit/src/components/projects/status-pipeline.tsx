@@ -27,7 +27,7 @@ export function StatusPipeline({ status, size = "sm" }: StatusPipelineProps) {
           size === "lg" ? "text-sm" : "text-xs"
         } ${colors[status] ?? "bg-muted text-muted-foreground"}`}
       >
-        {STEP_LABELS[status] ?? status}
+        {STEP_LABELS[status as keyof typeof STEP_LABELS] ?? status}
       </span>
     );
   }
@@ -65,7 +65,7 @@ export function StatusPipeline({ status, size = "sm" }: StatusPipelineProps) {
             role="listitem"
             aria-current={isCurrent ? "step" : undefined}
           >
-            {isLarge ? STEP_LABELS[step] : STEP_LABELS[step]}
+            {STEP_LABELS[step]}
           </span>
         );
       })}
