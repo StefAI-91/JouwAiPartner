@@ -17,7 +17,7 @@ export default async function EmailsPage() {
     <div className="space-y-6 px-4 py-8 lg:px-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1>Email</h1>
+          <h1>Emails</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {emailData.count} email{emailData.count !== 1 ? "s" : ""} gesynchroniseerd
           </p>
