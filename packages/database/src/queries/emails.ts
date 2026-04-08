@@ -1,5 +1,17 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
+// --- Google Account types ---
+
+/** Safe version for UI: no tokens exposed */
+export interface GoogleAccountSafe {
+  id: string;
+  email: string;
+  is_active: boolean;
+  last_sync_at: string | null;
+}
+
+/** Full version with tokens: only for sync pipeline (server-side only) */
 export interface GoogleAccountRow {
   id: string;
   user_id: string;
@@ -11,6 +23,20 @@ export interface GoogleAccountRow {
   is_active: boolean;
   last_sync_at: string | null;
 }
+
+// --- Google Account queries (safe, for UI) ---
+
+export async function listActiveGoogleAccountsSafe(): Promise<GoogleAccountSafe[]> {
+  const { data, error } = await getAdminClient()
+    .from("google_accounts")
+    .select("id, email, is_active, last_sync_at")
+    .eq("is_active", true);
+
+  if (error || !data) return [];
+  return data;
+}
+
+// --- Google Account queries (with tokens, for sync pipeline only) ---
 
 export async function listActiveGoogleAccounts(): Promise<GoogleAccountRow[]> {
   const { data, error } = await getAdminClient()
@@ -73,8 +99,10 @@ export async function listEmails(options: {
   isProcessed?: boolean;
   limit?: number;
   offset?: number;
+  client?: SupabaseClient;
 }): Promise<{ items: EmailListItem[]; count: number }> {
-  let query = getAdminClient()
+  const db = options.client ?? getAdminClient();
+  let query = db
     .from("emails")
     .select(
       `id, gmail_id, subject, from_address, from_name, date, snippet, labels,
@@ -157,8 +185,12 @@ export interface EmailDetail {
   }[];
 }
 
-export async function getEmailById(emailId: string): Promise<EmailDetail | null> {
-  const { data, error } = await getAdminClient()
+export async function getEmailById(
+  emailId: string,
+  client?: SupabaseClient,
+): Promise<EmailDetail | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
     .from("emails")
     .select(
       `id, gmail_id, thread_id, subject, from_address, from_name, to_addresses, cc_addresses,
@@ -216,8 +248,9 @@ export interface ReviewEmail {
   extractions: { id: string; type: string; content: string; confidence: number | null }[];
 }
 
-export async function listDraftEmails(): Promise<ReviewEmail[]> {
-  const { data, error } = await getAdminClient()
+export async function listDraftEmails(client?: SupabaseClient): Promise<ReviewEmail[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
     .from("emails")
     .select(
       `id, subject, from_address, from_name, date, snippet, created_at,
@@ -235,8 +268,12 @@ export async function listDraftEmails(): Promise<ReviewEmail[]> {
   return (data ?? []) as unknown as ReviewEmail[];
 }
 
-export async function getDraftEmailById(emailId: string): Promise<EmailDetail | null> {
-  const { data, error } = await getAdminClient()
+export async function getDraftEmailById(
+  emailId: string,
+  client?: SupabaseClient,
+): Promise<EmailDetail | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
     .from("emails")
     .select(
       `id, gmail_id, thread_id, subject, from_address, from_name, to_addresses, cc_addresses,

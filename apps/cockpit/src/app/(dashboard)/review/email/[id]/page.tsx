@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@repo/database/supabase/server";
 import { getDraftEmailById } from "@repo/database/queries/emails";
 import { EmailReviewDetail } from "@/components/review/email-review-detail";
 
@@ -12,7 +13,8 @@ export default async function EmailReviewDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const email = await getDraftEmailById(id);
+  const supabase = await createClient();
+  const email = await getDraftEmailById(id, supabase);
 
   if (!email) notFound();
 

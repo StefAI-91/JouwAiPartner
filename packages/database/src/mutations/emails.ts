@@ -167,10 +167,12 @@ export async function verifyEmailWithEdits(
 export async function rejectEmail(
   emailId: string,
   userId: string,
+  reason?: string,
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient().rpc("reject_email", {
     p_email_id: emailId,
     p_user_id: userId,
+    p_reason: reason ?? null,
   });
 
   if (error) return { error: error.message };

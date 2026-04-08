@@ -1,16 +1,17 @@
 export const dynamic = "force-dynamic";
 
 import { Mail } from "lucide-react";
-import { listEmails } from "@repo/database/queries/emails";
-import { listActiveGoogleAccounts } from "@repo/database/queries/emails";
+import { createClient } from "@repo/database/supabase/server";
+import { listEmails, listActiveGoogleAccountsSafe } from "@repo/database/queries/emails";
 import { EmailList } from "@/components/emails/email-list";
 import { SyncButton } from "@/components/emails/sync-button";
 import { GoogleAccountStatus } from "@/components/emails/google-account-status";
 
 export default async function EmailsPage() {
+  const supabase = await createClient();
   const [accounts, emailData] = await Promise.all([
-    listActiveGoogleAccounts(),
-    listEmails({ limit: 100 }),
+    listActiveGoogleAccountsSafe(),
+    listEmails({ limit: 100, client: supabase }),
   ]);
 
   return (

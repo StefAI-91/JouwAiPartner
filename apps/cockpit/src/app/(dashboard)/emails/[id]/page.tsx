@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, FolderKanban, Paperclip, Clock } from "lucide-react";
 import Link from "next/link";
+import { createClient } from "@repo/database/supabase/server";
 import { getEmailById } from "@repo/database/queries/emails";
 import { Badge } from "@/components/ui/badge";
 
@@ -26,7 +27,8 @@ function urgencyColor(urgency: string): string {
 
 export default async function EmailDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const email = await getEmailById(id);
+  const supabase = await createClient();
+  const email = await getEmailById(id, supabase);
 
   if (!email) notFound();
 
