@@ -12,7 +12,8 @@ import { PromoteTaskForm } from "./promote-task-form";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface ExtractionMetadata {
-  category?: "wij_leveren" | "wij_volgen_op";
+  category?: "wij_leveren" | "wij_volgen_op" | "wachten_op_extern" | "wachten_op_beslissing";
+  follow_up_contact?: string;
   assignee?: string;
   deadline?: string;
   suggested_deadline?: string;
@@ -147,6 +148,11 @@ export function ExtractionCard({
               }}
             >
               {CATEGORY_BADGES[extraction.metadata.category].label}
+            </span>
+          )}
+          {extraction.metadata.follow_up_contact && (
+            <span className="flex items-center gap-0.5 rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-medium text-orange-700">
+              Opvolgen bij: {extraction.metadata.follow_up_contact}
             </span>
           )}
           {extraction.metadata.assignee && (

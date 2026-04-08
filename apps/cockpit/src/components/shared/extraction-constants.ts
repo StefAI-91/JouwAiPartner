@@ -19,6 +19,10 @@ export const EXTRACTION_TYPE_COLORS: Record<string, { label: string; color: stri
   };
 
 export const CATEGORY_BADGES: Record<string, { label: string; color: string; bg: string }> = {
+  // Legacy categories (existing data)
   wij_leveren: { label: "Wij leveren", color: "#1D4ED8", bg: "#DBEAFE" },
   wij_volgen_op: { label: "Wij volgen op", color: "#B45309", bg: "#FEF3C7" },
+  // New categories
+  wachten_op_extern: { label: "Wachten op extern", color: "#B45309", bg: "#FEF3C7" },
+  wachten_op_beslissing: { label: "Wachten op beslissing", color: "#7C3AED", bg: "#F3E8FF" },
 };
