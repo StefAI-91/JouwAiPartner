@@ -10,6 +10,7 @@ import {
 } from "@repo/database/mutations/review";
 import { updateMeetingSummaryOnly } from "@repo/database/mutations/meetings";
 import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary-pipeline";
+import { scanMeetingNeeds } from "@repo/ai/pipeline/scan-needs";
 import {
   verifyMeetingSchema,
   verifyMeetingWithEditsSchema,
@@ -40,12 +41,16 @@ export async function approveMeetingAction(
   const result = await verifyMeeting(parsed.data.meetingId, user.id);
   if ("error" in result) return result;
 
-  // Trigger summary generation in background (non-blocking)
+  // Trigger summary generation + needs scan in background (non-blocking)
   triggerSummariesForMeeting(parsed.data.meetingId).catch((err) =>
     console.error("[approveMeetingAction] Summary generation failed:", err),
   );
+  scanMeetingNeeds(parsed.data.meetingId).catch((err) =>
+    console.error("[approveMeetingAction] Needs scan failed:", err),
+  );
 
   revalidatePath("/review");
+  revalidatePath("/intelligence/team");
   revalidatePath("/");
   return { success: true };
 }
@@ -77,13 +82,17 @@ export async function approveMeetingWithEditsAction(
   );
   if ("error" in result) return result;
 
-  // Trigger summary generation in background (non-blocking)
+  // Trigger summary generation + needs scan in background (non-blocking)
   triggerSummariesForMeeting(parsed.data.meetingId).catch((err) =>
     console.error("[approveMeetingWithEditsAction] Summary generation failed:", err),
+  );
+  scanMeetingNeeds(parsed.data.meetingId).catch((err) =>
+    console.error("[approveMeetingWithEditsAction] Needs scan failed:", err),
   );
 
   revalidatePath("/review");
   revalidatePath(`/review/${parsed.data.meetingId}`);
+  revalidatePath("/intelligence/team");
   revalidatePath("/");
   return { success: true };
 }
