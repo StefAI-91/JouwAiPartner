@@ -6,8 +6,9 @@ import { updatePartyTypeAction } from "@/actions/meetings";
 
 const PARTY_TYPES = [
   { value: "internal", label: "Intern" },
-  { value: "external", label: "Extern" },
-  { value: "mixed", label: "Mixed" },
+  { value: "client", label: "Klant" },
+  { value: "partner", label: "Partner" },
+  { value: "other", label: "Overig" },
 ] as const;
 
 export function PartyTypeSelector({
