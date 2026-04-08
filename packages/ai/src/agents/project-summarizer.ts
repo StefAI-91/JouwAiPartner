@@ -9,7 +9,7 @@ import {
 
 export type { ProjectSummaryOutput, OrgSummaryOutput };
 
-const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert drie outputs op basis van meeting-samenvattingen die bij dit project horen.
+const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert drie outputs op basis van meeting-samenvattingen en email-communicatie die bij dit project horen.
 
 1. CONTEXT — Een neutrale projectbeschrijving voor iemand die het project niet kent.
    Focus op: wat is het project, wie is de klant, welke technologie/aanpak, scope, wie werkt eraan, wanneer moet het af.
@@ -20,11 +20,11 @@ const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert drie ou
    Max 4-5 zinnen. Wees direct en actiegericht. Noem concrete namen, datums en items.
    Als er risico's zijn, geef een concrete aanbeveling.
 
-3. TIMELINE — Een chronologisch overzicht van alle meetings, van oud naar nieuw.
-   Per meeting geef je:
+3. TIMELINE — Een chronologisch overzicht van alle meetings en relevante emails, van oud naar nieuw.
+   Per item geef je:
    - date: de datum (YYYY-MM-DD)
-   - meeting_type: het type meeting
-   - title: de titel van de meeting
+   - meeting_type: het type meeting of "email" voor emails
+   - title: de titel van de meeting of het email-onderwerp
    - summary: één zin over het belangrijkste resultaat of de belangrijkste uitkomst
    - key_decisions: concrete besluiten (leeg als er geen waren)
    - open_actions: actiepunten die nog niet zijn afgerond (leeg als er geen zijn)
@@ -34,10 +34,10 @@ const PROJECT_SYSTEM_PROMPT = `Je bent een project-analist. Je genereert drie ou
 
 REGELS:
 - Schrijf in het Nederlands.
-- Baseer je ALLEEN op de aangeleverde meeting-samenvattingen. Verzin niets.
-- Recente meetings wegen zwaarder voor de BRIEFING dan oudere.
+- Baseer je ALLEEN op de aangeleverde meeting-samenvattingen en emails. Verzin niets.
+- Recente meetings en emails wegen zwaarder voor de BRIEFING dan oudere.
 - Als er weinig data is, wees dan kort. Liever 2 goede zinnen dan 5 vage.
-- De TIMELINE bevat ALLE aangeleverde meetings, gesorteerd van oud naar nieuw.`;
+- De TIMELINE bevat ALLE aangeleverde meetings en relevante emails, gesorteerd van oud naar nieuw.`;
 
 const ORG_SYSTEM_PROMPT = `Je bent een klant-analist. Je genereert twee soorten samenvattingen over een organisatie op basis van meeting-samenvattingen.
 
@@ -63,6 +63,13 @@ export interface MeetingInput {
   summary: string | null;
 }
 
+export interface EmailInput {
+  subject: string | null;
+  date: string;
+  from: string;
+  snippet: string | null;
+}
+
 export interface SegmentInput {
   meeting_title: string | null;
   meeting_date: string | null;
@@ -79,6 +86,18 @@ function formatMeetings(meetings: MeetingInput[]): string {
 
       const content = m.briefing || m.summary || "Geen samenvatting beschikbaar";
 
+      return `### ${header}\n${content}`;
+    })
+    .join("\n\n");
+}
+
+function formatEmails(emails: EmailInput[]): string {
+  if (emails.length === 0) return "";
+
+  return emails
+    .map((e) => {
+      const header = [e.subject, e.date, `van ${e.from}`].filter(Boolean).join(" — ");
+      const content = e.snippet || "Geen preview beschikbaar";
       return `### ${header}\n${content}`;
     })
     .join("\n\n");
@@ -109,18 +128,22 @@ export async function runProjectSummarizer(
   meetings: MeetingInput[],
   existingContext?: string | null,
   segments?: SegmentInput[],
+  emails?: EmailInput[],
 ): Promise<ProjectSummaryOutput> {
   const meetingsText = formatMeetings(meetings);
   const segmentsText = segments?.length ? formatSegments(segments) : "";
+  const emailsText = emails?.length ? formatEmails(emails) : "";
 
   const userContent = [
     `Project: ${projectName}`,
     `Aantal meetings: ${meetings.length}`,
+    emails?.length ? `Aantal emails: ${emails.length}` : "",
     existingContext ? `\nHuidige context samenvatting:\n${existingContext}` : "",
     segmentsText
       ? `\n--- PROJECT-SPECIFIEKE KERNPUNTEN (per meeting) ---\nDit zijn de kernpunten en vervolgstappen die specifiek over dit project gaan. Gebruik deze als primaire bron — ze bevatten minder ruis dan de volledige meeting-samenvattingen.\n\n${segmentsText}`
       : "",
-    `\n--- MEETING SAMENVATTINGEN ---\n${meetingsText}`,
+    meetingsText ? `\n--- MEETING SAMENVATTINGEN ---\n${meetingsText}` : "",
+    emailsText ? `\n--- EMAIL COMMUNICATIE ---\n${emailsText}` : "",
   ].join("\n");
 
   const { object } = await generateObject({

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
 import { verifyEmail, verifyEmailWithEdits, rejectEmail } from "@repo/database/mutations/emails";
+import { triggerSummariesForEmail } from "@repo/ai/pipeline/summary-pipeline";
 import {
   verifyEmailSchema,
   verifyEmailWithEditsSchema,
@@ -30,6 +31,11 @@ export async function approveEmailAction(
   const result = await verifyEmail(parsed.data.emailId, user.id);
   if ("error" in result) return result;
 
+  // Trigger summary generation in background (non-blocking)
+  triggerSummariesForEmail(parsed.data.emailId).catch((err) =>
+    console.error("[approveEmailAction] Summary generation failed:", err),
+  );
+
   revalidatePath("/review");
   revalidatePath("/emails");
   revalidatePath("/");
@@ -53,6 +59,11 @@ export async function approveEmailWithEditsAction(
     parsed.data.typeChanges ?? [],
   );
   if ("error" in result) return result;
+
+  // Trigger summary generation in background (non-blocking)
+  triggerSummariesForEmail(parsed.data.emailId).catch((err) =>
+    console.error("[approveEmailWithEditsAction] Summary generation failed:", err),
+  );
 
   revalidatePath("/review");
   revalidatePath(`/review/email/${parsed.data.emailId}`);

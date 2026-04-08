@@ -40,11 +40,19 @@ export async function generateProjectSummaries(
 
     const linkedMeetingIds = (meetingLinks ?? []).map((l) => l.meeting_id);
 
-    if (linkedMeetingIds.length === 0) {
+    // Get email IDs linked to this project via junction table
+    const { data: emailLinks } = await db
+      .from("email_projects")
+      .select("email_id")
+      .eq("project_id", projectId);
+
+    const linkedEmailIds = (emailLinks ?? []).map((l) => l.email_id);
+
+    if (linkedMeetingIds.length === 0 && linkedEmailIds.length === 0) {
       console.info(
-        `[generateProjectSummaries] No linked meetings for project "${project.name}" — skipping`,
+        `[generateProjectSummaries] No linked meetings or emails for project "${project.name}" — skipping`,
       );
-      return { success: false, error: "Geen meetings gekoppeld aan dit project." };
+      return { success: false, error: "Geen meetings of emails gekoppeld aan dit project." };
     }
 
     // Get verified meetings with their summaries
@@ -55,18 +63,44 @@ export async function generateProjectSummaries(
       .eq("verification_status", "verified")
       .order("date", { ascending: false });
 
-    if (!meetings || meetings.length === 0) {
+    // Get verified emails linked to this project
+    let formattedEmails: {
+      subject: string | null;
+      date: string;
+      from: string;
+      snippet: string | null;
+    }[] = [];
+    if (linkedEmailIds.length > 0) {
+      const { data: emails } = await db
+        .from("emails")
+        .select("subject, date, from_name, from_address, snippet")
+        .in("id", linkedEmailIds)
+        .eq("verification_status", "verified")
+        .order("date", { ascending: false });
+
+      formattedEmails = (emails ?? []).map((e) => ({
+        subject: e.subject,
+        date: e.date,
+        from: e.from_name ?? e.from_address,
+        snippet: e.snippet,
+      }));
+    }
+
+    if ((!meetings || meetings.length === 0) && formattedEmails.length === 0) {
       console.info(
-        `[generateProjectSummaries] No verified meetings for project "${project.name}" — skipping`,
+        `[generateProjectSummaries] No verified meetings or emails for project "${project.name}" — skipping`,
       );
-      return { success: false, error: "Geen geverifieerde meetings gevonden voor dit project." };
+      return {
+        success: false,
+        error: "Geen geverifieerde meetings of emails gevonden voor dit project.",
+      };
     }
 
     console.info(
-      `[generateProjectSummaries] Found ${meetings.length} verified meetings, calling AI...`,
+      `[generateProjectSummaries] Found ${meetings?.length ?? 0} verified meetings, ${formattedEmails.length} verified emails, calling AI...`,
     );
 
-    const formattedMeetings = meetings.map((m) => ({
+    const formattedMeetings = (meetings ?? []).map((m) => ({
       title: m.title,
       date: m.date,
       meetingType: m.meeting_type,
@@ -80,12 +114,13 @@ export async function generateProjectSummaries(
     // Get existing context summary to provide as reference
     const existingContext = await getLatestSummary("project", projectId, "context", db);
 
-    // Generate both summaries (with segment data for precision)
+    // Generate both summaries (with segment data + email data for precision)
     const output = await runProjectSummarizer(
       project.name,
       formattedMeetings,
       existingContext?.content,
       segments,
+      formattedEmails.length > 0 ? formattedEmails : undefined,
     );
 
     // Get source meeting IDs
@@ -299,6 +334,82 @@ export async function triggerSummariesForMeeting(meetingId: string): Promise<voi
   }
 
   console.info(`[triggerSummaries] Completed for meeting ${meetingId}`);
+}
+
+/**
+ * Trigger summary generation for all projects and organizations
+ * linked to a specific email. Called after email verification.
+ */
+export async function triggerSummariesForEmail(emailId: string): Promise<void> {
+  console.info(`[triggerSummariesForEmail] Starting for email ${emailId}`);
+  const db = getAdminClient();
+
+  // Get project IDs linked to this email
+  const { data: projectLinks, error: plError } = await db
+    .from("email_projects")
+    .select("project_id")
+    .eq("email_id", emailId);
+
+  if (plError) {
+    console.error("[triggerSummariesForEmail] Failed to get project links:", plError.message);
+  }
+
+  // Get organization ID from the email itself
+  const { data: email } = await db
+    .from("emails")
+    .select("organization_id")
+    .eq("id", emailId)
+    .single();
+
+  const projectIds = [...new Set((projectLinks ?? []).map((l) => l.project_id))];
+  const orgIds: string[] = [];
+  if (email?.organization_id) {
+    orgIds.push(email.organization_id);
+  }
+
+  // Also check email_extractions for organization_id
+  const { data: emailExtractions, error: eeError } = await db
+    .from("email_extractions")
+    .select("organization_id")
+    .eq("email_id", emailId)
+    .not("organization_id", "is", null);
+
+  if (eeError) {
+    console.error("[triggerSummariesForEmail] Failed to get org extractions:", eeError.message);
+  }
+
+  for (const ex of emailExtractions ?? []) {
+    if (ex.organization_id && !orgIds.includes(ex.organization_id)) {
+      orgIds.push(ex.organization_id);
+    }
+  }
+
+  console.info(
+    `[triggerSummariesForEmail] Found ${projectIds.length} projects, ${orgIds.length} orgs for email ${emailId}`,
+  );
+
+  if (projectIds.length === 0 && orgIds.length === 0) {
+    console.info(
+      "[triggerSummariesForEmail] No linked projects or organizations — skipping summary generation",
+    );
+    return;
+  }
+
+  // Generate summaries in parallel
+  const results = await Promise.allSettled([
+    ...projectIds.map((id) => generateProjectSummaries(id)),
+    ...orgIds.map((id) => generateOrgSummaries(id)),
+  ]);
+
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.error("[triggerSummariesForEmail] Promise rejected:", result.reason);
+    } else if (!result.value.success) {
+      console.error("[triggerSummariesForEmail] Generation failed:", result.value.error);
+    }
+  }
+
+  console.info(`[triggerSummariesForEmail] Completed for email ${emailId}`);
 }
 
 // ── Helpers ──

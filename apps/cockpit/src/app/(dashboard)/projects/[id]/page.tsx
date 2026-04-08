@@ -94,7 +94,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
       {/* Tabs */}
       <ProjectSections
         meetings={project.meetings}
+        emails={project.emails}
         extractions={project.extractions}
+        emailExtractions={project.email_extractions}
         segments={segments}
       />
     </div>

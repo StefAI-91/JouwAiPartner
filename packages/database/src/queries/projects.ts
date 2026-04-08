@@ -111,6 +111,17 @@ export interface ProjectDetail {
     meeting_type: string | null;
     verification_status: string;
   }[];
+  emails: {
+    id: string;
+    subject: string | null;
+    from_name: string | null;
+    from_address: string;
+    date: string;
+    snippet: string | null;
+    email_type: string | null;
+    party_type: string | null;
+    verification_status: string;
+  }[];
   extractions: {
     id: string;
     type: string;
@@ -119,6 +130,15 @@ export interface ProjectDetail {
     transcript_ref: string | null;
     metadata: Record<string, unknown>;
     meeting: { id: string; title: string | null } | null;
+  }[];
+  email_extractions: {
+    id: string;
+    type: string;
+    content: string;
+    confidence: number | null;
+    source_ref: string | null;
+    metadata: Record<string, unknown>;
+    email: { id: string; subject: string | null } | null;
   }[];
   context_summary: { content: string; version: number; created_at: string } | null;
   briefing_summary: {
@@ -152,25 +172,47 @@ export async function getProjectById(
   }
 
   // Run independent queries in parallel
-  const [meetingLinksResult, extractionsResult, contextSummary, briefingSummary] =
-    await Promise.all([
-      db
-        .from("meeting_projects")
-        .select("meeting:meetings(id, title, date, meeting_type, verification_status)")
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: false }),
-      db
-        .from("extractions")
-        .select(
-          `id, type, content, confidence, transcript_ref, metadata,
+  const [
+    meetingLinksResult,
+    emailLinksResult,
+    extractionsResult,
+    emailExtractionsResult,
+    contextSummary,
+    briefingSummary,
+  ] = await Promise.all([
+    db
+      .from("meeting_projects")
+      .select("meeting:meetings(id, title, date, meeting_type, verification_status)")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false }),
+    db
+      .from("email_projects")
+      .select(
+        "email:emails(id, subject, from_name, from_address, date, snippet, email_type, party_type, verification_status)",
+      )
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false }),
+    db
+      .from("extractions")
+      .select(
+        `id, type, content, confidence, transcript_ref, metadata,
          meeting:meetings(id, title)`,
-        )
-        .eq("project_id", projectId)
-        .eq("verification_status", "verified")
-        .order("created_at", { ascending: false }),
-      getLatestSummary("project", projectId, "context", db),
-      getLatestSummary("project", projectId, "briefing", db),
-    ]);
+      )
+      .eq("project_id", projectId)
+      .eq("verification_status", "verified")
+      .order("created_at", { ascending: false }),
+    db
+      .from("email_extractions")
+      .select(
+        `id, type, content, confidence, source_ref, metadata,
+         email:emails(id, subject)`,
+      )
+      .eq("project_id", projectId)
+      .eq("verification_status", "verified")
+      .order("created_at", { ascending: false }),
+    getLatestSummary("project", projectId, "context", db),
+    getLatestSummary("project", projectId, "briefing", db),
+  ]);
 
   const meetings = (meetingLinksResult.data ?? [])
     .map((link) => link.meeting as unknown as ProjectDetail["meetings"][number])
@@ -181,6 +223,11 @@ export async function getProjectById(
       if (!b.date) return -1;
       return b.date.localeCompare(a.date);
     });
+
+  const emails = (emailLinksResult.data ?? [])
+    .map((link) => link.email as unknown as ProjectDetail["emails"][number])
+    .filter(Boolean)
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   const typedProject = project as unknown as {
     id: string;
@@ -209,7 +256,10 @@ export async function getProjectById(
     owner: typedProject.owner,
     contact_person: typedProject.contact_person,
     meetings,
+    emails,
     extractions: (extractionsResult.data ?? []) as unknown as ProjectDetail["extractions"],
+    email_extractions: (emailExtractionsResult.data ??
+      []) as unknown as ProjectDetail["email_extractions"],
     context_summary: contextSummary
       ? {
           content: contextSummary.content,
