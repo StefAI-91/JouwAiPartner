@@ -10,7 +10,7 @@ import { GoogleAccountStatus } from "@/components/emails/google-account-status";
 export default async function EmailsPage() {
   const supabase = await createClient();
   const [accounts, emailData] = await Promise.all([
-    listActiveGoogleAccountsSafe(),
+    listActiveGoogleAccountsSafe(supabase),
     listEmails({ limit: 100, client: supabase }),
   ]);
 

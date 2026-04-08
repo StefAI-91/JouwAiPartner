@@ -26,8 +26,11 @@ export interface GoogleAccountRow {
 
 // --- Google Account queries (safe, for UI) ---
 
-export async function listActiveGoogleAccountsSafe(): Promise<GoogleAccountSafe[]> {
-  const { data, error } = await getAdminClient()
+export async function listActiveGoogleAccountsSafe(
+  client?: SupabaseClient,
+): Promise<GoogleAccountSafe[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
     .from("google_accounts")
     .select("id, email, is_active, last_sync_at")
     .eq("is_active", true);

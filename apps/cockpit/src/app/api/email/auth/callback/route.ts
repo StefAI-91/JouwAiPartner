@@ -26,8 +26,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // The state parameter contains the user_id from the auth initiation
-  const userId = state ?? user.id;
+  // Always use the authenticated user's ID — never trust the state parameter as identity.
+  // The state param is only used for CSRF protection: reject if it doesn't match.
+  if (state && state !== user.id) {
+    return NextResponse.redirect(new URL("/emails?error=state_mismatch", request.url));
+  }
+  const userId = user.id;
 
   try {
     // Build the same redirect URI that was used in the auth route
