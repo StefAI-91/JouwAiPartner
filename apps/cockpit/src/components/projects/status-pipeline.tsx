@@ -1,30 +1,9 @@
-const SALES_STEPS = ["lead", "discovery", "proposal", "negotiation", "won"] as const;
-const DELIVERY_STEPS = ["kickoff", "in_progress", "review", "completed"] as const;
-const OTHER_STEPS = ["on_hold", "lost", "maintenance"] as const;
-
-const ALL_STEPS = [...SALES_STEPS, ...DELIVERY_STEPS, ...OTHER_STEPS];
-
-const STEP_LABELS: Record<string, string> = {
-  lead: "Lead",
-  discovery: "Discovery",
-  proposal: "Proposal",
-  negotiation: "Negotiation",
-  won: "Won",
-  kickoff: "Kickoff",
-  in_progress: "In Progress",
-  review: "Review",
-  completed: "Completed",
-  on_hold: "On Hold",
-  lost: "Lost",
-  maintenance: "Maintenance",
-};
-
-function getPhaseSteps(status: string) {
-  if ((SALES_STEPS as readonly string[]).includes(status)) return SALES_STEPS;
-  if ((DELIVERY_STEPS as readonly string[]).includes(status)) return DELIVERY_STEPS;
-  if ((OTHER_STEPS as readonly string[]).includes(status)) return OTHER_STEPS;
-  return SALES_STEPS;
-}
+import {
+  ALL_STEPS,
+  OTHER_STEPS,
+  STATUS_LABELS as STEP_LABELS,
+  getPhaseSteps,
+} from "@/lib/constants/project";
 
 interface StatusPipelineProps {
   status: string;

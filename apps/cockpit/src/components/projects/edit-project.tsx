@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/modal";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { updateProjectAction, deleteProjectAction } from "@/actions/entities";
+import { PROJECT_STATUSES, STATUS_LABELS } from "@/lib/constants/project";
 
 interface EditProjectProps {
   project: {
@@ -23,38 +24,6 @@ interface EditProjectProps {
   organizations: { id: string; name: string }[];
   people?: { id: string; name: string }[];
 }
-
-const PROJECT_STATUSES = [
-  "lead",
-  "discovery",
-  "proposal",
-  "negotiation",
-  "won",
-  "kickoff",
-  "in_progress",
-  "review",
-  "completed",
-  "on_hold",
-  "lost",
-  "maintenance",
-  "active",
-] as const;
-
-const STATUS_LABELS: Record<string, string> = {
-  lead: "Lead",
-  discovery: "Discovery",
-  proposal: "Proposal",
-  negotiation: "Negotiation",
-  won: "Won",
-  kickoff: "Kickoff",
-  in_progress: "In Progress",
-  review: "Review",
-  completed: "Completed",
-  on_hold: "On Hold",
-  lost: "Lost",
-  maintenance: "Maintenance",
-  active: "Active",
-};
 
 export function EditProject({
   project,

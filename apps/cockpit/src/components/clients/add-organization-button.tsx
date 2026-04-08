@@ -4,8 +4,7 @@ import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
 import { createOrganizationAction } from "@/actions/meetings";
-
-const ORG_TYPES = ["client", "partner", "supplier", "other"] as const;
+import { ORG_TYPES } from "@/lib/constants/organization";
 
 export function AddOrganizationButton() {
   const [open, setOpen] = useState(false);
@@ -20,7 +19,7 @@ export function AddOrganizationButton() {
     startTransition(async () => {
       const result = await createOrganizationAction({
         name: name.trim(),
-        type: type as typeof ORG_TYPES[number],
+        type: type as (typeof ORG_TYPES)[number],
       });
       if ("error" in result) {
         setError(result.error);
@@ -51,9 +50,7 @@ export function AddOrganizationButton() {
           }}
           className="space-y-4"
         >
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           <div>
             <label className="mb-1 block text-sm font-medium">Name</label>
@@ -75,7 +72,9 @@ export function AddOrganizationButton() {
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
               {ORG_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>

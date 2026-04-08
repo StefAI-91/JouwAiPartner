@@ -15,6 +15,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { formatDate } from "@/lib/date-utils";
+import { formatWeekRange, getWeekNumber } from "@/lib/weekly";
 
 // ─── Types ───
 
@@ -40,28 +41,6 @@ interface WeeklySummaryData {
 interface WeeklySummaryViewProps {
   data: WeeklySummaryData;
   createdAt: string;
-}
-
-// ─── Helpers ───
-
-function formatWeekRange(start: string, end: string) {
-  const s = new Date(start);
-  const e = new Date(end);
-  const sDay = s.getDate();
-  const eDay = e.getDate();
-  const sMonth = s.toLocaleDateString("nl-NL", { month: "short" });
-  const eMonth = e.toLocaleDateString("nl-NL", { month: "short" });
-  if (sMonth === eMonth) {
-    return `${sDay} – ${eDay} ${eMonth}`;
-  }
-  return `${sDay} ${sMonth} – ${eDay} ${eMonth}`;
-}
-
-function getWeekNumber(dateStr: string) {
-  const date = new Date(dateStr);
-  const startOfYear = new Date(date.getFullYear(), 0, 1);
-  const days = Math.floor((date.getTime() - startOfYear.getTime()) / 86400000);
-  return Math.ceil((days + startOfYear.getDay() + 1) / 7);
 }
 
 // ─── Status Config ───
