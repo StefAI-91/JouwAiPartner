@@ -5,7 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@repo/database/supabase/server";
 import { getDraftEmailById } from "@repo/database/queries/emails";
+import { listOrganizations } from "@repo/database/queries/organizations";
+import { listProjects } from "@repo/database/queries/projects";
 import { EmailReviewDetail } from "@/components/review/email-review-detail";
+import { EmailLinkEditor } from "@/components/emails/email-link-editor";
 
 export default async function EmailReviewDetailPage({
   params,
@@ -14,7 +17,11 @@ export default async function EmailReviewDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const email = await getDraftEmailById(id, supabase);
+  const [email, organizations, projects] = await Promise.all([
+    getDraftEmailById(id, supabase),
+    listOrganizations(supabase),
+    listProjects(supabase),
+  ]);
 
   if (!email) notFound();
 
@@ -27,6 +34,14 @@ export default async function EmailReviewDetailPage({
         <ArrowLeft className="h-4 w-4" />
         Terug naar review queue
       </Link>
+
+      <EmailLinkEditor
+        emailId={email.id}
+        currentOrganization={email.organization}
+        linkedProjects={email.projects}
+        allOrganizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
+        allProjects={projects.map((p) => ({ id: p.id, name: p.name }))}
+      />
 
       <EmailReviewDetail email={email} />
     </div>
