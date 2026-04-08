@@ -25,9 +25,22 @@ interface FollowUpChecklistProps {
   onDelete?: (id: string) => void;
 }
 
+/** Action verbs that indicate the content already describes a follow-up action */
+const ACTION_VERBS = [
+  "checken",
+  "vragen",
+  "navragen",
+  "opvolgen",
+  "controleren",
+  "bevestigen",
+  "afchecken",
+  "informeren",
+  "heeft",
+  "is",
+];
+
 /**
- * Strip redundant prefixes, long tails, and parenthetical details from content.
- * Handles both old verbose format and new short format.
+ * Clean content for display: strip prefixes, tails, and rewrite as action if needed.
  */
 function cleanContent(content: string, contact?: string): string {
   let cleaned = content;
@@ -56,10 +69,19 @@ function cleanContent(content: string, contact?: string): string {
   // Step 3: Strip parenthetical details like "(Windows 11 licentie, ...)"
   cleaned = cleaned.replace(/\s*\([^)]{15,}\)/g, "");
 
-  // Step 4: Capitalize first letter
+  // Step 4: Trim and capitalize
   cleaned = cleaned.trim();
-  if (cleaned.length > 0) {
-    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  if (cleaned.length === 0) return content;
+  cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+
+  // Step 5: If content doesn't start with an action verb, prefix with "Checken of"
+  const firstWord = cleaned
+    .split(/\s/)[0]
+    .toLowerCase()
+    .replace(/[^a-zà-ú]/g, "");
+  if (!ACTION_VERBS.some((v) => firstWord === v)) {
+    // Lowercase the first char since it follows "Checken of"
+    cleaned = "Checken of " + cleaned.charAt(0).toLowerCase() + cleaned.slice(1);
   }
 
   return cleaned;

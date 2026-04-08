@@ -45,21 +45,22 @@ Iemand (intern of extern) moet nog een beslissing nemen die werk blokkeert.
 - JAIP kan deze persoon mailen/aanspreken om de beslissing te forceren
 
 --- FORMULERING VAN CONTENT ---
-Schrijf de content als een HELE KORTE vraag die je aan een collega zou stellen.
-Maximaal 8 woorden. Geen technische details, geen context, geen "nodig voor".
-Schrijf alsof je het op een post-it zet.
+Beschrijf de VERVOLGACTIE die JAIP gaat doen — wat gaan wij concreet checken of vragen?
+Schrijf het als een korte instructie die je op een post-it zou zetten.
+Maximaal 10 woorden. Begin met een werkwoord.
 
 Goede voorbeelden:
-- "Heeft ze het voorstel al gestuurd?"
-- "Akkoord op de offerte?"
-- "Feedback op de wireframes?"
-- "Beslissing over licentie-type?"
-- "Resultaten campagne aangeleverd?"
-- "Urenbudget SEA goedgekeurd?"
+- "Checken of ze het voorstel al heeft verstuurd"
+- "Vragen of hij al meer weet over het budget"
+- "Navragen of ze akkoord zijn op de offerte"
+- "Checken of de feedback op de wireframes binnen is"
+- "Vragen of er al een beslissing is over het licentie-type"
+- "Opvolgen of de campagne-resultaten zijn aangeleverd"
 
-Slechte voorbeelden (TE LANG — doe dit NOOIT):
-- "PR-linkbuilding voorstel voor Duitsland doorsturen (Windows 11 licentie, Windows 11 Pro)"
-- "Urenbudget SEA verhogen + marketing-kosten herverdelen (Nederland omhoog, Duitsland omlaag)"
+Slechte voorbeelden (beschrijven het ITEM, niet de ACTIE):
+- "PR-linkbuilding voorstel doorsturen" (wat ga ik ermee doen?)
+- "Urenbudget SEA verhogen" (dat is hun taak, niet mijn actie)
+- "Akkoord op de offerte?" (te vaag, wat is mijn actie?)
 - Alles met haakjes, opsommingen, of "— nodig voor"
 
 --- EXPLICIET GEEN ACTIEPUNT ---
