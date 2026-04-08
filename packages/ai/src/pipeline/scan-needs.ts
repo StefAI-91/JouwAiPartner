@@ -24,7 +24,7 @@ async function getMeetingForNeedsScan(meetingId: string) {
   const { data, error } = await getAdminClient()
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, summary, participants,
+      `id, title, date, meeting_type, party_type, summary, participants,
        meeting_participants(person:people(name))`,
     )
     .eq("id", meetingId)
@@ -44,6 +44,7 @@ async function getMeetingForNeedsScan(meetingId: string) {
     title: data.title ?? "Untitled",
     date: data.date ?? new Date().toISOString(),
     meeting_type: data.meeting_type ?? "team_sync",
+    party_type: data.party_type ?? "internal",
     summary: data.summary,
     participants: participantNames as string[],
   };
@@ -91,10 +92,9 @@ export async function scanMeetingNeeds(meetingId: string): Promise<{
     return { scanned: false, needs_found: 0, skipped_reason: "meeting_not_found" };
   }
 
-  // Only scan team meetings (internal syncs, strategy, one-on-ones)
-  const teamMeetingTypes = ["team_sync", "strategy", "one_on_one"];
-  if (!teamMeetingTypes.includes(meeting.meeting_type)) {
-    return { scanned: false, needs_found: 0, skipped_reason: "not_team_meeting" };
+  // Only scan internal meetings
+  if (meeting.party_type !== "internal") {
+    return { scanned: false, needs_found: 0, skipped_reason: "not_internal" };
   }
 
   // Need a summary to scan
@@ -136,15 +136,14 @@ export async function scanAllUnscannedMeetings(): Promise<{
   total_needs: number;
   errors: string[];
 }> {
-  const teamTypes = ["team_sync", "strategy", "one_on_one"];
   const db = getAdminClient();
 
-  // Get all verified team meetings
+  // Get all verified internal meetings
   const { data: meetings, error } = await db
     .from("meetings")
     .select("id")
     .eq("verification_status", "verified")
-    .in("meeting_type", teamTypes)
+    .eq("party_type", "internal")
     .not("summary", "is", null);
 
   if (error || !meetings) {
