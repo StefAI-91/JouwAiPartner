@@ -1,6 +1,8 @@
 import { getAdminClient } from "../supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type NeedStatus = "open" | "erkend" | "afgewezen" | "opgelost";
+
 export interface NeedRow {
   id: string;
   content: string;
@@ -9,6 +11,7 @@ export interface NeedRow {
     priority: string;
     context: string;
     source: string;
+    status: NeedStatus;
   };
   meeting: { id: string; title: string; date: string | null } | null;
   created_at: string;
@@ -32,10 +35,12 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_ORDER = ["tooling", "kennis", "capaciteit", "proces", "klant", "overig"];
 
 /**
- * List all verified needs, grouped by category.
+ * List needs grouped by category.
+ * By default only shows "open" and "erkend" needs.
  */
 export async function listNeedsGroupedByCategory(
   client?: SupabaseClient,
+  { includeArchived = false }: { includeArchived?: boolean } = {},
 ): Promise<{ grouped: NeedsByCategory[]; total: number }> {
   const db = client ?? getAdminClient();
 
@@ -51,7 +56,15 @@ export async function listNeedsGroupedByCategory(
 
   if (error || !data) return { grouped: [], total: 0 };
 
-  const needs = data as unknown as NeedRow[];
+  const allNeeds = data as unknown as NeedRow[];
+
+  // Filter by status: default shows only open + erkend
+  const needs = includeArchived
+    ? allNeeds
+    : allNeeds.filter((n) => {
+        const status = n.metadata?.status ?? "open";
+        return status === "open" || status === "erkend";
+      });
 
   // Group by category
   const categoryMap = new Map<string, NeedRow[]>();
@@ -75,16 +88,21 @@ export async function listNeedsGroupedByCategory(
 }
 
 /**
- * Count total needs (for badge display).
+ * Count active needs (open + erkend) for badge display.
  */
 export async function countNeeds(client?: SupabaseClient): Promise<number> {
   const db = client ?? getAdminClient();
 
-  const { count } = await db
+  const { data } = await db
     .from("extractions")
-    .select("id", { count: "exact", head: true })
+    .select("metadata")
     .eq("type", "need")
     .eq("verification_status", "verified");
 
-  return count ?? 0;
+  if (!data) return 0;
+
+  return data.filter((row) => {
+    const status = (row.metadata as Record<string, unknown>)?.status ?? "open";
+    return status === "open" || status === "erkend";
+  }).length;
 }

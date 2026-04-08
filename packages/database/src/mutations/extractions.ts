@@ -3,10 +3,7 @@ import { getAdminClient } from "../supabase/admin";
 export async function deleteExtractionsByMeetingId(
   meetingId: string,
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
-    .from("extractions")
-    .delete()
-    .eq("meeting_id", meetingId);
+  const { error } = await getAdminClient().from("extractions").delete().eq("meeting_id", meetingId);
 
   if (error) return { error: error.message };
   return { success: true };
@@ -14,7 +11,13 @@ export async function deleteExtractionsByMeetingId(
 
 export async function getExtractionForCorrection(
   extractionId: string,
-): Promise<{ id: string; content: string; metadata: Record<string, unknown> | null; type: string; meeting_id: string } | null> {
+): Promise<{
+  id: string;
+  content: string;
+  metadata: Record<string, unknown> | null;
+  type: string;
+  meeting_id: string;
+} | null> {
   const { data, error } = await getAdminClient()
     .from("extractions")
     .select("id, content, metadata, type, meeting_id")
@@ -22,7 +25,13 @@ export async function getExtractionForCorrection(
     .single();
 
   if (error || !data) return null;
-  return data as { id: string; content: string; metadata: Record<string, unknown> | null; type: string; meeting_id: string };
+  return data as {
+    id: string;
+    content: string;
+    metadata: Record<string, unknown> | null;
+    type: string;
+    meeting_id: string;
+  };
 }
 
 export async function correctExtraction(
@@ -136,10 +145,31 @@ export async function updateExtraction(
 export async function deleteExtraction(
   extractionId: string,
 ): Promise<{ success: true } | { error: string }> {
-  const { error } = await getAdminClient()
+  const { error } = await getAdminClient().from("extractions").delete().eq("id", extractionId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+export async function updateNeedStatus(
+  needId: string,
+  status: string,
+): Promise<{ success: true } | { error: string }> {
+  const db = getAdminClient();
+
+  // Fetch current metadata to merge
+  const { data: current, error: fetchError } = await db
     .from("extractions")
-    .delete()
-    .eq("id", extractionId);
+    .select("metadata")
+    .eq("id", needId)
+    .eq("type", "need")
+    .single();
+
+  if (fetchError || !current) return { error: fetchError?.message ?? "Need not found" };
+
+  const metadata = { ...(current.metadata as Record<string, unknown>), status };
+
+  const { error } = await db.from("extractions").update({ metadata }).eq("id", needId);
 
   if (error) return { error: error.message };
   return { success: true };

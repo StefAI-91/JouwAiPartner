@@ -65,6 +65,7 @@ function buildNeedRows(needs: NeedItem[], meetingId: string) {
       priority: need.priority,
       context: need.context,
       source: "needs_scanner",
+      status: "open",
     },
     project_id: null,
     embedding_stale: true,

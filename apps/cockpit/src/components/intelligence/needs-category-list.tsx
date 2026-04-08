@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import {
   Wrench,
   BookOpen,
@@ -10,8 +10,12 @@ import {
   MoreHorizontal,
   ArrowUpRight,
   ChevronRight,
+  Check,
+  X,
+  ThumbsUp,
 } from "lucide-react";
-import type { NeedsByCategory, NeedRow } from "@repo/database/queries/needs";
+import type { NeedsByCategory, NeedRow, NeedStatus } from "@repo/database/queries/needs";
+import { updateNeedStatusAction } from "@/actions/scan-needs";
 
 const CATEGORY_CONFIG: Record<
   string,
@@ -31,8 +35,16 @@ const PRIORITY_DOT: Record<string, string> = {
   laag: "bg-gray-300",
 };
 
+const STATUS_BADGE: Record<string, { label: string; class: string }> = {
+  erkend: { label: "Erkend", class: "bg-blue-50 text-blue-700" },
+  open: { label: "Nieuw", class: "bg-gray-50 text-gray-500" },
+};
+
 function NeedItem({ need }: { need: NeedRow }) {
+  const [isPending, startTransition] = useTransition();
+  const [dismissed, setDismissed] = useState(false);
   const dotClass = PRIORITY_DOT[need.metadata?.priority] ?? PRIORITY_DOT.laag;
+  const status = need.metadata?.status ?? "open";
   const meetingDate = need.meeting?.date
     ? new Date(need.meeting.date).toLocaleDateString("nl-NL", {
         day: "numeric",
@@ -40,25 +52,81 @@ function NeedItem({ need }: { need: NeedRow }) {
       })
     : null;
 
+  function handleStatus(newStatus: NeedStatus) {
+    if (newStatus === "afgewezen" || newStatus === "opgelost") {
+      setDismissed(true);
+    }
+    startTransition(async () => {
+      await updateNeedStatusAction({ needId: need.id, status: newStatus });
+    });
+  }
+
+  if (dismissed) return null;
+
   return (
-    <div className="flex items-start gap-2.5 rounded-lg border border-border/30 bg-white px-3 py-2.5">
+    <div
+      className={`flex items-start gap-2.5 rounded-lg border bg-white px-3 py-2.5 transition-opacity ${
+        isPending ? "opacity-50" : ""
+      } ${status === "erkend" ? "border-blue-200" : "border-border/30"}`}
+    >
       <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dotClass}`} />
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] leading-snug">{need.content}</p>
-        <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground/60">
-          {meetingDate && <span>{meetingDate}</span>}
-          {need.meeting && (
-            <>
-              <span>-</span>
-              <a
-                href={`/meetings/${need.meeting.id}`}
-                className="inline-flex items-center gap-0.5 truncate hover:text-primary transition-colors"
-              >
-                {need.meeting.title}
-                <ArrowUpRight className="h-2.5 w-2.5 shrink-0" />
-              </a>
-            </>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-[13px] leading-snug">{need.content}</p>
+          {status === "erkend" && (
+            <span
+              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${STATUS_BADGE.erkend.class}`}
+            >
+              {STATUS_BADGE.erkend.label}
+            </span>
           )}
+        </div>
+        <div className="mt-1.5 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60">
+            {meetingDate && <span>{meetingDate}</span>}
+            {need.meeting && (
+              <>
+                <span>-</span>
+                <a
+                  href={`/meetings/${need.meeting.id}`}
+                  className="inline-flex items-center gap-0.5 truncate hover:text-primary transition-colors"
+                >
+                  {need.meeting.title}
+                  <ArrowUpRight className="h-2.5 w-2.5 shrink-0" />
+                </a>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-0.5 shrink-0">
+            {status === "open" && (
+              <button
+                onClick={() => handleStatus("erkend")}
+                disabled={isPending}
+                className="rounded p-1 text-muted-foreground/40 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                title="Erkend - willen we oppakken"
+              >
+                <ThumbsUp className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {status === "erkend" && (
+              <button
+                onClick={() => handleStatus("opgelost")}
+                disabled={isPending}
+                className="rounded p-1 text-muted-foreground/40 hover:bg-green-50 hover:text-green-600 transition-colors"
+                title="Opgelost"
+              >
+                <Check className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <button
+              onClick={() => handleStatus("afgewezen")}
+              disabled={isPending}
+              className="rounded p-1 text-muted-foreground/40 hover:bg-red-50 hover:text-red-500 transition-colors"
+              title="Niet relevant"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
