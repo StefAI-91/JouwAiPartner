@@ -45,19 +45,22 @@ Iemand (intern of extern) moet nog een beslissing nemen die werk blokkeert.
 - JAIP kan deze persoon mailen/aanspreken om de beslissing te forceren
 
 --- FORMULERING VAN CONTENT ---
-Schrijf de content als een KORTE, SIMPELE zin die beschrijft wat er opgevolgd moet worden.
-Maximaal 10-15 woorden. Schrijf het als een menselijke opvolg-vraag.
+Schrijf de content als een HELE KORTE vraag die je aan een collega zou stellen.
+Maximaal 8 woorden. Geen technische details, geen context, geen "nodig voor".
+Schrijf alsof je het op een post-it zet.
 
 Goede voorbeelden:
-- "PR-linkbuilding voorstel doorsturen"
-- "Urenbudget SEA verhogen en kosten herverdelen"
-- "Beslissing nemen over Windows licentie-type"
-- "Feedback aanleveren op wireframes"
-- "Akkoord geven op offerte"
+- "Heeft ze het voorstel al gestuurd?"
+- "Akkoord op de offerte?"
+- "Feedback op de wireframes?"
+- "Beslissing over licentie-type?"
+- "Resultaten campagne aangeleverd?"
+- "Urenbudget SEA goedgekeurd?"
 
-Slechte voorbeelden (te lang, te formeel):
-- "Opvolgen bij Laura: PR-linkbuilding voorstel voor Duitsland doorsturen (Windows 11 licentie, Windows 11 Pro, Windows 10 Enterprise focus) — nodig voor goedkeuring en plaatsingen"
-- "Beslissing nodig van Ron: urenbudget SEA verhogen + marketing-kosten herverdelen (Nederland omhoog, Duitsland omlaag) — nodig voor capaciteit Service 2025-licenties"
+Slechte voorbeelden (TE LANG — doe dit NOOIT):
+- "PR-linkbuilding voorstel voor Duitsland doorsturen (Windows 11 licentie, Windows 11 Pro)"
+- "Urenbudget SEA verhogen + marketing-kosten herverdelen (Nederland omhoog, Duitsland omlaag)"
+- Alles met haakjes, opsommingen, of "— nodig voor"
 
 --- EXPLICIET GEEN ACTIEPUNT ---
 - Interne taken van JAIP ("wij bouwen X", "ik maak het document af", "offerte schrijven")

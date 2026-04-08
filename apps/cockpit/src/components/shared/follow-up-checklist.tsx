@@ -26,33 +26,40 @@ interface FollowUpChecklistProps {
 }
 
 /**
- * Strip redundant contact name from content.
- * E.g. "Opvolgen bij Laura: PR-linkbuilding voorstel" → "PR-linkbuilding voorstel"
- * E.g. "Beslissing nodig van Ron: urenbudget" → "urenbudget"
+ * Strip redundant prefixes, long tails, and parenthetical details from content.
+ * Handles both old verbose format and new short format.
  */
 function cleanContent(content: string, contact?: string): string {
-  if (!contact) return content;
-
-  // Remove "Opvolgen bij [contact]:" or "Beslissing nodig van [contact]:" prefix
-  const prefixes = [
-    `Opvolgen bij ${contact}:`,
-    `Beslissing nodig van ${contact}:`,
-    `Opvolgen: ${contact} levert`,
-    `${contact}:`,
-    `${contact} —`,
-    `${contact} -`,
-  ];
-
   let cleaned = content;
-  for (const prefix of prefixes) {
-    if (cleaned.toLowerCase().startsWith(prefix.toLowerCase())) {
-      cleaned = cleaned.slice(prefix.length).trim();
-      // Capitalize first letter
-      if (cleaned.length > 0) {
-        cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+
+  // Step 1: Strip contact-name prefixes
+  if (contact) {
+    const prefixes = [
+      `Opvolgen bij ${contact}:`,
+      `Beslissing nodig van ${contact}:`,
+      `Opvolgen: ${contact} levert`,
+      `${contact}:`,
+      `${contact} —`,
+      `${contact} -`,
+    ];
+    for (const prefix of prefixes) {
+      if (cleaned.toLowerCase().startsWith(prefix.toLowerCase())) {
+        cleaned = cleaned.slice(prefix.length).trim();
+        break;
       }
-      break;
     }
+  }
+
+  // Step 2: Strip "— nodig voor ..." / "— blokkeert ..." tails
+  cleaned = cleaned.replace(/\s*—\s*(nodig voor|blokkeert)\s.+$/i, "");
+
+  // Step 3: Strip parenthetical details like "(Windows 11 licentie, ...)"
+  cleaned = cleaned.replace(/\s*\([^)]{15,}\)/g, "");
+
+  // Step 4: Capitalize first letter
+  cleaned = cleaned.trim();
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   }
 
   return cleaned;
