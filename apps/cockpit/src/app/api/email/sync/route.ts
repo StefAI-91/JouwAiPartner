@@ -56,7 +56,7 @@ export async function POST() {
             .replace(/-/g, "/");
 
       const { messages, newTokens } = await fetchEmails(tokens, {
-        maxResults: 50,
+        maxResults: 5,
         afterDate,
       });
 
@@ -117,7 +117,7 @@ export async function POST() {
 
   // 2. Process unprocessed emails through AI pipeline
   try {
-    const unprocessed = await getUnprocessedEmails(20);
+    const unprocessed = await getUnprocessedEmails(5);
 
     if (unprocessed.length > 0) {
       const results = await processEmailBatch(
