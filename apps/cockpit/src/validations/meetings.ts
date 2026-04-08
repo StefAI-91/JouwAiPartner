@@ -30,6 +30,11 @@ export const updateMeetingTypeSchema = z.object({
   ]),
 });
 
+export const updatePartyTypeSchema = z.object({
+  meetingId: z.string().min(1),
+  partyType: z.enum(["internal", "client", "partner", "other"]),
+});
+
 export const updateMeetingOrganizationSchema = z.object({
   meetingId: z.string().min(1),
   organizationId: z.string().nullable(),

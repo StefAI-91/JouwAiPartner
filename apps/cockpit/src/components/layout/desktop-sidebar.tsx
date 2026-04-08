@@ -9,7 +9,7 @@ import {
   Calendar,
   Building2,
   Users,
-  CalendarDays,
+  BrainCircuit,
 } from "lucide-react";
 
 interface NavItem {
@@ -24,7 +24,7 @@ export function DesktopSidebar({ reviewCount }: { reviewCount?: number }) {
 
   const navItems: NavItem[] = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/weekly", label: "Weekly", icon: CalendarDays },
+    { href: "/intelligence", label: "Intelligence", icon: BrainCircuit },
     { href: "/review", label: "Review", icon: ClipboardCheck, badge: reviewCount },
     { href: "/projects", label: "Projects", icon: FolderKanban },
     { href: "/meetings", label: "Meetings", icon: Calendar },
