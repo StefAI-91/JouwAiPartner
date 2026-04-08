@@ -6,9 +6,11 @@ import { buildEntityContext } from "./context-injection";
 import { resolveOrganization } from "./entity-resolution";
 import {
   updateEmailClassification,
+  updateEmailSenderPerson,
   linkEmailProject,
   insertEmailExtractions,
 } from "@repo/database/mutations/emails";
+import { findPeopleByEmails } from "@repo/database/queries/people";
 import { embedText } from "../embeddings";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
@@ -111,6 +113,17 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
     } catch (err) {
       result.errors.push(`Org resolution failed: ${err}`);
     }
+  }
+
+  // 3b. Auto-match sender to known person by email address
+  try {
+    const emailMap = await findPeopleByEmails([email.from_address.toLowerCase()]);
+    const matchedPersonId = emailMap.get(email.from_address.toLowerCase());
+    if (matchedPersonId) {
+      await updateEmailSenderPerson(email.id, matchedPersonId);
+    }
+  } catch (err) {
+    result.errors.push(`Sender person match failed: ${err}`);
   }
 
   // 4. Link identified projects
