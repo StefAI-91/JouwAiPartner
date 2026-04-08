@@ -11,6 +11,11 @@ export const emailOrganizationSchema = z.object({
   organizationId: zUuid.nullable(),
 });
 
+export const emailSenderPersonSchema = z.object({
+  emailId: zUuid,
+  senderPersonId: zUuid.nullable(),
+});
+
 export const emailTypeSchema = z.object({
   emailId: zUuid,
   emailType: z

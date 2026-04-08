@@ -7,12 +7,14 @@ import {
   linkEmailProject,
   unlinkEmailProject,
   updateEmailOrganization,
+  updateEmailSenderPerson,
   updateEmailType,
   updateEmailPartyType,
 } from "@repo/database/mutations/emails";
 import {
   emailProjectSchema,
   emailOrganizationSchema,
+  emailSenderPersonSchema,
   emailTypeSchema,
   emailPartyTypeSchema,
 } from "@/validations/email-links";
@@ -79,6 +81,24 @@ export async function updateEmailOrganizationAction(
   revalidatePath(`/review/email/${parsed.data.emailId}`);
   revalidatePath("/emails");
   revalidatePath("/clients");
+  return { success: true };
+}
+
+export async function updateEmailSenderPersonAction(
+  input: z.infer<typeof emailSenderPersonSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = emailSenderPersonSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await updateEmailSenderPerson(parsed.data.emailId, parsed.data.senderPersonId);
+  if ("error" in result) return result;
+
+  revalidatePath(`/emails/${parsed.data.emailId}`);
+  revalidatePath(`/review/email/${parsed.data.emailId}`);
+  revalidatePath("/emails");
   return { success: true };
 }
 

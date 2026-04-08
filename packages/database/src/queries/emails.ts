@@ -180,6 +180,8 @@ export interface EmailDetail {
   relevance_score: number | null;
   email_type: string | null;
   party_type: string | null;
+  sender_person_id: string | null;
+  sender_person: { id: string; name: string; role: string | null } | null;
   organization_id: string | null;
   organization: { id: string; name: string } | null;
   projects: { id: string; name: string; source: string }[];
@@ -205,7 +207,8 @@ export async function getEmailById(
     .select(
       `id, gmail_id, thread_id, subject, from_address, from_name, to_addresses, cc_addresses,
        date, body_text, snippet, labels, has_attachments, is_processed, verification_status,
-       relevance_score, email_type, party_type, organization_id,
+       relevance_score, email_type, party_type, sender_person_id, organization_id,
+       sender_person:people!emails_sender_person_id_fkey(id, name, role),
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name), source),
        extractions:email_extractions(id, type, content, confidence, source_ref, project_id, verification_status, metadata)`,
@@ -215,6 +218,11 @@ export async function getEmailById(
 
   if (error || !data) return null;
 
+  const senderPerson = data.sender_person as unknown as {
+    id: string;
+    name: string;
+    role: string | null;
+  } | null;
   const org = data.organization as unknown as { id: string; name: string } | null;
   const projects = (data.projects ?? []) as unknown as {
     project: { id: string; name: string };
@@ -224,6 +232,7 @@ export async function getEmailById(
 
   return {
     ...data,
+    sender_person: senderPerson,
     organization: org,
     projects: projects.map((p) => ({ ...p.project, source: p.source })),
     extractions,
@@ -288,7 +297,8 @@ export async function getDraftEmailById(
     .select(
       `id, gmail_id, thread_id, subject, from_address, from_name, to_addresses, cc_addresses,
        date, body_text, snippet, labels, has_attachments, is_processed, verification_status,
-       relevance_score, email_type, party_type, organization_id,
+       relevance_score, email_type, party_type, sender_person_id, organization_id,
+       sender_person:people!emails_sender_person_id_fkey(id, name, role),
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name), source),
        extractions:email_extractions(id, type, content, confidence, source_ref, project_id, verification_status, metadata)`,
@@ -299,6 +309,11 @@ export async function getDraftEmailById(
 
   if (error || !data) return null;
 
+  const senderPerson = data.sender_person as unknown as {
+    id: string;
+    name: string;
+    role: string | null;
+  } | null;
   const org = data.organization as unknown as { id: string; name: string } | null;
   const projects = (data.projects ?? []) as unknown as {
     project: { id: string; name: string };
@@ -308,6 +323,7 @@ export async function getDraftEmailById(
 
   return {
     ...data,
+    sender_person: senderPerson,
     organization: org,
     projects: projects.map((p) => ({ ...p.project, source: p.source })),
     extractions,

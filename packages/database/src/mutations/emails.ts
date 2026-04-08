@@ -181,6 +181,19 @@ export async function rejectEmail(
   return { success: true };
 }
 
+export async function updateEmailSenderPerson(
+  emailId: string,
+  senderPersonId: string | null,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("emails")
+    .update({ sender_person_id: senderPersonId, updated_at: new Date().toISOString() })
+    .eq("id", emailId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateEmailType(
   emailId: string,
   emailType: string | null,

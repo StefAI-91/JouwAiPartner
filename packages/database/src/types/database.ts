@@ -544,6 +544,7 @@ export interface Database {
           relevance_score: number | null;
           email_type: string | null;
           party_type: string | null;
+          sender_person_id: string | null;
           is_processed: boolean;
           verification_status: string;
           verified_by: string | null;
@@ -576,6 +577,7 @@ export interface Database {
           relevance_score?: number | null;
           email_type?: string | null;
           party_type?: string | null;
+          sender_person_id?: string | null;
           is_processed?: boolean;
           verification_status?: string;
           verified_by?: string | null;
@@ -608,6 +610,7 @@ export interface Database {
           relevance_score?: number | null;
           email_type?: string | null;
           party_type?: string | null;
+          sender_person_id?: string | null;
           is_processed?: boolean;
           verification_status?: string;
           verified_by?: string | null;
