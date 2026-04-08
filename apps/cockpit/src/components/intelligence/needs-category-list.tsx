@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Wrench,
   BookOpen,
@@ -8,6 +9,7 @@ import {
   Handshake,
   MoreHorizontal,
   ArrowUpRight,
+  ChevronRight,
 } from "lucide-react";
 import type { NeedsByCategory, NeedRow } from "@repo/database/queries/needs";
 
@@ -29,7 +31,7 @@ const PRIORITY_DOT: Record<string, string> = {
   laag: "bg-gray-300",
 };
 
-function NeedRow({ need }: { need: NeedRow }) {
+function NeedItem({ need }: { need: NeedRow }) {
   const dotClass = PRIORITY_DOT[need.metadata?.priority] ?? PRIORITY_DOT.laag;
   const meetingDate = need.meeting?.date
     ? new Date(need.meeting.date).toLocaleDateString("nl-NL", {
@@ -64,12 +66,19 @@ function NeedRow({ need }: { need: NeedRow }) {
 }
 
 function CategorySection({ group }: { group: NeedsByCategory }) {
+  const [open, setOpen] = useState(false);
   const config = CATEGORY_CONFIG[group.category] ?? CATEGORY_CONFIG.overig;
   const Icon = config.icon;
 
   return (
     <section>
-      <div className="mb-2 flex items-center gap-2">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center gap-2 rounded-lg px-1 py-1.5 transition-colors hover:bg-muted/50"
+      >
+        <ChevronRight
+          className={`h-3.5 w-3.5 text-muted-foreground/50 transition-transform ${open ? "rotate-90" : ""}`}
+        />
         <div
           className="flex h-6 w-6 items-center justify-center rounded-md"
           style={{ backgroundColor: config.bg }}
@@ -84,20 +93,22 @@ function CategorySection({ group }: { group: NeedsByCategory }) {
         <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
           {group.needs.length}
         </span>
-      </div>
+      </button>
 
-      <div className="space-y-1.5">
-        {group.needs.map((need) => (
-          <NeedRow key={need.id} need={need} />
-        ))}
-      </div>
+      {open && (
+        <div className="mt-1.5 space-y-1.5 pl-6">
+          {group.needs.map((need) => (
+            <NeedItem key={need.id} need={need} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
 
 export function NeedsCategoryList({ groups }: { groups: NeedsByCategory[] }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-1">
       {groups.map((group) => (
         <CategorySection key={group.category} group={group} />
       ))}
