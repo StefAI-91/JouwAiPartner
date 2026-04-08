@@ -70,7 +70,7 @@ export async function rejectEmailAction(
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
 
-  const result = await rejectEmail(parsed.data.emailId, user.id);
+  const result = await rejectEmail(parsed.data.emailId, user.id, parsed.data.reason);
   if ("error" in result) return result;
 
   revalidatePath("/review");

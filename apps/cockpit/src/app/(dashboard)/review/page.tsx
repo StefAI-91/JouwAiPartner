@@ -11,7 +11,7 @@ export default async function ReviewPage() {
   const supabase = await createClient();
   const [meetings, emails, stats] = await Promise.all([
     listDraftMeetings(supabase),
-    listDraftEmails(),
+    listDraftEmails(supabase),
     getReviewStats(supabase),
   ]);
 
