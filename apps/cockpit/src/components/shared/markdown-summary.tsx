@@ -4,6 +4,12 @@ import { useState, useMemo, useCallback } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ChevronDown, ChevronUp, Pencil, Check, X } from "lucide-react";
+import {
+  isSectionStart,
+  parseSections,
+  rebuildMarkdown,
+  BOLD_SECTION_PATTERN,
+} from "@/lib/markdown";
 
 const COLLAPSED_MAX_HEIGHT = 160; // px
 
@@ -12,65 +18,6 @@ interface MarkdownSummaryProps {
   editable?: boolean;
   onEdit?: (content: string) => void;
   headerAction?: React.ReactNode;
-}
-
-/** Split markdown into sections by ## headings */
-interface Section {
-  heading: string;
-  body: string;
-  raw: string; // original markdown including heading
-}
-
-// Match ## headings or standalone **bold** lines (sub-sections)
-const HEADING_PATTERN = /^#{1,3}\s+/;
-const BOLD_SECTION_PATTERN = /^-?\s*\*\*(.+?)\*\*/;
-
-function isSectionStart(line: string): string | null {
-  const headingMatch = line.match(HEADING_PATTERN);
-  if (headingMatch) {
-    return line.replace(HEADING_PATTERN, "").replace(/\*\*/g, "").trim();
-  }
-  const boldMatch = line.match(BOLD_SECTION_PATTERN);
-  if (boldMatch) {
-    return boldMatch[1].trim();
-  }
-  return null;
-}
-
-function parseSections(markdown: string): Section[] {
-  const lines = markdown.split("\n");
-  const sections: Section[] = [];
-  let currentHeading = "";
-  let currentLines: string[] = [];
-
-  function flush() {
-    const raw = currentLines.join("\n").trim();
-    if (raw) {
-      sections.push({
-        heading: currentHeading,
-        body: currentHeading ? currentLines.slice(1).join("\n").trim() : raw,
-        raw,
-      });
-    }
-  }
-
-  for (const line of lines) {
-    const sectionHeading = isSectionStart(line);
-    if (sectionHeading) {
-      flush();
-      currentHeading = sectionHeading;
-      currentLines = [line];
-    } else {
-      currentLines.push(line);
-    }
-  }
-  flush();
-
-  return sections;
-}
-
-function rebuildMarkdown(sections: Section[]): string {
-  return sections.map((s) => s.raw).join("\n\n");
 }
 
 const PROSE_CLASSES = [
@@ -154,21 +101,21 @@ export function MarkdownSummary({ content, editable, onEdit, headerAction }: Mar
         <h3 className="text-sm font-semibold">Summary</h3>
         <div className="flex items-center gap-1">
           {headerAction}
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {expanded ? (
-            <>
-              Minder <ChevronUp className="size-3.5" />
-            </>
-          ) : (
-            <>
-              Meer lezen <ChevronDown className="size-3.5" />
-            </>
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {expanded ? (
+              <>
+                Minder <ChevronUp className="size-3.5" />
+              </>
+            ) : (
+              <>
+                Meer lezen <ChevronDown className="size-3.5" />
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -180,62 +127,62 @@ export function MarkdownSummary({ content, editable, onEdit, headerAction }: Mar
           {sections.map((section, index) => {
             // Add divider before top-level sections (h2 or bold headers), skip first
             const raw = section.raw.trimStart();
-            const isTopLevel = raw.startsWith("## ") || (!raw.startsWith("### ") && BOLD_SECTION_PATTERN.test(raw.split("\n")[0]));
+            const isTopLevel =
+              raw.startsWith("## ") ||
+              (!raw.startsWith("### ") && BOLD_SECTION_PATTERN.test(raw.split("\n")[0]));
             const showDivider = isTopLevel && index > 0;
 
             return (
-            <div key={index} className="group/section relative">
-              {showDivider && (
-                <div className="mx-1 my-3 border-t border-border/50" />
-              )}
-              {editingIndex === index ? (
-                <div className="rounded-lg border border-primary/30 bg-white p-3">
-                  <textarea
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    autoFocus
-                    aria-label={`Edit section: ${section.heading || "intro"}`}
-                    className="w-full resize-y rounded-md border border-input bg-muted/20 p-2 text-sm leading-relaxed outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                    rows={Math.max(3, editValue.split("\n").length + 1)}
-                  />
-                  <div className="mt-2 flex justify-end gap-1.5">
-                    <button
-                      type="button"
-                      onClick={cancelEdit}
-                      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <X className="size-3" />
-                      Annuleren
-                    </button>
-                    <button
-                      type="button"
-                      onClick={saveEdit}
-                      className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-                    >
-                      <Check className="size-3" />
-                      Opslaan
-                    </button>
+              <div key={index} className="group/section relative">
+                {showDivider && <div className="mx-1 my-3 border-t border-border/50" />}
+                {editingIndex === index ? (
+                  <div className="rounded-lg border border-primary/30 bg-white p-3">
+                    <textarea
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      autoFocus
+                      aria-label={`Edit section: ${section.heading || "intro"}`}
+                      className="w-full resize-y rounded-md border border-input bg-muted/20 p-2 text-sm leading-relaxed outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                      rows={Math.max(3, editValue.split("\n").length + 1)}
+                    />
+                    <div className="mt-2 flex justify-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={cancelEdit}
+                        className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <X className="size-3" />
+                        Annuleren
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveEdit}
+                        className="flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                      >
+                        <Check className="size-3" />
+                        Opslaan
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="relative rounded-lg px-1 py-0.5 transition-colors hover:bg-muted/40">
-                  {editable && (
-                    <button
-                      type="button"
-                      onClick={() => startEdit(index)}
-                      className="absolute right-1 top-1 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/section:opacity-100"
-                      title={`Bewerk: ${section.heading || "intro"}`}
-                    >
-                      <Pencil className="size-3" />
-                    </button>
-                  )}
-                  <div className={PROSE_CLASSES}>
-                    <Markdown remarkPlugins={[remarkGfm]}>{section.raw}</Markdown>
+                ) : (
+                  <div className="relative rounded-lg px-1 py-0.5 transition-colors hover:bg-muted/40">
+                    {editable && (
+                      <button
+                        type="button"
+                        onClick={() => startEdit(index)}
+                        className="absolute right-1 top-1 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover/section:opacity-100"
+                        title={`Bewerk: ${section.heading || "intro"}`}
+                      >
+                        <Pencil className="size-3" />
+                      </button>
+                    )}
+                    <div className={PROSE_CLASSES}>
+                      <Markdown remarkPlugins={[remarkGfm]}>{section.raw}</Markdown>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          );
+                )}
+              </div>
+            );
           })}
         </div>
 

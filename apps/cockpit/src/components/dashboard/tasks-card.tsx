@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TaskItem, getUrgency } from "./task-item";
+import { TaskItem } from "./task-item";
+import { getUrgency } from "@/lib/urgency";
 import type { TaskRow } from "@repo/database/queries/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 

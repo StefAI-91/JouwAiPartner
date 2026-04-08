@@ -1,9 +1,7 @@
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { MarkdownSummary } from "@/components/shared/markdown-summary";
-import {
-  StructuredTranscript,
-  type TranscriptSentence,
-} from "@/components/shared/structured-transcript";
+import { StructuredTranscript } from "@/components/shared/structured-transcript";
+import type { TranscriptSentence } from "@/lib/transcript";
 import { formatDateLong } from "@/lib/format";
 
 interface MeetingTranscriptPanelProps {
@@ -54,9 +52,7 @@ export function MeetingTranscriptPanel({
           {meetingTypeSlot ?? <MeetingTypeBadge type={meeting.meeting_type} />}
           {meeting.party_type && <span>{meeting.party_type}</span>}
         </div>
-        <div className="mt-2">
-          {titleSlot ?? <h1>{meeting.title ?? "Untitled meeting"}</h1>}
-        </div>
+        <div className="mt-2">{titleSlot ?? <h1>{meeting.title ?? "Untitled meeting"}</h1>}</div>
         {meeting.date && (
           <p className="mt-1 text-sm text-muted-foreground">{formatDateLong(meeting.date)}</p>
         )}
@@ -86,7 +82,7 @@ export function MeetingTranscriptPanel({
         </div>
       )}
 
-      {(meeting.transcript_elevenlabs || meeting.transcript) ? (
+      {meeting.transcript_elevenlabs || meeting.transcript ? (
         <StructuredTranscript
           transcript={meeting.transcript_elevenlabs ?? meeting.transcript!}
           sentences={meeting.transcript_elevenlabs ? undefined : meeting.raw_fireflies?.sentences}

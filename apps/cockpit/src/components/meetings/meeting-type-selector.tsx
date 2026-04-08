@@ -3,18 +3,7 @@
 import { useState, useTransition } from "react";
 import { Pencil, X } from "lucide-react";
 import { updateMeetingTypeAction } from "@/actions/meetings";
-
-const MEETING_TYPES = [
-  { value: "strategy", label: "Strategy" },
-  { value: "one_on_one", label: "One on one" },
-  { value: "team_sync", label: "Team sync" },
-  { value: "discovery", label: "Discovery" },
-  { value: "sales", label: "Sales" },
-  { value: "project_kickoff", label: "Project kickoff" },
-  { value: "status_update", label: "Status update" },
-  { value: "collaboration", label: "Collaboration" },
-  { value: "other", label: "Overig" },
-] as const;
+import { MEETING_TYPES } from "@/lib/constants/meeting";
 
 export function MeetingTypeSelector({
   meetingId,
@@ -27,9 +16,10 @@ export function MeetingTypeSelector({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const currentLabel = MEETING_TYPES.find((t) => t.value === currentType)?.label
-    ?? currentType?.replace(/_/g, " ")
-    ?? "Onbekend";
+  const currentLabel =
+    MEETING_TYPES.find((t) => t.value === currentType)?.label ??
+    currentType?.replace(/_/g, " ") ??
+    "Onbekend";
 
   function handleChange(value: string) {
     if (value === currentType) {
@@ -40,7 +30,7 @@ export function MeetingTypeSelector({
     startTransition(async () => {
       const result = await updateMeetingTypeAction({
         meetingId,
-        meetingType: value as typeof MEETING_TYPES[number]["value"],
+        meetingType: value as (typeof MEETING_TYPES)[number]["value"],
       });
       if ("error" in result) {
         setError(result.error);

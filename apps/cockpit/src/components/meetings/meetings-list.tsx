@@ -4,44 +4,12 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Building2, Users, ChevronRight, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { formatMeetingType } from "@/lib/constants/meeting";
+import { groupMeetingsByDate } from "@/lib/grouping";
 import type { VerifiedMeetingListItem } from "@repo/database/queries/meetings";
 
 interface MeetingsListProps {
   meetings: VerifiedMeetingListItem[];
-}
-
-function formatMeetingType(type: string): string {
-  return type.replace(/_/g, " ");
-}
-
-function formatDayHeading(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("nl-NL", {
-    timeZone: "Europe/Amsterdam",
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function groupByDate(meetings: VerifiedMeetingListItem[]) {
-  const groups: { date: string; label: string; meetings: VerifiedMeetingListItem[] }[] = [];
-  let currentDate = "";
-
-  for (const meeting of meetings) {
-    const dateKey = meeting.date?.slice(0, 10) ?? "unknown";
-    if (dateKey !== currentDate) {
-      currentDate = dateKey;
-      groups.push({
-        date: dateKey,
-        label: meeting.date ? formatDayHeading(meeting.date) : "Geen datum",
-        meetings: [],
-      });
-    }
-    groups[groups.length - 1].meetings.push(meeting);
-  }
-
-  return groups;
 }
 
 export function MeetingsList({ meetings }: MeetingsListProps) {
@@ -74,7 +42,7 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
     return result;
   }, [meetings, selectedType, selectedPerson]);
 
-  const groups = useMemo(() => groupByDate(filtered), [filtered]);
+  const groups = useMemo(() => groupMeetingsByDate(filtered), [filtered]);
   const hasFilters = selectedType !== null || selectedPerson !== null;
 
   return (

@@ -5,10 +5,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/modal";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import {
-  updateOrganizationAction,
-  deleteOrganizationAction,
-} from "@/actions/entities";
+import { updateOrganizationAction, deleteOrganizationAction } from "@/actions/entities";
+import { ORG_TYPES, ORG_STATUSES } from "@/lib/constants/organization";
 
 interface EditOrganizationProps {
   org: {
@@ -20,9 +18,6 @@ interface EditOrganizationProps {
     email: string | null;
   };
 }
-
-const ORG_TYPES = ["client", "partner", "supplier", "other"] as const;
-const ORG_STATUSES = ["prospect", "active", "inactive"] as const;
 
 export function EditOrganization({ org }: EditOrganizationProps) {
   const router = useRouter();
@@ -43,8 +38,8 @@ export function EditOrganization({ org }: EditOrganizationProps) {
       const result = await updateOrganizationAction({
         id: org.id,
         name: name.trim(),
-        type: type as typeof ORG_TYPES[number],
-        status: status as typeof ORG_STATUSES[number],
+        type: type as (typeof ORG_TYPES)[number],
+        status: status as (typeof ORG_STATUSES)[number],
         contact_person: contactPerson.trim() || null,
         email: email.trim() || null,
       });
@@ -97,9 +92,7 @@ export function EditOrganization({ org }: EditOrganizationProps) {
           }}
           className="space-y-4"
         >
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           <div>
             <label className="mb-1 block text-sm font-medium">Name</label>
@@ -121,7 +114,9 @@ export function EditOrganization({ org }: EditOrganizationProps) {
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 {ORG_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
                 ))}
               </select>
             </div>
@@ -133,7 +128,9 @@ export function EditOrganization({ org }: EditOrganizationProps) {
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 {ORG_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
                 ))}
               </select>
             </div>

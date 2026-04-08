@@ -1,3 +1,5 @@
+import { formatMeetingType } from "@/lib/constants/meeting";
+
 const MEETING_TYPE_STYLES: Record<string, string> = {
   sales: "bg-blue-100 text-blue-700",
   discovery: "bg-purple-100 text-purple-700",
@@ -10,7 +12,7 @@ const MEETING_TYPE_STYLES: Record<string, string> = {
 export function MeetingTypeBadge({ type }: { type: string | null }) {
   if (!type) return null;
   const style = MEETING_TYPE_STYLES[type] ?? "bg-gray-100 text-gray-700";
-  const label = type.replace(/_/g, " ");
+  const label = formatMeetingType(type);
 
   return (
     <span
