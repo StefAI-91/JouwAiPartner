@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Desktop sidebar — hidden on mobile */}
       <DesktopSidebar reviewCount={reviewCount} />
 
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         {/* Mobile header — hidden on desktop */}
         <header className="flex h-14 items-center gap-3 border-b border-border/50 bg-white/60 px-4 backdrop-blur-sm lg:hidden">
           <SideMenu reviewCount={reviewCount} />
