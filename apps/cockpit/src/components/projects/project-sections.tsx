@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
-import { ConfidenceBar } from "@/components/shared/confidence-bar";
 import { getMeetingHref } from "@/lib/meeting-href";
+import { EmailsSection, type ProjectEmail } from "./project-emails-section";
+import { CombinedExtractionsSection, type CombinedItem } from "./combined-extractions-section";
 import type { ProjectSegment } from "@repo/database/queries/meeting-project-summaries";
 
 interface Meeting {
@@ -12,18 +13,6 @@ interface Meeting {
   title: string | null;
   date: string | null;
   meeting_type: string | null;
-  verification_status: string;
-}
-
-interface Email {
-  id: string;
-  subject: string | null;
-  from_name: string | null;
-  from_address: string;
-  date: string;
-  snippet: string | null;
-  email_type: string | null;
-  party_type: string | null;
   verification_status: string;
 }
 
@@ -68,7 +57,7 @@ const TAB_LABELS: Record<Tab, string> = {
 
 interface ProjectSectionsProps {
   meetings: Meeting[];
-  emails: Email[];
+  emails: ProjectEmail[];
   extractions: Extraction[];
   emailExtractions: EmailExtraction[];
   segments?: ProjectSegment[];
@@ -83,16 +72,15 @@ export function ProjectSections({
 }: ProjectSectionsProps) {
   const [activeTab, setActiveTab] = useState<Tab>(segments.length > 0 ? "segments" : "meetings");
 
-  // Combine meeting extractions and email extractions for the tabs
-  const allActionItems = [
+  const allActionItems: CombinedItem[] = [
     ...extractions.filter((e) => e.type === "action_item"),
     ...emailExtractions.filter((e) => e.type === "action_item"),
   ];
-  const allDecisions = [
+  const allDecisions: CombinedItem[] = [
     ...extractions.filter((e) => e.type === "decision"),
     ...emailExtractions.filter((e) => e.type === "decision"),
   ];
-  const allNeedsInsights = [
+  const allNeedsInsights: CombinedItem[] = [
     ...extractions.filter((e) => e.type === "need" || e.type === "insight"),
     ...emailExtractions.filter((e) => e.type === "need" || e.type === "insight"),
   ];
@@ -106,7 +94,6 @@ export function ProjectSections({
     needs_insights: allNeedsInsights.length,
   };
 
-  // Only show tabs that have content (always show meetings)
   const visibleTabs = TABS.filter((tab) => {
     if (tab === "meetings") return true;
     return counts[tab] > 0;
@@ -114,7 +101,6 @@ export function ProjectSections({
 
   return (
     <div>
-      {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto border-b border-border/50 pb-px">
         {visibleTabs.map((tab) => (
           <button
@@ -136,7 +122,6 @@ export function ProjectSections({
         ))}
       </div>
 
-      {/* Tab content */}
       <div className="pt-6">
         {activeTab === "segments" && <SegmentsSection segments={segments} />}
         {activeTab === "meetings" && <MeetingsSection meetings={meetings} />}
@@ -272,233 +257,6 @@ function MeetingsSection({ meetings }: { meetings: Meeting[] }) {
           </div>
         </Link>
       ))}
-    </div>
-  );
-}
-
-const EMAIL_TYPE_LABELS: Record<string, string> = {
-  project_communication: "Project",
-  sales: "Sales",
-  internal: "Intern",
-  administrative: "Admin",
-  legal_finance: "Juridisch/Financieel",
-  newsletter: "Nieuwsbrief",
-  notification: "Notificatie",
-  other: "Overig",
-};
-
-function EmailsSection({ emails }: { emails: Email[] }) {
-  if (emails.length === 0) {
-    return (
-      <p className="py-6 text-center text-sm text-muted-foreground">
-        Geen emails gekoppeld aan dit project
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {emails.map((email) => (
-        <Link
-          key={email.id}
-          href={
-            email.verification_status === "draft"
-              ? `/review/email/${email.id}`
-              : `/emails/${email.id}`
-          }
-          className="block rounded-xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
-        >
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <h4 className="truncate text-sm font-semibold">
-                {email.subject ?? "(geen onderwerp)"}
-              </h4>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Van: {email.from_name ?? email.from_address}
-              </p>
-              {email.date && (
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {new Date(email.date).toLocaleDateString("nl-NL", {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {email.email_type && (
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium">
-                  {EMAIL_TYPE_LABELS[email.email_type] ?? email.email_type}
-                </span>
-              )}
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                  email.verification_status === "verified"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700"
-                }`}
-              >
-                {email.verification_status}
-              </span>
-            </div>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-const TYPE_COLORS: Record<string, { border: string }> = {
-  action_item: { border: "#16A34A" },
-  decision: { border: "#3B82F6" },
-  need: { border: "#A855F7" },
-  insight: { border: "#6B7280" },
-};
-
-type CombinedItem = (Extraction | EmailExtraction) & {
-  _source_label?: string;
-};
-
-function CombinedExtractionsSection({ items, type }: { items: CombinedItem[]; type: string }) {
-  if (items.length === 0) {
-    const labels: Record<string, string> = {
-      action_item: "Geen actiepunten gevonden",
-      decision: "Geen besluiten gevonden",
-      needs_insights: "Geen behoeften of inzichten gevonden",
-    };
-    return (
-      <p className="py-6 text-center text-sm text-muted-foreground">
-        {labels[type] ?? "Geen items gevonden"}
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {items.map((item) => {
-        const color = TYPE_COLORS[item.type] ?? TYPE_COLORS.insight;
-        // Determine source label
-        const isMeetingExtraction = "meeting" in item && "transcript_ref" in item;
-        const sourceLabel = isMeetingExtraction
-          ? (item as Extraction).meeting?.title
-          : (item as EmailExtraction).email?.subject;
-
-        return (
-          <div
-            key={item.id}
-            className="rounded-xl bg-white p-4 shadow-sm"
-            style={{ borderLeft: `3px solid ${color.border}` }}
-          >
-            <p className="text-sm leading-relaxed">{item.content}</p>
-
-            {item.type === "action_item" && item.metadata && (
-              <ActionItemMeta metadata={item.metadata} />
-            )}
-
-            {"transcript_ref" in item && item.transcript_ref && (
-              <blockquote className="mt-2 border-l-2 border-muted pl-3 text-xs italic text-muted-foreground">
-                {item.transcript_ref}
-              </blockquote>
-            )}
-
-            {"source_ref" in item && item.source_ref && (
-              <blockquote className="mt-2 border-l-2 border-muted pl-3 text-xs italic text-muted-foreground">
-                {item.source_ref}
-              </blockquote>
-            )}
-
-            <div className="mt-2 flex items-center justify-between">
-              <ConfidenceBar confidence={item.confidence} />
-              <div className="flex items-center gap-1.5">
-                {!isMeetingExtraction && (
-                  <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-600">
-                    email
-                  </span>
-                )}
-                {sourceLabel && (
-                  <span className="text-[10px] text-muted-foreground">{sourceLabel}</span>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function ExtractionsSection({ items, type }: { items: Extraction[]; type: string }) {
-  if (items.length === 0) {
-    const labels: Record<string, string> = {
-      action_item: "No action items found",
-      decision: "No decisions found",
-      needs_insights: "No needs or insights found",
-    };
-    return (
-      <p className="py-6 text-center text-sm text-muted-foreground">
-        {labels[type] ?? "No items found"}
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {items.map((item) => {
-        const color = TYPE_COLORS[item.type] ?? TYPE_COLORS.insight;
-        return (
-          <div
-            key={item.id}
-            className="rounded-xl bg-white p-4 shadow-sm"
-            style={{ borderLeft: `3px solid ${color.border}` }}
-          >
-            <p className="text-sm leading-relaxed">{item.content}</p>
-
-            {/* Action item metadata */}
-            {item.type === "action_item" && item.metadata && (
-              <ActionItemMeta metadata={item.metadata} />
-            )}
-
-            {item.transcript_ref && (
-              <blockquote className="mt-2 border-l-2 border-muted pl-3 text-xs italic text-muted-foreground">
-                {item.transcript_ref}
-              </blockquote>
-            )}
-
-            <div className="mt-2 flex items-center justify-between">
-              <ConfidenceBar confidence={item.confidence} />
-              {item.meeting && (
-                <span className="text-[10px] text-muted-foreground">
-                  {item.meeting.title ?? "Untitled"}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function ActionItemMeta({ metadata }: { metadata: Record<string, unknown> }) {
-  const assignee = metadata.assignee ? String(metadata.assignee) : null;
-  const dueDate = metadata.due_date ? String(metadata.due_date) : null;
-  const status = metadata.status ? String(metadata.status) : null;
-
-  return (
-    <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-      {assignee && <span className="rounded-full bg-muted px-2 py-0.5">{assignee}</span>}
-      {dueDate && <span className="rounded-full bg-muted px-2 py-0.5">Due: {dueDate}</span>}
-      {status && (
-        <span
-          className={`rounded-full px-2 py-0.5 ${
-            status === "done" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-          }`}
-        >
-          {status}
-        </span>
-      )}
     </div>
   );
 }

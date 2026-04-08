@@ -14,7 +14,7 @@ Je bepaalt:
    - 0.6–0.8: relevant (project communicatie, klant updates)
    - 0.9–1.0: kritiek (besluiten, urgente verzoeken, contracten)
 
-2. EMAIL CATEGORY: wat voor soort email is dit?
+2. EMAIL TYPE: wat voor soort email is dit?
    - project_communication: directe project-gerelateerde communicatie
    - sales: commercieel, offerte, propositie
    - internal: intern overleg, team communicatie

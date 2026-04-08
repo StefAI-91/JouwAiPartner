@@ -46,7 +46,7 @@ export async function runEmailExtractor(
   context: {
     identified_projects?: { project_name: string; project_id: string | null }[];
     organization_name?: string | null;
-    email_category?: string;
+    email_type?: string;
     entityContext?: string;
   } = {},
 ): Promise<EmailExtractorOutput> {
@@ -56,7 +56,7 @@ export async function runEmailExtractor(
     `Aan: ${email.to_addresses.join(", ")}`,
     `Datum: ${email.date}`,
     context.organization_name ? `Organisatie: ${context.organization_name}` : null,
-    context.email_category ? `Categorie: ${context.email_category}` : null,
+    context.email_type ? `Categorie: ${context.email_type}` : null,
   ]
     .filter(Boolean)
     .join("\n");

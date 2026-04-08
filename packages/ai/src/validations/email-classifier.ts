@@ -25,7 +25,7 @@ export const EmailClassifierSchema = z.object({
       }),
     )
     .describe("Projects this email relates to. Match to known projects when confident."),
-  email_category: z
+  email_type: z
     .enum([
       "project_communication",
       "sales",
@@ -36,7 +36,7 @@ export const EmailClassifierSchema = z.object({
       "notification",
       "other",
     ])
-    .describe("The category of this email"),
+    .describe("The type/category of this email"),
   party_type: z
     .enum(["internal", "client", "accountant", "tax_advisor", "lawyer", "partner", "other"])
     .describe(
