@@ -50,6 +50,7 @@ function buildExtractionRows(
 
     const metadata: Record<string, unknown> = {};
     if (item.category) metadata.category = item.category;
+    if (item.follow_up_contact) metadata.follow_up_contact = item.follow_up_contact;
     if (item.assignee) metadata.assignee = item.assignee;
     if (item.deadline) metadata.deadline = item.deadline;
     if (item.suggested_deadline) metadata.suggested_deadline = item.suggested_deadline;

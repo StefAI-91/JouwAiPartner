@@ -3,15 +3,16 @@ import { ExtractionItemSchema, ExtractorOutputSchema } from "../../src/validatio
 
 const validItem = {
   type: "action_item" as const,
-  category: "wij_leveren" as const,
-  content: "Follow up with client about proposal",
+  category: "wachten_op_extern" as const,
+  content: "Opvolgen bij Jan (Acme): levert projectplan aan — nodig voor kickoff",
   confidence: 0.9,
   transcript_ref: null,
+  follow_up_contact: "Jan van Acme",
   assignee: null,
   deadline: null,
   suggested_deadline: null,
   effort_estimate: "small" as const,
-  deadline_reasoning: "Geen expliciete deadline. Klein deliverable, +3 werkdagen vanaf meeting.",
+  deadline_reasoning: "Geen expliciete deadline. Default +5 werkdagen vanaf meeting.",
   scope: null,
   project: null,
 };
@@ -22,7 +23,9 @@ describe("ExtractionItemSchema", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.type).toBe("action_item");
-      expect(result.data.content).toBe("Follow up with client about proposal");
+      expect(result.data.content).toBe(
+        "Opvolgen bij Jan (Acme): levert projectplan aan — nodig voor kickoff",
+      );
     }
   });
 
@@ -52,13 +55,24 @@ describe("ExtractionItemSchema", () => {
   });
 
   it("accepts valid category values", () => {
-    for (const category of ["wij_leveren", "wij_volgen_op"]) {
+    for (const category of ["wachten_op_extern", "wachten_op_beslissing"]) {
       expect(ExtractionItemSchema.safeParse({ ...validItem, category }).success).toBe(true);
     }
   });
 
-  it("rejects invalid category", () => {
+  it("rejects invalid category (including legacy values)", () => {
     expect(ExtractionItemSchema.safeParse({ ...validItem, category: "other" }).success).toBe(false);
+    expect(ExtractionItemSchema.safeParse({ ...validItem, category: "wij_leveren" }).success).toBe(
+      false,
+    );
+    expect(
+      ExtractionItemSchema.safeParse({ ...validItem, category: "wij_volgen_op" }).success,
+    ).toBe(false);
+  });
+
+  it("requires follow_up_contact", () => {
+    const { follow_up_contact, ...withoutContact } = validItem;
+    expect(ExtractionItemSchema.safeParse(withoutContact).success).toBe(false);
   });
 
   it("accepts valid effort_estimate values", () => {
@@ -81,7 +95,7 @@ describe("ExtractionItemSchema", () => {
     const result = ExtractionItemSchema.safeParse({
       ...validItem,
       transcript_ref: "We need to complete the report",
-      assignee: "John",
+      assignee: "Stef",
       deadline: "2025-02-01",
       suggested_deadline: "2025-02-05",
       scope: "project",
@@ -89,7 +103,7 @@ describe("ExtractionItemSchema", () => {
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.assignee).toBe("John");
+      expect(result.data.assignee).toBe("Stef");
       expect(result.data.scope).toBe("project");
     }
   });

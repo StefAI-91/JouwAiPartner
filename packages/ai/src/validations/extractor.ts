@@ -3,9 +3,9 @@ import { z } from "zod";
 export const ExtractionItemSchema = z.object({
   type: z.literal("action_item"),
   category: z
-    .enum(["wij_leveren", "wij_volgen_op"])
+    .enum(["wachten_op_extern", "wachten_op_beslissing"])
     .describe(
-      "wij_leveren: JAIP team must deliver something concrete. wij_volgen_op: external party must deliver something that blocks our work.",
+      "wachten_op_extern: external party must deliver/respond. wachten_op_beslissing: someone must make a decision that blocks work.",
     ),
   content: z.string().describe("The extracted action item in Dutch, concise and clear"),
   confidence: z
@@ -17,6 +17,11 @@ export const ExtractionItemSchema = z.object({
     .string()
     .nullable()
     .describe("Exact quote from transcript that supports this extraction. Null if not applicable."),
+  follow_up_contact: z
+    .string()
+    .describe(
+      "Name of the person JAIP can email to follow up. Required — if no specific person can be identified, this is not an action item.",
+    ),
   assignee: z.string().nullable().describe("Who is responsible for this action item."),
   deadline: z
     .string()
@@ -33,7 +38,7 @@ export const ExtractionItemSchema = z.object({
   effort_estimate: z
     .enum(["small", "medium", "large"])
     .describe(
-      "Estimated effort: small (mail, share doc), medium (write proposal, analysis), large (delivery, implementation).",
+      "Estimated effort: small (simple follow-up), medium (multiple reminders needed), large (complex dependency).",
     ),
   deadline_reasoning: z
     .string()

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExtractionCard } from "@/components/shared/extraction-card";
-import { EditableExtractionCard } from "@/components/meetings/editable-extraction-card";
+import { FollowUpChecklist } from "@/components/shared/follow-up-checklist";
 import { AddExtractionForm } from "@/components/meetings/add-extraction-form";
+import { updateExtractionAction, deleteExtractionAction } from "@/actions/entities";
 import { regenerateMeetingAction } from "@/actions/meetings";
-import { ListChecks, RefreshCw } from "lucide-react";
+import { Mail, RefreshCw } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface Extraction {
@@ -57,9 +57,9 @@ export function ExtractionTabsPanel({
       <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ListChecks className="size-4 text-green-600" />
-            <h2 className="text-base font-semibold">Actiepunten</h2>
-            <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+            <Mail className="size-4 text-amber-500" />
+            <h2 className="text-base font-semibold">Opvolgsuggesties</h2>
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
               {actionItems.length}
             </span>
           </div>
@@ -80,37 +80,32 @@ export function ExtractionTabsPanel({
         </div>
       </div>
 
-      <div className="space-y-3 p-6">
+      <div className="p-6">
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
+          <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600">
             {error}
           </div>
         )}
-        {actionItems.map((ext) =>
-          editable && meetingId ? (
-            <EditableExtractionCard
-              key={ext.id}
-              extraction={ext}
-              meetingId={meetingId}
-              promotedExtractionIds={promotedExtractionIds}
-              peopleForAssignment={peopleForAssignment}
-            />
-          ) : (
-            <ExtractionCard
-              key={ext.id}
-              extraction={ext}
-              readOnly
-              showPromote
-              isPromoted={promotedExtractionIds?.includes(ext.id)}
-              people={peopleForAssignment}
-            />
-          ),
-        )}
-        {actionItems.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            Geen actiepunten gevonden
-          </p>
-        )}
+        <FollowUpChecklist
+          items={actionItems}
+          promotedIds={promotedExtractionIds}
+          people={peopleForAssignment}
+          onEdit={
+            editable && meetingId
+              ? (id, content) => {
+                  updateExtractionAction({ id, content, meetingId: meetingId! });
+                }
+              : undefined
+          }
+          onDelete={
+            editable && meetingId
+              ? (id) => {
+                  deleteExtractionAction({ id, meetingId: meetingId! });
+                  router.refresh();
+                }
+              : undefined
+          }
+        />
       </div>
     </>
   );
