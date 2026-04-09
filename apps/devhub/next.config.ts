@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  transpilePackages: ["@repo/database"],
+  transpilePackages: ["@repo/database", "@repo/ai"],
   async headers() {
     return [
       {

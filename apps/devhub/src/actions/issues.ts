@@ -11,6 +11,7 @@ import {
   insertActivity,
 } from "@repo/database/mutations/issues";
 import { getIssueById } from "@repo/database/queries/issues";
+import { classifyIssueBackground } from "./classify";
 
 // ── Constants ──
 
@@ -89,6 +90,9 @@ export async function createIssueAction(
       actor_id: user.id,
       action: "created",
     });
+
+    // Fire-and-forget AI classification (not awaited)
+    classifyIssueBackground(issue.id);
 
     revalidatePath("/issues");
     return { success: true, id: issue.id };

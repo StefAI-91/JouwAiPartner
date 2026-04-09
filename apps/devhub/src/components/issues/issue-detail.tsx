@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { IssueRow, IssueCommentRow, IssueActivityRow } from "@repo/database/queries/issues";
 import { updateIssueAction, deleteIssueAction } from "@/actions/issues";
+import { classifyIssueAction } from "@/actions/classify";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { PriorityBadge } from "@/components/shared/priority-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
@@ -11,7 +12,7 @@ import { ComponentBadge } from "@/components/shared/component-badge";
 import { CommentActivityFeed } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 // ── Constants ──
@@ -115,6 +116,18 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isClassifying, setIsClassifying] = useState(false);
+
+  function handleClassify() {
+    setIsClassifying(true);
+    startTransition(async () => {
+      const result = await classifyIssueAction({ id: issue.id });
+      if ("error" in result) {
+        console.error(result.error);
+      }
+      setIsClassifying(false);
+    });
+  }
 
   function handleFieldChange(field: string, value: string | null) {
     startTransition(async () => {
@@ -137,7 +150,13 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
   }
 
   const aiClassification = issue.ai_classification as Record<string, unknown> | undefined;
-  const reproSteps = (aiClassification?.repro_steps as string[]) ?? [];
+  const rawReproSteps = aiClassification?.repro_steps;
+  const reproSteps: string | null =
+    typeof rawReproSteps === "string"
+      ? rawReproSteps
+      : Array.isArray(rawReproSteps)
+        ? (rawReproSteps as string[]).join("\n")
+        : null;
 
   return (
     <div className="flex h-full flex-col lg:flex-row">
@@ -182,15 +201,11 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
         )}
 
         {/* AI Repro Steps */}
-        {reproSteps.length > 0 && (
+        {reproSteps && (
           <section className="mb-6">
             <h2 className="mb-2">AI Reproductiestappen</h2>
-            <div className="rounded-md border border-border bg-card p-4">
-              <ol className="list-decimal space-y-1 pl-5 text-sm">
-                {reproSteps.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
-              </ol>
+            <div className="rounded-md border border-border bg-card p-4 text-sm whitespace-pre-wrap">
+              {reproSteps}
             </div>
           </section>
         )}
@@ -303,6 +318,28 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
               </p>
             </div>
           )}
+
+          {/* AI Classification */}
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-muted-foreground">AI Classificatie</span>
+            {aiClassification ? (
+              <p className="text-xs text-muted-foreground">
+                Confidence: {Math.round((aiClassification.confidence as number) * 100)}%
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground/60">Nog niet geclassificeerd</p>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClassify}
+              disabled={isPending || isClassifying}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Sparkles className="size-3.5" />
+              {isClassifying ? "Bezig..." : aiClassification ? "Herclassificeer" : "Classificeer"}
+            </Button>
+          </div>
 
           {/* Delete */}
           <div className="border-t border-border pt-4">
