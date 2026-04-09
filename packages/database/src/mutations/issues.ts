@@ -137,6 +137,38 @@ export async function insertComment(
 }
 
 /**
+ * Update a comment body.
+ */
+export async function updateComment(
+  id: string,
+  body: string,
+  client?: SupabaseClient,
+): Promise<IssueCommentRow> {
+  const db = client ?? getAdminClient();
+  const { data: comment, error } = await db
+    .from("issue_comments")
+    .update({ body, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select(
+      `id, issue_id, author_id, body, created_at, updated_at,
+       author:author_id (id, name)`,
+    )
+    .single();
+
+  if (error) throw new Error(`Failed to update comment: ${error.message}`);
+  return comment as unknown as IssueCommentRow;
+}
+
+/**
+ * Delete a comment by ID.
+ */
+export async function deleteComment(id: string, client?: SupabaseClient): Promise<void> {
+  const db = client ?? getAdminClient();
+  const { error } = await db.from("issue_comments").delete().eq("id", id);
+  if (error) throw new Error(`Failed to delete comment: ${error.message}`);
+}
+
+/**
  * Insert an activity log entry for an issue.
  */
 export async function insertActivity(

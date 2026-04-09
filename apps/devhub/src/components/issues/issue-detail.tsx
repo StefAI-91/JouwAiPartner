@@ -1,0 +1,344 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import type { IssueRow, IssueCommentRow, IssueActivityRow } from "@repo/database/queries/issues";
+import { updateIssueAction, deleteIssueAction } from "@/actions/issues";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { PriorityBadge } from "@/components/shared/priority-badge";
+import { TypeBadge } from "@/components/shared/type-badge";
+import { ComponentBadge } from "@/components/shared/component-badge";
+import { CommentActivityFeed } from "@/components/comments/comment-list";
+import { CommentForm } from "@/components/comments/comment-form";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Trash2 } from "lucide-react";
+import Link from "next/link";
+
+// ── Constants ──
+
+const STATUSES = [
+  { value: "triage", label: "Triage" },
+  { value: "backlog", label: "Backlog" },
+  { value: "todo", label: "Todo" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "done", label: "Done" },
+  { value: "cancelled", label: "Cancelled" },
+] as const;
+
+const PRIORITIES = [
+  { value: "urgent", label: "Urgent" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+] as const;
+
+interface Person {
+  id: string;
+  name: string;
+}
+
+interface IssueDetailProps {
+  issue: IssueRow;
+  comments: IssueCommentRow[];
+  activities: IssueActivityRow[];
+  people: Person[];
+}
+
+// ── Sidebar Dropdown ──
+
+function SidebarSelect({
+  label,
+  value,
+  options,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="space-y-1">
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-50"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function SidebarAssignee({
+  value,
+  people,
+  onChange,
+  disabled,
+}: {
+  value: string | null;
+  people: Person[];
+  onChange: (value: string | null) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="space-y-1">
+      <span className="text-xs font-medium text-muted-foreground">Toegewezen aan</span>
+      <select
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        disabled={disabled}
+        className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-50"
+      >
+        <option value="">Niet toegewezen</option>
+        {people.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// ── Main Component ──
+
+export function IssueDetail({ issue, comments, activities, people }: IssueDetailProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  function handleFieldChange(field: string, value: string | null) {
+    startTransition(async () => {
+      const result = await updateIssueAction({ id: issue.id, [field]: value });
+      if ("error" in result) {
+        console.error(result.error);
+      }
+    });
+  }
+
+  function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteIssueAction({ id: issue.id });
+      if ("error" in result) {
+        console.error(result.error);
+      } else {
+        router.push("/issues");
+      }
+    });
+  }
+
+  const aiClassification = issue.ai_classification as Record<string, unknown> | undefined;
+  const reproSteps = (aiClassification?.repro_steps as string[]) ?? [];
+
+  return (
+    <div className="flex h-full flex-col lg:flex-row">
+      {/* Main content */}
+      <div className="flex-1 overflow-auto p-6">
+        {/* Header */}
+        <div className="mb-6">
+          <Link
+            href="/issues"
+            className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" />
+            Terug naar issues
+          </Link>
+
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className="flex items-center gap-2">
+                <span className="font-mono text-base font-normal text-muted-foreground">
+                  #{issue.issue_number}
+                </span>
+                {issue.title}
+              </h1>
+              <div className="mt-2 flex items-center gap-2">
+                <StatusBadge status={issue.status} />
+                <PriorityBadge priority={issue.priority} />
+                <TypeBadge type={issue.type} />
+                {issue.component && <ComponentBadge component={issue.component} />}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        {issue.description && (
+          <section className="mb-6">
+            <h2 className="mb-2">Beschrijving</h2>
+            <div className="rounded-md border border-border bg-card p-4 text-sm whitespace-pre-wrap">
+              {issue.description}
+            </div>
+          </section>
+        )}
+
+        {/* AI Repro Steps */}
+        {reproSteps.length > 0 && (
+          <section className="mb-6">
+            <h2 className="mb-2">AI Reproductiestappen</h2>
+            <div className="rounded-md border border-border bg-card p-4">
+              <ol className="list-decimal space-y-1 pl-5 text-sm">
+                {reproSteps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        )}
+
+        {/* Comments & Activity */}
+        <section>
+          <h2 className="mb-3">Reacties &amp; activiteit</h2>
+          <CommentActivityFeed comments={comments} activities={activities} />
+          <div className="mt-4">
+            <CommentForm issueId={issue.id} />
+          </div>
+        </section>
+      </div>
+
+      {/* Sidebar */}
+      <aside className="w-full shrink-0 border-t border-border bg-card p-4 lg:w-64 lg:border-l lg:border-t-0 lg:overflow-auto">
+        <div className="space-y-4">
+          <SidebarSelect
+            label="Status"
+            value={issue.status}
+            options={STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+            onChange={(v) => handleFieldChange("status", v)}
+            disabled={isPending}
+          />
+
+          <SidebarSelect
+            label="Prioriteit"
+            value={issue.priority}
+            options={PRIORITIES.map((p) => ({ value: p.value, label: p.label }))}
+            onChange={(v) => handleFieldChange("priority", v)}
+            disabled={isPending}
+          />
+
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-muted-foreground">Type</span>
+            <p className="text-sm capitalize">{issue.type.replace("_", " ")}</p>
+          </div>
+
+          {issue.component && (
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-muted-foreground">Component</span>
+              <p className="text-sm capitalize">{issue.component.replace("_", " ")}</p>
+            </div>
+          )}
+
+          {issue.severity && (
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-muted-foreground">Severity</span>
+              <p className="text-sm capitalize">{issue.severity}</p>
+            </div>
+          )}
+
+          <SidebarAssignee
+            value={issue.assigned_to}
+            people={people}
+            onChange={(v) => handleFieldChange("assigned_to", v)}
+            disabled={isPending}
+          />
+
+          {/* Labels */}
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-muted-foreground">Labels</span>
+            {issue.labels && issue.labels.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {issue.labels.map((label) => (
+                  <span
+                    key={label}
+                    className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground/60">Geen labels</p>
+            )}
+          </div>
+
+          {/* Source */}
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-muted-foreground">Bron</span>
+            <p className="text-sm capitalize">{issue.source}</p>
+          </div>
+
+          {/* Dates */}
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-muted-foreground">Aangemaakt</span>
+            <p className="text-xs text-muted-foreground">
+              {new Date(issue.created_at).toLocaleDateString("nl-NL", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+
+          {issue.closed_at && (
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-muted-foreground">Gesloten</span>
+              <p className="text-xs text-muted-foreground">
+                {new Date(issue.closed_at).toLocaleDateString("nl-NL", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
+          )}
+
+          {/* Delete */}
+          <div className="border-t border-border pt-4">
+            {showDeleteConfirm ? (
+              <div className="space-y-2">
+                <p className="text-xs text-destructive">
+                  Weet je zeker dat je dit issue wilt verwijderen?
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDelete}
+                    disabled={isPending}
+                  >
+                    Verwijderen
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+                    Annuleren
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="size-3.5" />
+                Verwijder issue
+              </Button>
+            )}
+          </div>
+        </div>
+      </aside>
+    </div>
+  );
+}
