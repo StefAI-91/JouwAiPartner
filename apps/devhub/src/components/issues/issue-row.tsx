@@ -105,7 +105,7 @@ export function IssueRowItem({
   return (
     <div
       className={cn(
-        "group relative flex gap-3 border-b border-border px-4 py-3.5 transition-colors hover:bg-muted/50",
+        "group relative border-b border-border px-4 py-3.5 transition-colors hover:bg-muted/50",
         isPending && "opacity-50 pointer-events-none",
         className,
       )}
@@ -129,38 +129,81 @@ export function IssueRowItem({
         </div>
       )}
 
-      {/* Main link area */}
-      <Link href={`/issues/${issue.id}?project=${issue.project_id}`} className="min-w-0 flex-1">
-        {/* Row 1: number + title */}
-        <div className="flex items-start gap-2">
-          <PriorityDot priority={issue.priority} />
-          <span className="shrink-0 text-sm text-muted-foreground font-mono mt-0.5">
-            #{issue.issue_number}
-          </span>
-          <span className="min-w-0 flex-1 font-medium text-foreground group-hover:text-primary line-clamp-2">
-            {issue.title}
-          </span>
+      <div className="flex gap-3">
+        {/* Main link area */}
+        <Link href={`/issues/${issue.id}?project=${issue.project_id}`} className="min-w-0 flex-1">
+          {/* Row 1: number + title */}
+          <div className="flex items-start gap-2">
+            <PriorityDot priority={issue.priority} />
+            <span className="shrink-0 text-sm text-muted-foreground font-mono mt-0.5">
+              #{issue.issue_number}
+            </span>
+            <span className="min-w-0 flex-1 font-medium text-foreground group-hover:text-primary line-clamp-2">
+              {issue.title}
+            </span>
+          </div>
+
+          {/* Row 2: description */}
+          {issue.description && issue.description !== issue.title && (
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-2 pl-8">
+              {issue.description}
+            </p>
+          )}
+
+          {/* Row 3: badges + meta */}
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 pl-8 sm:gap-2">
+            <TypeBadge type={issue.type} />
+            <StatusBadge status={issue.status} />
+            <ComponentBadge component={issue.component} />
+            <AssignedAvatar person={issue.assigned_person} />
+            <span className="ml-auto text-xs sm:text-sm text-muted-foreground">
+              {timeAgo(issue.created_at)}
+            </span>
+          </div>
+        </Link>
+
+        {/* Desktop: thumbnail + actions inline */}
+        <div className="hidden sm:flex items-center gap-2">
+          {thumbnailPath && <IssueThumbnail storagePath={thumbnailPath} />}
+
+          {canAiPickup && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAiPickup();
+              }}
+              disabled={isPending}
+              className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
+              title="Laat AI dit issue oppakken"
+            >
+              <Bot className="size-5" />
+              AI oppakken
+            </button>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100"
+              onClick={(e) => e.preventDefault()}
+            >
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="bottom" align="end">
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setShowConfirm(true)}
+              >
+                <Trash2 className="size-4" />
+                Verwijder issue
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+      </div>
 
-        {/* Row 2: description */}
-        {issue.description && issue.description !== issue.title && (
-          <p className="mt-1 text-sm text-muted-foreground line-clamp-2 pl-8">
-            {issue.description}
-          </p>
-        )}
-
-        {/* Row 3: badges + meta */}
-        <div className="mt-1.5 flex items-center gap-2 pl-8">
-          <TypeBadge type={issue.type} />
-          <StatusBadge status={issue.status} />
-          <ComponentBadge component={issue.component} />
-          <AssignedAvatar person={issue.assigned_person} />
-          <span className="ml-auto text-sm text-muted-foreground">{timeAgo(issue.created_at)}</span>
-        </div>
-      </Link>
-
-      {/* Right side: thumbnail + actions */}
-      <div className="flex items-center gap-2">
+      {/* Mobile: thumbnail + actions below content */}
+      <div className="mt-2 flex items-center gap-2 pl-8 sm:hidden">
         {thumbnailPath && <IssueThumbnail storagePath={thumbnailPath} />}
 
         {canAiPickup && (
@@ -179,23 +222,25 @@ export function IssueRowItem({
           </button>
         )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100"
-            onClick={(e) => e.preventDefault()}
-          >
-            <MoreHorizontal className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="bottom" align="end">
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={() => setShowConfirm(true)}
+        <div className="ml-auto">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              onClick={(e) => e.preventDefault()}
             >
-              <Trash2 className="size-4" />
-              Verwijder issue
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="bottom" align="end">
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setShowConfirm(true)}
+              >
+                <Trash2 className="size-4" />
+                Verwijder issue
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   );

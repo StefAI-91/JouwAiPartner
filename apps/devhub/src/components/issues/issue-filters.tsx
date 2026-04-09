@@ -152,7 +152,7 @@ export function IssueFilters() {
   }, [router, searchParams]);
 
   return (
-    <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+    <div className="flex items-center gap-2 overflow-x-auto border-b border-border px-4 py-3 scrollbar-none">
       <FilterDropdown
         label="Status"
         paramKey="status"
