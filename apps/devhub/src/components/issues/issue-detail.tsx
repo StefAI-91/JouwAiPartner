@@ -149,7 +149,9 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
     });
   }
 
-  const aiClassification = issue.ai_classification as Record<string, unknown> | undefined;
+  const rawAiClassification = issue.ai_classification as Record<string, unknown> | undefined;
+  const aiClassification =
+    rawAiClassification && Object.keys(rawAiClassification).length > 0 ? rawAiClassification : null;
   const rawReproSteps = aiClassification?.repro_steps;
   const reproSteps: string | null =
     typeof rawReproSteps === "string"
@@ -323,9 +325,14 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground">AI Classificatie</span>
             {aiClassification ? (
-              <p className="text-xs text-muted-foreground">
-                Confidence: {Math.round((aiClassification.confidence as number) * 100)}%
-              </p>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                {typeof aiClassification.confidence === "number" && (
+                  <p>Confidence: {Math.round(aiClassification.confidence * 100)}%</p>
+                )}
+                {typeof aiClassification.type === "string" && (
+                  <p>AI type: {aiClassification.type}</p>
+                )}
+              </div>
             ) : (
               <p className="text-xs text-muted-foreground/60">Nog niet geclassificeerd</p>
             )}
