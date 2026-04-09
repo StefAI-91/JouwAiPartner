@@ -83,7 +83,7 @@ export function LoginForm() {
         </div>
       )}
 
-      <Button type="submit" disabled={loading} className="w-full" size="lg">
+      <Button type="submit" disabled={loading} className="w-full glow-primary" size="lg">
         {loading ? "Bezig..." : "Inloggen"}
       </Button>
     </form>
