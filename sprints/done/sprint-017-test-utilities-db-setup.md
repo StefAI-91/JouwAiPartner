@@ -6,13 +6,13 @@ Maak de test-infrastructuur voor integratietests: Supabase lokale testdatabase c
 
 ## Requirements
 
-| ID       | Beschrijving                                                     |
-| -------- | ---------------------------------------------------------------- |
-| TEST-006 | Test utilities: database seeding helpers                         |
-| TEST-007 | Test utilities: database cleanup helpers (teardown)              |
-| TEST-008 | Test utilities: auth mock helpers (getAuthenticatedUser)         |
-| TEST-009 | Test utilities: revalidatePath mock (Next.js specifiek)          |
-| TEST-010 | Supabase lokale testdatabase setup documentatie                  |
+| ID       | Beschrijving                                             |
+| -------- | -------------------------------------------------------- |
+| TEST-006 | Test utilities: database seeding helpers                 |
+| TEST-007 | Test utilities: database cleanup helpers (teardown)      |
+| TEST-008 | Test utilities: auth mock helpers (getAuthenticatedUser) |
+| TEST-009 | Test utilities: revalidatePath mock (Next.js specifiek)  |
+| TEST-010 | Supabase lokale testdatabase setup documentatie          |
 
 ## Bronverwijzingen
 
@@ -30,10 +30,13 @@ Maak de test-infrastructuur voor integratietests: Supabase lokale testdatabase c
 ### Auth pattern in Server Actions
 
 Alle Server Actions volgen hetzelfde patroon:
+
 ```typescript
 async function getAuthenticatedUser() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return user;
 }
 
@@ -43,12 +46,14 @@ if (!user) return { error: "Niet ingelogd" };
 ```
 
 De `createClient()` functie uit `@repo/database/supabase/server` gebruikt Next.js cookies. Voor tests moeten we:
+
 1. De `createClient` import mocken zodat hij een Supabase client teruggeeft die verbindt met de test-database
 2. De auth.getUser() call mocken zodat hij een test-gebruiker teruggeeft (of null voor unauthenticated tests)
 
 ### revalidatePath pattern
 
 Alle Server Actions gebruiken `revalidatePath` van `next/cache` voor cache invalidatie:
+
 ```typescript
 import { revalidatePath } from "next/cache";
 // ...
@@ -61,6 +66,7 @@ Dit is Next.js specifiek en werkt niet buiten de Next.js runtime. Voor tests moe
 ### Database cleanup strategie
 
 Integratietests moeten de database in een bekende staat brengen voor elke test:
+
 1. **beforeEach:** Insert seed data (organisaties, projecten, personen, meetings, extractions)
 2. **afterEach:** Delete de seed data (in omgekeerde volgorde vanwege foreign keys)
 
@@ -90,6 +96,7 @@ apps/cockpit/
 ### Seed data schema
 
 De seed helpers moeten minimaal deze data kunnen aanmaken:
+
 - **Organisatie:** `{ id, name, type, status }` — nodig voor meetings, extractions
 - **Project:** `{ id, name, organization_id, status }` — nodig voor meetings, extractions
 - **Persoon:** `{ id, name, email, role, organization_id }` — nodig voor tasks, meeting participants

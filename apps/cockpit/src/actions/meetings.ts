@@ -392,6 +392,114 @@ export async function regenerateMeetingAction(
   return { success: true };
 }
 
+// ── Full Reprocess (re-fetch from Fireflies + full pipeline) ──
+
+export async function reprocessMeetingAction(
+  input: z.infer<typeof regenerateSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = regenerateSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const { meetingId } = parsed.data;
+
+  // 1. Fetch meeting to get fireflies_id
+  const supabase = getAdminClient();
+  const { data: meeting, error: fetchError } = await supabase
+    .from("meetings")
+    .select("id, fireflies_id")
+    .eq("id", meetingId)
+    .single();
+
+  if (fetchError || !meeting) {
+    return { error: "Meeting niet gevonden" };
+  }
+
+  if (!meeting.fireflies_id) {
+    return { error: "Geen Fireflies ID — kan niet opnieuw ophalen" };
+  }
+
+  // 2. Fetch full transcript from Fireflies (before any mutations — safe to fail here)
+  const { fetchFirefliesTranscript } = await import("@repo/ai/fireflies");
+  const transcript = await fetchFirefliesTranscript(meeting.fireflies_id);
+  if (!transcript) {
+    return { error: "Kon transcript niet ophalen van Fireflies" };
+  }
+
+  // 3. Clear fireflies_id on old meeting so the unique constraint doesn't block the new insert.
+  //    The old meeting stays intact until the pipeline succeeds.
+  const { error: clearError } = await supabase
+    .from("meetings")
+    .update({ fireflies_id: null })
+    .eq("id", meetingId);
+
+  if (clearError) {
+    return { error: `Voorbereiding mislukt: ${clearError.message}` };
+  }
+
+  // 4. Run full pipeline (gatekeeper → classify → speaker map → ElevenLabs → summarizer → extractor → embed)
+  try {
+    const { chunkTranscript } = await import("@repo/ai/transcript-processor");
+    const { processMeeting } = await import("@repo/ai/pipeline/gatekeeper-pipeline");
+
+    const chunks = chunkTranscript(transcript.sentences);
+    const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");
+
+    const pipelineResult = await processMeeting({
+      fireflies_id: meeting.fireflies_id,
+      title: transcript.title,
+      date: transcript.date,
+      participants: transcript.participants,
+      organizer_email: transcript.organizer_email,
+      meeting_attendees: transcript.meeting_attendees ?? [],
+      sentences: transcript.sentences,
+      summary: transcript.summary?.notes ?? "",
+      topics: transcript.summary?.topics_discussed ?? [],
+      transcript: chunkedTranscript,
+      raw_fireflies: {
+        fireflies_id: meeting.fireflies_id,
+        title: transcript.title,
+        date: transcript.date,
+        participants: transcript.participants,
+        organizer_email: transcript.organizer_email,
+        meeting_attendees: transcript.meeting_attendees,
+        summary: transcript.summary,
+        sentences: transcript.sentences,
+      },
+      audio_url: transcript.audio_url ?? undefined,
+    });
+
+    if (!pipelineResult.meetingId) {
+      // Pipeline failed — restore fireflies_id on old meeting so nothing is lost
+      await supabase
+        .from("meetings")
+        .update({ fireflies_id: meeting.fireflies_id })
+        .eq("id", meetingId);
+      return { error: "Pipeline mislukt — oude meeting is behouden" };
+    }
+
+    // 5. Pipeline succeeded — delete the old meeting (CASCADE cleans up related data)
+    await supabase.from("meetings").delete().eq("id", meetingId);
+
+    revalidatePath(`/meetings/${pipelineResult.meetingId}`);
+    revalidatePath(`/review/${pipelineResult.meetingId}`);
+    revalidatePath("/review");
+    revalidatePath("/meetings");
+    revalidatePath("/");
+    return { success: true };
+  } catch (err) {
+    // Pipeline crashed — restore fireflies_id on old meeting
+    await supabase
+      .from("meetings")
+      .update({ fireflies_id: meeting.fireflies_id })
+      .eq("id", meetingId);
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return { error: `Herverwerking mislukt — oude meeting is behouden: ${errMsg}` };
+  }
+}
+
 // ── Create Organization ──
 
 export async function createOrganizationAction(

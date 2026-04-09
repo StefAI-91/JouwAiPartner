@@ -6,9 +6,9 @@ Schrijf tests die verifiereren dat de MCP server correct wordt opgebouwd en dat 
 
 ## Requirements
 
-| ID       | Beschrijving                                                                          |
-| -------- | ------------------------------------------------------------------------------------- |
-| TEST-068 | Test createMcpServer: server registreert alle 10 tools                                |
+| ID       | Beschrijving                                           |
+| -------- | ------------------------------------------------------ |
+| TEST-068 | Test createMcpServer: server registreert alle 10 tools |
 
 ## Bronverwijzingen
 
@@ -64,6 +64,7 @@ De MCP SDK's `McpServer` klasse heeft een `.tool()` methode die tools registreer
 ### Verwachte tool namen
 
 De server moet precies deze 11 tools registreren (get_tasks en get_action_items zitten in dezelfde register-functie):
+
 1. `search_knowledge`
 2. `get_meeting_details`
 3. `get_tasks`
@@ -77,6 +78,7 @@ De server moet precies deze 11 tools registreren (get_tasks en get_action_items 
 11. `correct_extraction`
 
 En 1 prompt:
+
 1. `kennisbasis-context`
 
 ## Prerequisites

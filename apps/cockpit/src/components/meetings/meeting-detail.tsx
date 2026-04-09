@@ -10,6 +10,7 @@ import { PartyTypeSelector } from "@/components/meetings/party-type-selector";
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
+import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { updateMeetingSummaryAction } from "@/actions/meetings";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
@@ -67,7 +68,12 @@ export function MeetingDetailView({
             organizations={organizations}
           />
         }
-        summaryAction={<CopyMeetingButton meeting={meeting} />}
+        summaryAction={
+          <div className="flex items-center gap-1.5">
+            <PipelineInfo rawFireflies={meeting.raw_fireflies} />
+            <CopyMeetingButton meeting={meeting} />
+          </div>
+        }
         onSummaryEdit={handleSummaryEdit}
         headerExtra={
           <div className="mt-3 space-y-3">

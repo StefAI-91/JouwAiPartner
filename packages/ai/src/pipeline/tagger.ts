@@ -130,7 +130,10 @@ function tagItems(
     aliases: p.aliases,
   }));
 
-  return items.map((content) => {
+  // Filter out theme headers (### ...) from summarizer — they're structural, not content
+  const contentItems = items.filter((item) => !item.startsWith("### "));
+
+  return contentItems.map((content) => {
     const normalizedItem = normalize(content);
 
     // First: match against Gatekeeper-identified projects (priority)

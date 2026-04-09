@@ -73,7 +73,7 @@ export async function getDraftMeetingById(
     )
     .eq("id", meetingId)
     .eq("verification_status", "draft")
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("[getDraftMeetingById]", error.message);

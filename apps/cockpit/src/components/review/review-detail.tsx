@@ -11,9 +11,11 @@ import { PartyTypeSelector } from "@/components/meetings/party-type-selector";
 import { PeopleSelector } from "@/components/meetings/people-selector";
 import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
+import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
-import { regenerateMeetingAction, updateMeetingSummaryAction } from "@/actions/meetings";
-import { Mail, RefreshCw } from "lucide-react";
+import { updateMeetingSummaryAction } from "@/actions/meetings";
+import { RegenerateMenu } from "@/components/shared/regenerate-menu";
+import { Mail } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
 import { SegmentList } from "@/components/shared/segment-list";
@@ -68,7 +70,7 @@ export function ReviewDetail({
 }: ReviewDetailProps) {
   const router = useRouter();
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
-  const [loading, setLoading] = useState<"approve" | "reject" | "regenerate" | null>(null);
+  const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTranscriptRef, setActiveTranscriptRef] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
@@ -97,24 +99,6 @@ export function ReviewDetail({
     setActiveTranscriptRef(ref);
     setTimeout(() => setActiveTranscriptRef(null), 3000);
   }, []);
-
-  async function handleRegenerate() {
-    setLoading("regenerate");
-    setError(null);
-
-    const result = await regenerateMeetingAction({ meetingId: meeting.id });
-
-    if ("error" in result) {
-      setError(result.error);
-      setLoading(null);
-      return;
-    }
-    router.refresh();
-    setLoading(null);
-    setEdits(new Map());
-    setDeletedIds(new Set());
-    setSummaryEdit(null);
-  }
 
   async function handleApprove() {
     setLoading("approve");
@@ -195,7 +179,12 @@ export function ReviewDetail({
             />
           </div>
         }
-        summaryAction={<CopyMeetingButton meeting={meeting} />}
+        summaryAction={
+          <div className="flex items-center gap-1.5">
+            <PipelineInfo rawFireflies={meeting.raw_fireflies} />
+            <CopyMeetingButton meeting={meeting} />
+          </div>
+        }
         activeTranscriptRef={activeTranscriptRef}
         onSummaryEdit={handleSummaryEdit}
       />
@@ -217,15 +206,7 @@ export function ReviewDetail({
                 {actionItems.length}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={handleRegenerate}
-              disabled={loading === "regenerate"}
-              className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-            >
-              <RefreshCw className={`size-3.5 ${loading === "regenerate" ? "animate-spin" : ""}`} />
-              {loading === "regenerate" ? "Bezig..." : "Regenereer"}
-            </button>
+            <RegenerateMenu meetingId={meeting.id} />
           </div>
         </div>
 

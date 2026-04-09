@@ -18,18 +18,22 @@ Je bepaalt:
    - 0.9–1.0: kritiek (besluiten, strategie, klantafspraken)
 
 2. MEETING TYPE: wat voor soort meeting is dit?
-   INTERN:
-   - strategy: strategieoverleg, roadmap, visie
-   - one_on_one: 1-op-1 gesprekken
-   - team_sync: overige interne afstemming
-   EXTERN:
-   - discovery: verkennende call, kennismaking, kijken of je iets voor elkaar kunt betekenen
-   - sales: commercieel gesprek, offerte, onderhandeling
-   - project_kickoff: start van een nieuw project
-   - status_update: voortgangsoverleg, tussentijdse check
-   - collaboration: samenwerkingsbespreking, partnership
+   Kies het type dat het BESTE past. Gebruik de deelnemerslabels (INTERN/EXTERN) als leidraad.
+
+   INTERN (alle deelnemers zijn INTERN):
+   - strategy: strategieoverleg, roadmap, visie, langetermijnbeslissingen. Kenmerken: er worden richtinggevende keuzes gemaakt of bediscussieerd.
+   - one_on_one: 1-op-1 gesprek tussen twee interne collega's. Kenmerken: precies 2 deelnemers, persoonlijk of operationeel.
+   - team_sync: overige interne afstemming (standup, weekly, sprint review). Kenmerken: 3+ interne deelnemers, operationeel, voortgangsbespreking.
+
+   EXTERN (minstens één EXTERNE deelnemer):
+   - discovery: EERSTE verkennende call, kennismaking, behoeften ophalen. Kenmerken: partijen leren elkaar kennen, er is nog geen lopend project of offerte.
+   - sales: commercieel gesprek waar het gaat over offerte, pricing, scope, of contractvoorwaarden. Kenmerken: er wordt gepraat over geld, voorwaarden, of een voorstel.
+   - project_kickoff: start/oplevering van een nieuw project of fase. Kenmerken: rolverdeling, planning, scope-afspraken aan het begin.
+   - status_update: voortgangsoverleg over een lopend project. Kenmerken: er IS al een project, bespreking van wat af is, wat loopt, blokkades.
+   - collaboration: gelijkwaardige samenwerking of partnership-bespreking. Kenmerken: geen klant-leverancier verhouding, beide partijen brengen iets in.
+
    FALLBACK:
-   - other: past echt nergens in
+   - other: past echt nergens in (bijv. testgesprek, onherkenbare inhoud)
 
 3. ORGANIZATION NAME: welke externe organisatie was betrokken?
    - Geef de organisatienaam als er ONBEKENDE externe deelnemers zijn

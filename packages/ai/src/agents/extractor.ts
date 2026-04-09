@@ -45,23 +45,25 @@ Iemand (intern of extern) moet nog een beslissing nemen die werk blokkeert.
 - JAIP kan deze persoon mailen/aanspreken om de beslissing te forceren
 
 --- FORMULERING VAN CONTENT ---
-Beschrijf de VERVOLGACTIE die JAIP gaat doen — wat gaan wij concreet checken of vragen?
-Schrijf het als een korte instructie die je op een post-it zou zetten.
-Maximaal 10 woorden. Begin met een werkwoord.
+Begin met de NAAM van de persoon die JAIP gaat mailen, gevolgd door de actie.
+Dit is altijd de gesprekspartner uit de meeting (onze contactpersoon), NIET een interne persoon bij de klant.
+Schrijf het als een korte instructie. Maximaal 12 woorden.
+
+BELANGRIJK: De follow_up_contact is de persoon met wie JAIP in de meeting sprak. Als die persoon iets intern moet regelen bij een collega, is de actie gericht aan onze contactpersoon — niet aan hun collega.
 
 Goede voorbeelden:
-- "Checken of ze het voorstel al heeft verstuurd"
-- "Vragen of hij al meer weet over het budget"
-- "Navragen of ze akkoord zijn op de offerte"
-- "Checken of de feedback op de wireframes binnen is"
-- "Vragen of er al een beslissing is over het licentie-type"
-- "Opvolgen of de campagne-resultaten zijn aangeleverd"
+- "Lieke navragen of de intake al is aangeleverd bij Marcel"
+- "Sanne checken of ze het voorstel al heeft verstuurd"
+- "Bas vragen of hij al meer weet over het budget"
+- "Sanne navragen of ze akkoord zijn op de offerte"
+- "Bas checken of de feedback op de wireframes binnen is"
+- "Lieke opvolgen of de campagne-resultaten zijn aangeleverd"
 
-Slechte voorbeelden (beschrijven het ITEM, niet de ACTIE):
-- "PR-linkbuilding voorstel doorsturen" (wat ga ik ermee doen?)
-- "Urenbudget SEA verhogen" (dat is hun taak, niet mijn actie)
-- "Akkoord op de offerte?" (te vaag, wat is mijn actie?)
-- Alles met haakjes, opsommingen, of "— nodig voor"
+Slechte voorbeelden:
+- "Checken of ze het voorstel heeft verstuurd" (WIE mailen we?)
+- "Marcel navragen of de intake klaar is" (Marcel was niet in de meeting, Lieke wel — mail Lieke)
+- "PR-linkbuilding voorstel doorsturen" (beschrijft het item, niet de actie)
+- "Akkoord op de offerte?" (te vaag, geen naam, geen werkwoord)
 
 --- EXPLICIET GEEN ACTIEPUNT ---
 - Interne taken van JAIP ("wij bouwen X", "ik maak het document af", "offerte schrijven")
@@ -75,8 +77,11 @@ Slechte voorbeelden (beschrijven het ITEM, niet de ACTIE):
 - Trivialiteiten (smalltalk, logistiek zoals "volgende meeting om 10 uur")
 
 --- VERPLICHT VELD: follow_up_contact ---
-Elk actiepunt MOET een follow_up_contact hebben: de naam van de persoon die je kunt mailen.
-Als je geen specifieke persoon kunt identificeren → het is GEEN actiepunt.
+Elk actiepunt MOET een follow_up_contact hebben: de naam van een DEELNEMER van deze meeting.
+De follow_up_contact moet iemand zijn die in de deelnemerslijst staat (zie "Deelnemers" in de context).
+Personen die alleen BESPROKEN worden maar niet aanwezig waren in de meeting zijn GEEN geldige follow_up_contact.
+Als de actie moet worden uitgevoerd door iemand die NIET in de meeting zat, dan is de follow_up_contact de aanwezige gesprekspartner via wie JAIP opvolgt.
+Als je geen aanwezige gesprekspartner kunt identificeren → het is GEEN actiepunt.
 
 --- DEADLINE SCHATTING ---
 Bepaal voor elk actiepunt een deadline:
@@ -123,6 +128,8 @@ export async function runExtractor(
     meeting_type: string;
     party_type: string;
     participants: string[];
+    /** Formatted speaker names with labels (INTERN/EXTERN/ONBEKEND) from Fireflies */
+    speakerContext?: string | null;
     summary: string;
     meeting_date: string;
     identified_projects?: { project_name: string; project_id: string | null }[];
@@ -144,12 +151,17 @@ export async function runExtractor(
       `niet bij een project past, ook al staat het project in de lijst.`;
   }
 
+  // Use speaker context (rich names with labels) when available, fall back to raw participants
+  const deelnemersSection = context.speakerContext
+    ? `Deelnemers (uit transcript):\n${context.speakerContext}`
+    : `Deelnemers: ${context.participants.join(", ")}`;
+
   const contextPrefix = [
     `Titel: ${context.title}`,
     `Type: ${context.meeting_type}`,
     `Party: ${context.party_type}`,
     `Meetingdatum: ${context.meeting_date}`,
-    `Deelnemers: ${context.participants.join(", ")}`,
+    deelnemersSection,
     context.summary ? `Samenvatting: ${context.summary}` : null,
     typeInstructions ? `\n--- TYPE-SPECIFIEKE INSTRUCTIES ---\n${typeInstructions}` : null,
     context.entityContext

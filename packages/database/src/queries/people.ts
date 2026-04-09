@@ -160,6 +160,7 @@ export interface KnownPerson {
   name: string;
   email: string | null;
   team: string | null;
+  role: string | null;
   organization_id: string | null;
   organization_name: string | null;
   organization_type: string | null;
@@ -173,7 +174,7 @@ export interface KnownPerson {
 export async function getAllKnownPeople(): Promise<KnownPerson[]> {
   const { data, error } = await getAdminClient()
     .from("people")
-    .select("id, name, email, team, organization_id, organizations(name, type)");
+    .select("id, name, email, team, role, organization_id, organizations(name, type)");
 
   if (error || !data) return [];
   return data.map((p) => {
@@ -183,6 +184,7 @@ export async function getAllKnownPeople(): Promise<KnownPerson[]> {
       name: p.name,
       email: p.email,
       team: p.team,
+      role: p.role ?? null,
       organization_id: p.organization_id,
       organization_name: org?.name ?? null,
       organization_type: org?.type ?? null,
@@ -223,6 +225,31 @@ export async function getPeopleForContext(): Promise<PersonForContext[]> {
       organization_name: org?.name ?? null,
     };
   });
+}
+
+/**
+ * Find people by their names (case-insensitive exact match).
+ * Returns a map of lowercase name -> person_id for matched names.
+ * Used by speaker-map to link transcript speakers to known people.
+ */
+export async function findPeopleByNames(names: string[]): Promise<Map<string, string>> {
+  if (names.length === 0) return new Map();
+
+  // Supabase in-filter is case-sensitive, so fetch all people and match in JS.
+  // This reuses the same people list that participant-classifier already fetches.
+  const { data, error } = await getAdminClient().from("people").select("id, name");
+
+  if (error || !data) return new Map();
+
+  const lowerNames = new Set(names.map((n) => n.toLowerCase()));
+  const result = new Map<string, string>();
+  for (const person of data) {
+    const lower = person.name.toLowerCase();
+    if (lowerNames.has(lower)) {
+      result.set(lower, person.id);
+    }
+  }
+  return result;
 }
 
 export async function findPeopleByEmails(emails: string[]): Promise<Map<string, string>> {

@@ -22,6 +22,7 @@ export async function runExtractStep(
     meeting_type: string;
     party_type: string;
     participants: string[];
+    speakerContext?: string | null;
     summary: string;
     meeting_date: string;
     entityContext?: string;

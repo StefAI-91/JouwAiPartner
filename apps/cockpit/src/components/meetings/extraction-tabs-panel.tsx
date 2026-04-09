@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { FollowUpChecklist } from "@/components/shared/follow-up-checklist";
 import { AddExtractionForm } from "@/components/meetings/add-extraction-form";
 import { updateExtractionAction, deleteExtractionAction } from "@/actions/entities";
-import { regenerateMeetingAction } from "@/actions/meetings";
-import { Mail, RefreshCw } from "lucide-react";
+import { RegenerateMenu } from "@/components/shared/regenerate-menu";
+import { Mail } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface Extraction {
@@ -33,24 +33,9 @@ export function ExtractionTabsPanel({
   editable,
 }: ExtractionTabsPanelProps) {
   const router = useRouter();
-  const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const actionItems = extractions.filter((e) => e.type === "action_item");
-
-  async function handleRegenerate() {
-    if (!meetingId) return;
-    setRegenerating(true);
-    setError(null);
-    const result = await regenerateMeetingAction({ meetingId });
-    if ("error" in result) {
-      setError(result.error);
-      setRegenerating(false);
-      return;
-    }
-    router.refresh();
-    setRegenerating(false);
-  }
 
   return (
     <>
@@ -65,17 +50,7 @@ export function ExtractionTabsPanel({
           </div>
           <div className="flex items-center gap-2">
             {editable && meetingId && <AddExtractionForm meetingId={meetingId} />}
-            {meetingId && (
-              <button
-                type="button"
-                onClick={handleRegenerate}
-                disabled={regenerating}
-                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-              >
-                <RefreshCw className={`size-3.5 ${regenerating ? "animate-spin" : ""}`} />
-                {regenerating ? "Bezig..." : "Regenereer"}
-              </button>
-            )}
+            {meetingId && <RegenerateMenu meetingId={meetingId} />}
           </div>
         </div>
       </div>
@@ -92,16 +67,22 @@ export function ExtractionTabsPanel({
           people={peopleForAssignment}
           onEdit={
             editable && meetingId
-              ? (id, content) => {
-                  updateExtractionAction({ id, content, meetingId: meetingId! });
+              ? async (id, content) => {
+                  const result = await updateExtractionAction({
+                    id,
+                    content,
+                    meetingId: meetingId!,
+                  });
+                  if ("error" in result) setError(result.error);
                 }
               : undefined
           }
           onDelete={
             editable && meetingId
-              ? (id) => {
-                  deleteExtractionAction({ id, meetingId: meetingId! });
-                  router.refresh();
+              ? async (id) => {
+                  const result = await deleteExtractionAction({ id, meetingId: meetingId! });
+                  if ("error" in result) setError(result.error);
+                  else router.refresh();
                 }
               : undefined
           }

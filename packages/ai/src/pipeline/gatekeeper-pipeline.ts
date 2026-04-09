@@ -6,10 +6,10 @@ import type { PartyType, IdentifiedProject } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
 import { buildEntityContext } from "./context-injection";
-import { findPeopleByEmails } from "@repo/database/queries/people";
+import { findPeopleByEmails, getAllKnownPeople } from "@repo/database/queries/people";
 import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
-import { classifyParticipants, determinePartyType } from "./participant-classifier";
+import { classifyParticipantsWithCache, determinePartyType } from "./participant-classifier";
 import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
@@ -20,6 +20,8 @@ import { embedBatch } from "../embeddings";
 import { insertMeetingProjectSummaries } from "@repo/database/mutations/meeting-project-summaries";
 import { updateSegmentEmbedding } from "@repo/database/mutations/meeting-project-summaries";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
+import { extractSpeakerNames, buildSpeakerMap, formatSpeakerContext } from "./speaker-map";
+import type { SpeakerMap } from "./speaker-map";
 
 interface MeetingAttendee {
   displayName: string;
@@ -34,6 +36,8 @@ interface MeetingInput {
   participants: string[];
   organizer_email?: string | null;
   meeting_attendees?: MeetingAttendee[];
+  /** Fireflies sentences with speaker names (used for speaker mapping) */
+  sentences?: { speaker_name: string }[];
   summary: string;
   topics: string[];
   transcript: string;
@@ -65,22 +69,35 @@ function collectParticipantEmails(participants: string[], attendees?: MeetingAtt
 }
 
 /**
- * Match participant emails to known people and link them to the meeting.
+ * Match participant emails and speaker names to known people and link them to the meeting.
  * Uses meeting_attendees emails when available for more reliable matching.
+ * Also matches speaker names from the speaker map (name-based matching).
  */
 async function matchParticipants(
   meetingId: string,
   participants: string[],
   attendees?: MeetingAttendee[],
+  speakerMap?: SpeakerMap,
 ): Promise<number> {
+  const personIdSet = new Set<string>();
+
+  // Match by email
   const emails = collectParticipantEmails(participants, attendees);
-  if (emails.length === 0) return 0;
+  if (emails.length > 0) {
+    const emailToPersonId = await findPeopleByEmails(emails);
+    for (const id of emailToPersonId.values()) personIdSet.add(id);
+  }
 
-  const emailToPersonId = await findPeopleByEmails(emails);
-  const personIds = [...emailToPersonId.values()];
-  if (personIds.length === 0) return 0;
+  // Match by speaker name (from speaker map)
+  if (speakerMap) {
+    for (const info of speakerMap.values()) {
+      if (info.personId) personIdSet.add(info.personId);
+    }
+  }
 
-  const result = await linkMeetingParticipants(meetingId, personIds);
+  if (personIdSet.size === 0) return 0;
+
+  const result = await linkMeetingParticipants(meetingId, [...personIdSet]);
   if ("error" in result) {
     console.error("Failed to link participants:", result.error);
     return 0;
@@ -141,22 +158,39 @@ interface PipelineResult {
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
   const errors: string[] = [];
 
-  // Step 1-2: Classify participants and determine party type + fetch entity context (parallel)
+  // Step 1-2: Classify participants, build speaker map, fetch entity context (parallel)
   // Merge meeting_attendees emails into participants for better classification
   const allParticipantStrings = mergeParticipantSources(
     input.participants,
     input.meeting_attendees,
   );
-  const [classifiedParticipants, entityContext] = await Promise.all([
-    classifyParticipants(allParticipantStrings),
+  const [knownPeople, entityContext] = await Promise.all([
+    getAllKnownPeople(),
     buildEntityContext(),
   ]);
+  const classifiedParticipants = classifyParticipantsWithCache(allParticipantStrings, knownPeople);
   const partyType = determinePartyType(classifiedParticipants);
 
+  // Build speaker map from Fireflies sentence speaker names (reuse knownPeople)
+  const speakerNames = input.sentences ? extractSpeakerNames(input.sentences) : [];
+  const speakerMap = buildSpeakerMap(speakerNames, knownPeople);
+  const speakerContext = speakerMap.size > 0 ? formatSpeakerContext(speakerMap) : null;
+
   // Step 3: Classify meeting with Gatekeeper AI (with entity context for project identification)
+  // Merge speaker map info into classified participants for richer gatekeeper context
+  const gatekeeperParticipants: ParticipantInfo[] =
+    speakerMap.size > 0
+      ? [...speakerMap.values()].map((s) => ({
+          raw: s.raw,
+          label: s.label,
+          matchedName: s.name !== s.raw ? s.name : undefined,
+          organizationName: s.organizationName,
+        }))
+      : classifiedParticipants;
+
   const gatekeeperResult = await runGatekeeper(input.summary, {
     title: input.title,
-    participants: classifiedParticipants,
+    participants: gatekeeperParticipants,
     date: input.date,
     topics: input.topics,
     entityContext: entityContext.contextString,
@@ -177,6 +211,19 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     gatekeeperResult,
     partyTypeSource,
   );
+
+  // Add speaker map to pipeline audit trail
+  if (speakerMap.size > 0) {
+    const pipelineData = rawFireflies.pipeline as Record<string, unknown>;
+    pipelineData.speaker_map = [...speakerMap.values()].map((s) => ({
+      raw: s.raw,
+      name: s.name,
+      person_id: s.personId,
+      label: s.label,
+      role: s.role,
+      organization_name: s.organizationName,
+    }));
+  }
 
   // Step 5b: Insert meeting
   const insertResult = await insertMeeting({
@@ -216,8 +263,8 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
 
   const meetingId = insertResult.data.id;
 
-  // Step 6: Link participants (uses meeting_attendees emails when available)
-  await matchParticipants(meetingId, input.participants, input.meeting_attendees);
+  // Step 6: Link participants (uses emails + speaker name matching)
+  await matchParticipants(meetingId, input.participants, input.meeting_attendees, speakerMap);
 
   // Step 7: ElevenLabs transcription
   const transcribeResult = await runTranscribeStep(meetingId, input.audio_url);
@@ -232,6 +279,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     meeting_type: gatekeeperResult.meeting_type,
     party_type: partyType,
     participants: input.participants,
+    speakerContext,
     entityContext: entityContext.contextString,
   };
   console.info(`Summarizer using ${transcriptSource} transcript`);

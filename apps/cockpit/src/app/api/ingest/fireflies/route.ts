@@ -117,6 +117,7 @@ async function runIngest(limit: number, maxNew: number = Infinity) {
         participants: transcript.participants,
         organizer_email: transcript.organizer_email,
         meeting_attendees: transcript.meeting_attendees ?? [],
+        sentences: transcript.sentences,
         summary: transcript.summary?.notes ?? "",
         topics: transcript.summary?.topics_discussed ?? [],
         transcript: chunkedTranscript,

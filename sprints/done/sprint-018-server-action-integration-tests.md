@@ -6,17 +6,17 @@ Schrijf integratietests voor alle Server Actions in `apps/cockpit/src/actions/`.
 
 ## Requirements
 
-| ID       | Beschrijving                                                                          |
-| -------- | ------------------------------------------------------------------------------------- |
-| TEST-056 | Test Server Actions: niet-ingelogde gebruiker krijgt error "Niet ingelogd"            |
-| TEST-057 | Test promoteToTaskAction: succesvolle taak aanmaak met geldige input                  |
-| TEST-058 | Test promoteToTaskAction: dubbele taak voor zelfde extractie wordt geweigerd          |
-| TEST-059 | Test promoteToTaskAction: ongeldige input geeft validatiefout                         |
-| TEST-060 | Test completeTaskAction en dismissTaskAction: status wijziging                        |
-| TEST-061 | Test createOrganizationAction: succesvolle aanmaak                                   |
-| TEST-062 | Test createProjectAction: succesvolle aanmaak met organisatie koppeling               |
-| TEST-063 | Test createPersonAction: succesvolle aanmaak met alle velden                          |
-| TEST-064 | Test updateOrganizationAction/deleteOrganizationAction: CRUD cycle                   |
+| ID       | Beschrijving                                                                 |
+| -------- | ---------------------------------------------------------------------------- |
+| TEST-056 | Test Server Actions: niet-ingelogde gebruiker krijgt error "Niet ingelogd"   |
+| TEST-057 | Test promoteToTaskAction: succesvolle taak aanmaak met geldige input         |
+| TEST-058 | Test promoteToTaskAction: dubbele taak voor zelfde extractie wordt geweigerd |
+| TEST-059 | Test promoteToTaskAction: ongeldige input geeft validatiefout                |
+| TEST-060 | Test completeTaskAction en dismissTaskAction: status wijziging               |
+| TEST-061 | Test createOrganizationAction: succesvolle aanmaak                           |
+| TEST-062 | Test createProjectAction: succesvolle aanmaak met organisatie koppeling      |
+| TEST-063 | Test createPersonAction: succesvolle aanmaak met alle velden                 |
+| TEST-064 | Test updateOrganizationAction/deleteOrganizationAction: CRUD cycle           |
 
 ## Bronverwijzingen
 
@@ -34,6 +34,7 @@ Schrijf integratietests voor alle Server Actions in `apps/cockpit/src/actions/`.
 ### Teststrategie
 
 Elke Server Action volgt hetzelfde patroon:
+
 1. Zod validatie van input
 2. Auth check (getAuthenticatedUser/getAuthenticatedUserId)
 3. Business logic (database mutatie)
@@ -41,6 +42,7 @@ Elke Server Action volgt hetzelfde patroon:
 5. Return `{ success: true }` of `{ error: string }`
 
 De tests moeten elke stap verifiereren:
+
 - **Ongeldige input:** Action retourneert `{ error: "..." }` met Zod foutmelding
 - **Niet ingelogd:** Action retourneert `{ error: "Niet ingelogd" }` of `{ error: "Unauthorized" }`
 - **Happy path:** Action retourneert `{ success: true }` en data is correct in de database
@@ -49,10 +51,12 @@ De tests moeten elke stap verifiereren:
 ### Mock strategie
 
 **WEL mocken:**
+
 - `next/cache` — `revalidatePath` wordt een no-op spy
 - `@repo/database/supabase/server` — `createClient()` wordt gemocked om een test-client te retourneren die auth.getUser() controleert
 
 **NIET mocken:**
+
 - Database (Supabase) — gebruik echte testdatabase
 - Zod schemas — pure validatie
 - Mutation/query functies — deze worden meegetest (dat is het punt van integratietests)
@@ -60,10 +64,12 @@ De tests moeten elke stap verifiereren:
 ### Database state per test
 
 Elke test suite (describe block) moet:
+
 - `beforeEach`: seed de benodigde testdata (organisatie, project, persoon, meeting, extraction)
 - `afterEach`: cleanup alle testdata
 
 De seed data gebruikt deterministic UUIDs:
+
 ```
 Test Org:        00000000-0000-0000-0000-000000000001
 Test Project:    00000000-0000-0000-0000-000000000002
@@ -76,59 +82,63 @@ Test User ID:    00000000-0000-0000-0000-000000000099
 ### Server Action signaturen (exacte code)
 
 **tasks.ts:**
+
 ```typescript
 export async function promoteToTaskAction(
   input: z.infer<typeof promoteToTaskSchema>,
-): Promise<{ success: true; id: string } | { error: string }>
+): Promise<{ success: true; id: string } | { error: string }>;
 
 export async function updateTaskAction(
   input: z.infer<typeof updateTaskSchema>,
-): Promise<{ success: true } | { error: string }>
+): Promise<{ success: true } | { error: string }>;
 
 export async function completeTaskAction(
   input: z.infer<typeof taskIdSchema>,
-): Promise<{ success: true } | { error: string }>
+): Promise<{ success: true } | { error: string }>;
 
 export async function dismissTaskAction(
   input: z.infer<typeof taskIdSchema>,
-): Promise<{ success: true } | { error: string }>
+): Promise<{ success: true } | { error: string }>;
 ```
 
 **meetings.ts:**
+
 ```typescript
 export async function createOrganizationAction(
   input: z.infer<typeof createOrganizationSchema>,
-): Promise<{ success: true; data: { id: string; name: string } } | { error: string }>
+): Promise<{ success: true; data: { id: string; name: string } } | { error: string }>;
 
 export async function createProjectAction(
   input: z.infer<typeof createProjectSchema>,
-): Promise<{ success: true; data: { id: string; name: string } } | { error: string }>
+): Promise<{ success: true; data: { id: string; name: string } } | { error: string }>;
 
 export async function createPersonAction(
   input: z.infer<typeof createPersonSchema>,
-): Promise<{ success: true; data: { id: string; name: string } } | { error: string }>
+): Promise<{ success: true; data: { id: string; name: string } } | { error: string }>;
 ```
 
 **entities.ts:**
+
 ```typescript
 export async function updateOrganizationAction(
   input: z.infer<typeof updateOrganizationSchema>,
-): Promise<{ success: true } | { error: string }>
+): Promise<{ success: true } | { error: string }>;
 
 export async function deleteOrganizationAction(
   input: z.infer<typeof deleteSchema>,
-): Promise<{ success: true } | { error: string }>
+): Promise<{ success: true } | { error: string }>;
 ```
 
 **review.ts:**
+
 ```typescript
 export async function approveMeetingAction(
   input: z.infer<typeof verifyMeetingSchema>,
-): Promise<{ success: true } | { error: string }>
+): Promise<{ success: true } | { error: string }>;
 
 export async function rejectMeetingAction(
   input: z.infer<typeof rejectMeetingSchema>,
-): Promise<{ success: true } | { error: string }>
+): Promise<{ success: true } | { error: string }>;
 ```
 
 ### Business rules uit de code

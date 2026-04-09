@@ -48,12 +48,12 @@ Schrijf uitgebreide tests voor alle Zod schemas in het project. Dit zijn pure fu
 | TEST-048 | Test ExtractorOutputSchema: geldige output met extractions en entities                |
 | TEST-049 | Test SummarizerOutputSchema: geldige output met alle verplichte velden                |
 | TEST-050 | Test ThemeSchema: geldige theme met title, summary, quotes                            |
-| TEST-051 | Test ParticipantProfileSchema: nullable velden (role, organization, stance)            |
+| TEST-051 | Test ParticipantProfileSchema: nullable velden (role, organization, stance)           |
 | TEST-052 | Test isValidDuration: meeting korter dan 2 minuten is ongeldig                        |
 | TEST-053 | Test isValidDuration: lege sentences array is geldig                                  |
 | TEST-054 | Test hasParticipants: minder dan 2 deelnemers is ongeldig                             |
-| TEST-055 | Test hasParticipants: undefined participants is ongeldig                               |
-| TEST-065 | Test escapeLike: escaped % en _ karakters                                             |
+| TEST-055 | Test hasParticipants: undefined participants is ongeldig                              |
+| TEST-065 | Test escapeLike: escaped % en \_ karakters                                            |
 | TEST-066 | Test formatVerificatieStatus: alle status varianten                                   |
 | TEST-067 | Test collectVerifiedByIds: extraheert unieke non-null IDs                             |
 
@@ -80,6 +80,7 @@ Aanpak: maak een `apps/cockpit/src/validations/` directory met aparte bestanden 
 ### Zod schema definities (exacte code)
 
 **tasks.ts schemas:**
+
 ```typescript
 const optionalStringOrNull = z.string().nullable().optional();
 const optionalDateOrNull = z
@@ -109,6 +110,7 @@ const taskIdSchema = z.object({
 ```
 
 **entities.ts schemas:**
+
 ```typescript
 const updateOrganizationSchema = z.object({
   id: z.string().uuid(),
@@ -122,11 +124,23 @@ const updateOrganizationSchema = z.object({
 const updateProjectSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, "Naam is verplicht").max(200).optional(),
-  status: z.enum([
-    "lead", "discovery", "proposal", "negotiation", "won",
-    "kickoff", "in_progress", "review", "completed",
-    "on_hold", "lost", "maintenance", "active",
-  ]).optional(),
+  status: z
+    .enum([
+      "lead",
+      "discovery",
+      "proposal",
+      "negotiation",
+      "won",
+      "kickoff",
+      "in_progress",
+      "review",
+      "completed",
+      "on_hold",
+      "lost",
+      "maintenance",
+      "active",
+    ])
+    .optional(),
   organization_id: z.string().uuid().nullable().optional(),
 });
 
@@ -161,6 +175,7 @@ const deleteWithContextSchema = deleteSchema.extend({
 ```
 
 **review.ts schemas:**
+
 ```typescript
 const verifyMeetingSchema = z.object({
   meetingId: z.string().uuid(),
@@ -168,16 +183,24 @@ const verifyMeetingSchema = z.object({
 
 const verifyMeetingWithEditsSchema = z.object({
   meetingId: z.string().uuid(),
-  extractionEdits: z.array(z.object({
-    extractionId: z.string().uuid(),
-    content: z.string().optional(),
-    metadata: z.record(z.string(), z.unknown()).optional(),
-  })).optional(),
+  extractionEdits: z
+    .array(
+      z.object({
+        extractionId: z.string().uuid(),
+        content: z.string().optional(),
+        metadata: z.record(z.string(), z.unknown()).optional(),
+      }),
+    )
+    .optional(),
   rejectedExtractionIds: z.array(z.string().uuid()).optional(),
-  typeChanges: z.array(z.object({
-    extractionId: z.string().uuid(),
-    type: z.enum(["decision", "action_item", "need", "insight"]),
-  })).optional(),
+  typeChanges: z
+    .array(
+      z.object({
+        extractionId: z.string().uuid(),
+        type: z.enum(["decision", "action_item", "need", "insight"]),
+      }),
+    )
+    .optional(),
 });
 
 const rejectMeetingSchema = z.object({
@@ -187,6 +210,7 @@ const rejectMeetingSchema = z.object({
 ```
 
 **meetings.ts schemas:**
+
 ```typescript
 const updateTitleSchema = z.object({
   meetingId: z.string().min(1),
@@ -196,8 +220,15 @@ const updateTitleSchema = z.object({
 const updateMeetingTypeSchema = z.object({
   meetingId: z.string().min(1),
   meetingType: z.enum([
-    "strategy", "one_on_one", "team_sync", "discovery",
-    "sales", "project_kickoff", "status_update", "collaboration", "other",
+    "strategy",
+    "one_on_one",
+    "team_sync",
+    "discovery",
+    "sales",
+    "project_kickoff",
+    "status_update",
+    "collaboration",
+    "other",
   ]),
 });
 
@@ -235,12 +266,14 @@ const createPersonSchema = z.object({
 ```
 
 **AI validation schemas (al geexporteerd):**
+
 - `GatekeeperSchema` uit `packages/ai/src/validations/gatekeeper.ts`
 - `ExtractionItemSchema`, `ExtractorOutputSchema` uit `packages/ai/src/validations/extractor.ts`
 - `SummarizerOutputSchema`, `ThemeSchema`, `ParticipantProfileSchema` uit `packages/ai/src/validations/summarizer.ts`
 - `isValidDuration`, `hasParticipants` uit `packages/ai/src/validations/fireflies.ts`
 
 **MCP pure utility functies (al geexporteerd):**
+
 ```typescript
 // packages/mcp/src/tools/utils.ts
 export function escapeLike(input: string): string {
@@ -253,7 +286,9 @@ export function formatVerificatieStatus(
   verifiedAt: string | null,
   confidence: number | null,
   correctedBy: string | null,
-): string { /* ... */ }
+): string {
+  /* ... */
+}
 
 export function collectVerifiedByIds(items: { verified_by?: string | null }[]): string[] {
   return [...new Set(items.map((i) => i.verified_by).filter((id): id is string => id != null))];

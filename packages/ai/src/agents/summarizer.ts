@@ -66,11 +66,29 @@ Je produceert:
 
 1. BRIEFING — Een narratieve samenvatting in 3-5 zinnen, alsof je een collega in 30 seconden bijpraat over deze meeting. Noem wie er spraken, met welke organisatie, wat het belangrijkste resultaat was, en of er vervolgacties zijn. Schrijf in verleden tijd, informeel maar professioneel. Dit is het EERSTE dat iemand leest op het dashboard.
 
-2. KERNPUNTEN — Alle inhoudelijke punten die de meeting samenvatten, geordend op belang. Dit is het BELANGRIJKSTE onderdeel. Hier zit de intelligence: besluiten, behoeften, signalen, afspraken, risico's, visie — alles wat ertoe doet.
+2. KERNPUNTEN — Alle inhoudelijke punten die de meeting samenvatten, GEGROEPEERD PER THEMA/ONDERWERP. Dit is het BELANGRIJKSTE onderdeel. Hier zit de intelligence: besluiten, behoeften, signalen, afspraken, risico's, visie — alles wat ertoe doet.
 
-   Het aantal kernpunten schaalt mee met de inhoudelijke dichtheid van het transcript. Een korte standup kan 5 punten hebben, een uitgebreid discovery- of kickoff-gesprek 12-20. Laat GEEN inhoudelijke informatie weg om het kort te houden. Elk onderwerp dat besproken is verdient een punt als het informatiewaarde heeft voor toekomstige context.
+   STRUCTUUR: Groepeer gerelateerde punten onder een thema-kop. Gebruik het format:
+   - Eerst een thema-kop als apart item: "### Korte themanaam" (max 4-5 woorden)
+   - Daarna de punten die bij dat thema horen
 
-   Geef elk punt een **bold label** als het een duidelijke categorie heeft:
+   Voorbeeld:
+   - "### Contextdocumenten uploaden"
+   - "**Besluit:** Er komt een extra uploadveld voor contextdocumenten..."
+   - "**Risico:** Als de kwaliteit niet voldoende is, valt het buiten scope..."
+   - "### Raw notes als leidende bron"
+   - "**Afspraak:** Ruwe gespreksnotities zijn leidend als feiten..."
+
+   THEMA-REGELS:
+   - Kies thema's op basis van de onderwerpen die besproken zijn, niet op basis van labels
+   - Elk thema bevat 1-5 punten die over hetzelfde onderwerp gaan
+   - Een punt hoort bij het thema waar het inhoudelijk het beste past
+   - Sorteer thema's op belang (belangrijkste eerst)
+   - Een korte standup heeft 2-3 thema's, een discovery/kickoff 4-8 thema's
+
+   Het aantal kernpunten schaalt mee met de inhoudelijke dichtheid van het transcript. Een korte standup kan 5 punten hebben, een uitgebreid discovery- of kickoff-gesprek 12-20. Laat GEEN inhoudelijke informatie weg om het kort te houden.
+
+   Geef elk punt (NIET de thema-kop) een **bold label** als het een duidelijke categorie heeft:
    - **Besluit:** voor genomen besluiten (wie nam het, was het wederzijds?)
    - **Behoefte:** voor klantbehoeften, wensen, pijnpunten
    - **Afspraak:** voor concrete afspraken tussen partijen
@@ -83,9 +101,14 @@ Je produceert:
 
    Voeg relevante exacte quotes uit het transcript inline toe tussen aanhalingstekens waar dat waarde toevoegt. Wees hier ruimhartig mee — quotes bewaren de originele stem en nuance die bij parafraseren verloren gaat. Zorg dat kernmomenten, emotionele uitspraken en methodische uitleg waar mogelijk met quotes worden ondersteund.
 
-3. DEELNEMERS — Profiel per deelnemer: naam, rol, organisatie, houding. Afleiden uit het gesprek als het niet expliciet gezegd wordt. Beschrijf ook relevant persoonlijke context die de deelnemer zelf deelt (achtergrond, situatie, expertise), als dit relevant is voor de samenwerking of het project.
+3. DEELNEMERS — Profiel per deelnemer: naam, rol, organisatie, houding. Beschrijf ook relevant persoonlijke context die de deelnemer zelf deelt (achtergrond, situatie, expertise), als dit relevant is voor de samenwerking of het project.
 
-   STRIKTE REGEL: Als een rol, functietitel of organisatienaam NIET letterlijk in het transcript wordt genoemd, schrijf dan "Niet genoemd in transcript". Vul NOOIT een organisatienaam, rol of functie in die je niet direct uit het transcript kunt herleiden. Raden of afleiden uit andere bronnen is NIET toegestaan.
+   BRONNEN VOOR DEELNEMERPROFIEL (in volgorde van prioriteit):
+   1. Wat letterlijk in het transcript wordt gezegd
+   2. Informatie uit de BEKENDE ENTITEITEN sectie (database) — als daar een rol, organisatie of team staat, MAG je dat gebruiken
+   3. Wat je kunt afleiden uit de context van het gesprek
+
+   Als een rol of organisatie NIET uit het transcript of de bekende entiteiten te herleiden is, schrijf dan "Niet bekend". Verzin NOOIT informatie die nergens op gebaseerd is.
 
 4. VERVOLGSTAPPEN — Concrete next steps die uit het gesprek komen. Formaat: "Actie — eigenaar, deadline" als eigenaar en/of deadline bekend zijn. Dit is de ENIGE sectie voor acties. Maak GEEN aparte "Actiepunten" sectie aan.
 
@@ -112,16 +135,23 @@ export async function runSummarizer(
     meeting_type: string;
     party_type: string;
     participants: string[];
+    /** Formatted speaker names with labels (INTERN/EXTERN/ONBEKEND) from Fireflies */
+    speakerContext?: string | null;
     entityContext?: string;
   },
 ): Promise<SummarizerOutput> {
   const typeInstructions = MEETING_TYPE_INSTRUCTIONS[context.meeting_type] ?? "";
 
+  // Use speaker context (rich names with labels) when available, fall back to raw participants
+  const deelnemersSection = context.speakerContext
+    ? `Deelnemers (uit transcript):\n${context.speakerContext}`
+    : `Deelnemers: ${context.participants.join(", ")}`;
+
   const contextPrefix = [
     `Titel: ${context.title}`,
     `Type: ${context.meeting_type}`,
     `Party: ${context.party_type}`,
-    `Deelnemers: ${context.participants.join(", ")}`,
+    deelnemersSection,
     typeInstructions ? `\n--- TYPE-SPECIFIEKE FOCUS ---\n${typeInstructions}` : null,
     context.entityContext
       ? `\n--- BEKENDE ENTITEITEN (uit database) ---\n${context.entityContext}\nGebruik deze namen en projectnamen als je ze herkent in het transcript. Gebruik de EXACTE schrijfwijze uit deze lijst, niet varianten uit het transcript.`
@@ -159,8 +189,11 @@ export async function runSummarizer(
 export function formatSummary(output: SummarizerOutput): string {
   const sections: string[] = [];
 
-  // Kernpunten
-  sections.push("## Kernpunten\n" + output.kernpunten.map((k) => `- ${k}`).join("\n"));
+  // Kernpunten (theme headers start with ###, regular points get bullet prefix)
+  const kernpuntenLines = output.kernpunten.map((k) =>
+    k.startsWith("### ") ? `\n${k}` : `- ${k}`,
+  );
+  sections.push("## Kernpunten\n" + kernpuntenLines.join("\n"));
 
   // Deelnemers
   const deelnemerLines = output.deelnemers.map((d) => {
