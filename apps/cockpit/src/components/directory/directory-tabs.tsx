@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { TabsList, TabsTrigger } from "@repo/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@repo/ui/tabs";
 import { OrganizationsGrid } from "@/components/directory/organizations-grid";
 import { PeopleGrid } from "@/components/directory/people-grid";
 import { AddOrganizationButton } from "@/components/clients/add-organization-button";
@@ -19,29 +19,19 @@ export function DirectoryTabs({ organizations, people }: DirectoryTabsProps) {
   const router = useRouter();
   const activeTab = searchParams.get("tab") ?? "clients";
 
-  function switchTab(tab: string) {
-    router.replace(`/directory?tab=${tab}`, { scroll: false });
+  function switchTab(tab: string | number | null) {
+    if (tab) router.replace(`/directory?tab=${tab}`, { scroll: false });
   }
 
   return (
     <>
       <div className="flex items-center justify-between gap-4">
-        <TabsList>
-          <TabsTrigger
-            value="clients"
-            active={activeTab === "clients"}
-            onClick={() => switchTab("clients")}
-          >
-            Clients ({organizations.length})
-          </TabsTrigger>
-          <TabsTrigger
-            value="people"
-            active={activeTab === "people"}
-            onClick={() => switchTab("people")}
-          >
-            People ({people.length})
-          </TabsTrigger>
-        </TabsList>
+        <Tabs value={activeTab} onValueChange={switchTab}>
+          <TabsList>
+            <TabsTrigger value="clients">Clients ({organizations.length})</TabsTrigger>
+            <TabsTrigger value="people">People ({people.length})</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {activeTab === "clients" ? (
           <AddOrganizationButton />
