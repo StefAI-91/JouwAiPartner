@@ -145,6 +145,7 @@ export async function getIssueCounts(
   projectId: string,
   client?: SupabaseClient,
 ): Promise<{
+  triage: number;
   backlog: number;
   todo: number;
   in_progress: number;
@@ -152,8 +153,9 @@ export async function getIssueCounts(
   cancelled: number;
 }> {
   const db = client ?? getAdminClient();
-  const statuses = ["backlog", "todo", "in_progress", "done", "cancelled"] as const;
+  const statuses = ["triage", "backlog", "todo", "in_progress", "done", "cancelled"] as const;
   const counts: Record<string, number> = {
+    triage: 0,
     backlog: 0,
     todo: 0,
     in_progress: 0,
@@ -170,6 +172,7 @@ export async function getIssueCounts(
 
   if (error || !data)
     return counts as {
+      triage: number;
       backlog: number;
       todo: number;
       in_progress: number;
@@ -184,6 +187,7 @@ export async function getIssueCounts(
   }
 
   return counts as {
+    triage: number;
     backlog: number;
     todo: number;
     in_progress: number;

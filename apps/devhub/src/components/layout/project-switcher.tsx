@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
 import { ChevronDown, FolderKanban } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PROJECT_CHANGE_EVENT } from "@/hooks/use-project";
 
 interface Project {
   id: string;
@@ -74,6 +75,7 @@ export function ProjectSwitcher({
                 onClick={() => {
                   setSelectedId(project.id);
                   localStorage.setItem(STORAGE_KEY, project.id);
+                  window.dispatchEvent(new Event(PROJECT_CHANGE_EVENT));
                   setOpen(false);
                 }}
                 className={cn(
