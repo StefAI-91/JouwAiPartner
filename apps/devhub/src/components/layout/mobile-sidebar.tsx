@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Menu,
   CircleDot,
@@ -13,7 +13,6 @@ import {
   LayoutList,
 } from "lucide-react";
 import { cn } from "@repo/ui/utils";
-import { useProjectId } from "@/hooks/use-project";
 import { useEffect, useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
 import { Button } from "@repo/ui/button";
@@ -32,7 +31,8 @@ const NAV_ITEMS = [
 
 export function MobileSidebar() {
   const pathname = usePathname();
-  const projectId = useProjectId();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("project");
   const [counts, setCounts] = useState<StatusCounts>({});
 
   useEffect(() => {
@@ -57,6 +57,18 @@ export function MobileSidebar() {
     };
   }, [projectId]);
 
+  function issueHref(extraParams?: Record<string, string>) {
+    const params = new URLSearchParams();
+    if (projectId) params.set("project", projectId);
+    if (extraParams) {
+      for (const [key, value] of Object.entries(extraParams)) {
+        params.set(key, value);
+      }
+    }
+    const qs = params.toString();
+    return qs ? `/issues?${qs}` : "/issues";
+  }
+
   return (
     <Sheet>
       <SheetTrigger render={<Button variant="ghost" size="icon" className="shrink-0 lg:hidden" />}>
@@ -80,10 +92,11 @@ export function MobileSidebar() {
           <SheetClose
             render={
               <Link
-                href="/issues"
+                href={issueHref()}
                 className={cn(
                   "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   pathname === "/issues" &&
+                    !searchParams.has("status") &&
                     "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
                 )}
               />
@@ -107,7 +120,7 @@ export function MobileSidebar() {
                 key={item.status}
                 render={
                   <Link
-                    href={`/issues?status=${item.status}`}
+                    href={issueHref({ status: item.status })}
                     className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   />
                 }

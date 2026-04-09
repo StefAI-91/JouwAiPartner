@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createIssueAction } from "@/actions/issues";
 import { Button } from "@repo/ui/button";
-import { useProjectId } from "@/hooks/use-project";
 import {
   ISSUE_TYPES,
   ISSUE_TYPE_LABELS,
@@ -21,9 +20,8 @@ interface Person {
   name: string;
 }
 
-export function IssueForm({ people }: { people: Person[] }) {
+export function IssueForm({ projectId, people }: { projectId: string | null; people: Person[] }) {
   const router = useRouter();
-  const projectId = useProjectId();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
