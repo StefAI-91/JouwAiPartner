@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
-import type { IssueRow, IssueCommentRow } from "../queries/issues";
+import { ISSUE_SELECT, type IssueRow, type IssueCommentRow } from "../queries/issues";
 
 export interface InsertIssueData {
   project_id: string;
@@ -52,14 +52,6 @@ export interface UpdateIssueData {
   ai_executable?: boolean;
   closed_at?: string | null;
 }
-
-const ISSUE_SELECT = `
-  id, project_id, title, description, type, status, priority, component, severity,
-  labels, assigned_to, reporter_name, reporter_email, source, userback_id, source_url,
-  issue_number, execution_type, ai_executable, duplicate_of_id,
-  created_at, updated_at, closed_at,
-  assigned_person:assigned_to (id, name)
-` as const;
 
 /**
  * Insert a new issue with atomic issue_number via next_issue_number() SQL function.

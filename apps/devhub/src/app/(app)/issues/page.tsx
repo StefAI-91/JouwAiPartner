@@ -30,35 +30,34 @@ function IssuesContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!projectId) {
-      setIssues([]);
-      setLoading(false);
-      return;
-    }
+    if (!projectId) return;
 
-    setLoading(true);
+    let cancelled = false;
     const supabase = createClient();
 
-    let query = supabase
-      .from("issues")
-      .select(ISSUE_SELECT)
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: false })
-      .limit(100);
+    const fetchIssues = async () => {
+      let query = supabase
+        .from("issues")
+        .select(ISSUE_SELECT)
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false })
+        .limit(100);
 
-    const status = searchParams.get("status");
-    if (status) query = query.in("status", status.split(","));
+      const status = searchParams.get("status");
+      if (status) query = query.in("status", status.split(","));
 
-    const priority = searchParams.get("priority");
-    if (priority) query = query.in("priority", priority.split(","));
+      const priority = searchParams.get("priority");
+      if (priority) query = query.in("priority", priority.split(","));
 
-    const type = searchParams.get("type");
-    if (type) query = query.in("type", type.split(","));
+      const type = searchParams.get("type");
+      if (type) query = query.in("type", type.split(","));
 
-    const component = searchParams.get("component");
-    if (component) query = query.in("component", component.split(","));
+      const component = searchParams.get("component");
+      if (component) query = query.in("component", component.split(","));
 
-    query.then(({ data }) => {
+      const { data } = await query;
+      if (cancelled) return;
+
       const rows = (data ?? []) as unknown as IssueRow[];
       rows.sort((a, b) => {
         const pa = PRIORITY_ORDER[a.priority] ?? 99;
@@ -68,13 +67,20 @@ function IssuesContent() {
       });
       setIssues(rows);
       setLoading(false);
-    });
+    };
+
+    fetchIssues();
+    return () => {
+      cancelled = true;
+    };
   }, [projectId, searchParams]);
 
   if (!projectId) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
-        <p className="text-sm text-muted-foreground">Select a project to view issues.</p>
+        <p className="text-sm text-muted-foreground">
+          Selecteer een project om issues te bekijken.
+        </p>
       </div>
     );
   }

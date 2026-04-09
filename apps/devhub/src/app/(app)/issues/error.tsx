@@ -9,7 +9,7 @@ interface ErrorProps {
   reset: () => void;
 }
 
-export default function AppError({ error, reset }: ErrorProps) {
+export default function IssuesError({ error, reset }: ErrorProps) {
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -20,9 +20,9 @@ export default function AppError({ error, reset }: ErrorProps) {
         <AlertTriangle className="size-5" />
       </div>
       <div className="space-y-1">
-        <h2 className="text-base font-semibold">Er is iets misgegaan</h2>
+        <h2 className="text-base font-semibold">Issues laden mislukt</h2>
         <p className="text-sm text-muted-foreground">
-          De pagina kon niet worden geladen. Probeer het opnieuw.
+          Er ging iets mis bij het ophalen van de issues.
         </p>
       </div>
       <Button variant="outline" size="sm" onClick={reset}>
