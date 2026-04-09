@@ -197,14 +197,14 @@ export function ExtractionCard({
             className="flex shrink-0 items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-[11px] font-medium text-green-700 transition-colors hover:bg-green-100"
           >
             <ListChecks className="size-3" />
-            Maak taak
+            Opvolgen
           </button>
         )}
 
         {showPromote && extraction.type === "action_item" && promoted && (
           <span className="flex shrink-0 items-center gap-1 rounded-md bg-green-100 px-2 py-1 text-[11px] font-medium text-green-700">
             <ListChecks className="size-3" />
-            Taak aangemaakt
+            Wordt opgepakt
           </span>
         )}
       </div>

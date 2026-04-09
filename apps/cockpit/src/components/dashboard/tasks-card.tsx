@@ -93,7 +93,7 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
     <Card>
       <CardHeader className="border-b border-border/50">
         <div className="flex items-baseline justify-between">
-          <CardTitle>Taken</CardTitle>
+          <CardTitle>Opvolgen</CardTitle>
           <span className="text-xs text-muted-foreground">
             {activeCount} actief{doneCount > 0 ? ` · ${doneCount} afgerond` : ""}
           </span>
@@ -139,7 +139,7 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
         {!showDone ? (
           personGroups.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              Geen actieve taken. Promoveer actiepunten vanuit een meeting.
+              Geen actieve opvolgpunten. Promoveer actiepunten vanuit een meeting.
             </p>
           ) : (
             <div className="space-y-6">
@@ -148,7 +148,7 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
                   <div className="mb-3 flex items-baseline gap-2">
                     <h3 className="text-lg font-semibold">{group.name}</h3>
                     <span className="text-xs font-medium text-muted-foreground">
-                      {group.tasks.length} {group.tasks.length === 1 ? "taak" : "taken"}
+                      {group.tasks.length} {group.tasks.length === 1 ? "punt" : "punten"}
                     </span>
                   </div>
                   <div className="space-y-1">
@@ -161,7 +161,9 @@ export function TasksCard({ tasks, people }: TasksCardProps) {
             </div>
           )
         ) : doneTasks.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">Geen afgeronde taken.</p>
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            Geen afgeronde opvolgpunten.
+          </p>
         ) : (
           <div className="space-y-1">
             {doneTasks.map((task) => (

@@ -53,7 +53,7 @@ export function PromoteTaskForm({
 
   return (
     <div className="mt-3 rounded-lg border border-green-200 bg-green-50/50 p-3">
-      <p className="mb-2 text-[11px] font-medium text-green-800">Taak aanmaken</p>
+      <p className="mb-2 text-[11px] font-medium text-green-800">Opvolgpunt aanmaken</p>
       <div className="flex flex-wrap items-end gap-2">
         {/* Person selector */}
         <div className="flex flex-col gap-1">

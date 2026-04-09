@@ -243,7 +243,7 @@ export function TaskItem({
             onClick={handleDismiss}
             disabled={isPending}
             className="flex h-7 items-center gap-1 rounded-md px-2 text-xs text-red-500 transition-colors hover:bg-red-50 disabled:opacity-50"
-            title="Verwijder taak"
+            title="Verwijder opvolgpunt"
           >
             <X className="size-3" />
             Verwijder
