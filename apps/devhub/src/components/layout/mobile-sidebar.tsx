@@ -71,7 +71,11 @@ export function MobileSidebar() {
 
   return (
     <Sheet>
-      <SheetTrigger render={<Button variant="ghost" size="icon" className="shrink-0 lg:hidden" />}>
+      <SheetTrigger
+        render={(props) => (
+          <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" {...props} />
+        )}
+      >
         <Menu className="size-5" />
         <span className="sr-only">Open menu</span>
       </SheetTrigger>

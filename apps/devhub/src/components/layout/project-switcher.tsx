@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ChevronDown, FolderKanban } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 
@@ -12,21 +12,30 @@ interface Project {
 
 export function ProjectSwitcher({ projects }: { projects: Project[] }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentProjectId = searchParams.get("project");
   const [open, setOpen] = useState(false);
 
-  // Auto-select first project if none in URL
+  // Auto-set first project in URL if none selected and projects are available
+  useEffect(() => {
+    if (!currentProjectId && projects.length > 0) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("project", projects[0].id);
+      router.replace(`${pathname}?${params.toString()}`);
+    }
+  }, [currentProjectId, projects, router, pathname, searchParams]);
+
   const effectiveProjectId = currentProjectId ?? projects[0]?.id ?? null;
 
   const handleSelect = useCallback(
     (id: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set("project", id);
-      router.push(`/issues?${params.toString()}`);
+      router.push(`${pathname}?${params.toString()}`);
       setOpen(false);
     },
-    [router, searchParams],
+    [router, pathname, searchParams],
   );
 
   const selected = projects.find((p) => p.id === effectiveProjectId);
