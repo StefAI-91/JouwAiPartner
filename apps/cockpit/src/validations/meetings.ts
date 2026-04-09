@@ -67,6 +67,26 @@ export const createPersonSchema = z.object({
   organizationId: z.string().nullable().optional(),
 });
 
+export const updateMeetingMetadataSchema = z.object({
+  meetingId: z.string().min(1),
+  title: z.string().min(1, "Titel is verplicht").max(500),
+  meetingType: z.enum([
+    "strategy",
+    "one_on_one",
+    "team_sync",
+    "discovery",
+    "sales",
+    "project_kickoff",
+    "status_update",
+    "collaboration",
+    "other",
+  ]),
+  partyType: z.enum(["internal", "client", "partner", "other"]),
+  organizationId: z.string().nullable(),
+  projectIds: z.array(z.string().min(1)),
+  participantIds: z.array(z.string().min(1)),
+});
+
 export const regenerateSchema = z.object({
   meetingId: z.string().min(1),
 });

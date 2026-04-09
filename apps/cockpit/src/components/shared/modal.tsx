@@ -2,17 +2,20 @@
 
 import { useRef, useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Modal({
   open,
   onClose,
   title,
   children,
+  className,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  className?: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -33,7 +36,10 @@ export function Modal({
       onClick={(e) => {
         if (e.target === dialogRef.current) onClose();
       }}
-      className="m-auto w-full max-w-md rounded-xl border border-border bg-background p-0 shadow-lg backdrop:bg-black/50"
+      className={cn(
+        "m-auto w-full max-w-md rounded-xl border border-border bg-background p-0 shadow-lg backdrop:bg-black/50",
+        className,
+      )}
     >
       <div className="p-6">
         <div className="mb-4 flex items-center justify-between">

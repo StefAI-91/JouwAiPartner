@@ -47,6 +47,7 @@ import {
   createOrganizationSchema,
   createProjectSchema,
   createPersonSchema,
+  updateMeetingMetadataSchema,
   regenerateSchema,
 } from "@/validations/meetings";
 
@@ -223,6 +224,75 @@ export async function unlinkMeetingParticipantAction(
 
   revalidatePath(`/meetings/${parsed.data.meetingId}`);
   revalidatePath(`/review/${parsed.data.meetingId}`);
+  return { success: true };
+}
+
+// ── Update All Metadata ──
+
+export async function updateMeetingMetadataAction(
+  input: z.infer<typeof updateMeetingMetadataSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = updateMeetingMetadataSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const { meetingId, title, meetingType, partyType, organizationId, projectIds, participantIds } =
+    parsed.data;
+
+  // Fetch current links to diff
+  const supabase = getAdminClient();
+  const [{ data: currentProjects }, { data: currentParticipants }] = await Promise.all([
+    supabase.from("meeting_projects").select("project_id").eq("meeting_id", meetingId),
+    supabase.from("meeting_participants").select("person_id").eq("meeting_id", meetingId),
+  ]);
+
+  // Scalar updates in parallel
+  const [titleResult, typeResult, partyResult, orgResult] = await Promise.all([
+    updateMeetingTitle(meetingId, title),
+    updateMeetingType(meetingId, meetingType),
+    updateMeetingPartyType(meetingId, partyType),
+    updateMeetingOrganization(meetingId, organizationId),
+  ]);
+
+  for (const result of [titleResult, typeResult, partyResult, orgResult]) {
+    if ("error" in result) return result;
+  }
+
+  // Diff projects
+  const currentProjectIds = new Set((currentProjects ?? []).map((p) => p.project_id));
+  const desiredProjectIds = new Set(projectIds);
+  const projectsToLink = projectIds.filter((id) => !currentProjectIds.has(id));
+  const projectsToUnlink = [...currentProjectIds].filter((id) => !desiredProjectIds.has(id));
+
+  // Diff participants
+  const currentParticipantIds = new Set((currentParticipants ?? []).map((p) => p.person_id));
+  const desiredParticipantIds = new Set(participantIds);
+  const peopleToLink = participantIds.filter((id) => !currentParticipantIds.has(id));
+  const peopleToUnlink = [...currentParticipantIds].filter((id) => !desiredParticipantIds.has(id));
+
+  // Apply link/unlink changes in parallel
+  const linkOps = [
+    ...projectsToLink.map((id) => linkMeetingProject(meetingId, id, "manual")),
+    ...projectsToUnlink.map((id) => unlinkMeetingProject(meetingId, id)),
+    ...peopleToLink.map((id) => linkMeetingParticipant(meetingId, id)),
+    ...peopleToUnlink.map((id) => unlinkMeetingParticipant(meetingId, id)),
+  ];
+
+  if (linkOps.length > 0) {
+    const results = await Promise.all(linkOps);
+    for (const result of results) {
+      if ("error" in result) return result;
+    }
+  }
+
+  revalidatePath(`/meetings/${meetingId}`);
+  revalidatePath(`/review/${meetingId}`);
+  revalidatePath("/");
+  revalidatePath("/projects");
+  revalidatePath("/people");
+  revalidatePath("/clients");
   return { success: true };
 }
 

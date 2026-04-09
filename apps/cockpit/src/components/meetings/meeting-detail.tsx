@@ -1,16 +1,14 @@
 "use client";
 
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
-import { EditableTitle } from "@/components/meetings/editable-title";
 import { ExtractionTabsPanel } from "@/components/meetings/extraction-tabs-panel";
-import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
-import { PartyTypeSelector } from "@/components/meetings/party-type-selector";
-import { PeopleSelector } from "@/components/meetings/people-selector";
-import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
+import { EditMetadataModal } from "@/components/meetings/edit-metadata-modal";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
+import { Button } from "@/components/ui/button";
+import { Pencil, FolderKanban } from "lucide-react";
 import { updateMeetingSummaryAction } from "@/actions/meetings";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
@@ -38,6 +36,7 @@ export function MeetingDetailView({
 }: MeetingDetailViewProps) {
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleSummaryEdit = useCallback(
     async (content: string) => {
@@ -53,21 +52,6 @@ export function MeetingDetailView({
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
         meeting={meeting}
-        titleSlot={<EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />}
-        meetingTypeSlot={
-          <div className="flex items-center gap-1.5">
-            <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />
-            <PartyTypeSelector meetingId={meeting.id} currentType={meeting.party_type} />
-          </div>
-        }
-        participantsSlot={
-          <PeopleSelector
-            meetingId={meeting.id}
-            linkedPeople={linkedPeople}
-            allPeople={allPeople}
-            organizations={organizations}
-          />
-        }
         summaryAction={
           <div className="flex items-center gap-1.5">
             <PipelineInfo rawFireflies={meeting.raw_fireflies} />
@@ -77,16 +61,45 @@ export function MeetingDetailView({
         onSummaryEdit={handleSummaryEdit}
         headerExtra={
           <div className="mt-3 space-y-3">
-            <VerificationBadge
-              verifierName={meeting.verifier?.full_name ?? null}
-              verifiedAt={meeting.verified_at}
-            />
-            <ProjectLinker
-              meetingId={meeting.id}
-              linkedProjects={linkedProjects}
-              allProjects={projects}
-              organizations={organizations}
-            />
+            <div className="flex items-center gap-2">
+              <VerificationBadge
+                verifierName={meeting.verifier?.full_name ?? null}
+                verifiedAt={meeting.verified_at}
+              />
+              <Button size="xs" variant="outline" onClick={() => setShowEditModal(true)}>
+                <Pencil className="size-3" data-icon="inline-start" />
+                Metadata bewerken
+              </Button>
+            </div>
+
+            {/* Static project display */}
+            {linkedProjects.length > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <FolderKanban className="size-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Projecten
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {linkedProjects.map((project) => (
+                    <span
+                      key={project.id}
+                      className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
+                    >
+                      {project.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Static organization display */}
+            {meeting.organization && (
+              <p className="text-xs text-muted-foreground">
+                Organisatie: {meeting.organization.name}
+              </p>
+            )}
           </div>
         }
       />
@@ -106,6 +119,23 @@ export function MeetingDetailView({
           editable
         />
       </div>
+
+      <EditMetadataModal
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        meeting={{
+          id: meeting.id,
+          title: meeting.title,
+          meeting_type: meeting.meeting_type,
+          party_type: meeting.party_type,
+          organization_id: meeting.organization_id,
+        }}
+        linkedProjects={linkedProjects}
+        linkedPeople={linkedPeople}
+        allPeople={allPeople}
+        allProjects={projects}
+        organizations={organizations}
+      />
     </div>
   );
 }
