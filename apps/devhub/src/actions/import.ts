@@ -10,7 +10,6 @@ import {
   countUserbackIssues,
 } from "@repo/database/queries/issues";
 import { upsertUserbackIssues } from "@repo/database/mutations/issues";
-import { insertActivity } from "@repo/database/mutations/issues";
 import {
   fetchAllUserbackFeedback,
   mapUserbackToIssue,

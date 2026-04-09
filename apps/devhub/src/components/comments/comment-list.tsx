@@ -1,16 +1,5 @@
 import type { IssueCommentRow, IssueActivityRow } from "@repo/database/queries/issues";
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "zojuist";
-  if (mins < 60) return `${mins}m geleden`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}u geleden`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d geleden`;
-  return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
-}
+import { timeAgo } from "@/lib/time-ago";
 
 function ActivityDescription({ activity }: { activity: IssueActivityRow }) {
   const actor = activity.actor?.full_name ?? "Systeem";
