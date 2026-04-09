@@ -15,6 +15,7 @@ import {
   fetchAllUserbackFeedback,
   mapUserbackToIssue,
   extractMediaUrls,
+  extractMediaFromMetadata,
 } from "@repo/database/integrations/userback";
 import { storeIssueMedia } from "@repo/database/mutations/issue-attachments";
 import { classifyIssueBackground } from "./classify";
@@ -171,4 +172,97 @@ export async function getSyncStatus(projectId: string): Promise<{
   ]);
 
   return { itemCount, lastSyncCursor };
+}
+
+/**
+ * Backfill media for existing Userback issues that don't have attachments yet.
+ * Reads source_metadata.raw_userback to extract media URLs, downloads them,
+ * and stores in Supabase storage.
+ */
+export async function backfillMedia(): Promise<
+  | {
+      success: true;
+      data: { processed: number; mediaStored: number; skipped: number; errors: string[] };
+    }
+  | { error: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const admin = getAdminClient();
+
+  try {
+    // Find all Userback issues that have NO attachments yet
+    const { data: issues, error: queryError } = await admin
+      .from("issues")
+      .select("id, userback_id, source_metadata")
+      .eq("source", "userback")
+      .not("userback_id", "is", null)
+      .not("source_metadata", "is", null);
+
+    if (queryError) throw new Error(queryError.message);
+    if (!issues?.length) {
+      return { success: true, data: { processed: 0, mediaStored: 0, skipped: 0, errors: [] } };
+    }
+
+    // Get issue IDs that already have attachments
+    const { data: existingAttachments } = await admin
+      .from("issue_attachments")
+      .select("issue_id")
+      .in(
+        "issue_id",
+        issues.map((i) => i.id),
+      );
+
+    const hasAttachments = new Set((existingAttachments ?? []).map((a) => a.issue_id));
+
+    let processed = 0;
+    let mediaStored = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    for (const issue of issues) {
+      // Skip if already has attachments
+      if (hasAttachments.has(issue.id)) {
+        skipped++;
+        continue;
+      }
+
+      const metadata = issue.source_metadata as Record<string, unknown> | null;
+      if (!metadata) {
+        skipped++;
+        continue;
+      }
+
+      const mediaUrls = extractMediaFromMetadata(metadata);
+      if (mediaUrls.length === 0) {
+        skipped++;
+        continue;
+      }
+
+      try {
+        const count = await storeIssueMedia(issue.id, issue.userback_id!, mediaUrls, admin);
+        mediaStored += count;
+        processed++;
+        console.log(`[backfillMedia] Issue ${issue.id}: stored ${count} files`);
+      } catch (err) {
+        const msg = `Issue ${issue.userback_id}: ${err instanceof Error ? err.message : String(err)}`;
+        console.error(`[backfillMedia] ${msg}`);
+        errors.push(msg);
+      }
+    }
+
+    revalidatePath("/issues");
+
+    return {
+      success: true,
+      data: { processed, mediaStored, skipped, errors: errors.slice(0, 5) },
+    };
+  } catch (err) {
+    console.error("[backfillMedia]", err);
+    return { error: err instanceof Error ? err.message : "Backfill mislukt" };
+  }
 }
