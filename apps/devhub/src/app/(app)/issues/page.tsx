@@ -20,7 +20,7 @@ const ISSUE_SELECT = `
   labels, assigned_to, reporter_name, reporter_email, source, userback_id, source_url,
   issue_number, execution_type, ai_executable, duplicate_of_id, ai_classification,
   created_at, updated_at, closed_at,
-  assigned_person:assigned_to (id, name)
+  assigned_person:assigned_to (id, full_name)
 `;
 
 function IssuesContent() {

@@ -187,7 +187,7 @@ export async function insertComment(
     .insert(data)
     .select(
       `id, issue_id, author_id, body, created_at, updated_at,
-       author:author_id (id, name)`,
+       author:author_id (id, full_name)`,
     )
     .single();
 
@@ -210,7 +210,7 @@ export async function updateComment(
     .eq("id", id)
     .select(
       `id, issue_id, author_id, body, created_at, updated_at,
-       author:author_id (id, name)`,
+       author:author_id (id, full_name)`,
     )
     .single();
 

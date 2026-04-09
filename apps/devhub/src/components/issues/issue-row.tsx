@@ -18,9 +18,9 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
 }
 
-function AssignedAvatar({ person }: { person: { name: string } | null }) {
+function AssignedAvatar({ person }: { person: { full_name: string } | null }) {
   if (!person) return <span className="size-6" />;
-  const initials = person.name
+  const initials = (person.full_name || "?")
     .split(" ")
     .map((w) => w[0])
     .join("")
@@ -29,7 +29,7 @@ function AssignedAvatar({ person }: { person: { name: string } | null }) {
   return (
     <span
       className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-[0.6rem] font-medium text-muted-foreground"
-      title={person.name}
+      title={person.full_name}
     >
       {initials}
     </span>

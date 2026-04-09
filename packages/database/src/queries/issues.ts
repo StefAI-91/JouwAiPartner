@@ -13,7 +13,7 @@ export interface IssueRow {
   severity: string | null;
   labels: string[];
   assigned_to: string | null;
-  assigned_person: { id: string; name: string } | null;
+  assigned_person: { id: string; full_name: string } | null;
   reporter_name: string | null;
   reporter_email: string | null;
   source: string;
@@ -34,7 +34,7 @@ export interface IssueCommentRow {
   id: string;
   issue_id: string;
   author_id: string;
-  author: { id: string; name: string } | null;
+  author: { id: string; full_name: string } | null;
   body: string;
   created_at: string;
   updated_at: string;
@@ -44,7 +44,7 @@ export interface IssueActivityRow {
   id: string;
   issue_id: string;
   actor_id: string | null;
-  actor: { id: string; name: string } | null;
+  actor: { id: string; full_name: string } | null;
   action: string;
   field: string | null;
   old_value: string | null;
@@ -58,7 +58,7 @@ export const ISSUE_SELECT = `
   labels, assigned_to, reporter_name, reporter_email, source, userback_id, source_url, source_metadata,
   issue_number, execution_type, ai_executable, duplicate_of_id, ai_classification,
   created_at, updated_at, closed_at,
-  assigned_person:assigned_to (id, name)
+  assigned_person:assigned_to (id, full_name)
 ` as const;
 
 const PRIORITY_ORDER: Record<string, number> = {
@@ -211,7 +211,7 @@ export async function listIssueComments(
     .from("issue_comments")
     .select(
       `id, issue_id, author_id, body, created_at, updated_at,
-       author:author_id (id, name)`,
+       author:author_id (id, full_name)`,
     )
     .eq("issue_id", issueId)
     .order("created_at", { ascending: true })
@@ -319,7 +319,7 @@ export async function listIssueActivity(
     .from("issue_activity")
     .select(
       `id, issue_id, actor_id, action, field, old_value, new_value, metadata, created_at,
-       actor:actor_id (id, name)`,
+       actor:actor_id (id, full_name)`,
     )
     .eq("issue_id", issueId)
     .order("created_at", { ascending: false })
