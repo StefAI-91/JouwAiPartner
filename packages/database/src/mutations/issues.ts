@@ -113,11 +113,12 @@ export async function upsertUserbackIssues(
   items: InsertIssueData[],
   existingMap: Map<string, string>,
   client?: SupabaseClient,
-): Promise<{ imported: string[]; updated: number; skipped: number }> {
+): Promise<{ imported: string[]; updated: number; skipped: number; errors: string[] }> {
   const db = client ?? getAdminClient();
   const importedIds: string[] = [];
   let updated = 0;
   let skipped = 0;
+  const errors: string[] = [];
 
   for (const item of items) {
     const existingId = item.userback_id ? existingMap.get(item.userback_id) : undefined;
@@ -139,10 +140,9 @@ export async function upsertUserbackIssues(
         .eq("id", existingId);
 
       if (error) {
-        console.error(
-          `[upsertUserbackIssues] Update failed for ${item.userback_id}:`,
-          error.message,
-        );
+        const msg = `Update ${item.userback_id}: ${error.message}`;
+        console.error(`[upsertUserbackIssues] ${msg}`);
+        errors.push(msg);
         skipped++;
       } else {
         updated++;
@@ -153,13 +153,15 @@ export async function upsertUserbackIssues(
         const issue = await insertIssue(item, db);
         importedIds.push(issue.id);
       } catch (err) {
-        console.error(`[upsertUserbackIssues] Insert failed for ${item.userback_id}:`, err);
+        const msg = `Insert ${item.userback_id}: ${err instanceof Error ? err.message : String(err)}`;
+        console.error(`[upsertUserbackIssues] ${msg}`);
+        errors.push(msg);
         skipped++;
       }
     }
   }
 
-  return { imported: importedIds, updated, skipped };
+  return { imported: importedIds, updated, skipped, errors };
 }
 
 /**

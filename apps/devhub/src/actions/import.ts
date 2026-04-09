@@ -28,6 +28,7 @@ export interface SyncResult {
   total: number;
   classified: number;
   isInitial: boolean;
+  errors: string[];
 }
 
 /**
@@ -66,7 +67,15 @@ export async function syncUserback(
     if (items.length === 0) {
       return {
         success: true,
-        data: { imported: 0, updated: 0, skipped: 0, total: 0, classified: 0, isInitial },
+        data: {
+          imported: 0,
+          updated: 0,
+          skipped: 0,
+          total: 0,
+          classified: 0,
+          isInitial,
+          errors: [],
+        },
       };
     }
 
@@ -109,6 +118,7 @@ export async function syncUserback(
         total: items.length,
         classified,
         isInitial,
+        errors: result.errors.slice(0, 5),
       },
     };
   } catch (err) {

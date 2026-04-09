@@ -116,6 +116,16 @@ export function SyncCard({
               {result.isInitial ? "Eerste sync (volledige import)" : "Incremental sync"}
             </p>
           </div>
+          {result.errors.length > 0 && (
+            <div className="mt-2 border-t pt-2">
+              <p className="text-xs font-medium text-destructive">Errors:</p>
+              {result.errors.map((err, i) => (
+                <p key={i} className="text-[0.65rem] text-destructive/80 break-all">
+                  {err}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

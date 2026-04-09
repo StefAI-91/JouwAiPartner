@@ -150,8 +150,10 @@ const STATUS_MAP: Record<string, string> = {
  * Extract the first line of a description as the title.
  * Max 200 chars.
  */
-function extractTitle(description: string): string {
+function extractTitle(description: string | null | undefined): string {
+  if (!description) return "Untitled feedback";
   const firstLine = description.split("\n")[0]?.trim() ?? "";
+  if (!firstLine) return "Untitled feedback";
   return firstLine.length > 200 ? firstLine.slice(0, 197) + "..." : firstLine;
 }
 
@@ -168,11 +170,12 @@ function isSentinelDate(dateStr: string | null): boolean {
  */
 export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string): InsertIssueData {
   const screenshotUrl = item.screenshots?.[0]?.url ?? null;
+  const description = typeof item.description === "string" ? item.description : null;
 
   return {
     project_id: projectId,
-    title: extractTitle(item.description),
-    description: item.description || null,
+    title: extractTitle(description),
+    description,
     type: FEEDBACK_TYPE_MAP[item.feedback_type] ?? "question",
     priority: PRIORITY_MAP[item.priority] ?? "medium",
     status: STATUS_MAP[item.status] ?? "triage",
