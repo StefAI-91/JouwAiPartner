@@ -55,7 +55,7 @@ export function AppSidebar() {
   }, [projectId]);
 
   return (
-    <aside className="flex h-full w-56 flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className="hidden h-full w-56 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
       {/* Logo */}
       <div className="flex h-12 items-center px-4">
         <span className="text-sm font-bold tracking-tight text-sidebar-foreground">
