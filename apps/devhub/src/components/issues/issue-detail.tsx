@@ -10,6 +10,8 @@ import type {
 } from "@repo/database/queries/issues";
 import { updateIssueAction, deleteIssueAction } from "@/actions/issues";
 import { classifyIssueAction } from "@/actions/classify";
+import { startAiExecution } from "@/actions/execute";
+import { AiExecutionPanel } from "./ai-execution-panel";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { PriorityBadge } from "@/components/shared/priority-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
@@ -143,6 +145,12 @@ export function IssueDetail({
       const result = await updateIssueAction({ id: issue.id, [field]: value });
       if ("error" in result) {
         console.error(result.error);
+      } else if (field === "status") {
+        window.dispatchEvent(new Event("issues-changed"));
+        // Trigger AI execution when moving to in_progress
+        if (value === "in_progress" && issue.execution_type !== "ai") {
+          startAiExecution({ issueId: issue.id });
+        }
       }
     });
   }
@@ -153,7 +161,7 @@ export function IssueDetail({
       if ("error" in result) {
         console.error(result.error);
       } else {
-        router.push("/issues");
+        router.push(`/issues?project=${issue.project_id}`);
       }
     });
   }
@@ -176,7 +184,7 @@ export function IssueDetail({
         {/* Header */}
         <div className="mb-6">
           <Link
-            href="/issues"
+            href={`/issues?project=${issue.project_id}`}
             className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" />
@@ -210,6 +218,13 @@ export function IssueDetail({
             </div>
           </section>
         )}
+
+        {/* AI Execution */}
+        <AiExecutionPanel
+          aiContext={issue.ai_context as Parameters<typeof AiExecutionPanel>[0]["aiContext"]}
+          aiResult={issue.ai_result as Parameters<typeof AiExecutionPanel>[0]["aiResult"]}
+          executionType={issue.execution_type}
+        />
 
         {/* Attachments */}
         {attachments && attachments.length > 0 && (

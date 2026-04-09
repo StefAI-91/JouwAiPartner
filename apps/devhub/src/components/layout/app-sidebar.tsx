@@ -10,9 +10,10 @@ import {
   XCircle,
   Settings,
   LayoutList,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@repo/ui/utils";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
 
 type StatusCounts = Record<string, number>;
@@ -32,27 +33,29 @@ export function AppSidebar() {
   const projectId = searchParams.get("project");
   const [counts, setCounts] = useState<StatusCounts>({});
 
-  useEffect(() => {
+  const fetchCounts = useCallback(async () => {
     if (!projectId) return;
-
-    let cancelled = false;
     const supabase = createClient();
-
-    const fetchCounts = async () => {
-      const { data } = await supabase.from("issues").select("status").eq("project_id", projectId);
-      if (cancelled || !data) return;
-      const c: StatusCounts = {};
-      for (const row of data) {
-        c[row.status] = (c[row.status] ?? 0) + 1;
-      }
-      setCounts(c);
-    };
-
-    fetchCounts();
-    return () => {
-      cancelled = true;
-    };
+    const { data } = await supabase.from("issues").select("status").eq("project_id", projectId);
+    if (!data) return;
+    const c: StatusCounts = {};
+    for (const row of data) {
+      c[row.status] = (c[row.status] ?? 0) + 1;
+    }
+    setCounts(c);
   }, [projectId]);
+
+  // Fetch on mount and project change
+  useEffect(() => {
+    fetchCounts();
+  }, [fetchCounts]);
+
+  // Refetch when issues change (status updates, creates, deletes)
+  useEffect(() => {
+    const handler = () => fetchCounts();
+    window.addEventListener("issues-changed", handler);
+    return () => window.removeEventListener("issues-changed", handler);
+  }, [fetchCounts]);
 
   // Build href helper that preserves ?project= param
   function issueHref(extraParams?: Record<string, string>) {
@@ -70,13 +73,13 @@ export function AppSidebar() {
   return (
     <aside className="hidden h-full w-56 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
       {/* Logo */}
-      <div className="flex h-12 items-center gap-2.5 px-4">
+      <div className="flex h-16 items-center gap-3 px-4">
         <img
           src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
           alt="Jouw AI Partner"
-          className="h-7 w-auto"
+          className="h-9 w-auto"
         />
-        <span className="font-heading text-sm font-semibold text-primary">DevHub</span>
+        <span className="font-heading text-xl font-semibold text-primary">DevHub</span>
       </div>
 
       {/* Nav */}
@@ -84,13 +87,13 @@ export function AppSidebar() {
         <Link
           href={issueHref()}
           className={cn(
-            "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            "flex items-center gap-2 rounded-md px-2 py-2 text-[0.9rem] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             pathname === "/issues" &&
               !searchParams.has("status") &&
               "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
           )}
         >
-          <LayoutList className="size-4" />
+          <LayoutList className="size-5" />
           Alle issues
         </Link>
 
@@ -107,9 +110,9 @@ export function AppSidebar() {
             <Link
               key={item.status}
               href={issueHref({ status: item.status })}
-              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="flex items-center gap-2 rounded-md px-2 py-2 text-[0.9rem] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
-              <Icon className="size-4" />
+              <Icon className="size-5" />
               <span className="flex-1">{item.label}</span>
               {count > 0 && (
                 <span
@@ -128,13 +131,24 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Settings */}
-      <div className="border-t border-sidebar-border px-2 py-2">
+      {/* Bottom nav */}
+      <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
+        <Link
+          href={projectId ? `/review?project=${projectId}` : "/review"}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-2 py-2 text-[0.9rem] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            pathname === "/review" &&
+              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+          )}
+        >
+          <Sparkles className="size-5" />
+          AI Review
+        </Link>
         <Link
           href="/settings"
-          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="flex items-center gap-2 rounded-md px-2 py-2 text-[0.9rem] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
-          <Settings className="size-4" />
+          <Settings className="size-5" />
           Instellingen
         </Link>
       </div>

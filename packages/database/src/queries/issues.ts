@@ -24,6 +24,8 @@ export interface IssueRow {
   issue_number: number;
   execution_type: string;
   ai_executable: boolean;
+  ai_context: Record<string, unknown> | null;
+  ai_result: Record<string, unknown> | null;
   duplicate_of_id: string | null;
   ai_classification: Record<string, unknown>;
   created_at: string;
@@ -57,7 +59,7 @@ export interface IssueActivityRow {
 export const ISSUE_SELECT = `
   id, project_id, title, description, type, status, priority, component, severity,
   labels, assigned_to, reporter_name, reporter_email, source, userback_id, source_url, source_metadata,
-  issue_number, execution_type, ai_executable, duplicate_of_id, ai_classification,
+  issue_number, execution_type, ai_executable, ai_context, ai_result, duplicate_of_id, ai_classification,
   created_at, updated_at, closed_at,
   assigned_person:assigned_to (id, full_name)
 ` as const;

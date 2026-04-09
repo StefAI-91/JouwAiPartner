@@ -83,7 +83,12 @@ export function LoginForm() {
         </div>
       )}
 
-      <Button type="submit" disabled={loading} className="w-full glow-primary" size="lg">
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full glow-primary h-12 text-base"
+        size="lg"
+      >
         {loading ? "Bezig..." : "Inloggen"}
       </Button>
     </form>

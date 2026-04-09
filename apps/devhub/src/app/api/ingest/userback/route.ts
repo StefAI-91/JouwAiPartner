@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import {
-  getUserbackSyncCursor,
-  getExistingUserbackIds,
-  countUserbackIssues,
-} from "@repo/database/queries/issues";
+import { getUserbackSyncCursor, getExistingUserbackIds } from "@repo/database/queries/issues";
 import { upsertUserbackIssues } from "@repo/database/mutations/issues";
 import {
   fetchAllUserbackFeedback,
@@ -48,9 +44,12 @@ export async function GET(req: NextRequest) {
 
     if (realItems.length === 0) {
       return NextResponse.json({
-        synced: 0,
-        total: 0,
+        imported: 0,
+        updated: 0,
+        skipped: 0,
+        mediaStored: 0,
         filtered: items.length - realItems.length,
+        total: 0,
         isInitial: cursor === null,
       });
     }

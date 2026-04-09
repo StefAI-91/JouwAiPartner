@@ -51,7 +51,7 @@ function FilterDropdown({ label, paramKey, options, selected, onToggle }: Filter
     <div className="group relative">
       <button
         className={cn(
-          "flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs transition-colors hover:bg-muted",
+          "flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted",
           hasSelection && "border-primary/30 bg-primary/5 text-primary",
         )}
       >
@@ -72,7 +72,7 @@ function FilterDropdown({ label, paramKey, options, selected, onToggle }: Filter
               key={opt.value}
               onClick={() => onToggle(paramKey, opt.value)}
               className={cn(
-                "flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors hover:bg-accent",
+                "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-accent",
                 isSelected && "font-medium text-primary",
               )}
             >
@@ -152,7 +152,7 @@ export function IssueFilters() {
   }, [router, searchParams]);
 
   return (
-    <div className="flex items-center gap-2 border-b border-border px-4 py-2">
+    <div className="flex items-center gap-2 border-b border-border px-4 py-3">
       <FilterDropdown
         label="Status"
         paramKey="status"
@@ -185,7 +185,7 @@ export function IssueFilters() {
       {hasAnyFilter && (
         <button
           onClick={clearAll}
-          className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <X className="size-3" />
           Clear

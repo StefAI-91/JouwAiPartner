@@ -19,13 +19,16 @@ export function TopBar({ projects }: { projects: Project[] }) {
   const newIssueHref = projectId ? `/issues/new?project=${projectId}` : "/issues/new";
 
   return (
-    <header className="flex h-12 items-center justify-between border-b border-border bg-background px-4">
+    <header className="flex h-14 items-center justify-between border-b border-border bg-background px-4">
       <div className="flex items-center gap-2">
         <MobileSidebar />
         <ProjectSwitcher projects={projects} />
       </div>
 
-      <Link href={newIssueHref} className={buttonVariants({ size: "sm" })}>
+      <Link
+        href={newIssueHref}
+        className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/80"
+      >
         <Plus className="size-4" />
         Nieuw issue
       </Link>

@@ -183,16 +183,18 @@ export async function fetchAllUserbackFeedback(
 
 // ── Test Submission Filter ──
 
-const TEST_PATTERNS = [/^test\.?$/i, /^dit\s+(is\s+)?een\s+test/i, /^testing\.?$/i];
+const TEST_PATTERNS = [/^test\.?$/i, /^testing\.?$/i, /^dit\s+(is\s+)?een\s+test\b/i];
 
 /**
  * Check if a Userback feedback item is a test submission that should be skipped.
- * Matches: "test", "Test", "dit is een test", "dit een test om X te laten zien", etc.
+ * Matches short throwaway messages: "test", "dit is een test", "dit een test om X te laten zien".
+ * Only triggers on short descriptions (<80 chars) to avoid filtering real feedback
+ * that happens to start with "dit is een test...".
  */
 export function isTestSubmission(description: string | null | undefined): boolean {
   if (!description) return false;
   const trimmed = description.trim();
-  if (!trimmed) return false;
+  if (!trimmed || trimmed.length > 80) return false;
   return TEST_PATTERNS.some((pattern) => pattern.test(trimmed));
 }
 

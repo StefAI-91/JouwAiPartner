@@ -12,9 +12,10 @@ import {
   XCircle,
   Settings,
   LayoutList,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@repo/ui/utils";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
 
 type StatusCounts = Record<string, number>;
@@ -40,27 +41,27 @@ export function MobileSidebar() {
     setOpen(false);
   }, [pathname, searchParams]);
 
-  useEffect(() => {
+  const fetchCounts = useCallback(async () => {
     if (!projectId) return;
-
-    let cancelled = false;
     const supabase = createClient();
-
-    const fetchCounts = async () => {
-      const { data } = await supabase.from("issues").select("status").eq("project_id", projectId);
-      if (cancelled || !data) return;
-      const c: StatusCounts = {};
-      for (const row of data) {
-        c[row.status] = (c[row.status] ?? 0) + 1;
-      }
-      setCounts(c);
-    };
-
-    fetchCounts();
-    return () => {
-      cancelled = true;
-    };
+    const { data } = await supabase.from("issues").select("status").eq("project_id", projectId);
+    if (!data) return;
+    const c: StatusCounts = {};
+    for (const row of data) {
+      c[row.status] = (c[row.status] ?? 0) + 1;
+    }
+    setCounts(c);
   }, [projectId]);
+
+  useEffect(() => {
+    fetchCounts();
+  }, [fetchCounts]);
+
+  useEffect(() => {
+    const handler = () => fetchCounts();
+    window.addEventListener("issues-changed", handler);
+    return () => window.removeEventListener("issues-changed", handler);
+  }, [fetchCounts]);
 
   function issueHref(extraParams?: Record<string, string>) {
     const params = new URLSearchParams();
@@ -153,7 +154,18 @@ export function MobileSidebar() {
               })}
             </nav>
 
-            <div className="border-t border-sidebar-border px-2 py-2">
+            <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
+              <Link
+                href={projectId ? `/review?project=${projectId}` : "/review"}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  pathname === "/review" &&
+                    "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+                )}
+              >
+                <Sparkles className="size-4" />
+                AI Review
+              </Link>
               <Link
                 href="/settings"
                 className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

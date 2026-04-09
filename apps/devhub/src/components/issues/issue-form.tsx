@@ -71,7 +71,7 @@ export function IssueForm({ projectId, people }: { projectId: string | null; peo
       if ("error" in result) {
         setError(result.error);
       } else {
-        router.push(`/issues/${result.id}`);
+        router.push(`/issues/${result.id}?project=${projectId}`);
       }
     });
   }

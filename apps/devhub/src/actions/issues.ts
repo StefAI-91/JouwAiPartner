@@ -20,8 +20,6 @@ import {
 } from "@repo/database/validations/issues";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 
-export { createIssueSchema, updateIssueSchema };
-
 // ── Actions ──
 
 export async function createIssueAction(
