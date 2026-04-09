@@ -65,9 +65,14 @@ export function MobileSidebar() {
       </SheetTrigger>
 
       <SheetContent side="left" className="bg-sidebar p-0" showCloseButton={false}>
-        <div className="flex h-12 items-center px-4 border-b border-sidebar-border">
-          <SheetTitle className="text-sm font-bold tracking-tight text-sidebar-foreground">
-            JAIP DevHub
+        <div className="flex h-12 items-center gap-2.5 px-4 border-b border-sidebar-border">
+          <img
+            src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
+            alt="Jouw AI Partner"
+            className="h-7 w-auto"
+          />
+          <SheetTitle className="font-heading text-sm font-semibold text-primary">
+            DevHub
           </SheetTitle>
         </div>
 

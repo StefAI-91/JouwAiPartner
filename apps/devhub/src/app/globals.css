@@ -151,4 +151,10 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  .glow-primary {
+    box-shadow:
+      0 0 20px rgb(0 107 63 / 15%),
+      0 0 60px rgb(0 107 63 / 5%);
+  }
 }

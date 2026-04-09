@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Nunito, Fredoka, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+const nunito = Nunito({
   variable: "--font-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const fredoka = Fredoka({
+  variable: "--font-heading",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -20,7 +26,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "JAIP DevHub",
+  title: "Jouw AI Partner — DevHub",
   description: "Issue tracking & development portal",
 };
 
@@ -30,7 +36,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nl" className={`${inter.variable} ${geistMono.variable} h-full`}>
+    <html
+      lang="nl"
+      className={`${nunito.variable} ${fredoka.variable} ${geistMono.variable} h-full`}
+    >
       <body className="h-full antialiased">{children}</body>
     </html>
   );
