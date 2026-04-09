@@ -1,6 +1,15 @@
 "use client";
 
-import { Modal } from "./modal";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@repo/ui/alert-dialog";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -22,26 +31,24 @@ export function ConfirmDialog({
   loading,
 }: ConfirmDialogProps) {
   return (
-    <Modal open={open} onClose={onClose} title={title}>
-      <p className="mb-6 text-sm text-muted-foreground">{description}</p>
-      <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={loading}
-          className="rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
-        >
-          Annuleren
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={loading}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
-        >
-          {loading ? "Bezig..." : confirmLabel}
-        </button>
-      </div>
-    </Modal>
+    <AlertDialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={loading}>Annuleren</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={onConfirm} disabled={loading}>
+            {loading ? "Bezig..." : confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
