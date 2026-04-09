@@ -8,7 +8,12 @@ import {
   countUserbackIssues,
 } from "@repo/database/queries/issues";
 import { upsertUserbackIssues } from "@repo/database/mutations/issues";
-import { fetchAllUserbackFeedback, mapUserbackToIssue } from "@repo/database/integrations/userback";
+import {
+  fetchAllUserbackFeedback,
+  mapUserbackToIssue,
+  extractMediaUrls,
+} from "@repo/database/integrations/userback";
+import { storeIssueMedia } from "@repo/database/mutations/issue-attachments";
 
 export const maxDuration = 60;
 
@@ -56,16 +61,32 @@ export async function GET(req: NextRequest) {
     }
 
     const mappedItems = items.map((item) => mapUserbackToIssue(item, project.id));
+    const itemsByUserbackId = new Map(items.map((item) => [String(item.id), item]));
     const userbackIds = mappedItems
       .map((i) => i.userback_id)
       .filter((id): id is string => id !== null && id !== undefined);
     const existingMap = await getExistingUserbackIds(userbackIds, admin);
     const result = await upsertUserbackIssues(mappedItems, existingMap, admin);
 
+    // Download and store media for new items
+    let mediaStored = 0;
+    for (const [userbackId, issueId] of result.importedMap) {
+      const originalItem = itemsByUserbackId.get(userbackId);
+      if (!originalItem) continue;
+      const mediaUrls = extractMediaUrls(originalItem);
+      if (mediaUrls.length === 0) continue;
+      try {
+        mediaStored += await storeIssueMedia(issueId, userbackId, mediaUrls, admin);
+      } catch (err) {
+        console.error(`[cron] Media storage failed for ${issueId}:`, err);
+      }
+    }
+
     return NextResponse.json({
       imported: result.imported.length,
       updated: result.updated,
       skipped: result.skipped,
+      mediaStored,
       total: items.length,
       isInitial: cursor === null,
     });
@@ -117,16 +138,32 @@ export async function POST(req: NextRequest) {
     }
 
     const mappedItems = items.map((item) => mapUserbackToIssue(item, projectId));
+    const itemsByUserbackId = new Map(items.map((item) => [String(item.id), item]));
     const userbackIds = mappedItems
       .map((i) => i.userback_id)
       .filter((id): id is string => id !== null && id !== undefined);
     const existingMap = await getExistingUserbackIds(userbackIds, admin);
     const result = await upsertUserbackIssues(mappedItems, existingMap, admin);
 
+    // Download and store media for new items
+    let mediaStored = 0;
+    for (const [userbackId, issueId] of result.importedMap) {
+      const originalItem = itemsByUserbackId.get(userbackId);
+      if (!originalItem) continue;
+      const mediaUrls = extractMediaUrls(originalItem);
+      if (mediaUrls.length === 0) continue;
+      try {
+        mediaStored += await storeIssueMedia(issueId, userbackId, mediaUrls, admin);
+      } catch (err) {
+        console.error(`[POST] Media storage failed for ${issueId}:`, err);
+      }
+    }
+
     return NextResponse.json({
       imported: result.imported.length,
       updated: result.updated,
       skipped: result.skipped,
+      mediaStored,
       total: items.length,
       isInitial: cursor === null,
     });

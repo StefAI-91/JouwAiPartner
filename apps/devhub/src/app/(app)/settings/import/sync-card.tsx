@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import { RefreshCw, CheckCircle2, AlertCircle, ImageDown } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { syncUserback } from "@/actions/import";
+import { syncUserback, backfillMedia } from "@/actions/import";
 import { cn } from "@repo/ui/utils";
 
 interface SyncResult {
@@ -32,13 +32,21 @@ export function SyncCard({
   lastSyncCursor,
 }: SyncCardProps) {
   const [syncing, setSyncing] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
   const [result, setResult] = useState<SyncResult | null>(null);
+  const [backfillResult, setBackfillResult] = useState<{
+    processed: number;
+    mediaStored: number;
+    skipped: number;
+    errors: string[];
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [limit, setLimit] = useState(10);
 
   async function handleSync() {
     setSyncing(true);
     setResult(null);
+    setBackfillResult(null);
     setError(null);
 
     const response = await syncUserback({ projectId, limit });
@@ -50,6 +58,23 @@ export function SyncCard({
     }
 
     setSyncing(false);
+  }
+
+  async function handleBackfill() {
+    setBackfilling(true);
+    setBackfillResult(null);
+    setResult(null);
+    setError(null);
+
+    const response = await backfillMedia();
+
+    if ("error" in response) {
+      setError(response.error);
+    } else {
+      setBackfillResult(response.data);
+    }
+
+    setBackfilling(false);
   }
 
   return (
@@ -102,9 +127,19 @@ export function SyncCard({
           </select>
         </div>
 
-        <Button onClick={handleSync} disabled={syncing} size="sm">
+        <Button onClick={handleSync} disabled={syncing || backfilling} size="sm">
           <RefreshCw className={cn("size-3.5", syncing && "animate-spin")} />
           {syncing ? "Synchroniseren..." : "Sync nu"}
+        </Button>
+
+        <Button
+          onClick={handleBackfill}
+          disabled={syncing || backfilling}
+          size="sm"
+          variant="outline"
+        >
+          <ImageDown className={cn("size-3.5", backfilling && "animate-pulse")} />
+          {backfilling ? "Media ophalen..." : "Backfill media"}
         </Button>
       </div>
 
@@ -130,6 +165,31 @@ export function SyncCard({
             <div className="mt-2 border-t pt-2">
               <p className="text-xs font-medium text-destructive">Errors:</p>
               {result.errors.map((err, i) => (
+                <p key={i} className="text-[0.65rem] text-destructive/80 break-all">
+                  {err}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Backfill result */}
+      {backfillResult && (
+        <div className="mt-4 rounded-md border bg-muted/30 p-3">
+          <div className="flex items-center gap-1.5 text-sm font-medium text-green-700">
+            <CheckCircle2 className="size-4" />
+            Media backfill voltooid
+          </div>
+          <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+            <p>{backfillResult.processed} issues verwerkt</p>
+            <p>{backfillResult.mediaStored} bestanden opgeslagen</p>
+            <p>{backfillResult.skipped} overgeslagen</p>
+          </div>
+          {backfillResult.errors.length > 0 && (
+            <div className="mt-2 border-t pt-2">
+              <p className="text-xs font-medium text-destructive">Errors:</p>
+              {backfillResult.errors.map((err, i) => (
                 <p key={i} className="text-[0.65rem] text-destructive/80 break-all">
                   {err}
                 </p>
