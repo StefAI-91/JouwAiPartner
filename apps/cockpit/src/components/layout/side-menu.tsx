@@ -2,17 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  ClipboardCheck,
-  FolderKanban,
-  Calendar,
-  Building2,
-  Users,
-  Menu,
-  BrainCircuit,
-  Mail,
-} from "lucide-react";
+import { Menu } from "lucide-react";
 import {
   Sheet,
   SheetTrigger,
@@ -22,27 +12,51 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import {
+  primaryNavItems,
+  secondaryNavItems,
+  isNavItemActive,
+  type NavItem,
+} from "@/lib/constants/navigation";
 
-interface NavItem {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
+function MenuLink({
+  item,
+  pathname,
+  badge,
+  small,
+}: {
+  item: NavItem;
+  pathname: string;
   badge?: number;
+  small?: boolean;
+}) {
+  const isActive = isNavItemActive(item.href, pathname);
+  const Icon = item.icon;
+
+  return (
+    <SheetClose render={<Link href={item.href} />}>
+      <div
+        className={`flex items-center gap-4 rounded-xl px-4 ${small ? "py-2.5" : "py-3.5"} ${small ? "text-sm" : "text-base"} font-medium transition-colors ${
+          isActive
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+        }`}
+      >
+        <Icon className={`${small ? "h-5 w-5" : "h-6 w-6"} shrink-0`} />
+        <span className="flex-1">{item.label}</span>
+        {badge !== undefined && badge > 0 && (
+          <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )}
+      </div>
+    </SheetClose>
+  );
 }
 
 export function SideMenu({ reviewCount }: { reviewCount?: number }) {
   const pathname = usePathname();
-
-  const navItems: NavItem[] = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/intelligence", label: "Intelligence", icon: BrainCircuit },
-    { href: "/review", label: "Review", icon: ClipboardCheck, badge: reviewCount },
-    { href: "/projects", label: "Projects", icon: FolderKanban },
-    { href: "/meetings", label: "Meetings", icon: Calendar },
-    { href: "/emails", label: "Emails", icon: Mail },
-    { href: "/clients", label: "Clients", icon: Building2 },
-    { href: "/people", label: "People", icon: Users },
-  ];
+  const badges: Record<string, number | undefined> = { reviewCount };
 
   return (
     <Sheet>
@@ -66,29 +80,22 @@ export function SideMenu({ reviewCount }: { reviewCount?: number }) {
         </SheetHeader>
 
         <nav className="flex flex-col gap-1.5 px-4 py-5">
-          {navItems.map(({ href, label, icon: Icon, badge }) => {
-            const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          {primaryNavItems.map((item) => (
+            <MenuLink
+              key={item.href}
+              item={item}
+              pathname={pathname}
+              badge={item.badgeKey ? (badges[item.badgeKey] ?? undefined) : undefined}
+            />
+          ))}
 
-            return (
-              <SheetClose key={href} render={<Link href={href} />}>
-                <div
-                  className={`flex items-center gap-4 rounded-xl px-4 py-3.5 text-base font-medium transition-colors ${
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                  }`}
-                >
-                  <Icon className="h-6 w-6 shrink-0" />
-                  <span className="flex-1">{label}</span>
-                  {badge !== undefined && badge > 0 && (
-                    <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white">
-                      {badge > 99 ? "99+" : badge}
-                    </span>
-                  )}
-                </div>
-              </SheetClose>
-            );
-          })}
+          {/* Bronnen section */}
+          <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+            Bronnen
+          </div>
+          {secondaryNavItems.map((item) => (
+            <MenuLink key={item.href} item={item} pathname={pathname} small />
+          ))}
         </nav>
       </SheetContent>
     </Sheet>

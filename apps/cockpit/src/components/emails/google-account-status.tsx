@@ -19,7 +19,7 @@ export function GoogleAccountStatus({ accounts }: GoogleAccountStatusProps) {
               Koppel een Google Workspace account om emails te synchroniseren.
             </p>
           </div>
-          <Button size="sm" render={<a href="/api/email/auth" />}>
+          <Button size="sm" nativeButton={false} render={<a href="/api/email/auth" />}>
             <ExternalLink className="mr-2 h-4 w-4" />
             Koppelen
           </Button>
@@ -48,7 +48,12 @@ export function GoogleAccountStatus({ accounts }: GoogleAccountStatusProps) {
             )}
           </div>
         ))}
-        <Button variant="outline" size="sm" render={<a href="/api/email/auth" />}>
+        <Button
+          variant="outline"
+          size="sm"
+          nativeButton={false}
+          render={<a href="/api/email/auth" />}
+        >
           <ExternalLink className="mr-2 h-4 w-4" />
           Account toevoegen
         </Button>
