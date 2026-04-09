@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: DevHub — AI Development Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      .tab-active { border-bottom: 2px solid #006B3F; color: #006B3F; font-weight: 600; }
+      .tab-inactive { border-bottom: 2px solid transparent; color: #6b7280; }
+      .tab-inactive:hover { color: #374151; }
+      .sidebar-item { transition: background-color 0.1s; }
+      .sidebar-item:hover { background-color: #f3f4f6; }
+      .sidebar-item.active { background-color: #f0fdf4; color: #006B3F; font-weight: 600; }
+      .issue-row { transition: background-color 0.1s; }
+      .issue-row:hover { background-color: #f9fafb; }
+      .screen { display: none; }
+      .screen.active { display: block; }
+    </style>
+  </head>
+  <body class="bg-white text-gray-900">
+
+    <!-- SCREEN NAVIGATION -->
+    <div class="fixed top-7 left-0 right-0 bg-gray-900 text-white z-50 flex items-center justify-center gap-1 py-2 px-4">
+      <span class="text-xs text-gray-400 mr-3">Schermen:</span>
+      <button onclick="showScreen('list')" id="nav-list" class="px-3 py-1 text-xs rounded-md bg-white text-gray-900 font-medium">Issue List</button>
+      <button onclick="showScreen('detail')" id="nav-detail" class="px-3 py-1 text-xs rounded-md text-gray-300 hover:text-white">Issue Detail</button>
+      <button onclick="showScreen('status')" id="nav-status" class="px-3 py-1 text-xs rounded-md text-gray-300 hover:text-white">Status Page</button>
+    </div>
+
+    <div style="padding-top: 36px;">
+
+      <!-- ============================================ -->
+      <!-- SCREEN 1: ISSUE LIST                         -->
+      <!-- ============================================ -->
+      <div id="screen-list" class="screen active">
+        <div class="flex h-[calc(100vh-64px)]">
+
+          <!-- SIDEBAR -->
+          <!-- COMPONENT: AppSidebar -->
+          <aside class="w-56 border-r border-gray-200 bg-gray-50 flex flex-col">
+            <!-- Logo -->
+            <div class="px-4 py-4 border-b border-gray-200">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 bg-primary-500 rounded-md flex items-center justify-center">
+                  <span class="text-white text-xs font-bold">D</span>
+                </div>
+                <span class="font-semibold text-sm text-gray-900">JAIP DevHub</span>
+              </div>
+            </div>
+
+            <!-- Project Switcher -->
+            <!-- COMPONENT: ProjectSwitcher -->
+            <div class="px-3 py-3 border-b border-gray-200">
+              <button class="w-full flex items-center justify-between px-2 py-1.5 text-sm bg-white border border-gray-200 rounded-md hover:border-gray-300 transition-colors">
+                <span class="font-medium text-gray-900">CAi Studio</span>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+            </div>
+
+            <!-- Status Navigation -->
+            <nav class="flex-1 px-2 py-3 space-y-0.5">
+              <a href="#" class="sidebar-item flex items-center justify-between px-2 py-1.5 rounded-md text-sm text-gray-600">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+                  <span>Alle issues</span>
+                </div>
+                <span class="text-xs text-gray-400">152</span>
+              </a>
+              <a href="#" class="sidebar-item active flex items-center justify-between px-2 py-1.5 rounded-md text-sm">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                  <span>Backlog</span>
+                </div>
+                <span class="text-xs">45</span>
+              </a>
+              <a href="#" class="sidebar-item flex items-center justify-between px-2 py-1.5 rounded-md text-sm text-gray-600">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                  <span>Todo</span>
+                </div>
+                <span class="text-xs text-gray-400">12</span>
+              </a>
+              <a href="#" class="sidebar-item flex items-center justify-between px-2 py-1.5 rounded-md text-sm text-gray-600">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                  <span>In Progress</span>
+                </div>
+                <span class="text-xs text-gray-400">8</span>
+              </a>
+              <a href="#" class="sidebar-item flex items-center justify-between px-2 py-1.5 rounded-md text-sm text-gray-600">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                  <span>Done</span>
+                </div>
+                <span class="text-xs text-gray-400">87</span>
+              </a>
+            </nav>
+
+            <!-- Bottom -->
+            <div class="px-2 py-3 border-t border-gray-200">
+              <a href="#" class="sidebar-item flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>Instellingen</span>
+              </a>
+            </div>
+          </aside>
+
+          <!-- MAIN CONTENT -->
+          <main class="flex-1 flex flex-col">
+
+            <!-- Top bar with action -->
+            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200">
+              <h1 class="text-lg font-semibold text-gray-900">Issues</h1>
+              <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-md hover:bg-primary-600 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Nieuw Issue
+              </button>
+            </div>
+
+            <!-- COMPONENT: IssueFilters -->
+            <div class="flex items-center gap-2 px-5 py-2.5 border-b border-gray-100 bg-gray-50/50">
+              <button class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:border-gray-300">
+                Status <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <button class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:border-gray-300">
+                Priority <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <button class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:border-gray-300">
+                Type <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <button class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:border-gray-300">
+                Component <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <button class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:border-gray-300">
+                Toegewezen aan <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div class="flex-1"></div>
+              <div class="relative">
+                <svg class="w-4 h-4 text-gray-400 absolute left-2 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input type="text" placeholder="Zoeken..." class="w-48 pl-8 pr-3 py-1 text-xs border border-gray-200 rounded-md bg-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500">
+              </div>
+            </div>
+
+            <!-- COMPONENT: IssueList -->
+            <div class="flex-1 overflow-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="border-b border-gray-100">
+                    <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-5 py-2 w-8"></th>
+                    <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-2 py-2">Issue</th>
+                    <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-2 py-2 w-24">Type</th>
+                    <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-2 py-2 w-28">Component</th>
+                    <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-2 py-2 w-24">Toegewezen</th>
+                    <th class="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-2 py-2 w-28">Status</th>
+                    <th class="text-right text-xs font-medium text-gray-400 uppercase tracking-wider px-5 py-2 w-20">Datum</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- COMPONENT: IssueRow — Urgent, In Progress -->
+                  <tr class="issue-row border-b border-gray-50 cursor-pointer" onclick="showScreen('detail')">
+                    <td class="px-5 py-2.5">
+                      <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500" title="Urgent"></span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-mono">#42</span>
+                        <span class="text-sm font-medium text-gray-900">Studio opslaan verliest content</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-red-50 text-red-700">Bug</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-purple-50 text-purple-700">Backend</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-1.5">
+                        <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center"><span class="text-xs font-medium text-blue-700">K</span></div>
+                        <span class="text-xs text-gray-600">Kenji</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded bg-yellow-50 text-yellow-700">
+                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+                        In Progress
+                      </span>
+                    </td>
+                    <td class="px-5 py-2.5 text-right text-xs text-gray-400">8 apr</td>
+                  </tr>
+
+                  <!-- IssueRow — Urgent, In Progress -->
+                  <tr class="issue-row border-b border-gray-50 cursor-pointer">
+                    <td class="px-5 py-2.5">
+                      <span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500" title="Urgent"></span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-mono">#38</span>
+                        <span class="text-sm font-medium text-gray-900">Login crash op Safari 18.2</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-red-50 text-red-700">Bug</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-sky-50 text-sky-700">Frontend</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-1.5">
+                        <div class="w-5 h-5 rounded-full bg-pink-100 flex items-center justify-center"><span class="text-xs font-medium text-pink-700">M</span></div>
+                        <span class="text-xs text-gray-600">Myrrh</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded bg-yellow-50 text-yellow-700">
+                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+                        In Progress
+                      </span>
+                    </td>
+                    <td class="px-5 py-2.5 text-right text-xs text-gray-400">7 apr</td>
+                  </tr>
+
+                  <!-- IssueRow — High, Todo -->
+                  <tr class="issue-row border-b border-gray-50 cursor-pointer">
+                    <td class="px-5 py-2.5">
+                      <span class="inline-block w-2.5 h-2.5 rounded-full bg-orange-500" title="High"></span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-mono">#51</span>
+                        <span class="text-sm font-medium text-gray-900">Co-founder slaat fases over</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-red-50 text-red-700">Bug</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-violet-50 text-violet-700">Prompt AI</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="text-xs text-gray-300">—</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                        Todo
+                      </span>
+                    </td>
+                    <td class="px-5 py-2.5 text-right text-xs text-gray-400">9 apr</td>
+                  </tr>
+
+                  <!-- IssueRow — High, Todo -->
+                  <tr class="issue-row border-b border-gray-50 cursor-pointer">
+                    <td class="px-5 py-2.5">
+                      <span class="inline-block w-2.5 h-2.5 rounded-full bg-orange-500" title="High"></span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-mono">#47</span>
+                        <span class="text-sm font-medium text-gray-900">Upload timeout bij bestanden > 5MB</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-red-50 text-red-700">Bug</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-amber-50 text-amber-700">API</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-1.5">
+                        <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center"><span class="text-xs font-medium text-blue-700">K</span></div>
+                        <span class="text-xs text-gray-600">Kenji</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                        Todo
+                      </span>
+                    </td>
+                    <td class="px-5 py-2.5 text-right text-xs text-gray-400">8 apr</td>
+                  </tr>
+
+                  <!-- IssueRow — Medium, Backlog -->
+                  <tr class="issue-row border-b border-gray-50 cursor-pointer">
+                    <td class="px-5 py-2.5">
+                      <span class="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400" title="Medium"></span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-mono">#33</span>
+                        <span class="text-sm font-medium text-gray-900">Dark mode toggle werkt niet</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-red-50 text-red-700">Bug</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-sky-50 text-sky-700">Frontend</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="text-xs text-gray-300">—</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                        Backlog
+                      </span>
+                    </td>
+                    <td class="px-5 py-2.5 text-right text-xs text-gray-400">6 apr</td>
+                  </tr>
+
+                  <!-- IssueRow — Low, Feature Request -->
+                  <tr class="issue-row border-b border-gray-50 cursor-pointer">
+                    <td class="px-5 py-2.5">
+                      <span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-400" title="Low"></span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-mono">#52</span>
+                        <span class="text-sm font-medium text-gray-900">Export functie voor rapporten</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-primary-50 text-primary-500">Feature</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-sky-50 text-sky-700">Frontend</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="text-xs text-gray-300">—</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                        Backlog
+                      </span>
+                    </td>
+                    <td class="px-5 py-2.5 text-right text-xs text-gray-400">9 apr</td>
+                  </tr>
+
+                  <!-- IssueRow — Low, Question -->
+                  <tr class="issue-row border-b border-gray-50 cursor-pointer">
+                    <td class="px-5 py-2.5">
+                      <span class="inline-block w-2.5 h-2.5 rounded-full bg-blue-400" title="Low"></span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-mono">#44</span>
+                        <span class="text-sm font-medium text-gray-900">Hoe werkt de zoekfunctie?</span>
+                      </div>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600">Vraag</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="text-xs text-gray-300">—</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="text-xs text-gray-300">—</span>
+                    </td>
+                    <td class="px-2 py-2.5">
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                        Backlog
+                      </span>
+                    </td>
+                    <td class="px-5 py-2.5 text-right text-xs text-gray-400">7 apr</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Footer bar -->
+            <div class="flex items-center justify-between px-5 py-2 border-t border-gray-200 bg-gray-50 text-xs text-gray-400">
+              <span>152 issues</span>
+              <span>Laatste Userback sync: 9 apr 2026, 14:32</span>
+            </div>
+
+          </main>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 2: ISSUE DETAIL                       -->
+      <!-- ============================================ -->
+      <div id="screen-detail" class="screen">
+        <div class="flex h-[calc(100vh-64px)]">
+
+          <!-- Sidebar (same as list but collapsed indicator) -->
+          <aside class="w-56 border-r border-gray-200 bg-gray-50 flex flex-col">
+            <div class="px-4 py-4 border-b border-gray-200">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 bg-primary-500 rounded-md flex items-center justify-center">
+                  <span class="text-white text-xs font-bold">D</span>
+                </div>
+                <span class="font-semibold text-sm text-gray-900">JAIP DevHub</span>
+              </div>
+            </div>
+            <div class="px-3 py-3 border-b border-gray-200">
+              <button class="w-full flex items-center justify-between px-2 py-1.5 text-sm bg-white border border-gray-200 rounded-md">
+                <span class="font-medium text-gray-900">CAi Studio</span>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+            </div>
+            <nav class="flex-1 px-2 py-3 space-y-0.5">
+              <a href="#" onclick="showScreen('list'); return false;" class="sidebar-item flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Terug naar issues
+              </a>
+            </nav>
+          </aside>
+
+          <!-- MAIN: Issue Detail -->
+          <!-- COMPONENT: IssueDetail -->
+          <main class="flex-1 flex">
+
+            <!-- Left: Content -->
+            <div class="flex-1 overflow-auto p-6">
+              <!-- Header -->
+              <div class="flex items-center gap-3 mb-1">
+                <span class="text-sm font-mono text-gray-400">#42</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-red-50 text-red-700">Bug</span>
+                <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-red-50 text-red-600">Urgent</span>
+              </div>
+              <h1 class="text-xl font-semibold text-gray-900 mb-6">Studio opslaan verliest content</h1>
+
+              <!-- Description -->
+              <div class="mb-6">
+                <h3 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Beschrijving</h3>
+                <p class="text-sm text-gray-700 leading-relaxed">
+                  Wanneer je een studio opslaat na het aanpassen van content, verdwijnt de helft van de opgeslagen tekst. Dit gebeurt bij langere teksten (>500 woorden). Console toont geen errors.
+                </p>
+              </div>
+
+              <!-- AI Repro Steps -->
+              <div class="mb-6 bg-blue-50/50 border border-blue-100 rounded-lg p-4">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-sm">&#x2728;</span>
+                  <h3 class="text-xs font-medium text-blue-700 uppercase tracking-wider">AI Reproductiestappen</h3>
+                  <span class="text-xs text-blue-400 ml-auto">Haiku 4.5 &middot; confidence: 0.87</span>
+                </div>
+                <ol class="list-decimal list-inside space-y-1.5 text-sm text-gray-700">
+                  <li>Open een bestaande studio met >500 woorden content</li>
+                  <li>Wijzig een deel van de tekst</li>
+                  <li>Klik op "Opslaan"</li>
+                  <li>Herlaad de pagina</li>
+                  <li>Observeer dat content na ~500 woorden is afgekapt</li>
+                </ol>
+              </div>
+
+              <!-- Divider -->
+              <hr class="border-gray-200 my-6">
+
+              <!-- Comments & Activity Feed -->
+              <!-- COMPONENT: CommentActivityFeed -->
+              <h3 class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-4">Comments & Activiteit</h3>
+
+              <div class="space-y-4">
+                <!-- Activity: status change -->
+                <div class="flex items-start gap-3">
+                  <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center mt-0.5">
+                    <span class="text-xs text-gray-400">&#x21bb;</span>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">
+                      Status gewijzigd: <span class="text-gray-700 font-medium">backlog</span> &rarr; <span class="text-gray-700 font-medium">in_progress</span>
+                    </p>
+                    <p class="text-xs text-gray-400 mt-0.5">Stef &middot; 3 uur geleden</p>
+                  </div>
+                </div>
+
+                <!-- Activity: assignment -->
+                <div class="flex items-start gap-3">
+                  <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center mt-0.5">
+                    <span class="text-xs text-gray-400">&#x21bb;</span>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">
+                      Toegewezen aan <span class="text-gray-700 font-medium">Kenji</span>
+                    </p>
+                    <p class="text-xs text-gray-400 mt-0.5">Stef &middot; 3 uur geleden</p>
+                  </div>
+                </div>
+
+                <!-- Comment -->
+                <div class="flex items-start gap-3">
+                  <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
+                    <span class="text-xs font-medium text-blue-700">K</span>
+                  </div>
+                  <div class="flex-1">
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5">
+                      <p class="text-sm text-gray-700">
+                        Lijkt een truncation issue in het save endpoint. V2 endpoint van Joseph zou dit moeten oplossen.
+                      </p>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">Kenji &middot; 1 uur geleden</p>
+                  </div>
+                </div>
+
+                <!-- Comment input -->
+                <div class="flex items-start gap-3 pt-2">
+                  <div class="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center mt-0.5">
+                    <span class="text-xs font-medium text-primary-700">S</span>
+                  </div>
+                  <div class="flex-1">
+                    <textarea rows="2" placeholder="Voeg een comment toe..." class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none"></textarea>
+                    <div class="flex justify-end mt-2">
+                      <button class="px-3 py-1.5 text-xs font-medium bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors">Versturen</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Metadata Sidebar -->
+            <!-- COMPONENT: IssueMetadataSidebar -->
+            <div class="w-72 border-l border-gray-200 bg-gray-50/50 p-5 overflow-auto">
+              <div class="space-y-5">
+                <!-- Status -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Status</label>
+                  <button class="w-full flex items-center justify-between px-2.5 py-1.5 text-sm bg-white border border-gray-200 rounded-md hover:border-gray-300">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                      <span class="font-medium">In Progress</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                </div>
+
+                <!-- Priority -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Priority</label>
+                  <button class="w-full flex items-center justify-between px-2.5 py-1.5 text-sm bg-white border border-gray-200 rounded-md hover:border-gray-300">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                      <span class="font-medium">Urgent</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                </div>
+
+                <!-- Type -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Type</label>
+                  <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-red-50 text-red-700">Bug</span>
+                </div>
+
+                <!-- Component -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Component</label>
+                  <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-purple-50 text-purple-700">Backend</span>
+                </div>
+
+                <!-- Severity -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Severity</label>
+                  <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-red-50 text-red-600">Critical</span>
+                </div>
+
+                <hr class="border-gray-200">
+
+                <!-- Assigned to -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Toegewezen aan</label>
+                  <button class="w-full flex items-center justify-between px-2.5 py-1.5 text-sm bg-white border border-gray-200 rounded-md hover:border-gray-300">
+                    <div class="flex items-center gap-2">
+                      <div class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center"><span class="text-xs font-medium text-blue-700">K</span></div>
+                      <span class="font-medium">Kenji</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                </div>
+
+                <!-- Labels -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Labels</label>
+                  <div class="flex flex-wrap gap-1">
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600">save</span>
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600">data-loss</span>
+                  </div>
+                </div>
+
+                <hr class="border-gray-200">
+
+                <!-- Source -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Bron</label>
+                  <div class="flex items-center gap-1.5">
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-orange-50 text-orange-700">Userback</span>
+                    <a href="#" class="text-xs text-primary-500 hover:underline">Bekijk origineel &rarr;</a>
+                  </div>
+                </div>
+
+                <!-- Created -->
+                <div>
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-1.5">Aangemaakt</label>
+                  <span class="text-sm text-gray-600">8 apr 2026</span>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- SCREEN 3: STATUS PAGE (Public)               -->
+      <!-- ============================================ -->
+      <div id="screen-status" class="screen">
+        <div class="min-h-screen bg-gray-50">
+
+          <!-- Header -->
+          <header class="bg-white border-b border-gray-200">
+            <div class="max-w-2xl mx-auto px-6 py-5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                  <span class="text-white text-sm font-bold">J</span>
+                </div>
+                <div>
+                  <span class="text-sm text-gray-400">Jouw AI Partner</span>
+                  <span class="text-sm text-gray-300 mx-1">&middot;</span>
+                  <span class="text-sm text-gray-400">Project Status</span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <!-- Content -->
+          <div class="max-w-2xl mx-auto px-6 py-8">
+
+            <!-- Project name + stats -->
+            <div class="mb-8">
+              <h1 class="text-2xl font-bold text-gray-900 mb-2">CAi Studio</h1>
+              <div class="flex items-center gap-3 text-sm text-gray-500">
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                  12 open issues
+                </span>
+                <span>&middot;</span>
+                <span class="inline-flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                  8 opgelost deze maand
+                </span>
+              </div>
+            </div>
+
+            <!-- Open Issues -->
+            <div class="bg-white rounded-lg border border-gray-200 mb-6">
+              <div class="px-5 py-3 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-900">Open</h2>
+              </div>
+              <ul class="divide-y divide-gray-50">
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                    <span class="text-sm text-gray-800">Studio opslaan verliest content</span>
+                  </div>
+                  <span class="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded">In progress</span>
+                </li>
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+                    <span class="text-sm text-gray-800">Login crash op Safari 18.2</span>
+                  </div>
+                  <span class="text-xs font-medium text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded">In progress</span>
+                </li>
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                    <span class="text-sm text-gray-800">Co-founder slaat fases over</span>
+                  </div>
+                  <span class="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Todo</span>
+                </li>
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                    <span class="text-sm text-gray-800">Upload timeout bij grote bestanden</span>
+                  </div>
+                  <span class="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Todo</span>
+                </li>
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+                    <span class="text-sm text-gray-800">Dark mode toggle werkt niet</span>
+                  </div>
+                  <span class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded">Backlog</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Recently Resolved -->
+            <div class="bg-white rounded-lg border border-gray-200 mb-8">
+              <div class="px-5 py-3 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-900">Recent opgelost</h2>
+              </div>
+              <ul class="divide-y divide-gray-50">
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span class="text-sm text-gray-600">Chat response tijd verbeterd (40s &rarr; 4s)</span>
+                  </div>
+                  <span class="text-xs text-gray-400">7 apr 2026</span>
+                </li>
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span class="text-sm text-gray-600">Claude model integratie</span>
+                  </div>
+                  <span class="text-xs text-gray-400">6 apr 2026</span>
+                </li>
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span class="text-sm text-gray-600">Image generation fix</span>
+                  </div>
+                  <span class="text-xs text-gray-400">5 apr 2026</span>
+                </li>
+                <li class="flex items-center justify-between px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span class="text-sm text-gray-600">PDF generation crash opgelost</span>
+                  </div>
+                  <span class="text-xs text-gray-400">4 apr 2026</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center text-xs text-gray-400 pb-8">
+              <div class="flex items-center justify-center gap-2">
+                <div class="w-4 h-4 bg-primary-500 rounded flex items-center justify-center">
+                  <span class="text-white text-[8px] font-bold">J</span>
+                </div>
+                Powered by Jouw AI Partner
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      function showScreen(name) {
+        // Hide all screens
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        // Show target
+        document.getElementById('screen-' + name).classList.add('active');
+        // Update nav buttons
+        document.querySelectorAll('[id^="nav-"]').forEach(btn => {
+          btn.classList.remove('bg-white', 'text-gray-900', 'font-medium');
+          btn.classList.add('text-gray-300');
+        });
+        const activeBtn = document.getElementById('nav-' + name);
+        activeBtn.classList.remove('text-gray-300');
+        activeBtn.classList.add('bg-white', 'text-gray-900', 'font-medium');
+      }
+    </script>
+  </body>
+</html>
