@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@repo/database/supabase/client";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronDown, FolderKanban } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PROJECT_CHANGE_EVENT } from "@/hooks/use-project";
@@ -13,44 +12,43 @@ interface Project {
 
 const STORAGE_KEY = "devhub-selected-project";
 
+function getInitialProject(projects: Project[]): string | null {
+  if (typeof window === "undefined") return projects[0]?.id ?? null;
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored && projects.find((p) => p.id === stored)) return stored;
+  if (projects.length > 0) {
+    localStorage.setItem(STORAGE_KEY, projects[0].id);
+    return projects[0].id;
+  }
+  return null;
+}
+
 export function ProjectSwitcher({
+  projects,
   onProjectChange,
 }: {
+  projects: Project[];
   onProjectChange?: (projectId: string | null) => void;
 }) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => getInitialProject(projects));
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) setSelectedId(stored);
+  const handleSelect = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      localStorage.setItem(STORAGE_KEY, id);
+      window.dispatchEvent(new Event(PROJECT_CHANGE_EVENT));
+      setOpen(false);
+      onProjectChange?.(id);
+    },
+    [onProjectChange],
+  );
 
-    const supabase = createClient();
-    supabase
-      .from("projects")
-      .select("id, name")
-      .order("name")
-      .then(({ data }) => {
-        if (data) {
-          setProjects(data);
-          // If stored project no longer exists, select first
-          if (stored && !data.find((p) => p.id === stored) && data.length > 0) {
-            setSelectedId(data[0].id);
-            localStorage.setItem(STORAGE_KEY, data[0].id);
-          }
-          // If nothing stored, select first
-          if (!stored && data.length > 0) {
-            setSelectedId(data[0].id);
-            localStorage.setItem(STORAGE_KEY, data[0].id);
-          }
-        }
-      });
-  }, []);
-
+  // Sync onProjectChange on mount
   useEffect(() => {
     onProjectChange?.(selectedId);
-  }, [selectedId, onProjectChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const selected = projects.find((p) => p.id === selectedId);
 
@@ -61,7 +59,7 @@ export function ProjectSwitcher({
         className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
       >
         <FolderKanban className="size-4 text-muted-foreground" />
-        <span>{selected?.name ?? "Select project..."}</span>
+        <span>{selected?.name ?? "Selecteer project..."}</span>
         <ChevronDown className="size-3.5 text-muted-foreground" />
       </button>
 
@@ -72,12 +70,7 @@ export function ProjectSwitcher({
             {projects.map((project) => (
               <button
                 key={project.id}
-                onClick={() => {
-                  setSelectedId(project.id);
-                  localStorage.setItem(STORAGE_KEY, project.id);
-                  window.dispatchEvent(new Event(PROJECT_CHANGE_EVENT));
-                  setOpen(false);
-                }}
+                onClick={() => handleSelect(project.id)}
                 className={cn(
                   "flex w-full items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-accent",
                   project.id === selectedId && "bg-accent font-medium",
@@ -88,7 +81,7 @@ export function ProjectSwitcher({
               </button>
             ))}
             {projects.length === 0 && (
-              <p className="px-3 py-2 text-sm text-muted-foreground">No projects found</p>
+              <p className="px-3 py-2 text-sm text-muted-foreground">Geen projecten gevonden</p>
             )}
           </div>
         </>

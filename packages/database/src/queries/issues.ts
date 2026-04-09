@@ -51,7 +51,7 @@ export interface IssueActivityRow {
   created_at: string;
 }
 
-const ISSUE_SELECT = `
+export const ISSUE_SELECT = `
   id, project_id, title, description, type, status, priority, component, severity,
   labels, assigned_to, reporter_name, reporter_email, source, userback_id, source_url,
   issue_number, execution_type, ai_executable, duplicate_of_id,
@@ -105,17 +105,27 @@ export async function listIssues(
     query = query.eq("assigned_to", params.assignedTo);
   }
   if (params.search) {
-    query = query.or(`title.ilike.%${params.search}%,description.ilike.%${params.search}%`);
+    // Sanitize: escape PostgREST special characters to prevent filter injection
+    const sanitized = params.search.replace(/[%_\\,().]/g, (ch) => `\\${ch}`);
+    query = query.or(`title.ilike.%${sanitized}%,description.ilike.%${sanitized}%`);
   }
 
-  // Sort by priority (urgent first) then created_at DESC
-  query = query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+  // Sort by priority (urgent first via PRIORITY_ORDER) then created_at DESC
+  query = query
+    .order("priority", { ascending: true })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   const { data, error } = await query;
 
-  if (error || !data) return [];
+  if (error) {
+    console.error("[listIssues] Database error:", error.message);
+    return [];
+  }
 
-  // Sort by priority in JS since Supabase can't do custom enum ordering
+  if (!data) return [];
+
+  // Re-sort by priority weight since DB sorts alphabetically
   const rows = data as unknown as IssueRow[];
   rows.sort((a, b) => {
     const pa = PRIORITY_ORDER[a.priority] ?? 99;
@@ -134,12 +144,16 @@ export async function getIssueById(id: string, client?: SupabaseClient): Promise
   const db = client ?? getAdminClient();
   const { data, error } = await db.from("issues").select(ISSUE_SELECT).eq("id", id).single();
 
-  if (error || !data) return null;
+  if (error) {
+    console.error("[getIssueById] Database error:", error.message);
+    return null;
+  }
+  if (!data) return null;
   return data as unknown as IssueRow;
 }
 
 /**
- * Get issue counts per status for a project.
+ * Get issue counts per status for a project (uses DB-level counting).
  */
 export async function getIssueCounts(
   projectId: string,
@@ -154,56 +168,43 @@ export async function getIssueCounts(
 }> {
   const db = client ?? getAdminClient();
   const statuses = ["triage", "backlog", "todo", "in_progress", "done", "cancelled"] as const;
-  const counts: Record<string, number> = {
-    triage: 0,
-    backlog: 0,
-    todo: 0,
-    in_progress: 0,
-    done: 0,
-    cancelled: 0,
-  };
 
-  // Single query: fetch all issues with only status, then count in JS
-  const { data, error } = await db
-    .from("issues")
-    .select("status")
-    .eq("project_id", projectId)
-    .in("status", [...statuses]);
+  const results = await Promise.all(
+    statuses.map((status) =>
+      db
+        .from("issues")
+        .select("id", { count: "exact", head: true })
+        .eq("project_id", projectId)
+        .eq("status", status),
+    ),
+  );
 
-  if (error || !data)
-    return counts as {
-      triage: number;
-      backlog: number;
-      todo: number;
-      in_progress: number;
-      done: number;
-      cancelled: number;
-    };
+  const counts = { triage: 0, backlog: 0, todo: 0, in_progress: 0, done: 0, cancelled: 0 };
 
-  for (const row of data) {
-    if (row.status in counts) {
-      counts[row.status]++;
+  for (let i = 0; i < statuses.length; i++) {
+    const { count, error } = results[i];
+    if (error) {
+      console.error(`[getIssueCounts] Error counting ${statuses[i]}:`, error.message);
+      continue;
     }
+    counts[statuses[i]] = count ?? 0;
   }
 
-  return counts as {
-    triage: number;
-    backlog: number;
-    todo: number;
-    in_progress: number;
-    done: number;
-    cancelled: number;
-  };
+  return counts;
 }
 
 /**
- * List comments for an issue, sorted by created_at ASC.
+ * List comments for an issue, sorted by created_at ASC with pagination.
  */
 export async function listIssueComments(
   issueId: string,
+  params?: { limit?: number; offset?: number },
   client?: SupabaseClient,
 ): Promise<IssueCommentRow[]> {
   const db = client ?? getAdminClient();
+  const limit = params?.limit ?? 50;
+  const offset = params?.offset ?? 0;
+
   const { data, error } = await db
     .from("issue_comments")
     .select(
@@ -211,20 +212,28 @@ export async function listIssueComments(
        author:author_id (id, name)`,
     )
     .eq("issue_id", issueId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .range(offset, offset + limit - 1);
 
-  if (error || !data) return [];
-  return data as unknown as IssueCommentRow[];
+  if (error) {
+    console.error("[listIssueComments] Database error:", error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as IssueCommentRow[];
 }
 
 /**
- * List activity for an issue, sorted by created_at DESC.
+ * List activity for an issue, sorted by created_at DESC with pagination.
  */
 export async function listIssueActivity(
   issueId: string,
+  params?: { limit?: number; offset?: number },
   client?: SupabaseClient,
 ): Promise<IssueActivityRow[]> {
   const db = client ?? getAdminClient();
+  const limit = params?.limit ?? 50;
+  const offset = params?.offset ?? 0;
+
   const { data, error } = await db
     .from("issue_activity")
     .select(
@@ -232,8 +241,12 @@ export async function listIssueActivity(
        actor:actor_id (id, name)`,
     )
     .eq("issue_id", issueId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
-  if (error || !data) return [];
-  return data as unknown as IssueActivityRow[];
+  if (error) {
+    console.error("[listIssueActivity] Database error:", error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as IssueActivityRow[];
 }

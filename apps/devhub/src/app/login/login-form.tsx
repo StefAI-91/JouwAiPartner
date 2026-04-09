@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { z } from "zod";
 import { createClient } from "@repo/database/supabase/client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+
+const loginSchema = z.object({
+  email: z.string().email("Ongeldig e-mailadres"),
+  password: z.string().min(1, "Wachtwoord is verplicht"),
+});
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -18,9 +24,16 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Ongeldige invoer");
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: parsed.data.email,
+      password: parsed.data.password,
     });
 
     if (error) {

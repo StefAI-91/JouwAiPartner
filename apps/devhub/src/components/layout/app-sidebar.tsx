@@ -21,10 +21,10 @@ type StatusCounts = Record<string, number>;
 const NAV_ITEMS = [
   { label: "Triage", status: "triage", icon: Inbox, accent: true },
   { label: "Backlog", status: "backlog", icon: CircleDot },
-  { label: "Todo", status: "todo", icon: CircleDot },
-  { label: "In Progress", status: "in_progress", icon: Loader2 },
-  { label: "Done", status: "done", icon: CheckCircle2 },
-  { label: "Cancelled", status: "cancelled", icon: XCircle },
+  { label: "Te doen", status: "todo", icon: CircleDot },
+  { label: "In behandeling", status: "in_progress", icon: Loader2 },
+  { label: "Afgerond", status: "done", icon: CheckCircle2 },
+  { label: "Geannuleerd", status: "cancelled", icon: XCircle },
 ];
 
 export function AppSidebar() {
@@ -33,24 +33,25 @@ export function AppSidebar() {
   const [counts, setCounts] = useState<StatusCounts>({});
 
   useEffect(() => {
-    if (!projectId) {
-      setCounts({});
-      return;
-    }
+    if (!projectId) return;
 
+    let cancelled = false;
     const supabase = createClient();
-    supabase
-      .from("issues")
-      .select("status")
-      .eq("project_id", projectId)
-      .then(({ data }) => {
-        if (!data) return;
-        const c: StatusCounts = {};
-        for (const row of data) {
-          c[row.status] = (c[row.status] ?? 0) + 1;
-        }
-        setCounts(c);
-      });
+
+    const fetchCounts = async () => {
+      const { data } = await supabase.from("issues").select("status").eq("project_id", projectId);
+      if (cancelled || !data) return;
+      const c: StatusCounts = {};
+      for (const row of data) {
+        c[row.status] = (c[row.status] ?? 0) + 1;
+      }
+      setCounts(c);
+    };
+
+    fetchCounts();
+    return () => {
+      cancelled = true;
+    };
   }, [projectId]);
 
   return (
@@ -73,7 +74,7 @@ export function AppSidebar() {
           )}
         >
           <LayoutList className="size-4" />
-          All Issues
+          Alle issues
         </Link>
 
         <div className="pt-3 pb-1 px-2">
@@ -117,7 +118,7 @@ export function AppSidebar() {
           className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
           <Settings className="size-4" />
-          Settings
+          Instellingen
         </Link>
       </div>
     </aside>
