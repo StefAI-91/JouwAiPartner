@@ -15,7 +15,6 @@ import {
 import { cn } from "@repo/ui/utils";
 import { useEffect, useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
-import { Button } from "@repo/ui/button";
 import { Sheet, SheetTrigger, SheetContent, SheetClose, SheetTitle } from "@repo/ui/sheet";
 
 type StatusCounts = Record<string, number>;
@@ -71,11 +70,7 @@ export function MobileSidebar() {
 
   return (
     <Sheet>
-      <SheetTrigger
-        render={(props) => (
-          <Button variant="ghost" size="icon" className="shrink-0 lg:hidden" {...props} />
-        )}
-      >
+      <SheetTrigger className="inline-flex shrink-0 items-center justify-center rounded-lg size-8 transition-colors hover:bg-muted lg:hidden">
         <Menu className="size-5" />
         <span className="sr-only">Open menu</span>
       </SheetTrigger>
