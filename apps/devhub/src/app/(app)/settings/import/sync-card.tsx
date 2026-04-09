@@ -3,8 +3,18 @@
 import { useState } from "react";
 import { RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { syncUserback, type SyncResult } from "@/actions/import";
+import { syncUserback } from "@/actions/import";
 import { cn } from "@/lib/utils";
+
+interface SyncResult {
+  imported: number;
+  updated: number;
+  skipped: number;
+  total: number;
+  classified: number;
+  isInitial: boolean;
+  errors: string[];
+}
 
 interface SyncCardProps {
   projectId: string;

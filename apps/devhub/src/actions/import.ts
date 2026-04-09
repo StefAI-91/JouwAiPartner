@@ -21,23 +21,25 @@ const syncSchema = z.object({
   limit: z.number().int().min(1).max(1000).default(10),
 });
 
-export interface SyncResult {
-  imported: number;
-  updated: number;
-  skipped: number;
-  total: number;
-  classified: number;
-  isInitial: boolean;
-  errors: string[];
-}
-
 /**
  * Sync Userback feedback into the issues table.
  * Uses cursor-based incremental sync. Limit controls max items fetched from API.
  */
-export async function syncUserback(
-  input: z.input<typeof syncSchema>,
-): Promise<{ success: true; data: SyncResult } | { error: string }> {
+export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
+  | {
+      success: true;
+      data: {
+        imported: number;
+        updated: number;
+        skipped: number;
+        total: number;
+        classified: number;
+        isInitial: boolean;
+        errors: string[];
+      };
+    }
+  | { error: string }
+> {
   // Auth check
   const supabase = await createClient();
   const {
