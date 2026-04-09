@@ -1,727 +1,1694 @@
-// Generated manually from supabase/migrations/ — Sprint 001
-// Regenereer met: npx supabase gen types typescript --project-id <id> > packages/database/src/types/database.ts
-
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.4";
+  };
   public: {
     Tables: {
-      profiles: {
+      _cron_log: {
         Row: {
+          created_at: string | null;
+          id: number;
+          job_name: string;
+          result: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: never;
+          job_name: string;
+          result?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: never;
+          job_name?: string;
+          result?: string | null;
+        };
+        Relationships: [];
+      };
+      devhub_project_access: {
+        Row: {
+          created_at: string;
           id: string;
-          full_name: string | null;
-          email: string;
-          avatar_url: string | null;
+          profile_id: string;
+          project_id: string;
           role: string;
-          created_at: string;
-          updated_at: string;
         };
         Insert: {
-          id: string;
-          full_name?: string | null;
-          email: string;
-          avatar_url?: string | null;
+          created_at?: string;
+          id?: string;
+          profile_id: string;
+          project_id: string;
           role?: string;
-          created_at?: string;
-          updated_at?: string;
         };
         Update: {
+          created_at?: string;
           id?: string;
-          full_name?: string | null;
-          email?: string;
-          avatar_url?: string | null;
+          profile_id?: string;
+          project_id?: string;
           role?: string;
-          created_at?: string;
-          updated_at?: string;
         };
-      };
-      organizations: {
-        Row: {
-          id: string;
-          name: string;
-          aliases: string[];
-          type: "client" | "partner" | "supplier" | "other";
-          contact_person: string | null;
-          email: string | null;
-          status: "prospect" | "active" | "inactive";
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          aliases?: string[];
-          type?: "client" | "partner" | "supplier" | "other";
-          contact_person?: string | null;
-          email?: string | null;
-          status?: "prospect" | "active" | "inactive";
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          aliases?: string[];
-          type?: "client" | "partner" | "supplier" | "other";
-          contact_person?: string | null;
-          email?: string | null;
-          status?: "prospect" | "active" | "inactive";
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      people: {
-        Row: {
-          id: string;
-          name: string;
-          email: string | null;
-          team: string | null;
-          role: string | null;
-          organization_id: string | null;
-          embedding: string | null;
-          embedding_stale: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          email?: string | null;
-          team?: string | null;
-          role?: string | null;
-          organization_id?: string | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          email?: string | null;
-          team?: string | null;
-          role?: string | null;
-          organization_id?: string | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      projects: {
-        Row: {
-          id: string;
-          name: string;
-          aliases: string[];
-          organization_id: string | null;
-          description: string | null;
-          owner_id: string | null;
-          contact_person_id: string | null;
-          start_date: string | null;
-          deadline: string | null;
-          github_url: string | null;
-          status: string;
-          embedding: string | null;
-          embedding_stale: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          aliases?: string[];
-          organization_id?: string | null;
-          description?: string | null;
-          owner_id?: string | null;
-          contact_person_id?: string | null;
-          start_date?: string | null;
-          deadline?: string | null;
-          github_url?: string | null;
-          status?: string;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          aliases?: string[];
-          organization_id?: string | null;
-          description?: string | null;
-          owner_id?: string | null;
-          contact_person_id?: string | null;
-          start_date?: string | null;
-          deadline?: string | null;
-          github_url?: string | null;
-          status?: string;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      meetings: {
-        Row: {
-          id: string;
-          fireflies_id: string | null;
-          title: string;
-          date: string | null;
-          participants: string[] | null;
-          summary: string | null;
-          transcript: string | null;
-          meeting_type: string | null;
-          party_type: "client" | "partner" | "internal" | "other" | null;
-          organization_id: string | null;
-          unmatched_organization_name: string | null;
-          raw_fireflies: Json | null;
-          transcript_elevenlabs: string | null;
-          raw_elevenlabs: Json | null;
-          audio_url: string | null;
-          relevance_score: number | null;
-          ai_briefing: string | null;
-          embedding: string | null;
-          embedding_stale: boolean;
-          verification_status: string;
-          verified_by: string | null;
-          verified_at: string | null;
-          search_vector: unknown | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          fireflies_id?: string | null;
-          title: string;
-          date?: string | null;
-          participants?: string[] | null;
-          summary?: string | null;
-          transcript?: string | null;
-          meeting_type?: string | null;
-          party_type?: "client" | "partner" | "internal" | "other" | null;
-          organization_id?: string | null;
-          unmatched_organization_name?: string | null;
-          raw_fireflies?: Json | null;
-          transcript_elevenlabs?: string | null;
-          raw_elevenlabs?: Json | null;
-          audio_url?: string | null;
-          relevance_score?: number | null;
-          ai_briefing?: string | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          verification_status?: string;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          search_vector?: unknown | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          fireflies_id?: string | null;
-          title?: string;
-          date?: string | null;
-          participants?: string[] | null;
-          summary?: string | null;
-          transcript?: string | null;
-          meeting_type?: string | null;
-          party_type?: "client" | "partner" | "internal" | "other" | null;
-          organization_id?: string | null;
-          unmatched_organization_name?: string | null;
-          raw_fireflies?: Json | null;
-          transcript_elevenlabs?: string | null;
-          raw_elevenlabs?: Json | null;
-          audio_url?: string | null;
-          relevance_score?: number | null;
-          ai_briefing?: string | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          verification_status?: string;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          search_vector?: unknown | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      meeting_projects: {
-        Row: {
-          meeting_id: string;
-          project_id: string;
-          source: "ai" | "manual" | "review";
-          created_at: string;
-        };
-        Insert: {
-          meeting_id: string;
-          project_id: string;
-          source?: "ai" | "manual" | "review";
-          created_at?: string;
-        };
-        Update: {
-          meeting_id?: string;
-          project_id?: string;
-          source?: "ai" | "manual" | "review";
-          created_at?: string;
-        };
-      };
-      meeting_project_summaries: {
-        Row: {
-          id: string;
-          meeting_id: string;
-          project_id: string | null;
-          project_name_raw: string | null;
-          is_general: boolean;
-          kernpunten: string[];
-          vervolgstappen: string[];
-          summary_text: string;
-          embedding: string | null;
-          embedding_stale: boolean;
-          search_vector: unknown | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          meeting_id: string;
-          project_id?: string | null;
-          project_name_raw?: string | null;
-          kernpunten?: string[];
-          vervolgstappen?: string[];
-          summary_text: string;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          search_vector?: unknown | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          meeting_id?: string;
-          project_id?: string | null;
-          project_name_raw?: string | null;
-          kernpunten?: string[];
-          vervolgstappen?: string[];
-          summary_text?: string;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          search_vector?: unknown | null;
-          created_at?: string;
-        };
-      };
-      meeting_participants: {
-        Row: {
-          meeting_id: string;
-          person_id: string;
-          created_at: string;
-        };
-        Insert: {
-          meeting_id: string;
-          person_id: string;
-          created_at?: string;
-        };
-        Update: {
-          meeting_id?: string;
-          person_id?: string;
-          created_at?: string;
-        };
-      };
-      extractions: {
-        Row: {
-          id: string;
-          meeting_id: string;
-          type: "decision" | "action_item" | "need" | "insight";
-          content: string;
-          confidence: number | null;
-          metadata: Json;
-          transcript_ref: string | null;
-          organization_id: string | null;
-          project_id: string | null;
-          embedding: string | null;
-          embedding_stale: boolean;
-          corrected_by: string | null;
-          corrected_at: string | null;
-          verification_status: string;
-          verified_by: string | null;
-          verified_at: string | null;
-          search_vector: unknown | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          meeting_id: string;
-          type: "decision" | "action_item" | "need" | "insight";
-          content: string;
-          confidence?: number | null;
-          metadata?: Json;
-          transcript_ref?: string | null;
-          organization_id?: string | null;
-          project_id?: string | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          corrected_by?: string | null;
-          corrected_at?: string | null;
-          verification_status?: string;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          search_vector?: unknown | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          meeting_id?: string;
-          type?: "decision" | "action_item" | "need" | "insight";
-          content?: string;
-          confidence?: number | null;
-          metadata?: Json;
-          transcript_ref?: string | null;
-          organization_id?: string | null;
-          project_id?: string | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          corrected_by?: string | null;
-          corrected_at?: string | null;
-          verification_status?: string;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          search_vector?: unknown | null;
-          created_at?: string;
-        };
-      };
-      summaries: {
-        Row: {
-          id: string;
-          entity_type: string;
-          entity_id: string;
-          summary_type: string;
-          content: string;
-          version: number;
-          source_meeting_ids: string[];
-          structured_content: Record<string, unknown> | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          entity_type: string;
-          entity_id: string;
-          summary_type: string;
-          content: string;
-          version?: number;
-          source_meeting_ids?: string[];
-          structured_content?: Record<string, unknown> | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          entity_type?: string;
-          entity_id?: string;
-          summary_type?: string;
-          content?: string;
-          version?: number;
-          source_meeting_ids?: string[];
-          structured_content?: Record<string, unknown> | null;
-          created_at?: string;
-        };
-      };
-      tasks: {
-        Row: {
-          id: string;
-          extraction_id: string | null;
-          title: string;
-          status: "active" | "done" | "dismissed";
-          assigned_to: string | null;
-          due_date: string | null;
-          created_by: string | null;
-          completed_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          extraction_id?: string | null;
-          title: string;
-          status?: "active" | "done" | "dismissed";
-          assigned_to?: string | null;
-          due_date?: string | null;
-          created_by?: string | null;
-          completed_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          extraction_id?: string | null;
-          title?: string;
-          status?: "active" | "done" | "dismissed";
-          assigned_to?: string | null;
-          due_date?: string | null;
-          created_by?: string | null;
-          completed_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      ignored_entities: {
-        Row: {
-          id: string;
-          organization_id: string;
-          entity_name: string;
-          entity_type: "project" | "organization" | "person";
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          organization_id: string;
-          entity_name: string;
-          entity_type: "project" | "organization" | "person";
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          organization_id?: string;
-          entity_name?: string;
-          entity_type?: "project" | "organization" | "person";
-          created_at?: string;
-        };
-      };
-      google_accounts: {
-        Row: {
-          id: string;
-          user_id: string;
-          email: string;
-          access_token: string;
-          refresh_token: string;
-          token_expiry: string;
-          scopes: string[];
-          is_active: boolean;
-          last_sync_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          email: string;
-          access_token: string;
-          refresh_token: string;
-          token_expiry: string;
-          scopes?: string[];
-          is_active?: boolean;
-          last_sync_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          email?: string;
-          access_token?: string;
-          refresh_token?: string;
-          token_expiry?: string;
-          scopes?: string[];
-          is_active?: boolean;
-          last_sync_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      emails: {
-        Row: {
-          id: string;
-          google_account_id: string;
-          gmail_id: string;
-          thread_id: string;
-          subject: string | null;
-          from_address: string;
-          from_name: string | null;
-          to_addresses: string[];
-          cc_addresses: string[];
-          date: string;
-          body_text: string | null;
-          body_html: string | null;
-          snippet: string | null;
-          labels: string[];
-          has_attachments: boolean;
-          organization_id: string | null;
-          unmatched_organization_name: string | null;
-          relevance_score: number | null;
-          email_type: string | null;
-          party_type: string | null;
-          sender_person_id: string | null;
-          is_processed: boolean;
-          verification_status: string;
-          verified_by: string | null;
-          verified_at: string | null;
-          raw_gmail: Json | null;
-          embedding: string | null;
-          embedding_stale: boolean;
-          search_vector: unknown | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          google_account_id: string;
-          gmail_id: string;
-          thread_id: string;
-          subject?: string | null;
-          from_address: string;
-          from_name?: string | null;
-          to_addresses?: string[];
-          cc_addresses?: string[];
-          date: string;
-          body_text?: string | null;
-          body_html?: string | null;
-          snippet?: string | null;
-          labels?: string[];
-          has_attachments?: boolean;
-          organization_id?: string | null;
-          unmatched_organization_name?: string | null;
-          relevance_score?: number | null;
-          email_type?: string | null;
-          party_type?: string | null;
-          sender_person_id?: string | null;
-          is_processed?: boolean;
-          verification_status?: string;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          raw_gmail?: Json | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          search_vector?: unknown | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          google_account_id?: string;
-          gmail_id?: string;
-          thread_id?: string;
-          subject?: string | null;
-          from_address?: string;
-          from_name?: string | null;
-          to_addresses?: string[];
-          cc_addresses?: string[];
-          date?: string;
-          body_text?: string | null;
-          body_html?: string | null;
-          snippet?: string | null;
-          labels?: string[];
-          has_attachments?: boolean;
-          organization_id?: string | null;
-          unmatched_organization_name?: string | null;
-          relevance_score?: number | null;
-          email_type?: string | null;
-          party_type?: string | null;
-          sender_person_id?: string | null;
-          is_processed?: boolean;
-          verification_status?: string;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          raw_gmail?: Json | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          search_vector?: unknown | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      email_projects: {
-        Row: {
-          email_id: string;
-          project_id: string;
-          source: "ai" | "manual" | "review";
-          created_at: string;
-        };
-        Insert: {
-          email_id: string;
-          project_id: string;
-          source?: "ai" | "manual" | "review";
-          created_at?: string;
-        };
-        Update: {
-          email_id?: string;
-          project_id?: string;
-          source?: "ai" | "manual" | "review";
-          created_at?: string;
-        };
+        Relationships: [
+          {
+            foreignKeyName: "devhub_project_access_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "devhub_project_access_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       email_extractions: {
         Row: {
-          id: string;
-          email_id: string;
-          type: "decision" | "action_item" | "need" | "insight" | "project_update" | "request";
-          content: string;
           confidence: number | null;
-          metadata: Json;
-          source_ref: string | null;
+          content: string;
+          corrected_at: string | null;
+          corrected_by: string | null;
+          created_at: string | null;
+          email_id: string;
+          embedding: string | null;
+          embedding_stale: boolean | null;
+          id: string;
+          metadata: Json | null;
           organization_id: string | null;
           project_id: string | null;
-          embedding: string | null;
-          embedding_stale: boolean;
-          corrected_by: string | null;
-          corrected_at: string | null;
+          search_vector: unknown;
+          source_ref: string | null;
+          type: string;
           verification_status: string;
-          verified_by: string | null;
           verified_at: string | null;
-          search_vector: unknown | null;
-          created_at: string;
+          verified_by: string | null;
         };
         Insert: {
-          id?: string;
-          email_id: string;
-          type: "decision" | "action_item" | "need" | "insight" | "project_update" | "request";
-          content: string;
           confidence?: number | null;
-          metadata?: Json;
-          source_ref?: string | null;
+          content: string;
+          corrected_at?: string | null;
+          corrected_by?: string | null;
+          created_at?: string | null;
+          email_id: string;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          id?: string;
+          metadata?: Json | null;
           organization_id?: string | null;
           project_id?: string | null;
-          embedding?: string | null;
-          embedding_stale?: boolean;
-          corrected_by?: string | null;
-          corrected_at?: string | null;
+          search_vector?: unknown;
+          source_ref?: string | null;
+          type: string;
           verification_status?: string;
-          verified_by?: string | null;
           verified_at?: string | null;
-          search_vector?: unknown | null;
-          created_at?: string;
+          verified_by?: string | null;
         };
         Update: {
-          id?: string;
-          email_id?: string;
-          type?: "decision" | "action_item" | "need" | "insight" | "project_update" | "request";
-          content?: string;
           confidence?: number | null;
-          metadata?: Json;
-          source_ref?: string | null;
+          content?: string;
+          corrected_at?: string | null;
+          corrected_by?: string | null;
+          created_at?: string | null;
+          email_id?: string;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          id?: string;
+          metadata?: Json | null;
           organization_id?: string | null;
           project_id?: string | null;
+          search_vector?: unknown;
+          source_ref?: string | null;
+          type?: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "email_extractions_corrected_by_fkey";
+            columns: ["corrected_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_extractions_email_id_fkey";
+            columns: ["email_id"];
+            isOneToOne: false;
+            referencedRelation: "emails";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_extractions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_extractions_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_extractions_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      email_projects: {
+        Row: {
+          created_at: string | null;
+          email_id: string;
+          project_id: string;
+          source: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          email_id: string;
+          project_id: string;
+          source?: string;
+        };
+        Update: {
+          created_at?: string | null;
+          email_id?: string;
+          project_id?: string;
+          source?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "email_projects_email_id_fkey";
+            columns: ["email_id"];
+            isOneToOne: false;
+            referencedRelation: "emails";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_projects_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      emails: {
+        Row: {
+          body_html: string | null;
+          body_text: string | null;
+          cc_addresses: string[] | null;
+          created_at: string | null;
+          date: string;
+          email_type: string | null;
+          embedding: string | null;
+          embedding_stale: boolean | null;
+          from_address: string;
+          from_name: string | null;
+          gmail_id: string;
+          google_account_id: string;
+          has_attachments: boolean | null;
+          id: string;
+          is_processed: boolean | null;
+          labels: string[] | null;
+          organization_id: string | null;
+          party_type: string | null;
+          raw_gmail: Json | null;
+          rejection_reason: string | null;
+          relevance_score: number | null;
+          search_vector: unknown;
+          sender_person_id: string | null;
+          snippet: string | null;
+          subject: string | null;
+          thread_id: string;
+          to_addresses: string[] | null;
+          unmatched_organization_name: string | null;
+          updated_at: string | null;
+          verification_status: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        Insert: {
+          body_html?: string | null;
+          body_text?: string | null;
+          cc_addresses?: string[] | null;
+          created_at?: string | null;
+          date: string;
+          email_type?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          from_address: string;
+          from_name?: string | null;
+          gmail_id: string;
+          google_account_id: string;
+          has_attachments?: boolean | null;
+          id?: string;
+          is_processed?: boolean | null;
+          labels?: string[] | null;
+          organization_id?: string | null;
+          party_type?: string | null;
+          raw_gmail?: Json | null;
+          rejection_reason?: string | null;
+          relevance_score?: number | null;
+          search_vector?: unknown;
+          sender_person_id?: string | null;
+          snippet?: string | null;
+          subject?: string | null;
+          thread_id: string;
+          to_addresses?: string[] | null;
+          unmatched_organization_name?: string | null;
+          updated_at?: string | null;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          body_html?: string | null;
+          body_text?: string | null;
+          cc_addresses?: string[] | null;
+          created_at?: string | null;
+          date?: string;
+          email_type?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          from_address?: string;
+          from_name?: string | null;
+          gmail_id?: string;
+          google_account_id?: string;
+          has_attachments?: boolean | null;
+          id?: string;
+          is_processed?: boolean | null;
+          labels?: string[] | null;
+          organization_id?: string | null;
+          party_type?: string | null;
+          raw_gmail?: Json | null;
+          rejection_reason?: string | null;
+          relevance_score?: number | null;
+          search_vector?: unknown;
+          sender_person_id?: string | null;
+          snippet?: string | null;
+          subject?: string | null;
+          thread_id?: string;
+          to_addresses?: string[] | null;
+          unmatched_organization_name?: string | null;
+          updated_at?: string | null;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "emails_google_account_id_fkey";
+            columns: ["google_account_id"];
+            isOneToOne: false;
+            referencedRelation: "google_accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "emails_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "emails_sender_person_id_fkey";
+            columns: ["sender_person_id"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "emails_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      extractions: {
+        Row: {
+          confidence: number | null;
+          content: string;
+          corrected_at: string | null;
+          corrected_by: string | null;
+          created_at: string | null;
+          embedding: string | null;
+          embedding_stale: boolean | null;
+          id: string;
+          meeting_id: string;
+          metadata: Json | null;
+          organization_id: string | null;
+          project_id: string | null;
+          search_vector: unknown;
+          transcript_ref: string | null;
+          type: string;
+          verification_status: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        Insert: {
+          confidence?: number | null;
+          content: string;
+          corrected_at?: string | null;
+          corrected_by?: string | null;
+          created_at?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          id?: string;
+          meeting_id: string;
+          metadata?: Json | null;
+          organization_id?: string | null;
+          project_id?: string | null;
+          search_vector?: unknown;
+          transcript_ref?: string | null;
+          type: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          confidence?: number | null;
+          content?: string;
+          corrected_at?: string | null;
+          corrected_by?: string | null;
+          created_at?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          id?: string;
+          meeting_id?: string;
+          metadata?: Json | null;
+          organization_id?: string | null;
+          project_id?: string | null;
+          search_vector?: unknown;
+          transcript_ref?: string | null;
+          type?: string;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "extractions_corrected_by_fkey";
+            columns: ["corrected_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "extractions_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "extractions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "extractions_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "extractions_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      google_accounts: {
+        Row: {
+          access_token: string;
+          created_at: string | null;
+          email: string;
+          id: string;
+          is_active: boolean | null;
+          last_sync_at: string | null;
+          refresh_token: string;
+          scopes: string[] | null;
+          token_expiry: string;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          access_token: string;
+          created_at?: string | null;
+          email: string;
+          id?: string;
+          is_active?: boolean | null;
+          last_sync_at?: string | null;
+          refresh_token: string;
+          scopes?: string[] | null;
+          token_expiry: string;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          access_token?: string;
+          created_at?: string | null;
+          email?: string;
+          id?: string;
+          is_active?: boolean | null;
+          last_sync_at?: string | null;
+          refresh_token?: string;
+          scopes?: string[] | null;
+          token_expiry?: string;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "google_accounts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ignored_entities: {
+        Row: {
+          created_at: string;
+          entity_name: string;
+          entity_type: string;
+          id: string;
+          organization_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          entity_name: string;
+          entity_type: string;
+          id?: string;
+          organization_id: string;
+        };
+        Update: {
+          created_at?: string;
+          entity_name?: string;
+          entity_type?: string;
+          id?: string;
+          organization_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ignored_entities_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      issue_activity: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          created_at: string;
+          field: string | null;
+          id: string;
+          issue_id: string;
+          metadata: Json | null;
+          new_value: string | null;
+          old_value: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          created_at?: string;
+          field?: string | null;
+          id?: string;
+          issue_id: string;
+          metadata?: Json | null;
+          new_value?: string | null;
+          old_value?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          created_at?: string;
+          field?: string | null;
+          id?: string;
+          issue_id?: string;
+          metadata?: Json | null;
+          new_value?: string | null;
+          old_value?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "issue_activity_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "issue_activity_issue_id_fkey";
+            columns: ["issue_id"];
+            isOneToOne: false;
+            referencedRelation: "issues";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      issue_comments: {
+        Row: {
+          author_id: string;
+          body: string;
+          created_at: string;
+          id: string;
+          issue_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          author_id: string;
+          body: string;
+          created_at?: string;
+          id?: string;
+          issue_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          author_id?: string;
+          body?: string;
+          created_at?: string;
+          id?: string;
+          issue_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "issue_comments_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "issue_comments_issue_id_fkey";
+            columns: ["issue_id"];
+            isOneToOne: false;
+            referencedRelation: "issues";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      issue_number_seq: {
+        Row: {
+          last_number: number;
+          project_id: string;
+        };
+        Insert: {
+          last_number?: number;
+          project_id: string;
+        };
+        Update: {
+          last_number?: number;
+          project_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "issue_number_seq_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: true;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      issues: {
+        Row: {
+          ai_classification: Json | null;
+          ai_classified_at: string | null;
+          ai_context: Json | null;
+          ai_executable: boolean | null;
+          ai_result: Json | null;
+          assigned_to: string | null;
+          closed_at: string | null;
+          component: string | null;
+          created_at: string;
+          description: string | null;
+          duplicate_of_id: string | null;
+          embedding: string | null;
+          execution_type: string;
+          id: string;
+          issue_number: number;
+          labels: string[] | null;
+          priority: string;
+          project_id: string;
+          reporter_email: string | null;
+          reporter_name: string | null;
+          severity: string | null;
+          similarity_score: number | null;
+          source: string;
+          source_metadata: Json | null;
+          source_url: string | null;
+          status: string;
+          title: string;
+          type: string;
+          updated_at: string;
+          userback_id: string | null;
+        };
+        Insert: {
+          ai_classification?: Json | null;
+          ai_classified_at?: string | null;
+          ai_context?: Json | null;
+          ai_executable?: boolean | null;
+          ai_result?: Json | null;
+          assigned_to?: string | null;
+          closed_at?: string | null;
+          component?: string | null;
+          created_at?: string;
+          description?: string | null;
+          duplicate_of_id?: string | null;
+          embedding?: string | null;
+          execution_type?: string;
+          id?: string;
+          issue_number: number;
+          labels?: string[] | null;
+          priority?: string;
+          project_id: string;
+          reporter_email?: string | null;
+          reporter_name?: string | null;
+          severity?: string | null;
+          similarity_score?: number | null;
+          source?: string;
+          source_metadata?: Json | null;
+          source_url?: string | null;
+          status?: string;
+          title: string;
+          type?: string;
+          updated_at?: string;
+          userback_id?: string | null;
+        };
+        Update: {
+          ai_classification?: Json | null;
+          ai_classified_at?: string | null;
+          ai_context?: Json | null;
+          ai_executable?: boolean | null;
+          ai_result?: Json | null;
+          assigned_to?: string | null;
+          closed_at?: string | null;
+          component?: string | null;
+          created_at?: string;
+          description?: string | null;
+          duplicate_of_id?: string | null;
+          embedding?: string | null;
+          execution_type?: string;
+          id?: string;
+          issue_number?: number;
+          labels?: string[] | null;
+          priority?: string;
+          project_id?: string;
+          reporter_email?: string | null;
+          reporter_name?: string | null;
+          severity?: string | null;
+          similarity_score?: number | null;
+          source?: string;
+          source_metadata?: Json | null;
+          source_url?: string | null;
+          status?: string;
+          title?: string;
+          type?: string;
+          updated_at?: string;
+          userback_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "issues_assigned_to_fkey";
+            columns: ["assigned_to"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "issues_duplicate_of_id_fkey";
+            columns: ["duplicate_of_id"];
+            isOneToOne: false;
+            referencedRelation: "issues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "issues_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      mcp_queries: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          query: string | null;
+          tool: string;
+          user_id: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          query?: string | null;
+          tool: string;
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          query?: string | null;
+          tool?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "mcp_queries_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      meeting_participants: {
+        Row: {
+          created_at: string | null;
+          meeting_id: string;
+          person_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          meeting_id: string;
+          person_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          meeting_id?: string;
+          person_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "meeting_participants_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "meeting_participants_person_id_fkey";
+            columns: ["person_id"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      meeting_project_summaries: {
+        Row: {
+          created_at: string;
+          embedding: string | null;
+          embedding_stale: boolean;
+          id: string;
+          is_general: boolean | null;
+          kernpunten: string[] | null;
+          meeting_id: string;
+          project_id: string | null;
+          project_name_raw: string | null;
+          search_vector: unknown;
+          summary_text: string;
+          vervolgstappen: string[] | null;
+        };
+        Insert: {
+          created_at?: string;
           embedding?: string | null;
           embedding_stale?: boolean;
-          corrected_by?: string | null;
-          corrected_at?: string | null;
-          verification_status?: string;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          search_vector?: unknown | null;
-          created_at?: string;
+          id?: string;
+          is_general?: boolean | null;
+          kernpunten?: string[] | null;
+          meeting_id: string;
+          project_id?: string | null;
+          project_name_raw?: string | null;
+          search_vector?: unknown;
+          summary_text: string;
+          vervolgstappen?: string[] | null;
         };
+        Update: {
+          created_at?: string;
+          embedding?: string | null;
+          embedding_stale?: boolean;
+          id?: string;
+          is_general?: boolean | null;
+          kernpunten?: string[] | null;
+          meeting_id?: string;
+          project_id?: string | null;
+          project_name_raw?: string | null;
+          search_vector?: unknown;
+          summary_text?: string;
+          vervolgstappen?: string[] | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "meeting_project_summaries_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "meeting_project_summaries_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      meeting_projects: {
+        Row: {
+          created_at: string | null;
+          meeting_id: string;
+          project_id: string;
+          source: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          meeting_id: string;
+          project_id: string;
+          source?: string;
+        };
+        Update: {
+          created_at?: string | null;
+          meeting_id?: string;
+          project_id?: string;
+          source?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "meeting_projects_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "meeting_projects_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      meetings: {
+        Row: {
+          ai_briefing: string | null;
+          audio_url: string | null;
+          created_at: string | null;
+          date: string | null;
+          embedding: string | null;
+          embedding_stale: boolean | null;
+          fireflies_id: string | null;
+          id: string;
+          meeting_type: string | null;
+          organization_id: string | null;
+          organizer_email: string | null;
+          participants: string[] | null;
+          party_type: string | null;
+          raw_elevenlabs: Json | null;
+          raw_fireflies: Json | null;
+          relevance_score: number | null;
+          search_vector: unknown;
+          summary: string | null;
+          title: string;
+          transcript: string | null;
+          transcript_elevenlabs: string | null;
+          unmatched_organization_name: string | null;
+          updated_at: string | null;
+          verification_status: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        Insert: {
+          ai_briefing?: string | null;
+          audio_url?: string | null;
+          created_at?: string | null;
+          date?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          fireflies_id?: string | null;
+          id?: string;
+          meeting_type?: string | null;
+          organization_id?: string | null;
+          organizer_email?: string | null;
+          participants?: string[] | null;
+          party_type?: string | null;
+          raw_elevenlabs?: Json | null;
+          raw_fireflies?: Json | null;
+          relevance_score?: number | null;
+          search_vector?: unknown;
+          summary?: string | null;
+          title: string;
+          transcript?: string | null;
+          transcript_elevenlabs?: string | null;
+          unmatched_organization_name?: string | null;
+          updated_at?: string | null;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          ai_briefing?: string | null;
+          audio_url?: string | null;
+          created_at?: string | null;
+          date?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          fireflies_id?: string | null;
+          id?: string;
+          meeting_type?: string | null;
+          organization_id?: string | null;
+          organizer_email?: string | null;
+          participants?: string[] | null;
+          party_type?: string | null;
+          raw_elevenlabs?: Json | null;
+          raw_fireflies?: Json | null;
+          relevance_score?: number | null;
+          search_vector?: unknown;
+          summary?: string | null;
+          title?: string;
+          transcript?: string | null;
+          transcript_elevenlabs?: string | null;
+          unmatched_organization_name?: string | null;
+          updated_at?: string | null;
+          verification_status?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "meetings_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "meetings_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organizations: {
+        Row: {
+          aliases: string[] | null;
+          contact_person: string | null;
+          created_at: string | null;
+          email: string | null;
+          id: string;
+          name: string;
+          status: string | null;
+          type: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          aliases?: string[] | null;
+          contact_person?: string | null;
+          created_at?: string | null;
+          email?: string | null;
+          id?: string;
+          name: string;
+          status?: string | null;
+          type?: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          aliases?: string[] | null;
+          contact_person?: string | null;
+          created_at?: string | null;
+          email?: string | null;
+          id?: string;
+          name?: string;
+          status?: string | null;
+          type?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      pending_matches: {
+        Row: {
+          content_id: string;
+          content_table: string;
+          created_at: string | null;
+          extracted_name: string;
+          id: string;
+          resolved_by: string | null;
+          similarity_score: number | null;
+          status: string | null;
+          suggested_match_id: string | null;
+        };
+        Insert: {
+          content_id: string;
+          content_table: string;
+          created_at?: string | null;
+          extracted_name: string;
+          id?: string;
+          resolved_by?: string | null;
+          similarity_score?: number | null;
+          status?: string | null;
+          suggested_match_id?: string | null;
+        };
+        Update: {
+          content_id?: string;
+          content_table?: string;
+          created_at?: string | null;
+          extracted_name?: string;
+          id?: string;
+          resolved_by?: string | null;
+          similarity_score?: number | null;
+          status?: string | null;
+          suggested_match_id?: string | null;
+        };
+        Relationships: [];
+      };
+      people: {
+        Row: {
+          created_at: string | null;
+          email: string | null;
+          embedding: string | null;
+          embedding_stale: boolean | null;
+          id: string;
+          name: string;
+          organization_id: string | null;
+          role: string | null;
+          team: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          email?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          id?: string;
+          name: string;
+          organization_id?: string | null;
+          role?: string | null;
+          team?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          email?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          id?: string;
+          name?: string;
+          organization_id?: string | null;
+          role?: string | null;
+          team?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "people_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          avatar_url: string | null;
+          created_at: string | null;
+          email: string;
+          full_name: string | null;
+          id: string;
+          role: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          avatar_url?: string | null;
+          created_at?: string | null;
+          email: string;
+          full_name?: string | null;
+          id: string;
+          role?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          avatar_url?: string | null;
+          created_at?: string | null;
+          email?: string;
+          full_name?: string | null;
+          id?: string;
+          role?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      projects: {
+        Row: {
+          aliases: string[] | null;
+          contact_person_id: string | null;
+          created_at: string | null;
+          deadline: string | null;
+          description: string | null;
+          embedding: string | null;
+          embedding_stale: boolean | null;
+          github_url: string | null;
+          id: string;
+          name: string;
+          organization_id: string | null;
+          owner_id: string | null;
+          project_key: string | null;
+          start_date: string | null;
+          status: string | null;
+          updated_at: string | null;
+          userback_project_id: string | null;
+        };
+        Insert: {
+          aliases?: string[] | null;
+          contact_person_id?: string | null;
+          created_at?: string | null;
+          deadline?: string | null;
+          description?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          github_url?: string | null;
+          id?: string;
+          name: string;
+          organization_id?: string | null;
+          owner_id?: string | null;
+          project_key?: string | null;
+          start_date?: string | null;
+          status?: string | null;
+          updated_at?: string | null;
+          userback_project_id?: string | null;
+        };
+        Update: {
+          aliases?: string[] | null;
+          contact_person_id?: string | null;
+          created_at?: string | null;
+          deadline?: string | null;
+          description?: string | null;
+          embedding?: string | null;
+          embedding_stale?: boolean | null;
+          github_url?: string | null;
+          id?: string;
+          name?: string;
+          organization_id?: string | null;
+          owner_id?: string | null;
+          project_key?: string | null;
+          start_date?: string | null;
+          status?: string | null;
+          updated_at?: string | null;
+          userback_project_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "projects_contact_person_id_fkey";
+            columns: ["contact_person_id"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "projects_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "projects_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      summaries: {
+        Row: {
+          content: string;
+          created_at: string;
+          entity_id: string;
+          entity_type: string;
+          id: string;
+          source_meeting_ids: string[] | null;
+          structured_content: Json | null;
+          summary_type: string;
+          version: number;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          entity_id: string;
+          entity_type: string;
+          id?: string;
+          source_meeting_ids?: string[] | null;
+          structured_content?: Json | null;
+          summary_type: string;
+          version?: number;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          entity_id?: string;
+          entity_type?: string;
+          id?: string;
+          source_meeting_ids?: string[] | null;
+          structured_content?: Json | null;
+          summary_type?: string;
+          version?: number;
+        };
+        Relationships: [];
+      };
+      tasks: {
+        Row: {
+          assigned_to: string | null;
+          completed_at: string | null;
+          created_at: string | null;
+          created_by: string | null;
+          due_date: string | null;
+          extraction_id: string | null;
+          id: string;
+          status: string;
+          title: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          assigned_to?: string | null;
+          completed_at?: string | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          due_date?: string | null;
+          extraction_id?: string | null;
+          id?: string;
+          status?: string;
+          title: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          assigned_to?: string | null;
+          completed_at?: string | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          due_date?: string | null;
+          extraction_id?: string | null;
+          id?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey";
+            columns: ["assigned_to"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_extraction_id_fkey";
+            columns: ["extraction_id"];
+            isOneToOne: false;
+            referencedRelation: "extractions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      update_suggestions: {
+        Row: {
+          created_at: string | null;
+          current_content: string | null;
+          id: string;
+          new_content: string | null;
+          reason: string | null;
+          status: string | null;
+          target_content_id: string | null;
+          target_table: string | null;
+          trigger_source_id: string | null;
+          trigger_source_type: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          current_content?: string | null;
+          id?: string;
+          new_content?: string | null;
+          reason?: string | null;
+          status?: string | null;
+          target_content_id?: string | null;
+          target_table?: string | null;
+          trigger_source_id?: string | null;
+          trigger_source_type?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          current_content?: string | null;
+          id?: string;
+          new_content?: string | null;
+          reason?: string | null;
+          status?: string | null;
+          target_content_id?: string | null;
+          target_table?: string | null;
+          trigger_source_id?: string | null;
+          trigger_source_type?: string | null;
+        };
+        Relationships: [];
       };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      batch_update_embeddings: {
+        Args: { p_embeddings: string[]; p_ids: string[]; p_table: string };
+        Returns: undefined;
+      };
+      match_decisions: {
+        Args: {
+          match_count?: number;
+          match_threshold?: number;
+          query_embedding: string;
+        };
+        Returns: {
+          date: string;
+          decision: string;
+          id: string;
+          made_by: string;
+          similarity: number;
+          source_id: string;
+        }[];
+      };
+      match_meetings: {
+        Args: {
+          match_count?: number;
+          match_threshold?: number;
+          query_embedding: string;
+        };
+        Returns: {
+          date: string;
+          id: string;
+          similarity: number;
+          summary: string;
+          title: string;
+        }[];
+      };
+      match_people: {
+        Args: {
+          match_count?: number;
+          match_threshold?: number;
+          query_embedding: string;
+        };
+        Returns: {
+          email: string;
+          id: string;
+          name: string;
+          role: string;
+          similarity: number;
+          team: string;
+        }[];
+      };
+      match_projects:
+        | {
+            Args: {
+              match_count?: number;
+              match_threshold?: number;
+              query_embedding: string;
+            };
+            Returns: {
+              id: string;
+              name: string;
+              organization_id: string;
+              similarity: number;
+              status: string;
+            }[];
+          }
+        | {
+            Args: {
+              match_count?: number;
+              match_threshold?: number;
+              query_embedding: string;
+            };
+            Returns: {
+              aliases: string[];
+              client: string;
+              id: string;
+              name: string;
+              similarity: number;
+            }[];
+          };
+      next_issue_number: { Args: { p_project_id: string }; Returns: number };
+      reject_email:
+        | {
+            Args: { p_email_id: string; p_user_id: string };
+            Returns: undefined;
+          }
+        | {
+            Args: { p_email_id: string; p_reason?: string; p_user_id: string };
+            Returns: undefined;
+          };
+      reject_meeting: {
+        Args: { p_meeting_id: string; p_user_id: string };
+        Returns: undefined;
+      };
+      search_all_content:
+        | {
+            Args: {
+              match_count?: number;
+              match_threshold?: number;
+              query_embedding: string;
+              query_text?: string;
+            };
+            Returns: {
+              content: string;
+              date: string;
+              id: string;
+              rrf_score: number;
+              similarity: number;
+              source_type: string;
+              text_rank: number;
+              title: string;
+            }[];
+          }
+        | {
+            Args: {
+              match_count?: number;
+              match_threshold?: number;
+              query_embedding: string;
+              query_text?: string;
+              verified_only?: boolean;
+            };
+            Returns: {
+              confidence: number;
+              content: string;
+              corrected_by: string;
+              date: string;
+              id: string;
+              meeting_id: string;
+              rrf_score: number;
+              similarity: number;
+              source_type: string;
+              text_rank: number;
+              title: string;
+              transcript_ref: string;
+              verification_status: string;
+              verified_at: string;
+              verified_by: string;
+            }[];
+          };
+      search_meetings_by_participant: {
+        Args: {
+          match_count?: number;
+          match_threshold?: number;
+          participant_name: string;
+          query_embedding: string;
+        };
+        Returns: {
+          date: string;
+          id: string;
+          participants: string[];
+          similarity: number;
+          summary: string;
+          title: string;
+        }[];
+      };
+      verify_email: {
+        Args: {
+          p_edits?: Json;
+          p_email_id: string;
+          p_rejected_ids?: string[];
+          p_type_changes?: Json;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
+      verify_meeting: {
+        Args: {
+          p_edits?: Json;
+          p_meeting_id: string;
+          p_rejected_ids?: string[];
+          p_type_changes?: Json;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
     };
     Enums: {
       [_ in never]: never;
     };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
-}
+};
 
-// Convenience types
-export type Tables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Row"];
-export type InsertTables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Insert"];
-export type UpdateTables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Update"];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never;
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const;
