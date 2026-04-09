@@ -63,7 +63,7 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
     const cursor = await getUserbackSyncCursor(admin);
     const isInitial = cursor === null;
 
-    console.log(
+    console.info(
       `[syncUserback] Starting ${isInitial ? "initial" : "incremental"} sync` +
         ` (cursor: ${cursor ?? "none"}, limit: ${limit})`,
     );
@@ -113,13 +113,13 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
       try {
         const count = await storeIssueMedia(issueId, userbackId, mediaUrls, admin);
         mediaStored += count;
-        console.log(`[syncUserback] Stored ${count} media files for issue ${issueId}`);
+        console.info(`[syncUserback] Stored ${count} media files for issue ${issueId}`);
       } catch (err) {
         console.error(`[syncUserback] Media storage failed for ${issueId}:`, err);
       }
     }
 
-    console.log(`[syncUserback] Total media files stored: ${mediaStored}`);
+    console.info(`[syncUserback] Total media files stored: ${mediaStored}`);
 
     // 7. AI classification for NEW items only (sequential, 100ms delay)
     let classified = 0;
@@ -246,7 +246,7 @@ export async function backfillMedia(): Promise<
         const count = await storeIssueMedia(issue.id, issue.userback_id!, mediaUrls, admin);
         mediaStored += count;
         processed++;
-        console.log(`[backfillMedia] Issue ${issue.id}: stored ${count} files`);
+        console.info(`[backfillMedia] Issue ${issue.id}: stored ${count} files`);
       } catch (err) {
         const msg = `Issue ${issue.userback_id}: ${err instanceof Error ? err.message : String(err)}`;
         console.error(`[backfillMedia] ${msg}`);

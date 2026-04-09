@@ -4,37 +4,27 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { cn } from "@repo/ui/utils";
+import {
+  ISSUE_STATUSES,
+  ISSUE_STATUS_LABELS,
+  ISSUE_PRIORITIES,
+  ISSUE_PRIORITY_LABELS,
+  ISSUE_TYPES,
+  ISSUE_TYPE_LABELS,
+  ISSUE_COMPONENTS,
+  ISSUE_COMPONENT_LABELS,
+} from "@repo/database/constants/issues";
 
-const STATUS_OPTIONS = [
-  { value: "triage", label: "Triage" },
-  { value: "backlog", label: "Backlog" },
-  { value: "todo", label: "Todo" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "done", label: "Done" },
-  { value: "cancelled", label: "Cancelled" },
-];
-
-const PRIORITY_OPTIONS = [
-  { value: "urgent", label: "Urgent" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-];
-
-const TYPE_OPTIONS = [
-  { value: "bug", label: "Bug" },
-  { value: "feature_request", label: "Feature" },
-  { value: "question", label: "Question" },
-];
-
-const COMPONENT_OPTIONS = [
-  { value: "frontend", label: "Frontend" },
-  { value: "backend", label: "Backend" },
-  { value: "api", label: "API" },
-  { value: "database", label: "Database" },
-  { value: "prompt_ai", label: "AI / Prompt" },
-  { value: "unknown", label: "Unknown" },
-];
+const STATUS_OPTIONS = ISSUE_STATUSES.map((s) => ({ value: s, label: ISSUE_STATUS_LABELS[s] }));
+const PRIORITY_OPTIONS = ISSUE_PRIORITIES.map((p) => ({
+  value: p,
+  label: ISSUE_PRIORITY_LABELS[p],
+}));
+const TYPE_OPTIONS = ISSUE_TYPES.map((t) => ({ value: t, label: ISSUE_TYPE_LABELS[t] }));
+const COMPONENT_OPTIONS = ISSUE_COMPONENTS.map((c) => ({
+  value: c,
+  label: ISSUE_COMPONENT_LABELS[c],
+}));
 
 interface FilterDropdownProps {
   label: string;
