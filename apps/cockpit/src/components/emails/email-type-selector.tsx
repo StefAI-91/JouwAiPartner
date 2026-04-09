@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Tag, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { updateEmailTypeAction } from "@/actions/email-links";
 
 const EMAIL_TYPE_LABELS: Record<string, string> = {

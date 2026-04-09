@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import {
   updateMeetingTitle,
   updateMeetingType,
@@ -50,16 +49,7 @@ import {
   updateMeetingMetadataSchema,
   regenerateSchema,
 } from "@/validations/meetings";
-
-// ── Auth Helper ──
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 // ── Actions ──
 

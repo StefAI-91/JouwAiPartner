@@ -11,27 +11,16 @@ import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
 import { CommentActivityFeed } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { ArrowLeft, Trash2, Sparkles } from "lucide-react";
 import Link from "next/link";
 
-// ── Constants ──
-
-const STATUSES = [
-  { value: "triage", label: "Triage" },
-  { value: "backlog", label: "Backlog" },
-  { value: "todo", label: "Todo" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "done", label: "Done" },
-  { value: "cancelled", label: "Cancelled" },
-] as const;
-
-const PRIORITIES = [
-  { value: "urgent", label: "Urgent" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-] as const;
+import {
+  ISSUE_STATUSES,
+  ISSUE_STATUS_LABELS,
+  ISSUE_PRIORITIES,
+  ISSUE_PRIORITY_LABELS,
+} from "@repo/database/constants/issues";
 
 interface Person {
   id: string;
@@ -149,7 +138,9 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
     });
   }
 
-  const aiClassification = issue.ai_classification as Record<string, unknown> | undefined;
+  const rawAiClassification = issue.ai_classification as Record<string, unknown> | undefined;
+  const aiClassification =
+    rawAiClassification && Object.keys(rawAiClassification).length > 0 ? rawAiClassification : null;
   const rawReproSteps = aiClassification?.repro_steps;
   const reproSteps: string | null =
     typeof rawReproSteps === "string"
@@ -159,9 +150,9 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
         : null;
 
   return (
-    <div className="flex h-full flex-col lg:flex-row">
+    <div className="flex flex-col lg:h-full lg:flex-row">
       {/* Main content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 p-6 lg:overflow-auto">
         {/* Header */}
         <div className="mb-6">
           <Link
@@ -226,7 +217,7 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
           <SidebarSelect
             label="Status"
             value={issue.status}
-            options={STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+            options={ISSUE_STATUSES.map((s) => ({ value: s, label: ISSUE_STATUS_LABELS[s] }))}
             onChange={(v) => handleFieldChange("status", v)}
             disabled={isPending}
           />
@@ -234,7 +225,7 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
           <SidebarSelect
             label="Prioriteit"
             value={issue.priority}
-            options={PRIORITIES.map((p) => ({ value: p.value, label: p.label }))}
+            options={ISSUE_PRIORITIES.map((p) => ({ value: p, label: ISSUE_PRIORITY_LABELS[p] }))}
             onChange={(v) => handleFieldChange("priority", v)}
             disabled={isPending}
           />
@@ -323,9 +314,14 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
           <div className="space-y-1">
             <span className="text-xs font-medium text-muted-foreground">AI Classificatie</span>
             {aiClassification ? (
-              <p className="text-xs text-muted-foreground">
-                Confidence: {Math.round((aiClassification.confidence as number) * 100)}%
-              </p>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                {typeof aiClassification.confidence === "number" && (
+                  <p>Confidence: {Math.round(aiClassification.confidence * 100)}%</p>
+                )}
+                {typeof aiClassification.type === "string" && (
+                  <p>AI type: {aiClassification.type}</p>
+                )}
+              </div>
             ) : (
               <p className="text-xs text-muted-foreground/60">Nog niet geclassificeerd</p>
             )}

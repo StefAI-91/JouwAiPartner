@@ -8,7 +8,7 @@ import { getEmailById } from "@repo/database/queries/emails";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
 import { listPeople } from "@repo/database/queries/people";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@repo/ui/badge";
 import { EmailLinkEditor } from "@/components/emails/email-link-editor";
 
 function formatExtractionType(type: string): string {

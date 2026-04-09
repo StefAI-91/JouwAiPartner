@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 
 interface GoogleAccountStatusProps {
   accounts: { id: string; email: string; last_sync_at: string | null }[];

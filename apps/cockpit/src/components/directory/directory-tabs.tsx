@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsList, TabsTrigger } from "@repo/ui/tabs";
 import { OrganizationsGrid } from "@/components/directory/organizations-grid";
 import { PeopleGrid } from "@/components/directory/people-grid";
 import { AddOrganizationButton } from "@/components/clients/add-organization-button";

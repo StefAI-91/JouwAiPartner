@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 
 export function LoginForm({ returnTo }: { returnTo?: string }) {
   const [email, setEmail] = useState("");

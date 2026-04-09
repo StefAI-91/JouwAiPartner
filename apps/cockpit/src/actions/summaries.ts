@@ -2,21 +2,13 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import { generateProjectSummaries, generateOrgSummaries } from "@repo/ai/pipeline/summary-pipeline";
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 const regenerateSchema = z.object({
   entityType: z.enum(["project", "organization"]),
   entityId: z.string().uuid(),
 });
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
 
 export async function regenerateSummaryAction(
   input: z.infer<typeof regenerateSchema>,

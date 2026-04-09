@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 
 export function SyncButton() {
   const [syncing, setSyncing] = useState(false);

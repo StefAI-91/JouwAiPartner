@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Building2, FolderKanban, Paperclip, ChevronRight, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@repo/ui/badge";
 import type { EmailListItem } from "@repo/database/queries/emails";
 
 interface EmailListProps {

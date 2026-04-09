@@ -4,7 +4,7 @@ import { PriorityDot } from "@/components/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -18,9 +18,9 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
 }
 
-function AssignedAvatar({ person }: { person: { name: string } | null }) {
+function AssignedAvatar({ person }: { person: { full_name: string } | null }) {
   if (!person) return <span className="size-6" />;
-  const initials = person.name
+  const initials = (person.full_name || "?")
     .split(" ")
     .map((w) => w[0])
     .join("")
@@ -29,7 +29,7 @@ function AssignedAvatar({ person }: { person: { name: string } | null }) {
   return (
     <span
       className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-[0.6rem] font-medium text-muted-foreground"
-      title={person.name}
+      title={person.full_name}
     >
       {initials}
     </span>
@@ -41,28 +41,33 @@ export function IssueRowItem({ issue, className }: { issue: IssueRow; className?
     <Link
       href={`/issues/${issue.id}`}
       className={cn(
-        "group flex items-center gap-3 border-b border-border px-4 py-2 text-sm transition-colors hover:bg-muted/50",
+        "group block border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/50",
         className,
       )}
     >
-      <PriorityDot priority={issue.priority} />
+      {/* Row 1: number + title (full width) */}
+      <div className="flex items-start gap-2">
+        <PriorityDot priority={issue.priority} />
+        <span className="shrink-0 text-xs text-muted-foreground font-mono mt-0.5">
+          #{issue.issue_number}
+        </span>
+        <span className="min-w-0 flex-1 font-medium text-foreground group-hover:text-primary line-clamp-2">
+          {issue.title}
+        </span>
+      </div>
 
-      <span className="shrink-0 w-10 text-xs text-muted-foreground font-mono">
-        #{issue.issue_number}
-      </span>
+      {/* Row 2: description (full width, 2 lines) */}
+      {issue.description && issue.description !== issue.title && (
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2 pl-8">{issue.description}</p>
+      )}
 
-      <span className="min-w-0 flex-1 truncate font-medium text-foreground group-hover:text-primary">
-        {issue.title}
-      </span>
-
-      <div className="flex shrink-0 items-center gap-2">
+      {/* Row 3: badges + meta */}
+      <div className="mt-1.5 flex items-center gap-2 pl-8">
         <TypeBadge type={issue.type} />
+        <StatusBadge status={issue.status} />
         <ComponentBadge component={issue.component} />
         <AssignedAvatar person={issue.assigned_person} />
-        <StatusBadge status={issue.status} />
-        <span className="w-16 text-right text-xs text-muted-foreground">
-          {timeAgo(issue.created_at)}
-        </span>
+        <span className="ml-auto text-xs text-muted-foreground">{timeAgo(issue.created_at)}</span>
       </div>
     </Link>
   );

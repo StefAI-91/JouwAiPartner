@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 const STATUS_OPTIONS = [
   { value: "triage", label: "Triage" },
@@ -144,8 +144,12 @@ export function IssueFilters() {
     searchParams.has("component");
 
   const clearAll = useCallback(() => {
-    router.push("/issues");
-  }, [router]);
+    const params = new URLSearchParams();
+    const project = searchParams.get("project");
+    if (project) params.set("project", project);
+    const qs = params.toString();
+    router.push(qs ? `/issues?${qs}` : "/issues");
+  }, [router, searchParams]);
 
   return (
     <div className="flex items-center gap-2 border-b border-border px-4 py-2">

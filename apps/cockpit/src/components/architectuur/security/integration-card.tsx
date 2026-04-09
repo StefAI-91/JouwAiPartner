@@ -1,11 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
+import { Badge } from "@repo/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@repo/ui/accordion";
 import { Key } from "lucide-react";
 import { DataFlowTable } from "@/components/architectuur/security/data-flow-table";
 import type { IntegrationFlow } from "@/app/(dashboard)/architectuur/security/_data/integrations";
@@ -62,11 +57,7 @@ export function IntegrationCard({ integration }: IntegrationCardProps) {
           direction="out"
           fields={integration.dataOut}
         />
-        <DataFlowTable
-          title="Data die wij ontvangen"
-          direction="in"
-          fields={integration.dataIn}
-        />
+        <DataFlowTable title="Data die wij ontvangen" direction="in" fields={integration.dataIn} />
 
         <Accordion>
           <AccordionItem>

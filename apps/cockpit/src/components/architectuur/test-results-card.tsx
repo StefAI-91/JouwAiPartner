@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
 import { testResults } from "@/app/(dashboard)/architectuur/_data/test-results";
 
 export function TestResultsCard() {
@@ -12,9 +12,7 @@ export function TestResultsCard() {
         <ul className="space-y-2">
           {testResults.map((item) => (
             <li key={item.test} className="flex items-start gap-2">
-              <span
-                className={`mt-0.5 text-xs ${item.pass ? "text-green-600" : "text-red-500"}`}
-              >
+              <span className={`mt-0.5 text-xs ${item.pass ? "text-green-600" : "text-red-500"}`}>
                 {item.pass ? "\u2713" : "\u2717"}
               </span>
               <div>

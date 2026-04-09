@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
 import { StatusBadge } from "@/components/architectuur/status-badge";
 import { roadmapItems } from "@/app/(dashboard)/architectuur/_data/roadmap";
 

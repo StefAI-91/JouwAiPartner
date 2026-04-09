@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
+import { Badge } from "@repo/ui/badge";
 import type { RecentDecision } from "@repo/database/queries/decisions";
 import { formatDateShort, truncate } from "@/lib/format";
 

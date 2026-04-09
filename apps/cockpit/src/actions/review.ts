@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import {
   verifyMeeting,
   verifyMeetingWithEdits,
@@ -16,16 +15,9 @@ import {
   verifyMeetingWithEditsSchema,
   rejectMeetingSchema,
 } from "@/validations/review";
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 // ── Helpers ──
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
 
 // ── Actions ──
 

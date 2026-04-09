@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import {
   linkEmailProject,
   unlinkEmailProject,
@@ -18,14 +17,7 @@ import {
   emailTypeSchema,
   emailPartyTypeSchema,
 } from "@/validations/email-links";
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 export async function linkEmailProjectAction(
   input: z.infer<typeof emailProjectSchema>,

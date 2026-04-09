@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 const COMPONENT_LABELS: Record<string, string> = {
   frontend: "Frontend",

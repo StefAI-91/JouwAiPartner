@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   CircleDot,
   Inbox,
@@ -11,8 +11,7 @@ import {
   Settings,
   LayoutList,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useProjectId } from "@/hooks/use-project";
+import { cn } from "@repo/ui/utils";
 import { useEffect, useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
 
@@ -29,7 +28,8 @@ const NAV_ITEMS = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const projectId = useProjectId();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("project");
   const [counts, setCounts] = useState<StatusCounts>({});
 
   useEffect(() => {
@@ -54,6 +54,19 @@ export function AppSidebar() {
     };
   }, [projectId]);
 
+  // Build href helper that preserves ?project= param
+  function issueHref(extraParams?: Record<string, string>) {
+    const params = new URLSearchParams();
+    if (projectId) params.set("project", projectId);
+    if (extraParams) {
+      for (const [key, value] of Object.entries(extraParams)) {
+        params.set(key, value);
+      }
+    }
+    const qs = params.toString();
+    return qs ? `/issues?${qs}` : "/issues";
+  }
+
   return (
     <aside className="hidden h-full w-56 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
       {/* Logo */}
@@ -69,10 +82,11 @@ export function AppSidebar() {
       {/* Nav */}
       <nav className="flex-1 space-y-0.5 px-2 py-2">
         <Link
-          href="/issues"
+          href={issueHref()}
           className={cn(
             "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             pathname === "/issues" &&
+              !searchParams.has("status") &&
               "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
           )}
         >
@@ -92,7 +106,7 @@ export function AppSidebar() {
           return (
             <Link
               key={item.status}
-              href={`/issues?status=${item.status}`}
+              href={issueHref({ status: item.status })}
               className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <Icon className="size-4" />

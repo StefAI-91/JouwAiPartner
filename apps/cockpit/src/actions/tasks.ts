@@ -10,21 +10,8 @@ import {
   dismissTask,
 } from "@repo/database/mutations/tasks";
 import { hasTaskForExtraction } from "@repo/database/queries/tasks";
-import {
-  promoteToTaskSchema,
-  updateTaskSchema,
-  taskIdSchema,
-} from "@/validations/tasks";
-
-// ── Helpers ──
-
-async function getAuthenticatedUserId(): Promise<string | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
-}
+import { promoteToTaskSchema, updateTaskSchema, taskIdSchema } from "@/validations/tasks";
+import { getAuthenticatedUserId } from "@repo/auth/helpers";
 
 // ── Actions ──
 

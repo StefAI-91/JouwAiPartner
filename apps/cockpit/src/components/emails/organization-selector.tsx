@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Building2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { updateEmailOrganizationAction } from "@/actions/email-links";
 
 export function OrganizationSelector({

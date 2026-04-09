@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@repo/ui/card";
 
 function SkeletonLine({ className }: { className?: string }) {
   return <div className={`animate-pulse rounded bg-muted ${className ?? "h-4 w-full"}`} />;

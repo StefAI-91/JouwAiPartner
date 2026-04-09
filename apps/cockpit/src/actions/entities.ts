@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import { updateOrganization, deleteOrganization } from "@repo/database/mutations/organizations";
 import { updateProject, deleteProject } from "@repo/database/mutations/projects";
 import { updatePerson, deletePerson } from "@repo/database/mutations/people";
@@ -21,6 +20,7 @@ import {
   deleteSchema,
   deleteWithContextSchema,
 } from "@/validations/entities";
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 // ── Helpers ──
 
@@ -33,16 +33,6 @@ function cleanInput<T extends Record<string, unknown>>(input: T): T {
     }
   }
   return cleaned;
-}
-
-// ── Auth Helper ──
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
 }
 
 // ── Organization Actions ──

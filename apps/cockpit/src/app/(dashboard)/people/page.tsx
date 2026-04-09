@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@repo/database/supabase/server";
 import { listPeople } from "@repo/database/queries/people";
 import { listOrganizations } from "@repo/database/queries/organizations";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@repo/ui/badge";
 import { Users, Mail, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { AddPersonButton } from "@/components/people/add-person-button";

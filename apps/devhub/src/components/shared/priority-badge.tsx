@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 const PRIORITY_CONFIG: Record<string, { label: string; dotClass: string; textClass: string }> = {
   urgent: { label: "Urgent", dotClass: "bg-red-500", textClass: "text-red-700" },

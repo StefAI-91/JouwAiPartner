@@ -13,7 +13,7 @@ function timeAgo(dateStr: string): string {
 }
 
 function ActivityDescription({ activity }: { activity: IssueActivityRow }) {
-  const actor = activity.actor?.name ?? "Systeem";
+  const actor = activity.actor?.full_name ?? "Systeem";
 
   switch (activity.action) {
     case "created":
@@ -134,10 +134,10 @@ export function CommentActivityFeed({
           const c = item.data;
           return (
             <div key={`c-${c.id}`} className="flex gap-3 border-b border-border py-3">
-              <Avatar name={c.author?.name ?? null} />
+              <Avatar name={c.author?.full_name ?? null} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{c.author?.name ?? "Onbekend"}</span>
+                  <span className="text-sm font-medium">{c.author?.full_name ?? "Onbekend"}</span>
                   <span className="text-xs text-muted-foreground">{timeAgo(c.created_at)}</span>
                 </div>
                 <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{c.body}</p>

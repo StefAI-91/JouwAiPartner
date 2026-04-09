@@ -106,6 +106,65 @@ export async function updateIssue(
 }
 
 /**
+ * Upsert Userback issues: insert new ones (with issue_number), update existing ones.
+ * Returns stats: { imported, updated, skipped }.
+ */
+export async function upsertUserbackIssues(
+  items: InsertIssueData[],
+  existingMap: Map<string, string>,
+  client?: SupabaseClient,
+): Promise<{ imported: string[]; updated: number; skipped: number; errors: string[] }> {
+  const db = client ?? getAdminClient();
+  const importedIds: string[] = [];
+  let updated = 0;
+  let skipped = 0;
+  const errors: string[] = [];
+
+  for (const item of items) {
+    const existingId = item.userback_id ? existingMap.get(item.userback_id) : undefined;
+
+    if (existingId) {
+      // Update existing issue (don't touch issue_number, type, priority — those came from Userback mapping)
+      const { error } = await db
+        .from("issues")
+        .update({
+          title: item.title,
+          description: item.description,
+          status: item.status,
+          reporter_email: item.reporter_email,
+          reporter_name: item.reporter_name,
+          source_url: item.source_url,
+          source_metadata: item.source_metadata,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingId);
+
+      if (error) {
+        const msg = `Update ${item.userback_id}: ${error.message}`;
+        console.error(`[upsertUserbackIssues] ${msg}`);
+        errors.push(msg);
+        skipped++;
+      } else {
+        updated++;
+      }
+    } else {
+      // Insert new issue with atomic issue_number
+      try {
+        const issue = await insertIssue(item, db);
+        importedIds.push(issue.id);
+      } catch (err) {
+        const msg = `Insert ${item.userback_id}: ${err instanceof Error ? err.message : String(err)}`;
+        console.error(`[upsertUserbackIssues] ${msg}`);
+        errors.push(msg);
+        skipped++;
+      }
+    }
+  }
+
+  return { imported: importedIds, updated, skipped, errors };
+}
+
+/**
  * Delete an issue (cascade deletes comments and activity).
  */
 export async function deleteIssue(id: string, client?: SupabaseClient): Promise<void> {
@@ -128,7 +187,7 @@ export async function insertComment(
     .insert(data)
     .select(
       `id, issue_id, author_id, body, created_at, updated_at,
-       author:author_id (id, name)`,
+       author:author_id (id, full_name)`,
     )
     .single();
 
@@ -151,7 +210,7 @@ export async function updateComment(
     .eq("id", id)
     .select(
       `id, issue_id, author_id, body, created_at, updated_at,
-       author:author_id (id, name)`,
+       author:author_id (id, full_name)`,
     )
     .single();
 

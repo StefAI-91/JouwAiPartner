@@ -7,7 +7,7 @@ import { ExtractionTabsPanel } from "@/components/meetings/extraction-tabs-panel
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import { EditMetadataModal } from "@/components/meetings/edit-metadata-modal";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { Pencil, FolderKanban } from "lucide-react";
 import { updateMeetingSummaryAction } from "@/actions/meetings";
 import type { MeetingDetail } from "@repo/database/queries/meetings";

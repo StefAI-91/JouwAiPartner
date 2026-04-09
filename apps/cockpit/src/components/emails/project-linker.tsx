@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { FolderKanban, X, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { linkEmailProjectAction, unlinkEmailProjectAction } from "@/actions/email-links";
 
 export function ProjectLinker({

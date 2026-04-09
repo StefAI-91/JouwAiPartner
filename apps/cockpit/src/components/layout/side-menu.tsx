@@ -10,8 +10,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetClose,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+} from "@repo/ui/sheet";
+import { Button } from "@repo/ui/button";
 import {
   primaryNavItems,
   secondaryNavItems,

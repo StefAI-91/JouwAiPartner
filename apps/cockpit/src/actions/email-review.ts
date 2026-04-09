@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import { verifyEmail, verifyEmailWithEdits, rejectEmail } from "@repo/database/mutations/emails";
 import { triggerSummariesForEmail } from "@repo/ai/pipeline/summary-pipeline";
 import {
@@ -10,14 +9,7 @@ import {
   verifyEmailWithEditsSchema,
   rejectEmailSchema,
 } from "@/validations/email-review";
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 export async function approveEmailAction(
   input: z.infer<typeof verifyEmailSchema>,

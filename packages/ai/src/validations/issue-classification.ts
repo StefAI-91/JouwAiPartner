@@ -32,11 +32,7 @@ export const IssueClassifierSchema = z.object({
     .describe(
       "Concrete reproductiestappen in het Nederlands. Als info ontbreekt, geef aan wat er mist",
     ),
-  confidence: z
-    .number()
-    .min(0)
-    .max(1)
-    .describe("Hoe zeker ben je van deze classificatie (0.0-1.0)"),
+  confidence: z.number().describe("Hoe zeker ben je van deze classificatie (0.0-1.0)"),
 });
 
 export type IssueClassifierOutput = z.infer<typeof IssueClassifierSchema>;
