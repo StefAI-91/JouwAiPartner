@@ -161,9 +161,9 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
         : null;
 
   return (
-    <div className="flex h-full flex-col lg:flex-row">
+    <div className="flex flex-col lg:h-full lg:flex-row">
       {/* Main content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 p-6 lg:overflow-auto">
         {/* Header */}
         <div className="mb-6">
           <Link
