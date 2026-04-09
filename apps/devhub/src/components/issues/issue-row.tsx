@@ -41,35 +41,33 @@ export function IssueRowItem({ issue, className }: { issue: IssueRow; className?
     <Link
       href={`/issues/${issue.id}`}
       className={cn(
-        "group flex items-center gap-3 border-b border-border px-4 py-2 text-sm transition-colors hover:bg-muted/50",
+        "group block border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/50",
         className,
       )}
     >
-      <PriorityDot priority={issue.priority} />
-
-      <span className="shrink-0 w-10 text-xs text-muted-foreground font-mono">
-        #{issue.issue_number}
-      </span>
-
-      <div className="min-w-0 flex-1">
-        <span className="truncate font-medium text-foreground group-hover:text-primary block">
+      {/* Row 1: number + title (full width) */}
+      <div className="flex items-start gap-2">
+        <PriorityDot priority={issue.priority} />
+        <span className="shrink-0 text-xs text-muted-foreground font-mono mt-0.5">
+          #{issue.issue_number}
+        </span>
+        <span className="min-w-0 flex-1 font-medium text-foreground group-hover:text-primary line-clamp-2">
           {issue.title}
         </span>
-        {issue.description && (
-          <span className="block truncate text-xs text-muted-foreground mt-0.5">
-            {issue.description.slice(0, 120)}
-          </span>
-        )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      {/* Row 2: description (full width, 2 lines) */}
+      {issue.description && issue.description !== issue.title && (
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2 pl-8">{issue.description}</p>
+      )}
+
+      {/* Row 3: badges + meta */}
+      <div className="mt-1.5 flex items-center gap-2 pl-8">
         <TypeBadge type={issue.type} />
+        <StatusBadge status={issue.status} />
         <ComponentBadge component={issue.component} />
         <AssignedAvatar person={issue.assigned_person} />
-        <StatusBadge status={issue.status} />
-        <span className="w-16 text-right text-xs text-muted-foreground">
-          {timeAgo(issue.created_at)}
-        </span>
+        <span className="ml-auto text-xs text-muted-foreground">{timeAgo(issue.created_at)}</span>
       </div>
     </Link>
   );
