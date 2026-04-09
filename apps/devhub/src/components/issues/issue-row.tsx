@@ -51,9 +51,16 @@ export function IssueRowItem({ issue, className }: { issue: IssueRow; className?
         #{issue.issue_number}
       </span>
 
-      <span className="min-w-0 flex-1 truncate font-medium text-foreground group-hover:text-primary">
-        {issue.title}
-      </span>
+      <div className="min-w-0 flex-1">
+        <span className="truncate font-medium text-foreground group-hover:text-primary block">
+          {issue.title}
+        </span>
+        {issue.description && (
+          <span className="block truncate text-xs text-muted-foreground mt-0.5">
+            {issue.description.slice(0, 120)}
+          </span>
+        )}
+      </div>
 
       <div className="flex shrink-0 items-center gap-2">
         <TypeBadge type={issue.type} />
