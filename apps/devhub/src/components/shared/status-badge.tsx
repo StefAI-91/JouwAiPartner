@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   triage: { label: "Triage", className: "bg-orange-100 text-orange-700 border-orange-200" },

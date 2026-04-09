@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createCommentAction } from "@/actions/issues";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 
 export function CommentForm({ issueId }: { issueId: string }) {
   const [body, setBody] = useState("");

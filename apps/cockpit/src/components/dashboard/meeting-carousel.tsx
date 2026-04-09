@@ -3,8 +3,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Building2, CalendarDays } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@repo/ui/button";
+import { Badge } from "@repo/ui/badge";
 import { formatDateShort } from "@/lib/format";
 import type { BriefingMeeting, ExtractionCounts } from "@repo/database/queries/dashboard";
 

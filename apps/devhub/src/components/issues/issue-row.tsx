@@ -4,7 +4,7 @@ import { PriorityDot } from "@/components/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();

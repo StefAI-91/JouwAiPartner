@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import {
   insertIssue,
   updateIssue,
@@ -12,64 +11,16 @@ import {
 } from "@repo/database/mutations/issues";
 import { getIssueById } from "@repo/database/queries/issues";
 import { classifyIssueBackground } from "./classify";
+import { CLOSED_STATUSES, type IssueStatus } from "@repo/database/constants/issues";
+import {
+  createIssueSchema,
+  updateIssueSchema,
+  deleteIssueSchema,
+  createCommentSchema,
+} from "@repo/database/validations/issues";
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 
-// ── Constants ──
-
-const ISSUE_TYPES = ["bug", "feature", "improvement", "task", "question"] as const;
-const ISSUE_STATUSES = ["triage", "backlog", "todo", "in_progress", "done", "cancelled"] as const;
-const ISSUE_PRIORITIES = ["urgent", "high", "medium", "low"] as const;
-const COMPONENTS = ["frontend", "backend", "api", "database", "prompt_ai", "unknown"] as const;
-const SEVERITIES = ["critical", "high", "medium", "low"] as const;
-const CLOSED_STATUSES = new Set(["done", "cancelled"]);
-
-// ── Zod Schemas ──
-
-const createIssueSchema = z.object({
-  project_id: z.string().uuid(),
-  title: z.string().min(1, "Titel is verplicht").max(500),
-  description: z.string().max(10000).nullish(),
-  type: z.enum(ISSUE_TYPES).default("bug"),
-  status: z.enum(ISSUE_STATUSES).default("triage"),
-  priority: z.enum(ISSUE_PRIORITIES).default("medium"),
-  component: z.enum(COMPONENTS).nullish(),
-  severity: z.enum(SEVERITIES).nullish(),
-  labels: z.array(z.string()).default([]),
-  assigned_to: z.string().uuid().nullish(),
-  reporter_name: z.string().max(200).nullish(),
-  reporter_email: z.string().email().nullish(),
-});
-
-const updateIssueSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string().min(1).max(500).optional(),
-  description: z.string().max(10000).nullish(),
-  type: z.enum(ISSUE_TYPES).optional(),
-  status: z.enum(ISSUE_STATUSES).optional(),
-  priority: z.enum(ISSUE_PRIORITIES).optional(),
-  component: z.enum(COMPONENTS).nullish(),
-  severity: z.enum(SEVERITIES).nullish(),
-  labels: z.array(z.string()).optional(),
-  assigned_to: z.string().uuid().nullable().optional(),
-});
-
-const deleteIssueSchema = z.object({
-  id: z.string().uuid(),
-});
-
-const createCommentSchema = z.object({
-  issue_id: z.string().uuid(),
-  body: z.string().min(1, "Reactie mag niet leeg zijn").max(10000),
-});
-
-// ── Auth Helper ──
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
+export { createIssueSchema, updateIssueSchema };
 
 // ── Actions ──
 
@@ -114,15 +65,13 @@ export async function updateIssueAction(
   const { id, ...data } = parsed.data;
 
   try {
-    // Fetch current issue for activity diff
     const current = await getIssueById(id);
     if (!current) return { error: "Issue niet gevonden" };
 
-    // Auto-set closed_at based on status change
     const updateData: Record<string, unknown> = { ...data };
     if (data.status) {
-      const wasClosedStatus = CLOSED_STATUSES.has(current.status);
-      const isClosedStatus = CLOSED_STATUSES.has(data.status);
+      const wasClosedStatus = CLOSED_STATUSES.has(current.status as IssueStatus);
+      const isClosedStatus = CLOSED_STATUSES.has(data.status as IssueStatus);
       if (!wasClosedStatus && isClosedStatus) {
         updateData.closed_at = new Date().toISOString();
       } else if (wasClosedStatus && !isClosedStatus) {
@@ -132,7 +81,6 @@ export async function updateIssueAction(
 
     await updateIssue(id, updateData);
 
-    // Log activity for each changed field
     const activityPromises: Promise<void>[] = [];
     const trackFields = [
       "status",
@@ -170,7 +118,6 @@ export async function updateIssueAction(
       );
     }
 
-    // Track title/description changes
     if (data.title && data.title !== current.title) {
       activityPromises.push(
         insertActivity({
@@ -184,7 +131,6 @@ export async function updateIssueAction(
       );
     }
 
-    // Track label changes
     if (data.labels) {
       const oldLabels = new Set(current.labels ?? []);
       const newLabels = new Set(data.labels);

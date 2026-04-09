@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@repo/ui/badge";
 import { Users, Mail, ChevronRight } from "lucide-react";
 import type { PersonListItem } from "@repo/database/queries/people";
 

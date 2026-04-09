@@ -11,7 +11,7 @@ import {
   Settings,
   LayoutList,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 import { useProjectId } from "@/hooks/use-project";
 import { useEffect, useState } from "react";
 import { createClient } from "@repo/database/supabase/client";

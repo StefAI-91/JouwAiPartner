@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@repo/database/supabase/server";
 import { getOrganizationById } from "@repo/database/queries/organizations";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@repo/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { Building2, Mail, User, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";

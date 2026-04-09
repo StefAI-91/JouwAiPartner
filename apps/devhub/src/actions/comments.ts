@@ -2,31 +2,9 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import { updateComment, deleteComment, insertActivity } from "@repo/database/mutations/issues";
-
-// ── Schemas ──
-
-const updateCommentSchema = z.object({
-  id: z.string().uuid(),
-  issue_id: z.string().uuid(),
-  body: z.string().min(1, "Reactie mag niet leeg zijn").max(10000),
-});
-
-const deleteCommentSchema = z.object({
-  id: z.string().uuid(),
-  issue_id: z.string().uuid(),
-});
-
-// ── Auth Helper ──
-
-async function getAuthenticatedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
+import { updateCommentSchema, deleteCommentSchema } from "@repo/database/validations/issues";
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 // ── Actions ──
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { TaskItem } from "./task-item";
 import { getUrgency } from "@/lib/urgency";
 import type { TaskRow } from "@repo/database/queries/tasks";

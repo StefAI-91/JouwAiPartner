@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@repo/ui/badge";
 
 interface StatusBadgeProps {
   status: "live" | "gepland";

@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 const STATUS_OPTIONS = [
   { value: "triage", label: "Triage" },

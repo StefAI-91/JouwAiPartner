@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 
 interface ErrorProps {
   error: Error & { digest?: string };

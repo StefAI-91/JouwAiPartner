@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Building2, Users, ChevronRight, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@repo/ui/badge";
 import { formatMeetingType } from "@/lib/constants/meeting";
 import { groupMeetingsByDate } from "@/lib/grouping";
 import type { VerifiedMeetingListItem } from "@repo/database/queries/meetings";

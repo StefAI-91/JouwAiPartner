@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
 import { Shield } from "lucide-react";
 import { completedItems } from "@/app/(dashboard)/architectuur/security/_data/completed-items";
 

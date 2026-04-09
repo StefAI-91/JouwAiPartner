@@ -11,27 +11,16 @@ import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
 import { CommentActivityFeed } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { ArrowLeft, Trash2, Sparkles } from "lucide-react";
 import Link from "next/link";
 
-// ── Constants ──
-
-const STATUSES = [
-  { value: "triage", label: "Triage" },
-  { value: "backlog", label: "Backlog" },
-  { value: "todo", label: "Todo" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "done", label: "Done" },
-  { value: "cancelled", label: "Cancelled" },
-] as const;
-
-const PRIORITIES = [
-  { value: "urgent", label: "Urgent" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-] as const;
+import {
+  ISSUE_STATUSES,
+  ISSUE_STATUS_LABELS,
+  ISSUE_PRIORITIES,
+  ISSUE_PRIORITY_LABELS,
+} from "@repo/database/constants/issues";
 
 interface Person {
   id: string;
@@ -228,7 +217,7 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
           <SidebarSelect
             label="Status"
             value={issue.status}
-            options={STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+            options={ISSUE_STATUSES.map((s) => ({ value: s, label: ISSUE_STATUS_LABELS[s] }))}
             onChange={(v) => handleFieldChange("status", v)}
             disabled={isPending}
           />
@@ -236,7 +225,7 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
           <SidebarSelect
             label="Prioriteit"
             value={issue.priority}
-            options={PRIORITIES.map((p) => ({ value: p.value, label: p.label }))}
+            options={ISSUE_PRIORITIES.map((p) => ({ value: p, label: ISSUE_PRIORITY_LABELS[p] }))}
             onChange={(v) => handleFieldChange("priority", v)}
             disabled={isPending}
           />

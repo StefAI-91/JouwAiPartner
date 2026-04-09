@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@repo/ui/button";
 import { ProjectSwitcher } from "./project-switcher";
 import { MobileSidebar } from "./mobile-sidebar";
 

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 const TYPE_CONFIG: Record<string, { label: string; className: string }> = {
   bug: { label: "Bug", className: "bg-red-50 text-red-700 border-red-200" },

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
+import { Badge } from "@repo/ui/badge";
 import { Users, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import type { RecentMeeting } from "@repo/database/queries/meetings";
 import { formatDateShort } from "@/lib/format";
@@ -47,9 +47,7 @@ function RelevanceRing({ score }: { score: number | null }) {
           className="stroke-current transition-[stroke-dashoffset] duration-500"
         />
       </svg>
-      <span className="absolute text-[9px] font-semibold tabular-nums">
-        {percent}
-      </span>
+      <span className="absolute text-[9px] font-semibold tabular-nums">{percent}</span>
     </div>
   );
 }
@@ -89,9 +87,7 @@ export function MeetingsCard({ meetings }: MeetingsCardProps) {
                         </p>
                       </div>
                       <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
-                        {meeting.date && (
-                          <span>{formatDateShort(meeting.date)}</span>
-                        )}
+                        {meeting.date && <span>{formatDateShort(meeting.date)}</span>}
                         {meeting.participants && meeting.participants.length > 0 && (
                           <span className="flex items-center gap-0.5">
                             <Users className="h-3 w-3" />

@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  transpilePackages: ["@repo/database", "@repo/ai", "@repo/mcp"],
+  transpilePackages: ["@repo/database", "@repo/ai", "@repo/mcp", "@repo/ui", "@repo/auth"],
   serverExternalPackages: ["cohere-ai"],
   experimental: {
     serverActions: {

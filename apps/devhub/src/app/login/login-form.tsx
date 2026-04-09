@@ -4,7 +4,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { createClient } from "@repo/database/supabase/client";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 
 const loginSchema = z.object({
   email: z.string().email("Ongeldig e-mailadres"),

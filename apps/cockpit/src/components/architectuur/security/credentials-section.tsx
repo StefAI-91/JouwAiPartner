@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@repo/ui/card";
 import { SensitivityBadge } from "@/components/architectuur/security/sensitivity-badge";
 import { allCredentials } from "@/app/(dashboard)/architectuur/security/_data/credentials";
 

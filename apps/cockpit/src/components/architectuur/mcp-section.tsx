@@ -1,11 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
+import { Badge } from "@repo/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@repo/ui/accordion";
 import { Wrench } from "lucide-react";
 import { mcpTools } from "@/app/(dashboard)/architectuur/_data/mcp-tools";
 
@@ -41,9 +36,11 @@ export function McpSection() {
               <li>1. Je stelt een vraag aan Claude</li>
               <li>
                 2. Claude kiest de juiste tool (bijv.{" "}
-                <code className="rounded bg-muted px-1 font-mono text-[11px]">search_knowledge</code>{" "}
-                of{" "}
-                <code className="rounded bg-muted px-1 font-mono text-[11px]">get_projects</code>)
+                <code className="rounded bg-muted px-1 font-mono text-[11px]">
+                  search_knowledge
+                </code>{" "}
+                of <code className="rounded bg-muted px-1 font-mono text-[11px]">get_projects</code>
+                )
               </li>
               <li>3. De tool bevraagt de database en stuurt resultaten terug</li>
               <li>4. Claude formuleert een antwoord op basis van de resultaten</li>
@@ -135,9 +132,7 @@ export function McpSection() {
                         </code>
                         <span className="text-muted-foreground">
                           {param.description}
-                          {param.required && (
-                            <span className="ml-1 text-primary">(verplicht)</span>
-                          )}
+                          {param.required && <span className="ml-1 text-primary">(verplicht)</span>}
                         </span>
                       </div>
                     ))}

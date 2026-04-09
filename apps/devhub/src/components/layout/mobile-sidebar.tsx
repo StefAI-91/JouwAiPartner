@@ -12,12 +12,12 @@ import {
   Settings,
   LayoutList,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 import { useProjectId } from "@/hooks/use-project";
 import { useEffect, useState } from "react";
 import { createClient } from "@repo/database/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetTrigger, SheetContent, SheetClose, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@repo/ui/button";
+import { Sheet, SheetTrigger, SheetContent, SheetClose, SheetTitle } from "@repo/ui/sheet";
 
 type StatusCounts = Record<string, number>;
 

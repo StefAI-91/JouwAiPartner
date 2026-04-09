@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
+import { Badge } from "@repo/ui/badge";
 import { Shield } from "lucide-react";
 import { IntegrationCard } from "@/components/architectuur/security/integration-card";
 import { StoredDataSection } from "@/components/architectuur/security/stored-data-section";

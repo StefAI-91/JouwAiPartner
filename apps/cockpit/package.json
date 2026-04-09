@@ -13,6 +13,8 @@
   "dependencies": {
     "@base-ui/react": "^1.3.0",
     "@repo/ai": "*",
+    "@repo/auth": "*",
+    "@repo/ui": "*",
     "@repo/database": "*",
     "@repo/mcp": "*",
     "@userback/widget": "^0.3.12",

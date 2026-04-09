@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ChevronDown, FolderKanban } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 import { PROJECT_CHANGE_EVENT } from "@/hooks/use-project";
 
 interface Project {

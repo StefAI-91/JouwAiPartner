@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ExtractionCard } from "@/components/shared/extraction-card";
 import { ReviewActionBar } from "./review-action-bar";
 import { Mail, Clock, Building2, FolderKanban, Paperclip } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@repo/ui/badge";
 import { approveEmailWithEditsAction, rejectEmailAction } from "@/actions/email-review";
 
 interface EmailExtraction {

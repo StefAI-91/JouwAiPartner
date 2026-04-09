@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
 import { seedSection } from "@/app/(dashboard)/architectuur/_data/seed";
 
 export function SeedCard() {

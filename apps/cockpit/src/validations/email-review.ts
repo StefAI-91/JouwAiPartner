@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zUuid } from "./uuid";
+import { zUuid } from "@repo/database/validations/uuid";
 
 export const verifyEmailSchema = z.object({
   emailId: zUuid,

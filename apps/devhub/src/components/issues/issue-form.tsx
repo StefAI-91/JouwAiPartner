@@ -3,39 +3,18 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createIssueAction } from "@/actions/issues";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { useProjectId } from "@/hooks/use-project";
-
-const TYPES = [
-  { value: "bug", label: "Bug" },
-  { value: "feature", label: "Feature" },
-  { value: "improvement", label: "Improvement" },
-  { value: "task", label: "Task" },
-  { value: "question", label: "Question" },
-] as const;
-
-const PRIORITIES = [
-  { value: "urgent", label: "Urgent" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-] as const;
-
-const COMPONENTS = [
-  { value: "frontend", label: "Frontend" },
-  { value: "backend", label: "Backend" },
-  { value: "api", label: "API" },
-  { value: "database", label: "Database" },
-  { value: "prompt_ai", label: "Prompt / AI" },
-  { value: "unknown", label: "Onbekend" },
-] as const;
-
-const SEVERITIES = [
-  { value: "critical", label: "Critical" },
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-] as const;
+import {
+  ISSUE_TYPES,
+  ISSUE_TYPE_LABELS,
+  ISSUE_PRIORITIES,
+  ISSUE_PRIORITY_LABELS,
+  ISSUE_COMPONENTS,
+  ISSUE_COMPONENT_LABELS,
+  ISSUE_SEVERITIES,
+  ISSUE_SEVERITY_LABELS,
+} from "@repo/database/constants/issues";
 
 interface Person {
   id: string;
@@ -153,9 +132,9 @@ export function IssueForm({ people }: { people: Person[] }) {
             onChange={(e) => setType(e.target.value)}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           >
-            {TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {ISSUE_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {ISSUE_TYPE_LABELS[t]}
               </option>
             ))}
           </select>
@@ -170,9 +149,9 @@ export function IssueForm({ people }: { people: Person[] }) {
             onChange={(e) => setPriority(e.target.value)}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           >
-            {PRIORITIES.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
+            {ISSUE_PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {ISSUE_PRIORITY_LABELS[p]}
               </option>
             ))}
           </select>
@@ -192,9 +171,9 @@ export function IssueForm({ people }: { people: Person[] }) {
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           >
             <option value="">-- Geen --</option>
-            {COMPONENTS.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
+            {ISSUE_COMPONENTS.map((c) => (
+              <option key={c} value={c}>
+                {ISSUE_COMPONENT_LABELS[c]}
               </option>
             ))}
           </select>
@@ -210,9 +189,9 @@ export function IssueForm({ people }: { people: Person[] }) {
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
           >
             <option value="">-- Geen --</option>
-            {SEVERITIES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
+            {ISSUE_SEVERITIES.map((s) => (
+              <option key={s} value={s}>
+                {ISSUE_SEVERITY_LABELS[s]}
               </option>
             ))}
           </select>

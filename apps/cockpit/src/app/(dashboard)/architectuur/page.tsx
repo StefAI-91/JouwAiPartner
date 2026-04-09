@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { LayerCard } from "@/components/architectuur/layer-card";
 import { FlowArrow } from "@/components/architectuur/flow-arrow";
 import { EmbeddingsCard } from "@/components/architectuur/embeddings-card";

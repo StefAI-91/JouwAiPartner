@@ -1,10 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@repo/ui/accordion";
 import { Brain } from "lucide-react";
 import { embedSection } from "@/app/(dashboard)/architectuur/_data/embeddings";
 

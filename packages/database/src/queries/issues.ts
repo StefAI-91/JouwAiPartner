@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
+import { PRIORITY_ORDER } from "../constants/issues";
 
 export interface IssueRow {
   id: string;
@@ -60,13 +61,6 @@ export const ISSUE_SELECT = `
   created_at, updated_at, closed_at,
   assigned_person:assigned_to (id, full_name)
 ` as const;
-
-const PRIORITY_ORDER: Record<string, number> = {
-  urgent: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-};
 
 /**
  * List issues with filters, pagination, and priority sorting.

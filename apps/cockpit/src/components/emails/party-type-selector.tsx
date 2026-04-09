@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { UserCircle, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { updateEmailPartyTypeAction } from "@/actions/email-links";
 
 const PARTY_TYPE_LABELS: Record<string, string> = {

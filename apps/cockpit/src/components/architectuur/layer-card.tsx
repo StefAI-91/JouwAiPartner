@@ -1,10 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@repo/ui/accordion";
 import { StatusBadge } from "@/components/architectuur/status-badge";
 import type { LayerProps } from "@/app/(dashboard)/architectuur/_data/layers";
 
