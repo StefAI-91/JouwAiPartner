@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   CircleDot,
   Inbox,
@@ -29,11 +29,8 @@ const NAV_ITEMS = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const projectId = useProjectId();
   const [counts, setCounts] = useState<StatusCounts>({});
-
-  const activeStatus = searchParams.get("status");
 
   useEffect(() => {
     if (!projectId) {
@@ -72,7 +69,6 @@ export function AppSidebar() {
           className={cn(
             "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             pathname === "/issues" &&
-              !activeStatus &&
               "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
           )}
         >
@@ -89,15 +85,11 @@ export function AppSidebar() {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const count = counts[item.status] ?? 0;
-          const isActive = activeStatus === item.status;
           return (
             <Link
               key={item.status}
               href={`/issues?status=${item.status}`}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
-              )}
+              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <Icon className="size-4" />
               <span className="flex-1">{item.label}</span>
