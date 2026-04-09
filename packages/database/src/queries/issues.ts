@@ -325,3 +325,46 @@ export async function listIssueActivity(
   }
   return (data ?? []) as unknown as IssueActivityRow[];
 }
+
+// ── Issue Attachments ──
+
+export interface IssueAttachmentRow {
+  id: string;
+  issue_id: string;
+  type: string; // "screenshot" | "video" | "attachment"
+  storage_path: string;
+  original_url: string | null;
+  file_name: string;
+  mime_type: string | null;
+  file_size: number | null;
+  width: number | null;
+  height: number | null;
+  created_at: string;
+}
+
+const ATTACHMENT_SELECT = `
+  id, issue_id, type, storage_path, original_url,
+  file_name, mime_type, file_size, width, height, created_at
+` as const;
+
+/**
+ * List all attachments for a given issue.
+ */
+export async function listIssueAttachments(
+  issueId: string,
+  client?: SupabaseClient,
+): Promise<IssueAttachmentRow[]> {
+  const db = client ?? getAdminClient();
+
+  const { data, error } = await db
+    .from("issue_attachments")
+    .select(ATTACHMENT_SELECT)
+    .eq("issue_id", issueId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("[listIssueAttachments] Database error:", error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as IssueAttachmentRow[];
+}

@@ -10,8 +10,27 @@ interface UserbackPagination {
   totalPages: number;
 }
 
-interface UserbackScreenshot {
+export interface UserbackScreenshot {
   url: string;
+  width?: number;
+  height?: number;
+  created?: string;
+}
+
+export interface UserbackSession {
+  colorDepth?: number;
+  dpi?: number;
+  resolution?: string;
+  window?: string;
+  userAgent?: string;
+}
+
+export interface UserbackLocation {
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  country?: string;
+  postal_code?: string;
 }
 
 export interface UserbackFeedbackItem {
@@ -25,6 +44,12 @@ export interface UserbackFeedbackItem {
   page_url: string | null;
   share_url: string | null;
   screenshots: UserbackScreenshot[];
+  videoUrl: string | null;
+  attachmentUrl: string | null;
+  Session: UserbackSession | null;
+  Location: UserbackLocation | null;
+  rating: string | null; // "star_1" through "star_5"
+  category: string | null;
   browser: string | null;
   os: string | null;
   resolution: string | null;
@@ -166,6 +191,45 @@ function isSentinelDate(dateStr: string | null): boolean {
 }
 
 /**
+ * Extract all media URLs from a Userback feedback item.
+ * Returns an array of { url, type, width?, height? } objects.
+ */
+export function extractMediaUrls(item: UserbackFeedbackItem): Array<{
+  url: string;
+  type: "screenshot" | "video" | "attachment";
+  width?: number;
+  height?: number;
+}> {
+  const media: Array<{
+    url: string;
+    type: "screenshot" | "video" | "attachment";
+    width?: number;
+    height?: number;
+  }> = [];
+
+  // Screenshots (up to 3)
+  if (item.screenshots?.length) {
+    for (const s of item.screenshots) {
+      if (s.url) {
+        media.push({ url: s.url, type: "screenshot", width: s.width, height: s.height });
+      }
+    }
+  }
+
+  // Video recording
+  if (item.videoUrl) {
+    media.push({ url: item.videoUrl, type: "video" });
+  }
+
+  // File attachment
+  if (item.attachmentUrl) {
+    media.push({ url: item.attachmentUrl, type: "attachment" });
+  }
+
+  return media;
+}
+
+/**
  * Map a Userback feedback item to our issues table insert format.
  */
 export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string): InsertIssueData {
@@ -186,10 +250,17 @@ export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string
     source_url: item.page_url ?? null,
     source_metadata: {
       screenshot_url: screenshotUrl,
+      screenshot_urls: item.screenshots?.map((s) => s.url).filter(Boolean) ?? [],
+      video_url: item.videoUrl ?? null,
+      attachment_url: item.attachmentUrl ?? null,
       share_url: item.share_url,
       browser: item.browser,
       os: item.os,
       screen: item.resolution,
+      rating: item.rating ?? null,
+      category: item.category ?? null,
+      session: item.Session ?? null,
+      location: item.Location ?? null,
       userback_created_at: item.created_at,
       userback_modified_at: item.modified_at,
       feedback_type: item.feedback_type,

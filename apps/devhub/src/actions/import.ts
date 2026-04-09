@@ -11,7 +11,12 @@ import {
 } from "@repo/database/queries/issues";
 import { upsertUserbackIssues } from "@repo/database/mutations/issues";
 import { insertActivity } from "@repo/database/mutations/issues";
-import { fetchAllUserbackFeedback, mapUserbackToIssue } from "@repo/database/integrations/userback";
+import {
+  fetchAllUserbackFeedback,
+  mapUserbackToIssue,
+  extractMediaUrls,
+} from "@repo/database/integrations/userback";
+import { storeIssueMedia } from "@repo/database/mutations/issue-attachments";
 import { classifyIssueBackground } from "./classify";
 
 const AI_CLASSIFY_DELAY_MS = 100;
@@ -81,8 +86,11 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
       };
     }
 
-    // 3. Map to issue format
+    // 3. Map to issue format + keep original items for media extraction
     const mappedItems = items.map((item) => mapUserbackToIssue(item, projectId));
+
+    // Build a lookup from userback_id → original item (for media extraction later)
+    const itemsByUserbackId = new Map(items.map((item) => [String(item.id), item]));
 
     // 4. Check which userback_ids already exist (batch dedup)
     const userbackIds = mappedItems
@@ -93,7 +101,27 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
     // 5. Upsert (insert new, update existing)
     const result = await upsertUserbackIssues(mappedItems, existingMap, admin);
 
-    // 6. AI classification for NEW items only (sequential, 100ms delay)
+    // 6. Download and store media for NEW items (screenshots, video, attachments)
+    let mediaStored = 0;
+    for (const [userbackId, issueId] of result.importedMap) {
+      const originalItem = itemsByUserbackId.get(userbackId);
+      if (!originalItem) continue;
+
+      const mediaUrls = extractMediaUrls(originalItem);
+      if (mediaUrls.length === 0) continue;
+
+      try {
+        const count = await storeIssueMedia(issueId, userbackId, mediaUrls, admin);
+        mediaStored += count;
+        console.log(`[syncUserback] Stored ${count} media files for issue ${issueId}`);
+      } catch (err) {
+        console.error(`[syncUserback] Media storage failed for ${issueId}:`, err);
+      }
+    }
+
+    console.log(`[syncUserback] Total media files stored: ${mediaStored}`);
+
+    // 7. AI classification for NEW items only (sequential, 100ms delay)
     let classified = 0;
     for (const issueId of result.imported) {
       try {

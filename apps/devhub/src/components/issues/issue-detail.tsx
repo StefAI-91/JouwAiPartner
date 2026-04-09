@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { IssueRow, IssueCommentRow, IssueActivityRow } from "@repo/database/queries/issues";
+import type {
+  IssueRow,
+  IssueCommentRow,
+  IssueActivityRow,
+  IssueAttachmentRow,
+} from "@repo/database/queries/issues";
 import { updateIssueAction, deleteIssueAction } from "@/actions/issues";
 import { classifyIssueAction } from "@/actions/classify";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -12,7 +17,15 @@ import { ComponentBadge } from "@/components/shared/component-badge";
 import { CommentActivityFeed } from "@/components/comments/comment-list";
 import { CommentForm } from "@/components/comments/comment-form";
 import { Button } from "@repo/ui/button";
-import { ArrowLeft, Trash2, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Trash2,
+  Sparkles,
+  Image as ImageIcon,
+  Video,
+  Paperclip,
+  ExternalLink,
+} from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -32,6 +45,7 @@ interface IssueDetailProps {
   comments: IssueCommentRow[];
   activities: IssueActivityRow[];
   people: Person[];
+  attachments?: IssueAttachmentRow[];
 }
 
 // ── Sidebar Dropdown ──
@@ -101,7 +115,13 @@ function SidebarAssignee({
 
 // ── Main Component ──
 
-export function IssueDetail({ issue, comments, activities, people }: IssueDetailProps) {
+export function IssueDetail({
+  issue,
+  comments,
+  activities,
+  people,
+  attachments,
+}: IssueDetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -187,6 +207,108 @@ export function IssueDetail({ issue, comments, activities, people }: IssueDetail
             <h2 className="mb-2">Beschrijving</h2>
             <div className="rounded-md border border-border bg-card p-4 text-sm whitespace-pre-wrap">
               {issue.description}
+            </div>
+          </section>
+        )}
+
+        {/* Attachments */}
+        {attachments && attachments.length > 0 && (
+          <section className="mb-6">
+            <h2 className="mb-2">Bijlagen</h2>
+            <div className="space-y-3">
+              {/* Screenshots */}
+              {attachments.filter((a) => a.type === "screenshot").length > 0 && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {attachments
+                    .filter((a) => a.type === "screenshot")
+                    .map((a) => {
+                      const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/issue-attachments/${a.storage_path}`;
+                      return (
+                        <a
+                          key={a.id}
+                          href={publicUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group relative block overflow-hidden rounded-md border border-border bg-card"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={publicUrl}
+                            alt={a.file_name}
+                            className="w-full object-contain"
+                            style={{ maxHeight: 400 }}
+                          />
+                          <div className="flex items-center gap-1.5 border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
+                            <ImageIcon className="size-3" />
+                            <span className="truncate">{a.file_name}</span>
+                            {a.width && a.height && (
+                              <span className="ml-auto shrink-0">
+                                {a.width}x{a.height}
+                              </span>
+                            )}
+                            <ExternalLink className="size-3 shrink-0 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        </a>
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* Video */}
+              {attachments
+                .filter((a) => a.type === "video")
+                .map((a) => {
+                  const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/issue-attachments/${a.storage_path}`;
+                  return (
+                    <div
+                      key={a.id}
+                      className="overflow-hidden rounded-md border border-border bg-card"
+                    >
+                      <video
+                        src={publicUrl}
+                        controls
+                        className="w-full"
+                        style={{ maxHeight: 500 }}
+                      />
+                      <div className="flex items-center gap-1.5 border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
+                        <Video className="size-3" />
+                        <span className="truncate">{a.file_name}</span>
+                        {a.file_size && (
+                          <span className="ml-auto">
+                            {(a.file_size / 1024 / 1024).toFixed(1)} MB
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+              {/* Other attachments */}
+              {attachments
+                .filter((a) => a.type === "attachment")
+                .map((a) => {
+                  const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/issue-attachments/${a.storage_path}`;
+                  return (
+                    <a
+                      key={a.id}
+                      href={publicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-muted"
+                    >
+                      <Paperclip className="size-4 text-muted-foreground" />
+                      <span className="truncate">{a.file_name}</span>
+                      {a.file_size && (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {a.file_size > 1024 * 1024
+                            ? `${(a.file_size / 1024 / 1024).toFixed(1)} MB`
+                            : `${Math.round(a.file_size / 1024)} KB`}
+                        </span>
+                      )}
+                      <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" />
+                    </a>
+                  );
+                })}
             </div>
           </section>
         )}

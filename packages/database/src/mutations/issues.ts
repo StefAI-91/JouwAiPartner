@@ -113,9 +113,16 @@ export async function upsertUserbackIssues(
   items: InsertIssueData[],
   existingMap: Map<string, string>,
   client?: SupabaseClient,
-): Promise<{ imported: string[]; updated: number; skipped: number; errors: string[] }> {
+): Promise<{
+  imported: string[];
+  importedMap: Map<string, string>; // userback_id → issue_id (for new items)
+  updated: number;
+  skipped: number;
+  errors: string[];
+}> {
   const db = client ?? getAdminClient();
   const importedIds: string[] = [];
+  const importedMap = new Map<string, string>();
   let updated = 0;
   let skipped = 0;
   const errors: string[] = [];
@@ -152,6 +159,9 @@ export async function upsertUserbackIssues(
       try {
         const issue = await insertIssue(item, db);
         importedIds.push(issue.id);
+        if (item.userback_id) {
+          importedMap.set(item.userback_id, issue.id);
+        }
       } catch (err) {
         const msg = `Insert ${item.userback_id}: ${err instanceof Error ? err.message : String(err)}`;
         console.error(`[upsertUserbackIssues] ${msg}`);
@@ -161,7 +171,7 @@ export async function upsertUserbackIssues(
     }
   }
 
-  return { imported: importedIds, updated, skipped, errors };
+  return { imported: importedIds, importedMap, updated, skipped, errors };
 }
 
 /**
