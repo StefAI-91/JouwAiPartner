@@ -1,79 +1,21 @@
-"use client";
-
-import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { createClient } from "@repo/database/supabase/client";
-import type { IssueRow } from "@repo/database/queries/issues";
+import { createClient } from "@repo/database/supabase/server";
+import { listIssues } from "@repo/database/queries/issues";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
-import { useProjectId } from "@/hooks/use-project";
 
-const PRIORITY_ORDER: Record<string, number> = {
-  urgent: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
-};
-
-const ISSUE_SELECT = `
-  id, project_id, title, description, type, status, priority, component, severity,
-  labels, assigned_to, reporter_name, reporter_email, source, userback_id, source_url,
-  issue_number, execution_type, ai_executable, duplicate_of_id, ai_classification,
-  created_at, updated_at, closed_at,
-  assigned_person:assigned_to (id, full_name)
-`;
-
-function IssuesContent() {
-  const projectId = useProjectId();
-  const searchParams = useSearchParams();
-  const [issues, setIssues] = useState<IssueRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!projectId) return;
-
-    let cancelled = false;
-    const supabase = createClient();
-
-    const fetchIssues = async () => {
-      let query = supabase
-        .from("issues")
-        .select(ISSUE_SELECT)
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: false })
-        .limit(100);
-
-      const status = searchParams.get("status");
-      if (status) query = query.in("status", status.split(","));
-
-      const priority = searchParams.get("priority");
-      if (priority) query = query.in("priority", priority.split(","));
-
-      const type = searchParams.get("type");
-      if (type) query = query.in("type", type.split(","));
-
-      const component = searchParams.get("component");
-      if (component) query = query.in("component", component.split(","));
-
-      const { data } = await query;
-      if (cancelled) return;
-
-      const rows = (data ?? []) as unknown as IssueRow[];
-      rows.sort((a, b) => {
-        const pa = PRIORITY_ORDER[a.priority] ?? 99;
-        const pb = PRIORITY_ORDER[b.priority] ?? 99;
-        if (pa !== pb) return pa - pb;
-        return 0;
-      });
-      setIssues(rows);
-      setLoading(false);
-    };
-
-    fetchIssues();
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId, searchParams]);
+export default async function IssuesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    project?: string;
+    status?: string;
+    priority?: string;
+    type?: string;
+    component?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const projectId = params.project;
 
   if (!projectId) {
     return (
@@ -85,24 +27,23 @@ function IssuesContent() {
     );
   }
 
+  const supabase = await createClient();
+
+  const issues = await listIssues(
+    {
+      projectId,
+      status: params.status?.split(","),
+      priority: params.priority?.split(","),
+      type: params.type?.split(","),
+      component: params.component?.split(","),
+    },
+    supabase,
+  );
+
   return (
     <div className="flex flex-1 flex-col">
       <IssueFilters />
-      {loading ? (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="size-5 animate-spin rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground" />
-        </div>
-      ) : (
-        <IssueList issues={issues} />
-      )}
+      <IssueList issues={issues} />
     </div>
-  );
-}
-
-export default function IssuesPage() {
-  return (
-    <Suspense>
-      <IssuesContent />
-    </Suspense>
   );
 }

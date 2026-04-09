@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@repo/ui/button";
 import { syncUserback } from "@/actions/import";
-import { cn } from "@/lib/utils";
+import { cn } from "@repo/ui/utils";
 
 interface SyncResult {
   imported: number;
