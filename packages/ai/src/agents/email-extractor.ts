@@ -9,11 +9,12 @@ ALLE output moet in het Nederlands zijn (behalve enum-waarden).
 
 Je extraheert de volgende types:
 - decision: een besluit dat genomen of bevestigd wordt
-- action_item: iets dat iemand moet doen (JAIP-team of extern)
 - need: iets dat ontbreekt of blokkerend is
 - insight: nuttige informatie of context voor het project
 - project_update: statusupdate, voortgang, milestone
 - request: een expliciet verzoek van de afzender
+
+LET OP: Extraheer GEEN action_items uit emails. Taken worden alleen uit meetings gegenereerd.
 
 --- REGELS ---
 - Wees SELECTIEF: liever 2-3 sterke extracties dan 8 zwakke

@@ -21,7 +21,7 @@ export const verifyEmailWithEditsSchema = z.object({
     .array(
       z.object({
         extractionId: zUuid,
-        type: z.enum(["decision", "action_item", "need", "insight", "project_update", "request"]),
+        type: z.enum(["decision", "need", "insight", "project_update", "request"]),
       }),
     )
     .optional(),

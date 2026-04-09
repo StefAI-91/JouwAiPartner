@@ -2,9 +2,9 @@ import { z } from "zod";
 
 export const EmailExtractionItemSchema = z.object({
   type: z
-    .enum(["decision", "action_item", "need", "insight", "project_update", "request"])
+    .enum(["decision", "need", "insight", "project_update", "request"])
     .describe(
-      "Type of extraction: decision, action_item, need (something missing/blocking), insight (useful info), project_update (status/progress), request (someone asks for something)",
+      "Type of extraction: decision, need (something missing/blocking), insight (useful info), project_update (status/progress), request (someone asks for something)",
     ),
   content: z.string().describe("The extracted insight in Dutch, concise and clear"),
   confidence: z.number().describe("Confidence score 0.0-1.0. Must be between 0 and 1."),
