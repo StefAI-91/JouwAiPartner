@@ -106,6 +106,63 @@ export async function updateIssue(
 }
 
 /**
+ * Upsert Userback issues: insert new ones (with issue_number), update existing ones.
+ * Returns stats: { imported, updated, skipped }.
+ */
+export async function upsertUserbackIssues(
+  items: InsertIssueData[],
+  existingMap: Map<string, string>,
+  client?: SupabaseClient,
+): Promise<{ imported: string[]; updated: number; skipped: number }> {
+  const db = client ?? getAdminClient();
+  const importedIds: string[] = [];
+  let updated = 0;
+  let skipped = 0;
+
+  for (const item of items) {
+    const existingId = item.userback_id ? existingMap.get(item.userback_id) : undefined;
+
+    if (existingId) {
+      // Update existing issue (don't touch issue_number, type, priority — those came from Userback mapping)
+      const { error } = await db
+        .from("issues")
+        .update({
+          title: item.title,
+          description: item.description,
+          status: item.status,
+          reporter_email: item.reporter_email,
+          reporter_name: item.reporter_name,
+          source_url: item.source_url,
+          source_metadata: item.source_metadata,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingId);
+
+      if (error) {
+        console.error(
+          `[upsertUserbackIssues] Update failed for ${item.userback_id}:`,
+          error.message,
+        );
+        skipped++;
+      } else {
+        updated++;
+      }
+    } else {
+      // Insert new issue with atomic issue_number
+      try {
+        const issue = await insertIssue(item, db);
+        importedIds.push(issue.id);
+      } catch (err) {
+        console.error(`[upsertUserbackIssues] Insert failed for ${item.userback_id}:`, err);
+        skipped++;
+      }
+    }
+  }
+
+  return { imported: importedIds, updated, skipped };
+}
+
+/**
  * Delete an issue (cascade deletes comments and activity).
  */
 export async function deleteIssue(id: string, client?: SupabaseClient): Promise<void> {
