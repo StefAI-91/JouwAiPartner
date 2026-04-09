@@ -1,5 +1,5 @@
 import { createClient } from "@repo/database/supabase/server";
-import { listIssues } from "@repo/database/queries/issues";
+import { listIssues, getIssueThumbnails } from "@repo/database/queries/issues";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
 
@@ -40,10 +40,15 @@ export default async function IssuesPage({
     supabase,
   );
 
+  const thumbnails = await getIssueThumbnails(
+    issues.map((i) => i.id),
+    supabase,
+  );
+
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col px-4 sm:px-6 lg:px-8">
       <IssueFilters />
-      <IssueList issues={issues} />
+      <IssueList issues={issues} thumbnails={thumbnails} />
     </div>
   );
 }

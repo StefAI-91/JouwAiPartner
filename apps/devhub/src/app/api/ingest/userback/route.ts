@@ -10,6 +10,7 @@ import {
 import { upsertUserbackIssues } from "@repo/database/mutations/issues";
 import {
   fetchAllUserbackFeedback,
+  isTestSubmission,
   mapUserbackToIssue,
   extractMediaUrls,
 } from "@repo/database/integrations/userback";
@@ -42,8 +43,16 @@ export async function GET(req: NextRequest) {
     const cursor = await getUserbackSyncCursor(admin);
     const items = await fetchAllUserbackFeedback(cursor, 50);
 
-    if (items.length === 0) {
-      return NextResponse.json({ synced: 0, total: 0, isInitial: cursor === null });
+    // Filter out test submissions ("test", "dit is een test", etc.)
+    const realItems = items.filter((item) => !isTestSubmission(item.description));
+
+    if (realItems.length === 0) {
+      return NextResponse.json({
+        synced: 0,
+        total: 0,
+        filtered: items.length - realItems.length,
+        isInitial: cursor === null,
+      });
     }
 
     // Get project with userback_project_id = '127499'
@@ -60,8 +69,8 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const mappedItems = items.map((item) => mapUserbackToIssue(item, project.id));
-    const itemsByUserbackId = new Map(items.map((item) => [String(item.id), item]));
+    const mappedItems = realItems.map((item) => mapUserbackToIssue(item, project.id));
+    const itemsByUserbackId = new Map(realItems.map((item) => [String(item.id), item]));
     const userbackIds = mappedItems
       .map((i) => i.userback_id)
       .filter((id): id is string => id !== null && id !== undefined);
@@ -87,6 +96,7 @@ export async function GET(req: NextRequest) {
       updated: result.updated,
       skipped: result.skipped,
       mediaStored,
+      filtered: items.length - realItems.length,
       total: items.length,
       isInitial: cursor === null,
     });
@@ -127,18 +137,22 @@ export async function POST(req: NextRequest) {
     const cursor = await getUserbackSyncCursor(admin);
     const items = await fetchAllUserbackFeedback(cursor, limit);
 
-    if (items.length === 0) {
+    // Filter out test submissions
+    const realItems = items.filter((item) => !isTestSubmission(item.description));
+
+    if (realItems.length === 0) {
       return NextResponse.json({
         imported: 0,
         updated: 0,
         skipped: 0,
+        filtered: items.length - realItems.length,
         total: 0,
         isInitial: cursor === null,
       });
     }
 
-    const mappedItems = items.map((item) => mapUserbackToIssue(item, projectId));
-    const itemsByUserbackId = new Map(items.map((item) => [String(item.id), item]));
+    const mappedItems = realItems.map((item) => mapUserbackToIssue(item, projectId));
+    const itemsByUserbackId = new Map(realItems.map((item) => [String(item.id), item]));
     const userbackIds = mappedItems
       .map((i) => i.userback_id)
       .filter((id): id is string => id !== null && id !== undefined);
@@ -164,6 +178,7 @@ export async function POST(req: NextRequest) {
       updated: result.updated,
       skipped: result.skipped,
       mediaStored,
+      filtered: items.length - realItems.length,
       total: items.length,
       isInitial: cursor === null,
     });

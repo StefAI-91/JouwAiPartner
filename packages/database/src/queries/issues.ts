@@ -348,6 +348,36 @@ const ATTACHMENT_SELECT = `
 ` as const;
 
 /**
+ * Get the first screenshot attachment for each issue in a batch.
+ * Returns a map of issue_id -> storage_path.
+ */
+export async function getIssueThumbnails(
+  issueIds: string[],
+  client?: SupabaseClient,
+): Promise<Map<string, string>> {
+  if (issueIds.length === 0) return new Map();
+  const db = client ?? getAdminClient();
+
+  const { data, error } = await db
+    .from("issue_attachments")
+    .select("issue_id, storage_path")
+    .in("issue_id", issueIds)
+    .eq("type", "screenshot")
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return new Map();
+
+  // Keep only the first screenshot per issue
+  const map = new Map<string, string>();
+  for (const row of data) {
+    if (!map.has(row.issue_id)) {
+      map.set(row.issue_id, row.storage_path);
+    }
+  }
+  return map;
+}
+
+/**
  * List all attachments for a given issue.
  */
 export async function listIssueAttachments(

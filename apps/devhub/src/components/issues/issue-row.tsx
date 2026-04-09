@@ -36,39 +36,65 @@ function AssignedAvatar({ person }: { person: { full_name: string } | null }) {
   );
 }
 
-export function IssueRowItem({ issue, className }: { issue: IssueRow; className?: string }) {
+function IssueThumbnail({ storagePath }: { storagePath: string }) {
+  const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/issue-attachments/${storagePath}`;
+  return (
+    <div className="shrink-0 overflow-hidden rounded-md border border-border">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={publicUrl} alt="Screenshot" className="size-16 object-cover" loading="lazy" />
+    </div>
+  );
+}
+
+export function IssueRowItem({
+  issue,
+  thumbnailPath,
+  className,
+}: {
+  issue: IssueRow;
+  thumbnailPath?: string;
+  className?: string;
+}) {
   return (
     <Link
       href={`/issues/${issue.id}`}
       className={cn(
-        "group block border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/50",
+        "group flex gap-3 border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/50",
         className,
       )}
     >
-      {/* Row 1: number + title (full width) */}
-      <div className="flex items-start gap-2">
-        <PriorityDot priority={issue.priority} />
-        <span className="shrink-0 text-xs text-muted-foreground font-mono mt-0.5">
-          #{issue.issue_number}
-        </span>
-        <span className="min-w-0 flex-1 font-medium text-foreground group-hover:text-primary line-clamp-2">
-          {issue.title}
-        </span>
+      {/* Left: content */}
+      <div className="min-w-0 flex-1">
+        {/* Row 1: number + title */}
+        <div className="flex items-start gap-2">
+          <PriorityDot priority={issue.priority} />
+          <span className="shrink-0 text-xs text-muted-foreground font-mono mt-0.5">
+            #{issue.issue_number}
+          </span>
+          <span className="min-w-0 flex-1 font-medium text-foreground group-hover:text-primary line-clamp-2">
+            {issue.title}
+          </span>
+        </div>
+
+        {/* Row 2: description */}
+        {issue.description && issue.description !== issue.title && (
+          <p className="mt-1 text-xs text-muted-foreground line-clamp-2 pl-8">
+            {issue.description}
+          </p>
+        )}
+
+        {/* Row 3: badges + meta */}
+        <div className="mt-1.5 flex items-center gap-2 pl-8">
+          <TypeBadge type={issue.type} />
+          <StatusBadge status={issue.status} />
+          <ComponentBadge component={issue.component} />
+          <AssignedAvatar person={issue.assigned_person} />
+          <span className="ml-auto text-xs text-muted-foreground">{timeAgo(issue.created_at)}</span>
+        </div>
       </div>
 
-      {/* Row 2: description (full width, 2 lines) */}
-      {issue.description && issue.description !== issue.title && (
-        <p className="mt-1 text-xs text-muted-foreground line-clamp-2 pl-8">{issue.description}</p>
-      )}
-
-      {/* Row 3: badges + meta */}
-      <div className="mt-1.5 flex items-center gap-2 pl-8">
-        <TypeBadge type={issue.type} />
-        <StatusBadge status={issue.status} />
-        <ComponentBadge component={issue.component} />
-        <AssignedAvatar person={issue.assigned_person} />
-        <span className="ml-auto text-xs text-muted-foreground">{timeAgo(issue.created_at)}</span>
-      </div>
+      {/* Right: thumbnail */}
+      {thumbnailPath && <IssueThumbnail storagePath={thumbnailPath} />}
     </Link>
   );
 }

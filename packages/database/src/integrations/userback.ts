@@ -181,6 +181,21 @@ export async function fetchAllUserbackFeedback(
   return allItems;
 }
 
+// ── Test Submission Filter ──
+
+const TEST_PATTERNS = [/^test\.?$/i, /^dit\s+(is\s+)?een\s+test/i, /^testing\.?$/i];
+
+/**
+ * Check if a Userback feedback item is a test submission that should be skipped.
+ * Matches: "test", "Test", "dit is een test", "dit een test om X te laten zien", etc.
+ */
+export function isTestSubmission(description: string | null | undefined): boolean {
+  if (!description) return false;
+  const trimmed = description.trim();
+  if (!trimmed) return false;
+  return TEST_PATTERNS.some((pattern) => pattern.test(trimmed));
+}
+
 // ── Field Mapping ──
 
 const FEEDBACK_TYPE_MAP: Record<string, string> = {

@@ -1,7 +1,13 @@
 import type { IssueRow } from "@repo/database/queries/issues";
 import { IssueRowItem } from "./issue-row";
 
-export function IssueList({ issues }: { issues: IssueRow[] }) {
+export function IssueList({
+  issues,
+  thumbnails,
+}: {
+  issues: IssueRow[];
+  thumbnails?: Map<string, string>;
+}) {
   if (issues.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -16,7 +22,7 @@ export function IssueList({ issues }: { issues: IssueRow[] }) {
   return (
     <div className="divide-y-0">
       {issues.map((issue) => (
-        <IssueRowItem key={issue.id} issue={issue} />
+        <IssueRowItem key={issue.id} issue={issue} thumbnailPath={thumbnails?.get(issue.id)} />
       ))}
     </div>
   );
