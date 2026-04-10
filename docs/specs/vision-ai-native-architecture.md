@@ -103,20 +103,41 @@ Phase 5+:   AI executes    — picks up tickets, writes code, opens PRs, human r
 ### 2.3 Delivery — Shipped Products
 
 **Not a separate app** — these are the client applications we build and maintain.
-**AI role:** Support agent (via embedded chatbot)
+**AI role:** Support agent (via embedded widget)
 
 Every delivered product generates feedback:
 
-- **Feedback widget** (currently Userback, future: own widget) — bugs, feature requests
-- **Support chatbot** — answers known questions from verified knowledge, reports bugs to DevHub, escalates to human when stuck
+- **Embedded widget** (currently Userback, future: own widget) — chat, feedback forms, bug reports
 - **Direct communication** — email, WhatsApp, meetings (all flow into cockpit)
 
-The support chatbot is the key innovation here. It:
+#### Decision: Embeddable widget architecture (2026-04-10)
 
-1. Searches verified knowledge for answers
-2. If found: responds to the client (with optional human review)
-3. If not found: creates a DevHub ticket and tells the client "we're looking into it"
-4. Learns from each resolved interaction
+The delivery layer uses a single embeddable JavaScript snippet per project:
+
+```html
+<script
+  src="https://widget.jouwaipartner.nl/v1/embed.js"
+  data-project-key="cai-studio-abc123"
+></script>
+```
+
+The widget has two modes:
+
+1. **Chat mode** (default) — client types a question or reports a problem.
+   - Support agent searches verified knowledge for that project
+   - Answer found → responds immediately (sensitive answers flagged for human review)
+   - Not found → creates DevHub issue, tells client "we've logged this"
+   - Conversation stored and linked to project
+
+2. **Structured feedback mode** — switchable form.
+   - Title, description, type selector (bug / question / feature idea)
+   - Built-in screenshot capture (browser API)
+   - Automatic metadata: current URL, browser, viewport, timestamp
+   - Submits directly as DevHub issue with AI classification
+
+**Architecture:** `packages/widget/` builds to standalone JS file. Backend via API routes using same Supabase instance. `project_key` on projects table links widget to project. Uses Support agent (Haiku/Sonnet) + MCP search for chat answers.
+
+**Timeline:** Phase D — after DevHub is solid and portal MVP exists. Currently using Userback with DH-007 sync as interim solution.
 
 **Key principle:** Delivery is the feedback layer. It answers "what does the client experience?" and "what needs fixing?"
 
