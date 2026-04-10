@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## IMPORTANT: Read at Session Start
+
+**Before doing any work**, read [`docs/dependency-graph.md`](docs/dependency-graph.md) for a complete map of all functions, queries, mutations, actions, and pipelines — including what calls what. This gives you instant context on blast radius and data flow without needing to search.
+
+> The graph is auto-generated from the actual codebase. Regenerate with `npm run dep-graph`.
+
 ## Vision: AI-Native Operating System
 
 **Read first:** [`docs/specs/vision-ai-native-architecture.md`](docs/specs/vision-ai-native-architecture.md) — the north star for all platform development. Every sprint, feature, and architectural decision must align with this vision.
