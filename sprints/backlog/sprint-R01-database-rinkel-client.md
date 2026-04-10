@@ -5,14 +5,14 @@
 
 ## Requirements
 
-| ID        | Beschrijving                                                                              |
-| --------- | ----------------------------------------------------------------------------------------- |
-| VOIP-001  | Meetings tabel uitbreiden met `source`, `rinkel_call_id`, `call_direction`, `phone_from`, `phone_to` |
-| VOIP-002  | People tabel uitbreiden met `phone` kolom (E.164 formaat)                                 |
-| VOIP-003  | Supabase Storage bucket aanmaken voor call recordings                                      |
-| VOIP-004  | Rinkel API client met `x-rinkel-api-key` authenticatie                                     |
-| VOIP-005  | Webhook endpoint voor Rinkel "Call End" events                                             |
-| VOIP-006  | Idempotency check op `rinkel_call_id`                                                      |
+| ID       | Beschrijving                                                                                         |
+| -------- | ---------------------------------------------------------------------------------------------------- |
+| VOIP-001 | Meetings tabel uitbreiden met `source`, `rinkel_call_id`, `call_direction`, `phone_from`, `phone_to` |
+| VOIP-002 | People tabel uitbreiden met `phone` kolom (E.164 formaat)                                            |
+| VOIP-003 | Supabase Storage bucket aanmaken voor call recordings                                                |
+| VOIP-004 | Rinkel API client met `x-rinkel-api-key` authenticatie                                               |
+| VOIP-005 | Webhook endpoint voor Rinkel "Call End" events                                                       |
+| VOIP-006 | Idempotency check op `rinkel_call_id`                                                                |
 
 ## Context
 

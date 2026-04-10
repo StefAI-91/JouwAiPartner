@@ -21,7 +21,7 @@ Data flows in a continuous loop: Knowledge In (cockpit) → Work Created → Wor
 
 AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes all company data, processes it through AI agents, and exposes it via MCP server, web dashboard, and client portal.
 
-**Current state:** v2 (review gate + dashboard) complete. 28 sprints done. DevHub fase 1 partially built (DH-001 through DH-007). Portal not yet started. Next: unblock DevHub, build cockpit↔devhub bridge, then portal MVP.
+**Current state:** 39 sprints done (28 core + 4 foundation + 7 DevHub). Cockpit fully built (meetings, review, dashboard, emails). DevHub fase 1 complete (DH-001 through DH-007: issues, AI classification, Userback sync). Portal not yet started. Next: cockpit↔devhub bridge, then portal MVP.
 **Team:** 6 people, 3 internal reviewers (Stef, Wouter, Ege). Platform maintained by Stef (non-coder) via Claude Code.
 **Verification model:** All content must be human-verified before becoming queryable truth (review gate). This applies to all quadrants.
 **DevHub:** Internal tool — not a product for clients. Optimized for team workflow and AI agent execution.
@@ -297,10 +297,13 @@ Organizations, projects, people, and extractions are manually editable via inlin
 
 ### DevHub (`apps/devhub/`, internal)
 
-| Route    | Purpose                                        |
-| -------- | ---------------------------------------------- |
-| `/`      | Issue list with project filter, triage sidebar |
-| `/login` | Login page                                     |
+| Route              | Purpose                                        |
+| ------------------ | ---------------------------------------------- |
+| `/`                | Issue list with project filter, triage sidebar |
+| `/issues/[id]`     | Issue detail with comments, activity, AI panel |
+| `/review`          | AI review overview                             |
+| `/settings/import` | Userback sync + import management              |
+| `/login`           | Login page                                     |
 
 ## Next.js 16 Warning
 

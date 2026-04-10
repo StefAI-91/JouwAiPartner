@@ -5,19 +5,19 @@
 
 ## Requirements
 
-| ID        | Beschrijving                                                                              |
-| --------- | ----------------------------------------------------------------------------------------- |
-| VOIP-010  | ElevenLabs transcriptie van opgeslagen audio (hergebruik bestaande code)                   |
-| VOIP-011  | Telefoon-naar-persoon resolutie (phone number → people tabel)                              |
-| VOIP-012  | Participant classificatie op basis van telefoonnummer matching                              |
-| VOIP-013  | Gatekeeper classificatie van telefoongesprekken (hergebruik bestaande agent)                |
-| VOIP-014  | Organisatie resolutie op basis van gatekeeper output + telefoon lookup                      |
-| VOIP-015  | Meeting record aanmaken met source='rinkel' en verification_status='draft'                 |
-| VOIP-016  | Summarizer draaien op call transcript (hergebruik bestaande agent)                         |
-| VOIP-017  | Extractor draaien op call transcript (hergebruik bestaande agent)                          |
-| VOIP-018  | Entity resolution voor projectkoppeling op basis van gesprekscontent                       |
-| VOIP-019  | Embeddings genereren voor meeting + extractions                                            |
-| VOIP-020  | Verwerkte calls verschijnen in review queue als draft                                      |
+| ID       | Beschrijving                                                                 |
+| -------- | ---------------------------------------------------------------------------- |
+| VOIP-010 | ElevenLabs transcriptie van opgeslagen audio (hergebruik bestaande code)     |
+| VOIP-011 | Telefoon-naar-persoon resolutie (phone number → people tabel)                |
+| VOIP-012 | Participant classificatie op basis van telefoonnummer matching               |
+| VOIP-013 | Gatekeeper classificatie van telefoongesprekken (hergebruik bestaande agent) |
+| VOIP-014 | Organisatie resolutie op basis van gatekeeper output + telefoon lookup       |
+| VOIP-015 | Meeting record aanmaken met source='rinkel' en verification_status='draft'   |
+| VOIP-016 | Summarizer draaien op call transcript (hergebruik bestaande agent)           |
+| VOIP-017 | Extractor draaien op call transcript (hergebruik bestaande agent)            |
+| VOIP-018 | Entity resolution voor projectkoppeling op basis van gesprekscontent         |
+| VOIP-019 | Embeddings genereren voor meeting + extractions                              |
+| VOIP-020 | Verwerkte calls verschijnen in review queue als draft                        |
 
 ## Context
 
@@ -56,6 +56,7 @@ resolvePersonByPhone(phone: string): Promise<{
 ```
 
 Matching strategie:
+
 1. Exacte match op `people.phone` (E.164 genormaliseerd)
 2. Match op laatste 9 cijfers (voor +31 vs 06 variaties)
 3. Geen match → `unknown` label, gatekeeper bepaalt context
@@ -63,20 +64,21 @@ Matching strategie:
 ### Gatekeeper aanpassingen
 
 Geen modelwijziging nodig. De gatekeeper werkt op transcript tekst — ongeacht bron. Wel:
+
 - Title genereren: "Telefoongesprek [from] → [to] op [datum]" (als er geen titel is)
 - Participants als `[from_name, to_name]` of `[phone_from, phone_to]` als naam onbekend
 
 ### Hergebruik van bestaande code
 
-| Bestaand bestand | Hergebruik | Aanpassing |
-|---|---|---|
-| `packages/ai/src/transcribe-elevenlabs.ts` | Direct | Accepteert al audio URL |
-| `packages/ai/src/agents/gatekeeper.ts` | Direct | Geen wijziging nodig |
-| `packages/ai/src/agents/summarizer.ts` | Direct | Geen wijziging nodig |
-| `packages/ai/src/agents/extractor.ts` | Direct | Geen wijziging nodig |
-| `packages/ai/src/pipeline/entity-resolution.ts` | Direct | Geen wijziging nodig |
-| `packages/ai/src/pipeline/embed-pipeline.ts` | Direct | Geen wijziging nodig |
-| `packages/ai/src/pipeline/save-extractions.ts` | Direct | Geen wijziging nodig |
+| Bestaand bestand                                     | Hergebruik | Aanpassing                          |
+| ---------------------------------------------------- | ---------- | ----------------------------------- |
+| `packages/ai/src/transcribe-elevenlabs.ts`           | Direct     | Accepteert al audio URL             |
+| `packages/ai/src/agents/gatekeeper.ts`               | Direct     | Geen wijziging nodig                |
+| `packages/ai/src/agents/summarizer.ts`               | Direct     | Geen wijziging nodig                |
+| `packages/ai/src/agents/extractor.ts`                | Direct     | Geen wijziging nodig                |
+| `packages/ai/src/pipeline/entity-resolution.ts`      | Direct     | Geen wijziging nodig                |
+| `packages/ai/src/pipeline/embed-pipeline.ts`         | Direct     | Geen wijziging nodig                |
+| `packages/ai/src/pipeline/save-extractions.ts`       | Direct     | Geen wijziging nodig                |
 | `packages/ai/src/pipeline/participant-classifier.ts` | Uitbreiden | Phone-based classificatie toevoegen |
 
 ## Prerequisites
