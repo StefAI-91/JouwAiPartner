@@ -1,21 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Responses keyed by query pattern
+// Responses keyed by query pattern — recursive chainable mock
 let queryResponses: Map<string, { data: unknown; error: unknown }>;
 
-// Every chain method returns an object that is:
-// 1. Thenable (has data/error when awaited or destructured)
-// 2. Further chainable (.eq(), .single(), .order(), .not(), .in())
 function createMockDb() {
-  function makeResult(key: string) {
+  function makeResult(key: string): Record<string, unknown> {
     const resp = queryResponses.get(key) ?? { data: null, error: null };
     return {
       ...resp,
       single: vi.fn(() => resp),
-      eq: vi.fn((col2: string, val2: unknown) => makeResult(`${key}.${col2}=${val2}`)),
-      order: vi.fn(() => resp),
+      eq: vi.fn((col: string, val: unknown) => makeResult(`${key}.${col}=${val}`)),
       not: vi.fn((_c: string, _op: string, _v: unknown) => makeResult(`${key}.not`)),
       in: vi.fn((_col: string, _vals: unknown[]) => makeResult(`${key}.in`)),
+      order: vi.fn(() => resp),
     };
   }
 
@@ -94,7 +91,7 @@ function setupProjectFlow(projectId: string) {
     error: null,
   });
 
-  // db.from("meetings").select(...).in("id", [...]).eq("verification_status", "verified").order(...)
+  // db.from("meetings").select(...).in("id", [...]).eq("verification_status","verified").order(...)
   queryResponses.set("meetings.in", {
     data: [
       {
@@ -108,8 +105,6 @@ function setupProjectFlow(projectId: string) {
     ],
     error: null,
   });
-
-  // But the chain is: .in().eq().order() → response comes from "meetings.in.verification_status=verified"
   queryResponses.set("meetings.in.verification_status=verified", {
     data: [
       {
@@ -119,6 +114,31 @@ function setupProjectFlow(projectId: string) {
         ai_briefing: "AI briefing",
         summary: "Samenvatting",
         meeting_type: "team_sync",
+      },
+    ],
+    error: null,
+  });
+}
+
+function setupOrgFlow(orgId: string) {
+  queryResponses.set(`organizations.id=${orgId}`, {
+    data: { name: "Klant BV" },
+    error: null,
+  });
+  queryResponses.set(`meetings.organization_id=${orgId}`, {
+    data: null,
+    error: null,
+  });
+  // Chain: .eq("organization_id", orgId).eq("verification_status", "verified").order(...)
+  queryResponses.set(`meetings.organization_id=${orgId}.verification_status=verified`, {
+    data: [
+      {
+        id: "m-1",
+        title: "Klant meeting",
+        date: "2026-04-10",
+        ai_briefing: null,
+        summary: "Klant update",
+        meeting_type: "status_update",
       },
     ],
     error: null,
@@ -183,7 +203,7 @@ describe("generateProjectSummaries", () => {
     );
   });
 
-  it("vangt rejected promises op via Promise.allSettled", async () => {
+  it("retourneert error als createSummaryVersion faalt", async () => {
     setupProjectFlow("proj-1");
 
     mockGetSegments.mockResolvedValue([]);
@@ -193,14 +213,13 @@ describe("generateProjectSummaries", () => {
       briefing: "br",
       timeline: [],
     });
-    // One succeeds, one fails
+    // First (context) succeeds, second (briefing) fails
     mockCreateVersion
       .mockResolvedValueOnce({ success: true, data: { id: "s-1", version: 1 } })
       .mockResolvedValueOnce({ error: "Write failed" });
 
     const result = await generateProjectSummaries("proj-1", ["m-1"]);
 
-    // Should still return but with error from the failed one
     expect(result.success).toBe(false);
     expect(result.error).toBe("Write failed");
   });
@@ -219,7 +238,6 @@ describe("generateProjectSummaries", () => {
   });
 
   it("retourneert error als project niet gevonden wordt", async () => {
-    // Project not found
     queryResponses.set("projects.id=proj-missing", { data: null, error: null });
 
     const result = await generateProjectSummaries("proj-missing");
@@ -227,21 +245,42 @@ describe("generateProjectSummaries", () => {
     expect(result.success).toBe(false);
     expect(result.error).toBe("Project not found");
   });
+
+  it("retourneert error als geen meetings of emails gekoppeld zijn", async () => {
+    queryResponses.set("projects.id=proj-1", {
+      data: { name: "Leeg Project" },
+      error: null,
+    });
+    // No meeting links
+    queryResponses.set("meeting_projects.project_id=proj-1", {
+      data: [],
+      error: null,
+    });
+    // No email links
+    queryResponses.set("email_projects.project_id=proj-1", {
+      data: [],
+      error: null,
+    });
+
+    const result = await generateProjectSummaries("proj-1");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Geen meetings of emails gekoppeld");
+  });
 });
 
 describe("triggerSummariesForMeeting", () => {
-  it("dispatcht parallel per project+org via Promise.allSettled", async () => {
-    // meeting_projects: project links for meeting
+  it("dispatcht project + org summaries parallel en vangt rejected promises op", async () => {
+    // meeting_projects: project links
     queryResponses.set("meeting_projects.meeting_id=m-1", {
       data: [{ project_id: "proj-1" }],
       error: null,
     });
-    // extractions: org IDs for meeting
+    // extractions: org IDs — chain: .eq("meeting_id", "m-1").not(...)
     queryResponses.set("extractions.meeting_id=m-1", {
-      data: [{ organization_id: "org-1" }],
+      data: [],
       error: null,
     });
-    // The chain: .eq("meeting_id").not("organization_id", "is", null)
     queryResponses.set("extractions.meeting_id=m-1.not", {
       data: [{ organization_id: "org-1" }],
       error: null,
@@ -252,7 +291,7 @@ describe("triggerSummariesForMeeting", () => {
       error: null,
     });
 
-    // Setup for generateProjectSummaries
+    // Setup generateProjectSummaries flow
     setupProjectFlow("proj-1");
     mockGetSegments.mockResolvedValue([]);
     mockGetLatestSummary.mockResolvedValue(null);
@@ -263,49 +302,60 @@ describe("triggerSummariesForMeeting", () => {
     });
     mockCreateVersion.mockResolvedValue({ success: true, data: { id: "s-1", version: 1 } });
 
-    // Setup for generateOrgSummaries
-    queryResponses.set("organizations.id=org-1", {
-      data: { name: "Klant BV" },
-      error: null,
-    });
-    // meetings for org
-    queryResponses.set("meetings.organization_id=org-1", {
-      data: null,
-      error: null,
-    });
-    queryResponses.set("meetings.organization_id=org-1.verification_status=verified", {
-      data: [
-        {
-          id: "m-1",
-          title: "Weekly",
-          date: "2026-04-10",
-          ai_briefing: null,
-          summary: "text",
-          meeting_type: "team_sync",
-        },
-      ],
-      error: null,
-    });
+    // Setup generateOrgSummaries flow — will fail (no verified meetings)
+    setupOrgFlow("org-1");
     mockOrgSummarizer.mockResolvedValue({
       context: "org ctx",
       briefing: "org br",
     });
 
-    // Should not throw even if some promises fail
+    // Should not throw even when some summaries fail
     await triggerSummariesForMeeting("m-1");
 
-    expect(mockProjectSummarizer).toHaveBeenCalled();
+    // Project summarizer should have been called with the meeting data
+    expect(mockProjectSummarizer).toHaveBeenCalledWith(
+      "Klantportaal",
+      [expect.objectContaining({ title: "Weekly standup" })],
+      undefined, // existingContext (mockGetLatestSummary returned null → .content is undefined)
+      [], // segments
+      undefined, // no emails
+    );
+  });
+
+  it("skipt als geen projecten of orgs gekoppeld zijn", async () => {
+    queryResponses.set("meeting_projects.meeting_id=m-1", {
+      data: [],
+      error: null,
+    });
+    queryResponses.set("extractions.meeting_id=m-1", {
+      data: [],
+      error: null,
+    });
+    queryResponses.set("extractions.meeting_id=m-1.not", {
+      data: [],
+      error: null,
+    });
+    queryResponses.set("meetings.id=m-1", {
+      data: { organization_id: null },
+      error: null,
+    });
+
+    await triggerSummariesForMeeting("m-1");
+
+    // No summaries should be generated
+    expect(mockProjectSummarizer).not.toHaveBeenCalled();
+    expect(mockOrgSummarizer).not.toHaveBeenCalled();
   });
 });
 
 describe("triggerSummariesForEmail", () => {
-  it("dispatcht parallel per project+org", async () => {
-    // email project links
+  it("dispatcht org summary voor email met organization_id", async () => {
+    // email project links — no projects
     queryResponses.set("email_projects.email_id=e-1", {
       data: [],
       error: null,
     });
-    // email org
+    // email has an organization
     queryResponses.set("emails.id=e-1", {
       data: { organization_id: "org-1" },
       error: null,
@@ -320,23 +370,46 @@ describe("triggerSummariesForEmail", () => {
       error: null,
     });
 
-    // org summaries
-    queryResponses.set("organizations.id=org-1", {
-      data: { name: "Klant BV" },
+    // org summaries — setup
+    setupOrgFlow("org-1");
+    mockOrgSummarizer.mockResolvedValue({
+      context: "org ctx",
+      briefing: "org br",
+    });
+    mockCreateVersion.mockResolvedValue({ success: true, data: { id: "s-1", version: 1 } });
+    mockGetLatestSummary.mockResolvedValue(null);
+
+    await triggerSummariesForEmail("e-1");
+
+    // Org summarizer should have been called
+    expect(mockOrgSummarizer).toHaveBeenCalledWith(
+      "Klant BV",
+      [expect.objectContaining({ title: "Klant meeting" })],
+      undefined, // existingContext (mockGetLatestSummary returned null → .content is undefined)
+    );
+  });
+
+  it("skipt als geen projecten of orgs gekoppeld zijn", async () => {
+    queryResponses.set("email_projects.email_id=e-1", {
+      data: [],
       error: null,
     });
-    queryResponses.set("meetings.organization_id=org-1", {
-      data: null,
+    queryResponses.set("emails.id=e-1", {
+      data: { organization_id: null },
       error: null,
     });
-    queryResponses.set("meetings.organization_id=org-1.verification_status=verified", {
+    queryResponses.set("email_extractions.email_id=e-1", {
+      data: [],
+      error: null,
+    });
+    queryResponses.set("email_extractions.email_id=e-1.not", {
       data: [],
       error: null,
     });
 
     await triggerSummariesForEmail("e-1");
 
-    // Verify trigger was called (at least the org summary generation was attempted)
-    expect(mockDb.from).toHaveBeenCalled();
+    expect(mockProjectSummarizer).not.toHaveBeenCalled();
+    expect(mockOrgSummarizer).not.toHaveBeenCalled();
   });
 });

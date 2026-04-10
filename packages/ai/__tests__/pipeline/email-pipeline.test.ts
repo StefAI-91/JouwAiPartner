@@ -164,6 +164,7 @@ describe("processEmail", () => {
     const result = await processEmail(baseEmail);
 
     expect(mockExtractor).not.toHaveBeenCalled();
+    expect(result.extractor).toBeNull();
   });
 
   it("voert extractie uit als relevance >= 0.4 en type is relevant", async () => {

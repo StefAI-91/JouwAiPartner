@@ -60,14 +60,15 @@ describe("resolveProject", () => {
     expect(result.project_id).toBe("proj-1");
   });
 
-  it("substring match (>=4 chars) retourneert match_type: 'exact'", async () => {
+  it("substring match (>=4 chars) retourneert matched: true (impl gebruikt match_type 'exact')", async () => {
     mockGetAllProjects.mockResolvedValue(projects);
 
-    // "Klantportaal" contains "portaal" as substring and length >= 4
+    // "portaal" is a substring of "Klantportaal" (>= 4 chars → substring matching active)
     const result = await resolveProject("portaal");
 
     expect(result.matched).toBe(true);
     expect(result.project_id).toBe("proj-1");
+    // Note: implementatie groepeert substring onder "exact" match_type (geen "substring" in MatchResult)
     expect(result.match_type).toBe("exact");
   });
 
@@ -124,8 +125,24 @@ describe("resolveProject", () => {
 
   it("korte namen (<4 chars) slaan substring matching over", async () => {
     mockGetAllProjects.mockResolvedValue(projects);
-    // "CRM" is only 3 chars, so substring matching won't match "CRM" against longer names
-    // But exact match should still work
+    mockEmbedText.mockResolvedValue([0.1, 0.2]);
+    mockMatchByEmbedding.mockResolvedValue([]);
+
+    // "CRM" has 3 chars → substring matching is skipped.
+    // "crm" is not a substring match because the length check (>=4) prevents it.
+    // But searching for "CR" which is a substring of "CRM" should NOT match via substring
+    // because "CRM".length < 4.
+    const result = await resolveProject("CR");
+
+    // "CR" doesn't exact-match any project, and substring is skipped for <4 char project names
+    // → falls through to embedding, which returns no match
+    expect(result.matched).toBe(false);
+    expect(result.match_type).toBe("none");
+  });
+
+  it("exact match werkt nog wel voor korte namen", async () => {
+    mockGetAllProjects.mockResolvedValue(projects);
+
     const result = await resolveProject("CRM");
 
     expect(result.matched).toBe(true);
