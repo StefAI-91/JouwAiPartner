@@ -26,26 +26,22 @@ export async function createCommentAction(
   const parsed = createCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
-  try {
-    await insertComment({
-      issue_id: parsed.data.issue_id,
-      author_id: user.id,
-      body: parsed.data.body,
-    });
+  const result = await insertComment({
+    issue_id: parsed.data.issue_id,
+    author_id: user.id,
+    body: parsed.data.body,
+  });
+  if ("error" in result) return { error: "Reactie plaatsen mislukt" };
 
-    await insertActivity({
-      issue_id: parsed.data.issue_id,
-      actor_id: user.id,
-      action: "commented",
-    });
+  await insertActivity({
+    issue_id: parsed.data.issue_id,
+    actor_id: user.id,
+    action: "commented",
+  });
 
-    revalidatePath(`/issues`);
-    revalidatePath(`/issues/${parsed.data.issue_id}`);
-    return { success: true };
-  } catch (err) {
-    console.error("[createCommentAction]", err);
-    return { error: "Reactie plaatsen mislukt" };
-  }
+  revalidatePath(`/issues`);
+  revalidatePath(`/issues/${parsed.data.issue_id}`);
+  return { success: true };
 }
 
 export async function updateCommentAction(
@@ -57,14 +53,11 @@ export async function updateCommentAction(
   const parsed = updateCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
-  try {
-    await updateComment(parsed.data.id, parsed.data.body);
-    revalidatePath(`/issues/${parsed.data.issue_id}`);
-    return { success: true };
-  } catch (err) {
-    console.error("[updateCommentAction]", err);
-    return { error: "Reactie bijwerken mislukt" };
-  }
+  const result = await updateComment(parsed.data.id, parsed.data.body);
+  if ("error" in result) return { error: "Reactie bijwerken mislukt" };
+
+  revalidatePath(`/issues/${parsed.data.issue_id}`);
+  return { success: true };
 }
 
 export async function deleteCommentAction(
@@ -76,19 +69,15 @@ export async function deleteCommentAction(
   const parsed = deleteCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
-  try {
-    await deleteComment(parsed.data.id);
+  const result = await deleteComment(parsed.data.id);
+  if ("error" in result) return { error: "Reactie verwijderen mislukt" };
 
-    await insertActivity({
-      issue_id: parsed.data.issue_id,
-      actor_id: user.id,
-      action: "comment_deleted",
-    });
+  await insertActivity({
+    issue_id: parsed.data.issue_id,
+    actor_id: user.id,
+    action: "comment_deleted",
+  });
 
-    revalidatePath(`/issues/${parsed.data.issue_id}`);
-    return { success: true };
-  } catch (err) {
-    console.error("[deleteCommentAction]", err);
-    return { error: "Reactie verwijderen mislukt" };
-  }
+  revalidatePath(`/issues/${parsed.data.issue_id}`);
+  return { success: true };
 }

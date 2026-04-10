@@ -28,12 +28,10 @@ export async function startAiExecution(
     const issue = await getIssueById(parsed.data.issueId);
     if (!issue) return { error: "Issue niet gevonden" };
 
-    // Get repro steps from AI classification if available
     const aiClassification = issue.ai_classification as Record<string, unknown> | null;
     const reproSteps =
       typeof aiClassification?.repro_steps === "string" ? aiClassification.repro_steps : null;
 
-    // Generate execution plan
     const plan = await runIssueExecutor({
       title: issue.title,
       description: issue.description,
@@ -43,13 +41,12 @@ export async function startAiExecution(
       repro_steps: reproSteps,
     });
 
-    // Save plan with first step "in_progress"
     const stepsWithProgress = plan.steps.map((step, i) => ({
       ...step,
       status: i === 0 ? "in_progress" : "pending",
     }));
 
-    await updateIssue(parsed.data.issueId, {
+    const updateResult = await updateIssue(parsed.data.issueId, {
       execution_type: "ai",
       ai_executable: true,
       ai_context: {
@@ -66,6 +63,7 @@ export async function startAiExecution(
         status: "executing",
       },
     });
+    if ("error" in updateResult) return { error: "AI plan opslaan mislukt" };
 
     await insertActivity({
       issue_id: parsed.data.issueId,
@@ -81,7 +79,7 @@ export async function startAiExecution(
     revalidatePath(`/issues/${parsed.data.issueId}`);
 
     // Simulate step progression in the background
-    simulateStepProgression(parsed.data.issueId, stepsWithProgress.length);
+    simulateStepProgression(parsed.data.issueId, stepsWithProgress.length, user.id);
 
     return { success: true };
   } catch (err) {
@@ -94,9 +92,8 @@ export async function startAiExecution(
  * Simulate AI progressing through steps (fire-and-forget).
  * Each step takes 4-8 seconds for demo purposes.
  */
-async function simulateStepProgression(issueId: string, totalSteps: number) {
+async function simulateStepProgression(issueId: string, totalSteps: number, actorId: string) {
   for (let i = 0; i < totalSteps; i++) {
-    // Wait 4-8 seconds per step
     const delay = 4000 + Math.random() * 4000;
     await new Promise((r) => setTimeout(r, delay));
 
@@ -109,7 +106,6 @@ async function simulateStepProgression(issueId: string, totalSteps: number) {
 
       const steps = (aiResult.steps as Array<Record<string, unknown>>) ?? [];
 
-      // Mark current step as done, next step as in_progress
       const updatedSteps = steps.map((step, idx) => ({
         ...step,
         status: idx < i + 1 ? "done" : idx === i + 1 ? "in_progress" : step.status,
@@ -130,6 +126,7 @@ async function simulateStepProgression(issueId: string, totalSteps: number) {
       if (isLastStep) {
         await insertActivity({
           issue_id: issueId,
+          actor_id: actorId,
           action: "ai_completed",
           metadata: { steps_completed: totalSteps },
         });

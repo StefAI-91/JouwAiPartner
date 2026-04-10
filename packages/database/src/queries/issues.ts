@@ -438,3 +438,51 @@ export async function listIssueAttachments(
   }
   return (data ?? []) as unknown as IssueAttachmentRow[];
 }
+
+/**
+ * List Userback issues that have source_metadata (for media backfill).
+ */
+export async function listUserbackIssuesForBackfill(
+  client?: SupabaseClient,
+): Promise<
+  { id: string; userback_id: string | null; source_metadata: Record<string, unknown> | null }[]
+> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("issues")
+    .select("id, userback_id, source_metadata")
+    .eq("source", "userback")
+    .not("userback_id", "is", null)
+    .not("source_metadata", "is", null);
+
+  if (error) {
+    console.error("[listUserbackIssuesForBackfill] Database error:", error.message);
+    return [];
+  }
+  return (data ?? []) as {
+    id: string;
+    userback_id: string | null;
+    source_metadata: Record<string, unknown> | null;
+  }[];
+}
+
+/**
+ * Get issue IDs that already have attachments (for dedup in backfill).
+ */
+export async function getIssueIdsWithAttachments(
+  issueIds: string[],
+  client?: SupabaseClient,
+): Promise<Set<string>> {
+  if (issueIds.length === 0) return new Set();
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("issue_attachments")
+    .select("issue_id")
+    .in("issue_id", issueIds);
+
+  if (error) {
+    console.error("[getIssueIdsWithAttachments] Database error:", error.message);
+    return new Set();
+  }
+  return new Set((data ?? []).map((a) => a.issue_id));
+}
