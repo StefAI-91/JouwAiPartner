@@ -2,13 +2,29 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Vision: AI-Native Operating System
+
+**Read first:** [`docs/specs/vision-ai-native-architecture.md`](docs/specs/vision-ai-native-architecture.md) — the north star for all platform development. Every sprint, feature, and architectural decision must align with this vision.
+
+The platform is a **full-circle AI-native operating system** with four quadrants:
+
+| Quadrant     | App             | Role                                                            | AI Acts As      |
+| ------------ | --------------- | --------------------------------------------------------------- | --------------- |
+| **Cockpit**  | `apps/cockpit/` | Strategy & PM — knowledge hub, meetings, decisions              | Project Manager |
+| **DevHub**   | `apps/devhub/`  | Build & Execute — tickets, triage, AI execution (internal tool) | Developer       |
+| **Portal**   | `apps/portal/`  | Client transparency — progress, Q&A, feedback                   | Account Manager |
+| **Delivery** | Client apps     | Shipped products — feedback widget, support chatbot             | Support Agent   |
+
+Data flows in a continuous loop: Knowledge In (cockpit) → Work Created → Work Executed (devhub) → Product Delivered → Feedback Captured (delivery) → Client Informed (portal) → Knowledge Grows → back to cockpit.
+
 ## Project Overview
 
-AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes company data — starting with meetings — processes it through AI agents, and exposes it via MCP server + web dashboard. Full spec: `docs/specs/platform-spec.md`.
+AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes all company data, processes it through AI agents, and exposes it via MCP server, web dashboard, and client portal.
 
-**Current state:** v2 (review gate + dashboard) complete. 14 sprints done. Next: v3 (client portal + advanced features).
+**Current state:** v2 (review gate + dashboard) complete. 28 sprints done. DevHub fase 1 partially built (DH-001 through DH-007). Portal not yet started. Next: unblock DevHub, build cockpit↔devhub bridge, then portal MVP.
 **Team:** 6 people, 3 internal reviewers (Stef, Wouter, Ege). Platform maintained by Stef (non-coder) via Claude Code.
-**Verification model:** All content must be human-verified before becoming queryable truth (review gate).
+**Verification model:** All content must be human-verified before becoming queryable truth (review gate). This applies to all quadrants.
+**DevHub:** Internal tool — not a product for clients. Optimized for team workflow and AI agent execution.
 **Feedback:** Userback widget integrated for user feedback collection.
 
 ## Tech Stack
@@ -36,9 +52,9 @@ npm run type-check   # TypeScript check (all workspaces)
 ```
 /
 ├── apps/
-│   ├── cockpit/                   # Next.js 16 dashboard app
+│   ├── cockpit/                   # Strategy & PM dashboard (built)
 │   │   ├── src/
-│   │   │   ├── app/               # Routes (dashboard, login, api, review)
+│   │   │   ├── app/               # Routes (dashboard, login, api, review, emails)
 │   │   │   ├── actions/           # Server Actions (tasks, entities, review, meetings)
 │   │   │   ├── components/        # UI + feature components
 │   │   │   ├── lib/utils.ts       # cn() helper (app-specific)
@@ -46,7 +62,15 @@ npm run type-check   # TypeScript check (all workspaces)
 │   │   ├── next.config.ts         # transpilePackages for @repo/*
 │   │   └── package.json
 │   │
-│   └── portal/                    # v3: Client portal (placeholder)
+│   ├── devhub/                    # Build & Execute — internal tool (partially built)
+│   │   ├── src/
+│   │   │   ├── app/               # Routes (issues, login, api)
+│   │   │   ├── actions/           # Server Actions (issues, comments, sync)
+│   │   │   ├── components/        # Issue list, detail, triage UI
+│   │   │   └── middleware.ts      # Auth route guards
+│   │   └── package.json
+│   │
+│   └── portal/                    # Client portal — transparency & Q&A (planned)
 │
 ├── packages/
 │   ├── database/                  # Shared: Supabase clients, queries, mutations, types
@@ -58,12 +82,15 @@ npm run type-check   # TypeScript check (all workspaces)
 │   │
 │   ├── ai/                        # Shared: Agents, embeddings, pipeline
 │   │   └── src/
-│   │       ├── agents/            # gatekeeper.ts, extractor.ts
+│   │       ├── agents/            # gatekeeper.ts, extractor.ts, classifier.ts
 │   │       ├── pipeline/          # gatekeeper-pipeline, entity-resolution, embed, save, re-embed
 │   │       ├── validations/       # Zod schemas for agents + fireflies
 │   │       ├── embeddings.ts      # Cohere embed-v4
 │   │       ├── fireflies.ts       # Fireflies GraphQL client
 │   │       └── transcript-processor.ts
+│   │
+│   ├── ui/                        # Shared: shadcn/ui components (Button, Badge, Card, etc.)
+│   ├── auth/                      # Shared: Auth helpers + middleware factory
 │   │
 │   └── mcp/                       # Shared: MCP server + tools
 │       └── src/
@@ -111,20 +138,25 @@ import { cn } from "@/lib/utils";
 
 Agents write to the database, not to each other. This ensures audit trail + replay capability.
 
-**Built (v1):**
+**Built:**
 
-| Agent      | Model     | Purpose                                                                           |
-| ---------- | --------- | --------------------------------------------------------------------------------- |
-| Gatekeeper | Haiku 4.5 | Classify meetings: meeting_type (12 types incl. team_sync, status_update, discovery, sales, strategy, etc.), party_type, relevance_score |
-| Extractor  | Sonnet    | Extract decisions, action_items, needs, insights with confidence + transcript_ref |
+| Agent      | Model     | Quadrant | Purpose                                                                           |
+| ---------- | --------- | -------- | --------------------------------------------------------------------------------- |
+| Gatekeeper | Haiku 4.5 | Cockpit  | Classify meetings: meeting_type, party_type, relevance_score                      |
+| Extractor  | Sonnet    | Cockpit  | Extract decisions, action_items, needs, insights with confidence + transcript_ref |
+| Classifier | Haiku 4.5 | DevHub   | Classify issues: type, component, severity, repro steps                           |
 
-**Planned (v3+, NOT built):**
+**Planned (see vision doc for full agent roster):**
 
-| Agent      | Model       | Purpose                                             |
-| ---------- | ----------- | --------------------------------------------------- |
-| Curator    | Sonnet      | Nightly: dedupe, staleness, contradictions          |
-| Analyst    | Opus        | Daily: cross-source patterns, trends, risk flagging |
-| Dispatcher | Haiku/rules | Route insights/alerts to Slack, email               |
+| Agent        | Model        | Quadrant | Purpose                                             |
+| ------------ | ------------ | -------- | --------------------------------------------------- |
+| Planner      | Sonnet       | DevHub   | Turn decisions/needs into implementation plans      |
+| Executor     | Sonnet/Opus  | DevHub   | Pick up tickets, write code, create PRs             |
+| Curator      | Sonnet       | Cockpit  | Nightly: dedupe, staleness, contradictions          |
+| Analyst      | Opus         | Cockpit  | Daily: cross-source patterns, trends, risk flagging |
+| Communicator | Sonnet       | Portal   | Draft client-facing answers, progress updates       |
+| Support      | Haiku/Sonnet | Delivery | Chatbot: answer questions, report bugs, escalate    |
+| Dispatcher   | Haiku/rules  | Cross    | Route insights/alerts to Slack, email               |
 
 ### Tasks System (extractions vs tasks)
 
@@ -138,6 +170,7 @@ Extractions = AI-extracted facts from meetings (decisions, action_items, needs, 
 ### Review Flow
 
 Draft meetings go through human review before becoming verified. Reviewers can:
+
 - Approve/reject individual extractions
 - Change extraction types (e.g., action_item → decision)
 - Promote action items to tasks with assignment during review
@@ -235,25 +268,39 @@ Organizations, projects, people, and extractions are manually editable via inlin
 
 ## Sprint Management
 
+- **Vision doc:** `docs/specs/vision-ai-native-architecture.md` — every sprint must align with this
 - Sprints are in `sprints/`: `done/` for completed, `backlog/` for upcoming
 - When a sprint is completed, move its file from `sprints/backlog/` to `sprints/done/`
 - Each sprint file references requirement IDs (FUNC-xxx, DATA-xxx, AI-xxx, MCP-xxx, RULE-xxx) from `docs/specs/requirements.md`
-- Full platform spec: `docs/specs/platform-spec.md` (single source of truth)
+- Full platform spec: `docs/specs/platform-spec.md` (technical source of truth)
+- DevHub requirements: `docs/specs/requirements-devhub.md`
 - Archived docs in `docs/archive/` (PRD v1, PRD v2, business model v1)
 
-## Dashboard Routes (cockpit)
+## Routes
 
-| Route | Purpose |
-|---|---|
-| `/` | Dashboard home (carousel, AI pulse, tasks) |
-| `/meetings` | Meeting list with day grouping, type/participant filters |
-| `/meetings/[id]` | Meeting detail with extraction tabs |
-| `/review` | Review queue (draft meetings) |
-| `/review/[id]` | Review detail (approve/reject extractions, type changes) |
-| `/clients` | Organizations list + inline create |
-| `/projects` | Projects list + inline create |
-| `/people` | People list + inline create |
-| `/login` | Split-screen login page |
+### Cockpit (`apps/cockpit/`)
+
+| Route                | Purpose                                                  |
+| -------------------- | -------------------------------------------------------- |
+| `/`                  | Dashboard home (carousel, AI pulse, tasks)               |
+| `/meetings`          | Meeting list with day grouping, type/participant filters |
+| `/meetings/[id]`     | Meeting detail with extraction tabs                      |
+| `/emails`            | Email list                                               |
+| `/emails/[id]`       | Email detail                                             |
+| `/review`            | Review queue (draft meetings)                            |
+| `/review/[id]`       | Review detail (approve/reject extractions, type changes) |
+| `/review/email/[id]` | Email review detail                                      |
+| `/clients`           | Organizations list + inline create                       |
+| `/projects`          | Projects list + inline create                            |
+| `/people`            | People list + inline create                              |
+| `/login`             | Split-screen login page                                  |
+
+### DevHub (`apps/devhub/`, internal)
+
+| Route    | Purpose                                        |
+| -------- | ---------------------------------------------- |
+| `/`      | Issue list with project filter, triage sidebar |
+| `/login` | Login page                                     |
 
 ## Next.js 16 Warning
 
@@ -261,9 +308,11 @@ This uses Next.js 16 which has breaking changes from earlier versions. Read the 
 
 ## Path Aliases
 
-- `@/*` maps to `./src/*` within `apps/cockpit/` — use for app-internal imports only
+- `@/*` maps to `./src/*` within each app (`apps/cockpit/`, `apps/devhub/`) — use for app-internal imports only
 - `@repo/database/*` — shared database package (queries, mutations, supabase clients, types)
 - `@repo/ai/*` — shared AI package (agents, pipeline, embeddings, fireflies)
+- `@repo/ui/*` — shared UI components (shadcn/ui)
+- `@repo/auth/*` — shared auth helpers + middleware factory
 - `@repo/mcp/*` — shared MCP package (server, tools)
 
 ## Environment Variables (new)
