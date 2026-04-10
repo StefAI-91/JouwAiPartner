@@ -5,20 +5,21 @@
 
 ## Requirements
 
-| ID        | Beschrijving                                                                              |
-| --------- | ----------------------------------------------------------------------------------------- |
-| VOIP-040  | Supabase Storage bucket configuratie: RLS, file size limits, MIME types                    |
-| VOIP-041  | Signed URL generatie voor audio playback (tijdelijk, verlopen na X uur)                    |
-| VOIP-042  | Storage cleanup: verwijder audio van rejected meetings (na X dagen)                        |
-| VOIP-043  | Retry logica: als audio download van Rinkel faalt, markeer voor handmatige actie           |
-| VOIP-044  | Storage path conventie: `call-recordings/{year}/{month}/{rinkel_call_id}.webm`             |
-| VOIP-045  | Monitoring: log storage usage en failed downloads                                          |
+| ID       | Beschrijving                                                                     |
+| -------- | -------------------------------------------------------------------------------- |
+| VOIP-040 | Supabase Storage bucket configuratie: RLS, file size limits, MIME types          |
+| VOIP-041 | Signed URL generatie voor audio playback (tijdelijk, verlopen na X uur)          |
+| VOIP-042 | Storage cleanup: verwijder audio van rejected meetings (na X dagen)              |
+| VOIP-043 | Retry logica: als audio download van Rinkel faalt, markeer voor handmatige actie |
+| VOIP-044 | Storage path conventie: `call-recordings/{year}/{month}/{rinkel_call_id}.webm`   |
+| VOIP-045 | Monitoring: log storage usage en failed downloads                                |
 
 ## Context
 
 ### Waarom apart sprint?
 
 Audio storage heeft subtiliteiten die los staan van de pipeline:
+
 - Rinkel URLs verlopen na 3 uur — robuuste download in sprint R01 is de happy path
 - Dit sprint dekt edge cases: netwerk failures, storage limits, cleanup
 - Signed URLs voor veilige playback zonder publieke bucket
@@ -39,9 +40,7 @@ call-recordings/
 
 ```typescript
 // Server Action of API route
-const { data } = await supabase.storage
-  .from('call-recordings')
-  .createSignedUrl(path, 3600); // 1 uur geldig
+const { data } = await supabase.storage.from("call-recordings").createSignedUrl(path, 3600); // 1 uur geldig
 ```
 
 ### Cleanup policy

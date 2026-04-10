@@ -5,16 +5,16 @@
 
 ## Requirements
 
-| ID        | Beschrijving                                                                              |
-| --------- | ----------------------------------------------------------------------------------------- |
-| VOIP-030  | Meetings lijst: telefoon-icoon voor calls, meeting-icoon voor vergaderingen               |
-| VOIP-031  | Meetings lijst: call direction badge (inkomend/uitgaand)                                   |
-| VOIP-032  | Meetings lijst: filter op source (alle/fireflies/rinkel)                                   |
-| VOIP-033  | Meeting detail: telefoonnummers tonen (from → to)                                          |
-| VOIP-034  | Meeting detail: audio player voor opgeslagen call recording                                |
-| VOIP-035  | Review queue: bron-indicator (telefoon vs vergadering)                                      |
-| VOIP-036  | Dashboard carousel: calls opnemen in meeting carousel                                      |
-| VOIP-037  | People pagina: telefoonnummer tonen en bewerkbaar maken                                    |
+| ID       | Beschrijving                                                                |
+| -------- | --------------------------------------------------------------------------- |
+| VOIP-030 | Meetings lijst: telefoon-icoon voor calls, meeting-icoon voor vergaderingen |
+| VOIP-031 | Meetings lijst: call direction badge (inkomend/uitgaand)                    |
+| VOIP-032 | Meetings lijst: filter op source (alle/fireflies/rinkel)                    |
+| VOIP-033 | Meeting detail: telefoonnummers tonen (from → to)                           |
+| VOIP-034 | Meeting detail: audio player voor opgeslagen call recording                 |
+| VOIP-035 | Review queue: bron-indicator (telefoon vs vergadering)                      |
+| VOIP-036 | Dashboard carousel: calls opnemen in meeting carousel                       |
+| VOIP-037 | People pagina: telefoonnummer tonen en bewerkbaar maken                     |
 
 ## Context
 
@@ -27,6 +27,7 @@
 ### Source filter
 
 Meetings pagina krijgt een extra filter dropdown:
+
 - Alle bronnen (default)
 - Vergaderingen (Fireflies)
 - Telefoongesprekken (Rinkel)
@@ -34,6 +35,7 @@ Meetings pagina krijgt een extra filter dropdown:
 ### Audio player
 
 Simpele HTML5 audio player in meeting detail voor calls met audio in Supabase Storage:
+
 - Play/pause
 - Progress bar
 - Duur weergave

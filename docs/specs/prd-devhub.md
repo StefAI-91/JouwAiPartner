@@ -6,6 +6,8 @@
 > **Versie:** 1.0
 > **App:** `apps/devhub/`
 
+> **Decision (2026-04-10):** DevHub is an **internal tool**, not a product for clients. It is optimized for the JAIP team workflow and AI agent execution. The earlier framing as "herbruikbaar product" is superseded — if it becomes good enough to productize later, that's a bonus, but all decisions should prioritize internal usefulness over client-facing polish. See `docs/specs/vision-ai-native-architecture.md` for the full platform vision.
+
 ---
 
 ## 1. Context & Probleem
