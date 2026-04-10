@@ -11,6 +11,13 @@ Master backlog for all upcoming work. Sprint numbering continues from 029 (sprin
 | DH-008 | Status page (public, per-project, read-only)                 | DevHub fase 2 | Backlog |
 | DH-009 | Duplicate detection via embeddings                           | DevHub fase 2 | Backlog |
 | 031    | Shared packages cleanup (constants, validations, formatting) | Monorepo      | Backlog |
+| T01    | AI Pipeline kritieke tests (9 modules)                       | Testing       | Backlog |
+| T02    | Database mutations tests (10 modules)                        | Testing       | Backlog |
+| T03    | Database queries tests (18 modules)                          | Testing       | Backlog |
+| T04    | Cockpit actions tests — ontbrekende modules (6 actions)      | Testing       | Backlog |
+| T05    | DevHub actions tests (6 modules)                             | Testing       | Backlog |
+| T06    | MCP tools tests (12 modules)                                 | Testing       | Backlog |
+| T07    | API routes tests (13 routes)                                 | Testing       | Backlog |
 | R01    | Database + Rinkel API client                                 | VoIP pipeline | Backlog |
 | R02    | Call processing pipeline                                     | VoIP pipeline | Backlog |
 | R03    | UI updates for call data                                     | VoIP pipeline | Backlog |
@@ -32,6 +39,12 @@ Monorepo, review gate, meeting detail, projects, dashboard, MCP verification fil
 
 Test framework, Zod schema tests, test utilities, server action integration tests, MCP tests.
 Note: sprints 015 and 016 each have two files (different workstreams ran in parallel).
+
+### v4 — Behavioral Test Coverage (sprints T01-T07)
+
+Gedragstests voor alle kritieke lagen, geprioriteerd op blast radius via dependency graph.
+Volgorde: T01 (pipelines) → T02 (mutations) → T03 (queries) → T04 (cockpit actions) → T05 (devhub actions) → T06 (MCP tools) → T07 (API routes).
+Principe: geen false positives, test observeerbaar gedrag, niet implementatiedetails.
 
 ### v3 — Segmented Summaries (sprints 020-028)
 
