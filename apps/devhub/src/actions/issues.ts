@@ -8,7 +8,7 @@ import {
   deleteIssue,
   insertActivity,
 } from "@repo/database/mutations/issues";
-import { getIssueById } from "@repo/database/queries/issues";
+import { getIssueById, getIssueCounts } from "@repo/database/queries/issues";
 import { classifyIssueBackground } from "./classify";
 import { CLOSED_STATUSES, type IssueStatus } from "@repo/database/constants/issues";
 import {
@@ -29,24 +29,20 @@ export async function createIssueAction(
   const parsed = createIssueSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
-  try {
-    const issue = await insertIssue(parsed.data);
+  const result = await insertIssue(parsed.data);
+  if ("error" in result) return { error: "Issue aanmaken mislukt" };
 
-    await insertActivity({
-      issue_id: issue.id,
-      actor_id: user.id,
-      action: "created",
-    });
+  await insertActivity({
+    issue_id: result.data.id,
+    actor_id: user.id,
+    action: "created",
+  });
 
-    // Fire-and-forget AI classification (not awaited)
-    classifyIssueBackground(issue.id);
+  // Fire-and-forget AI classification (not awaited)
+  classifyIssueBackground(result.data.id);
 
-    revalidatePath("/issues");
-    return { success: true, id: issue.id };
-  } catch (err) {
-    console.error("[createIssueAction]", err);
-    return { error: "Issue aanmaken mislukt" };
-  }
+  revalidatePath("/issues");
+  return { success: true, id: result.data.id };
 }
 
 export async function updateIssueAction(
@@ -60,111 +56,107 @@ export async function updateIssueAction(
 
   const { id, ...data } = parsed.data;
 
-  try {
-    const current = await getIssueById(id);
-    if (!current) return { error: "Issue niet gevonden" };
+  const current = await getIssueById(id);
+  if (!current) return { error: "Issue niet gevonden" };
 
-    const updateData: Record<string, unknown> = { ...data };
-    if (data.status) {
-      const wasClosedStatus = CLOSED_STATUSES.has(current.status as IssueStatus);
-      const isClosedStatus = CLOSED_STATUSES.has(data.status as IssueStatus);
-      if (!wasClosedStatus && isClosedStatus) {
-        updateData.closed_at = new Date().toISOString();
-      } else if (wasClosedStatus && !isClosedStatus) {
-        updateData.closed_at = null;
-      }
+  const updateData: Record<string, unknown> = { ...data };
+  if (data.status) {
+    const wasClosedStatus = CLOSED_STATUSES.has(current.status as IssueStatus);
+    const isClosedStatus = CLOSED_STATUSES.has(data.status as IssueStatus);
+    if (!wasClosedStatus && isClosedStatus) {
+      updateData.closed_at = new Date().toISOString();
+    } else if (wasClosedStatus && !isClosedStatus) {
+      updateData.closed_at = null;
     }
-
-    await updateIssue(id, updateData);
-
-    const activityPromises: Promise<void>[] = [];
-    const trackFields = [
-      "status",
-      "priority",
-      "type",
-      "component",
-      "severity",
-      "assigned_to",
-    ] as const;
-
-    for (const field of trackFields) {
-      if (data[field] === undefined) continue;
-      const oldVal = current[field as keyof typeof current];
-      const newVal = data[field];
-      if (String(oldVal ?? "") === String(newVal ?? "")) continue;
-
-      const action =
-        field === "status"
-          ? "status_changed"
-          : field === "priority"
-            ? "priority_changed"
-            : field === "assigned_to"
-              ? "assigned"
-              : "field_changed";
-
-      activityPromises.push(
-        insertActivity({
-          issue_id: id,
-          actor_id: user.id,
-          action,
-          field,
-          old_value: oldVal != null ? String(oldVal) : undefined,
-          new_value: newVal != null ? String(newVal) : undefined,
-        }),
-      );
-    }
-
-    if (data.title && data.title !== current.title) {
-      activityPromises.push(
-        insertActivity({
-          issue_id: id,
-          actor_id: user.id,
-          action: "field_changed",
-          field: "title",
-          old_value: current.title,
-          new_value: data.title,
-        }),
-      );
-    }
-
-    if (data.labels) {
-      const oldLabels = new Set(current.labels ?? []);
-      const newLabels = new Set(data.labels);
-      for (const label of data.labels) {
-        if (!oldLabels.has(label)) {
-          activityPromises.push(
-            insertActivity({
-              issue_id: id,
-              actor_id: user.id,
-              action: "label_added",
-              new_value: label,
-            }),
-          );
-        }
-      }
-      for (const label of current.labels ?? []) {
-        if (!newLabels.has(label)) {
-          activityPromises.push(
-            insertActivity({
-              issue_id: id,
-              actor_id: user.id,
-              action: "label_removed",
-              old_value: label,
-            }),
-          );
-        }
-      }
-    }
-
-    await Promise.all(activityPromises);
-
-    revalidatePath("/issues");
-    revalidatePath(`/issues/${id}`);
-    return { success: true };
-  } catch (err) {
-    console.error("[updateIssueAction]", err);
-    return { error: "Issue bijwerken mislukt" };
   }
+
+  const result = await updateIssue(id, updateData);
+  if ("error" in result) return { error: "Issue bijwerken mislukt" };
+
+  const activityPromises: Promise<{ success: true } | { error: string }>[] = [];
+  const trackFields = [
+    "status",
+    "priority",
+    "type",
+    "component",
+    "severity",
+    "assigned_to",
+  ] as const;
+
+  for (const field of trackFields) {
+    if (data[field] === undefined) continue;
+    const oldVal = current[field as keyof typeof current];
+    const newVal = data[field];
+    if (String(oldVal ?? "") === String(newVal ?? "")) continue;
+
+    const action =
+      field === "status"
+        ? "status_changed"
+        : field === "priority"
+          ? "priority_changed"
+          : field === "assigned_to"
+            ? "assigned"
+            : "field_changed";
+
+    activityPromises.push(
+      insertActivity({
+        issue_id: id,
+        actor_id: user.id,
+        action,
+        field,
+        old_value: oldVal != null ? String(oldVal) : undefined,
+        new_value: newVal != null ? String(newVal) : undefined,
+      }),
+    );
+  }
+
+  if (data.title && data.title !== current.title) {
+    activityPromises.push(
+      insertActivity({
+        issue_id: id,
+        actor_id: user.id,
+        action: "field_changed",
+        field: "title",
+        old_value: current.title,
+        new_value: data.title,
+      }),
+    );
+  }
+
+  if (data.labels) {
+    const oldLabels = new Set(current.labels ?? []);
+    const newLabels = new Set(data.labels);
+    for (const label of data.labels) {
+      if (!oldLabels.has(label)) {
+        activityPromises.push(
+          insertActivity({
+            issue_id: id,
+            actor_id: user.id,
+            action: "label_added",
+            new_value: label,
+          }),
+        );
+      }
+    }
+    for (const label of current.labels ?? []) {
+      if (!newLabels.has(label)) {
+        activityPromises.push(
+          insertActivity({
+            issue_id: id,
+            actor_id: user.id,
+            action: "label_removed",
+            old_value: label,
+          }),
+        );
+      }
+    }
+  }
+
+  await Promise.all(activityPromises);
+
+  revalidatePath("/issues");
+  revalidatePath(`/issues/${id}`);
+  return { success: true };
 }
 
 export async function deleteIssueAction(
@@ -176,12 +168,32 @@ export async function deleteIssueAction(
   const parsed = deleteIssueSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
+  const result = await deleteIssue(parsed.data.id);
+  if ("error" in result) return { error: "Issue verwijderen mislukt" };
+
+  revalidatePath("/issues");
+  return { success: true };
+}
+
+const projectIdSchema = z.string().uuid();
+
+/**
+ * Get issue counts per status for sidebar display.
+ */
+export async function getIssueCountsAction(
+  projectId: string,
+): Promise<{ data: Record<string, number> } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = projectIdSchema.safeParse(projectId);
+  if (!parsed.success) return { error: "Ongeldig project ID" };
+
   try {
-    await deleteIssue(parsed.data.id);
-    revalidatePath("/issues");
-    return { success: true };
+    const counts = await getIssueCounts(parsed.data);
+    return { data: counts };
   } catch (err) {
-    console.error("[deleteIssueAction]", err);
-    return { error: "Issue verwijderen mislukt" };
+    console.error("[getIssueCountsAction]", err);
+    return { error: "Counts ophalen mislukt" };
   }
 }

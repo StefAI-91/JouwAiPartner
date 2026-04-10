@@ -55,34 +55,29 @@ export interface UpdateIssueData {
 
 /**
  * Insert a new issue with atomic issue_number via next_issue_number() SQL function.
- * No race conditions: the function uses INSERT ... ON CONFLICT DO UPDATE in a single statement.
  */
 export async function insertIssue(
   data: InsertIssueData,
   client?: SupabaseClient,
-): Promise<IssueRow> {
+): Promise<{ success: true; data: IssueRow } | { error: string }> {
   const db = client ?? getAdminClient();
 
-  // Atomically get next issue number via SQL function
   const { data: issueNumber, error: seqError } = await db.rpc("next_issue_number", {
     p_project_id: data.project_id,
   });
 
   if (seqError || issueNumber == null) {
-    throw new Error(`Failed to get issue number: ${seqError?.message}`);
+    return { error: `Failed to get issue number: ${seqError?.message}` };
   }
 
   const { data: issue, error } = await db
     .from("issues")
-    .insert({
-      ...data,
-      issue_number: issueNumber,
-    })
+    .insert({ ...data, issue_number: issueNumber })
     .select(ISSUE_SELECT)
     .single();
 
-  if (error) throw new Error(`Failed to insert issue: ${error.message}`);
-  return issue as unknown as IssueRow;
+  if (error) return { error: `Failed to insert issue: ${error.message}` };
+  return { success: true, data: issue as unknown as IssueRow };
 }
 
 /**
@@ -92,7 +87,7 @@ export async function updateIssue(
   id: string,
   data: UpdateIssueData,
   client?: SupabaseClient,
-): Promise<IssueRow> {
+): Promise<{ success: true; data: IssueRow } | { error: string }> {
   const db = client ?? getAdminClient();
   const { data: issue, error } = await db
     .from("issues")
@@ -101,13 +96,12 @@ export async function updateIssue(
     .select(ISSUE_SELECT)
     .single();
 
-  if (error) throw new Error(`Failed to update issue: ${error.message}`);
-  return issue as unknown as IssueRow;
+  if (error) return { error: `Failed to update issue: ${error.message}` };
+  return { success: true, data: issue as unknown as IssueRow };
 }
 
 /**
  * Upsert Userback issues: insert new ones (with issue_number), update existing ones.
- * Returns stats: { imported, updated, skipped }.
  */
 export async function upsertUserbackIssues(
   items: InsertIssueData[],
@@ -115,7 +109,7 @@ export async function upsertUserbackIssues(
   client?: SupabaseClient,
 ): Promise<{
   imported: string[];
-  importedMap: Map<string, string>; // userback_id → issue_id (for new items)
+  importedMap: Map<string, string>;
   updated: number;
   skipped: number;
   errors: string[];
@@ -131,7 +125,6 @@ export async function upsertUserbackIssues(
     const existingId = item.userback_id ? existingMap.get(item.userback_id) : undefined;
 
     if (existingId) {
-      // Update existing issue (don't touch issue_number, type, priority — those came from Userback mapping)
       const { error } = await db
         .from("issues")
         .update({
@@ -155,18 +148,17 @@ export async function upsertUserbackIssues(
         updated++;
       }
     } else {
-      // Insert new issue with atomic issue_number
-      try {
-        const issue = await insertIssue(item, db);
-        importedIds.push(issue.id);
-        if (item.userback_id) {
-          importedMap.set(item.userback_id, issue.id);
-        }
-      } catch (err) {
-        const msg = `Insert ${item.userback_id}: ${err instanceof Error ? err.message : String(err)}`;
+      const result = await insertIssue(item, db);
+      if ("error" in result) {
+        const msg = `Insert ${item.userback_id}: ${result.error}`;
         console.error(`[upsertUserbackIssues] ${msg}`);
         errors.push(msg);
         skipped++;
+      } else {
+        importedIds.push(result.data.id);
+        if (item.userback_id) {
+          importedMap.set(item.userback_id, result.data.id);
+        }
       }
     }
   }
@@ -177,11 +169,14 @@ export async function upsertUserbackIssues(
 /**
  * Delete an issue (cascade deletes comments and activity).
  */
-export async function deleteIssue(id: string, client?: SupabaseClient): Promise<void> {
+export async function deleteIssue(
+  id: string,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
   const { error } = await db.from("issues").delete().eq("id", id);
-
-  if (error) throw new Error(`Failed to delete issue: ${error.message}`);
+  if (error) return { error: `Failed to delete issue: ${error.message}` };
+  return { success: true };
 }
 
 /**
@@ -190,7 +185,7 @@ export async function deleteIssue(id: string, client?: SupabaseClient): Promise<
 export async function insertComment(
   data: { issue_id: string; author_id: string; body: string },
   client?: SupabaseClient,
-): Promise<IssueCommentRow> {
+): Promise<{ success: true; data: IssueCommentRow } | { error: string }> {
   const db = client ?? getAdminClient();
   const { data: comment, error } = await db
     .from("issue_comments")
@@ -201,8 +196,8 @@ export async function insertComment(
     )
     .single();
 
-  if (error) throw new Error(`Failed to insert comment: ${error.message}`);
-  return comment as unknown as IssueCommentRow;
+  if (error) return { error: `Failed to insert comment: ${error.message}` };
+  return { success: true, data: comment as unknown as IssueCommentRow };
 }
 
 /**
@@ -212,7 +207,7 @@ export async function updateComment(
   id: string,
   body: string,
   client?: SupabaseClient,
-): Promise<IssueCommentRow> {
+): Promise<{ success: true; data: IssueCommentRow } | { error: string }> {
   const db = client ?? getAdminClient();
   const { data: comment, error } = await db
     .from("issue_comments")
@@ -224,17 +219,21 @@ export async function updateComment(
     )
     .single();
 
-  if (error) throw new Error(`Failed to update comment: ${error.message}`);
-  return comment as unknown as IssueCommentRow;
+  if (error) return { error: `Failed to update comment: ${error.message}` };
+  return { success: true, data: comment as unknown as IssueCommentRow };
 }
 
 /**
  * Delete a comment by ID.
  */
-export async function deleteComment(id: string, client?: SupabaseClient): Promise<void> {
+export async function deleteComment(
+  id: string,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
   const { error } = await db.from("issue_comments").delete().eq("id", id);
-  if (error) throw new Error(`Failed to delete comment: ${error.message}`);
+  if (error) return { error: `Failed to delete comment: ${error.message}` };
+  return { success: true };
 }
 
 /**
@@ -251,9 +250,9 @@ export async function insertActivity(
     metadata?: Record<string, unknown>;
   },
   client?: SupabaseClient,
-): Promise<void> {
+): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
   const { error } = await db.from("issue_activity").insert(data);
-
-  if (error) throw new Error(`Failed to insert activity: ${error.message}`);
+  if (error) return { error: `Failed to insert activity: ${error.message}` };
+  return { success: true };
 }

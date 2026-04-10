@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 235 |
-| Exported functions/constants | 405 |
+| Files scanned | 241 |
+| Exported functions/constants | 409 |
 | Exported types/interfaces | 110 |
-| Cross-package imports | 313 |
+| Cross-package imports | 317 |
 | Critical integration points (3+ packages) | 6 |
 
 ## Package Dependency Flow
@@ -102,6 +102,7 @@
 
 **Exports:**
 - `listIssues()`
+- `countFilteredIssues()`
 - `getIssueById()`
 - `getIssueCounts()`
 - `listIssueComments()`
@@ -111,6 +112,8 @@
 - `listIssueActivity()`
 - `getIssueThumbnails()`
 - `listIssueAttachments()`
+- `listUserbackIssuesForBackfill()`
+- `getIssueIdsWithAttachments()`
 - `ISSUE_SELECT`
 
 **Types:** `IssueRow`, `IssueCommentRow`, `IssueActivityRow`, `IssueAttachmentRow`
@@ -1508,7 +1511,7 @@
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/database/queries/issues` → getUserbackSyncCursor, countUserbackIssues
+- `@repo/database/queries/issues` → getUserbackSyncCursor, countUserbackIssues, listUserbackIssuesForBackfill, getIssueIdsWithAttachments
 - `@repo/database/integrations/userback` → extractMediaFromMetadata
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/database/mutations/issue-attachments` → storeIssueMedia
@@ -1519,10 +1522,11 @@
 - `createIssueAction()`
 - `updateIssueAction()`
 - `deleteIssueAction()`
+- `getIssueCountsAction()`
 
 **Depends on:**
 - `@repo/database/mutations/issues` → insertIssue, updateIssue, deleteIssue, insertActivity
-- `@repo/database/queries/issues` → getIssueById
+- `@repo/database/queries/issues` → getIssueById, getIssueCounts
 - `@repo/database/constants/issues` → CLOSED_STATUSES, type IssueStatus
 - `@repo/database/validations/issues` → createIssueSchema, updateIssueSchema, deleteIssueSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
@@ -1536,6 +1540,7 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/issues` → listIssues
+- `@repo/database/queries/projects` → getProjectById
 - `@repo/database/mutations/project-reviews` → saveProjectReview
 - `@repo/ai/agents/issue-reviewer` → runIssueReviewer, type IssueForReview
 - `@repo/auth/helpers` → getAuthenticatedUser, isAuthBypassed
@@ -1566,9 +1571,9 @@ Which layers depend on which packages:
 | Cockpit Server Actions | 32 | 14 | 7 | - | - | 53 |
 | Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
 | Cockpit Pages | 65 | - | - | 20 | - | 85 |
-| DevHub Server Actions | 19 | 3 | 6 | - | - | 28 |
+| DevHub Server Actions | 20 | 3 | 6 | - | - | 29 |
 | DevHub API Routes | 3 | - | - | - | - | 3 |
-| DevHub Pages | 9 | - | 6 | 6 | - | 21 |
+| DevHub Pages | 9 | - | 6 | 9 | - | 24 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
 
 ## Critical Integration Points
@@ -1788,14 +1793,17 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/execute.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getIssueCounts()` | `apps/devhub/src/app/(app)/review/page.tsx` |
+| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/review/page.tsx` |
 | `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
 | `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |
 | `listIssueActivity()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueThumbnails()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `listIssueAttachments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `listUserbackIssuesForBackfill()` | `apps/devhub/src/actions/import.ts` |
+| `getIssueIdsWithAttachments()` | `apps/devhub/src/actions/import.ts` |
 
 ### queries/meeting-project-summaries.ts
 
@@ -1871,7 +1879,7 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `listProjects()` | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
-| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
+| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |

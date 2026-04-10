@@ -14,17 +14,22 @@ import {
   ISSUE_SEVERITIES,
   ISSUE_SEVERITY_LABELS,
 } from "@repo/database/constants/issues";
+import { FormSelect } from "./sidebar-fields";
+import { LabelInput } from "./label-input";
 
-interface Person {
-  id: string;
-  name: string;
-}
+const INPUT_CLASS =
+  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20";
 
-export function IssueForm({ projectId, people }: { projectId: string | null; people: Person[] }) {
+export function IssueForm({
+  projectId,
+  people,
+}: {
+  projectId: string | null;
+  people: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("bug");
@@ -32,28 +37,11 @@ export function IssueForm({ projectId, people }: { projectId: string | null; peo
   const [component, setComponent] = useState("");
   const [severity, setSeverity] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
-  const [labelInput, setLabelInput] = useState("");
   const [labels, setLabels] = useState<string[]>([]);
-
-  function addLabel() {
-    const trimmed = labelInput.trim();
-    if (trimmed && !labels.includes(trimmed)) {
-      setLabels((prev) => [...prev, trimmed]);
-    }
-    setLabelInput("");
-  }
-
-  function removeLabel(label: string) {
-    setLabels((prev) => prev.filter((l) => l !== label));
-  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!projectId) {
-      setError("Selecteer eerst een project");
-      return;
-    }
-
+    if (!projectId) return setError("Selecteer eerst een project");
     setError(null);
     startTransition(async () => {
       const result = await createIssueAction({
@@ -67,26 +55,17 @@ export function IssueForm({ projectId, people }: { projectId: string | null; peo
         assigned_to: assignedTo || null,
         labels,
       });
-
-      if ("error" in result) {
-        setError(result.error);
-      } else {
-        router.push(`/issues/${result.id}?project=${projectId}`);
-      }
+      if ("error" in result) setError(result.error);
+      else router.push(`/issues/${result.id}?project=${projectId}`);
     });
   }
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-6 p-6">
       <h1>Nieuw issue</h1>
-
       {error && (
-        <div className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
-        </div>
+        <p className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>
       )}
-
-      {/* Title */}
       <div className="space-y-1.5">
         <label htmlFor="title" className="text-sm font-medium">
           Titel <span className="text-destructive">*</span>
@@ -98,11 +77,9 @@ export function IssueForm({ projectId, people }: { projectId: string | null; peo
           placeholder="Korte beschrijving van het issue"
           required
           maxLength={500}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+          className={INPUT_CLASS}
         />
       </div>
-
-      {/* Description */}
       <div className="space-y-1.5">
         <label htmlFor="description" className="text-sm font-medium">
           Beschrijving
@@ -114,150 +91,56 @@ export function IssueForm({ projectId, people }: { projectId: string | null; peo
           placeholder="Gedetailleerde beschrijving, stappen om te reproduceren, verwacht gedrag..."
           rows={6}
           maxLength={10000}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 resize-y"
+          className={`${INPUT_CLASS} resize-y`}
         />
       </div>
-
-      {/* Type + Priority row */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label htmlFor="type" className="text-sm font-medium">
-            Type
-          </label>
-          <select
-            id="type"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-          >
-            {ISSUE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {ISSUE_TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="priority" className="text-sm font-medium">
-            Prioriteit
-          </label>
-          <select
-            id="priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-          >
-            {ISSUE_PRIORITIES.map((p) => (
-              <option key={p} value={p}>
-                {ISSUE_PRIORITY_LABELS[p]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <FormSelect
+          id="type"
+          label="Type"
+          value={type}
+          onChange={setType}
+          options={ISSUE_TYPES.map((t) => ({ value: t, label: ISSUE_TYPE_LABELS[t] }))}
+        />
+        <FormSelect
+          id="priority"
+          label="Prioriteit"
+          value={priority}
+          onChange={setPriority}
+          options={ISSUE_PRIORITIES.map((p) => ({ value: p, label: ISSUE_PRIORITY_LABELS[p] }))}
+        />
       </div>
-
-      {/* Component + Severity row */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label htmlFor="component" className="text-sm font-medium">
-            Component
-          </label>
-          <select
-            id="component"
-            value={component}
-            onChange={(e) => setComponent(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-          >
-            <option value="">-- Geen --</option>
-            {ISSUE_COMPONENTS.map((c) => (
-              <option key={c} value={c}>
-                {ISSUE_COMPONENT_LABELS[c]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="severity" className="text-sm font-medium">
-            Severity
-          </label>
-          <select
-            id="severity"
-            value={severity}
-            onChange={(e) => setSeverity(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-          >
-            <option value="">-- Geen --</option>
-            {ISSUE_SEVERITIES.map((s) => (
-              <option key={s} value={s}>
-                {ISSUE_SEVERITY_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <FormSelect
+          id="component"
+          label="Component"
+          value={component}
+          onChange={setComponent}
+          options={ISSUE_COMPONENTS.map((c) => ({ value: c, label: ISSUE_COMPONENT_LABELS[c] }))}
+          placeholder="-- Geen --"
+        />
+        <FormSelect
+          id="severity"
+          label="Severity"
+          value={severity}
+          onChange={setSeverity}
+          options={ISSUE_SEVERITIES.map((s) => ({ value: s, label: ISSUE_SEVERITY_LABELS[s] }))}
+          placeholder="-- Geen --"
+        />
       </div>
-
-      {/* Assigned to */}
-      <div className="space-y-1.5">
-        <label htmlFor="assigned_to" className="text-sm font-medium">
-          Toewijzen aan
-        </label>
-        <select
-          id="assigned_to"
-          value={assignedTo}
-          onChange={(e) => setAssignedTo(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-        >
-          <option value="">-- Niet toegewezen --</option>
-          {people.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Labels */}
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium">Labels</label>
-        <div className="flex gap-2">
-          <input
-            value={labelInput}
-            onChange={(e) => setLabelInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addLabel();
-              }
-            }}
-            placeholder="Voeg label toe en druk Enter"
-            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
-          />
-          <Button type="button" variant="outline" size="sm" onClick={addLabel}>
-            Toevoegen
-          </Button>
-        </div>
-        {labels.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {labels.map((label) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
-              >
-                {label}
-                <button
-                  type="button"
-                  onClick={() => removeLabel(label)}
-                  className="ml-0.5 text-muted-foreground/60 hover:text-foreground"
-                >
-                  &times;
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Submit */}
+      <FormSelect
+        id="assigned_to"
+        label="Toewijzen aan"
+        value={assignedTo}
+        onChange={setAssignedTo}
+        options={people.map((p) => ({ value: p.id, label: p.name }))}
+        placeholder="-- Niet toegewezen --"
+      />
+      <LabelInput
+        labels={labels}
+        onAdd={(label) => setLabels((prev) => [...prev, label])}
+        onRemove={(label) => setLabels((prev) => prev.filter((l) => l !== label))}
+      />
       <div className="flex items-center gap-3 pt-2">
         <Button type="submit" disabled={isPending || !projectId}>
           {isPending ? "Aanmaken..." : "Issue aanmaken"}

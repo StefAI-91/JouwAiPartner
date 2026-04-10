@@ -91,7 +91,10 @@ export async function listVerifiedMeetings(
     .order("date", { ascending: false, nullsFirst: false })
     .range(offset, offset + limit - 1);
 
-  if (error) throw new Error(`Failed to load meetings: ${error.message}`);
+  if (error) {
+    console.error("[listVerifiedMeetings] Database error:", error.message);
+    return { data: [], total: 0 };
+  }
 
   const meetings = (
     data as unknown as (Omit<VerifiedMeetingListItem, "participants"> & {

@@ -43,19 +43,14 @@ export function IssueDetail({
       const result = await updateIssueAction({ id: issue.id, [field]: value });
       if ("error" in result) {
         console.error(result.error);
-      } else if (field === "status") {
-        window.dispatchEvent(new Event("issues-changed"));
-        if (value === "in_progress" && issue.execution_type !== "ai") {
-          startAiExecution({ issueId: issue.id });
-        }
+      } else if (field === "status" && value === "in_progress" && issue.execution_type !== "ai") {
+        startAiExecution({ issueId: issue.id });
       }
     });
   }
 
-  const rawAiClassification = issue.ai_classification as Record<string, unknown> | undefined;
-  const aiClassification =
-    rawAiClassification && Object.keys(rawAiClassification).length > 0 ? rawAiClassification : null;
-  const rawReproSteps = aiClassification?.repro_steps;
+  const rawReproSteps = (issue.ai_classification as Record<string, unknown> | undefined)
+    ?.repro_steps;
   const reproSteps: string | null =
     typeof rawReproSteps === "string"
       ? rawReproSteps
@@ -77,7 +72,6 @@ export function IssueDetail({
           projectId={issue.project_id}
         />
 
-        {/* Description */}
         {issue.description && (
           <section className="mb-6">
             <h2 className="mb-2">Beschrijving</h2>
@@ -87,17 +81,14 @@ export function IssueDetail({
           </section>
         )}
 
-        {/* AI Execution */}
         <AiExecutionPanel
           aiContext={issue.ai_context as Parameters<typeof AiExecutionPanel>[0]["aiContext"]}
           aiResult={issue.ai_result as Parameters<typeof AiExecutionPanel>[0]["aiResult"]}
           executionType={issue.execution_type}
         />
 
-        {/* Attachments */}
         <IssueAttachments attachments={attachments ?? []} />
 
-        {/* AI Repro Steps */}
         {reproSteps && (
           <section className="mb-6">
             <h2 className="mb-2">AI Reproductiestappen</h2>
@@ -107,7 +98,6 @@ export function IssueDetail({
           </section>
         )}
 
-        {/* Comments & Activity */}
         <section>
           <h2 className="mb-3">Reacties &amp; activiteit</h2>
           <CommentActivityFeed comments={comments} activities={activities} />
@@ -119,19 +109,7 @@ export function IssueDetail({
 
       {/* Sidebar */}
       <IssueSidebar
-        issueId={issue.id}
-        projectId={issue.project_id}
-        status={issue.status}
-        priority={issue.priority}
-        type={issue.type}
-        component={issue.component}
-        severity={issue.severity}
-        assignedTo={issue.assigned_to}
-        labels={issue.labels}
-        source={issue.source}
-        createdAt={issue.created_at}
-        closedAt={issue.closed_at}
-        aiClassification={aiClassification}
+        issue={issue}
         people={people}
         onFieldChange={handleFieldChange}
         isPending={isPending}

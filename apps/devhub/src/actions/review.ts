@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { listIssues } from "@repo/database/queries/issues";
+import { getProjectById } from "@repo/database/queries/projects";
 import { saveProjectReview } from "@repo/database/mutations/project-reviews";
 import { runIssueReviewer, type IssueForReview } from "@repo/ai/agents/issue-reviewer";
 import { getAuthenticatedUser, isAuthBypassed } from "@repo/auth/helpers";
@@ -38,12 +39,7 @@ export async function generateProjectReview(
     }
 
     // Get project name
-    const { data: project } = await db
-      .from("projects")
-      .select("name")
-      .eq("id", parsed.data.projectId)
-      .single();
-
+    const project = await getProjectById(parsed.data.projectId, db);
     const projectName = project?.name ?? "Onbekend project";
 
     // Prepare issues for the AI agent

@@ -15,9 +15,12 @@ const classifySchema = z.object({
  * Core classification logic shared by interactive and background classify.
  * Runs the AI classifier, updates the issue, and logs activity.
  */
-async function classifyIssueCore(issueId: string, actorId?: string): Promise<void> {
+async function classifyIssueCore(
+  issueId: string,
+  actorId?: string,
+): Promise<{ success: true } | { error: string }> {
   const issue = await getIssueById(issueId);
-  if (!issue) throw new Error("Issue niet gevonden");
+  if (!issue) return { error: "Issue niet gevonden" };
 
   const result = await runIssueClassifier({
     title: issue.title,
@@ -41,12 +44,12 @@ async function classifyIssueCore(issueId: string, actorId?: string): Promise<voi
     ai_classified_at: now,
   };
 
-  // For manual issues, also set type
   if (issue.source === "manual") {
     updateData.type = result.type;
   }
 
-  await updateIssue(issueId, updateData);
+  const updateResult = await updateIssue(issueId, updateData);
+  if ("error" in updateResult) return { error: updateResult.error };
 
   await insertActivity({
     issue_id: issueId,
@@ -57,11 +60,12 @@ async function classifyIssueCore(issueId: string, actorId?: string): Promise<voi
       confidence: result.confidence,
     },
   });
+
+  return { success: true };
 }
 
 /**
  * Classify an issue using AI (interactive, authenticated).
- * Updates ai_classification, component, severity, and ai_classified_at.
  */
 export async function classifyIssueAction(
   input: z.input<typeof classifySchema>,
@@ -73,7 +77,8 @@ export async function classifyIssueAction(
   if (!parsed.success) return { error: "Ongeldig issue ID" };
 
   try {
-    await classifyIssueCore(parsed.data.id, user.id);
+    const result = await classifyIssueCore(parsed.data.id, user.id);
+    if ("error" in result) return result;
 
     revalidatePath("/issues");
     revalidatePath(`/issues/${parsed.data.id}`);
