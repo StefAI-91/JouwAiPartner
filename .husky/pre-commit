@@ -1,1 +1,8 @@
 npx lint-staged
+
+# Regenerate dependency graph if any source files changed
+STAGED_SRC=$(git diff --cached --name-only -- 'packages/' 'apps/' | grep -E '\.(ts|tsx)$' || true)
+if [ -n "$STAGED_SRC" ]; then
+  node scripts/generate-dep-graph.js
+  git add docs/dependency-graph.md
+fi
