@@ -24,7 +24,10 @@ export default async function ImportPage() {
     );
   }
 
-  const status = await getSyncStatus(project.id);
+  const statusResult = await getSyncStatus({ projectId: project.id });
+
+  const itemCount = "data" in statusResult ? statusResult.data.itemCount : 0;
+  const lastSyncCursor = "data" in statusResult ? statusResult.data.lastSyncCursor : null;
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
@@ -36,8 +39,8 @@ export default async function ImportPage() {
           projectId={project.id}
           projectName={project.name}
           userbackProjectId={project.userback_project_id!}
-          itemCount={status.itemCount}
-          lastSyncCursor={status.lastSyncCursor}
+          itemCount={itemCount}
+          lastSyncCursor={lastSyncCursor}
         />
       </div>
     </div>

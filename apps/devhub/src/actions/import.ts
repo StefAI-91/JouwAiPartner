@@ -84,20 +84,38 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
   }
 }
 
+const syncStatusSchema = z.object({
+  projectId: z.string().uuid(),
+});
+
 /**
  * Get sync status info for the import page.
  */
-export async function getSyncStatus(projectId: string): Promise<{
-  itemCount: number;
-  lastSyncCursor: string | null;
-}> {
-  const admin = getAdminClient();
-  const [itemCount, lastSyncCursor] = await Promise.all([
-    countUserbackIssues(projectId, admin),
-    getUserbackSyncCursor(admin),
-  ]);
+export async function getSyncStatus(
+  input: z.input<typeof syncStatusSchema>,
+): Promise<
+  { success: true; data: { itemCount: number; lastSyncCursor: string | null } } | { error: string }
+> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
 
-  return { itemCount, lastSyncCursor };
+  const parsed = syncStatusSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const { projectId } = parsed.data;
+  const admin = getAdminClient();
+
+  try {
+    const [itemCount, lastSyncCursor] = await Promise.all([
+      countUserbackIssues(projectId, admin),
+      getUserbackSyncCursor(admin),
+    ]);
+
+    return { success: true, data: { itemCount, lastSyncCursor } };
+  } catch (err) {
+    console.error("[getSyncStatus]", err);
+    return { error: "Status ophalen mislukt" };
+  }
 }
 
 /**

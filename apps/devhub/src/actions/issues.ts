@@ -8,7 +8,7 @@ import {
   deleteIssue,
   insertActivity,
 } from "@repo/database/mutations/issues";
-import { getIssueById } from "@repo/database/queries/issues";
+import { getIssueById, getIssueCounts } from "@repo/database/queries/issues";
 import { classifyIssueBackground } from "./classify";
 import { CLOSED_STATUSES, type IssueStatus } from "@repo/database/constants/issues";
 import {
@@ -183,5 +183,28 @@ export async function deleteIssueAction(
   } catch (err) {
     console.error("[deleteIssueAction]", err);
     return { error: "Issue verwijderen mislukt" };
+  }
+}
+
+const projectIdSchema = z.string().uuid();
+
+/**
+ * Get issue counts per status for sidebar display.
+ */
+export async function getIssueCountsAction(
+  projectId: string,
+): Promise<{ data: Record<string, number> } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = projectIdSchema.safeParse(projectId);
+  if (!parsed.success) return { error: "Ongeldig project ID" };
+
+  try {
+    const counts = await getIssueCounts(parsed.data);
+    return { data: counts };
+  } catch (err) {
+    console.error("[getIssueCountsAction]", err);
+    return { error: "Counts ophalen mislukt" };
   }
 }

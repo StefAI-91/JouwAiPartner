@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 235 |
-| Exported functions/constants | 405 |
+| Exported functions/constants | 407 |
 | Exported types/interfaces | 110 |
 | Cross-package imports | 313 |
 | Critical integration points (3+ packages) | 6 |
@@ -102,6 +102,7 @@
 
 **Exports:**
 - `listIssues()`
+- `countFilteredIssues()`
 - `getIssueById()`
 - `getIssueCounts()`
 - `listIssueComments()`
@@ -1519,10 +1520,11 @@
 - `createIssueAction()`
 - `updateIssueAction()`
 - `deleteIssueAction()`
+- `getIssueCountsAction()`
 
 **Depends on:**
 - `@repo/database/mutations/issues` → insertIssue, updateIssue, deleteIssue, insertActivity
-- `@repo/database/queries/issues` → getIssueById
+- `@repo/database/queries/issues` → getIssueById, getIssueCounts
 - `@repo/database/constants/issues` → CLOSED_STATUSES, type IssueStatus
 - `@repo/database/validations/issues` → createIssueSchema, updateIssueSchema, deleteIssueSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
@@ -1788,8 +1790,9 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/execute.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getIssueCounts()` | `apps/devhub/src/app/(app)/review/page.tsx` |
+| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/review/page.tsx` |
 | `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
 | `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |

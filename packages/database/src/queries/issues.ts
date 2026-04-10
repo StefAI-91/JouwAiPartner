@@ -136,6 +136,58 @@ export async function listIssues(
 }
 
 /**
+ * Count issues matching the same filters as listIssues (for pagination).
+ */
+export async function countFilteredIssues(
+  params: {
+    projectId: string;
+    status?: string[];
+    priority?: string[];
+    type?: string[];
+    component?: string[];
+    assignedTo?: string;
+    search?: string;
+  },
+  client?: SupabaseClient,
+): Promise<number> {
+  const db = client ?? getAdminClient();
+
+  let query = db
+    .from("issues")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", params.projectId);
+
+  if (params.status && params.status.length > 0) {
+    query = query.in("status", params.status);
+  }
+  if (params.priority && params.priority.length > 0) {
+    query = query.in("priority", params.priority);
+  }
+  if (params.type && params.type.length > 0) {
+    query = query.in("type", params.type);
+  }
+  if (params.component && params.component.length > 0) {
+    query = query.in("component", params.component);
+  }
+  if (params.assignedTo) {
+    query = query.eq("assigned_to", params.assignedTo);
+  }
+  if (params.search) {
+    const sanitized = params.search.replace(/[%_\\,().]/g, (ch) => `\\${ch}`);
+    query = query.or(`title.ilike.%${sanitized}%,description.ilike.%${sanitized}%`);
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    console.error("[countFilteredIssues] Database error:", error.message);
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+/**
  * Get a single issue by ID.
  */
 export async function getIssueById(id: string, client?: SupabaseClient): Promise<IssueRow | null> {
@@ -223,6 +275,9 @@ export async function listIssueComments(
 /**
  * Get the sync cursor for Userback incremental sync.
  * Returns the most recent userback_modified_at date, or null for first sync.
+ *
+ * Uses updated_at DESC + LIMIT 1 as a proxy — Userback issues are updated
+ * during sync, so the most recently updated row has the latest cursor.
  */
 export async function getUserbackSyncCursor(client?: SupabaseClient): Promise<string | null> {
   const db = client ?? getAdminClient();
@@ -236,25 +291,8 @@ export async function getUserbackSyncCursor(client?: SupabaseClient): Promise<st
 
   if (error || !data || data.length === 0) return null;
 
-  // Find the max userback_modified_at across all userback issues
-  const { data: allItems, error: allError } = await db
-    .from("issues")
-    .select("source_metadata")
-    .eq("source", "userback")
-    .not("source_metadata", "is", null);
-
-  if (allError || !allItems || allItems.length === 0) return null;
-
-  let maxDate: string | null = null;
-  for (const row of allItems) {
-    const meta = row.source_metadata as Record<string, unknown> | null;
-    const modifiedAt = meta?.userback_modified_at as string | undefined;
-    if (modifiedAt && (!maxDate || modifiedAt > maxDate)) {
-      maxDate = modifiedAt;
-    }
-  }
-
-  return maxDate;
+  const meta = data[0].source_metadata as Record<string, unknown> | null;
+  return (meta?.userback_modified_at as string) ?? null;
 }
 
 /**
