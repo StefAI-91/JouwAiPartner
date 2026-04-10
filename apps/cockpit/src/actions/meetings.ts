@@ -48,7 +48,7 @@ import {
   createPersonSchema,
   updateMeetingMetadataSchema,
   regenerateSchema,
-} from "@/validations/meetings";
+} from "@repo/database/validations/meetings";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 // ── Actions ──

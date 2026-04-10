@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Pencil, X } from "lucide-react";
 import { updateMeetingTypeAction } from "@/actions/meetings";
-import { MEETING_TYPES } from "@/lib/constants/meeting";
+import { MEETING_TYPES } from "@repo/database/constants/meetings";
 
 export function MeetingTypeSelector({
   meetingId,

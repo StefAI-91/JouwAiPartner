@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, Building2, CalendarDays } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Badge } from "@repo/ui/badge";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort } from "@repo/ui/format";
 import type { BriefingMeeting, ExtractionCounts } from "@repo/database/queries/dashboard";
 
 interface MeetingCarouselProps {

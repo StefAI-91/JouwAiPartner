@@ -5,7 +5,7 @@ import { listOrganizations } from "@repo/database/queries/organizations";
 import { Badge } from "@repo/ui/badge";
 import { Building2, CalendarDays, FolderKanban } from "lucide-react";
 import Link from "next/link";
-import { formatDate } from "@/lib/format";
+import { formatDate } from "@repo/ui/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import { AddOrganizationButton } from "@/components/clients/add-organization-button";
 

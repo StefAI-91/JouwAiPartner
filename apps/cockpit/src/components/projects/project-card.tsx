@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, CircleCheck, User, Clock } from "lucide-react";
 import { StatusPipeline } from "./status-pipeline";
-import { daysUntil } from "@/lib/date-utils";
+import { daysUntil } from "@repo/ui/format";
 
 interface ProjectCardProps {
   project: {

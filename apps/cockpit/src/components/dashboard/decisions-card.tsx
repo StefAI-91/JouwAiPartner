@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo/ui/card";
 import { Badge } from "@repo/ui/badge";
 import type { RecentDecision } from "@repo/database/queries/decisions";
-import { formatDateShort, truncate } from "@/lib/format";
+import { formatDateShort, truncate } from "@repo/ui/format";
 
 interface DecisionsCardProps {
   decisions: RecentDecision[];

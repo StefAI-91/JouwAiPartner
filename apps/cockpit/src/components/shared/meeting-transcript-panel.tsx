@@ -2,7 +2,7 @@ import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { MarkdownSummary } from "@/components/shared/markdown-summary";
 import { StructuredTranscript } from "@/components/shared/structured-transcript";
 import type { TranscriptSentence } from "@/lib/transcript";
-import { formatDateLong } from "@/lib/format";
+import { formatDateLong } from "@repo/ui/format";
 
 interface MeetingTranscriptPanelProps {
   meeting: {

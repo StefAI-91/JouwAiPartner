@@ -5,7 +5,7 @@ import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { ExtractionDots } from "@/components/shared/extraction-dots";
 import { approveMeetingAction } from "@/actions/review";
 import { useState } from "react";
-import { timeAgo } from "@/lib/format";
+import { timeAgo } from "@repo/ui/format";
 
 interface ReviewCardProps {
   meeting: {

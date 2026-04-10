@@ -42,6 +42,22 @@ export function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
+export function timeAgoDays(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "vandaag";
+  if (diffDays === 1) return "gisteren";
+  return `${diffDays} dagen geleden`;
+}
+
+export function daysUntil(dateStr: string): number {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength).trimEnd() + "\u2026";

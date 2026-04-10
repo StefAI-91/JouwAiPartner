@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/modal";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { updateProjectAction, deleteProjectAction } from "@/actions/entities";
-import { PROJECT_STATUSES, STATUS_LABELS } from "@/lib/constants/project";
+import { PROJECT_STATUSES, STATUS_LABELS } from "@repo/database/constants/projects";
 
 interface EditProjectProps {
   project: {

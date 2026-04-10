@@ -1,5 +1,5 @@
 import { Sparkles } from "lucide-react";
-import { timeAgo } from "@/lib/date-utils";
+import { timeAgoDays as timeAgo } from "@repo/ui/format";
 
 interface ProjectBriefingProps {
   content: string | null;

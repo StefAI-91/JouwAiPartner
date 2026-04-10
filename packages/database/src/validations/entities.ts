@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zUuid } from "@repo/database/validations/uuid";
+import { zUuid } from "./uuid";
 
 export const updateOrganizationSchema = z.object({
   id: zUuid,

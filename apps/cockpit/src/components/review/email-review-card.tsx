@@ -5,7 +5,7 @@ import { Mail } from "lucide-react";
 import { ExtractionDots } from "@/components/shared/extraction-dots";
 import { approveEmailAction } from "@/actions/email-review";
 import { useState } from "react";
-import { timeAgo } from "@/lib/format";
+import { timeAgo } from "@repo/ui/format";
 
 interface EmailReviewCardProps {
   email: {

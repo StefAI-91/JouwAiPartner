@@ -8,7 +8,7 @@ import { Building2, Mail, User, CheckCircle2, Clock, ChevronRight } from "lucide
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { formatDate } from "@/lib/format";
+import { formatDate } from "@repo/ui/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import { getMeetingHref } from "@/lib/meeting-href";
 import { EditOrganization } from "@/components/clients/edit-organization";
