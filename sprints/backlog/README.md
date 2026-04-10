@@ -10,6 +10,7 @@ Master backlog for all upcoming work. Sprint numbering continues from 029 (sprin
 | 030    | Organization page + AI summary                               | Cockpit UI    | Backlog |
 | DH-008 | Status page (public, per-project, read-only)                 | DevHub fase 2 | Backlog |
 | DH-009 | Duplicate detection via embeddings                           | DevHub fase 2 | Backlog |
+| 031    | Shared packages cleanup (constants, validations, formatting) | Monorepo      | Backlog |
 | R01    | Database + Rinkel API client                                 | VoIP pipeline | Backlog |
 | R02    | Call processing pipeline                                     | VoIP pipeline | Backlog |
 | R03    | UI updates for call data                                     | VoIP pipeline | Backlog |
