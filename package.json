@@ -16,6 +16,7 @@
     "test": "turbo test",
     "test:watch": "vitest --watch",
     "format:check": "prettier --check .",
+    "dep-graph": "node scripts/generate-dep-graph.js",
     "prepare": "husky"
   },
   "devDependencies": {
