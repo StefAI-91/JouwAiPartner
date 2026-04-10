@@ -168,6 +168,19 @@ AI can:
 
 **Key principle:** The portal is the trust layer. It answers "what's happening with my project?" and "am I being heard?"
 
+#### Decision: Single Supabase instance for portal (2026-04-10)
+
+The portal uses the same Supabase project as cockpit and devhub. No separate database.
+
+**Rationale:** A second database means double migrations, double types, data syncing complexity, and double operational overhead — all for a 3-person team. The portal reads the same data (projects, meetings, extractions, issues) that already exists. RLS is designed to scope access per user role.
+
+**What this requires before portal launch:**
+
+- Upgrade RLS from "permissive for authenticated" to role-based policies
+- Internal users (admin/member) → full access (cockpit/devhub behavior unchanged)
+- Client users → scoped to their organization's projects, verified content only, no transcripts
+- `profiles.role` column already exists and is prepared for this
+
 ---
 
 ## 3. The Data Flow — Full Circle
