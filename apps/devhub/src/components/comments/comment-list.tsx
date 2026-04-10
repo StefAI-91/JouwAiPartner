@@ -1,16 +1,6 @@
 import type { IssueCommentRow, IssueActivityRow } from "@repo/database/queries/issues";
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "zojuist";
-  if (mins < 60) return `${mins}m geleden`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}u geleden`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d geleden`;
-  return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
-}
+import { timeAgo } from "@/components/shared/time-ago";
+import { Avatar } from "@/components/shared/avatar";
 
 function ActivityDescription({ activity }: { activity: IssueActivityRow }) {
   const actor = activity.actor?.full_name ?? "Systeem";
@@ -98,20 +88,6 @@ function mergeFeed(comments: IssueCommentRow[], activities: IssueActivityRow[]):
   ];
   items.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
   return items;
-}
-
-function Avatar({ name }: { name: string | null }) {
-  const initials = (name ?? "?")
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-  return (
-    <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[0.65rem] font-medium text-muted-foreground">
-      {initials}
-    </span>
-  );
 }
 
 export function CommentActivityFeed({

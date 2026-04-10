@@ -1,14 +1,11 @@
 import { Suspense } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopBar } from "@/components/layout/top-bar";
-import { createClient } from "@repo/database/supabase/server";
 import { listAccessibleProjects } from "@repo/database/queries/project-access";
+import { getAuthenticatedUser, createPageClient } from "@repo/auth/helpers";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [user, supabase] = await Promise.all([getAuthenticatedUser(), createPageClient()]);
 
   const projects = await listAccessibleProjects(user?.id ?? "", supabase);
 

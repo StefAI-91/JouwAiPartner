@@ -6,12 +6,12 @@ import {
   listIssueAttachments,
 } from "@repo/database/queries/issues";
 import { listPeople } from "@repo/database/queries/people";
-import { createClient } from "@repo/database/supabase/server";
+import { createPageClient } from "@repo/auth/helpers";
 import { IssueDetail } from "@/components/issues/issue-detail";
 
 export default async function IssueDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await createPageClient();
 
   const [issue, comments, activities, people, attachments] = await Promise.all([
     getIssueById(id, supabase),

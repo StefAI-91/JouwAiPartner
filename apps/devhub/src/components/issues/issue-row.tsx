@@ -9,6 +9,8 @@ import { PriorityDot } from "@/components/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
+import { Avatar } from "@/components/shared/avatar";
+import { timeAgo } from "@/components/shared/time-ago";
 import { cn } from "@repo/ui/utils";
 import {
   DropdownMenu,
@@ -18,36 +20,6 @@ import {
 } from "@repo/ui/dropdown-menu";
 import { deleteIssueAction, updateIssueAction } from "@/actions/issues";
 import { startAiExecution } from "@/actions/execute";
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
-}
-
-function AssignedAvatar({ person }: { person: { full_name: string } | null }) {
-  if (!person) return <span className="size-7" />;
-  const initials = (person.full_name || "?")
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-  return (
-    <span
-      className="inline-flex size-7 items-center justify-center rounded-full bg-muted text-[0.7rem] font-medium text-muted-foreground"
-      title={person.full_name}
-    >
-      {initials}
-    </span>
-  );
-}
 
 function IssueThumbnail({ storagePath }: { storagePath: string }) {
   const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/issue-attachments/${storagePath}`;
@@ -155,7 +127,11 @@ export function IssueRowItem({
             <TypeBadge type={issue.type} />
             <StatusBadge status={issue.status} />
             <ComponentBadge component={issue.component} />
-            <AssignedAvatar person={issue.assigned_person} />
+            {issue.assigned_person ? (
+              <Avatar name={issue.assigned_person.full_name} />
+            ) : (
+              <span className="size-7" />
+            )}
             <span className="ml-auto text-xs sm:text-sm text-muted-foreground">
               {timeAgo(issue.created_at)}
             </span>

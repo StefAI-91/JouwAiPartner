@@ -1,8 +1,8 @@
-import { createClient } from "@repo/database/supabase/server";
 import { listAccessibleProjects } from "@repo/database/queries/project-access";
 import { getLatestProjectReview } from "@repo/database/queries/project-reviews";
 import { getIssueCounts } from "@repo/database/queries/issues";
 import { ReviewOverview } from "@/components/review/review-overview";
+import { getAuthenticatedUser, createPageClient } from "@repo/auth/helpers";
 
 export default async function ReviewPage({
   searchParams,
@@ -12,10 +12,7 @@ export default async function ReviewPage({
   const params = await searchParams;
   const projectId = params.project;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [user, supabase] = await Promise.all([getAuthenticatedUser(), createPageClient()]);
 
   const projects = await listAccessibleProjects(user?.id ?? "", supabase);
 

@@ -2,21 +2,11 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import {
-  getUserbackSyncCursor,
-  getExistingUserbackIds,
-  countUserbackIssues,
-} from "@repo/database/queries/issues";
-import { upsertUserbackIssues } from "@repo/database/mutations/issues";
-import { insertActivity } from "@repo/database/mutations/issues";
-import {
-  fetchAllUserbackFeedback,
-  mapUserbackToIssue,
-  extractMediaUrls,
-  extractMediaFromMetadata,
-} from "@repo/database/integrations/userback";
+import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { getUserbackSyncCursor, countUserbackIssues } from "@repo/database/queries/issues";
+import { extractMediaFromMetadata } from "@repo/database/integrations/userback";
+import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
 import { storeIssueMedia } from "@repo/database/mutations/issue-attachments";
 import { classifyIssueBackground } from "./classify";
 
@@ -46,11 +36,7 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
     }
   | { error: string }
 > {
-  // Auth check
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
   const parsed = syncSchema.safeParse(input);
@@ -60,71 +46,11 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
   const admin = getAdminClient();
 
   try {
-    // 1. Get sync cursor (null = first sync)
-    const cursor = await getUserbackSyncCursor(admin);
-    const isInitial = cursor === null;
+    const result = await executeSyncPipeline({ projectId, limit, admin });
 
-    console.log(
-      `[syncUserback] Starting ${isInitial ? "initial" : "incremental"} sync` +
-        ` (cursor: ${cursor ?? "none"}, limit: ${limit})`,
-    );
-
-    // 2. Fetch from Userback API
-    const items = await fetchAllUserbackFeedback(cursor, limit);
-
-    if (items.length === 0) {
-      return {
-        success: true,
-        data: {
-          imported: 0,
-          updated: 0,
-          skipped: 0,
-          total: 0,
-          classified: 0,
-          isInitial,
-          errors: [],
-        },
-      };
-    }
-
-    // 3. Map to issue format + keep original items for media extraction
-    const mappedItems = items.map((item) => mapUserbackToIssue(item, projectId));
-
-    // Build a lookup from userback_id → original item (for media extraction later)
-    const itemsByUserbackId = new Map(items.map((item) => [String(item.id), item]));
-
-    // 4. Check which userback_ids already exist (batch dedup)
-    const userbackIds = mappedItems
-      .map((i) => i.userback_id)
-      .filter((id): id is string => id !== null && id !== undefined);
-    const existingMap = await getExistingUserbackIds(userbackIds, admin);
-
-    // 5. Upsert (insert new, update existing)
-    const result = await upsertUserbackIssues(mappedItems, existingMap, admin);
-
-    // 6. Download and store media for NEW items (screenshots, video, attachments)
-    let mediaStored = 0;
-    for (const [userbackId, issueId] of result.importedMap) {
-      const originalItem = itemsByUserbackId.get(userbackId);
-      if (!originalItem) continue;
-
-      const mediaUrls = extractMediaUrls(originalItem);
-      if (mediaUrls.length === 0) continue;
-
-      try {
-        const count = await storeIssueMedia(issueId, userbackId, mediaUrls, admin);
-        mediaStored += count;
-        console.log(`[syncUserback] Stored ${count} media files for issue ${issueId}`);
-      } catch (err) {
-        console.error(`[syncUserback] Media storage failed for ${issueId}:`, err);
-      }
-    }
-
-    console.log(`[syncUserback] Total media files stored: ${mediaStored}`);
-
-    // 7. AI classification for NEW items only (sequential, 100ms delay)
+    // AI classification for NEW items only (sequential, 100ms delay)
     let classified = 0;
-    for (const issueId of result.imported) {
+    for (const issueId of result.importedIds) {
       try {
         await classifyIssueBackground(issueId);
         classified++;
@@ -132,7 +58,7 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
         console.error(`[syncUserback] AI classification failed for ${issueId}:`, err);
       }
 
-      if (classified < result.imported.length) {
+      if (classified < result.importedIds.length) {
         await new Promise((resolve) => setTimeout(resolve, AI_CLASSIFY_DELAY_MS));
       }
     }
@@ -143,13 +69,13 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
     return {
       success: true,
       data: {
-        imported: result.imported.length,
+        imported: result.imported,
         updated: result.updated,
         skipped: result.skipped,
-        total: items.length,
+        total: result.total,
         classified,
-        isInitial,
-        errors: result.errors.slice(0, 5),
+        isInitial: result.isInitial,
+        errors: result.errors,
       },
     };
   } catch (err) {
@@ -186,10 +112,7 @@ export async function backfillMedia(): Promise<
     }
   | { error: string }
 > {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
   const admin = getAdminClient();
@@ -225,7 +148,6 @@ export async function backfillMedia(): Promise<
     const errors: string[] = [];
 
     for (const issue of issues) {
-      // Skip if already has attachments
       if (hasAttachments.has(issue.id)) {
         skipped++;
         continue;

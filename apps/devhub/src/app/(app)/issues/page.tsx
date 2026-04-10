@@ -1,4 +1,4 @@
-import { createClient } from "@repo/database/supabase/server";
+import { createPageClient } from "@repo/auth/helpers";
 import { listIssues, getIssueThumbnails } from "@repo/database/queries/issues";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
@@ -27,7 +27,7 @@ export default async function IssuesPage({
     );
   }
 
-  const supabase = await createClient();
+  const supabase = await createPageClient();
 
   const issues = await listIssues(
     {

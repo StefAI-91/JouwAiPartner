@@ -3,9 +3,11 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
+import { getAdminClient } from "@repo/database/supabase/admin";
 import { listIssues } from "@repo/database/queries/issues";
 import { saveProjectReview } from "@repo/database/mutations/project-reviews";
 import { runIssueReviewer, type IssueForReview } from "@repo/ai/agents/issue-reviewer";
+import { getAuthenticatedUser, isAuthBypassed } from "@repo/auth/helpers";
 
 const generateReviewSchema = z.object({
   projectId: z.string().uuid(),
@@ -18,25 +20,25 @@ const generateReviewSchema = z.object({
 export async function generateProjectReview(
   input: z.input<typeof generateReviewSchema>,
 ): Promise<{ success: true; reviewId: string } | { error: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
   const parsed = generateReviewSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig project ID" };
 
   try {
+    // Use admin client in bypass mode (no user session), otherwise user-scoped client
+    const db = isAuthBypassed() ? getAdminClient() : await createClient();
+
     // Fetch all issues for the project (up to 500)
-    const issues = await listIssues({ projectId: parsed.data.projectId, limit: 500 }, supabase);
+    const issues = await listIssues({ projectId: parsed.data.projectId, limit: 500 }, db);
 
     if (issues.length === 0) {
       return { error: "Geen issues gevonden voor dit project" };
     }
 
     // Get project name
-    const { data: project } = await supabase
+    const { data: project } = await db
       .from("projects")
       .select("name")
       .eq("id", parsed.data.projectId)
