@@ -1,9 +1,9 @@
-import { createClient } from "@repo/database/supabase/server";
+import { createPageClient } from "@repo/auth/helpers";
 import { getSyncStatus } from "@/actions/import";
 import { SyncCard } from "./sync-card";
 
 export default async function ImportPage() {
-  const supabase = await createClient();
+  const supabase = await createPageClient();
 
   // Get the project with userback_project_id
   const { data: project } = await supabase

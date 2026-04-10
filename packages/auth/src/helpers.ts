@@ -1,4 +1,6 @@
 import { createClient } from "@repo/database/supabase/server";
+import { getAdminClient } from "@repo/database/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ── Dev Auth Bypass ──
 // WARNING: Development/preview only. Never enable in production.
@@ -53,4 +55,18 @@ export async function getAuthenticatedUser() {
 export async function getAuthenticatedUserId(): Promise<string | null> {
   const user = await getAuthenticatedUser();
   return user?.id ?? null;
+}
+
+/**
+ * Returns a Supabase client that works in both normal and bypass mode.
+ * - Normal: returns the cookie-based server client (respects RLS per user session)
+ * - Bypass: returns the admin/service-role client (skips RLS, sees all data)
+ *
+ * Use this in Server Components that need to fetch data.
+ */
+export async function createPageClient(): Promise<SupabaseClient> {
+  if (isAuthBypassed()) {
+    return getAdminClient();
+  }
+  return createClient();
 }

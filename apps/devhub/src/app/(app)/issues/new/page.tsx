@@ -1,5 +1,5 @@
 import { listPeople } from "@repo/database/queries/people";
-import { createClient } from "@repo/database/supabase/server";
+import { createPageClient } from "@repo/auth/helpers";
 import { IssueForm } from "@/components/issues/issue-form";
 
 export default async function NewIssuePage({
@@ -9,7 +9,7 @@ export default async function NewIssuePage({
 }) {
   const params = await searchParams;
   const projectId = params.project ?? null;
-  const supabase = await createClient();
+  const supabase = await createPageClient();
   const people = await listPeople(supabase, { limit: 200 });
 
   return (
