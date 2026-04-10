@@ -10,13 +10,13 @@ interface AuthMiddlewareOptions {
  * Check if auth bypass is active in middleware context.
  * Only true when BOTH conditions are met:
  *   1. NEXT_PUBLIC_DEV_BYPASS_AUTH === "true"
- *   2. NODE_ENV !== "production"
+ *   2. VERCEL_ENV !== "production" (undefined locally = allowed, "preview" = allowed)
  *
  * WARNING: Development/preview only. Never set this in production.
  */
 function isAuthBypassed(): boolean {
   return (
-    process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production"
+    process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true" && process.env.VERCEL_ENV !== "production"
   );
 }
 

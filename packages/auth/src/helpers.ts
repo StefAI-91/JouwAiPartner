@@ -3,7 +3,7 @@ import { createClient } from "@repo/database/supabase/server";
 // ── Dev Auth Bypass ──
 // WARNING: Development/preview only. Never enable in production.
 // Set NEXT_PUBLIC_DEV_BYPASS_AUTH=true in your .env.local or Vercel preview env vars.
-// Double-guarded: also requires NODE_ENV !== "production".
+// Double-guarded: also requires VERCEL_ENV !== "production" (allows preview + local dev).
 
 const DEV_BYPASS_USER = {
   id: "00000000-0000-0000-0000-000000000000",
@@ -18,11 +18,11 @@ const DEV_BYPASS_USER = {
  * Check if auth bypass is active.
  * Only true when BOTH conditions are met:
  *   1. NEXT_PUBLIC_DEV_BYPASS_AUTH === "true"
- *   2. NODE_ENV !== "production"
+ *   2. VERCEL_ENV !== "production" (undefined locally = allowed, "preview" = allowed)
  */
 export function isAuthBypassed(): boolean {
   return (
-    process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production"
+    process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true" && process.env.VERCEL_ENV !== "production"
   );
 }
 
