@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { getUserbackSyncCursor, getExistingUserbackIds } from "@repo/database/queries/issues";
-import { upsertUserbackIssues } from "@repo/database/mutations/issues";
-import {
-  fetchAllUserbackFeedback,
-  isTestSubmission,
-  mapUserbackToIssue,
-  extractMediaUrls,
-} from "@repo/database/integrations/userback";
-import { storeIssueMedia } from "@repo/database/mutations/issue-attachments";
+import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
 
 export const maxDuration = 60;
 
@@ -36,23 +28,6 @@ export async function GET(req: NextRequest) {
 
   try {
     const admin = getAdminClient();
-    const cursor = await getUserbackSyncCursor(admin);
-    const items = await fetchAllUserbackFeedback(cursor, 50);
-
-    // Filter out test submissions ("test", "dit is een test", etc.)
-    const realItems = items.filter((item) => !isTestSubmission(item.description));
-
-    if (realItems.length === 0) {
-      return NextResponse.json({
-        imported: 0,
-        updated: 0,
-        skipped: 0,
-        mediaStored: 0,
-        filtered: items.length - realItems.length,
-        total: 0,
-        isInitial: cursor === null,
-      });
-    }
 
     // Get project with userback_project_id = '127499'
     const { data: project } = await admin
@@ -68,36 +43,21 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const mappedItems = realItems.map((item) => mapUserbackToIssue(item, project.id));
-    const itemsByUserbackId = new Map(realItems.map((item) => [String(item.id), item]));
-    const userbackIds = mappedItems
-      .map((i) => i.userback_id)
-      .filter((id): id is string => id !== null && id !== undefined);
-    const existingMap = await getExistingUserbackIds(userbackIds, admin);
-    const result = await upsertUserbackIssues(mappedItems, existingMap, admin);
-
-    // Download and store media for new items
-    let mediaStored = 0;
-    for (const [userbackId, issueId] of result.importedMap) {
-      const originalItem = itemsByUserbackId.get(userbackId);
-      if (!originalItem) continue;
-      const mediaUrls = extractMediaUrls(originalItem);
-      if (mediaUrls.length === 0) continue;
-      try {
-        mediaStored += await storeIssueMedia(issueId, userbackId, mediaUrls, admin);
-      } catch (err) {
-        console.error(`[cron] Media storage failed for ${issueId}:`, err);
-      }
-    }
+    const result = await executeSyncPipeline({
+      projectId: project.id,
+      limit: 50,
+      filterTests: true,
+      admin,
+    });
 
     return NextResponse.json({
-      imported: result.imported.length,
+      imported: result.imported,
       updated: result.updated,
       skipped: result.skipped,
-      mediaStored,
-      filtered: items.length - realItems.length,
-      total: items.length,
-      isInitial: cursor === null,
+      mediaStored: result.mediaStored,
+      filtered: result.filtered,
+      total: result.total,
+      isInitial: result.isInitial,
     });
   } catch (err) {
     console.error("[GET /api/ingest/userback]", err);
@@ -130,56 +90,23 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { projectId, limit } = parsed.data;
     const admin = getAdminClient();
 
-    const cursor = await getUserbackSyncCursor(admin);
-    const items = await fetchAllUserbackFeedback(cursor, limit);
-
-    // Filter out test submissions
-    const realItems = items.filter((item) => !isTestSubmission(item.description));
-
-    if (realItems.length === 0) {
-      return NextResponse.json({
-        imported: 0,
-        updated: 0,
-        skipped: 0,
-        filtered: items.length - realItems.length,
-        total: 0,
-        isInitial: cursor === null,
-      });
-    }
-
-    const mappedItems = realItems.map((item) => mapUserbackToIssue(item, projectId));
-    const itemsByUserbackId = new Map(realItems.map((item) => [String(item.id), item]));
-    const userbackIds = mappedItems
-      .map((i) => i.userback_id)
-      .filter((id): id is string => id !== null && id !== undefined);
-    const existingMap = await getExistingUserbackIds(userbackIds, admin);
-    const result = await upsertUserbackIssues(mappedItems, existingMap, admin);
-
-    // Download and store media for new items
-    let mediaStored = 0;
-    for (const [userbackId, issueId] of result.importedMap) {
-      const originalItem = itemsByUserbackId.get(userbackId);
-      if (!originalItem) continue;
-      const mediaUrls = extractMediaUrls(originalItem);
-      if (mediaUrls.length === 0) continue;
-      try {
-        mediaStored += await storeIssueMedia(issueId, userbackId, mediaUrls, admin);
-      } catch (err) {
-        console.error(`[POST] Media storage failed for ${issueId}:`, err);
-      }
-    }
+    const result = await executeSyncPipeline({
+      projectId: parsed.data.projectId,
+      limit: parsed.data.limit,
+      filterTests: true,
+      admin,
+    });
 
     return NextResponse.json({
-      imported: result.imported.length,
+      imported: result.imported,
       updated: result.updated,
       skipped: result.skipped,
-      mediaStored,
-      filtered: items.length - realItems.length,
-      total: items.length,
-      isInitial: cursor === null,
+      mediaStored: result.mediaStored,
+      filtered: result.filtered,
+      total: result.total,
+      isInitial: result.isInitial,
     });
   } catch (err) {
     console.error("[POST /api/ingest/userback]", err);

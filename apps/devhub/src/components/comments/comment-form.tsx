@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createCommentAction } from "@/actions/issues";
+import { createCommentAction } from "@/actions/comments";
 import { Button } from "@repo/ui/button";
 
 export function CommentForm({ issueId }: { issueId: string }) {

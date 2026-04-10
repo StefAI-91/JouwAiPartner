@@ -2,11 +2,51 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { updateComment, deleteComment, insertActivity } from "@repo/database/mutations/issues";
-import { updateCommentSchema, deleteCommentSchema } from "@repo/database/validations/issues";
+import {
+  insertComment,
+  updateComment,
+  deleteComment,
+  insertActivity,
+} from "@repo/database/mutations/issues";
+import {
+  createCommentSchema,
+  updateCommentSchema,
+  deleteCommentSchema,
+} from "@repo/database/validations/issues";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 // ── Actions ──
+
+export async function createCommentAction(
+  input: z.input<typeof createCommentSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+
+  const parsed = createCommentSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  try {
+    await insertComment({
+      issue_id: parsed.data.issue_id,
+      author_id: user.id,
+      body: parsed.data.body,
+    });
+
+    await insertActivity({
+      issue_id: parsed.data.issue_id,
+      actor_id: user.id,
+      action: "commented",
+    });
+
+    revalidatePath(`/issues`);
+    revalidatePath(`/issues/${parsed.data.issue_id}`);
+    return { success: true };
+  } catch (err) {
+    console.error("[createCommentAction]", err);
+    return { error: "Reactie plaatsen mislukt" };
+  }
+}
 
 export async function updateCommentAction(
   input: z.input<typeof updateCommentSchema>,
