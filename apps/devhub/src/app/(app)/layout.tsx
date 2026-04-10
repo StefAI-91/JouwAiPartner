@@ -11,11 +11,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-full">
-      <Suspense>
+      <Suspense
+        fallback={
+          <div className="hidden h-full w-56 border-r border-sidebar-border bg-sidebar lg:block" />
+        }
+      >
         <AppSidebar />
       </Suspense>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Suspense>
+        <Suspense fallback={<div className="h-14 border-b border-border bg-background" />}>
           <TopBar projects={projects} />
         </Suspense>
         <main className="flex-1 overflow-auto">{children}</main>

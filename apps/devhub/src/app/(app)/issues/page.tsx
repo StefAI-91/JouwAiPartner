@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createPageClient } from "@repo/auth/helpers";
 import { listIssues, getIssueThumbnails, countFilteredIssues } from "@repo/database/queries/issues";
 import { IssueList } from "@/components/issues/issue-list";
@@ -6,19 +7,23 @@ import { PaginationControls } from "@/components/issues/pagination-controls";
 
 const PAGE_SIZE = 25;
 
+const issueSearchParamsSchema = z.object({
+  project: z.string().uuid().optional(),
+  status: z.string().optional(),
+  priority: z.string().optional(),
+  type: z.string().optional(),
+  component: z.string().optional(),
+  page: z.coerce.number().int().min(1).optional(),
+});
+
 export default async function IssuesPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    project?: string;
-    status?: string;
-    priority?: string;
-    type?: string;
-    component?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const params = await searchParams;
+  const raw = await searchParams;
+  const parsed = issueSearchParamsSchema.safeParse(raw);
+  const params = parsed.success ? parsed.data : {};
   const projectId = params.project;
 
   if (!projectId) {
@@ -31,7 +36,7 @@ export default async function IssuesPage({
     );
   }
 
-  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const currentPage = params.page ?? 1;
   const offset = (currentPage - 1) * PAGE_SIZE;
 
   const supabase = await createPageClient();

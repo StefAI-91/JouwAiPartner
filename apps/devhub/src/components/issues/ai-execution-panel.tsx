@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Bot, CheckCircle2, Circle, Loader2, Clock, FileCode, Brain, Zap } from "lucide-react";
 import { cn } from "@repo/ui/utils";
@@ -50,10 +50,10 @@ function StepIcon({ status }: { status: string }) {
 export function AiExecutionPanel({ aiContext, aiResult, executionType }: AiExecutionPanelProps) {
   const router = useRouter();
 
-  // Poll for updates while executing
+  // Poll for updates only while actively executing
   useEffect(() => {
     if (aiResult?.status !== "executing") return;
-    const interval = setInterval(() => router.refresh(), 3000);
+    const interval = setInterval(() => router.refresh(), 5000);
     return () => clearInterval(interval);
   }, [aiResult?.status, router]);
 

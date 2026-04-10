@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 235 |
+| Files scanned | 241 |
 | Exported functions/constants | 407 |
 | Exported types/interfaces | 110 |
-| Cross-package imports | 313 |
+| Cross-package imports | 316 |
 | Critical integration points (3+ packages) | 6 |
 
 ## Package Dependency Flow
@@ -1570,7 +1570,7 @@ Which layers depend on which packages:
 | Cockpit Pages | 65 | - | - | 20 | - | 85 |
 | DevHub Server Actions | 19 | 3 | 6 | - | - | 28 |
 | DevHub API Routes | 3 | - | - | - | - | 3 |
-| DevHub Pages | 9 | - | 6 | 6 | - | 21 |
+| DevHub Pages | 9 | - | 6 | 9 | - | 24 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
 
 ## Critical Integration Points
