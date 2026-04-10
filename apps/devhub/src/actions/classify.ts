@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import { getIssueById } from "@repo/database/queries/issues";
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { updateIssue, insertActivity } from "@repo/database/mutations/issues";
 import { runIssueClassifier } from "@repo/ai/agents/issue-classifier";
 
@@ -66,10 +66,7 @@ async function classifyIssueCore(issueId: string, actorId?: string): Promise<voi
 export async function classifyIssueAction(
   input: z.input<typeof classifySchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
   const parsed = classifySchema.safeParse(input);

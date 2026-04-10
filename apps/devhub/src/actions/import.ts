@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
+import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { getUserbackSyncCursor, countUserbackIssues } from "@repo/database/queries/issues";
 import { extractMediaFromMetadata } from "@repo/database/integrations/userback";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
@@ -36,10 +36,7 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
     }
   | { error: string }
 > {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
   const parsed = syncSchema.safeParse(input);
@@ -115,10 +112,7 @@ export async function backfillMedia(): Promise<
     }
   | { error: string }
 > {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
   const admin = getAdminClient();
