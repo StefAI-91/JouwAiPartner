@@ -190,12 +190,22 @@ This is how data flows through the four quadrants, creating a continuous feedbac
 
 | Bridge                  | From → To         | Mechanism                                                              |
 | ----------------------- | ----------------- | ---------------------------------------------------------------------- |
-| **Meeting → Ticket**    | Cockpit → DevHub  | Action item promoted to task, optionally creates linked DevHub issue   |
+| **Meeting → Ticket**    | Cockpit → DevHub  | Manual "Send to DevHub" on promoted tasks (see decision below)         |
 | **Feedback → Ticket**   | Delivery → DevHub | Userback/widget/chatbot creates issue with AI classification           |
 | **Ticket → Status**     | DevHub → Portal   | Issue status changes reflect in client portal                          |
 | **Question → Answer**   | Portal → Cockpit  | Client question triggers AI search of verified knowledge               |
 | **Knowledge → Context** | Cockpit → DevHub  | AI enriches DevHub tickets with relevant meeting context and decisions |
 | **Progress → Update**   | DevHub → Portal   | AI generates progress summaries for client review                      |
+
+#### Decision: Meeting → Ticket bridge is manual-first (2026-04-10)
+
+The cockpit↔devhub bridge evolves in three phases:
+
+1. **Now (manual):** A "Send to DevHub" button on promoted tasks in cockpit. Human decides which action items become DevHub tickets. Linked via `source_task_id` / `source_extraction_id` on the issues table.
+2. **Later (AI suggests):** After enough manual decisions accumulate as training data, AI analyzes patterns ("these types of action items always become tickets") and suggests — human approves or dismisses.
+3. **Future (AI autonomous):** AI creates tickets automatically for high-confidence matches, flags uncertain ones for review.
+
+The manual phase is not wasted — it produces the labeled dataset the AI needs to learn what "worth a ticket" means for this team.
 
 ---
 
