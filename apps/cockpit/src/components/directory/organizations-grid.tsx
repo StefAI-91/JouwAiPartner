@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@repo/ui/badge";
 import { Building2, CalendarDays, FolderKanban } from "lucide-react";
-import { formatDate } from "@/lib/format";
+import { formatDate } from "@repo/ui/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import type { OrganizationListItem } from "@repo/database/queries/organizations";
 

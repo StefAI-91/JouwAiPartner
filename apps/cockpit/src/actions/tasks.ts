@@ -10,7 +10,11 @@ import {
   dismissTask,
 } from "@repo/database/mutations/tasks";
 import { hasTaskForExtraction } from "@repo/database/queries/tasks";
-import { promoteToTaskSchema, updateTaskSchema, taskIdSchema } from "@/validations/tasks";
+import {
+  promoteToTaskSchema,
+  updateTaskSchema,
+  taskIdSchema,
+} from "@repo/database/validations/tasks";
 import { getAuthenticatedUserId } from "@repo/auth/helpers";
 
 // ── Actions ──

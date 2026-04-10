@@ -1,4 +1,4 @@
-import { formatMeetingType } from "@/lib/constants/meeting";
+import { formatMeetingType } from "@repo/database/constants/meetings";
 
 const MEETING_TYPE_STYLES: Record<string, string> = {
   sales: "bg-blue-100 text-blue-700",

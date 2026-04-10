@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { CalendarDays, ChevronRight } from "lucide-react";
 import type { RecentVerifiedMeeting } from "@repo/database/queries/dashboard";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort } from "@repo/ui/format";
 
 interface RecentVerifiedMeetingsProps {
   meetings: RecentVerifiedMeeting[];

@@ -19,7 +19,7 @@ import {
   updateExtractionSchema,
   deleteSchema,
   deleteWithContextSchema,
-} from "@/validations/entities";
+} from "@repo/database/validations/entities";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 
 // ── Helpers ──

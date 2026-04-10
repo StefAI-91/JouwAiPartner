@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Clock, ChevronDown, ChevronUp, CheckCircle2, CircleAlert } from "lucide-react";
-import { formatDate } from "@/lib/date-utils";
+import { formatDate } from "@repo/ui/format";
 
 interface TimelineEntry {
   date: string;
@@ -52,9 +52,7 @@ export function ProjectTimeline({ timeline }: ProjectTimelineProps) {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">
             Projectverloop
           </h3>
-          <span className="text-[10px] text-muted-foreground/55">
-            {timeline.length} meetings
-          </span>
+          <span className="text-[10px] text-muted-foreground/55">{timeline.length} meetings</span>
         </div>
         {hasMore && (
           <button

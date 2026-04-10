@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/modal";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { updateOrganizationAction, deleteOrganizationAction } from "@/actions/entities";
-import { ORG_TYPES, ORG_STATUSES } from "@/lib/constants/organization";
+import { ORG_TYPES, ORG_STATUSES } from "@repo/database/constants/organizations";
 
 interface EditOrganizationProps {
   org: {

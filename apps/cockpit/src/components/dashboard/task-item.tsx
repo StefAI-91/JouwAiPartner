@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort } from "@repo/ui/format";
 import { updateTaskAction, completeTaskAction, dismissTaskAction } from "@/actions/tasks";
 import { Check, X, ChevronDown, CircleCheck, ExternalLink } from "lucide-react";
 import { getUrgency } from "@/lib/urgency";

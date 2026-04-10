@@ -3,7 +3,7 @@ import {
   OTHER_STEPS,
   STATUS_LABELS as STEP_LABELS,
   getPhaseSteps,
-} from "@/lib/constants/project";
+} from "@repo/database/constants/projects";
 
 interface StatusPipelineProps {
   status: string;

@@ -10,7 +10,7 @@ import {
   createProjectAction,
   createPersonAction,
 } from "@/actions/meetings";
-import { MEETING_TYPES } from "@/lib/constants/meeting";
+import { MEETING_TYPES } from "@repo/database/constants/meetings";
 import type { PersonWithOrg } from "@repo/database/queries/people";
 
 const PARTY_TYPES = [

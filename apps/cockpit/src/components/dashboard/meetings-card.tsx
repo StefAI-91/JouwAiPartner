@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@repo
 import { Badge } from "@repo/ui/badge";
 import { Users, CheckCircle2, Clock, ChevronRight } from "lucide-react";
 import type { RecentMeeting } from "@repo/database/queries/meetings";
-import { formatDateShort } from "@/lib/format";
+import { formatDateShort } from "@repo/ui/format";
 import { getMeetingHref } from "@/lib/meeting-href";
 
 interface MeetingsCardProps {

@@ -14,7 +14,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
-import { formatDate } from "@/lib/date-utils";
+import { formatDate } from "@repo/ui/format";
 import { formatWeekRange, getWeekNumber } from "@/lib/weekly";
 
 // ─── Types ───
