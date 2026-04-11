@@ -89,7 +89,7 @@ export function EditProject({
           type="button"
           onClick={() => setEditOpen(true)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          title="Edit project"
+          title="Bewerken"
         >
           <Pencil className="size-4" />
         </button>
@@ -97,13 +97,13 @@ export function EditProject({
           type="button"
           onClick={() => setDeleteOpen(true)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
-          title="Delete project"
+          title="Verwijderen"
         >
           <Trash2 className="size-4" />
         </button>
       </div>
 
-      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Project">
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Project bewerken">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -114,7 +114,7 @@ export function EditProject({
           {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Name</label>
+            <label className="mb-1 block text-sm font-medium">Naam</label>
             <input
               type="text"
               value={name}
@@ -125,13 +125,13 @@ export function EditProject({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Description</label>
+            <label className="mb-1 block text-sm font-medium">Beschrijving</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
-              placeholder="Project beschrijving..."
+              placeholder="Projectbeschrijving..."
             />
           </div>
 
@@ -162,13 +162,13 @@ export function EditProject({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Organization</label>
+            <label className="mb-1 block text-sm font-medium">Organisatie</label>
             <select
               value={orgId}
               onChange={(e) => setOrgId(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
-              <option value="">No organization</option>
+              <option value="">Geen organisatie</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
                   {org.name}
@@ -179,13 +179,13 @@ export function EditProject({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">Owner</label>
+              <label className="mb-1 block text-sm font-medium">Eigenaar</label>
               <select
                 value={ownerId}
                 onChange={(e) => setOwnerId(e.target.value)}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
-                <option value="">No owner</option>
+                <option value="">Geen eigenaar</option>
                 {people.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -195,13 +195,13 @@ export function EditProject({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Contact Person</label>
+              <label className="mb-1 block text-sm font-medium">Contactpersoon</label>
               <select
                 value={contactPersonId}
                 onChange={(e) => setContactPersonId(e.target.value)}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
-                <option value="">No contact person</option>
+                <option value="">Geen contactpersoon</option>
                 {people.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -213,7 +213,7 @@ export function EditProject({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">Start Date</label>
+              <label className="mb-1 block text-sm font-medium">Startdatum</label>
               <input
                 type="date"
                 value={startDate}
@@ -240,14 +240,14 @@ export function EditProject({
               disabled={isPending}
               className="rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
             >
-              Cancel
+              Annuleren
             </button>
             <button
               type="submit"
               disabled={isPending}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {isPending ? "Saving..." : "Save"}
+              {isPending ? "Opslaan..." : "Opslaan"}
             </button>
           </div>
         </form>
@@ -257,8 +257,8 @@ export function EditProject({
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Project"
-        description={`Are you sure you want to delete "${project.name}"? This will unlink all meetings and extractions from this project.`}
+        title="Project verwijderen"
+        description={`Weet je zeker dat je "${project.name}" wilt verwijderen? Dit ontkoppelt alle meetings en extracties van dit project.`}
         loading={isPending}
       />
     </>

@@ -1,12 +1,12 @@
 export const MEETING_TYPES = [
-  { value: "strategy", label: "Strategy" },
-  { value: "one_on_one", label: "One on one" },
-  { value: "team_sync", label: "Team sync" },
-  { value: "discovery", label: "Discovery" },
+  { value: "strategy", label: "Strategie" },
+  { value: "one_on_one", label: "Één-op-één" },
+  { value: "team_sync", label: "Teamoverleg" },
+  { value: "discovery", label: "Kennismaking" },
   { value: "sales", label: "Sales" },
   { value: "project_kickoff", label: "Project kickoff" },
-  { value: "status_update", label: "Status update" },
-  { value: "collaboration", label: "Collaboration" },
+  { value: "status_update", label: "Statusupdate" },
+  { value: "collaboration", label: "Samenwerking" },
   { value: "other", label: "Overig" },
 ] as const;
 

@@ -42,7 +42,7 @@ export default async function LoginPage({
           />
 
           <h1 className="text-4xl font-bold tracking-tight text-white xl:text-5xl">
-            Knowledge
+            Kennis
             <br />
             Platform
           </h1>
@@ -60,25 +60,17 @@ export default async function LoginPage({
       <div className="relative flex w-full flex-col items-center justify-center px-6 sm:px-12 lg:w-1/2">
         {/* Mobile-only branded header */}
         <div className="mb-10 text-center lg:hidden">
-          <img
-            src={LOGO_URL}
-            alt="Jouw AI Partner"
-            className="mx-auto mb-4 h-10 w-auto"
-          />
+          <img src={LOGO_URL} alt="Jouw AI Partner" className="mx-auto mb-4 h-10 w-auto" />
           <h1 className="font-heading text-2xl font-bold tracking-tight">Knowledge Platform</h1>
         </div>
 
         <div className="w-full max-w-sm">
           <div className="mb-8 hidden lg:block">
             <h2 className="text-2xl font-semibold tracking-tight">Welkom terug</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Log in om door te gaan
-            </p>
+            <p className="mt-1.5 text-sm text-muted-foreground">Log in om door te gaan</p>
           </div>
 
-          <p className="mb-6 text-sm text-muted-foreground lg:hidden">
-            Log in om door te gaan
-          </p>
+          <p className="mb-6 text-sm text-muted-foreground lg:hidden">Log in om door te gaan</p>
 
           <LoginForm returnTo={returnTo} />
 

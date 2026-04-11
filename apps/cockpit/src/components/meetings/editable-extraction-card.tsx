@@ -3,10 +3,7 @@
 import { useState, useTransition } from "react";
 import { ExtractionCard } from "@/components/shared/extraction-card";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import {
-  updateExtractionAction,
-  deleteExtractionAction,
-} from "@/actions/entities";
+import { updateExtractionAction, deleteExtractionAction } from "@/actions/entities";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface EditableExtractionCardProps {
@@ -58,9 +55,7 @@ export function EditableExtractionCard({
 
   return (
     <>
-      {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
       <ExtractionCard
         extraction={extraction}
         readOnly={false}
@@ -74,8 +69,8 @@ export function EditableExtractionCard({
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete Extraction"
-        description="Are you sure you want to delete this extraction? This cannot be undone."
+        title="Extractie verwijderen"
+        description="Weet je zeker dat je deze extractie wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
         loading={isPending}
       />
     </>

@@ -10,9 +10,9 @@ export function OrganizationsGrid({ organizations }: { organizations: Organizati
     return (
       <div className="py-12 text-center">
         <Building2 className="mx-auto h-10 w-10 text-muted-foreground/40" />
-        <h3 className="mt-4 font-heading text-lg font-semibold">No organizations yet</h3>
+        <h3 className="mt-4 font-heading text-lg font-semibold">Nog geen organisaties</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Organizations will appear here once meetings are processed.
+          Organisaties verschijnen hier zodra meetings zijn verwerkt.
         </p>
       </div>
     );

@@ -77,7 +77,7 @@ export function SideMenu({ reviewCount }: { reviewCount?: number }) {
         type="button"
         onClick={() => setOpen(true)}
         className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-sm font-medium transition-all hover:bg-muted hover:text-foreground"
-        aria-label="Open menu"
+        aria-label="Menu openen"
       >
         <Menu className="h-6 w-6" />
       </button>
@@ -100,7 +100,7 @@ export function SideMenu({ reviewCount }: { reviewCount?: number }) {
             }`}
             role="dialog"
             aria-modal="true"
-            aria-label="Navigation menu"
+            aria-label="Navigatiemenu"
           >
             <div className="flex items-center justify-between border-b border-sidebar-border px-6 py-5">
               <div className="flex items-center gap-3">
@@ -110,14 +110,14 @@ export function SideMenu({ reviewCount }: { reviewCount?: number }) {
                   className="h-8 w-auto"
                 />
                 <span className="font-heading text-base font-semibold text-primary">
-                  Knowledge Platform
+                  Kennisplatform
                 </span>
               </div>
               <button
                 type="button"
                 onClick={close}
                 className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
-                aria-label="Close menu"
+                aria-label="Menu sluiten"
               >
                 <X className="h-5 w-5" />
               </button>

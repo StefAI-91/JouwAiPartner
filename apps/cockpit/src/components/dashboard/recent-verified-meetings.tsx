@@ -12,12 +12,12 @@ export function RecentVerifiedMeetings({ meetings }: RecentVerifiedMeetingsProps
   return (
     <Card>
       <CardHeader className="border-b border-border/50">
-        <CardTitle>Recent verified</CardTitle>
+        <CardTitle>Recent geverifieerd</CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
         {meetings.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            No verified meetings yet.
+            Nog geen geverifieerde meetings.
           </p>
         ) : (
           <ul className="-mx-1">

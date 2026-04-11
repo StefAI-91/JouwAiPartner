@@ -27,22 +27,22 @@ export function ReviewEmptyState({ stats }: ReviewEmptyStateProps) {
       {/* Chat bubble */}
       <div className="mt-8 rounded-[2rem] bg-white p-8 shadow-sm">
         <h2 className="text-center font-heading text-xl font-semibold text-primary">
-          All caught up!
+          Alles bijgewerkt!
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          No meetings awaiting review right now. New meetings will appear here automatically when
-          they come in.
+          Er staan momenteel geen meetings klaar voor review. Nieuwe meetings verschijnen hier
+          automatisch zodra ze binnenkomen.
         </p>
 
         {/* Stats */}
         <div className="mt-6 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-muted/50 p-4 text-center">
             <p className="font-heading text-2xl font-bold text-primary">{stats.verifiedToday}</p>
-            <p className="text-xs text-muted-foreground">Verified today</p>
+            <p className="text-xs text-muted-foreground">Vandaag geverifieerd</p>
           </div>
           <div className="rounded-2xl bg-muted/50 p-4 text-center">
             <p className="font-heading text-2xl font-bold text-primary">{stats.totalVerified}</p>
-            <p className="text-xs text-muted-foreground">Total verified</p>
+            <p className="text-xs text-muted-foreground">Totaal geverifieerd</p>
           </div>
         </div>
       </div>

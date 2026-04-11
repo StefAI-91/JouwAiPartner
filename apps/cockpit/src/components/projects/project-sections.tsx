@@ -50,9 +50,9 @@ const TAB_LABELS: Record<Tab, string> = {
   segments: "Segmenten",
   meetings: "Meetings",
   emails: "Emails",
-  action_items: "Action Items",
-  decisions: "Decisions",
-  needs_insights: "Needs & Insights",
+  action_items: "Actiepunten",
+  decisions: "Beslissingen",
+  needs_insights: "Behoeften & Inzichten",
 };
 
 interface ProjectSectionsProps {

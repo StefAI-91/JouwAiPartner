@@ -5,10 +5,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/modal";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import {
-  updatePersonAction,
-  deletePersonAction,
-} from "@/actions/entities";
+import { updatePersonAction, deletePersonAction } from "@/actions/entities";
 
 interface EditPersonProps {
   person: {
@@ -73,7 +70,7 @@ export function EditPerson({ person, organizations }: EditPersonProps) {
           type="button"
           onClick={() => setEditOpen(true)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          title="Edit person"
+          title="Bewerken"
         >
           <Pencil className="size-4" />
         </button>
@@ -81,13 +78,13 @@ export function EditPerson({ person, organizations }: EditPersonProps) {
           type="button"
           onClick={() => setDeleteOpen(true)}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
-          title="Delete person"
+          title="Verwijderen"
         >
           <Trash2 className="size-4" />
         </button>
       </div>
 
-      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Person">
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Persoon bewerken">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -95,12 +92,10 @@ export function EditPerson({ person, organizations }: EditPersonProps) {
           }}
           className="space-y-4"
         >
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Name</label>
+            <label className="mb-1 block text-sm font-medium">Naam</label>
             <input
               type="text"
               value={name}
@@ -111,25 +106,25 @@ export function EditPerson({ person, organizations }: EditPersonProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Email</label>
+            <label className="mb-1 block text-sm font-medium">E-mail</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="Optional"
+              placeholder="Optioneel"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium">Role</label>
+              <label className="mb-1 block text-sm font-medium">Rol</label>
               <input
                 type="text"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                placeholder="Optional"
+                placeholder="Optioneel"
               />
             </div>
             <div>
@@ -139,21 +134,23 @@ export function EditPerson({ person, organizations }: EditPersonProps) {
                 value={team}
                 onChange={(e) => setTeam(e.target.value)}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                placeholder="Optional"
+                placeholder="Optioneel"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Organization</label>
+            <label className="mb-1 block text-sm font-medium">Organisatie</label>
             <select
               value={orgId}
               onChange={(e) => setOrgId(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
-              <option value="">No organization</option>
+              <option value="">Geen organisatie</option>
               {organizations.map((org) => (
-                <option key={org.id} value={org.id}>{org.name}</option>
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
               ))}
             </select>
           </div>
@@ -165,14 +162,14 @@ export function EditPerson({ person, organizations }: EditPersonProps) {
               disabled={isPending}
               className="rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
             >
-              Cancel
+              Annuleren
             </button>
             <button
               type="submit"
               disabled={isPending}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {isPending ? "Saving..." : "Save"}
+              {isPending ? "Opslaan..." : "Opslaan"}
             </button>
           </div>
         </form>
@@ -182,8 +179,8 @@ export function EditPerson({ person, organizations }: EditPersonProps) {
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Person"
-        description={`Are you sure you want to delete "${person.name}"? This will remove them from all meeting participants.`}
+        title="Persoon verwijderen"
+        description={`Weet je zeker dat je "${person.name}" wilt verwijderen? Dit verwijdert de persoon uit alle meetingdeelnemers.`}
         loading={isPending}
       />
     </>

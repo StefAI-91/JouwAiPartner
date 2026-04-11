@@ -121,7 +121,7 @@ export function IssueForm({
         />
         <FormSelect
           id="severity"
-          label="Severity"
+          label="Ernst"
           value={severity}
           onChange={setSeverity}
           options={ISSUE_SEVERITIES.map((s) => ({ value: s, label: ISSUE_SEVERITY_LABELS[s] }))}

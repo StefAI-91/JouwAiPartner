@@ -9,18 +9,18 @@ export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
 export const STATUS_LABELS: Record<ProjectStatus, string> = {
   lead: "Lead",
-  discovery: "Discovery",
-  proposal: "Proposal",
-  negotiation: "Negotiation",
-  won: "Won",
+  discovery: "Kennismaking",
+  proposal: "Offerte",
+  negotiation: "Onderhandeling",
+  won: "Gewonnen",
   kickoff: "Kickoff",
-  in_progress: "In Progress",
+  in_progress: "In uitvoering",
   review: "Review",
-  completed: "Completed",
-  on_hold: "On Hold",
-  lost: "Lost",
-  maintenance: "Maintenance",
-  active: "Active",
+  completed: "Afgerond",
+  on_hold: "On hold",
+  lost: "Verloren",
+  maintenance: "Onderhoud",
+  active: "Actief",
 };
 
 export function getPhaseSteps(status: string) {
