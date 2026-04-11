@@ -9,6 +9,14 @@ export const TEST_IDS = {
   extraction: "00000000-0000-0000-0000-000000000005",
   task: "00000000-0000-0000-0000-000000000006",
   userId: "00000000-0000-0000-0000-000000000099",
+  // T02: additional IDs for mutation tests
+  meeting2: "00000000-0000-0000-0000-000000000014",
+  extraction2: "00000000-0000-0000-0000-000000000015",
+  googleAccount: "00000000-0000-0000-0000-000000000007",
+  email: "00000000-0000-0000-0000-000000000008",
+  issue: "00000000-0000-0000-0000-000000000009",
+  task2: "00000000-0000-0000-0000-000000000016",
+  project2: "00000000-0000-0000-0000-000000000012",
 } as const;
 
 export async function seedOrganization(overrides: Record<string, unknown> = {}) {
@@ -122,6 +130,128 @@ export async function seedTask(overrides: Record<string, unknown> = {}) {
     .select()
     .single();
   if (error) throw new Error(`seedTask failed: ${error.message}`);
+  return result;
+}
+
+/**
+ * Seed a profile via auth.admin (profiles FK → auth.users).
+ * Uses a deterministic email based on the ID to allow repeated calls.
+ * Returns the profile row.
+ */
+export async function seedProfile(
+  overrides: { id?: string; email?: string; full_name?: string } = {},
+) {
+  const supabase = getTestClient();
+  const id = overrides.id ?? TEST_IDS.userId;
+  const email = overrides.email ?? `test-${id}@test.local`;
+
+  // Try to create auth user — ignore "already registered" errors
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    password: "test-password-T02-secure",
+    email_confirm: true,
+    user_metadata: { full_name: overrides.full_name ?? "Test User" },
+  });
+
+  if (authError && !authError.message.includes("already been registered")) {
+    throw new Error(`seedProfile auth failed: ${authError.message}`);
+  }
+
+  const authUserId = authData?.user?.id;
+  if (!authUserId) {
+    // User already exists — look up by email
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existing = existingUsers?.users?.find((u) => u.email === email);
+    if (!existing) throw new Error(`seedProfile: user not found for ${email}`);
+    return { id: existing.id, email };
+  }
+
+  return { id: authUserId, email };
+}
+
+export async function seedGoogleAccount(
+  profileId: string,
+  overrides: Record<string, unknown> = {},
+) {
+  const supabase = getTestClient();
+  const data = {
+    user_id: profileId,
+    email: "test-google@test.local",
+    access_token: "test-access-token",
+    refresh_token: "test-refresh-token",
+    token_expiry: new Date(Date.now() + 3600 * 1000).toISOString(),
+    scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
+    ...overrides,
+  };
+  const { data: result, error } = await supabase
+    .from("google_accounts")
+    .upsert(data, { onConflict: "email" })
+    .select()
+    .single();
+  if (error) throw new Error(`seedGoogleAccount failed: ${error.message}`);
+  return result;
+}
+
+export async function seedEmail(googleAccountId: string, overrides: Record<string, unknown> = {}) {
+  const supabase = getTestClient();
+  const data = {
+    id: TEST_IDS.email,
+    google_account_id: googleAccountId,
+    gmail_id: `test-gmail-${Date.now()}`,
+    thread_id: "test-thread-1",
+    subject: "Test Email Subject",
+    from_address: "sender@test.local",
+    from_name: "Test Sender",
+    to_addresses: ["recipient@test.local"],
+    cc_addresses: [],
+    date: new Date().toISOString(),
+    body_text: "Test email body",
+    body_html: "<p>Test email body</p>",
+    snippet: "Test email snippet",
+    labels: ["INBOX"],
+    has_attachments: false,
+    raw_gmail: { id: "raw-test" },
+    embedding_stale: true,
+    verification_status: "draft",
+    ...overrides,
+  };
+  const { data: result, error } = await supabase
+    .from("emails")
+    .upsert(data, { onConflict: "id" })
+    .select()
+    .single();
+  if (error) throw new Error(`seedEmail failed: ${error.message}`);
+  return result;
+}
+
+export async function seedIssue(overrides: Record<string, unknown> = {}) {
+  const supabase = getTestClient();
+
+  // Get next issue number via RPC
+  const projectId = (overrides.project_id as string) ?? TEST_IDS.project;
+  const { data: issueNumber, error: seqError } = await supabase.rpc("next_issue_number", {
+    p_project_id: projectId,
+  });
+  if (seqError) throw new Error(`seedIssue seq failed: ${seqError.message}`);
+
+  const data = {
+    id: TEST_IDS.issue,
+    project_id: projectId,
+    title: "Test Issue",
+    description: "Test issue description",
+    type: "bug",
+    status: "triage",
+    priority: "medium",
+    source: "manual",
+    issue_number: issueNumber,
+    ...overrides,
+  };
+  const { data: result, error } = await supabase
+    .from("issues")
+    .upsert(data, { onConflict: "id" })
+    .select()
+    .single();
+  if (error) throw new Error(`seedIssue failed: ${error.message}`);
   return result;
 }
 

@@ -3,16 +3,23 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 let _testClient: SupabaseClient | null = null;
 
 /**
+ * Returns true when Supabase credentials are available.
+ */
+export function hasDbCredentials(): boolean {
+  const url = process.env.TEST_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return Boolean(url && key);
+}
+
+/**
  * Returns a Supabase admin client configured for the test database.
  * Uses TEST_SUPABASE_URL / TEST_SUPABASE_SERVICE_ROLE_KEY if set,
  * otherwise falls back to the standard env vars.
  */
 export function getTestClient(): SupabaseClient {
   if (!_testClient) {
-    const url =
-      process.env.TEST_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key =
-      process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const url = process.env.TEST_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.TEST_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!url || !key) {
       throw new Error(
