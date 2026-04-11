@@ -1,15 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  mockAuthenticated,
-  mockUnauthenticated,
-  createIntegrationServerMock,
-} from "../helpers/mock-auth";
+import { mockAuthenticated, mockUnauthenticated, createServerMock } from "../helpers/mock-auth";
 import { createNextCacheMock, resetNextMocks, getRevalidatePathCalls } from "../helpers/mock-next";
 import { TEST_IDS } from "../../../../packages/database/__tests__/helpers/seed";
-import { describeWithDb } from "../helpers/describe-with-db";
 
 vi.mock("next/cache", () => createNextCacheMock());
-vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
+vi.mock("@repo/database/supabase/server", () => createServerMock());
 
 const mockScanAllUnscannedMeetings = vi.fn();
 vi.mock("@repo/ai/pipeline/scan-needs", () => ({
@@ -21,7 +16,7 @@ vi.mock("@repo/database/mutations/extractions", () => ({
   updateNeedStatus: (...args: unknown[]) => mockUpdateNeedStatus(...args),
 }));
 
-describeWithDb("Scan Needs Actions (integration)")("Scan Needs Actions (integration)", () => {
+describe("Scan Needs Actions", () => {
   beforeEach(() => {
     mockAuthenticated(TEST_IDS.userId);
     resetNextMocks();

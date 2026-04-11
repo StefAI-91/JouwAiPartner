@@ -1,15 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  mockAuthenticated,
-  mockUnauthenticated,
-  createIntegrationServerMock,
-} from "../helpers/mock-auth";
+import { mockAuthenticated, mockUnauthenticated, createServerMock } from "../helpers/mock-auth";
 import { createNextCacheMock, resetNextMocks, getRevalidatePathCalls } from "../helpers/mock-next";
-import { TEST_IDS } from "../../../../packages/database/__tests__/helpers/seed";
-import { describeWithDb } from "../helpers/describe-with-db";
+
+// RFC 4122 compliant UUIDs for unit tests (Zod 4 validates variant bits)
+const IDS = {
+  userId: "00000000-0000-4000-8000-000000000099",
+  segment: "00000000-0000-4000-8000-000000000005",
+  project: "00000000-0000-4000-8000-000000000002",
+  meeting: "00000000-0000-4000-8000-000000000004",
+  organization: "00000000-0000-4000-8000-000000000001",
+};
 
 vi.mock("next/cache", () => createNextCacheMock());
-vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
+vi.mock("@repo/database/supabase/server", () => createServerMock());
 
 const mockLinkSegmentToProject = vi.fn();
 const mockRemoveSegmentTag = vi.fn();
@@ -82,9 +85,9 @@ function setupAdminMock(
   });
 }
 
-describeWithDb("Segments Actions (integration)")("Segments Actions (integration)", () => {
+describe("Segments Actions", () => {
   beforeEach(() => {
-    mockAuthenticated(TEST_IDS.userId);
+    mockAuthenticated(IDS.userId);
     resetNextMocks();
     mockLinkSegmentToProject.mockReset();
     mockRemoveSegmentTag.mockReset();
@@ -106,14 +109,14 @@ describeWithDb("Segments Actions (integration)")("Segments Actions (integration)
 
       const action = await getAction();
       const result = await action({
-        segmentId: TEST_IDS.extraction,
-        projectId: TEST_IDS.project,
-        meetingId: TEST_IDS.meeting,
+        segmentId: IDS.segment,
+        projectId: IDS.project,
+        meetingId: IDS.meeting,
       });
 
       expect(result).toEqual({ success: true });
-      expect(mockLinkSegmentToProject).toHaveBeenCalledWith(TEST_IDS.extraction, TEST_IDS.project);
-      expect(mockUpdateProjectAliases).toHaveBeenCalledWith(TEST_IDS.project, [
+      expect(mockLinkSegmentToProject).toHaveBeenCalledWith(IDS.segment, IDS.project);
+      expect(mockUpdateProjectAliases).toHaveBeenCalledWith(IDS.project, [
         "Existing Alias",
         "Custom Project Name",
       ]);
@@ -125,9 +128,9 @@ describeWithDb("Segments Actions (integration)")("Segments Actions (integration)
 
       const action = await getAction();
       await action({
-        segmentId: TEST_IDS.extraction,
-        projectId: TEST_IDS.project,
-        meetingId: TEST_IDS.meeting,
+        segmentId: IDS.segment,
+        projectId: IDS.project,
+        meetingId: IDS.meeting,
       });
 
       // Should NOT call updateProjectAliases because alias already exists
@@ -140,23 +143,23 @@ describeWithDb("Segments Actions (integration)")("Segments Actions (integration)
 
       const action = await getAction();
       await action({
-        segmentId: TEST_IDS.extraction,
-        projectId: TEST_IDS.project,
-        meetingId: TEST_IDS.meeting,
+        segmentId: IDS.segment,
+        projectId: IDS.project,
+        meetingId: IDS.meeting,
       });
 
       const paths = getRevalidatePathCalls();
-      expect(paths).toContain(`/review/${TEST_IDS.meeting}`);
-      expect(paths).toContain(`/meetings/${TEST_IDS.meeting}`);
+      expect(paths).toContain(`/review/${IDS.meeting}`);
+      expect(paths).toContain(`/meetings/${IDS.meeting}`);
     });
 
     it("returns error when not logged in", async () => {
       mockUnauthenticated();
       const action = await getAction();
       const result = await action({
-        segmentId: TEST_IDS.extraction,
-        projectId: TEST_IDS.project,
-        meetingId: TEST_IDS.meeting,
+        segmentId: IDS.segment,
+        projectId: IDS.project,
+        meetingId: IDS.meeting,
       });
 
       expect(result).toEqual({ error: "Niet ingelogd" });
@@ -166,8 +169,8 @@ describeWithDb("Segments Actions (integration)")("Segments Actions (integration)
       const action = await getAction();
       const result = await action({
         segmentId: "not-uuid",
-        projectId: TEST_IDS.project,
-        meetingId: TEST_IDS.meeting,
+        projectId: IDS.project,
+        meetingId: IDS.meeting,
       } as never);
 
       expect(result).toHaveProperty("error");
@@ -181,20 +184,20 @@ describeWithDb("Segments Actions (integration)")("Segments Actions (integration)
     }
 
     it("removes tag and adds to ignored entities", async () => {
-      setupAdminMock("Ignored Name", [], TEST_IDS.organization);
+      setupAdminMock("Ignored Name", [], IDS.organization);
       mockRemoveSegmentTag.mockResolvedValue({ success: true });
       mockAddIgnoredEntity.mockResolvedValue({ success: true });
 
       const action = await getAction();
       const result = await action({
-        segmentId: TEST_IDS.extraction,
-        meetingId: TEST_IDS.meeting,
+        segmentId: IDS.segment,
+        meetingId: IDS.meeting,
       });
 
       expect(result).toEqual({ success: true });
-      expect(mockRemoveSegmentTag).toHaveBeenCalledWith(TEST_IDS.extraction, TEST_IDS.meeting);
+      expect(mockRemoveSegmentTag).toHaveBeenCalledWith(IDS.segment, IDS.meeting);
       expect(mockAddIgnoredEntity).toHaveBeenCalledWith(
-        TEST_IDS.organization,
+        IDS.organization,
         "Ignored Name",
         "project",
       );
@@ -204,8 +207,8 @@ describeWithDb("Segments Actions (integration)")("Segments Actions (integration)
       mockUnauthenticated();
       const action = await getAction();
       const result = await action({
-        segmentId: TEST_IDS.extraction,
-        meetingId: TEST_IDS.meeting,
+        segmentId: IDS.segment,
+        meetingId: IDS.meeting,
       });
 
       expect(result).toEqual({ error: "Niet ingelogd" });

@@ -28,6 +28,16 @@ export function getTestClient(): SupabaseClient {
       );
     }
 
+    // Safety: refuse to run tests against production-like URLs
+    const isLocalhost =
+      url.includes("localhost") || url.includes("127.0.0.1") || url.includes(".supabase.co");
+    if (!isLocalhost && !process.env.TEST_SUPABASE_URL) {
+      throw new Error(
+        "Refusing to run tests: NEXT_PUBLIC_SUPABASE_URL does not look like a local/hosted Supabase instance. " +
+          "Set TEST_SUPABASE_URL explicitly to confirm this is a test database.",
+      );
+    }
+
     _testClient = createClient(url, key);
   }
   return _testClient;

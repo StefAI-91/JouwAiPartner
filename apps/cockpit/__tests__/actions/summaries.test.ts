@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  mockAuthenticated,
-  mockUnauthenticated,
-  createIntegrationServerMock,
-} from "../helpers/mock-auth";
+import { mockAuthenticated, mockUnauthenticated, createServerMock } from "../helpers/mock-auth";
 import { createNextCacheMock, resetNextMocks, getRevalidatePathCalls } from "../helpers/mock-next";
-import { TEST_IDS } from "../../../../packages/database/__tests__/helpers/seed";
-import { describeWithDb } from "../helpers/describe-with-db";
+// RFC 4122 compliant UUIDs for unit tests (Zod 4 validates variant bits)
+const IDS = {
+  userId: "00000000-0000-4000-8000-000000000099",
+  project: "00000000-0000-4000-8000-000000000002",
+  organization: "00000000-0000-4000-8000-000000000001",
+};
 
 vi.mock("next/cache", () => createNextCacheMock());
-vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
+vi.mock("@repo/database/supabase/server", () => createServerMock());
 
 const mockGenerateProjectSummaries = vi.fn();
 const mockGenerateOrgSummaries = vi.fn();
@@ -18,9 +18,9 @@ vi.mock("@repo/ai/pipeline/summary-pipeline", () => ({
   generateOrgSummaries: (...args: unknown[]) => mockGenerateOrgSummaries(...args),
 }));
 
-describeWithDb("Summaries Actions (integration)")("Summaries Actions (integration)", () => {
+describe("Summaries Actions", () => {
   beforeEach(() => {
-    mockAuthenticated(TEST_IDS.userId);
+    mockAuthenticated(IDS.userId);
     resetNextMocks();
     mockGenerateProjectSummaries.mockReset();
     mockGenerateOrgSummaries.mockReset();
@@ -38,11 +38,11 @@ describeWithDb("Summaries Actions (integration)")("Summaries Actions (integratio
       const action = await getAction();
       const result = await action({
         entityType: "project",
-        entityId: TEST_IDS.project,
+        entityId: IDS.project,
       });
 
       expect(result).toEqual({ success: true });
-      expect(mockGenerateProjectSummaries).toHaveBeenCalledWith(TEST_IDS.project);
+      expect(mockGenerateProjectSummaries).toHaveBeenCalledWith(IDS.project);
       expect(mockGenerateOrgSummaries).not.toHaveBeenCalled();
     });
 
@@ -52,11 +52,11 @@ describeWithDb("Summaries Actions (integration)")("Summaries Actions (integratio
       const action = await getAction();
       const result = await action({
         entityType: "organization",
-        entityId: TEST_IDS.organization,
+        entityId: IDS.organization,
       });
 
       expect(result).toEqual({ success: true });
-      expect(mockGenerateOrgSummaries).toHaveBeenCalledWith(TEST_IDS.organization);
+      expect(mockGenerateOrgSummaries).toHaveBeenCalledWith(IDS.organization);
       expect(mockGenerateProjectSummaries).not.toHaveBeenCalled();
     });
 
@@ -66,11 +66,11 @@ describeWithDb("Summaries Actions (integration)")("Summaries Actions (integratio
       const action = await getAction();
       await action({
         entityType: "project",
-        entityId: TEST_IDS.project,
+        entityId: IDS.project,
       });
 
       const paths = getRevalidatePathCalls();
-      expect(paths).toContain(`/projects/${TEST_IDS.project}`);
+      expect(paths).toContain(`/projects/${IDS.project}`);
       expect(paths).toContain("/");
     });
 
@@ -83,7 +83,7 @@ describeWithDb("Summaries Actions (integration)")("Summaries Actions (integratio
       const action = await getAction();
       const result = await action({
         entityType: "project",
-        entityId: TEST_IDS.project,
+        entityId: IDS.project,
       });
 
       expect(result).toEqual({ error: "AI rate limit exceeded" });
@@ -97,7 +97,7 @@ describeWithDb("Summaries Actions (integration)")("Summaries Actions (integratio
       const action = await getAction();
       const result = await action({
         entityType: "organization",
-        entityId: TEST_IDS.organization,
+        entityId: IDS.organization,
       });
 
       expect(result).toEqual({ error: "Samenvatting genereren mislukt" });
@@ -108,7 +108,7 @@ describeWithDb("Summaries Actions (integration)")("Summaries Actions (integratio
       const action = await getAction();
       const result = await action({
         entityType: "project",
-        entityId: TEST_IDS.project,
+        entityId: IDS.project,
       });
 
       expect(result).toEqual({ error: "Niet ingelogd" });
@@ -118,7 +118,7 @@ describeWithDb("Summaries Actions (integration)")("Summaries Actions (integratio
       const action = await getAction();
       const result = await action({
         entityType: "invalid" as never,
-        entityId: TEST_IDS.project,
+        entityId: IDS.project,
       });
 
       expect(result).toHaveProperty("error");
