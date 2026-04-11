@@ -26,6 +26,11 @@ vi.mock("@repo/ai/agents/issue-reviewer", () => ({
   runIssueReviewer: (...args: unknown[]) => mockRunIssueReviewer(...args),
 }));
 
+const mockGetProjectById = vi.fn();
+vi.mock("@repo/database/queries/projects", () => ({
+  getProjectById: (...args: unknown[]) => mockGetProjectById(...args),
+}));
+
 vi.mock("@repo/auth/helpers", () => {
   let _user: { id: string } | null = null;
   return {
@@ -36,14 +41,6 @@ vi.mock("@repo/auth/helpers", () => {
     },
   };
 });
-
-// Mock getAdminClient + createClient for the DB query inside the action
-const mockAdminFrom = vi.fn();
-vi.mock("@repo/database/supabase/admin", () => ({
-  getAdminClient: () => ({
-    from: mockAdminFrom,
-  }),
-}));
 
 const mockIssue = {
   id: "issue-1",
@@ -78,7 +75,7 @@ describe("Review Actions", () => {
     mockListIssues.mockReset();
     mockSaveProjectReview.mockReset();
     mockRunIssueReviewer.mockReset();
-    mockAdminFrom.mockReset();
+    mockGetProjectById.mockReset();
 
     // Set authenticated user via the mocked auth helpers
     const authHelpers = await import("@repo/auth/helpers");
@@ -97,16 +94,7 @@ describe("Review Actions", () => {
       mockListIssues.mockResolvedValue([mockIssue]);
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
       mockSaveProjectReview.mockResolvedValue({ id: "review-1" });
-      mockAdminFrom.mockImplementation(() => ({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { name: "Test Project" },
-              error: null,
-            }),
-          }),
-        }),
-      }));
+      mockGetProjectById.mockResolvedValue({ name: "Test Project" });
 
       const action = await getAction();
       const result = await action({ projectId: IDS.project });
@@ -118,13 +106,7 @@ describe("Review Actions", () => {
       mockListIssues.mockResolvedValue([mockIssue]);
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
       mockSaveProjectReview.mockResolvedValue({ id: "review-1" });
-      mockAdminFrom.mockImplementation(() => ({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { name: "P" }, error: null }),
-          }),
-        }),
-      }));
+      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       await action({ projectId: IDS.project });
@@ -145,13 +127,7 @@ describe("Review Actions", () => {
       mockListIssues.mockResolvedValue([mockIssue]);
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
       mockSaveProjectReview.mockResolvedValue({ id: "review-1" });
-      mockAdminFrom.mockImplementation(() => ({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { name: "P" }, error: null }),
-          }),
-        }),
-      }));
+      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       await action({ projectId: IDS.project });
@@ -168,13 +144,7 @@ describe("Review Actions", () => {
 
     it("returns error when no issues found", async () => {
       mockListIssues.mockResolvedValue([]);
-      mockAdminFrom.mockImplementation(() => ({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { name: "P" }, error: null }),
-          }),
-        }),
-      }));
+      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       const result = await action({ projectId: IDS.project });
@@ -186,13 +156,7 @@ describe("Review Actions", () => {
       mockListIssues.mockResolvedValue([mockIssue]);
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
       mockSaveProjectReview.mockResolvedValue({ id: "review-1" });
-      mockAdminFrom.mockImplementation(() => ({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { name: "P" }, error: null }),
-          }),
-        }),
-      }));
+      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       await action({ projectId: IDS.project });
@@ -212,13 +176,7 @@ describe("Review Actions", () => {
 
     it("forwards AI/DB errors with message", async () => {
       mockListIssues.mockRejectedValue(new Error("DB connection failed"));
-      mockAdminFrom.mockImplementation(() => ({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { name: "P" }, error: null }),
-          }),
-        }),
-      }));
+      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       const result = await action({ projectId: IDS.project });
