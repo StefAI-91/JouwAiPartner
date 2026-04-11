@@ -17,9 +17,9 @@ export default async function ClientsPage() {
     return (
       <div className="px-4 py-16 text-center lg:px-10">
         <Building2 className="mx-auto h-10 w-10 text-muted-foreground/40" />
-        <h2 className="mt-4 font-heading text-xl font-semibold">No organizations yet</h2>
+        <h2 className="mt-4 font-heading text-xl font-semibold">Nog geen organisaties</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Organizations will appear here once meetings are processed.
+          Organisaties verschijnen hier zodra meetings zijn verwerkt.
         </p>
         <div className="mt-6">
           <AddOrganizationButton />

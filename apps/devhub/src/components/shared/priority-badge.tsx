@@ -2,9 +2,9 @@ import { cn } from "@repo/ui/utils";
 
 const PRIORITY_CONFIG: Record<string, { label: string; dotClass: string; textClass: string }> = {
   urgent: { label: "Urgent", dotClass: "bg-red-500", textClass: "text-red-700" },
-  high: { label: "High", dotClass: "bg-orange-500", textClass: "text-orange-700" },
-  medium: { label: "Medium", dotClass: "bg-yellow-500", textClass: "text-yellow-700" },
-  low: { label: "Low", dotClass: "bg-muted-foreground/40", textClass: "text-muted-foreground" },
+  high: { label: "Hoog", dotClass: "bg-orange-500", textClass: "text-orange-700" },
+  medium: { label: "Gemiddeld", dotClass: "bg-yellow-500", textClass: "text-yellow-700" },
+  low: { label: "Laag", dotClass: "bg-muted-foreground/40", textClass: "text-muted-foreground" },
 };
 
 export function PriorityBadge({ priority, className }: { priority: string; className?: string }) {

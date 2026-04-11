@@ -6,7 +6,7 @@ const COMPONENT_LABELS: Record<string, string> = {
   api: "API",
   database: "Database",
   prompt_ai: "AI / Prompt",
-  unknown: "Unknown",
+  unknown: "Onbekend",
 };
 
 export function ComponentBadge({

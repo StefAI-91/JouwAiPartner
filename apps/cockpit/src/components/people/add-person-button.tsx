@@ -48,10 +48,10 @@ export function AddPersonButton({ organizations }: AddPersonButtonProps) {
         className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
       >
         <Plus className="size-4" />
-        Add Person
+        Persoon toevoegen
       </button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="New Person">
+      <Modal open={open} onClose={() => setOpen(false)} title="Nieuwe persoon">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -59,54 +59,54 @@ export function AddPersonButton({ organizations }: AddPersonButtonProps) {
           }}
           className="space-y-4"
         >
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Name</label>
+            <label className="mb-1 block text-sm font-medium">Naam</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="Full name"
+              placeholder="Volledige naam"
               required
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Email</label>
+            <label className="mb-1 block text-sm font-medium">E-mail</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="Optional — used for participant matching"
+              placeholder="Optioneel — gebruikt voor deelnemersherkenning"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Role</label>
+            <label className="mb-1 block text-sm font-medium">Rol</label>
             <input
               type="text"
               value={role}
               onChange={(e) => setRole(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="Optional"
+              placeholder="Optioneel"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Organization</label>
+            <label className="mb-1 block text-sm font-medium">Organisatie</label>
             <select
               value={orgId}
               onChange={(e) => setOrgId(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
-              <option value="">No organization</option>
+              <option value="">Geen organisatie</option>
               {organizations.map((org) => (
-                <option key={org.id} value={org.id}>{org.name}</option>
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
               ))}
             </select>
           </div>
@@ -118,14 +118,14 @@ export function AddPersonButton({ organizations }: AddPersonButtonProps) {
               disabled={isPending}
               className="rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
             >
-              Cancel
+              Annuleren
             </button>
             <button
               type="submit"
               disabled={isPending || !name.trim()}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {isPending ? "Creating..." : "Create"}
+              {isPending ? "Aanmaken..." : "Aanmaken"}
             </button>
           </div>
         </form>

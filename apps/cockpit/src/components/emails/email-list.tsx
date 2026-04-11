@@ -49,8 +49,8 @@ export function EmailList({ emails }: EmailListProps) {
           className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground"
         >
           <option value="">Alle statussen</option>
-          <option value="draft">Draft</option>
-          <option value="verified">Verified</option>
+          <option value="draft">Concept</option>
+          <option value="verified">Geverifieerd</option>
         </select>
 
         {statusFilter && (

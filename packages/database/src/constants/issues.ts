@@ -35,26 +35,26 @@ export const CLOSED_STATUSES = new Set<IssueStatus>(["done", "cancelled"]);
 
 export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
   bug: "Bug",
-  feature: "Feature",
-  improvement: "Improvement",
-  task: "Task",
-  question: "Question",
+  feature: "Functionaliteit",
+  improvement: "Verbetering",
+  task: "Taak",
+  question: "Vraag",
 };
 
 export const ISSUE_STATUS_LABELS: Record<IssueStatus, string> = {
   triage: "Triage",
   backlog: "Backlog",
-  todo: "Todo",
-  in_progress: "In Progress",
-  done: "Done",
-  cancelled: "Cancelled",
+  todo: "Te doen",
+  in_progress: "In behandeling",
+  done: "Afgerond",
+  cancelled: "Geannuleerd",
 };
 
 export const ISSUE_PRIORITY_LABELS: Record<IssuePriority, string> = {
   urgent: "Urgent",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+  high: "Hoog",
+  medium: "Gemiddeld",
+  low: "Laag",
 };
 
 export const ISSUE_COMPONENT_LABELS: Record<IssueComponent, string> = {
@@ -67,10 +67,10 @@ export const ISSUE_COMPONENT_LABELS: Record<IssueComponent, string> = {
 };
 
 export const ISSUE_SEVERITY_LABELS: Record<IssueSeverity, string> = {
-  critical: "Critical",
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+  critical: "Kritiek",
+  high: "Hoog",
+  medium: "Gemiddeld",
+  low: "Laag",
 };
 
 // ── Priority sort order (voor queries en client-side sorting) ──

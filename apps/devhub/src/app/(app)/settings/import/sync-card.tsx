@@ -163,7 +163,7 @@ export function SyncCard({
           </div>
           {result.errors.length > 0 && (
             <div className="mt-2 border-t pt-2">
-              <p className="text-xs font-medium text-destructive">Errors:</p>
+              <p className="text-xs font-medium text-destructive">Fouten:</p>
               {result.errors.map((err, i) => (
                 <p key={i} className="text-[0.65rem] text-destructive/80 break-all">
                   {err}
@@ -188,7 +188,7 @@ export function SyncCard({
           </div>
           {backfillResult.errors.length > 0 && (
             <div className="mt-2 border-t pt-2">
-              <p className="text-xs font-medium text-destructive">Errors:</p>
+              <p className="text-xs font-medium text-destructive">Fouten:</p>
               {backfillResult.errors.map((err, i) => (
                 <p key={i} className="text-[0.65rem] text-destructive/80 break-all">
                   {err}

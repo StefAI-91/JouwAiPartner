@@ -3,10 +3,10 @@ import { cn } from "@repo/ui/utils";
 const TYPE_CONFIG: Record<string, { label: string; className: string }> = {
   bug: { label: "Bug", className: "bg-red-50 text-red-700 border-red-200" },
   feature_request: {
-    label: "Feature",
+    label: "Functionaliteit",
     className: "bg-purple-50 text-purple-700 border-purple-200",
   },
-  question: { label: "Question", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  question: { label: "Vraag", className: "bg-blue-50 text-blue-700 border-blue-200" },
 };
 
 export function TypeBadge({ type, className }: { type: string; className?: string }) {

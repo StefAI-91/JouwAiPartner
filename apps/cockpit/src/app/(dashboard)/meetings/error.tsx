@@ -10,9 +10,9 @@ export default function MeetingsError({
 }) {
   return (
     <div className="px-4 py-16 text-center">
-      <h2 className="font-heading text-xl font-semibold">Something went wrong</h2>
+      <h2 className="font-heading text-xl font-semibold">Er ging iets mis</h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Could not load meetings. Please try again later.
+        Kon meetings niet laden. Probeer het later opnieuw.
       </p>
       <Button variant="outline" onClick={reset} className="mt-4">
         Probeer opnieuw

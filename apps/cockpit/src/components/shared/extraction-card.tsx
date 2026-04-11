@@ -123,7 +123,7 @@ export function ExtractionCard({
             }
           }}
           autoFocus
-          aria-label="Edit action item content"
+          aria-label="Extractie-inhoud bewerken"
           className="w-full resize-none rounded-lg border border-input bg-muted/30 p-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           rows={3}
         />

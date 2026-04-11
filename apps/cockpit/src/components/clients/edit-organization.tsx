@@ -84,7 +84,7 @@ export function EditOrganization({ org }: EditOrganizationProps) {
         </button>
       </div>
 
-      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Organization">
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Organisatie bewerken">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -95,7 +95,7 @@ export function EditOrganization({ org }: EditOrganizationProps) {
           {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Name</label>
+            <label className="mb-1 block text-sm font-medium">Naam</label>
             <input
               type="text"
               value={name}
@@ -137,24 +137,24 @@ export function EditOrganization({ org }: EditOrganizationProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Contact Person</label>
+            <label className="mb-1 block text-sm font-medium">Contactpersoon</label>
             <input
               type="text"
               value={contactPerson}
               onChange={(e) => setContactPerson(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="Optional"
+              placeholder="Optioneel"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Email</label>
+            <label className="mb-1 block text-sm font-medium">E-mail</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              placeholder="Optional"
+              placeholder="Optioneel"
             />
           </div>
 
@@ -165,14 +165,14 @@ export function EditOrganization({ org }: EditOrganizationProps) {
               disabled={isPending}
               className="rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
             >
-              Cancel
+              Annuleren
             </button>
             <button
               type="submit"
               disabled={isPending}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {isPending ? "Saving..." : "Save"}
+              {isPending ? "Opslaan..." : "Opslaan"}
             </button>
           </div>
         </form>
@@ -182,8 +182,8 @@ export function EditOrganization({ org }: EditOrganizationProps) {
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDelete}
-        title="Delete Organization"
-        description={`Are you sure you want to delete "${org.name}"? This will unlink all meetings and projects from this organization.`}
+        title="Organisatie verwijderen"
+        description={`Weet je zeker dat je "${org.name}" wilt verwijderen? Dit ontkoppelt alle meetings en projecten van deze organisatie.`}
         loading={isPending}
       />
     </>

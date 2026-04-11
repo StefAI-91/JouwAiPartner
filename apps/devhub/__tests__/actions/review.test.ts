@@ -16,6 +16,11 @@ vi.mock("@repo/database/queries/issues", () => ({
   listIssues: (...args: unknown[]) => mockListIssues(...args),
 }));
 
+const mockGetProjectById = vi.fn();
+vi.mock("@repo/database/queries/projects", () => ({
+  getProjectById: (...args: unknown[]) => mockGetProjectById(...args),
+}));
+
 const mockSaveProjectReview = vi.fn();
 vi.mock("@repo/database/mutations/project-reviews", () => ({
   saveProjectReview: (...args: unknown[]) => mockSaveProjectReview(...args),
@@ -24,11 +29,6 @@ vi.mock("@repo/database/mutations/project-reviews", () => ({
 const mockRunIssueReviewer = vi.fn();
 vi.mock("@repo/ai/agents/issue-reviewer", () => ({
   runIssueReviewer: (...args: unknown[]) => mockRunIssueReviewer(...args),
-}));
-
-const mockGetProjectById = vi.fn();
-vi.mock("@repo/database/queries/projects", () => ({
-  getProjectById: (...args: unknown[]) => mockGetProjectById(...args),
 }));
 
 vi.mock("@repo/auth/helpers", () => {
@@ -73,9 +73,9 @@ describe("Review Actions", () => {
   beforeEach(async () => {
     resetNextMocks();
     mockListIssues.mockReset();
+    mockGetProjectById.mockReset();
     mockSaveProjectReview.mockReset();
     mockRunIssueReviewer.mockReset();
-    mockGetProjectById.mockReset();
 
     // Set authenticated user via the mocked auth helpers
     const authHelpers = await import("@repo/auth/helpers");
@@ -92,9 +92,9 @@ describe("Review Actions", () => {
 
     it("generates review and returns { success, reviewId }", async () => {
       mockListIssues.mockResolvedValue([mockIssue]);
+      mockGetProjectById.mockResolvedValue({ name: "Test Project" });
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
       mockSaveProjectReview.mockResolvedValue({ id: "review-1" });
-      mockGetProjectById.mockResolvedValue({ name: "Test Project" });
 
       const action = await getAction();
       const result = await action({ projectId: IDS.project });
@@ -104,9 +104,9 @@ describe("Review Actions", () => {
 
     it("passes correct data to saveProjectReview", async () => {
       mockListIssues.mockResolvedValue([mockIssue]);
+      mockGetProjectById.mockResolvedValue({ name: "P" });
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
       mockSaveProjectReview.mockResolvedValue({ id: "review-1" });
-      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       await action({ projectId: IDS.project });
@@ -125,9 +125,9 @@ describe("Review Actions", () => {
 
     it("computes metrics: status/priority/type counts", async () => {
       mockListIssues.mockResolvedValue([mockIssue]);
+      mockGetProjectById.mockResolvedValue({ name: "P" });
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
       mockSaveProjectReview.mockResolvedValue({ id: "review-1" });
-      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       await action({ projectId: IDS.project });
@@ -144,7 +144,6 @@ describe("Review Actions", () => {
 
     it("returns error when no issues found", async () => {
       mockListIssues.mockResolvedValue([]);
-      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       const result = await action({ projectId: IDS.project });
@@ -154,9 +153,9 @@ describe("Review Actions", () => {
 
     it("revalidates /review path", async () => {
       mockListIssues.mockResolvedValue([mockIssue]);
+      mockGetProjectById.mockResolvedValue({ name: "P" });
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
       mockSaveProjectReview.mockResolvedValue({ id: "review-1" });
-      mockGetProjectById.mockResolvedValue({ name: "P" });
 
       const action = await getAction();
       await action({ projectId: IDS.project });
