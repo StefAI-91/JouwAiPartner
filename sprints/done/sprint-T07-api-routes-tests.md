@@ -18,12 +18,12 @@ Test de API routes die data het systeem in brengen (webhooks, cron jobs, ingest 
 
 Gedragstests:
 
-- [ ] POST met geldig webhook payload — haalt transcript op en triggert `processMeeting()`
-- [ ] Skipt meetings die al bestaan (`getMeetingByFirefliesId()` retourneert match)
-- [ ] Skipt meetings met duplicate title+date (`getMeetingByTitleAndDate()` retourneert match)
-- [ ] Skipt meetings met ongeldige duur (`isValidDuration()` retourneert false)
-- [ ] Retourneert 200 OK ook bij skip (webhook moet niet retrien)
-- [ ] Retourneert 500 bij onverwachte error
+- [x] POST met geldig webhook payload — haalt transcript op en triggert `processMeeting()`
+- [x] Skipt meetings die al bestaan (`getMeetingByFirefliesId()` retourneert match)
+- [x] Skipt meetings met duplicate title+date (`getMeetingByTitleAndDate()` retourneert match)
+- [x] Skipt meetings met ongeldige duur (`isValidDuration()` retourneert false)
+- [x] Retourneert 200 OK ook bij skip (webhook moet niet retrien)
+- [x] Retourneert 500 bij onverwachte error
 
 ### T07-2: `api/ingest/fireflies/route.ts` tests
 
@@ -32,11 +32,11 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] GET — retourneert lijst van Fireflies transcripts
-- [ ] POST — batch verwerking: filtert bestaande fireflies_ids en title+date duplicates
-- [ ] POST — verwerkt nieuwe meetings via `processMeeting()` per stuk
-- [ ] POST — draait `runReEmbedWorker()` na verwerking
-- [ ] POST — retourneert teller: processed, skipped, errors
+- [x] GET — retourneert lijst van Fireflies transcripts
+- [x] POST — batch verwerking: filtert bestaande fireflies_ids en title+date duplicates
+- [x] POST — verwerkt nieuwe meetings via `processMeeting()` per stuk
+- [x] POST — draait `runReEmbedWorker()` na verwerking
+- [x] POST — retourneert teller: processed, skipped, errors
 
 ### T07-3: `api/ingest/reprocess/route.ts` tests
 
@@ -45,10 +45,10 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] POST — verwijdert bestaande extracties (`deleteExtractionsByMeetingId`)
-- [ ] POST — voert volledige pipeline opnieuw uit (transcribe → summarize → extract → embed)
-- [ ] POST — bouwt segments en linkt aan projecten
-- [ ] POST — retourneert error bij niet-bestaand meeting
+- [x] POST — verwijdert bestaande extracties (`deleteExtractionsByMeetingId`)
+- [x] POST — voert volledige pipeline opnieuw uit (transcribe → summarize → extract → embed)
+- [x] POST — bouwt segments en linkt aan projecten
+- [x] POST — retourneert error bij niet-bestaand meeting
 
 ### T07-4: `api/email/sync/route.ts` tests
 
@@ -57,12 +57,12 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] POST — haalt actieve Google accounts op
-- [ ] POST — fetcht emails per account; filtert bestaande gmail_ids
-- [ ] POST — insert nieuwe emails
-- [ ] POST — verwerkt onverwerkte emails via `processEmailBatch()`
-- [ ] POST — update account tokens en last_sync timestamp
-- [ ] POST — retourneert error bij geen actieve accounts
+- [x] POST — haalt actieve Google accounts op
+- [x] POST — fetcht emails per account; filtert bestaande gmail_ids
+- [x] POST — insert nieuwe emails
+- [x] POST — verwerkt onverwerkte emails via `processEmailBatch()`
+- [x] POST — update account tokens en last_sync timestamp
+- [x] POST — retourneert error bij geen actieve accounts
 
 ### T07-5: `api/cron/re-embed/route.ts` tests
 
@@ -71,9 +71,9 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] POST — roept `runReEmbedWorker()` aan
-- [ ] POST — retourneert totalen per tabel
-- [ ] POST — retourneert error response bij failure
+- [x] POST — roept `runReEmbedWorker()` aan
+- [x] POST — retourneert totalen per tabel
+- [x] POST — retourneert error response bij failure
 
 ### T07-6: `api/cron/reclassify/route.ts` tests
 
@@ -82,11 +82,11 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] POST — haalt meetings op die herclassificatie nodig hebben
-- [ ] POST — draait Gatekeeper per meeting
-- [ ] POST — update classificatie (meeting_type, party_type, relevance_score)
-- [ ] POST — resolved organisatie via entity-resolution
-- [ ] POST — retourneert count van herclassificeerde meetings
+- [x] POST — haalt meetings op die herclassificatie nodig hebben
+- [x] POST — draait Gatekeeper per meeting
+- [x] POST — update classificatie (meeting_type, party_type, relevance_score)
+- [x] POST — resolved organisatie via entity-resolution
+- [x] POST — retourneert count van herclassificeerde meetings
 
 ### T07-7: `api/mcp/route.ts` tests
 
@@ -95,9 +95,9 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] POST — forwardt request naar MCP server
-- [ ] GET — retourneert MCP server info
-- [ ] DELETE — cleanup MCP session
+- [x] POST — forwardt request naar MCP server
+- [x] GET — retourneert MCP server info
+- [x] DELETE — cleanup MCP session
 
 ### T07-8: DevHub `api/ingest/userback/route.ts` tests
 
@@ -106,16 +106,16 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] GET — retourneert sync status
-- [ ] POST — fetcht Userback feedback; filtert test submissions
-- [ ] POST — filtert bestaande userback_ids
-- [ ] POST — insert/update issues via `upsertUserbackIssues()`
-- [ ] POST — slaat media op via `storeIssueMedia()`
-- [ ] POST — retourneert count: imported, updated, skipped
+- [x] GET — retourneert sync status
+- [x] POST — fetcht Userback feedback; filtert test submissions
+- [x] POST — filtert bestaande userback_ids
+- [x] POST — insert/update issues via `upsertUserbackIssues()`
+- [x] POST — slaat media op via `storeIssueMedia()`
+- [x] POST — retourneert count: imported, updated, skipped
 
 ## Afronding
 
-- [ ] Alle tests draaien groen via `npm run test`
-- [ ] Webhook routes retourneren altijd 200 (voorkom retries)
-- [ ] Cron routes valideren auth/secret headers
-- [ ] Tests mocken alle externe services (geen echte API calls)
+- [x] Alle tests draaien groen via `npm run test`
+- [x] Webhook routes retourneren altijd 200 (voorkom retries)
+- [x] Cron routes valideren auth/secret headers
+- [x] Tests mocken alle externe services (geen echte API calls)

@@ -18,12 +18,12 @@ Test dat elke MCP tool correct data ophaalt, formatteert en retourneert. Focus o
 
 Gedragstests:
 
-- [ ] Registreert search tool correct op MCP server
-- [ ] Roept `embedText()` aan met search query
-- [ ] Filtert default op verified_only
-- [ ] Formatteert resultaten met verificatie status
-- [ ] Resolved profile namen voor verified_by ids
-- [ ] Handelt lege zoekresultaten af
+- [x] Registreert search tool correct op MCP server
+- [x] Roept `embedText()` aan met search query
+- [x] Filtert default op verified_only
+- [x] Formatteert resultaten met verificatie status
+- [x] Resolved profile namen voor verified_by ids
+- [x] Handelt lege zoekresultaten af
 
 ### T06-2: `tools/meetings.ts` tests
 
@@ -32,11 +32,11 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] Haalt meeting op met segments via `getSegmentsByMeetingIds()`
-- [ ] Formatteert verificatie status
-- [ ] Escaped like-characters in zoekinput
-- [ ] Resolved profile namen
-- [ ] Retourneert foutmelding bij niet-bestaand meeting
+- [x] Haalt meeting op met segments via `getSegmentsByMeetingIds()`
+- [x] Formatteert verificatie status
+- [x] Escaped like-characters in zoekinput
+- [x] Resolved profile namen
+- [x] Retourneert foutmelding bij niet-bestaand meeting
 
 ### T06-3: `tools/list-meetings.ts` tests
 
@@ -45,11 +45,11 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] Filtert op project (resolved via `resolveProjectIds()`)
-- [ ] Filtert op organisatie (resolved via `resolveOrganizationIds()`)
-- [ ] Filtert op deelnemer (resolved via `resolveMeetingIdsByParticipant()`)
-- [ ] Escaped like-characters
-- [ ] Haalt segment counts op per meeting
+- [x] Filtert op project (resolved via `resolveProjectIds()`)
+- [x] Filtert op organisatie (resolved via `resolveOrganizationIds()`)
+- [x] Filtert op deelnemer (resolved via `resolveMeetingIdsByParticipant()`)
+- [x] Escaped like-characters
+- [x] Haalt segment counts op per meeting
 
 ### T06-4: `tools/actions.ts` tests
 
@@ -58,10 +58,10 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] Filtert op persoon via `findPersonIdsByName()`
-- [ ] Resolved project ids
-- [ ] Formatteert verificatie status
-- [ ] Default verified_only filter
+- [x] Filtert op persoon via `findPersonIdsByName()`
+- [x] Resolved project ids
+- [x] Formatteert verificatie status
+- [x] Default verified_only filter
 
 ### T06-5: `tools/correct-extraction.ts` tests
 
@@ -70,10 +70,10 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] Haalt extractie op via `getExtractionForCorrection()`
-- [ ] Voert correctie uit via `correctExtraction()`
-- [ ] Resolved corrected_by naam naar profile id
-- [ ] Retourneert error bij niet-bestaande extractie
+- [x] Haalt extractie op via `getExtractionForCorrection()`
+- [x] Voert correctie uit via `correctExtraction()`
+- [x] Resolved corrected_by naam naar profile id
+- [x] Retourneert error bij niet-bestaande extractie
 
 ### T06-6: `tools/write-tasks.ts` tests
 
@@ -82,11 +82,11 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] `createTaskFromExtraction` — maakt taak aan
-- [ ] `updateTask` — partial update
-- [ ] `completeTask` — markeert als done
-- [ ] `dismissTask` — markeert als dismissed
-- [ ] Resolved assigned_to naam naar profile id
+- [x] `createTaskFromExtraction` — maakt taak aan
+- [x] `updateTask` — partial update
+- [x] `completeTask` — markeert als done
+- [x] `dismissTask` — markeert als dismissed
+- [x] Resolved assigned_to naam naar profile id
 
 ### T06-7: `tools/write-client-updates.ts` tests
 
@@ -95,10 +95,10 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] Insert manual meeting met correcte defaults
-- [ ] Insert extracties gekoppeld aan meeting
-- [ ] Resolved organisatie id
-- [ ] Retourneert error bij ongeldige input
+- [x] Insert manual meeting met correcte defaults
+- [x] Insert extracties gekoppeld aan meeting
+- [x] Resolved organisatie id
+- [x] Retourneert error bij ongeldige input
 
 ### T06-8: `tools/decisions.ts` + overige read tools tests
 
@@ -107,11 +107,11 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] `decisions` — formatteert met verificatie status + profile namen
-- [ ] `organizations` — escaped like-characters; sanitized contains
-- [ ] `projects` — haalt segment counts per project
-- [ ] `people` — escaped like-characters in zoekinput
-- [ ] `get-organization-overview` — combineert org data met meetings en extracties
+- [x] `decisions` — formatteert met verificatie status + profile namen
+- [x] `organizations` — escaped like-characters; sanitized contains
+- [x] `projects` — haalt segment counts per project
+- [x] `people` — escaped like-characters in zoekinput
+- [x] `get-organization-overview` — combineert org data met meetings en extracties
 
 ### T06-9: `tools/usage-tracking.ts` tests
 
@@ -119,11 +119,11 @@ Gedragstests:
 
 Gedragstests:
 
-- [ ] `trackMcpQuery()` — logt query naar database
-- [ ] Faalt silently bij DB error (geen throw)
+- [x] `trackMcpQuery()` — logt query naar database
+- [x] Faalt silently bij DB error (geen throw)
 
 ## Afronding
 
-- [ ] Alle tests draaien groen via `npm run test -- --filter=mcp`
-- [ ] Elke tool-module heeft minimaal happy path + error case
-- [ ] Utils functies (escapeLike, sanitizeForContains, etc.) al getest in bestaande utils.test.ts
+- [x] Alle tests draaien groen via `npm run test -- --filter=mcp`
+- [x] Elke tool-module heeft minimaal happy path + error case
+- [x] Utils functies (escapeLike, sanitizeForContains, etc.) al getest in bestaande utils.test.ts
