@@ -72,7 +72,10 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
             </Button>
           }
         />
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent
+          align="end"
+          className="w-56 border border-border bg-background shadow-lg dark:bg-card"
+        >
           <DropdownMenuItem onClick={handleRegenerate}>
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Regenereer</span>
