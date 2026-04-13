@@ -57,7 +57,7 @@ export function IssueDetail({
         : null;
 
   return (
-    <div className="flex flex-col lg:h-full lg:flex-row">
+    <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
       {/* Main content */}
       <div className="flex-1 p-6 lg:overflow-auto">
         <IssueHeader

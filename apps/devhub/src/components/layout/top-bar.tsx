@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
-import { buttonVariants } from "@repo/ui/button";
 import { ProjectSwitcher } from "./project-switcher";
 import { MobileSidebar } from "./mobile-sidebar";
 
@@ -19,7 +18,7 @@ export function TopBar({ projects }: { projects: Project[] }) {
   const newIssueHref = projectId ? `/issues/new?project=${projectId}` : "/issues/new";
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-background px-4">
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-border bg-background px-4">
       <div className="flex items-center gap-2">
         <MobileSidebar />
         <ProjectSwitcher projects={projects} />
