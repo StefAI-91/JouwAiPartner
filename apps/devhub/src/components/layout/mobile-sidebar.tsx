@@ -2,6 +2,7 @@
 
 import { Menu, X } from "lucide-react";
 import { useCallback, useState } from "react";
+import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
 import { SidebarNav } from "./sidebar-nav";
 
 export function MobileSidebar() {
@@ -38,6 +39,10 @@ export function MobileSidebar() {
               >
                 <X className="size-4" />
               </button>
+            </div>
+
+            <div className="border-b border-sidebar-border px-2 py-2">
+              <WorkspaceSwitcher current="devhub" />
             </div>
 
             <SidebarNav

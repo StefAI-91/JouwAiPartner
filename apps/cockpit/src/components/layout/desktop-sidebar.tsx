@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { FocusProject } from "@repo/database/queries/projects";
+import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
 import {
   primaryNavItems,
   secondaryNavItems,
@@ -80,13 +81,17 @@ export function DesktopSidebar({
   return (
     <aside className="hidden w-64 shrink-0 border-r border-border/50 bg-white/60 backdrop-blur-sm lg:flex lg:flex-col">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-5">
+      <div className="flex items-center gap-2.5 px-5 py-4">
         <img
           src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
           alt="Jouw AI Partner"
           className="h-7 w-auto"
         />
-        <span className="font-heading text-sm font-semibold text-primary">Knowledge Platform</span>
+      </div>
+
+      {/* Workspace switcher */}
+      <div className="px-3 pb-2">
+        <WorkspaceSwitcher current="cockpit" />
       </div>
 
       {/* Primary navigation */}

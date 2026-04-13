@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import type { FocusProject } from "@repo/database/queries/projects";
+import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
 import {
   primaryNavItems,
   secondaryNavItems,
@@ -142,16 +143,11 @@ export function SideMenu({
             aria-label="Navigatiemenu"
           >
             <div className="flex items-center justify-between border-b border-sidebar-border px-6 py-5">
-              <div className="flex items-center gap-3">
-                <img
-                  src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
-                  alt="Jouw AI Partner"
-                  className="h-8 w-auto"
-                />
-                <span className="font-heading text-base font-semibold text-primary">
-                  Kennisplatform
-                </span>
-              </div>
+              <img
+                src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
+                alt="Jouw AI Partner"
+                className="h-8 w-auto"
+              />
               <button
                 type="button"
                 onClick={close}
@@ -160,6 +156,10 @@ export function SideMenu({
               >
                 <X className="h-5 w-5" />
               </button>
+            </div>
+
+            <div className="border-b border-sidebar-border px-4 py-3">
+              <WorkspaceSwitcher current="cockpit" />
             </div>
 
             <nav className="flex flex-col gap-1.5 overflow-y-auto px-4 py-5">
