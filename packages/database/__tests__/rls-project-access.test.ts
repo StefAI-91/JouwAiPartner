@@ -65,7 +65,10 @@ async function seedUser(
 }
 
 describeWithDb("RLS: DevHub project access (DH-017)", () => {
-  const svc = getTestClient();
+  // Defer client init to beforeAll: even with describe.skip vitest evaluates
+  // the describe callback body, so calling getTestClient() here would throw
+  // when env vars are absent (e.g. in the pre-push hook).
+  let svc: ReturnType<typeof getTestClient>;
 
   let admin: { id: string; email: string };
   let memberA: { id: string; email: string };
@@ -76,6 +79,7 @@ describeWithDb("RLS: DevHub project access (DH-017)", () => {
   let memberBClient: SupabaseClient;
 
   beforeAll(async () => {
+    svc = getTestClient();
     // ── Clean any stale rows from prior runs ──
     await svc.from("issue_activity").delete().in("issue_id", [RLS_IDS.issueA, RLS_IDS.issueB]);
     await svc.from("issue_comments").delete().in("issue_id", [RLS_IDS.issueA, RLS_IDS.issueB]);
