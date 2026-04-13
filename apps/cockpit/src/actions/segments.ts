@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
+import { isAdmin } from "@repo/auth/access";
 import {
   linkSegmentToProject,
   removeSegmentTag,
@@ -27,6 +28,8 @@ async function requireAuth() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) return null;
+  if (!(await isAdmin(user.id))) return null;
   return user;
 }
 

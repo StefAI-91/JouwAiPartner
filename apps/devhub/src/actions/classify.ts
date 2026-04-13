@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getIssueById } from "@repo/database/queries/issues";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import { updateIssue, insertActivity } from "@repo/database/mutations/issues";
 import { runIssueClassifier } from "@repo/ai/agents/issue-classifier";
 
@@ -73,6 +74,15 @@ export async function classifyIssueAction(
   const parsed = classifySchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig issue ID" };
 
+  const target = await getIssueById(parsed.data.id);
+  if (!target) return { error: "Issue niet gevonden" };
+  try {
+    await assertProjectAccess(user.id, target.project_id);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Issue niet gevonden" };
+    throw e;
+  }
+
   try {
     const result = await classifyIssueCore(parsed.data.id, user.id);
     if ("error" in result) return result;
@@ -114,6 +124,13 @@ export async function bulkReclassifyAction(
 
   const parsed = bulkClassifySchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig project ID" };
+
+  try {
+    await assertProjectAccess(user.id, parsed.data.projectId);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
+    throw e;
+  }
 
   try {
     const { listIssues } = await import("@repo/database/queries/issues");

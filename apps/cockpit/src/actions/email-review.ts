@@ -10,6 +10,7 @@ import {
   rejectEmailSchema,
 } from "@/validations/email-review";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { isAdmin } from "@repo/auth/access";
 
 export async function approveEmailAction(
   input: z.infer<typeof verifyEmailSchema>,
@@ -19,6 +20,7 @@ export async function approveEmailAction(
 
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const result = await verifyEmail(parsed.data.emailId, user.id);
   if ("error" in result) return result;
@@ -42,6 +44,7 @@ export async function approveEmailWithEditsAction(
 
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const result = await verifyEmailWithEdits(
     parsed.data.emailId,
@@ -72,6 +75,7 @@ export async function rejectEmailAction(
 
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const result = await rejectEmail(parsed.data.emailId, user.id, parsed.data.reason);
   if ("error" in result) return result;

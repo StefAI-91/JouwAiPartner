@@ -18,12 +18,14 @@ import {
   emailPartyTypeSchema,
 } from "@/validations/email-links";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { isAdmin } from "@repo/auth/access";
 
 export async function linkEmailProjectAction(
   input: z.infer<typeof emailProjectSchema>,
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = emailProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -43,6 +45,7 @@ export async function unlinkEmailProjectAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = emailProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -62,6 +65,7 @@ export async function updateEmailOrganizationAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = emailOrganizationSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -81,6 +85,7 @@ export async function updateEmailSenderPersonAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = emailSenderPersonSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -99,6 +104,7 @@ export async function updateEmailTypeAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = emailTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -117,6 +123,7 @@ export async function updateEmailPartyTypeAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = emailPartyTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };

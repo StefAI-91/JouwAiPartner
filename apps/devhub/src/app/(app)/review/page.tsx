@@ -1,4 +1,6 @@
+import { notFound, redirect } from "next/navigation";
 import { listAccessibleProjects } from "@repo/database/queries/project-access";
+import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import { getLatestProjectReview } from "@repo/database/queries/project-reviews";
 import { getIssueCounts } from "@repo/database/queries/issues";
 import { ReviewOverview } from "@/components/review/review-overview";
@@ -13,8 +15,9 @@ export default async function ReviewPage({
   const projectId = params.project;
 
   const [user, supabase] = await Promise.all([getAuthenticatedUser(), createPageClient()]);
+  if (!user) redirect("/login");
 
-  const projects = await listAccessibleProjects(user?.id ?? "", supabase);
+  const projects = await listAccessibleProjects(user.id, supabase);
 
   if (!projectId) {
     return (
@@ -24,6 +27,13 @@ export default async function ReviewPage({
         </p>
       </div>
     );
+  }
+
+  try {
+    await assertProjectAccess(user.id, projectId, supabase);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) notFound();
+    throw e;
   }
 
   const [review, counts] = await Promise.all([

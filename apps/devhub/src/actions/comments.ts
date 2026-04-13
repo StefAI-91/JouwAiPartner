@@ -8,12 +8,29 @@ import {
   deleteComment,
   insertActivity,
 } from "@repo/database/mutations/issues";
+import { getIssueById } from "@repo/database/queries/issues";
 import {
   createCommentSchema,
   updateCommentSchema,
   deleteCommentSchema,
 } from "@repo/database/validations/issues";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
+
+async function assertAccessToIssue(
+  userId: string,
+  issueId: string,
+): Promise<{ ok: true } | { error: string }> {
+  const issue = await getIssueById(issueId);
+  if (!issue) return { error: "Issue niet gevonden" };
+  try {
+    await assertProjectAccess(userId, issue.project_id);
+    return { ok: true };
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Issue niet gevonden" };
+    throw e;
+  }
+}
 
 // ── Actions ──
 
@@ -25,6 +42,9 @@ export async function createCommentAction(
 
   const parsed = createCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const access = await assertAccessToIssue(user.id, parsed.data.issue_id);
+  if ("error" in access) return access;
 
   const result = await insertComment({
     issue_id: parsed.data.issue_id,
@@ -53,6 +73,9 @@ export async function updateCommentAction(
   const parsed = updateCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
+  const access = await assertAccessToIssue(user.id, parsed.data.issue_id);
+  if ("error" in access) return access;
+
   const result = await updateComment(parsed.data.id, parsed.data.body);
   if ("error" in result) return { error: "Reactie bijwerken mislukt" };
 
@@ -68,6 +91,9 @@ export async function deleteCommentAction(
 
   const parsed = deleteCommentSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const access = await assertAccessToIssue(user.id, parsed.data.issue_id);
+  if ("error" in access) return access;
 
   const result = await deleteComment(parsed.data.id);
   if ("error" in result) return { error: "Reactie verwijderen mislukt" };

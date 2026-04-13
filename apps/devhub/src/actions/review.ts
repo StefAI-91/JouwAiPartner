@@ -9,6 +9,7 @@ import { getProjectById } from "@repo/database/queries/projects";
 import { saveProjectReview } from "@repo/database/mutations/project-reviews";
 import { runIssueReviewer, type IssueForReview } from "@repo/ai/agents/issue-reviewer";
 import { getAuthenticatedUser, isAuthBypassed } from "@repo/auth/helpers";
+import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 
 const generateReviewSchema = z.object({
   projectId: z.string().uuid(),
@@ -26,6 +27,13 @@ export async function generateProjectReview(
 
   const parsed = generateReviewSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig project ID" };
+
+  try {
+    await assertProjectAccess(user.id, parsed.data.projectId);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
+    throw e;
+  }
 
   try {
     // Use admin client in bypass mode (no user session), otherwise user-scoped client

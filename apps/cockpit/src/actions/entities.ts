@@ -21,6 +21,7 @@ import {
   deleteWithContextSchema,
 } from "@repo/database/validations/entities";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { isAdmin } from "@repo/auth/access";
 
 // ── Helpers ──
 
@@ -42,6 +43,7 @@ export async function updateOrganizationAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateOrganizationSchema.safeParse(cleanInput(input));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -61,6 +63,7 @@ export async function deleteOrganizationAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = deleteSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -80,6 +83,7 @@ export async function updateProjectAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateProjectSchema.safeParse(cleanInput(input));
   if (!parsed.success) {
@@ -104,6 +108,7 @@ export async function deleteProjectAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = deleteSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -123,6 +128,7 @@ export async function updatePersonAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updatePersonSchema.safeParse(cleanInput(input));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -141,6 +147,7 @@ export async function deletePersonAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = deleteSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -159,6 +166,7 @@ export async function createExtractionAction(
 ): Promise<{ success: true; data: { id: string } } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = createExtractionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -182,6 +190,7 @@ export async function updateExtractionAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateExtractionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -201,6 +210,7 @@ export async function deleteExtractionAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = deleteWithContextSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -221,6 +231,7 @@ export async function deleteMeetingAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = deleteSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };

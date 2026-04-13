@@ -1,6 +1,11 @@
 import { createAuthMiddleware } from "@repo/auth/middleware";
 
-export const middleware = createAuthMiddleware();
+export const middleware = createAuthMiddleware({
+  loginPath: "/login",
+  defaultRedirect: "/",
+  requireRole: "admin",
+  forbiddenRedirect: process.env.NEXT_PUBLIC_DEVHUB_URL ?? "/",
+});
 
 export const config = {
   matcher: [

@@ -35,21 +35,18 @@ export type Database = {
           id: string;
           profile_id: string;
           project_id: string;
-          role: string;
         };
         Insert: {
           created_at?: string;
           id?: string;
           profile_id: string;
           project_id: string;
-          role?: string;
         };
         Update: {
           created_at?: string;
           id?: string;
           profile_id?: string;
           project_id?: string;
-          role?: string;
         };
         Relationships: [
           {
@@ -1147,7 +1144,7 @@ export type Database = {
           email: string;
           full_name: string | null;
           id: string;
-          role: string | null;
+          role: "admin" | "member";
           updated_at: string | null;
         };
         Insert: {
@@ -1156,7 +1153,7 @@ export type Database = {
           email: string;
           full_name?: string | null;
           id: string;
-          role?: string | null;
+          role?: "admin" | "member";
           updated_at?: string | null;
         };
         Update: {
@@ -1165,7 +1162,7 @@ export type Database = {
           email?: string;
           full_name?: string | null;
           id?: string;
-          role?: string | null;
+          role?: "admin" | "member";
           updated_at?: string | null;
         };
         Relationships: [];

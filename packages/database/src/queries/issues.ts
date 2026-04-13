@@ -66,10 +66,15 @@ export const ISSUE_SELECT = `
 
 /**
  * List issues with filters, pagination, and priority sorting.
+ *
+ * Scope: supply either `projectId` (single project) or `projectIds` (several
+ * projects — used for members with multi-project access). At least one of
+ * the two must be provided; an empty `projectIds` returns `[]`.
  */
 export async function listIssues(
   params: {
-    projectId: string;
+    projectId?: string;
+    projectIds?: string[];
     status?: string[];
     priority?: string[];
     type?: string[];
@@ -85,7 +90,16 @@ export async function listIssues(
   const limit = params.limit ?? 50;
   const offset = params.offset ?? 0;
 
-  let query = db.from("issues").select(ISSUE_SELECT).eq("project_id", params.projectId);
+  if (params.projectIds && params.projectIds.length === 0) return [];
+
+  let query = db.from("issues").select(ISSUE_SELECT);
+  if (params.projectIds) {
+    query = query.in("project_id", params.projectIds);
+  } else if (params.projectId) {
+    query = query.eq("project_id", params.projectId);
+  } else {
+    return [];
+  }
 
   if (params.status && params.status.length > 0) {
     query = query.in("status", params.status);
@@ -140,7 +154,8 @@ export async function listIssues(
  */
 export async function countFilteredIssues(
   params: {
-    projectId: string;
+    projectId?: string;
+    projectIds?: string[];
     status?: string[];
     priority?: string[];
     type?: string[];
@@ -152,10 +167,16 @@ export async function countFilteredIssues(
 ): Promise<number> {
   const db = client ?? getAdminClient();
 
-  let query = db
-    .from("issues")
-    .select("id", { count: "exact", head: true })
-    .eq("project_id", params.projectId);
+  if (params.projectIds && params.projectIds.length === 0) return 0;
+
+  let query = db.from("issues").select("id", { count: "exact", head: true });
+  if (params.projectIds) {
+    query = query.in("project_id", params.projectIds);
+  } else if (params.projectId) {
+    query = query.eq("project_id", params.projectId);
+  } else {
+    return 0;
+  }
 
   if (params.status && params.status.length > 0) {
     query = query.in("status", params.status);

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
+import { isAdmin } from "@repo/auth/access";
 import { scanAllUnscannedMeetings } from "@repo/ai/pipeline/scan-needs";
 import { updateNeedStatus } from "@repo/database/mutations/extractions";
 
@@ -14,6 +15,7 @@ export async function scanTeamNeedsAction(): Promise<
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const result = await scanAllUnscannedMeetings();
 
@@ -39,6 +41,7 @@ export async function updateNeedStatusAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Unauthorized" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateNeedStatusSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };

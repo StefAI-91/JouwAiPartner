@@ -5,7 +5,11 @@
   "type": "module",
   "exports": {
     "./helpers": "./src/helpers.ts",
-    "./middleware": "./src/middleware.ts"
+    "./middleware": "./src/middleware.ts",
+    "./access": "./src/access.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { listAccessibleProjectIds } from "@repo/auth/access";
 import { getAdminClient } from "../supabase/admin";
 
 export interface AccessibleProject {
@@ -8,8 +9,11 @@ export interface AccessibleProject {
 }
 
 /**
- * List projects accessible to the current user via devhub_project_access.
- * Falls back to all projects if no access rows exist (bootstrap scenario).
+ * List projects accessible to the given user.
+ *
+ * - Admins receive all projects (see `listAccessibleProjectIds` in @repo/auth/access).
+ * - Members receive only the projects linked via `devhub_project_access`.
+ * - No bootstrap-fallback: a member without access rows receives an empty list.
  */
 export async function listAccessibleProjects(
   userId: string,
@@ -17,29 +21,9 @@ export async function listAccessibleProjects(
 ): Promise<AccessibleProject[]> {
   const db = client ?? getAdminClient();
 
-  // Check if user has explicit access rows
-  const { data: accessRows, error: accessError } = await db
-    .from("devhub_project_access")
-    .select("project_id")
-    .eq("profile_id", userId);
+  const projectIds = await listAccessibleProjectIds(userId, db);
+  if (projectIds.length === 0) return [];
 
-  if (accessError) {
-    console.error("[listAccessibleProjects] Error fetching access:", accessError.message);
-    return [];
-  }
-
-  // If no access rows, return all projects (bootstrap / admin fallback)
-  if (!accessRows || accessRows.length === 0) {
-    const { data, error } = await db.from("projects").select("id, name, project_key").order("name");
-
-    if (error) {
-      console.error("[listAccessibleProjects] Error fetching projects:", error.message);
-      return [];
-    }
-    return (data ?? []) as AccessibleProject[];
-  }
-
-  const projectIds = accessRows.map((r) => r.project_id);
   const { data, error } = await db
     .from("projects")
     .select("id, name, project_key")

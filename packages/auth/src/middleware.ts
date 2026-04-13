@@ -4,6 +4,17 @@ import { NextResponse, type NextRequest } from "next/server";
 interface AuthMiddlewareOptions {
   loginPath?: string;
   defaultRedirect?: string;
+  /**
+   * Require this role on `profiles.role` for access. When the user is
+   * authenticated but does not have the required role, the request is
+   * redirected to `forbiddenRedirect`.
+   */
+  requireRole?: "admin" | "member";
+  /**
+   * Absolute or relative URL used when the user is authenticated but lacks
+   * the required role. Defaults to the value of `loginPath` when omitted.
+   */
+  forbiddenRedirect?: string;
 }
 
 /**
@@ -20,14 +31,26 @@ function isAuthBypassed(): boolean {
   );
 }
 
+function redirectTo(request: NextRequest, target: string) {
+  // Absolute URL → redirect directly. Relative → keep host and set pathname.
+  if (/^https?:\/\//i.test(target)) {
+    return NextResponse.redirect(new URL(target));
+  }
+  const url = request.nextUrl.clone();
+  url.pathname = target;
+  url.search = "";
+  return NextResponse.redirect(url);
+}
+
 export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
   const loginPath = options?.loginPath ?? "/login";
   const defaultRedirect = options?.defaultRedirect ?? "/";
+  const requireRole = options?.requireRole;
+  const forbiddenRedirect = options?.forbiddenRedirect ?? loginPath;
 
   return async function middleware(request: NextRequest) {
     // DEV BYPASS: skip all auth checks in development/preview
     if (isAuthBypassed()) {
-      // If they visit /login while bypassed, redirect to home
       if (request.nextUrl.pathname.startsWith(loginPath)) {
         const url = request.nextUrl.clone();
         url.pathname = defaultRedirect;
@@ -43,9 +66,7 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
       if (request.nextUrl.pathname.startsWith(loginPath)) {
         return NextResponse.next({ request });
       }
-      const url = request.nextUrl.clone();
-      url.pathname = loginPath;
-      return NextResponse.redirect(url);
+      return redirectTo(request, loginPath);
     }
 
     let supabaseResponse = NextResponse.next({ request });
@@ -70,15 +91,28 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
     } = await supabase.auth.getUser();
 
     if (!user && !request.nextUrl.pathname.startsWith(loginPath)) {
-      const url = request.nextUrl.clone();
-      url.pathname = loginPath;
-      return NextResponse.redirect(url);
+      return redirectTo(request, loginPath);
     }
 
     if (user && request.nextUrl.pathname.startsWith(loginPath)) {
       const url = request.nextUrl.clone();
       url.pathname = defaultRedirect;
       return NextResponse.redirect(url);
+    }
+
+    // Role gate — only applied when `requireRole` is configured and the user
+    // is authenticated. Performed BEFORE the page renders so no data leaks
+    // for users lacking the role (SEC-153).
+    if (user && requireRole) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.role !== requireRole) {
+        return redirectTo(request, forbiddenRedirect);
+      }
     }
 
     return supabaseResponse;

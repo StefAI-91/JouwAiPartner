@@ -17,6 +17,7 @@ import {
   deleteIssueSchema,
 } from "@repo/database/validations/issues";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 
 // ── Actions ──
 
@@ -28,6 +29,13 @@ export async function createIssueAction(
 
   const parsed = createIssueSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  try {
+    await assertProjectAccess(user.id, parsed.data.project_id);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
+    throw e;
+  }
 
   const result = await insertIssue(parsed.data);
   if ("error" in result) return { error: "Issue aanmaken mislukt" };
@@ -58,6 +66,15 @@ export async function updateIssueAction(
 
   const current = await getIssueById(id);
   if (!current) return { error: "Issue niet gevonden" };
+
+  // Info-leak prevention (SEC-157 / EDGE-150): return "not found" rather
+  // than "no access" so the client can't probe which issues exist.
+  try {
+    await assertProjectAccess(user.id, current.project_id);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Issue niet gevonden" };
+    throw e;
+  }
 
   const updateData: Record<string, unknown> = { ...data };
   if (data.status) {
@@ -168,6 +185,16 @@ export async function deleteIssueAction(
   const parsed = deleteIssueSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
+  const current = await getIssueById(parsed.data.id);
+  if (!current) return { error: "Issue niet gevonden" };
+
+  try {
+    await assertProjectAccess(user.id, current.project_id);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Issue niet gevonden" };
+    throw e;
+  }
+
   const result = await deleteIssue(parsed.data.id);
   if ("error" in result) return { error: "Issue verwijderen mislukt" };
 
@@ -188,6 +215,13 @@ export async function getIssueCountsAction(
 
   const parsed = projectIdSchema.safeParse(projectId);
   if (!parsed.success) return { error: "Ongeldig project ID" };
+
+  try {
+    await assertProjectAccess(user.id, parsed.data);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
+    throw e;
+  }
 
   try {
     const counts = await getIssueCounts(parsed.data);

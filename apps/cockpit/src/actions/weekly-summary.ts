@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
+import { isAdmin } from "@repo/auth/access";
 import { generateWeeklySummary } from "@repo/ai/pipeline/weekly-summary-pipeline";
 
 const generateWeeklySummarySchema = z.object({
@@ -20,6 +21,9 @@ export async function generateWeeklySummaryAction(
 
   if (!user) {
     return { error: "Niet ingelogd." };
+  }
+  if (!(await isAdmin(user.id))) {
+    return { error: "Geen toegang." };
   }
 
   const parsed = generateWeeklySummarySchema.safeParse(input);

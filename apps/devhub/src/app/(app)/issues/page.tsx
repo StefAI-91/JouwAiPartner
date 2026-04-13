@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { createPageClient } from "@repo/auth/helpers";
+import { redirect } from "next/navigation";
+import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
+import { listAccessibleProjectIds } from "@repo/auth/access";
 import { listIssues, getIssueThumbnails, countFilteredIssues } from "@repo/database/queries/issues";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
@@ -26,6 +28,21 @@ export default async function IssuesPage({
   const params = parsed.success ? parsed.data : {};
   const projectId = params.project;
 
+  const [user, supabase] = await Promise.all([getAuthenticatedUser(), createPageClient()]);
+  if (!user) redirect("/login");
+
+  const accessibleIds = await listAccessibleProjectIds(user.id, supabase);
+
+  if (accessibleIds.length === 0) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8">
+        <p className="max-w-md text-center text-sm text-muted-foreground">
+          Je hebt nog geen toegang tot projecten. Vraag een admin om je toe te voegen.
+        </p>
+      </div>
+    );
+  }
+
   if (!projectId) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
@@ -36,10 +53,18 @@ export default async function IssuesPage({
     );
   }
 
+  // Members without access to this specific project get the same empty view
+  // as members selecting an unknown project — no existence hint.
+  if (!accessibleIds.includes(projectId)) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8">
+        <p className="text-sm text-muted-foreground">Geen issues gevonden voor dit project.</p>
+      </div>
+    );
+  }
+
   const currentPage = params.page ?? 1;
   const offset = (currentPage - 1) * PAGE_SIZE;
-
-  const supabase = await createPageClient();
 
   const filterParams = {
     projectId,

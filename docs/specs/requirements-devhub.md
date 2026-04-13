@@ -75,35 +75,64 @@ Totaal: 119 requirements.
 
 ## Security eisen
 
-| ID      | Beschrijving                                                                                         | Bron                  | Sprint |
-| ------- | ---------------------------------------------------------------------------------------------------- | --------------------- | ------ |
-| SEC-101 | RLS enabled op `issues` tabel                                                                        | prd-devhub.md:324     | DH-001 |
-| SEC-102 | RLS policy: authenticated users can SELECT issues                                                    | prd-devhub.md:325-326 | DH-001 |
-| SEC-103 | RLS policy: authenticated users can INSERT issues                                                    | prd-devhub.md:327-328 | DH-001 |
-| SEC-104 | RLS policy: authenticated users can UPDATE issues                                                    | prd-devhub.md:329-330 | DH-001 |
-| SEC-105 | RLS enabled op `issue_comments` tabel                                                                | prd-devhub.md:333     | DH-001 |
-| SEC-106 | RLS policy: authenticated users can SELECT comments                                                  | prd-devhub.md:334-335 | DH-001 |
-| SEC-107 | RLS policy: authenticated users can INSERT comments                                                  | prd-devhub.md:336-337 | DH-001 |
-| SEC-108 | RLS policy: users can UPDATE own comments only (auth.uid() = author_id)                              | prd-devhub.md:338-339 | DH-001 |
-| SEC-109 | RLS enabled op `issue_activity` tabel                                                                | prd-devhub.md:342     | DH-001 |
-| SEC-110 | RLS policy: authenticated users can SELECT activity                                                  | prd-devhub.md:343-344 | DH-001 |
-| SEC-111 | RLS policy: authenticated users can INSERT activity                                                  | prd-devhub.md:345-346 | DH-001 |
-| SEC-112 | RLS enabled op `devhub_project_access` tabel                                                         | prd-devhub.md:349     | DH-001 |
-| SEC-113 | RLS policy: authenticated users can SELECT project access                                            | prd-devhub.md:350-351 | DH-001 |
-| SEC-114 | RLS policy: authenticated users can ALL project access                                               | prd-devhub.md:352-353 | DH-001 |
-| SEC-115 | Status page gebruikt admin client (service role) — issues tabel hoeft niet publiek leesbaar te zijn  | prd-devhub.md:937     | DH-008 |
-| SEC-116 | Status page filtert server-side welke velden naar de client gaan (alleen titel, status, type, datum) | prd-devhub.md:937     | DH-008 |
+| ID      | Beschrijving                                                                                                                                                                                          | Bron                  | Sprint |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------ |
+| SEC-101 | RLS enabled op `issues` tabel                                                                                                                                                                         | prd-devhub.md:324     | DH-001 |
+| SEC-102 | RLS policy: authenticated users can SELECT issues                                                                                                                                                     | prd-devhub.md:325-326 | DH-001 |
+| SEC-103 | RLS policy: authenticated users can INSERT issues                                                                                                                                                     | prd-devhub.md:327-328 | DH-001 |
+| SEC-104 | RLS policy: authenticated users can UPDATE issues                                                                                                                                                     | prd-devhub.md:329-330 | DH-001 |
+| SEC-105 | RLS enabled op `issue_comments` tabel                                                                                                                                                                 | prd-devhub.md:333     | DH-001 |
+| SEC-106 | RLS policy: authenticated users can SELECT comments                                                                                                                                                   | prd-devhub.md:334-335 | DH-001 |
+| SEC-107 | RLS policy: authenticated users can INSERT comments                                                                                                                                                   | prd-devhub.md:336-337 | DH-001 |
+| SEC-108 | RLS policy: users can UPDATE own comments only (auth.uid() = author_id)                                                                                                                               | prd-devhub.md:338-339 | DH-001 |
+| SEC-109 | RLS enabled op `issue_activity` tabel                                                                                                                                                                 | prd-devhub.md:342     | DH-001 |
+| SEC-110 | RLS policy: authenticated users can SELECT activity                                                                                                                                                   | prd-devhub.md:343-344 | DH-001 |
+| SEC-111 | RLS policy: authenticated users can INSERT activity                                                                                                                                                   | prd-devhub.md:345-346 | DH-001 |
+| SEC-112 | RLS enabled op `devhub_project_access` tabel                                                                                                                                                          | prd-devhub.md:349     | DH-001 |
+| SEC-113 | RLS policy: authenticated users can SELECT project access                                                                                                                                             | prd-devhub.md:350-351 | DH-001 |
+| SEC-114 | RLS policy: authenticated users can ALL project access                                                                                                                                                | prd-devhub.md:352-353 | DH-001 |
+| SEC-115 | Status page gebruikt admin client (service role) — issues tabel hoeft niet publiek leesbaar te zijn                                                                                                   | prd-devhub.md:937     | DH-008 |
+| SEC-116 | Status page filtert server-side welke velden naar de client gaan (alleen titel, status, type, datum)                                                                                                  | prd-devhub.md:937     | DH-008 |
+| SEC-150 | Access-check functies (`isAdmin`, `requireAdmin`, `assertProjectAccess`, `listAccessibleProjectIds`) zijn de enige plek waar rol-logica leeft; app-code doet nooit inline `profile.role === 'admin'`. | DH-013-020 index      | DH-014 |
+| SEC-151 | Helpers staan onder `packages/auth/src/` en zijn server-only (gebruiken `@repo/database/supabase/server` of admin client); nooit in Client Components geïmporteerd.                                   | DH-013-020 index      | DH-014 |
+| SEC-152 | `assertProjectAccess` faalt default-deny bij ontbrekende user-sessie (null/undefined userId → throw, geen silent true).                                                                               | DH-013-020 index      | DH-014 |
+| SEC-153 | Cockpit middleware-redirect gebeurt vóór data-ophalen; geen query-leak naar non-admins tijdens de redirect-flow.                                                                                      | DH-013-020 index      | DH-015 |
+| SEC-154 | DevHub issue list toont alleen issues uit projecten beschikbaar via `listAccessibleProjectIds(userId)`.                                                                                               | DH-013-020 index      | DH-016 |
+| SEC-155 | Issue detail page rendert `notFound()` (404) wanneer de user geen toegang heeft tot het project.                                                                                                      | DH-013-020 index      | DH-016 |
+| SEC-156 | `createIssueAction` controleert access op `project_id` in payload vóór insert.                                                                                                                        | DH-013-020 index      | DH-016 |
+| SEC-157 | `updateIssueAction` en `deleteIssueAction` controleren access op basis van bestaand `issue.project_id` (info-leak prevention via "niet gevonden").                                                    | DH-013-020 index      | DH-016 |
+| SEC-158 | Comments CRUD controleren project-access via het gerelateerde issue.                                                                                                                                  | DH-013-020 index      | DH-016 |
+| SEC-159 | `insertActivity` calls gebeuren pas na succesvolle access-assertie.                                                                                                                                   | DH-013-020 index      | DH-016 |
+| SEC-160 | Triage/counts/classify/review-actions respecteren access-check per project.                                                                                                                           | DH-013-020 index      | DH-016 |
 
 ## Rollen en permissies
 
-| ID       | Beschrijving                                                                                                  | Bron                  | Sprint |
-| -------- | ------------------------------------------------------------------------------------------------------------- | --------------------- | ------ |
-| AUTH-101 | Rol `admin`: CRUD issues, importeren, projecten beheren, gebruikers uitnodigen — alle projecten               | prd-devhub.md:110     | DH-003 |
-| AUTH-102 | Rol `member`: issues bekijken, status wijzigen, comments plaatsen, aan zichzelf toewijzen — alle projecten    | prd-devhub.md:111     | DH-003 |
-| AUTH-103 | Rol `guest`: issues bekijken en status wijzigen voor toegewezen projecten (voorbereid, niet actief in fase 1) | prd-devhub.md:112     | DH-001 |
-| AUTH-104 | Fase 1 simplificatie: admin en member zien alles, guest role voorbereid in datamodel maar niet geactiveerd    | prd-devhub.md:114     | DH-003 |
-| AUTH-105 | Supabase Auth — zelfde instance als cockpit, email/password login                                             | prd-devhub.md:802-803 | DH-003 |
-| AUTH-106 | Middleware route guard op alle routes behalve `/login`                                                        | prd-devhub.md:804     | DH-003 |
+> **Vervangen in DH-013**: `AUTH-101 / AUTH-102 / AUTH-103 / AUTH-104` beschreven een 3-rollen model (`admin` / `member` / `guest`) met "iedereen ziet alles". Dit model is vervangen door `AUTH-150..158` (2 rollen, admin impliciet alles, members per-project access). De oude IDs blijven gearchiveerd voor traceability maar zijn niet meer actief.
+
+| ID           | Beschrijving                                                                                                                     | Bron                  | Sprint |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------ |
+| ~~AUTH-101~~ | _Vervangen door AUTH-150..158 in DH-013_                                                                                         | prd-devhub.md:110     | DH-003 |
+| ~~AUTH-102~~ | _Vervangen door AUTH-150..158 in DH-013_                                                                                         | prd-devhub.md:111     | DH-003 |
+| ~~AUTH-103~~ | _Ingetrokken in DH-013 (geen `guest` rol meer)_                                                                                  | prd-devhub.md:112     | DH-001 |
+| ~~AUTH-104~~ | _Vervangen door AUTH-152 (admin impliciet alles) in DH-013_                                                                      | prd-devhub.md:114     | DH-003 |
+| AUTH-105     | Supabase Auth — zelfde instance als cockpit (login-methode herzien in DH-018 → magic link)                                       | prd-devhub.md:802-803 | DH-003 |
+| AUTH-106     | Middleware route guard op alle routes behalve `/login`                                                                           | prd-devhub.md:804     | DH-003 |
+| AUTH-150     | Het platform kent exact twee rollen: `admin` en `member`. Geen derde tier.                                                       | DH-013-020 index      | DH-013 |
+| AUTH-151     | Rol leeft uitsluitend op `profiles.role`; `devhub_project_access` bevat géén `role` kolom meer.                                  | DH-013-020 index      | DH-013 |
+| AUTH-152     | Admins krijgen impliciet toegang tot alle DevHub-projecten zonder `devhub_project_access` rows.                                  | DH-013-020 index      | DH-013 |
+| AUTH-153     | Stef (stef@jouwaipartner.nl) en Wouter (wouter@jouwaipartner.nl) zijn als `admin` geseed (idempotent).                           | DH-013-020 index      | DH-013 |
+| AUTH-154     | Alle andere bestaande profiles behouden hun rol; ontbrekende/ongeldige waarden worden `'member'`.                                | DH-013-020 index      | DH-013 |
+| DATA-200     | Kolom `devhub_project_access.role` wordt via migratie gedropt.                                                                   | DH-013-020 index      | DH-013 |
+| DATA-201     | `profiles.role` heeft CHECK constraint: alleen `'admin'` of `'member'`.                                                          | DH-013-020 index      | DH-013 |
+| DATA-202     | DB-trigger garandeert dat `profiles` altijd ≥ 1 rij met `role = 'admin'` bevat.                                                  | DH-013-020 index      | DH-013 |
+| RULE-150     | De laatste admin kan niet gedemoot, gedeactiveerd of verwijderd worden zonder dat er al een andere admin is.                     | DH-013-020 index      | DH-013 |
+| AUTH-155     | Helper `isAdmin(userId)` retourneert `true` desda `profiles.role = 'admin'` voor de gegeven userId.                              | DH-013-020 index      | DH-014 |
+| AUTH-156     | Helper `requireAdmin()` haalt de huidige user op en redirect naar `/login` bij geen sessie of geen admin-rol.                    | DH-013-020 index      | DH-014 |
+| AUTH-157     | `assertProjectAccess(userId, projectId)` slaagt zonder row-check voor admins; members vereisen bestaande row.                    | DH-013-020 index      | DH-014 |
+| AUTH-158     | `listAccessibleProjectIds(userId)` → admins: alle `projects.id`; members: alleen IDs in `devhub_project_access` (geen fallback). | DH-013-020 index      | DH-014 |
+| AUTH-160     | Cockpit middleware staat toegang alleen toe voor `profiles.role = 'admin'`; members → 302 naar DevHub-URL.                       | DH-013-020 index      | DH-015 |
+| AUTH-161     | Members die Cockpit bezoeken krijgen een duidelijke redirect (geen 500 of lege pagina).                                          | DH-013-020 index      | DH-015 |
+| AUTH-162     | Cockpit Server Actions doen een `isAdmin()` check (defense-in-depth) en retourneren `{ error: "Geen toegang" }` voor non-admins. | DH-013-020 index      | DH-015 |
 
 ## Functionele eisen
 
@@ -165,6 +194,7 @@ Totaal: 119 requirements.
 | FUNC-154 | Query: getProjectByKey (status page)                                                                            | prd-devhub.md:932     | DH-002 |
 | FUNC-155 | Query: listPublicIssues (alleen titel, status, type, created_at, closed_at)                                     | prd-devhub.md:933     | DH-002 |
 | FUNC-156 | Query: getPublicIssueCounts (open, resolved_this_month)                                                         | prd-devhub.md:934     | DH-002 |
+| FUNC-160 | Project-selector toont alleen projecten geretourneerd door `listAccessibleProjectIds(userId)` (admins: alle).   | DH-013-020 index      | DH-016 |
 
 ## UI/UX eisen
 
@@ -206,6 +236,7 @@ Totaal: 119 requirements.
 | UI-134 | Status page: responsive (mobiel en desktop)                                                                                                   | prd-devhub.md:926     | DH-008 |
 | UI-135 | Status page route: /[project_key]                                                                                                             | prd-devhub.md:879     | DH-008 |
 | UI-136 | Status page fallback: / toont 404 of "Voer een project key in"                                                                                | prd-devhub.md:877     | DH-008 |
+| UI-150 | Cockpit `forbiddenRedirect` is configureerbaar via env `NEXT_PUBLIC_DEVHUB_URL` (fallback `/`).                                               | DH-013-020 index      | DH-015 |
 
 ## Business rules
 
@@ -242,12 +273,14 @@ Totaal: 119 requirements.
 
 ## Edge cases
 
-| ID       | Beschrijving                                                                             | Bron              | Sprint |
-| -------- | ---------------------------------------------------------------------------------------- | ----------------- | ------ |
-| EDGE-101 | Userback due date 1970-01-01 is sentinel voor "geen due date" — moet weggefilterd worden | prd-devhub.md:631 | DH-007 |
-| EDGE-102 | Userback description kan te lang zijn voor title — neem regel 1 of laat AI genereren     | prd-devhub.md:603 | DH-007 |
-| EDGE-103 | AI classificatie bij vage beschrijving: classificeer altijd, geef lage confidence        | prd-devhub.md:462 | DH-006 |
-| EDGE-104 | Status page: ongeldige project_key toont 404                                             | prd-devhub.md:877 | DH-008 |
+| ID       | Beschrijving                                                                                    | Bron              | Sprint |
+| -------- | ----------------------------------------------------------------------------------------------- | ----------------- | ------ |
+| EDGE-101 | Userback due date 1970-01-01 is sentinel voor "geen due date" — moet weggefilterd worden        | prd-devhub.md:631 | DH-007 |
+| EDGE-102 | Userback description kan te lang zijn voor title — neem regel 1 of laat AI genereren            | prd-devhub.md:603 | DH-007 |
+| EDGE-103 | AI classificatie bij vage beschrijving: classificeer altijd, geef lage confidence               | prd-devhub.md:462 | DH-006 |
+| EDGE-104 | Status page: ongeldige project_key toont 404                                                    | prd-devhub.md:877 | DH-008 |
+| EDGE-150 | Navigatie naar `/issues/[id]` buiten toegang rendert 404 (niet 403) — geen hint over bestaan.   | DH-013-020 index  | DH-016 |
+| EDGE-151 | Member zonder toegang tot een enkel project krijgt een empty state met uitleg, geen lege lijst. | DH-013-020 index  | DH-016 |
 
 ## Performance eisen
 

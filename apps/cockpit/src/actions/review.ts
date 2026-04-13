@@ -16,6 +16,7 @@ import {
   rejectMeetingSchema,
 } from "@/validations/review";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { isAdmin } from "@repo/auth/access";
 
 // ── Helpers ──
 
@@ -29,6 +30,7 @@ export async function approveMeetingAction(
 
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const result = await verifyMeeting(parsed.data.meetingId, user.id);
   if ("error" in result) return result;
@@ -55,6 +57,7 @@ export async function approveMeetingWithEditsAction(
 
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   // Save summary edit before verification (so it's persisted regardless)
   if (parsed.data.summaryEdit) {
@@ -97,6 +100,7 @@ export async function rejectMeetingAction(
 
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Unauthorized" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const result = await rejectMeeting(parsed.data.meetingId, user.id);
   if ("error" in result) return result;

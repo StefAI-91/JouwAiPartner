@@ -50,6 +50,7 @@ import {
   regenerateSchema,
 } from "@repo/database/validations/meetings";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { isAdmin } from "@repo/auth/access";
 
 // ── Actions ──
 
@@ -58,6 +59,7 @@ export async function updateMeetingTitleAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateTitleSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -76,6 +78,7 @@ export async function updateMeetingSummaryAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateSummarySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -95,6 +98,7 @@ export async function updateMeetingTypeAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateMeetingTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig meeting type" };
@@ -113,6 +117,7 @@ export async function updatePartyTypeAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updatePartyTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig party type" };
@@ -131,6 +136,7 @@ export async function updateMeetingOrganizationAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateOrganizationSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -149,6 +155,7 @@ export async function linkMeetingProjectAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = meetingProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -167,6 +174,7 @@ export async function unlinkMeetingProjectAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = meetingProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -185,6 +193,7 @@ export async function linkMeetingParticipantAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = meetingParticipantSchema.safeParse(input);
   if (!parsed.success) {
@@ -205,6 +214,7 @@ export async function unlinkMeetingParticipantAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = meetingParticipantSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -224,6 +234,7 @@ export async function updateMeetingMetadataAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = updateMeetingMetadataSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -293,6 +304,7 @@ export async function regenerateMeetingAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = regenerateSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -459,6 +471,7 @@ export async function reprocessMeetingAction(
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = regenerateSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -567,6 +580,7 @@ export async function createOrganizationAction(
 ): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = createOrganizationSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -588,6 +602,7 @@ export async function createProjectAction(
 ): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = createProjectSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -609,6 +624,7 @@ export async function createPersonAction(
 ): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   const parsed = createPersonSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };

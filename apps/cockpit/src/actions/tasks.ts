@@ -16,6 +16,7 @@ import {
   taskIdSchema,
 } from "@repo/database/validations/tasks";
 import { getAuthenticatedUserId } from "@repo/auth/helpers";
+import { isAdmin } from "@repo/auth/access";
 
 // ── Actions ──
 
@@ -29,6 +30,7 @@ export async function promoteToTaskAction(
 
   const userId = await getAuthenticatedUserId();
   if (!userId) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(userId))) return { error: "Geen toegang" };
 
   const supabase = await createClient();
 
@@ -65,6 +67,7 @@ export async function updateTaskAction(
 
   const userId = await getAuthenticatedUserId();
   if (!userId) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(userId))) return { error: "Geen toegang" };
 
   const supabase = await createClient();
   const result = await updateTask(
@@ -93,6 +96,7 @@ export async function completeTaskAction(
 
   const userId = await getAuthenticatedUserId();
   if (!userId) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(userId))) return { error: "Geen toegang" };
 
   const supabase = await createClient();
   const result = await completeTask(parsed.data.taskId, supabase);
@@ -113,6 +117,7 @@ export async function dismissTaskAction(
 
   const userId = await getAuthenticatedUserId();
   if (!userId) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(userId))) return { error: "Geen toegang" };
 
   const supabase = await createClient();
   const result = await dismissTask(parsed.data.taskId, supabase);

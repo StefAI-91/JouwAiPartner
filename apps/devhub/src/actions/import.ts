@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { isAdmin, assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import {
   getUserbackSyncCursor,
   countUserbackIssues,
@@ -48,6 +49,16 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
   const { projectId, limit } = parsed.data;
+
+  // Userback sync pulls external data + writes across issues — admin-only.
+  try {
+    await assertProjectAccess(user.id, projectId);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
+    throw e;
+  }
+  if (!(await isAdmin(user.id))) return { error: "Alleen admins kunnen syncen" };
+
   const admin = getAdminClient();
 
   try {
@@ -108,6 +119,14 @@ export async function getSyncStatus(
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
   const { projectId } = parsed.data;
+
+  try {
+    await assertProjectAccess(user.id, projectId);
+  } catch (e) {
+    if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
+    throw e;
+  }
+
   const admin = getAdminClient();
 
   try {
@@ -137,6 +156,9 @@ export async function backfillMedia(): Promise<
 > {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
+
+  // Backfill touches all Userback issues across projects → admin-only.
+  if (!(await isAdmin(user.id))) return { error: "Alleen admins kunnen backfillen" };
 
   const admin = getAdminClient();
 
