@@ -10,6 +10,9 @@ const IDS = {
 
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createServerMock());
+vi.mock("@repo/auth/access", () => ({
+  isAdmin: vi.fn().mockResolvedValue(true),
+}));
 
 const mockGenerateProjectSummaries = vi.fn();
 const mockGenerateOrgSummaries = vi.fn();
