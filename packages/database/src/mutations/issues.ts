@@ -27,6 +27,7 @@ export interface InsertIssueData {
   ai_context?: Record<string, unknown>;
   ai_result?: Record<string, unknown>;
   ai_executable?: boolean;
+  created_at?: string;
 }
 
 export interface UpdateIssueData {

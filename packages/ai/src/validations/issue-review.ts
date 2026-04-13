@@ -30,6 +30,18 @@ export const IssueReviewSchema = z.object({
     ),
   health_label: z.enum(["healthy", "needs_attention", "critical"]),
   summary: z.string().describe("Samenvatting van de algehele status van het project in 2-4 zinnen"),
+  frontend_summary: z
+    .string()
+    .nullable()
+    .describe(
+      "Samenvatting van de frontend-situatie in 2-3 zinnen: welke bugs/issues spelen, welk component is het meest geraakt, wat is de urgentie. Null als er geen frontend issues zijn.",
+    ),
+  backend_summary: z
+    .string()
+    .nullable()
+    .describe(
+      "Samenvatting van de backend/API/database-situatie in 2-3 zinnen: welke bugs/issues spelen, wat is de urgentie. Null als er geen backend issues zijn.",
+    ),
   patterns: z
     .array(PatternSchema)
     .describe("Terugkerende patronen in de issues (bijv. veel bugs in dezelfde component)"),
@@ -38,7 +50,9 @@ export const IssueReviewSchema = z.object({
     .describe("Risico's die aandacht nodig hebben (bijv. oude issues, ontbrekende assignees)"),
   action_items: z
     .array(ActionItemSchema)
-    .describe("Concrete aanbevelingen om de projectgezondheid te verbeteren"),
+    .describe(
+      "Top 3 concrete aanbevelingen om de projectgezondheid te verbeteren — alleen de belangrijkste, maximaal 3",
+    ),
 });
 
 export type IssueReviewOutput = z.infer<typeof IssueReviewSchema>;

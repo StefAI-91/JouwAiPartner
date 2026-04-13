@@ -203,7 +203,7 @@ export function isTestSubmission(description: string | null | undefined): boolea
 const FEEDBACK_TYPE_MAP: Record<string, string> = {
   Bug: "bug",
   Idea: "feature_request",
-  General: "question",
+  General: "bug",
 };
 
 const PRIORITY_MAP: Record<string, string> = {
@@ -292,7 +292,7 @@ export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string
     project_id: projectId,
     title: extractTitle(description),
     description,
-    type: FEEDBACK_TYPE_MAP[item.feedback_type] ?? "question",
+    type: FEEDBACK_TYPE_MAP[item.feedback_type] ?? "bug",
     priority: PRIORITY_MAP[item.priority] ?? "medium",
     status: STATUS_MAP[item.status] ?? "triage",
     reporter_email: item.email ?? null,
@@ -300,6 +300,7 @@ export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string
     source: "userback",
     userback_id: String(item.id),
     source_url: item.page_url ?? null,
+    created_at: item.created_at,
     source_metadata: {
       screenshot_url: screenshotUrl,
       screenshot_urls: screenshots.map((s) => s.url).filter(Boolean),

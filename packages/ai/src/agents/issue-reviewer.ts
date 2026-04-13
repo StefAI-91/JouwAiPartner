@@ -51,14 +51,18 @@ Identificeer:
 - Potentiele duplicaten (vergelijkbare titels)
 
 ## ACTIEPUNTEN
-Geef concrete aanbevelingen:
+Geef MAXIMAAL 3 concrete aanbevelingen — alleen de belangrijkste:
 - Wie moet wat oppakken (verwijs naar issue numbers)
 - Welke issues eerst (prioritering)
 - Welke issues kunnen worden samengevoegd of gesloten
-- Procesverbeteringen (bijv. "issues komen binnen zonder beschrijving")
+
+## AREA-SAMENVATTINGEN
+Schrijf een korte samenvatting (2-3 zinnen) voor:
+- **Frontend** (component: frontend): welke bugs/issues spelen, welk onderdeel is het meest geraakt, wat is de urgentie. Als er geen frontend issues zijn, schrijf "Geen openstaande frontend issues."
+- **Backend** (component: backend, api, database): welke bugs/issues spelen, wat is de urgentie. Als er geen backend issues zijn, schrijf "Geen openstaande backend issues."
 
 Wees specifiek en verwijs altijd naar issue numbers (#N). Vermijd vage aanbevelingen.
-Geef maximaal 5 patronen, 5 risico's en 8 actiepunten — focus op de belangrijkste.`;
+Geef maximaal 5 patronen, 5 risico's en 3 actiepunten — focus op de belangrijkste.`;
 
 export async function runIssueReviewer(
   projectName: string,

@@ -16,9 +16,19 @@ De pageUrl geeft context over WAAR in de applicatie het probleem zit.
 Je bepaalt:
 
 1. TYPE: wat voor soort issue is dit?
-   - bug: iets werkt niet, is kapot, crasht, toont verkeerde data, layout is broken
-   - feature_request: gebruiker wil iets nieuws, een verbetering, of een aanpassing
-   - question: gebruiker snapt iets niet, is verward, stelt een vraag
+   - bug: iets werkt niet zoals bedoeld. Denk aan: layout/styling fouten, tekst die uitloopt, verkeerde data, kapotte knoppen, ontbrekende elementen, foutmeldingen, crashes. OOK als de gebruiker het niet expliciet een "bug" noemt maar WEL beschrijft dat iets er verkeerd uitziet of niet goed werkt.
+   - feature_request: gebruiker wil iets VERANDEREN, verwijderen, toevoegen, of verbeteren. Denk aan: "dit mag er uit", "kan dit anders", "voeg X toe", "maak dit groter/kleiner". Het huidige gedrag is niet per se kapot, maar de gebruiker wil iets anders.
+   - question: gebruiker stelt EXPLICIET een vraag (met vraagteken of "hoe doe ik..."). ALLEEN classificeren als question als er daadwerkelijk een vraag wordt gesteld. Korte observaties zonder vraagteken zijn GEEN vragen.
+
+   VUISTREGEL: bij twijfel tussen bug en question → kies bug. Bij twijfel tussen feature_request en question → kies feature_request. Question is ALLEEN voor echte vragen.
+
+   VOORBEELDEN:
+   - "De titel loopt hier uit de div" → bug (layout fout)
+   - "Hier gaat iets mis in de opmaak" → bug (visueel probleem)
+   - "Deze tekst mag er uit" → feature_request (aanpassing gewenst)
+   - "Kan ik hier ook filteren?" → feature_request (nieuwe functie gewenst)
+   - "Hoe werkt de export?" → question (echte vraag)
+   - "Snap de workflow niet" → question (verwarring)
 
    LET OP: Userback "General" items kunnen bug, feature_request OF question zijn — bepaal op basis van de beschrijving.
    Userback "Bug" -> meestal bug, maar check of het niet eigenlijk een feature_request is.

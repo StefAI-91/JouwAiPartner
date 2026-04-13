@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutList, Sparkles, Settings } from "lucide-react";
+import { LayoutDashboard, LayoutList, Sparkles, Settings } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import { useEffect, useState, useTransition } from "react";
 import { NAV_ITEMS, issueHref, type StatusCounts } from "./sidebar-constants";
@@ -45,6 +45,18 @@ export function SidebarNav({
   return (
     <>
       <nav className="flex-1 space-y-0.5 overflow-auto px-2 py-2">
+        <Link
+          href={projectId ? `/?project=${projectId}` : "/"}
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            linkClassName,
+            pathname === "/" && "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+          )}
+        >
+          <LayoutDashboard className={iconSize} />
+          Dashboard
+        </Link>
         <Link
           href={issueHref(projectId)}
           onClick={onNavigate}

@@ -13,6 +13,8 @@ export interface InsertProjectReviewData {
   health_score: number;
   health_label: string;
   summary: string;
+  frontend_summary?: string | null;
+  backend_summary?: string | null;
   patterns: unknown[];
   risks: unknown[];
   action_items: unknown[];
@@ -35,7 +37,8 @@ export async function saveProjectReview(
     .select(
       `id, project_id, generated_by, total_issues,
        issues_by_status, issues_by_priority, issues_by_type, avg_resolution_days,
-       health_score, health_label, summary, patterns, risks, action_items,
+       health_score, health_label, summary, frontend_summary, backend_summary,
+       patterns, risks, action_items,
        model_used, created_at`,
     )
     .single();

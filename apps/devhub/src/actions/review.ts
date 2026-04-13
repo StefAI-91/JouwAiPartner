@@ -104,12 +104,15 @@ export async function generateProjectReview(
       health_score: result.health_score,
       health_label: result.health_label,
       summary: result.summary,
+      frontend_summary: result.frontend_summary,
+      backend_summary: result.backend_summary,
       patterns: result.patterns,
       risks: result.risks,
       action_items: result.action_items,
     });
 
     revalidatePath("/review");
+    revalidatePath("/");
     return { success: true, reviewId: review.id };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

@@ -244,6 +244,31 @@ export async function getIssueCounts(
 }
 
 /**
+ * Count critical issues without an assignee (open statuses only).
+ */
+export async function countCriticalUnassigned(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<number> {
+  const db = client ?? getAdminClient();
+
+  const { count, error } = await db
+    .from("issues")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", projectId)
+    .eq("severity", "critical")
+    .is("assigned_to", null)
+    .not("status", "in", '("done","cancelled")');
+
+  if (error) {
+    console.error("[countCriticalUnassigned] Database error:", error.message);
+    return 0;
+  }
+
+  return count ?? 0;
+}
+
+/**
  * List comments for an issue, sorted by created_at ASC with pagination.
  */
 export async function listIssueComments(

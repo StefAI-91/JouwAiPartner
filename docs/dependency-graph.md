@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 241 |
-| Exported functions/constants | 410 |
+| Exported functions/constants | 412 |
 | Exported types/interfaces | 111 |
-| Cross-package imports | 317 |
+| Cross-package imports | 321 |
 | Critical integration points (3+ packages) | 6 |
 
 ## Package Dependency Flow
@@ -46,7 +46,7 @@ Which layers depend on which packages:
 
 | Layer | database | ai | auth | ui | mcp | Total |
 |-------|---|---|---|---|---|-------|
-| other | 218 | 50 | 19 | 29 | 1 | 317 |
+| other | 221 | 50 | 20 | 29 | 1 | 321 |
 
 ## Critical Integration Points
 

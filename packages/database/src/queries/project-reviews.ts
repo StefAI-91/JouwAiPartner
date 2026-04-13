@@ -32,6 +32,8 @@ export interface ProjectReviewRow {
     related_issues: number[];
     effort: string;
   }>;
+  frontend_summary: string | null;
+  backend_summary: string | null;
   model_used: string;
   created_at: string;
 }
@@ -39,7 +41,8 @@ export interface ProjectReviewRow {
 const REVIEW_SELECT = `
   id, project_id, generated_by, total_issues,
   issues_by_status, issues_by_priority, issues_by_type, avg_resolution_days,
-  health_score, health_label, summary, patterns, risks, action_items,
+  health_score, health_label, summary, frontend_summary, backend_summary,
+  patterns, risks, action_items,
   model_used, created_at
 ` as const;
 
@@ -89,4 +92,22 @@ export async function listProjectReviews(
     return [];
   }
   return (data ?? []) as unknown as ProjectReviewRow[];
+}
+
+/**
+ * Get the health score trend by comparing the two most recent reviews.
+ */
+export async function getHealthTrend(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<{ current: number; previous: number | null; delta: number | null } | null> {
+  const reviews = await listProjectReviews(projectId, { limit: 2 }, client);
+
+  if (reviews.length === 0) return null;
+
+  const current = reviews[0].health_score;
+  const previous = reviews.length >= 2 ? reviews[1].health_score : null;
+  const delta = previous !== null ? current - previous : null;
+
+  return { current, previous, delta };
 }
