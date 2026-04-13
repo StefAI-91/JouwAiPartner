@@ -3,9 +3,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../../src/agents/email-classifier", () => ({
   runEmailClassifier: vi.fn(),
 }));
-vi.mock("../../src/agents/email-extractor", () => ({
-  runEmailExtractor: vi.fn(),
-}));
 vi.mock("../../src/pipeline/context-injection", () => ({
   buildEntityContext: vi.fn(),
 }));
@@ -16,7 +13,6 @@ vi.mock("@repo/database/mutations/emails", () => ({
   updateEmailClassification: vi.fn(),
   updateEmailSenderPerson: vi.fn(),
   linkEmailProject: vi.fn(),
-  insertEmailExtractions: vi.fn(),
 }));
 vi.mock("@repo/database/queries/people", () => ({
   findPeopleByEmails: vi.fn(),
@@ -36,26 +32,22 @@ vi.mock("@repo/database/supabase/admin", () => ({
 
 import { processEmail } from "../../src/pipeline/email-pipeline";
 import { runEmailClassifier } from "../../src/agents/email-classifier";
-import { runEmailExtractor } from "../../src/agents/email-extractor";
 import { buildEntityContext } from "../../src/pipeline/context-injection";
 import { resolveOrganization } from "../../src/pipeline/entity-resolution";
 import {
   updateEmailClassification,
   updateEmailSenderPerson,
   linkEmailProject,
-  insertEmailExtractions,
 } from "@repo/database/mutations/emails";
 import { findPeopleByEmails } from "@repo/database/queries/people";
 import { embedText } from "../../src/embeddings";
 
 const mockClassifier = runEmailClassifier as ReturnType<typeof vi.fn>;
-const mockExtractor = runEmailExtractor as ReturnType<typeof vi.fn>;
 const mockEntityContext = buildEntityContext as ReturnType<typeof vi.fn>;
 const mockResolveOrg = resolveOrganization as ReturnType<typeof vi.fn>;
 const mockUpdateClassification = updateEmailClassification as ReturnType<typeof vi.fn>;
 const mockUpdateSenderPerson = updateEmailSenderPerson as ReturnType<typeof vi.fn>;
 const mockLinkProject = linkEmailProject as ReturnType<typeof vi.fn>;
-const mockInsertExtractions = insertEmailExtractions as ReturnType<typeof vi.fn>;
 const mockFindPeople = findPeopleByEmails as ReturnType<typeof vi.fn>;
 const mockEmbedText = embedText as ReturnType<typeof vi.fn>;
 
@@ -99,21 +91,6 @@ function setupHappyPath() {
   mockFindPeople.mockResolvedValue(new Map([["jan@klantbv.nl", "person-1"]]));
   mockUpdateSenderPerson.mockResolvedValue({ success: true });
   mockLinkProject.mockResolvedValue({ success: true });
-  mockExtractor.mockResolvedValue({
-    extractions: [
-      {
-        type: "project_update",
-        content: "Voortgang op alle fronten",
-        confidence: 0.85,
-        source_ref: "We hebben voortgang geboekt",
-        project: "Klantportaal",
-        assignee: null,
-        urgency: "medium",
-      },
-    ],
-    summary: "Project update van Klant BV",
-  });
-  mockInsertExtractions.mockResolvedValue({ success: true, count: 1 });
   mockEmbedText.mockResolvedValue([0.1, 0.2, 0.3]);
 }
 
@@ -128,53 +105,16 @@ describe("processEmail", () => {
     expect(result.classifier!.relevance_score).toBe(0.8);
   });
 
-  it("slaat extractie over als relevance_score < 0.4", async () => {
-    setupHappyPath();
-    mockClassifier.mockResolvedValue({
-      ...classifierOutput,
-      relevance_score: 0.2,
-    });
-
-    const result = await processEmail(baseEmail);
-
-    expect(mockExtractor).not.toHaveBeenCalled();
-    expect(result.extractor).toBeNull();
-  });
-
-  it("slaat extractie over als email_type newsletter is", async () => {
-    setupHappyPath();
-    mockClassifier.mockResolvedValue({
-      ...classifierOutput,
-      email_type: "newsletter",
-    });
-
-    const result = await processEmail(baseEmail);
-
-    expect(mockExtractor).not.toHaveBeenCalled();
-    expect(result.extractor).toBeNull();
-  });
-
-  it("slaat extractie over als email_type notification is", async () => {
-    setupHappyPath();
-    mockClassifier.mockResolvedValue({
-      ...classifierOutput,
-      email_type: "notification",
-    });
-
-    const result = await processEmail(baseEmail);
-
-    expect(mockExtractor).not.toHaveBeenCalled();
-    expect(result.extractor).toBeNull();
-  });
-
-  it("voert extractie uit als relevance >= 0.4 en type is relevant", async () => {
+  it("voert geen AI-extractie uit op e-mails (extraction disabled)", async () => {
     setupHappyPath();
 
     const result = await processEmail(baseEmail);
 
-    expect(mockExtractor).toHaveBeenCalled();
-    expect(result.extractor).toBeDefined();
-    expect(result.extractions_saved).toBe(1);
+    // Pipeline resultaat mag geen extractor-velden meer hebben
+    expect(result).not.toHaveProperty("extractor");
+    expect(result).not.toHaveProperty("extractions_saved");
+    // Classificatie blijft wel gebeuren
+    expect(result.classifier).toBeDefined();
   });
 
   it("resolved organisatie en linkt aan email", async () => {
@@ -238,10 +178,8 @@ describe("processEmail", () => {
 
     expect(result.emailId).toBe("email-1");
     expect(result.classifier).toBeDefined();
-    expect(result.extractor).toBeDefined();
     expect(result.organization_id).toBe("org-1");
     expect(result.projects_linked).toBe(1);
-    expect(result.extractions_saved).toBe(1);
     expect(result.embedded).toBe(true);
   });
 

@@ -1,14 +1,11 @@
 import { runEmailClassifier } from "../agents/email-classifier";
-import { runEmailExtractor } from "../agents/email-extractor";
 import type { EmailClassifierOutput } from "../agents/email-classifier";
-import type { EmailExtractorOutput } from "../agents/email-extractor";
 import { buildEntityContext } from "./context-injection";
 import { resolveOrganization } from "./entity-resolution";
 import {
   updateEmailClassification,
   updateEmailSenderPerson,
   linkEmailProject,
-  insertEmailExtractions,
 } from "@repo/database/mutations/emails";
 import { findPeopleByEmails } from "@repo/database/queries/people";
 import { embedText } from "../embeddings";
@@ -28,32 +25,30 @@ interface EmailInput {
 interface EmailPipelineResult {
   emailId: string;
   classifier: EmailClassifierOutput | null;
-  extractor: EmailExtractorOutput | null;
   organization_id: string | null;
   projects_linked: number;
-  extractions_saved: number;
   embedded: boolean;
   errors: string[];
 }
 
 /**
- * Process a single email through classification and extraction.
- * Same pattern as the meeting gatekeeper-pipeline:
+ * Process a single email: classify + link entities. AI extraction of
+ * decisions, action items, needs and insights is intentionally disabled
+ * for e-mails — we only want classification and entity linking.
+ *
+ * Steps:
  * 1. Build entity context
  * 2. Classify (relevance, project match, category)
- * 3. Resolve organization
- * 4. Extract insights (only if relevant enough)
- * 5. Save extractions + link projects
- * 6. Embed
+ * 3. Resolve organization + match sender person
+ * 4. Link identified projects
+ * 5. Mark processed + embed
  */
 export async function processEmail(email: EmailInput): Promise<EmailPipelineResult> {
   const result: EmailPipelineResult = {
     emailId: email.id,
     classifier: null,
-    extractor: null,
     organization_id: null,
     projects_linked: 0,
-    extractions_saved: 0,
     embedded: false,
     errors: [],
   };
@@ -142,73 +137,7 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
     }
   }
 
-  // 5. Extract insights (skip low-relevance emails)
-  if (
-    result.classifier.relevance_score >= 0.4 &&
-    result.classifier.email_type !== "newsletter" &&
-    result.classifier.email_type !== "notification"
-  ) {
-    try {
-      result.extractor = await runEmailExtractor(
-        {
-          subject: email.subject,
-          from_address: email.from_address,
-          from_name: email.from_name,
-          to_addresses: email.to_addresses,
-          body_text: email.body_text,
-          snippet: email.snippet ?? "",
-          date: email.date,
-        },
-        {
-          identified_projects: identifiedProjects,
-          organization_name: result.classifier.organization_name,
-          email_type: result.classifier.email_type,
-          entityContext: entityContext.contextString,
-        },
-      );
-
-      // Save extractions
-      if (result.extractor.extractions.length > 0) {
-        const rows = result.extractor.extractions.map((ex) => {
-          // Match project name to project_id
-          let projectId: string | null = null;
-          if (ex.project) {
-            const matched = identifiedProjects.find(
-              (p) => p.project_name.toLowerCase() === ex.project!.toLowerCase(),
-            );
-            if (matched?.project_id) projectId = matched.project_id;
-          }
-
-          return {
-            email_id: email.id,
-            type: ex.type,
-            content: ex.content,
-            confidence: ex.confidence,
-            source_ref: ex.source_ref,
-            metadata: {
-              assignee: ex.assignee,
-              urgency: ex.urgency,
-              project_name: ex.project,
-            },
-            project_id: projectId,
-            embedding_stale: true,
-            verification_status: "draft" as const,
-          };
-        });
-
-        const insertResult = await insertEmailExtractions(rows);
-        if ("error" in insertResult) {
-          result.errors.push(`Extraction insert failed: ${insertResult.error}`);
-        } else {
-          result.extractions_saved = insertResult.count;
-        }
-      }
-    } catch (err) {
-      result.errors.push(`Extraction failed: ${err}`);
-    }
-  }
-
-  // 6. Mark as processed + embed
+  // 5. Mark as processed + embed (AI extraction intentionally disabled)
   try {
     await updateEmailClassification(email.id, {
       organization_id: result.organization_id,
@@ -222,7 +151,7 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
     result.errors.push(`Update classification failed: ${err}`);
   }
 
-  // 7. Embed the email
+  // 6. Embed the email
   try {
     const textToEmbed = [email.subject, email.body_text ?? email.snippet]
       .filter(Boolean)
