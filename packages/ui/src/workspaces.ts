@@ -25,9 +25,22 @@ export interface Workspace {
   status: WorkspaceStatus;
 }
 
-function readEnv(key: string, fallback: string): string {
+/** Bekende productie-deployments. Dient als fallback wanneer geen env var is gezet. */
+const PROD_FALLBACKS = {
+  devhub: "https://jouw-ai-partner-devhub.vercel.app",
+  // TODO: cockpit + portal production URLs invullen zodra bekend.
+  cockpit: "",
+  portal: "",
+} as const;
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
+function readEnv(key: string, devFallback: string, prodFallback: string): string {
   // process.env lookups via string keys worden niet door Next inline-replaced,
   // dus we gebruiken expliciete property-accessors per variabele.
+  const fallback = isProduction() && prodFallback ? prodFallback : devFallback;
   if (key === "NEXT_PUBLIC_COCKPIT_URL") {
     return process.env.NEXT_PUBLIC_COCKPIT_URL ?? fallback;
   }
@@ -48,7 +61,7 @@ export function getWorkspaces(): Workspace[] {
       label: "Cockpit",
       description: "Strategy & PM",
       icon: LayoutDashboard,
-      url: readEnv("NEXT_PUBLIC_COCKPIT_URL", "http://localhost:3000"),
+      url: readEnv("NEXT_PUBLIC_COCKPIT_URL", "http://localhost:3000", PROD_FALLBACKS.cockpit),
       status: "active",
     },
     {
@@ -56,7 +69,7 @@ export function getWorkspaces(): Workspace[] {
       label: "DevHub",
       description: "Build & Execute",
       icon: Wrench,
-      url: readEnv("NEXT_PUBLIC_DEVHUB_URL", "http://localhost:3001"),
+      url: readEnv("NEXT_PUBLIC_DEVHUB_URL", "http://localhost:3001", PROD_FALLBACKS.devhub),
       status: "active",
     },
     {
@@ -64,7 +77,7 @@ export function getWorkspaces(): Workspace[] {
       label: "Portal",
       description: "Client transparency",
       icon: MessagesSquare,
-      url: readEnv("NEXT_PUBLIC_PORTAL_URL", ""),
+      url: readEnv("NEXT_PUBLIC_PORTAL_URL", "", PROD_FALLBACKS.portal),
       status: "coming_soon",
     },
   ];
