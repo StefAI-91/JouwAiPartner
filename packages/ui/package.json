@@ -6,7 +6,8 @@
   "exports": {
     "./*": "./src/*.tsx",
     "./utils": "./src/utils.ts",
-    "./format": "./src/format.ts"
+    "./format": "./src/format.ts",
+    "./workspaces": "./src/workspaces.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

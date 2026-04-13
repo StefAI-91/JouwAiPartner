@@ -327,3 +327,8 @@ This uses Next.js 16 which has breaking changes from earlier versions. Read the 
 ## Environment Variables (new)
 
 - `NEXT_PUBLIC_USERBACK_TOKEN` — Userback feedback widget token (required for deployment)
+- `NEXT_PUBLIC_COCKPIT_URL` — Full URL naar de cockpit app (productie: `https://jouw-ai-partner.vercel.app`, dev fallback: `http://localhost:3000`)
+- `NEXT_PUBLIC_DEVHUB_URL` — Full URL naar de devhub app (productie: `https://jouw-ai-partner-devhub.vercel.app`, dev fallback: `http://localhost:3001`)
+- `NEXT_PUBLIC_PORTAL_URL` — Full URL naar de portal app (nog niet gedeployed)
+
+Beide apps (cockpit + devhub) hebben deze 3 vars nodig zodat de workspace-switcher in de sidebar naar de andere quadranten kan linken.
