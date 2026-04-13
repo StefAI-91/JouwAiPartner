@@ -5,7 +5,7 @@ import { SidebarNav } from "./sidebar-nav";
 
 export function AppSidebar() {
   return (
-    <aside className="hidden h-full w-56 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+    <aside className="hidden w-56 flex-col border-r border-sidebar-border bg-sidebar lg:sticky lg:top-0 lg:flex lg:h-screen">
       {/* Logo */}
       <div className="flex h-14 items-center px-4">
         <img
