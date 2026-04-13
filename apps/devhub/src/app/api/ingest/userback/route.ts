@@ -4,8 +4,9 @@ import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
 import { isAdmin } from "@repo/auth/access";
+import { classifyIssueBackground } from "@/actions/classify";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const postSchema = z.object({
   projectId: z.string().uuid(),
@@ -51,6 +52,17 @@ export async function GET(req: NextRequest) {
       admin,
     });
 
+    let classified = 0;
+    for (const id of result.importedIds) {
+      try {
+        await classifyIssueBackground(id);
+        classified++;
+      } catch (err) {
+        console.error(`[cron] classify failed for ${id}:`, err);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
     return NextResponse.json({
       imported: result.imported,
       updated: result.updated,
@@ -58,6 +70,7 @@ export async function GET(req: NextRequest) {
       mediaStored: result.mediaStored,
       filtered: result.filtered,
       total: result.total,
+      classified,
       isInitial: result.isInitial,
     });
   } catch (err) {
