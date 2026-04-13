@@ -42,11 +42,31 @@ export async function executeSyncPipeline({
   // 1. Hard 30-day window: only fetch items created in the last 30 days.
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  console.log(`[syncPipeline] Starting sync (createdAfter: ${thirtyDaysAgo}, limit: ${limit})`);
+  // 2. Resolve the Userback project to scope the API call — without this
+  //    filter the API returns feedback from every project under the token.
+  const { data: project, error: projectErr } = await admin
+    .from("projects")
+    .select("userback_project_id")
+    .eq("id", projectId)
+    .single();
 
-  // 2. Fetch newest-first; pagination stops as soon as items are older than
+  if (projectErr) {
+    throw new Error(`Failed to load project ${projectId}: ${projectErr.message}`);
+  }
+  const userbackProjectId = project?.userback_project_id ?? null;
+  if (!userbackProjectId) {
+    throw new Error(
+      `Project ${projectId} has no userback_project_id — set it before syncing to avoid pulling feedback from other Userback projects.`,
+    );
+  }
+
+  console.log(
+    `[syncPipeline] Starting sync (userbackProjectId: ${userbackProjectId}, createdAfter: ${thirtyDaysAgo}, limit: ${limit})`,
+  );
+
+  // 3. Fetch newest-first; pagination stops as soon as items are older than
   //    the cutoff, so no client-side filtering needed.
-  const items = await fetchAllUserbackFeedback(thirtyDaysAgo, limit);
+  const items = await fetchAllUserbackFeedback(thirtyDaysAgo, limit, userbackProjectId);
 
   // 3. Optionally filter test submissions
   const realItems = filterTests

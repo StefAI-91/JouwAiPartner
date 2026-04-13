@@ -20,76 +20,50 @@ export interface UserbackScreenshot {
 export interface UserbackSession {
   colorDepth?: number;
   dpi?: number;
-  resolution?: string;
-  window?: string;
+  resolutionX?: number;
+  resolutionY?: number;
+  windowWidth?: number;
+  windowHeight?: number;
   userAgent?: string;
+  pageTitle?: string;
+  uaData?: string;
 }
 
-export interface UserbackLocation {
-  latitude?: number;
-  longitude?: number;
-  city?: string;
-  country?: string;
-  postal_code?: string;
+export interface UserbackWorkflow {
+  id?: number;
+  name?: string;
+  sort?: number;
+  color?: string;
 }
 
 export interface UserbackFeedbackItem {
   id: number;
+  projectId?: number;
   description: string;
-  feedback_type: string; // "Bug" | "Idea" | "General"
-  priority: string; // "critical" | "important" | "neutral" | "minor"
-  status: string; // "Open" | "In Progress" | "Closed"
+  feedbackType: string; // "Bug" | "Idea" | "General"
+  priority: string; // "critical" | "important" | "neutral" | "minor" (empty string when unset)
+  Workflow?: UserbackWorkflow | null; // status lives here ("Open", "In Progress", "Closed", ...)
   email: string | null;
   name: string | null;
-  page_url: string | null;
-  share_url: string | null;
-  // API may return "screenshots" or "Screenshots" — we handle both
+  title?: string | null;
+  pageUrl: string | null;
+  shareUrl: string | null;
+  // API may return "screenshots" or "Screenshots" — keep both casings.
   screenshots?: UserbackScreenshot[];
   Screenshots?: UserbackScreenshot[];
   videoUrl?: string | null;
-  video_url?: string | null;
   attachmentUrl?: string | null;
-  attachment_url?: string | null;
   Session?: UserbackSession | null;
-  session?: UserbackSession | null;
-  Location?: UserbackLocation | null;
-  location?: UserbackLocation | null;
-  rating?: string | null; // "star_1" through "star_5"
-  category?: string | null;
-  browser: string | null;
-  os: string | null;
-  resolution: string | null;
-  due_date: string | null;
+  rating?: string | null; // "star_1" through "star_5", or empty string
+  dueDate: string | null; // "1970-01-01T00:00:00.000Z" sentinel when unset
   created: string;
   modified: string;
-  created_at?: string;
-  modified_at?: string;
   [key: string]: unknown;
 }
 
 /** Get screenshots array regardless of API casing */
 function getScreenshots(item: UserbackFeedbackItem): UserbackScreenshot[] {
   return item.screenshots ?? item.Screenshots ?? [];
-}
-
-/** Get video URL regardless of API casing */
-function getVideoUrl(item: UserbackFeedbackItem): string | null {
-  return item.videoUrl ?? item.video_url ?? null;
-}
-
-/** Get attachment URL regardless of API casing */
-function getAttachmentUrl(item: UserbackFeedbackItem): string | null {
-  return item.attachmentUrl ?? item.attachment_url ?? null;
-}
-
-/** Get session regardless of API casing */
-function getSession(item: UserbackFeedbackItem): UserbackSession | null {
-  return item.Session ?? item.session ?? null;
-}
-
-/** Get location regardless of API casing */
-function getLocation(item: UserbackFeedbackItem): UserbackLocation | null {
-  return item.Location ?? item.location ?? null;
 }
 
 interface UserbackFeedbackPage {
@@ -112,13 +86,18 @@ function getApiToken(): string {
  * Fetch a single page of Userback feedback items.
  * Sort defaults to newest-created first so callers can stop paginating
  * as soon as items pass their cutoff.
+ *
+ * When `userbackProjectId` is provided the request is scoped to that
+ * Userback project via OData filter — otherwise feedback from every
+ * project under the API token is returned.
  */
 export async function fetchUserbackFeedbackPage(options: {
   page: number;
   perPage?: number;
   sort?: string;
+  userbackProjectId?: string;
 }): Promise<UserbackFeedbackPage> {
-  const { page, perPage = 50, sort = "created,desc" } = options;
+  const { page, perPage = 50, sort = "created,desc", userbackProjectId } = options;
   const token = getApiToken();
 
   const params = new URLSearchParams({
@@ -126,6 +105,10 @@ export async function fetchUserbackFeedbackPage(options: {
     per_page: String(perPage),
     sort,
   });
+
+  if (userbackProjectId) {
+    params.set("filter", `projectId eq ${userbackProjectId}`);
+  }
 
   const response = await fetch(`${USERBACK_API_BASE}/feedback?${params}`, {
     headers: {
@@ -147,10 +130,12 @@ export async function fetchUserbackFeedbackPage(options: {
  * below the cutoff or the limit is reached. Dedup happens downstream.
  * @param createdAfter - ISO date; items created before this are excluded
  * @param limit - Max items to return
+ * @param userbackProjectId - Scope the fetch to a single Userback project
  */
 export async function fetchAllUserbackFeedback(
   createdAfter: string,
   limit: number = 50,
+  userbackProjectId?: string,
 ): Promise<UserbackFeedbackItem[]> {
   const allItems: UserbackFeedbackItem[] = [];
   let page = 1;
@@ -160,6 +145,7 @@ export async function fetchAllUserbackFeedback(
       page,
       perPage: Math.min(50, limit - allItems.length),
       sort: "created,desc",
+      userbackProjectId,
     });
 
     for (const item of result.data) {
@@ -211,10 +197,15 @@ const PRIORITY_MAP: Record<string, string> = {
   minor: "low",
 };
 
+// Userback stores status as a Workflow row; default columns are
+// "Open", "In Progress", "Closed". Custom workflow columns fall through
+// to the "triage" default downstream.
 const STATUS_MAP: Record<string, string> = {
   Open: "triage",
   "In Progress": "in_progress",
   Closed: "done",
+  Resolved: "done",
+  Done: "done",
 };
 
 /**
@@ -261,16 +252,12 @@ export function extractMediaUrls(item: UserbackFeedbackItem): Array<{
     }
   }
 
-  // Video recording
-  const videoUrl = getVideoUrl(item);
-  if (videoUrl) {
-    media.push({ url: videoUrl, type: "video" });
+  if (item.videoUrl) {
+    media.push({ url: item.videoUrl, type: "video" });
   }
 
-  // File attachment
-  const attachmentUrl = getAttachmentUrl(item);
-  if (attachmentUrl) {
-    media.push({ url: attachmentUrl, type: "attachment" });
+  if (item.attachmentUrl) {
+    media.push({ url: item.attachmentUrl, type: "attachment" });
   }
 
   return media;
@@ -282,41 +269,39 @@ export function extractMediaUrls(item: UserbackFeedbackItem): Array<{
 export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string): InsertIssueData {
   const screenshots = getScreenshots(item);
   const screenshotUrl = screenshots[0]?.url ?? null;
-  const videoUrl = getVideoUrl(item);
-  const attachmentUrl = getAttachmentUrl(item);
   const description = typeof item.description === "string" ? item.description : null;
+  const workflowName = item.Workflow?.name ?? null;
+  const rating = item.rating && item.rating.length > 0 ? item.rating : null;
 
   return {
     project_id: projectId,
     title: extractTitle(description),
     description,
-    type: FEEDBACK_TYPE_MAP[item.feedback_type] ?? "bug",
+    type: FEEDBACK_TYPE_MAP[item.feedbackType] ?? "bug",
     priority: PRIORITY_MAP[item.priority] ?? "medium",
-    status: STATUS_MAP[item.status] ?? "triage",
-    reporter_email: item.email ?? null,
-    reporter_name: item.name ?? null,
+    status: (workflowName && STATUS_MAP[workflowName]) ?? "triage",
+    reporter_email: item.email ? item.email : null,
+    reporter_name: item.name ? item.name : null,
     source: "userback",
     userback_id: String(item.id),
-    source_url: item.page_url ?? null,
-    created_at: item.created ?? item.created_at,
+    source_url: item.pageUrl ?? null,
+    created_at: item.created,
     source_metadata: {
       screenshot_url: screenshotUrl,
       screenshot_urls: screenshots.map((s) => s.url).filter(Boolean),
-      video_url: videoUrl,
-      attachment_url: attachmentUrl,
-      share_url: item.share_url,
-      browser: item.browser,
-      os: item.os,
-      screen: item.resolution,
-      rating: item.rating ?? null,
-      category: item.category ?? null,
-      session: getSession(item),
-      location: getLocation(item),
-      userback_created_at: item.created ?? item.created_at,
-      userback_modified_at: item.modified ?? item.modified_at,
-      feedback_type: item.feedback_type,
+      video_url: item.videoUrl ?? null,
+      attachment_url: item.attachmentUrl ?? null,
+      share_url: item.shareUrl,
+      rating,
+      session: item.Session ?? null,
+      workflow: item.Workflow ?? null,
+      workflow_name: workflowName,
+      userback_created_at: item.created,
+      userback_modified_at: item.modified,
+      userback_project_id: item.projectId ?? null,
+      feedback_type: item.feedbackType,
       raw_userback: item,
-      ...(isSentinelDate(item.due_date) ? {} : { due_date: item.due_date }),
+      ...(isSentinelDate(item.dueDate) ? {} : { due_date: item.dueDate }),
     },
   };
 }
