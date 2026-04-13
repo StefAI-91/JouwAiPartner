@@ -10,7 +10,7 @@
 | Files scanned | 405 |
 | Exported functions/constants | 597 |
 | Exported types/interfaces | 125 |
-| Cross-package imports | 494 |
+| Cross-package imports | 493 |
 | Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
@@ -2771,7 +2771,6 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/auth/access` → isAdmin
 
 ### `apps/devhub/src/app/layout.tsx`
 
@@ -3111,7 +3110,7 @@ Which layers depend on which packages:
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
 | DevHub Components | 9 | - | - | 26 | - | 35 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 10 | - | 9 | 8 | - | 27 |
+| DevHub Pages | 10 | - | 8 | 8 | - | 26 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
 
 ## Critical Integration Points
