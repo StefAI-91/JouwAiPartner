@@ -1,11 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@repo/database/supabase/server";
 import { isAdmin } from "@repo/auth/access";
 
 /**
- * AUTH-171: Magic link callback for Cockpit.
+ * AUTH-171: Magic link / invite callback for Cockpit.
  *
- * Exchanges the OTP code for a session, then routes by role:
+ * Accepts both PKCE (`?code=`) and OTP (`?token_hash=&type=`) links, then
+ * routes by role:
  *   - admin   → `next` param (if same-origin) or "/"
  *   - member  → NEXT_PUBLIC_DEVHUB_URL (members never enter cockpit)
  *
@@ -14,14 +16,18 @@ import { isAdmin } from "@repo/auth/access";
  */
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
+  const tokenHash = req.nextUrl.searchParams.get("token_hash");
+  const type = req.nextUrl.searchParams.get("type") as EmailOtpType | null;
   const next = req.nextUrl.searchParams.get("next");
 
-  if (!code) {
+  if (!code && !tokenHash) {
     return NextResponse.redirect(new URL("/login?error=missing_code", req.url));
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { error } = code
+    ? await supabase.auth.exchangeCodeForSession(code)
+    : await supabase.auth.verifyOtp({ type: type ?? "magiclink", token_hash: tokenHash! });
   if (error) {
     return NextResponse.redirect(new URL("/login?error=invalid_link", req.url));
   }
