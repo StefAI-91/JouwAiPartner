@@ -12,9 +12,14 @@ vi.mock("@repo/database/integrations/userback-sync", () => ({
   executeSyncPipeline: vi.fn(),
 }));
 
+vi.mock("@repo/auth/access", () => ({
+  isAdmin: vi.fn(),
+}));
+
 import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
+import { isAdmin } from "@repo/auth/access";
 import { GET, POST } from "../../src/app/api/ingest/userback/route";
 
 const CRON_SECRET = "test-cron-secret";
@@ -114,7 +119,7 @@ describe("POST /api/ingest/userback", () => {
     vi.clearAllMocks();
   });
 
-  function mockAuth(authenticated: boolean) {
+  function mockAuth(authenticated: boolean, admin: boolean = true) {
     vi.mocked(createClient).mockResolvedValue({
       auth: {
         getUser: vi.fn().mockResolvedValue({
@@ -122,6 +127,7 @@ describe("POST /api/ingest/userback", () => {
         }),
       },
     } as never);
+    vi.mocked(isAdmin).mockResolvedValue(admin);
   }
 
   it("returns 401 when user is not authenticated", async () => {
@@ -134,6 +140,18 @@ describe("POST /api/ingest/userback", () => {
     });
     const res = await POST(req as never);
     expect(res.status).toBe(401);
+  });
+
+  it("returns 403 when user is not admin", async () => {
+    mockAuth(true, false);
+
+    const req = new Request("http://localhost/api/ingest/userback", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ projectId: "550e8400-e29b-41d4-a716-446655440000", limit: 10 }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(403);
   });
 
   it("returns 400 with invalid input", async () => {
