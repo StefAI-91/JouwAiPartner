@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
+import { isAdmin } from "@repo/auth/access";
 
 export const maxDuration = 60;
 
@@ -78,6 +79,10 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!(await isAdmin(user.id))) {
+    return NextResponse.json({ error: "Admin only" }, { status: 403 });
   }
 
   const body = await req.json().catch(() => ({}));

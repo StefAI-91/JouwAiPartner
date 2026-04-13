@@ -8,7 +8,7 @@ import {
   deleteComment,
   insertActivity,
 } from "@repo/database/mutations/issues";
-import { getIssueById } from "@repo/database/queries/issues";
+import { getIssueById, getCommentById } from "@repo/database/queries/issues";
 import {
   createCommentSchema,
   updateCommentSchema,
@@ -76,6 +76,11 @@ export async function updateCommentAction(
   const access = await assertAccessToIssue(user.id, parsed.data.issue_id);
   if ("error" in access) return access;
 
+  const comment = await getCommentById(parsed.data.id, parsed.data.issue_id);
+  if (!comment || comment.author_id !== user.id) {
+    return { error: "Alleen de auteur kan deze reactie wijzigen" };
+  }
+
   const result = await updateComment(parsed.data.id, parsed.data.body);
   if ("error" in result) return { error: "Reactie bijwerken mislukt" };
 
@@ -94,6 +99,11 @@ export async function deleteCommentAction(
 
   const access = await assertAccessToIssue(user.id, parsed.data.issue_id);
   if ("error" in access) return access;
+
+  const comment = await getCommentById(parsed.data.id, parsed.data.issue_id);
+  if (!comment || comment.author_id !== user.id) {
+    return { error: "Alleen de auteur kan deze reactie verwijderen" };
+  }
 
   const result = await deleteComment(parsed.data.id);
   if ("error" in result) return { error: "Reactie verwijderen mislukt" };

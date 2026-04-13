@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/ingest/userback",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

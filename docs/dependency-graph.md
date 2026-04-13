@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 408 |
-| Exported functions/constants | 597 |
+| Exported functions/constants | 598 |
 | Exported types/interfaces | 125 |
-| Cross-package imports | 500 |
+| Cross-package imports | 501 |
 | Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
@@ -124,6 +124,7 @@
 - `getIssueById()`
 - `getIssueCounts()`
 - `countCriticalUnassigned()`
+- `getCommentById()`
 - `listIssueComments()`
 - `getUserbackSyncCursor()`
 - `getExistingUserbackIds()`
@@ -2676,7 +2677,7 @@
 
 **Depends on:**
 - `@repo/database/mutations/issues` → insertComment, updateComment, deleteComment, insertActivity
-- `@repo/database/queries/issues` → getIssueById
+- `@repo/database/queries/issues` → getIssueById, getCommentById
 - `@repo/database/validations/issues` → createCommentSchema, updateCommentSchema, deleteCommentSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
@@ -2741,6 +2742,7 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
+- `@repo/auth/access` → isAdmin
 
 ## DevHub Pages
 
@@ -3110,7 +3112,7 @@ Which layers depend on which packages:
 | Cockpit Pages | 70 | - | 2 | 21 | - | 93 |
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 19 | 2 | 10 | - | - | 31 |
-| DevHub API Routes | 3 | - | - | - | - | 3 |
+| DevHub API Routes | 3 | - | 1 | - | - | 4 |
 | DevHub Components | 10 | - | - | 29 | - | 39 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 13 | - | 11 | 9 | - | 33 |
@@ -3338,6 +3340,7 @@ Which queries are used where across the codebase.
 | `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/page.tsx`, `apps/devhub/src/app/(app)/review/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
+| `getCommentById()` | `apps/devhub/src/actions/comments.ts` |
 | `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
 | `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |

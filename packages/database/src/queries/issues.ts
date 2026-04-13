@@ -290,6 +290,26 @@ export async function countCriticalUnassigned(
 }
 
 /**
+ * Get a single comment by ID, scoped to an issue.
+ */
+export async function getCommentById(
+  commentId: string,
+  issueId: string,
+  client?: SupabaseClient,
+): Promise<{ id: string; author_id: string } | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("issue_comments")
+    .select("id, author_id")
+    .eq("id", commentId)
+    .eq("issue_id", issueId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data;
+}
+
+/**
  * List comments for an issue, sorted by created_at ASC with pagination.
  */
 export async function listIssueComments(
