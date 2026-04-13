@@ -6,7 +6,8 @@
   "exports": {
     "./helpers": "./src/helpers.ts",
     "./middleware": "./src/middleware.ts",
-    "./access": "./src/access.ts"
+    "./access": "./src/access.ts",
+    "./actions": "./src/actions.ts"
   },
   "scripts": {
     "test": "vitest run"

@@ -3,9 +3,16 @@
 import { Menu, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
+import { UserMenu } from "@repo/ui/user-menu";
+import { signOutAction } from "@repo/auth/actions";
 import { SidebarNav } from "./sidebar-nav";
 
-export function MobileSidebar() {
+interface MobileSidebarProps {
+  userEmail?: string | null;
+  userFullName?: string | null;
+}
+
+export function MobileSidebar({ userEmail, userFullName }: MobileSidebarProps) {
   const [open, setOpen] = useState(false);
 
   const handleNavigate = useCallback(() => setOpen(false), []);
@@ -50,6 +57,16 @@ export function MobileSidebar() {
               linkClassName="py-1.5 text-sm"
               onNavigate={handleNavigate}
             />
+
+            {/* User menu with logout */}
+            <div className="border-t border-sidebar-border px-2 py-2">
+              <UserMenu
+                email={userEmail}
+                fullName={userFullName}
+                onSignOut={signOutAction}
+                variant="dark"
+              />
+            </div>
           </aside>
         </div>
       )}

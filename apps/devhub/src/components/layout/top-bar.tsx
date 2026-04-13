@@ -11,7 +11,15 @@ interface Project {
   name: string;
 }
 
-export function TopBar({ projects }: { projects: Project[] }) {
+export function TopBar({
+  projects,
+  userEmail,
+  userFullName,
+}: {
+  projects: Project[];
+  userEmail?: string | null;
+  userFullName?: string | null;
+}) {
   const searchParams = useSearchParams();
   const projectId = searchParams.get("project");
 
@@ -20,7 +28,7 @@ export function TopBar({ projects }: { projects: Project[] }) {
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-border bg-background px-4">
       <div className="flex items-center gap-2">
-        <MobileSidebar />
+        <MobileSidebar userEmail={userEmail} userFullName={userFullName} />
         <ProjectSwitcher projects={projects} />
       </div>
 

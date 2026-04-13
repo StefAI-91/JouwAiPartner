@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import type { FocusProject } from "@repo/database/queries/projects";
 import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
+import { UserMenu } from "@repo/ui/user-menu";
+import { signOutAction } from "@repo/auth/actions";
 import {
   primaryNavItems,
   secondaryNavItems,
@@ -87,9 +89,13 @@ function FocusProjectMenuLink({
 export function SideMenu({
   reviewCount,
   focusProjects = [],
+  userEmail,
+  userFullName,
 }: {
   reviewCount?: number;
   focusProjects?: FocusProject[];
+  userEmail?: string | null;
+  userFullName?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -169,7 +175,7 @@ export function SideMenu({
                 <WorkspaceSwitcher current="cockpit" />
               </div>
 
-              <nav className="flex flex-col gap-1.5 overflow-y-auto px-4 py-5">
+              <nav className="flex flex-1 flex-col gap-1.5 overflow-y-auto px-4 py-5">
                 {primaryNavItems.map((item) => (
                   <MenuLink
                     key={item.href}
@@ -225,6 +231,16 @@ export function SideMenu({
                   />
                 ))}
               </nav>
+
+              {/* User menu with logout */}
+              <div className="mt-auto border-t border-sidebar-border px-4 py-3">
+                <UserMenu
+                  email={userEmail}
+                  fullName={userFullName}
+                  onSignOut={signOutAction}
+                  variant="dark"
+                />
+              </div>
             </div>
           </>,
           document.body,

@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 405 |
-| Exported functions/constants | 597 |
-| Exported types/interfaces | 125 |
-| Cross-package imports | 493 |
-| Critical integration points (3+ packages) | 7 |
+| Files scanned | 407 |
+| Exported functions/constants | 599 |
+| Exported types/interfaces | 126 |
+| Cross-package imports | 503 |
+| Critical integration points (3+ packages) | 9 |
 
 ## Package Dependency Flow
 
@@ -977,6 +977,14 @@
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/supabase/server` → createClient
 
+### `packages/auth/src/actions.ts`
+
+**Exports:**
+- `signOutAction()`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+
 ### `packages/auth/src/helpers.ts`
 
 **Exports:**
@@ -1006,6 +1014,13 @@
 - `timeAgoDays()`
 - `daysUntil()`
 - `truncate()`
+
+### `packages/ui/src/user-menu.tsx`
+
+**Exports:**
+- `UserMenu()`
+
+**Types:** `UserMenuProps`
 
 ### `packages/ui/src/utils.ts`
 
@@ -2268,6 +2283,8 @@
 **Depends on:**
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+- `@repo/ui/user-menu` → UserMenu
+- `@repo/auth/actions` → signOutAction
 
 ### `apps/cockpit/src/components/layout/side-menu.tsx`
 
@@ -2277,6 +2294,8 @@
 **Depends on:**
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+- `@repo/ui/user-menu` → UserMenu
+- `@repo/auth/actions` → signOutAction
 
 ### `apps/cockpit/src/components/meetings/add-extraction-form.tsx`
 
@@ -2959,6 +2978,8 @@
 
 **Depends on:**
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+- `@repo/ui/user-menu` → UserMenu
+- `@repo/auth/actions` → signOutAction
 
 ### `apps/devhub/src/components/layout/mobile-sidebar.tsx`
 
@@ -2967,6 +2988,8 @@
 
 **Depends on:**
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+- `@repo/ui/user-menu` → UserMenu
+- `@repo/auth/actions` → signOutAction
 
 ### `apps/devhub/src/components/layout/project-switcher.tsx`
 
@@ -3099,16 +3122,16 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Core | 5 | - | - | - | - | 5 |
 | AI Pipeline | 39 | - | - | - | - | 39 |
-| Auth | 4 | - | - | - | - | 4 |
+| Auth | 5 | - | - | - | - | 5 |
 | Cockpit Server Actions | 36 | 14 | 20 | - | - | 70 |
 | Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
-| Cockpit Components | 39 | - | - | 67 | - | 106 |
+| Cockpit Components | 39 | - | 2 | 69 | - | 110 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 70 | - | 2 | 21 | - | 93 |
+| Cockpit Pages | 70 | - | 3 | 21 | - | 94 |
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 19 | 2 | 10 | - | - | 31 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
-| DevHub Components | 9 | - | - | 26 | - | 35 |
+| DevHub Components | 9 | - | 2 | 28 | - | 39 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 10 | - | 8 | 8 | - | 26 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
@@ -3125,6 +3148,8 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
+| `apps/cockpit/src/components/layout/desktop-sidebar.tsx` | database, ui, auth | 3 |
+| `apps/cockpit/src/components/layout/side-menu.tsx` | database, ui, auth | 3 |
 | `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 

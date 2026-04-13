@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { FocusProject } from "@repo/database/queries/projects";
 import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
+import { UserMenu } from "@repo/ui/user-menu";
+import { signOutAction } from "@repo/auth/actions";
 import {
   primaryNavItems,
   secondaryNavItems,
@@ -72,9 +74,13 @@ function FocusProjectLink({ project, pathname }: { project: FocusProject; pathna
 export function DesktopSidebar({
   reviewCount,
   focusProjects = [],
+  userEmail,
+  userFullName,
 }: {
   reviewCount?: number;
   focusProjects?: FocusProject[];
+  userEmail?: string | null;
+  userFullName?: string | null;
 }) {
   const pathname = usePathname();
   const badges: Record<string, number | undefined> = { reviewCount };
@@ -133,6 +139,16 @@ export function DesktopSidebar({
           <NavLink key={item.href} item={item} pathname={pathname} small />
         ))}
       </nav>
+
+      {/* User menu with logout */}
+      <div className="border-t border-border/50 px-3 py-3">
+        <UserMenu
+          email={userEmail}
+          fullName={userFullName}
+          onSignOut={signOutAction}
+          variant="sidebar"
+        />
+      </div>
     </aside>
   );
 }
