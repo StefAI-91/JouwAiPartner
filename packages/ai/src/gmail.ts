@@ -132,8 +132,9 @@ export async function fetchEmails(
   const client = createAuthenticatedClient(tokens);
   const gmail = google.gmail({ version: "v1", auth: client });
 
-  // Build query: default to non-draft, non-spam
-  let q = options.query ?? "in:inbox -category:promotions -category:social";
+  // Build query: fetch both inbox and sent mail by default, skip promotions/social.
+  // Gmail OR-syntax uses curly braces: {in:inbox in:sent}.
+  let q = options.query ?? "{in:inbox in:sent} -category:promotions -category:social";
   if (options.afterDate) {
     q += ` after:${options.afterDate}`;
   }

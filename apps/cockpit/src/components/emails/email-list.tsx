@@ -4,10 +4,11 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Building2, FolderKanban, Paperclip, ChevronRight, X } from "lucide-react";
 import { Badge } from "@repo/ui/badge";
-import type { EmailListItem } from "@repo/database/queries/emails";
+import type { EmailListItem, EmailDirection } from "@repo/database/queries/emails";
 
 interface EmailListProps {
   emails: EmailListItem[];
+  direction?: EmailDirection;
 }
 
 function formatDate(dateStr: string): string {
@@ -31,8 +32,9 @@ function relevanceBadge(score: number | null) {
   return null;
 }
 
-export function EmailList({ emails }: EmailListProps) {
+export function EmailList({ emails, direction = "incoming" }: EmailListProps) {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const isOutgoing = direction === "outgoing";
 
   const filtered = useMemo(() => {
     if (!statusFilter) return emails;
@@ -89,7 +91,9 @@ export function EmailList({ emails }: EmailListProps) {
                   )}
                 </div>
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {email.from_name ?? email.from_address}
+                  {isOutgoing
+                    ? `Aan: ${email.to_addresses.join(", ") || "—"}`
+                    : (email.from_name ?? email.from_address)}
                 </p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
                   {email.organization && (

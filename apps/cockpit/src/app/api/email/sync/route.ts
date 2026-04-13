@@ -96,6 +96,10 @@ export async function POST() {
           snippet: m.snippet,
           labels: m.labels,
           has_attachments: m.has_attachments,
+          // Gmail always stamps user-sent messages with the SENT label.
+          direction: (m.labels.includes("SENT") ? "outgoing" : "incoming") as
+            | "incoming"
+            | "outgoing",
           raw_gmail: m.raw_gmail,
           embedding_stale: true,
           verification_status: "draft",
