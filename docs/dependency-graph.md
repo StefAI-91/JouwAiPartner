@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 241 |
-| Exported functions/constants | 412 |
-| Exported types/interfaces | 111 |
-| Cross-package imports | 321 |
+| Files scanned | 244 |
+| Exported functions/constants | 415 |
+| Exported types/interfaces | 115 |
+| Cross-package imports | 317 |
 | Critical integration points (3+ packages) | 6 |
 
 ## Package Dependency Flow
