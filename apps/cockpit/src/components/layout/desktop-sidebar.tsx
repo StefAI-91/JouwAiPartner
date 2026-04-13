@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { FocusProject } from "@repo/database/queries/projects";
 import {
   primaryNavItems,
   secondaryNavItems,
   isNavItemActive,
+  isFocusProjectActive,
   type NavItem,
 } from "@/lib/constants/navigation";
 
@@ -43,7 +45,35 @@ function NavLink({
   );
 }
 
-export function DesktopSidebar({ reviewCount }: { reviewCount?: number }) {
+function FocusProjectLink({ project, pathname }: { project: FocusProject; pathname: string }) {
+  const isActive = isFocusProjectActive(project.id, pathname);
+
+  return (
+    <Link
+      href={`/projects/${project.id}`}
+      className={`block rounded-lg px-3 py-1.5 transition-colors ${
+        isActive
+          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+      }`}
+    >
+      <div className="truncate text-[13px] font-medium">{project.name}</div>
+      {project.organization_name && (
+        <div className="truncate text-[10.5px] text-muted-foreground/70">
+          {project.organization_name}
+        </div>
+      )}
+    </Link>
+  );
+}
+
+export function DesktopSidebar({
+  reviewCount,
+  focusProjects = [],
+}: {
+  reviewCount?: number;
+  focusProjects?: FocusProject[];
+}) {
   const pathname = usePathname();
   const badges: Record<string, number | undefined> = { reviewCount };
 
@@ -69,6 +99,18 @@ export function DesktopSidebar({ reviewCount }: { reviewCount?: number }) {
             badge={item.badgeKey ? (badges[item.badgeKey] ?? undefined) : undefined}
           />
         ))}
+
+        {/* Focus section — active projects as shortcuts */}
+        {focusProjects.length > 0 && (
+          <>
+            <div className="mb-1 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              Actieve projecten
+            </div>
+            {focusProjects.map((project) => (
+              <FocusProjectLink key={project.id} project={project} pathname={pathname} />
+            ))}
+          </>
+        )}
 
         {/* Bronnen section */}
         <div className="mb-1 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">

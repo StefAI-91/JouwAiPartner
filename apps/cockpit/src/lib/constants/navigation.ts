@@ -40,5 +40,13 @@ export function isNavItemActive(href: string, pathname: string): boolean {
       pathname.startsWith("/people")
     );
   }
+  // /projects is only active on the list page itself — not when viewing a
+  // specific project, because the focus-shortcut for that project takes over.
+  if (href === "/projects") return pathname === "/projects";
   return pathname.startsWith(href);
+}
+
+/** Check if a focus-project shortcut should be highlighted */
+export function isFocusProjectActive(projectId: string, pathname: string): boolean {
+  return pathname === `/projects/${projectId}` || pathname.startsWith(`/projects/${projectId}/`);
 }
