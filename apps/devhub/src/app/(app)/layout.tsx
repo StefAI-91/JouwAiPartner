@@ -22,7 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Suspense fallback={<div className="h-14 border-b border-border bg-background" />}>
           <TopBar projects={projects} />
         </Suspense>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
       </div>
     </div>
   );
