@@ -536,15 +536,13 @@
 - `processEmailBatch()`
 
 **Depends on:**
-- `@repo/database/mutations/emails` → updateEmailClassification, updateEmailSenderPerson, linkEmailProject, insertEmailExtractions
+- `@repo/database/mutations/emails` → updateEmailClassification, updateEmailSenderPerson, linkEmailProject
 - `@repo/database/queries/people` → findPeopleByEmails
 - `@repo/database/supabase/admin` → getAdminClient
 
 **Internal deps:**
 - `../agents/email-classifier` → runEmailClassifier
-- `../agents/email-extractor` → runEmailExtractor
 - `../agents/email-classifier` → EmailClassifierOutput
-- `../agents/email-extractor` → EmailExtractorOutput
 - `./context-injection` → buildEntityContext
 - `./entity-resolution` → resolveOrganization
 - `../embeddings` → embedText
@@ -1613,7 +1611,6 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateEmailPartyType()` | `apps/cockpit/src/actions/email-links.ts` |
 | `updateEmailOrganization()` | `apps/cockpit/src/actions/email-links.ts` |
 | `unlinkEmailProject()` | `apps/cockpit/src/actions/email-links.ts` |
-| `insertEmailExtractions()` | `packages/ai/src/pipeline/email-pipeline.ts` |
 
 ### mutations/embeddings.ts
 
