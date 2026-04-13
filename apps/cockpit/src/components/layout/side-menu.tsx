@@ -5,10 +5,12 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import type { FocusProject } from "@repo/database/queries/projects";
 import {
   primaryNavItems,
   secondaryNavItems,
   isNavItemActive,
+  isFocusProjectActive,
   type NavItem,
 } from "@/lib/constants/navigation";
 
@@ -49,7 +51,44 @@ function MenuLink({
   );
 }
 
-export function SideMenu({ reviewCount }: { reviewCount?: number }) {
+function FocusProjectMenuLink({
+  project,
+  pathname,
+  onNavigate,
+}: {
+  project: FocusProject;
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  const isActive = isFocusProjectActive(project.id, pathname);
+
+  return (
+    <Link
+      href={`/projects/${project.id}`}
+      onClick={onNavigate}
+      className={`block rounded-xl px-4 py-2.5 transition-colors ${
+        isActive
+          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+      }`}
+    >
+      <div className="truncate text-sm font-medium">{project.name}</div>
+      {project.organization_name && (
+        <div className="truncate text-[11px] text-sidebar-foreground/50">
+          {project.organization_name}
+        </div>
+      )}
+    </Link>
+  );
+}
+
+export function SideMenu({
+  reviewCount,
+  focusProjects = [],
+}: {
+  reviewCount?: number;
+  focusProjects?: FocusProject[];
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const badges: Record<string, number | undefined> = { reviewCount };
@@ -133,6 +172,23 @@ export function SideMenu({ reviewCount }: { reviewCount?: number }) {
                   onNavigate={close}
                 />
               ))}
+
+              {/* Focus section — active projects as shortcuts */}
+              {focusProjects.length > 0 && (
+                <>
+                  <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                    Actieve projecten
+                  </div>
+                  {focusProjects.map((project) => (
+                    <FocusProjectMenuLink
+                      key={project.id}
+                      project={project}
+                      pathname={pathname}
+                      onNavigate={close}
+                    />
+                  ))}
+                </>
+              )}
 
               {/* Bronnen section */}
               <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">

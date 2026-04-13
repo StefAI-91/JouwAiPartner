@@ -278,6 +278,50 @@ export async function getProjectById(
   };
 }
 
+export interface FocusProject {
+  id: string;
+  name: string;
+  organization_name: string | null;
+}
+
+/**
+ * Snelkoppelingen naar actieve projecten voor de sidebar.
+ * Filter: alleen delivery-fases (kickoff / in_progress / review / maintenance).
+ * Sortering: updated_at DESC — recentste activiteit bovenaan.
+ * Limiet: klein houden zodat de sidebar compact blijft.
+ */
+export async function listFocusProjects(
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<FocusProject[]> {
+  const db = client ?? getAdminClient();
+
+  const { data, error } = await db
+    .from("projects")
+    .select("id, name, organization:organizations(name)")
+    .in("status", ["kickoff", "in_progress", "review", "maintenance"])
+    .order("updated_at", { ascending: false })
+    .limit(options?.limit ?? 5);
+
+  if (error) {
+    console.error("[listFocusProjects]", error.message);
+    return [];
+  }
+  if (!data) return [];
+
+  return (
+    data as unknown as {
+      id: string;
+      name: string;
+      organization: { name: string } | null;
+    }[]
+  ).map((p) => ({
+    id: p.id,
+    name: p.name,
+    organization_name: p.organization?.name ?? null,
+  }));
+}
+
 export async function getProjectByNameIlike(name: string) {
   const { data } = await getAdminClient()
     .from("projects")
