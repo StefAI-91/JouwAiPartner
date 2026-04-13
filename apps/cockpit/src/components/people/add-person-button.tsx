@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
-import { createPersonAction } from "@/actions/meetings";
+import { createPersonAction } from "@/actions/entities";
 
 interface AddPersonButtonProps {
   organizations: { id: string; name: string }[];

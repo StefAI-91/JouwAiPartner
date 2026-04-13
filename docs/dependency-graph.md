@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 408 |
-| Exported functions/constants | 598 |
+| Files scanned | 405 |
+| Exported functions/constants | 597 |
 | Exported types/interfaces | 125 |
-| Cross-package imports | 500 |
+| Cross-package imports | 494 |
 | Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
@@ -1250,10 +1250,13 @@
 ### `apps/cockpit/src/actions/entities.ts`
 
 **Exports:**
+- `createOrganizationAction()`
 - `updateOrganizationAction()`
 - `deleteOrganizationAction()`
+- `createProjectAction()`
 - `updateProjectAction()`
 - `deleteProjectAction()`
+- `createPersonAction()`
 - `updatePersonAction()`
 - `deletePersonAction()`
 - `createExtractionAction()`
@@ -1262,12 +1265,37 @@
 - `deleteMeetingAction()`
 
 **Depends on:**
-- `@repo/database/mutations/organizations` → updateOrganization, deleteOrganization
-- `@repo/database/mutations/projects` → updateProject, deleteProject
-- `@repo/database/mutations/people` → updatePerson, deletePerson
+- `@repo/database/mutations/organizations` → createOrganization, updateOrganization, deleteOrganization
+- `@repo/database/mutations/projects` → createProject, updateProject, deleteProject
+- `@repo/database/mutations/people` → createPerson, updatePerson, deletePerson
 - `@repo/database/mutations/extractions` → createExtraction, updateExtraction, deleteExtraction
 - `@repo/database/mutations/meetings` → deleteMeeting
 - `@repo/database/validations/entities` → updateOrganizationSchema, updateProjectSchema, updatePersonSchema, createExtractionSchema, updateExtractionSchema, deleteSchema, deleteWithContextSchema
+- `@repo/database/validations/meetings` → createOrganizationSchema, createProjectSchema, createPersonSchema
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+
+### `apps/cockpit/src/actions/meeting-pipeline.ts`
+
+**Exports:**
+- `regenerateMeetingAction()`
+- `reprocessMeetingAction()`
+
+**Depends on:**
+- `@repo/database/mutations/meetings` → updateMeetingSummary, markMeetingEmbeddingStale
+- `@repo/database/mutations/extractions` → deleteExtractionsByMeetingId
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
+- `@repo/ai/agents/extractor` → runExtractor
+- `@repo/ai/pipeline/save-extractions` → saveExtractions
+- `@repo/ai/pipeline/context-injection` → buildEntityContext
+- `@repo/ai/agents/gatekeeper` → runGatekeeper
+- `@repo/ai/pipeline/tagger` → runTagger
+- `@repo/ai/pipeline/segment-builder` → buildSegments
+- `@repo/ai/embeddings` → embedBatch
+- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
+- `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
+- `@repo/database/validations/meetings` → regenerateSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -1284,31 +1312,12 @@
 - `linkMeetingParticipantAction()`
 - `unlinkMeetingParticipantAction()`
 - `updateMeetingMetadataAction()`
-- `regenerateMeetingAction()`
-- `reprocessMeetingAction()`
-- `createOrganizationAction()`
-- `createProjectAction()`
-- `createPersonAction()`
 
 **Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummary, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject
-- `@repo/database/mutations/extractions` → deleteExtractionsByMeetingId
-- `@repo/database/mutations/organizations` → createOrganization
-- `@repo/database/mutations/projects` → createProject
+- `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject
 - `@repo/database/mutations/meeting-participants` → linkMeetingParticipant, unlinkMeetingParticipant
-- `@repo/database/mutations/people` → createPerson
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
-- `@repo/ai/agents/extractor` → runExtractor
-- `@repo/ai/pipeline/save-extractions` → saveExtractions
-- `@repo/ai/pipeline/context-injection` → buildEntityContext
-- `@repo/ai/agents/gatekeeper` → runGatekeeper
-- `@repo/ai/pipeline/tagger` → runTagger
-- `@repo/ai/pipeline/segment-builder` → buildSegments
-- `@repo/ai/embeddings` → embedBatch
-- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
-- `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
-- `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, createOrganizationSchema, createProjectSchema, createPersonSchema, updateMeetingMetadataSchema, regenerateSchema
+- `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -3021,16 +3030,6 @@
 **Depends on:**
 - `@repo/ui/utils` → cn
 
-### `apps/devhub/src/components/review/review-overview.tsx`
-
-**Exports:**
-- `ReviewOverview()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-- `@repo/ui/utils` → cn
-- (type) `@repo/database/queries/project-reviews` → ProjectReviewRow
-
 ### `apps/devhub/src/components/review/risks-list.tsx`
 
 **Exports:**
@@ -3102,7 +3101,7 @@ Which layers depend on which packages:
 | AI Core | 5 | - | - | - | - | 5 |
 | AI Pipeline | 39 | - | - | - | - | 39 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 35 | 14 | 18 | - | - | 67 |
+| Cockpit Server Actions | 36 | 14 | 20 | - | - | 70 |
 | Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
 | Cockpit Components | 39 | - | - | 67 | - | 106 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -3110,9 +3109,9 @@ Which layers depend on which packages:
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 19 | 2 | 10 | - | - | 31 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
-| DevHub Components | 10 | - | - | 28 | - | 38 |
+| DevHub Components | 9 | - | - | 26 | - | 35 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 13 | - | 11 | 9 | - | 33 |
+| DevHub Pages | 10 | - | 9 | 8 | - | 27 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
 
 ## Critical Integration Points
@@ -3123,7 +3122,7 @@ parts of the codebase — changes here have the widest blast radius.
 | File | Packages | Count |
 |------|----------|-------|
 | `apps/cockpit/src/actions/email-review.ts` | database, ai, auth | 3 |
-| `apps/cockpit/src/actions/meetings.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/actions/meeting-pipeline.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
@@ -3164,7 +3163,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `deleteExtractionsByMeetingId()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `deleteExtractionsByMeetingId()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `insertExtractions()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
@@ -3209,10 +3208,10 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `linkSegmentToProject()` | `apps/cockpit/src/actions/segments.ts` |
 | `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
-| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meetings.ts
 
@@ -3228,10 +3227,10 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
-| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
 | `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/actions/review.ts` |
 | `updateMeetingRawFireflies()` | `packages/ai/src/pipeline/steps/extract.ts` |
-| `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `deleteMeeting()` | `apps/cockpit/src/actions/entities.ts` |
 
@@ -3239,7 +3238,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `createOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
+| `createOrganization()` | `apps/cockpit/src/actions/entities.ts` |
 | `updateOrganization()` | `apps/cockpit/src/actions/entities.ts` |
 | `deleteOrganization()` | `apps/cockpit/src/actions/entities.ts` |
 
@@ -3247,7 +3246,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `createPerson()` | `apps/cockpit/src/actions/meetings.ts` |
+| `createPerson()` | `apps/cockpit/src/actions/entities.ts` |
 | `updatePerson()` | `apps/cockpit/src/actions/entities.ts` |
 | `deletePerson()` | `apps/cockpit/src/actions/entities.ts` |
 
@@ -3261,7 +3260,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `createProject()` | `apps/cockpit/src/actions/meetings.ts` |
+| `createProject()` | `apps/cockpit/src/actions/entities.ts` |
 | `updateProjectAliases()` | `packages/ai/src/pipeline/entity-resolution.ts`, `apps/cockpit/src/actions/segments.ts` |
 | `updateProject()` | `apps/cockpit/src/actions/entities.ts` |
 | `deleteProject()` | `apps/cockpit/src/actions/entities.ts` |
@@ -3326,7 +3325,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getIgnoredEntityNames()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `getIgnoredEntityNames()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### queries/issues.ts
 
@@ -3335,7 +3334,7 @@ Which queries are used where across the codebase.
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/page.tsx`, `apps/devhub/src/app/(app)/review/page.tsx` |
+| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 | `getCommentById()` | `apps/devhub/src/actions/comments.ts` |
 | `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
@@ -3385,7 +3384,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/clients/page.tsx`, `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/clients/page.tsx`, `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
 | `getAllOrganizations()` | `packages/ai/src/pipeline/context-injection.ts`, `packages/ai/src/pipeline/entity-resolution.ts` |
 
@@ -3408,20 +3407,20 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listAccessibleProjects()` | `apps/devhub/src/app/(app)/layout.tsx`, `apps/devhub/src/app/(app)/page.tsx`, `apps/devhub/src/app/(app)/review/page.tsx` |
+| `listAccessibleProjects()` | `apps/devhub/src/app/(app)/layout.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/project-reviews.ts
 
 | Query | Used in |
 |-------|---------|
-| `getLatestProjectReview()` | `apps/devhub/src/app/(app)/page.tsx`, `apps/devhub/src/app/(app)/review/page.tsx` |
+| `getLatestProjectReview()` | `apps/devhub/src/app/(app)/page.tsx` |
 | `getHealthTrend()` | `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/projects.ts
 
 | Query | Used in |
 |-------|---------|
-| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
@@ -3454,7 +3453,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 

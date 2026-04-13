@@ -23,11 +23,11 @@ export interface InsertIssueData {
   ai_classified_at?: string | null;
   duplicate_of_id?: string | null;
   similarity_score?: number | null;
+  created_at?: string;
   execution_type?: string;
   ai_context?: Record<string, unknown>;
   ai_result?: Record<string, unknown>;
   ai_executable?: boolean;
-  created_at?: string;
 }
 
 export interface UpdateIssueData {
@@ -136,6 +136,7 @@ export async function upsertUserbackIssues(
           reporter_name: item.reporter_name,
           source_url: item.source_url,
           source_metadata: item.source_metadata,
+          ...(item.created_at ? { created_at: item.created_at } : {}),
           updated_at: new Date().toISOString(),
         })
         .eq("id", existingId);

@@ -4,12 +4,12 @@ import { useState, useRef, useEffect, useTransition } from "react";
 import { X } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
+import { updateMeetingMetadataAction } from "@/actions/meetings";
 import {
-  updateMeetingMetadataAction,
   createOrganizationAction,
   createProjectAction,
   createPersonAction,
-} from "@/actions/meetings";
+} from "@/actions/entities";
 import { MEETING_TYPES } from "@repo/database/constants/meetings";
 import type { PersonWithOrg } from "@repo/database/queries/people";
 

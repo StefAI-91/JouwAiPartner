@@ -4,11 +4,8 @@ import { useState, useRef, useEffect, useTransition } from "react";
 import { FolderKanban, X, Plus } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
-import {
-  linkMeetingProjectAction,
-  unlinkMeetingProjectAction,
-  createProjectAction,
-} from "@/actions/meetings";
+import { linkMeetingProjectAction, unlinkMeetingProjectAction } from "@/actions/meetings";
+import { createProjectAction } from "@/actions/entities";
 
 interface Organization {
   id: string;

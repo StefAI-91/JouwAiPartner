@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, LayoutList, Sparkles, Settings } from "lucide-react";
+import { LayoutDashboard, LayoutList, Settings } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import { useEffect, useState, useTransition } from "react";
 import { NAV_ITEMS, issueHref, type StatusCounts } from "./sidebar-constants";
@@ -112,19 +112,6 @@ export function SidebarNav({
 
       {/* Bottom nav */}
       <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
-        <Link
-          href={projectId ? `/review?project=${projectId}` : "/review"}
-          onClick={onNavigate}
-          className={cn(
-            "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            linkClassName,
-            pathname === "/review" &&
-              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
-          )}
-        >
-          <Sparkles className={iconSize} />
-          AI Review
-        </Link>
         <Link
           href="/settings"
           onClick={onNavigate}

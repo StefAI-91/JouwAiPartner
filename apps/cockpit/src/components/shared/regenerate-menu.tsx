@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/ui/dropdown-menu";
-import { regenerateMeetingAction, reprocessMeetingAction } from "@/actions/meetings";
+import { regenerateMeetingAction, reprocessMeetingAction } from "@/actions/meeting-pipeline";
 
 interface RegenerateMenuProps {
   meetingId: string;

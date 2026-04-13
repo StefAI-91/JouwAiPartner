@@ -60,8 +60,10 @@ export interface UserbackFeedbackItem {
   os: string | null;
   resolution: string | null;
   due_date: string | null;
-  created_at: string;
-  modified_at: string;
+  created: string;
+  modified: string;
+  created_at?: string;
+  modified_at?: string;
   [key: string]: unknown;
 }
 
@@ -300,7 +302,7 @@ export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string
     source: "userback",
     userback_id: String(item.id),
     source_url: item.page_url ?? null,
-    created_at: item.created_at,
+    created_at: item.created ?? item.created_at,
     source_metadata: {
       screenshot_url: screenshotUrl,
       screenshot_urls: screenshots.map((s) => s.url).filter(Boolean),
@@ -314,8 +316,8 @@ export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string
       category: item.category ?? null,
       session: getSession(item),
       location: getLocation(item),
-      userback_created_at: item.created_at,
-      userback_modified_at: item.modified_at,
+      userback_created_at: item.created ?? item.created_at,
+      userback_modified_at: item.modified ?? item.modified_at,
       feedback_type: item.feedback_type,
       raw_userback: item,
       ...(isSentinelDate(item.due_date) ? {} : { due_date: item.due_date }),

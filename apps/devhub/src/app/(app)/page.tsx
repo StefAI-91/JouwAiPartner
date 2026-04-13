@@ -68,14 +68,7 @@ export default async function DashboardPage({
       ) : (
         <div className="rounded-lg border border-dashed bg-card p-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Nog geen AI review beschikbaar. Ga naar{" "}
-            <a
-              href={`/review?project=${projectId}`}
-              className="font-medium text-foreground underline underline-offset-4"
-            >
-              AI Review
-            </a>{" "}
-            om een analyse te genereren.
+            Nog geen AI review beschikbaar. Gebruik de knop hierboven om een analyse te genereren.
           </p>
         </div>
       )}

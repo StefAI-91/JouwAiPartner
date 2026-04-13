@@ -2,9 +2,13 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { updateOrganization, deleteOrganization } from "@repo/database/mutations/organizations";
-import { updateProject, deleteProject } from "@repo/database/mutations/projects";
-import { updatePerson, deletePerson } from "@repo/database/mutations/people";
+import {
+  createOrganization,
+  updateOrganization,
+  deleteOrganization,
+} from "@repo/database/mutations/organizations";
+import { createProject, updateProject, deleteProject } from "@repo/database/mutations/projects";
+import { createPerson, updatePerson, deletePerson } from "@repo/database/mutations/people";
 import {
   createExtraction,
   updateExtraction,
@@ -20,6 +24,11 @@ import {
   deleteSchema,
   deleteWithContextSchema,
 } from "@repo/database/validations/entities";
+import {
+  createOrganizationSchema,
+  createProjectSchema,
+  createPersonSchema,
+} from "@repo/database/validations/meetings";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 
@@ -37,6 +46,26 @@ function cleanInput<T extends Record<string, unknown>>(input: T): T {
 }
 
 // ── Organization Actions ──
+
+export async function createOrganizationAction(
+  input: z.infer<typeof createOrganizationSchema>,
+): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+
+  const parsed = createOrganizationSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const result = await createOrganization({
+    name: parsed.data.name,
+    type: parsed.data.type,
+  });
+  if ("error" in result) return result;
+
+  revalidatePath("/clients");
+  return { success: true, data: result.data };
+}
 
 export async function updateOrganizationAction(
   input: z.infer<typeof updateOrganizationSchema>,
@@ -77,6 +106,26 @@ export async function deleteOrganizationAction(
 }
 
 // ── Project Actions ──
+
+export async function createProjectAction(
+  input: z.infer<typeof createProjectSchema>,
+): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+
+  const parsed = createProjectSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const result = await createProject({
+    name: parsed.data.name,
+    organizationId: parsed.data.organizationId,
+  });
+  if ("error" in result) return result;
+
+  revalidatePath("/projects");
+  return { success: true, data: result.data };
+}
 
 export async function updateProjectAction(
   input: z.infer<typeof updateProjectSchema>,
@@ -122,6 +171,28 @@ export async function deleteProjectAction(
 }
 
 // ── Person Actions ──
+
+export async function createPersonAction(
+  input: z.infer<typeof createPersonSchema>,
+): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+
+  const parsed = createPersonSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+
+  const result = await createPerson({
+    name: parsed.data.name,
+    email: parsed.data.email,
+    role: parsed.data.role,
+    organizationId: parsed.data.organizationId,
+  });
+  if ("error" in result) return result;
+
+  revalidatePath("/people");
+  return { success: true, data: result.data };
+}
 
 export async function updatePersonAction(
   input: z.infer<typeof updatePersonSchema>,

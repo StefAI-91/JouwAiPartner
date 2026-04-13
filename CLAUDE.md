@@ -307,7 +307,6 @@ Organizations, projects, people, and extractions are manually editable via inlin
 | ------------------ | ---------------------------------------------- |
 | `/`                | Issue list with project filter, triage sidebar |
 | `/issues/[id]`     | Issue detail with comments, activity, AI panel |
-| `/review`          | AI review overview                             |
 | `/settings/import` | Userback sync + import management              |
 | `/login`           | Login page                                     |
 
