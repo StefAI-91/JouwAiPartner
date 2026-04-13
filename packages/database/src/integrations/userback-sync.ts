@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getUserbackSyncCursor, getExistingUserbackIds } from "../queries/issues";
+import { getExistingUserbackIds } from "../queries/issues";
 import { upsertUserbackIssues } from "../mutations/issues";
 import {
   fetchAllUserbackFeedback,
@@ -39,39 +39,21 @@ export async function executeSyncPipeline({
   filterTests = false,
   admin,
 }: SyncPipelineParams): Promise<SyncPipelineResult> {
-  // 1. Get sync cursor, capped to 30 days ago (never fetch older than that)
-  const rawCursor = await getUserbackSyncCursor(admin);
-  const isInitial = rawCursor === null;
+  // 1. Hard 30-day window: only fetch items created in the last 30 days.
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const cursor = rawCursor && rawCursor > thirtyDaysAgo ? rawCursor : thirtyDaysAgo;
 
-  console.log(
-    `[syncPipeline] Starting ${isInitial ? "initial" : "incremental"} sync` +
-      ` (cursor: ${cursor ?? "none"}, limit: ${limit})`,
-  );
+  console.log(`[syncPipeline] Starting sync (createdAfter: ${thirtyDaysAgo}, limit: ${limit})`);
 
-  // 2. Fetch from Userback API (filters on updated_after, so older items
-  //    that were recently modified can still come back — handled below).
-  const rawItems = await fetchAllUserbackFeedback(cursor, limit);
+  // 2. Fetch newest-first; pagination stops as soon as items are older than
+  //    the cutoff, so no client-side filtering needed.
+  const items = await fetchAllUserbackFeedback(thirtyDaysAgo, limit);
 
-  // 3. Drop items created before the 30-day window, then sort newest-first
-  //    so the limit picks up the most recent feedback first.
-  const items = rawItems
-    .filter((item) => {
-      const created = item.created ?? item.created_at;
-      return !!created && created >= thirtyDaysAgo;
-    })
-    .sort((a, b) => {
-      const aDate = a.created ?? a.created_at ?? "";
-      const bDate = b.created ?? b.created_at ?? "";
-      return bDate.localeCompare(aDate);
-    });
-
-  // 4. Optionally filter test submissions
+  // 3. Optionally filter test submissions
   const realItems = filterTests
     ? items.filter((item) => !isTestSubmission(item.description))
     : items;
   const filtered = items.length - realItems.length;
+  const isInitial = false;
 
   if (realItems.length === 0) {
     return {

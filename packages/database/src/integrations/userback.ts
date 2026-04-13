@@ -110,23 +110,22 @@ function getApiToken(): string {
 
 /**
  * Fetch a single page of Userback feedback items.
+ * Sort defaults to newest-created first so callers can stop paginating
+ * as soon as items pass their cutoff.
  */
 export async function fetchUserbackFeedbackPage(options: {
   page: number;
   perPage?: number;
-  updatedAfter?: string;
+  sort?: string;
 }): Promise<UserbackFeedbackPage> {
-  const { page, perPage = 50, updatedAfter } = options;
+  const { page, perPage = 50, sort = "created,desc" } = options;
   const token = getApiToken();
 
   const params = new URLSearchParams({
     page: String(page),
     per_page: String(perPage),
+    sort,
   });
-
-  if (updatedAfter) {
-    params.set("updated_after", updatedAfter);
-  }
 
   const response = await fetch(`${USERBACK_API_BASE}/feedback?${params}`, {
     headers: {
@@ -144,39 +143,36 @@ export async function fetchUserbackFeedbackPage(options: {
 }
 
 /**
- * Fetch all Userback feedback, paginating automatically with rate limiting.
- * @param updatedAfter - ISO date string for incremental sync (null = full sync)
- * @param limit - Max items to return (default 10 for testing, set higher for production)
+ * Fetch recent Userback feedback newest-first, stopping when items drop
+ * below the cutoff or the limit is reached. Dedup happens downstream.
+ * @param createdAfter - ISO date; items created before this are excluded
+ * @param limit - Max items to return
  */
 export async function fetchAllUserbackFeedback(
-  updatedAfter?: string | null,
-  limit: number = 10,
+  createdAfter: string,
+  limit: number = 50,
 ): Promise<UserbackFeedbackItem[]> {
   const allItems: UserbackFeedbackItem[] = [];
   let page = 1;
 
-  while (true) {
+  while (allItems.length < limit) {
     const result = await fetchUserbackFeedbackPage({
       page,
       perPage: Math.min(50, limit - allItems.length),
-      updatedAfter: updatedAfter ?? undefined,
+      sort: "created,desc",
     });
 
-    allItems.push(...result.data);
-
-    // Stop if we've hit the limit
-    if (allItems.length >= limit) {
-      return allItems.slice(0, limit);
+    for (const item of result.data) {
+      const created = item.created ?? item.created_at;
+      // Page is sorted newest-first, so once we see an older item we're done.
+      if (!created || created < createdAfter) return allItems;
+      allItems.push(item);
+      if (allItems.length >= limit) return allItems;
     }
 
-    // Stop if we've fetched all pages
-    if (page >= result._pagination.totalPages) {
-      break;
-    }
+    if (page >= result._pagination.totalPages) break;
 
     page++;
-
-    // Rate limit: 200ms between pages
     await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY_MS));
   }
 
