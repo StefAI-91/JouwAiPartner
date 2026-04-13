@@ -78,7 +78,7 @@ export function DesktopSidebar({
   const badges: Record<string, number | undefined> = { reviewCount };
 
   return (
-    <aside className="hidden w-56 shrink-0 border-r border-border/50 bg-white/60 backdrop-blur-sm lg:flex lg:flex-col">
+    <aside className="hidden w-64 shrink-0 border-r border-border/50 bg-white/60 backdrop-blur-sm lg:flex lg:flex-col">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
         <img
