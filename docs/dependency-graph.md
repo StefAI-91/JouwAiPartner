@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 244 |
 | Exported functions/constants | 416 |
-| Exported types/interfaces | 114 |
+| Exported types/interfaces | 113 |
 | Cross-package imports | 317 |
 | Critical integration points (3+ packages) | 6 |
 
