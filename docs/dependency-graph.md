@@ -10,7 +10,7 @@
 | Files scanned | 408 |
 | Exported functions/constants | 598 |
 | Exported types/interfaces | 125 |
-| Cross-package imports | 501 |
+| Cross-package imports | 500 |
 | Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
@@ -2989,9 +2989,6 @@
 **Exports:**
 - `TopBar()`
 
-**Depends on:**
-- `@repo/ui/button` → buttonVariants
-
 ### `apps/devhub/src/components/review/action-items-list.tsx`
 
 **Exports:**
@@ -3113,7 +3110,7 @@ Which layers depend on which packages:
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 19 | 2 | 10 | - | - | 31 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
-| DevHub Components | 10 | - | - | 29 | - | 39 |
+| DevHub Components | 10 | - | - | 28 | - | 38 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 13 | - | 11 | 9 | - | 33 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
