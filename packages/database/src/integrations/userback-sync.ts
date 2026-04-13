@@ -39,10 +39,11 @@ export async function executeSyncPipeline({
   filterTests = false,
   admin,
 }: SyncPipelineParams): Promise<SyncPipelineResult> {
-  // 1. Get sync cursor (null = first sync → default to 14 days ago)
+  // 1. Get sync cursor, capped to 30 days ago (never fetch older than that)
   const rawCursor = await getUserbackSyncCursor(admin);
   const isInitial = rawCursor === null;
-  const cursor = rawCursor ?? new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const cursor = rawCursor && rawCursor > thirtyDaysAgo ? rawCursor : thirtyDaysAgo;
 
   console.log(
     `[syncPipeline] Starting ${isInitial ? "initial" : "incremental"} sync` +
