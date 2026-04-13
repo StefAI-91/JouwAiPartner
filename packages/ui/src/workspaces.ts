@@ -27,9 +27,9 @@ export interface Workspace {
 
 /** Bekende productie-deployments. Dient als fallback wanneer geen env var is gezet. */
 const PROD_FALLBACKS = {
+  cockpit: "https://jouw-ai-partner.vercel.app",
   devhub: "https://jouw-ai-partner-devhub.vercel.app",
-  // TODO: cockpit + portal production URLs invullen zodra bekend.
-  cockpit: "",
+  // TODO: portal production URL invullen zodra gedeployed.
   portal: "",
 } as const;
 
