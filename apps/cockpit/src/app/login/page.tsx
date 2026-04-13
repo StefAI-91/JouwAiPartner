@@ -4,8 +4,8 @@ const LOGO_URL =
   "https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  missing_code: "De magic link is onvolledig. Vraag een nieuwe aan.",
-  invalid_link: "Deze magic link is verlopen of ongeldig. Vraag een nieuwe aan.",
+  missing_code: "De inloglink is onvolledig. Vraag een nieuwe code aan.",
+  invalid_link: "Deze inloglink is verlopen of ongeldig. Vraag een nieuwe code aan.",
   session: "Er ging iets mis bij het aanmaken van je sessie. Probeer opnieuw.",
   no_access: "Je account heeft geen toegang tot het cockpit.",
 };

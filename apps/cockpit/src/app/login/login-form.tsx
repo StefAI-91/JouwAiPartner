@@ -1,19 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@repo/database/supabase/client";
 import { Button } from "@repo/ui/button";
 
 const emailSchema = z.object({ email: z.string().email("Ongeldig e-mailadres") });
+const codeSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "Code moet 6 cijfers zijn"),
+});
+
+type FormState = "idle" | "sending" | "awaiting-code" | "verifying" | "error";
 
 export function LoginForm({ returnTo }: { returnTo?: string }) {
   const [email, setEmail] = useState("");
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [code, setCode] = useState("");
+  const [state, setState] = useState<FormState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const supabase = createClient();
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -26,39 +34,107 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
 
     setState("sending");
 
-    const callbackUrl = new URL("/auth/callback", window.location.origin);
-    if (returnTo) callbackUrl.searchParams.set("next", returnTo);
-
     // AUTH-174 / EDGE-170: shouldCreateUser=false so unknown emails never enter
-    // the system. We ignore the error and always show the "sent" state to avoid
-    // leaking which addresses are registered (user enumeration).
+    // the system. We ignore the error and always show the "code sent" state to
+    // avoid leaking which addresses are registered (user enumeration).
     await supabase.auth.signInWithOtp({
       email: parsed.data.email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: callbackUrl.toString(),
-      },
+      options: { shouldCreateUser: false },
     });
 
-    setState("sent");
+    setState("awaiting-code");
   }
 
-  if (state === "sent") {
+  async function handleCodeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const parsed = codeSchema.safeParse({ code: code.trim() });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Code moet 6 cijfers zijn");
+      return;
+    }
+
+    setState("verifying");
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: parsed.data.code,
+      type: "email",
+    });
+
+    if (verifyError) {
+      setError("Code is onjuist of verlopen. Controleer de code of vraag een nieuwe aan.");
+      setState("awaiting-code");
+      return;
+    }
+
+    // Middleware handles role-based routing: admins stay in cockpit,
+    // members get redirected to NEXT_PUBLIC_DEVHUB_URL automatically.
+    const target =
+      returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/";
+    router.push(target);
+    router.refresh();
+  }
+
+  function handleReset() {
+    setState("idle");
+    setEmail("");
+    setCode("");
+    setError(null);
+  }
+
+  if (state === "awaiting-code" || state === "verifying") {
     return (
       <div className="space-y-4">
         <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-6 text-center">
           <p className="text-sm font-medium">Check je inbox</p>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            Als dit e-mailadres toegang heeft, ontvang je een magic link. Klik op de link om in te
-            loggen.
+            Als dit e-mailadres toegang heeft, ontvang je een 6-cijferige code. Vul de code
+            hieronder in om in te loggen.
           </p>
         </div>
+
+        <form onSubmit={handleCodeSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="code" className="block text-sm font-medium">
+              Inlogcode
+            </label>
+            <input
+              id="code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              required
+              autoFocus
+              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-center text-lg tracking-[0.4em] outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              placeholder="123456"
+            />
+          </div>
+
+          {error && (
+            <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={state === "verifying" || code.length !== 6}
+            className="w-full glow-primary"
+            size="lg"
+          >
+            {state === "verifying" ? "Bezig..." : "Inloggen"}
+          </Button>
+        </form>
+
         <button
           type="button"
-          onClick={() => {
-            setState("idle");
-            setEmail("");
-          }}
+          onClick={handleReset}
           className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
         >
           Andere e-mail gebruiken
@@ -68,7 +144,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleEmailSubmit} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="email" className="block text-sm font-medium">
           E-mail
@@ -97,7 +173,7 @@ export function LoginForm({ returnTo }: { returnTo?: string }) {
         className="w-full glow-primary"
         size="lg"
       >
-        {state === "sending" ? "Bezig..." : "Stuur magic link"}
+        {state === "sending" ? "Bezig..." : "Stuur inlogcode"}
       </Button>
     </form>
   );
