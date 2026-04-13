@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 
     const result = await executeSyncPipeline({
       projectId: project.id,
-      limit: 50,
+      limit: 100,
       filterTests: true,
       admin,
     });
