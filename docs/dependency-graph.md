@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 403 |
-| Exported functions/constants | 587 |
-| Exported types/interfaces | 119 |
-| Cross-package imports | 493 |
+| Files scanned | 408 |
+| Exported functions/constants | 597 |
+| Exported types/interfaces | 125 |
+| Cross-package imports | 500 |
 | Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
@@ -224,12 +224,13 @@
 **Exports:**
 - `listProjects()`
 - `getProjectById()`
+- `listFocusProjects()`
 - `getProjectByNameIlike()`
 - `getAllProjects()`
 - `getActiveProjectsForContext()`
 - `matchProjectsByEmbedding()`
 
-**Types:** `ProjectListItem`, `ProjectDetail`, `ActiveProjectForContext`
+**Types:** `ProjectListItem`, `ProjectDetail`, `FocusProject`, `ActiveProjectForContext`
 
 ### `queries/review.ts`
 
@@ -1010,6 +1011,19 @@
 **Exports:**
 - `cn()`
 
+### `packages/ui/src/workspace-switcher.tsx`
+
+**Exports:**
+- `WorkspaceSwitcher()`
+
+### `packages/ui/src/workspaces.ts`
+
+**Exports:**
+- `getWorkspaces()`
+- `getWorkspace()`
+
+**Types:** `WorkspaceId`, `WorkspaceStatus`, `Workspace`
+
 ## MCP Server
 
 ### `packages/mcp/src/server.ts`
@@ -1767,6 +1781,26 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/meetings` → listVerifiedMeetings
 
+### `apps/cockpit/src/app/(dashboard)/navigatie-test/mock-data.ts`
+
+**Exports:**
+- `focusProjectsMvp`
+- `productionQuery`
+- `signals`
+- `parked`
+
+**Types:** `DeliveryPhase`, `FocusProjectMvp`
+
+### `apps/cockpit/src/app/(dashboard)/navigatie-test/navigatie-playground.tsx`
+
+**Exports:**
+- `NavigatiePlayground()`
+
+### `apps/cockpit/src/app/(dashboard)/navigatie-test/page.tsx`
+
+**Exports:**
+- `metadata`
+
 ### `apps/cockpit/src/app/(dashboard)/page.tsx`
 
 **Exports:**
@@ -2221,10 +2255,18 @@
 **Exports:**
 - `DesktopSidebar()`
 
+**Depends on:**
+- (type) `@repo/database/queries/projects` → FocusProject
+- `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+
 ### `apps/cockpit/src/components/layout/side-menu.tsx`
 
 **Exports:**
 - `SideMenu()`
+
+**Depends on:**
+- (type) `@repo/database/queries/projects` → FocusProject
+- `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
 ### `apps/cockpit/src/components/meetings/add-extraction-form.tsx`
 
@@ -2905,10 +2947,16 @@
 **Exports:**
 - `AppSidebar()`
 
+**Depends on:**
+- `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+
 ### `apps/devhub/src/components/layout/mobile-sidebar.tsx`
 
 **Exports:**
 - `MobileSidebar()`
+
+**Depends on:**
+- `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
 ### `apps/devhub/src/components/layout/project-switcher.tsx`
 
@@ -3057,13 +3105,13 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 35 | 14 | 18 | - | - | 67 |
 | Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
-| Cockpit Components | 37 | - | - | 65 | - | 102 |
+| Cockpit Components | 39 | - | - | 67 | - | 106 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 69 | - | 2 | 21 | - | 92 |
+| Cockpit Pages | 70 | - | 2 | 21 | - | 93 |
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 19 | 2 | 10 | - | - | 31 |
 | DevHub API Routes | 3 | - | - | - | - | 3 |
-| DevHub Components | 10 | - | - | 27 | - | 37 |
+| DevHub Components | 10 | - | - | 29 | - | 39 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 13 | - | 11 | 9 | - | 33 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
@@ -3375,6 +3423,7 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
+| `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |
