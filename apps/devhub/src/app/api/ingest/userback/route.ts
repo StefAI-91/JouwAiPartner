@@ -21,7 +21,7 @@ function verifyCronAuth(req: NextRequest): boolean {
 
 /**
  * GET — Vercel Cron trigger (auth via CRON_SECRET).
- * Syncs max 50 items per cron run.
+ * Syncs up to 100 items per cron run, then runs AI classify on new ones.
  */
 export async function GET(req: NextRequest) {
   if (!verifyCronAuth(req)) {

@@ -16,6 +16,10 @@ vi.mock("@repo/auth/access", () => ({
   isAdmin: vi.fn(),
 }));
 
+vi.mock("@/actions/classify", () => ({
+  classifyIssueBackground: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
@@ -67,6 +71,7 @@ describe("GET /api/ingest/userback", () => {
     });
     vi.mocked(getAdminClient).mockReturnValue(mockAdmin as never);
     vi.mocked(executeSyncPipeline).mockResolvedValue({
+      importedIds: [],
       imported: 5,
       updated: 2,
       skipped: 1,
@@ -86,7 +91,7 @@ describe("GET /api/ingest/userback", () => {
     expect(executeSyncPipeline).toHaveBeenCalledWith(
       expect.objectContaining({
         projectId: "project-1",
-        limit: 50,
+        limit: 100,
         filterTests: true,
       }),
     );
