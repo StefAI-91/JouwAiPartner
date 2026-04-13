@@ -1,209 +1,209 @@
 /**
- * Mock data voor de navigatie-test.
- * Deze data simuleert wat de focus-ranker zou ophalen uit productie.
- * Niet gekoppeld aan de echte database — puur voor visualisatie.
+ * Mock data voor de MVP navigatie-test.
+ * Reflecteert exact wat vandaag al in de database staat:
+ * projects.name/status/updated_at/deadline, organizations.name,
+ * people.name (owner), aggregated last_meeting_date en open_action_count,
+ * en optioneel weekly_summary.status wanneer de week is gedraaid.
+ *
+ * Geen AI-reden. Geen scoring. Geen scenarios.
  */
 
 export type HealthStatus = "rood" | "oranje" | "groen";
+export type DeliveryPhase = "kickoff" | "in_progress" | "review" | "maintenance";
 
-export interface FocusProject {
+export interface FocusProjectMvp {
   id: string;
   name: string;
   organization: string;
-  health: HealthStatus;
+  /** projects.status — filter: alleen delivery-fases verschijnen in focus */
+  phase: DeliveryPhase;
+  /** weekly_summary.status — kan ontbreken als Weekly Summarizer nog niet liep */
+  health: HealthStatus | null;
+  /** Aggregatie op extractions.type = action_item */
   openActions: number;
-  reason: string;
-  lastSignal: string;
-  score: number;
-  /** Welke signalen aan de score bijdroegen (voor de hover-breakdown) */
-  signals: {
-    health: number;
-    actions: number;
-    recency: number;
-    ownerBonus: number;
-    clientWaiting: number;
-  };
+  /** Relatieve tijd sinds laatste gekoppelde meeting — kan ontbreken */
+  lastMeetingRelative: string | null;
+  /** Relatieve tijd sinds projects.updated_at — altijd beschikbaar */
+  updatedRelative: string;
+  /** people.name via projects.owner_id — kan ontbreken */
+  owner: string | null;
+  /** projects.deadline — kan ontbreken */
+  deadlineRelative: string | null;
 }
 
-export type ScenarioKey = "maandag-ochtend" | "woensdag-middag" | "vrijdag-eind";
-
-export interface Scenario {
-  key: ScenarioKey;
-  label: string;
-  timeLabel: string;
-  greeting: string;
-  subheading: string;
-}
-
-export const scenarios: Scenario[] = [
+/**
+ * Vaste lijst, gesorteerd op `updated_at DESC` zoals de echte query.
+ * Geen scenarios — één statische lijst die productie-realistisch is.
+ */
+export const focusProjectsMvp: FocusProjectMvp[] = [
   {
-    key: "maandag-ochtend",
-    label: "Maandag 08:42",
-    timeLabel: "Maandag · 08:42",
-    greeting: "Goedemorgen, Stef",
-    subheading: "3 projecten vragen aandacht voordat je de week in gaat",
+    id: "p1",
+    name: "Flowwijs MVP",
+    organization: "Flowwijs",
+    phase: "in_progress",
+    health: "rood",
+    openActions: 6,
+    lastMeetingRelative: "vandaag",
+    updatedRelative: "3 uur geleden",
+    owner: "Stef",
+    deadlineRelative: null,
   },
   {
-    key: "woensdag-middag",
-    label: "Woensdag 14:15",
-    timeLabel: "Woensdag · 14:15",
-    greeting: "Focus, Stef",
-    subheading: "Midweek — één project op rood, twee wachten op jou",
+    id: "p2",
+    name: "CAI Studio",
+    organization: "Creative AI Partners",
+    phase: "in_progress",
+    health: "oranje",
+    openActions: 3,
+    lastMeetingRelative: "2 dagen geleden",
+    updatedRelative: "gisteren",
+    owner: "Stef",
+    deadlineRelative: "vrijdag",
   },
   {
-    key: "vrijdag-eind",
-    label: "Vrijdag 16:30",
-    timeLabel: "Vrijdag · 16:30",
-    greeting: "Bijna weekend",
-    subheading: "Twee items die het weekend niet over moeten",
+    id: "p3",
+    name: "Rinkel VoIP pipeline",
+    organization: "Intern",
+    phase: "kickoff",
+    health: null, // nog geen weekly summary
+    openActions: 1,
+    lastMeetingRelative: null,
+    updatedRelative: "1 dag geleden",
+    owner: "Ege",
+    deadlineRelative: null,
+  },
+  {
+    id: "p4",
+    name: "Klantportaal MVP",
+    organization: "Intern",
+    phase: "in_progress",
+    health: "groen",
+    openActions: 2,
+    lastMeetingRelative: "1 week geleden",
+    updatedRelative: "4 dagen geleden",
+    owner: "Stef",
+    deadlineRelative: "3 weken",
+  },
+  {
+    id: "p5",
+    name: "Weekly Summarizer v2",
+    organization: "Intern",
+    phase: "maintenance",
+    health: null,
+    openActions: 0,
+    lastMeetingRelative: null,
+    updatedRelative: "2 weken geleden",
+    owner: "Wouter",
+    deadlineRelative: null,
   },
 ];
 
-export const focusByScenario: Record<ScenarioKey, FocusProject[]> = {
-  "maandag-ochtend": [
-    {
-      id: "p1",
-      name: "CAI Studio",
-      organization: "Creative AI Partners",
-      health: "rood",
-      openActions: 4,
-      reason: "Demo vrijdag — 2 openstaande beslissingen sinds overleg donderdag",
-      lastSignal: "Overleg 3 dagen geleden",
-      score: 94,
-      signals: { health: 30, actions: 24, recency: 18, ownerBonus: 12, clientWaiting: 10 },
-    },
-    {
-      id: "p2",
-      name: "Flowwijs MVP",
-      organization: "Flowwijs",
-      health: "oranje",
-      openActions: 6,
-      reason: "E-mail klant zaterdag — wacht op antwoord over scope-uitbreiding",
-      lastSignal: "E-mail 2 dagen geleden",
-      score: 78,
-      signals: { health: 18, actions: 30, recency: 14, ownerBonus: 6, clientWaiting: 10 },
-    },
-    {
-      id: "p3",
-      name: "Rinkel VoIP pipeline",
-      organization: "Intern",
-      health: "oranje",
-      openActions: 3,
-      reason: "Ege blokt op transcriptie-endpoint — jij bent gemarkeerd als reviewer",
-      lastSignal: "Actie open sinds dinsdag",
-      score: 64,
-      signals: { health: 18, actions: 18, recency: 8, ownerBonus: 12, clientWaiting: 0 },
-    },
-    {
-      id: "p4",
-      name: "Klantportaal MVP",
-      organization: "Intern",
-      health: "groen",
-      openActions: 2,
-      reason: "Deadline Phase B over 3 weken — nog op schema",
-      lastSignal: "Sprint 032 afgerond",
-      score: 41,
-      signals: { health: 6, actions: 12, recency: 10, ownerBonus: 12, clientWaiting: 0 },
-    },
-    {
-      id: "p5",
-      name: "Weekly Summarizer v2",
-      organization: "Intern",
-      health: "groen",
-      openActions: 1,
-      reason: "Prompt-tuning wacht op 2 weken approval-data",
-      lastSignal: "Geen activiteit deze week",
-      score: 28,
-      signals: { health: 6, actions: 6, recency: 4, ownerBonus: 12, clientWaiting: 0 },
-    },
-  ],
-  "woensdag-middag": [
-    {
-      id: "p2",
-      name: "Flowwijs MVP",
-      organization: "Flowwijs",
-      health: "rood",
-      openActions: 9,
-      reason: "Klant bevestigde scope-uitbreiding — 3 nieuwe acties, deadline niet aangepast",
-      lastSignal: "E-mail 12 minuten geleden",
-      score: 96,
-      signals: { health: 30, actions: 36, recency: 20, ownerBonus: 6, clientWaiting: 4 },
-    },
-    {
-      id: "p1",
-      name: "CAI Studio",
-      organization: "Creative AI Partners",
-      health: "oranje",
-      openActions: 2,
-      reason: "Demo vrijdag — overleg vandaag ging goed, nog 2 acties voor Wouter",
-      lastSignal: "Overleg 2 uur geleden",
-      score: 72,
-      signals: { health: 18, actions: 12, recency: 24, ownerBonus: 12, clientWaiting: 6 },
-    },
-    {
-      id: "p6",
-      name: "Gmail Pipeline v2",
-      organization: "Intern",
-      health: "oranje",
-      openActions: 5,
-      reason: "Classifier-accuracy gedaald naar 82% — patroon in afwijzingen deze week",
-      lastSignal: "Curator-alert 40 minuten geleden",
-      score: 68,
-      signals: { health: 18, actions: 20, recency: 18, ownerBonus: 12, clientWaiting: 0 },
-    },
-    {
-      id: "p3",
-      name: "Rinkel VoIP pipeline",
-      organization: "Intern",
-      health: "groen",
-      openActions: 1,
-      reason: "Ege heeft transcriptie-endpoint gemerged, reviewer check open",
-      lastSignal: "PR 1 uur geleden",
-      score: 38,
-      signals: { health: 6, actions: 6, recency: 14, ownerBonus: 12, clientWaiting: 0 },
-    },
-  ],
-  "vrijdag-eind": [
-    {
-      id: "p1",
-      name: "CAI Studio",
-      organization: "Creative AI Partners",
-      health: "rood",
-      openActions: 3,
-      reason: "Demo was vanochtend — klant wacht op follow-up met 3 beslispunten",
-      lastSignal: "Meeting 6 uur geleden",
-      score: 88,
-      signals: { health: 30, actions: 18, recency: 22, ownerBonus: 12, clientWaiting: 6 },
-    },
-    {
-      id: "p2",
-      name: "Flowwijs MVP",
-      organization: "Flowwijs",
-      health: "oranje",
-      openActions: 4,
-      reason: "Klant vroeg vanmiddag om status-update voor maandag",
-      lastSignal: "E-mail 2 uur geleden",
-      score: 74,
-      signals: { health: 18, actions: 16, recency: 22, ownerBonus: 6, clientWaiting: 12 },
-    },
-    {
-      id: "p7",
-      name: "Portal RLS upgrade",
-      organization: "Intern",
-      health: "groen",
-      openActions: 2,
-      reason: "Blokkeert Phase B — geen urgentie dit weekend",
-      lastSignal: "Actie 1 dag geleden",
-      score: 32,
-      signals: { health: 6, actions: 8, recency: 6, ownerBonus: 12, clientWaiting: 0 },
-    },
-  ],
-};
+/**
+ * De échte query die dit voedt in productie.
+ * Puur voor weergave in het "Hoe werkt het" paneel.
+ */
+export const productionQuery = `SELECT
+  p.id, p.name, p.status, p.deadline, p.updated_at,
+  o.name AS organization,
+  owner.name AS owner_name,
+  ws.status AS health,
+  COUNT(DISTINCT e.id) FILTER (WHERE e.type = 'action_item') AS open_actions,
+  MAX(m.date) AS last_meeting_date
+FROM projects p
+LEFT JOIN organizations o ON o.id = p.organization_id
+LEFT JOIN people owner    ON owner.id = p.owner_id
+LEFT JOIN weekly_summaries ws ON ws.project_id = p.id
+                              AND ws.week = date_trunc('week', now())
+LEFT JOIN extractions e   ON e.project_id = p.id
+LEFT JOIN meeting_projects mp ON mp.project_id = p.id
+LEFT JOIN meetings m      ON m.id = mp.meeting_id
+WHERE p.status IN ('kickoff', 'in_progress', 'review', 'maintenance')
+GROUP BY p.id, o.name, owner.name, ws.status
+ORDER BY p.updated_at DESC
+LIMIT 5;`;
 
-export const scoringWeights = [
-  { key: "health", label: "Gezondheid (rood/oranje)", max: 30 },
-  { key: "actions", label: "Openstaande acties op jou", max: 40 },
-  { key: "recency", label: "Recente activiteit", max: 25 },
-  { key: "ownerBonus", label: "Jij bent owner/reviewer", max: 15 },
-  { key: "clientWaiting", label: "Klant wacht op ons", max: 15 },
+/**
+ * Signalen die we vandaag gebruiken — alles komt uit een bestaande kolom.
+ */
+export const todaysSignals = [
+  {
+    label: "Delivery-fase",
+    source: "projects.status",
+    usage: "Filter: alleen kickoff / in_progress / review / maintenance",
+    ready: true,
+  },
+  {
+    label: "Momentum",
+    source: "projects.updated_at",
+    usage: "Primaire sortering (DESC)",
+    ready: true,
+  },
+  {
+    label: "Organisatie",
+    source: "organizations.name",
+    usage: "Secundair label onder projectnaam",
+    ready: true,
+  },
+  {
+    label: "Openstaande acties",
+    source: "COUNT(extractions WHERE type = 'action_item')",
+    usage: "Badge naast projectnaam",
+    ready: true,
+  },
+  {
+    label: "Laatste meeting",
+    source: "MAX(meetings.date via meeting_projects)",
+    usage: "Subline: 'meeting 2 dagen geleden'",
+    ready: true,
+  },
+  {
+    label: "Owner",
+    source: "projects.owner_id → people.name",
+    usage: "Optioneel label bij rich variant",
+    ready: true,
+  },
+  {
+    label: "Deadline",
+    source: "projects.deadline",
+    usage: "Subline als binnen 2 weken",
+    ready: true,
+  },
+  {
+    label: "Gezondheid",
+    source: "weekly_summaries.status",
+    usage: "Kleur-dot. Grijs als nog geen weekly summary",
+    ready: true,
+    note: "Alleen beschikbaar als Weekly Summarizer deze week liep",
+  },
+] as const;
+
+/**
+ * Expliciet NIET in de MVP — voor latere fases.
+ */
+export const notYet = [
+  {
+    label: "AI-gegenereerde reden",
+    reason: "Vereist Project Summarizer-aanroep per render — duur en niet altijd verified",
+    phase: "Fase 1",
+  },
+  {
+    label: "Per-user personalisatie",
+    reason: "3-persoons team — zelfde lijst is prima",
+    phase: "Fase 2",
+  },
+  {
+    label: "Scoring / ranking-formule",
+    reason: "Eerst zien hoe sortering op updated_at voelt in de praktijk",
+    phase: "Fase 2",
+  },
+  {
+    label: "Klik-tracking als label-data",
+    reason: "Pas zinvol wanneer we een ranker gaan tunen",
+    phase: "Fase 3",
+  },
+  {
+    label: "Tijd-van-de-dag gedrag",
+    reason: "Cosmetisch — statisch per refresh is voldoende",
+    phase: "Niet gepland",
+  },
 ] as const;
