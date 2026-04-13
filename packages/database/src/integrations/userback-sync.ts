@@ -50,10 +50,24 @@ export async function executeSyncPipeline({
       ` (cursor: ${cursor ?? "none"}, limit: ${limit})`,
   );
 
-  // 2. Fetch from Userback API
-  const items = await fetchAllUserbackFeedback(cursor, limit);
+  // 2. Fetch from Userback API (filters on updated_after, so older items
+  //    that were recently modified can still come back — handled below).
+  const rawItems = await fetchAllUserbackFeedback(cursor, limit);
 
-  // 3. Optionally filter test submissions
+  // 3. Drop items created before the 30-day window, then sort newest-first
+  //    so the limit picks up the most recent feedback first.
+  const items = rawItems
+    .filter((item) => {
+      const created = item.created ?? item.created_at;
+      return !!created && created >= thirtyDaysAgo;
+    })
+    .sort((a, b) => {
+      const aDate = a.created ?? a.created_at ?? "";
+      const bDate = b.created ?? b.created_at ?? "";
+      return bDate.localeCompare(aDate);
+    });
+
+  // 4. Optionally filter test submissions
   const realItems = filterTests
     ? items.filter((item) => !isTestSubmission(item.description))
     : items;
@@ -73,22 +87,22 @@ export async function executeSyncPipeline({
     };
   }
 
-  // 4. Map to issue format
+  // 5. Map to issue format
   const mappedItems = realItems.map((item) => mapUserbackToIssue(item, projectId));
 
   // Build a lookup from userback_id -> original item (for media extraction)
   const itemsByUserbackId = new Map(realItems.map((item) => [String(item.id), item]));
 
-  // 5. Dedup check
+  // 6. Dedup check
   const userbackIds = mappedItems
     .map((i) => i.userback_id)
     .filter((id): id is string => id !== null && id !== undefined);
   const existingMap = await getExistingUserbackIds(userbackIds, admin);
 
-  // 6. Upsert (insert new, update existing)
+  // 7. Upsert (insert new, update existing)
   const result = await upsertUserbackIssues(mappedItems, existingMap, admin);
 
-  // 7. Download and store media for NEW items
+  // 8. Download and store media for NEW items
   let mediaStored = 0;
   for (const [userbackId, issueId] of result.importedMap) {
     const originalItem = itemsByUserbackId.get(userbackId);
