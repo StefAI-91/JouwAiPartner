@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Trash2, Bot } from "lucide-react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import type { IssueRow } from "@repo/database/queries/issues";
 import { PriorityDot } from "@/components/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -18,8 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@repo/ui/dropdown-menu";
-import { deleteIssueAction, updateIssueAction } from "@/actions/issues";
-import { startAiExecution } from "@/actions/execute";
+import { deleteIssueAction } from "@/actions/issues";
 
 function IssueThumbnail({ storagePath }: { storagePath: string }) {
   const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/issue-attachments/${storagePath}`;
@@ -33,38 +32,16 @@ function IssueThumbnail({ storagePath }: { storagePath: string }) {
 
 function IssueRowActions({
   thumbnailPath,
-  canAiPickup,
-  isPending,
-  onAiPickup,
   onDelete,
   triggerClassName,
 }: {
   thumbnailPath?: string;
-  canAiPickup: boolean;
-  isPending: boolean;
-  onAiPickup: () => void;
   onDelete: () => void;
   triggerClassName?: string;
 }) {
   return (
     <>
       {thumbnailPath && <IssueThumbnail storagePath={thumbnailPath} />}
-
-      {canAiPickup && (
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onAiPickup();
-          }}
-          disabled={isPending}
-          className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
-          title="Laat AI dit issue oppakken"
-        >
-          <Bot className="size-5" />
-          AI oppakken
-        </button>
-      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -110,24 +87,6 @@ export function IssueRowItem({
       }
     });
   }
-
-  function handleAiPickup() {
-    startTransition(async () => {
-      const result = await updateIssueAction({ id: issue.id, status: "in_progress" });
-      if ("error" in result) {
-        console.error(result.error);
-      } else {
-        startAiExecution({ issueId: issue.id });
-        router.push(`/issues/${issue.id}?project=${issue.project_id}`);
-      }
-    });
-  }
-
-  const canAiPickup =
-    issue.status !== "in_progress" &&
-    issue.status !== "done" &&
-    issue.status !== "cancelled" &&
-    issue.execution_type !== "ai";
 
   return (
     <div
@@ -194,9 +153,6 @@ export function IssueRowItem({
         <div className="hidden sm:flex items-center gap-2">
           <IssueRowActions
             thumbnailPath={thumbnailPath}
-            canAiPickup={canAiPickup}
-            isPending={isPending}
-            onAiPickup={handleAiPickup}
             onDelete={() => setShowConfirm(true)}
             triggerClassName="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           />
@@ -205,13 +161,7 @@ export function IssueRowItem({
 
       {/* Mobile: actions below content */}
       <div className="mt-2 flex items-center gap-2 pl-8 sm:hidden">
-        <IssueRowActions
-          thumbnailPath={thumbnailPath}
-          canAiPickup={canAiPickup}
-          isPending={isPending}
-          onAiPickup={handleAiPickup}
-          onDelete={() => setShowConfirm(true)}
-        />
+        <IssueRowActions thumbnailPath={thumbnailPath} onDelete={() => setShowConfirm(true)} />
       </div>
     </div>
   );

@@ -15,6 +15,12 @@ interface AuthMiddlewareOptions {
    * the required role. Defaults to the value of `loginPath` when omitted.
    */
   forbiddenRedirect?: string;
+  /**
+   * Route prefixes that are always allowed for unauthenticated users and are
+   * NOT subject to the role gate. Used for auth callback handlers that need
+   * to run BEFORE a session exists (e.g. `/auth/callback` for magic links).
+   */
+  publicPaths?: string[];
 }
 
 /**
@@ -47,8 +53,18 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
   const defaultRedirect = options?.defaultRedirect ?? "/";
   const requireRole = options?.requireRole;
   const forbiddenRedirect = options?.forbiddenRedirect ?? loginPath;
+  const publicPaths = options?.publicPaths ?? [];
+
+  const isPublicPath = (pathname: string) =>
+    publicPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   return async function middleware(request: NextRequest) {
+    // Public paths (e.g. /auth/callback) run without auth checks so magic-link
+    // flows can create a session before any role gate is evaluated.
+    if (isPublicPath(request.nextUrl.pathname)) {
+      return NextResponse.next({ request });
+    }
+
     // DEV BYPASS: skip all auth checks in development/preview
     if (isAuthBypassed()) {
       if (request.nextUrl.pathname.startsWith(loginPath)) {

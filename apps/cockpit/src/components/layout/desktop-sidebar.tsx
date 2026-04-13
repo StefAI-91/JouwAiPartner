@@ -7,6 +7,7 @@ import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
 import {
   primaryNavItems,
   secondaryNavItems,
+  adminNavItems,
   isNavItemActive,
   isFocusProjectActive,
   type NavItem,
@@ -122,6 +123,13 @@ export function DesktopSidebar({
           Bronnen
         </div>
         {secondaryNavItems.map((item) => (
+          <NavLink key={item.href} item={item} pathname={pathname} small />
+        ))}
+
+        <div className="mb-1 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+          Admin
+        </div>
+        {adminNavItems.map((item) => (
           <NavLink key={item.href} item={item} pathname={pathname} small />
         ))}
       </nav>

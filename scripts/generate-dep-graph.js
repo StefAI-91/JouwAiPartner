@@ -21,16 +21,25 @@ const ROOT = path.resolve(__dirname, "..");
 const SCAN_DIRS = [
   "packages/database/src/queries",
   "packages/database/src/mutations",
+  "packages/database/src/supabase",
   "packages/ai/src/agents",
   "packages/ai/src/pipeline",
   "packages/ai/src/validations",
   "packages/ai/src",
   "packages/auth/src",
   "packages/mcp/src",
+  "packages/ui/src",
   "apps/cockpit/src/actions",
   "apps/cockpit/src/app",
+  "apps/cockpit/src/components",
   "apps/devhub/src/actions",
   "apps/devhub/src/app",
+  "apps/devhub/src/components",
+];
+
+const SCAN_FILES = [
+  "apps/cockpit/src/middleware.ts",
+  "apps/devhub/src/middleware.ts",
 ];
 
 function walkDir(dir) {
@@ -52,6 +61,10 @@ function discoverFiles() {
   for (const dir of SCAN_DIRS) {
     files.push(...walkDir(path.join(ROOT, dir)));
   }
+  for (const file of SCAN_FILES) {
+    const full = path.join(ROOT, file);
+    if (fs.existsSync(full)) files.push(full);
+  }
   // dedupe (some dirs overlap, e.g. packages/ai/src and packages/ai/src/agents)
   return [...new Set(files)];
 }
@@ -69,7 +82,7 @@ const NAMED_IMPORTS = /import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+["']([^"']+)["'
 
 function parseFile(filePath) {
   const content = fs.readFileSync(filePath, "utf-8");
-  const relPath = path.relative(ROOT, filePath);
+  const relPath = path.relative(ROOT, filePath).replace(/\\/g, "/");
 
   // --- exports ---
   const exports = { functions: [], constants: [], types: [] };
@@ -122,19 +135,26 @@ function getLayer(filePath) {
   if (filePath.startsWith("packages/ai/src/agents")) return "ai-agents";
   if (filePath.startsWith("packages/ai/src/pipeline")) return "ai-pipeline";
   if (filePath.startsWith("packages/ai/src/validations")) return "ai-validations";
+  if (filePath.startsWith("packages/database/src/supabase")) return "db-clients";
   if (filePath.startsWith("packages/ai/src")) return "ai-core";
   if (filePath.startsWith("packages/auth")) return "auth";
+  if (filePath.startsWith("packages/ui")) return "ui";
   if (filePath.startsWith("packages/mcp")) return "mcp";
   if (filePath.startsWith("apps/cockpit/src/actions")) return "cockpit-actions";
   if (filePath.includes("apps/cockpit/src/app") && filePath.includes("api/")) return "cockpit-api";
   if (filePath.startsWith("apps/cockpit/src/app")) return "cockpit-pages";
+  if (filePath.startsWith("apps/cockpit/src/components")) return "cockpit-components";
+  if (filePath.startsWith("apps/cockpit/src/middleware")) return "cockpit-middleware";
   if (filePath.startsWith("apps/devhub/src/actions")) return "devhub-actions";
   if (filePath.includes("apps/devhub/src/app") && filePath.includes("api/")) return "devhub-api";
   if (filePath.startsWith("apps/devhub/src/app")) return "devhub-pages";
+  if (filePath.startsWith("apps/devhub/src/components")) return "devhub-components";
+  if (filePath.startsWith("apps/devhub/src/middleware")) return "devhub-middleware";
   return "other";
 }
 
 const LAYER_LABELS = {
+  "db-clients": "Database Clients",
   "db-queries": "Database Queries",
   "db-mutations": "Database Mutations",
   "ai-agents": "AI Agents",
@@ -142,13 +162,18 @@ const LAYER_LABELS = {
   "ai-validations": "AI Validations",
   "ai-core": "AI Core",
   "auth": "Auth",
+  "ui": "Shared UI Components",
   "mcp": "MCP Server",
   "cockpit-actions": "Cockpit Server Actions",
   "cockpit-api": "Cockpit API Routes",
   "cockpit-pages": "Cockpit Pages",
+  "cockpit-components": "Cockpit Components",
+  "cockpit-middleware": "Cockpit Middleware",
   "devhub-actions": "DevHub Server Actions",
   "devhub-api": "DevHub API Routes",
   "devhub-pages": "DevHub Pages",
+  "devhub-components": "DevHub Components",
+  "devhub-middleware": "DevHub Middleware",
 };
 
 // ---------------------------------------------------------------------------
@@ -261,6 +286,7 @@ function renderMarkdown(graph, parsedFiles) {
 
   // ---- Per-layer sections ----
   const layerOrder = [
+    "db-clients",
     "db-queries",
     "db-mutations",
     "ai-agents",
@@ -268,11 +294,18 @@ function renderMarkdown(graph, parsedFiles) {
     "ai-core",
     "ai-validations",
     "auth",
+    "ui",
     "mcp",
     "cockpit-actions",
     "cockpit-api",
+    "cockpit-pages",
+    "cockpit-components",
+    "cockpit-middleware",
     "devhub-actions",
     "devhub-api",
+    "devhub-pages",
+    "devhub-components",
+    "devhub-middleware",
   ];
 
   for (const layerKey of layerOrder) {

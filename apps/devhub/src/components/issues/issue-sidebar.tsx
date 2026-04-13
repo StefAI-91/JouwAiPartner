@@ -6,6 +6,8 @@ import {
   ISSUE_STATUS_LABELS,
   ISSUE_PRIORITIES,
   ISSUE_PRIORITY_LABELS,
+  ISSUE_TYPE_LABELS,
+  type IssueType,
 } from "@repo/database/constants/issues";
 import { SidebarSelect, SidebarAssignee } from "./sidebar-fields";
 import { SidebarAiClassification } from "./sidebar-ai-classification";
@@ -49,7 +51,7 @@ export function IssueSidebar({ issue, people, onFieldChange, isPending }: IssueS
 
         <div className="space-y-1">
           <span className="text-xs font-medium text-muted-foreground">Type</span>
-          <p className="text-sm capitalize">{issue.type.replace("_", " ")}</p>
+          <p className="text-sm">{ISSUE_TYPE_LABELS[issue.type as IssueType] ?? issue.type}</p>
         </div>
 
         {issue.component && (

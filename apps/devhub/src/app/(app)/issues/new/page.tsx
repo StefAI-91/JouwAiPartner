@@ -1,4 +1,4 @@
-import { listPeople } from "@repo/database/queries/people";
+import { listTeamMembers } from "@repo/database/queries/team";
 import { createPageClient } from "@repo/auth/helpers";
 import { IssueForm } from "@/components/issues/issue-form";
 
@@ -10,9 +10,12 @@ export default async function NewIssuePage({
   const params = await searchParams;
   const projectId = params.project ?? null;
   const supabase = await createPageClient();
-  const people = await listPeople(supabase, { limit: 200 });
+  const members = await listTeamMembers(supabase);
 
-  return (
-    <IssueForm projectId={projectId} people={people.map((p) => ({ id: p.id, name: p.name }))} />
-  );
+  const assignees = members.map((m) => ({
+    id: m.id,
+    name: m.full_name?.trim() || m.email,
+  }));
+
+  return <IssueForm projectId={projectId} people={assignees} />;
 }

@@ -1,6 +1,6 @@
 // ── Raw values (voor Zod schemas en database checks) ──
 
-export const ISSUE_TYPES = ["bug", "feature", "improvement", "task", "question"] as const;
+export const ISSUE_TYPES = ["bug", "feature_request", "question"] as const;
 export type IssueType = (typeof ISSUE_TYPES)[number];
 
 export const ISSUE_STATUSES = [
@@ -35,9 +35,7 @@ export const CLOSED_STATUSES = new Set<IssueStatus>(["done", "cancelled"]);
 
 export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
   bug: "Bug",
-  feature: "Functionaliteit",
-  improvement: "Verbetering",
-  task: "Taak",
+  feature_request: "Functionaliteit",
   question: "Vraag",
 };
 

@@ -1,6 +1,8 @@
 import { createAuthMiddleware } from "@repo/auth/middleware";
 
-export const middleware = createAuthMiddleware();
+export const middleware = createAuthMiddleware({
+  publicPaths: ["/auth/callback"],
+});
 
 export const config = {
   matcher: [

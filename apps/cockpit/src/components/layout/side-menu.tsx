@@ -10,6 +10,7 @@ import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
 import {
   primaryNavItems,
   secondaryNavItems,
+  adminNavItems,
   isNavItemActive,
   isFocusProjectActive,
   type NavItem,
@@ -91,10 +92,15 @@ export function SideMenu({
   focusProjects?: FocusProject[];
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const badges: Record<string, number | undefined> = { reviewCount };
 
   const close = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close on route change
   useEffect(() => {
@@ -122,92 +128,107 @@ export function SideMenu({
         <Menu className="h-6 w-6" />
       </button>
 
-      {createPortal(
-        <>
-          {/* Overlay */}
-          {open && (
-            <div
-              className="fixed inset-0 z-50 bg-black/10 backdrop-blur-xs"
-              onClick={close}
-              aria-hidden="true"
-            />
-          )}
-
-          {/* Slide-in panel */}
-          <div
-            className={`fixed inset-y-0 left-0 z-50 flex h-full w-[70%] flex-col border-r bg-sidebar shadow-lg transition-transform duration-200 ease-in-out ${
-              open ? "translate-x-0" : "-translate-x-full"
-            }`}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Navigatiemenu"
-          >
-            <div className="flex items-center justify-between border-b border-sidebar-border px-6 py-5">
-              <img
-                src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
-                alt="Jouw AI Partner"
-                className="h-8 w-auto"
-              />
-              <button
-                type="button"
+      {mounted &&
+        createPortal(
+          <>
+            {/* Overlay */}
+            {open && (
+              <div
+                className="fixed inset-0 z-50 bg-black/10 backdrop-blur-xs"
                 onClick={close}
-                className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
-                aria-label="Menu sluiten"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+                aria-hidden="true"
+              />
+            )}
 
-            <div className="border-b border-sidebar-border px-4 py-3">
-              <WorkspaceSwitcher current="cockpit" />
-            </div>
-
-            <nav className="flex flex-col gap-1.5 overflow-y-auto px-4 py-5">
-              {primaryNavItems.map((item) => (
-                <MenuLink
-                  key={item.href}
-                  item={item}
-                  pathname={pathname}
-                  badge={item.badgeKey ? (badges[item.badgeKey] ?? undefined) : undefined}
-                  onNavigate={close}
+            {/* Slide-in panel */}
+            <div
+              className={`fixed inset-y-0 left-0 z-50 flex h-full w-[70%] flex-col border-r bg-sidebar shadow-lg transition-transform duration-200 ease-in-out ${
+                open ? "translate-x-0" : "-translate-x-full"
+              }`}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigatiemenu"
+            >
+              <div className="flex items-center justify-between border-b border-sidebar-border px-6 py-5">
+                <img
+                  src="https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg"
+                  alt="Jouw AI Partner"
+                  className="h-8 w-auto"
                 />
-              ))}
-
-              {/* Focus section — active projects as shortcuts */}
-              {focusProjects.length > 0 && (
-                <>
-                  <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                    Actieve projecten
-                  </div>
-                  {focusProjects.map((project) => (
-                    <FocusProjectMenuLink
-                      key={project.id}
-                      project={project}
-                      pathname={pathname}
-                      onNavigate={close}
-                    />
-                  ))}
-                </>
-              )}
-
-              {/* Bronnen section */}
-              <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                Bronnen
+                <button
+                  type="button"
+                  onClick={close}
+                  className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-muted"
+                  aria-label="Menu sluiten"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              {secondaryNavItems.map((item) => (
-                <MenuLink
-                  key={item.href}
-                  item={item}
-                  pathname={pathname}
-                  small
-                  onNavigate={close}
-                />
-              ))}
-            </nav>
-          </div>
-        </>,
-        document.body,
-      )}
+
+              <div className="border-b border-sidebar-border px-4 py-3">
+                <WorkspaceSwitcher current="cockpit" />
+              </div>
+
+              <nav className="flex flex-col gap-1.5 overflow-y-auto px-4 py-5">
+                {primaryNavItems.map((item) => (
+                  <MenuLink
+                    key={item.href}
+                    item={item}
+                    pathname={pathname}
+                    badge={item.badgeKey ? (badges[item.badgeKey] ?? undefined) : undefined}
+                    onNavigate={close}
+                  />
+                ))}
+
+                {/* Focus section — active projects as shortcuts */}
+                {focusProjects.length > 0 && (
+                  <>
+                    <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                      Actieve projecten
+                    </div>
+                    {focusProjects.map((project) => (
+                      <FocusProjectMenuLink
+                        key={project.id}
+                        project={project}
+                        pathname={pathname}
+                        onNavigate={close}
+                      />
+                    ))}
+                  </>
+                )}
+
+                {/* Bronnen section */}
+                <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                  Bronnen
+                </div>
+                {secondaryNavItems.map((item) => (
+                  <MenuLink
+                    key={item.href}
+                    item={item}
+                    pathname={pathname}
+                    small
+                    onNavigate={close}
+                  />
+                ))}
+
+                {/* Admin section */}
+                <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                  Admin
+                </div>
+                {adminNavItems.map((item) => (
+                  <MenuLink
+                    key={item.href}
+                    item={item}
+                    pathname={pathname}
+                    small
+                    onNavigate={close}
+                  />
+                ))}
+              </nav>
+            </div>
+          </>,
+          document.body,
+        )}
     </>
   );
 }

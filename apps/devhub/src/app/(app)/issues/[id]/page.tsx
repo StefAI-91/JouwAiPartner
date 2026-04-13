@@ -5,7 +5,7 @@ import {
   listIssueActivity,
   listIssueAttachments,
 } from "@repo/database/queries/issues";
-import { listPeople } from "@repo/database/queries/people";
+import { listTeamMembers } from "@repo/database/queries/team";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import { IssueDetail } from "@/components/issues/issue-detail";
@@ -26,19 +26,24 @@ export default async function IssueDetailPage({ params }: { params: Promise<{ id
     throw e;
   }
 
-  const [comments, activities, people, attachments] = await Promise.all([
+  const [comments, activities, members, attachments] = await Promise.all([
     listIssueComments(id, { limit: 100 }, supabase),
     listIssueActivity(id, { limit: 100 }, supabase),
-    listPeople(supabase, { limit: 200 }),
+    listTeamMembers(supabase),
     listIssueAttachments(id, supabase),
   ]);
+
+  const assignees = members.map((m) => ({
+    id: m.id,
+    name: m.full_name?.trim() || m.email,
+  }));
 
   return (
     <IssueDetail
       issue={issue}
       comments={comments}
       activities={activities}
-      people={people.map((p) => ({ id: p.id, name: p.name }))}
+      people={assignees}
       attachments={attachments}
     />
   );

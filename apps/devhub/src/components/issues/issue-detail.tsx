@@ -8,7 +8,7 @@ import type {
   IssueAttachmentRow,
 } from "@repo/database/queries/issues";
 import { updateIssueAction } from "@/actions/issues";
-import { startAiExecution } from "@/actions/execute";
+
 import { IssueHeader } from "./issue-header";
 import { IssueAttachments } from "./issue-attachments";
 import { IssueSidebar } from "./issue-sidebar";
@@ -43,8 +43,6 @@ export function IssueDetail({
       const result = await updateIssueAction({ id: issue.id, [field]: value });
       if ("error" in result) {
         console.error(result.error);
-      } else if (field === "status" && value === "in_progress" && issue.execution_type !== "ai") {
-        startAiExecution({ issueId: issue.id });
       }
     });
   }

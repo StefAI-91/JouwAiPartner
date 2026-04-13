@@ -174,7 +174,10 @@ headers: async () => [
 
 **Impact:** Zodra de browser client direct queries doet (nu niet het geval), kan elke ingelogde gebruiker alle data zien. Dit is bewust uitgesteld naar v3 maar moet gedocumenteerd zijn als geaccepteerd risico.
 
-**Status:** Geaccepteerd risico voor v1-v2 (documentatie nodig). Geplande fix in v3.
+**Status:** Gedeeltelijk afgerond.
+
+- **DevHub (2026-04-13, DH-017):** Fine-grained RLS live op `issues`, `issue_comments`, `issue_activity`, `devhub_project_access`. Members zien alleen projecten waartoe ze via `devhub_project_access` toegang hebben; admins impliciet alles. Helpers: `is_admin(uuid)` en `has_project_access(uuid, uuid)` — beide `STABLE SECURITY DEFINER`. Permissieve policies uit `20260409100003_devhub_rls_policies.sql` zijn vervangen. App-layer enforcement (DH-016) blijft primaire verdediging; DB-laag is defense-in-depth.
+- **Cockpit:** Nog steeds permissieve RLS op meetings/extractions/tasks/e.d. Geplande fine-grained fix in v3 (client portal).
 
 ---
 

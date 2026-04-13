@@ -5,6 +5,7 @@ export const middleware = createAuthMiddleware({
   defaultRedirect: "/",
   requireRole: "admin",
   forbiddenRedirect: process.env.NEXT_PUBLIC_DEVHUB_URL ?? "/",
+  publicPaths: ["/auth/callback"],
 });
 
 export const config = {

@@ -3,12 +3,22 @@ import { LoginForm } from "./login-form";
 const LOGO_URL =
   "https://gattprzzbpnyygzgzvxg.supabase.co/storage/v1/object/public/Public/images/679a9066567ec01242301e4d_jap_logo_zwart_gradient.svg";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  missing_code: "De magic link is onvolledig. Vraag een nieuwe aan.",
+  invalid_link: "Deze magic link is verlopen of ongeldig. Vraag een nieuwe aan.",
+  session: "Er ging iets mis bij het aanmaken van je sessie. Probeer opnieuw.",
+  no_access: "Je account heeft geen toegang tot het cockpit.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ returnTo?: string }>;
+  searchParams: Promise<{ returnTo?: string; error?: string }>;
 }) {
-  const { returnTo } = await searchParams;
+  const { returnTo, error } = await searchParams;
+  const errorMessage = error
+    ? (ERROR_MESSAGES[error] ?? "Er ging iets mis bij het inloggen.")
+    : null;
 
   return (
     <div className="flex min-h-dvh">
@@ -71,6 +81,12 @@ export default async function LoginPage({
           </div>
 
           <p className="mb-6 text-sm text-muted-foreground lg:hidden">Log in om door te gaan</p>
+
+          {errorMessage && (
+            <div className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {errorMessage}
+            </div>
+          )}
 
           <LoginForm returnTo={returnTo} />
 
