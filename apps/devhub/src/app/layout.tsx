@@ -40,7 +40,7 @@ export default function RootLayout({
       lang="nl"
       className={`${nunito.variable} ${fredoka.variable} ${geistMono.variable} h-full`}
     >
-      <body className="h-full antialiased">{children}</body>
+      <body className="h-full overflow-hidden antialiased">{children}</body>
     </html>
   );
 }
