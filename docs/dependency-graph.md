@@ -1,6 +1,6 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-12. Do not edit manually.
+> Auto-generated on 2026-04-13. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 241 |
-| Exported functions/constants | 409 |
-| Exported types/interfaces | 110 |
+| Exported functions/constants | 410 |
+| Exported types/interfaces | 111 |
 | Cross-package imports | 317 |
 | Critical integration points (3+ packages) | 6 |
 
@@ -85,13 +85,14 @@
 - `getGoogleAccountById()`
 - `getGoogleAccountByEmail()`
 - `listEmails()`
+- `countEmailsByDirection()`
 - `getEmailById()`
 - `getExistingGmailIds()`
 - `listDraftEmails()`
 - `getDraftEmailById()`
 - `getUnprocessedEmails()`
 
-**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
+**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
 
 ### `queries/ignored-entities.ts`
 
@@ -1776,6 +1777,7 @@ Which queries are used where across the codebase.
 | `listActiveGoogleAccountsSafe()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `listEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `countEmailsByDirection()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `getEmailById()` | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx` |
 | `getExistingGmailIds()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |

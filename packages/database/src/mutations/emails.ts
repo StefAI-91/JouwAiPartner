@@ -71,6 +71,7 @@ export async function insertEmails(
     snippet: string | null;
     labels: string[];
     has_attachments: boolean;
+    direction: "incoming" | "outgoing";
     raw_gmail: Record<string, unknown>;
     embedding_stale: boolean;
     verification_status: string;

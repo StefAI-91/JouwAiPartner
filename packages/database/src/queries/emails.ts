@@ -79,12 +79,15 @@ export async function getGoogleAccountByEmail(email: string): Promise<GoogleAcco
   return data;
 }
 
+export type EmailDirection = "incoming" | "outgoing";
+
 export interface EmailListItem {
   id: string;
   gmail_id: string;
   subject: string | null;
   from_address: string;
   from_name: string | null;
+  to_addresses: string[];
   date: string;
   snippet: string | null;
   labels: string[];
@@ -94,6 +97,7 @@ export interface EmailListItem {
   relevance_score: number | null;
   email_type: string | null;
   party_type: string | null;
+  direction: EmailDirection;
   organization: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
 }
@@ -102,6 +106,7 @@ export async function listEmails(options: {
   googleAccountId?: string;
   verificationStatus?: string;
   isProcessed?: boolean;
+  direction?: EmailDirection;
   limit?: number;
   offset?: number;
   client?: SupabaseClient;
@@ -110,9 +115,9 @@ export async function listEmails(options: {
   let query = db
     .from("emails")
     .select(
-      `id, gmail_id, subject, from_address, from_name, date, snippet, labels,
+      `id, gmail_id, subject, from_address, from_name, to_addresses, date, snippet, labels,
        has_attachments, is_processed, verification_status, relevance_score,
-       email_type, party_type,
+       email_type, party_type, direction,
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name))`,
       { count: "exact" },
@@ -127,6 +132,9 @@ export async function listEmails(options: {
   }
   if (options.isProcessed !== undefined) {
     query = query.eq("is_processed", options.isProcessed);
+  }
+  if (options.direction) {
+    query = query.eq("direction", options.direction);
   }
 
   const limit = options.limit ?? 50;
@@ -143,6 +151,7 @@ export async function listEmails(options: {
     subject: row.subject as string | null,
     from_address: row.from_address as string,
     from_name: row.from_name as string | null,
+    to_addresses: (row.to_addresses as string[] | null) ?? [],
     date: row.date as string,
     snippet: row.snippet as string | null,
     labels: row.labels as string[],
@@ -152,6 +161,7 @@ export async function listEmails(options: {
     relevance_score: row.relevance_score as number | null,
     email_type: row.email_type as string | null,
     party_type: row.party_type as string | null,
+    direction: (row.direction as EmailDirection) ?? "incoming",
     organization: row.organization as { id: string; name: string } | null,
     projects: ((row.projects as { project: { id: string; name: string } }[]) ?? []).map(
       (p) => p.project,
@@ -159,6 +169,20 @@ export async function listEmails(options: {
   }));
 
   return { items, count: count ?? 0 };
+}
+
+export async function countEmailsByDirection(options: {
+  client?: SupabaseClient;
+}): Promise<{ incoming: number; outgoing: number }> {
+  const db = options.client ?? getAdminClient();
+  const [incoming, outgoing] = await Promise.all([
+    db.from("emails").select("id", { count: "exact", head: true }).eq("direction", "incoming"),
+    db.from("emails").select("id", { count: "exact", head: true }).eq("direction", "outgoing"),
+  ]);
+  return {
+    incoming: incoming.count ?? 0,
+    outgoing: outgoing.count ?? 0,
+  };
 }
 
 export interface EmailDetail {

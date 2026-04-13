@@ -210,6 +210,7 @@ export type Database = {
           cc_addresses: string[] | null;
           created_at: string | null;
           date: string;
+          direction: string;
           email_type: string | null;
           embedding: string | null;
           embedding_stale: boolean | null;
@@ -244,6 +245,7 @@ export type Database = {
           cc_addresses?: string[] | null;
           created_at?: string | null;
           date: string;
+          direction?: string;
           email_type?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean | null;
@@ -278,6 +280,7 @@ export type Database = {
           cc_addresses?: string[] | null;
           created_at?: string | null;
           date?: string;
+          direction?: string;
           email_type?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean | null;
