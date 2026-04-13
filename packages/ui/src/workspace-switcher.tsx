@@ -87,7 +87,11 @@ export function WorkspaceSwitcher({
         <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" sideOffset={6} className="w-64 p-1.5">
+      <DropdownMenuContent
+        align="start"
+        sideOffset={6}
+        className="w-64 border border-border bg-background p-1.5 shadow-lg dark:bg-card"
+      >
         <div className="px-2 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Workspaces
         </div>
