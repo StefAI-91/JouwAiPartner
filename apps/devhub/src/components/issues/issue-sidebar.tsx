@@ -7,6 +7,8 @@ import {
   ISSUE_PRIORITIES,
   ISSUE_PRIORITY_LABELS,
   ISSUE_TYPE_LABELS,
+  ISSUE_COMPONENTS,
+  ISSUE_COMPONENT_LABELS,
   type IssueType,
 } from "@repo/database/constants/issues";
 import { SidebarSelect, SidebarAssignee } from "./sidebar-fields";
@@ -54,12 +56,16 @@ export function IssueSidebar({ issue, people, onFieldChange, isPending }: IssueS
           <p className="text-sm">{ISSUE_TYPE_LABELS[issue.type as IssueType] ?? issue.type}</p>
         </div>
 
-        {issue.component && (
-          <div className="space-y-1">
-            <span className="text-xs font-medium text-muted-foreground">Component</span>
-            <p className="text-sm capitalize">{issue.component.replace("_", " ")}</p>
-          </div>
-        )}
+        <SidebarSelect
+          label="Component"
+          value={issue.component ?? "unknown"}
+          options={ISSUE_COMPONENTS.map((c) => ({
+            value: c,
+            label: ISSUE_COMPONENT_LABELS[c],
+          }))}
+          onChange={(v) => onFieldChange("component", v)}
+          disabled={isPending}
+        />
 
         {issue.severity && (
           <div className="space-y-1">
