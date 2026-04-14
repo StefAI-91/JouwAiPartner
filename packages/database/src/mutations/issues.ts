@@ -126,12 +126,14 @@ export async function upsertUserbackIssues(
     const existingId = item.userback_id ? existingMap.get(item.userback_id) : undefined;
 
     if (existingId) {
+      // NOTE: `status` is intentionally NOT synced on update. Once an issue is imported,
+      // its status is owned by DevHub — humans move it through triage/in_progress/done.
+      // Syncing Userback's Workflow status would overwrite human decisions every hour.
       const { error } = await db
         .from("issues")
         .update({
           title: item.title,
           description: item.description,
-          status: item.status,
           reporter_email: item.reporter_email,
           reporter_name: item.reporter_name,
           source_url: item.source_url,
