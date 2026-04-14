@@ -40,6 +40,9 @@ Totaal: 90 requirements.
 | FUNC-029 | MCP get_organization_overview retourneert compleet klantoverzicht via SQL joins              | PRD sectie 8.3 | 004    |
 | FUNC-030 | MCP list_meetings filtert op organization, project, datum, type met pagination               | PRD sectie 8.3 | 004    |
 | FUNC-031 | Query-helper listOrganizationsByType(types) filtert organizations op relatie-type            | Sprint 032     | 032    |
+| FUNC-035 | Query findPersonOrgByEmail(email) retourneert personId + organizationId van bekende afzender | Sprint 034     | 034    |
+| FUNC-036 | Query findOrganizationIdByEmailDomain(domain) matcht email-domein op organizations           | Sprint 034     | 034    |
+| FUNC-037 | Query listEmailsByOrganization(orgId) lijst alle gekoppelde mails per organisatie            | Sprint 034     | 034    |
 
 ## Datamodel eisen
 
@@ -102,6 +105,8 @@ Totaal: 90 requirements.
 | DATA-055 | organizations.type CHECK constraint accepteert 'internal' (eigen bedrijfsentiteit)          | Sprint 032               | 032    |
 | DATA-056 | Seed-rij Flowwijs (a0000000-...-001) heeft type='internal' in plaats van 'other'            | Sprint 032               | 032    |
 | DATA-057 | organizations.type toegestaan: client, partner, supplier, advisor, internal, other          | Sprint 032               | 032    |
+| DATA-058 | Kolom organizations.email_domains TEXT[] DEFAULT '{}' voor domain-based email matching      | Sprint 034               | 034    |
+| DATA-059 | GIN-index idx_organizations_email_domains op email_domains array voor snelle lookups        | Sprint 034               | 034    |
 
 ## AI pipeline eisen
 
@@ -114,6 +119,8 @@ Totaal: 90 requirements.
 | AI-005 | Extractor wordt gestuurd door meeting_type voor type-specifieke extracties                  | PRD sectie 5.2 | 003     |
 | AI-006 | Prompt caching inschakelen voor Gatekeeper en Extractor system prompts                      | PRD sectie 6.1 | 002-003 |
 | AI-007 | Transcript_ref validatie: quote checken tegen brontranscript, confidence→0 bij mismatch     | PRD sectie 6.2 | 003     |
+| AI-010 | Email-pipeline 3-stage org matching: classifier-naam → sender-person → email-domein         | Sprint 034     | 034     |
+| AI-011 | Backfill-script koppelt bestaande ongekoppelde mails via person + domain matching           | Sprint 034     | 034     |
 
 ## MCP eisen
 

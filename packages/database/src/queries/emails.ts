@@ -107,6 +107,7 @@ export async function listEmails(options: {
   verificationStatus?: string;
   isProcessed?: boolean;
   direction?: EmailDirection;
+  organizationId?: string;
   limit?: number;
   offset?: number;
   client?: SupabaseClient;
@@ -135,6 +136,9 @@ export async function listEmails(options: {
   }
   if (options.direction) {
     query = query.eq("direction", options.direction);
+  }
+  if (options.organizationId) {
+    query = query.eq("organization_id", options.organizationId);
   }
 
   const limit = options.limit ?? 50;
@@ -169,6 +173,25 @@ export async function listEmails(options: {
   }));
 
   return { items, count: count ?? 0 };
+}
+
+/**
+ * Lijst alle e-mails voor één organisatie, gesorteerd op datum aflopend.
+ *
+ * Thin wrapper rond listEmails() met vaste organisatie-filter. Handig voor
+ * de administratie-detailpagina die per adviseur de bijbehorende mails toont.
+ * Zie sprint 034 / FUNC-037.
+ */
+export async function listEmailsByOrganization(
+  orgId: string,
+  options?: { limit?: number; offset?: number; client?: SupabaseClient },
+): Promise<{ items: EmailListItem[]; count: number }> {
+  return listEmails({
+    organizationId: orgId,
+    limit: options?.limit,
+    offset: options?.offset,
+    client: options?.client,
+  });
 }
 
 export async function countEmailsByDirection(options: {

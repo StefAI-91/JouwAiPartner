@@ -9,6 +9,9 @@ export const updateOrganizationSchema = z.object({
   status: z.enum(ORG_STATUSES).optional(),
   contact_person: z.string().max(200).nullable().optional(),
   email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
+  email_domains: z
+    .array(z.string().regex(/^[a-z0-9.-]+\.[a-z]{2,}$/i, "Ongeldig domein"))
+    .optional(),
 });
 
 export const updateProjectSchema = z.object({

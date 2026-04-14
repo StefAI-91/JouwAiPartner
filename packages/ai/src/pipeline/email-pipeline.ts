@@ -7,9 +7,93 @@ import {
   updateEmailSenderPerson,
   linkEmailProject,
 } from "@repo/database/mutations/emails";
-import { findPeopleByEmails } from "@repo/database/queries/people";
+import { findPersonOrgByEmail } from "@repo/database/queries/people";
+import { findOrganizationIdByEmailDomain } from "@repo/database/queries/organizations";
 import { embedText } from "../embeddings";
 import { getAdminClient } from "@repo/database/supabase/admin";
+
+/**
+ * Resolve een e-mail naar een organisatie én (waar mogelijk) een bekende
+ * afzender-person. Probeert drie strategieën in prioriteitsvolgorde:
+ *
+ *   1. Classifier organisatienaam → resolveOrganization (bestaande naam/alias match)
+ *   2. from_address → findPersonOrgByEmail → people.organization_id
+ *   3. from_address domein → findOrganizationIdByEmailDomain
+ *
+ * Eerste match wint. `unmatched_organization_name` wordt alleen gezet als de
+ * classifier een organisatienaam uit de tekst haalde maar géén van de drie
+ * strategieën een organisatie opleverde — voor debugging en review.
+ */
+export interface EmailOrganizationResolution {
+  organization_id: string | null;
+  unmatched_organization_name: string | null;
+  sender_person_id: string | null;
+  match_source: "classifier" | "person" | "domain" | "none";
+}
+
+export async function resolveEmailOrganization(
+  fromAddress: string,
+  classifierOrgName: string | null,
+): Promise<EmailOrganizationResolution> {
+  const result: EmailOrganizationResolution = {
+    organization_id: null,
+    unmatched_organization_name: null,
+    sender_person_id: null,
+    match_source: "none",
+  };
+
+  // Strategy 1: classifier organisatienaam
+  if (classifierOrgName) {
+    try {
+      const orgResult = await resolveOrganization(classifierOrgName);
+      if (orgResult.matched && orgResult.organization_id) {
+        result.organization_id = orgResult.organization_id;
+        result.match_source = "classifier";
+      }
+    } catch {
+      // swallow — we proberen de volgende strategie nog
+    }
+  }
+
+  // Strategy 2: sender-person lookup (ook als we al een org-match hebben, voor sender_person_id)
+  const senderMatch = await findPersonOrgByEmail(fromAddress).catch(() => null);
+  if (senderMatch) {
+    result.sender_person_id = senderMatch.personId;
+    if (result.organization_id === null && senderMatch.organizationId) {
+      result.organization_id = senderMatch.organizationId;
+      result.match_source = "person";
+    }
+  }
+
+  // Strategy 3: domein-fallback
+  if (result.organization_id === null) {
+    const atIdx = fromAddress.lastIndexOf("@");
+    if (atIdx > 0 && atIdx < fromAddress.length - 1) {
+      const domain = fromAddress
+        .slice(atIdx + 1)
+        .trim()
+        .toLowerCase();
+      if (domain) {
+        const orgId = await findOrganizationIdByEmailDomain(domain).catch(() => null);
+        if (orgId) {
+          result.organization_id = orgId;
+          result.match_source = "domain";
+        }
+      }
+    }
+  }
+
+  // Unmatched orgname alleen zetten als classifier wél een naam gaf maar niks matchte
+  if (classifierOrgName && result.match_source === "none") {
+    result.unmatched_organization_name = classifierOrgName;
+  } else if (classifierOrgName && result.match_source !== "classifier") {
+    // Classifier had een naam, maar we hebben gematcht via andere strategie —
+    // toch een unmatched_organization_name bewaren? Nee: we zijn zeker, vlag weg.
+    result.unmatched_organization_name = null;
+  }
+
+  return result;
+}
 
 interface EmailInput {
   id: string;
@@ -90,35 +174,35 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
     return result;
   }
 
-  // 3. Resolve organization
+  // 3. Resolve organization + sender (3-stage matching: classifier → person → domain)
   const orgName = result.classifier.organization_name;
-  if (orgName) {
-    try {
-      const orgResult = await resolveOrganization(orgName);
-      result.organization_id = orgResult.organization_id;
-
-      await updateEmailClassification(email.id, {
-        organization_id: orgResult.organization_id,
-        unmatched_organization_name: orgResult.matched ? null : orgName,
-        relevance_score: result.classifier.relevance_score,
-        email_type: result.classifier.email_type,
-        party_type: result.classifier.party_type,
-        is_processed: false, // not done yet
-      });
-    } catch (err) {
-      result.errors.push(`Org resolution failed: ${err}`);
-    }
-  }
-
-  // 3b. Auto-match sender to known person by email address
+  let orgResolution: EmailOrganizationResolution;
   try {
-    const emailMap = await findPeopleByEmails([email.from_address.toLowerCase()]);
-    const matchedPersonId = emailMap.get(email.from_address.toLowerCase());
-    if (matchedPersonId) {
-      await updateEmailSenderPerson(email.id, matchedPersonId);
+    orgResolution = await resolveEmailOrganization(email.from_address, orgName);
+    result.organization_id = orgResolution.organization_id;
+
+    // Save sender person as soon as we find one — survives pipeline errors later
+    if (orgResolution.sender_person_id) {
+      await updateEmailSenderPerson(email.id, orgResolution.sender_person_id);
     }
+
+    // Intermediate persist — as before, safe against downstream failure
+    await updateEmailClassification(email.id, {
+      organization_id: orgResolution.organization_id,
+      unmatched_organization_name: orgResolution.unmatched_organization_name,
+      relevance_score: result.classifier.relevance_score,
+      email_type: result.classifier.email_type,
+      party_type: result.classifier.party_type,
+      is_processed: false, // not done yet
+    });
   } catch (err) {
-    result.errors.push(`Sender person match failed: ${err}`);
+    result.errors.push(`Org resolution failed: ${err}`);
+    orgResolution = {
+      organization_id: null,
+      unmatched_organization_name: orgName,
+      sender_person_id: null,
+      match_source: "none",
+    };
   }
 
   // 4. Link identified projects
@@ -141,7 +225,7 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
   try {
     await updateEmailClassification(email.id, {
       organization_id: result.organization_id,
-      unmatched_organization_name: orgName && !result.organization_id ? orgName : null,
+      unmatched_organization_name: orgResolution.unmatched_organization_name,
       relevance_score: result.classifier.relevance_score,
       email_type: result.classifier.email_type,
       party_type: result.classifier.party_type,

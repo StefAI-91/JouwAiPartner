@@ -11,12 +11,12 @@ import { ORG_TYPE_LABELS } from "@/components/shared/org-type-labels";
  *
  * Zelfde visuele stijl als de kaarten op /clients, maar hergebruikt in de
  * administratie-tabs voor adviseurs en interne organisaties. Klik navigeert
- * naar de bestaande detail-pagina op /clients/[id] — die werkt voor elke
- * organisatie ongeacht type.
+ * naar de dedicated administratie-detailpagina die contactpersonen en
+ * gekoppelde e-mails toont (i.p.v. /clients/[id]).
  */
 export function OrganizationCard({ org }: { org: OrganizationListItem }) {
   return (
-    <Link href={`/clients/${org.id}`}>
+    <Link href={`/administratie/${org.id}`}>
       <div className="rounded-2xl bg-white px-5 py-4 shadow-sm transition-shadow hover:shadow-md">
         <div className="flex items-start justify-between gap-3">
           <h3 className="font-heading text-base font-semibold leading-snug">{org.name}</h3>

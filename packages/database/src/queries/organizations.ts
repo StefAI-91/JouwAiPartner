@@ -81,6 +81,7 @@ export interface OrganizationDetail {
   status: string;
   contact_person: string | null;
   email: string | null;
+  email_domains: string[];
   projects: {
     id: string;
     name: string;
@@ -106,7 +107,7 @@ export async function getOrganizationById(
 
   const { data: org, error } = await db
     .from("organizations")
-    .select("id, name, type, status, contact_person, email")
+    .select("id, name, type, status, contact_person, email, email_domains")
     .eq("id", orgId)
     .single();
 
@@ -124,6 +125,7 @@ export async function getOrganizationById(
 
   return {
     ...org,
+    email_domains: (org.email_domains ?? []) as string[],
     projects: projects ?? [],
     meetings: meetings ?? [],
   };
@@ -152,6 +154,35 @@ export async function getAllOrganizations() {
  *   listOrganizationsByType(['advisor'])           // alleen adviseurs
  *   listOrganizationsByType(['advisor', 'internal']) // adviseurs + eigen bedrijf
  */
+/**
+ * Zoek de organization.id die het opgegeven e-maildomein in zijn
+ * `email_domains` array heeft staan. Retourneert de eerste match of null.
+ *
+ * Gebruikt door de email-pipeline als derde fallback (na classifier-naam
+ * en sender-person matches). Zie sprint 034 / FUNC-036.
+ *
+ * Input wordt naar lowercase genormaliseerd; DB-waardes zijn altijd lowercase
+ * (zie `normalizeEmailDomains` in mutations/organizations.ts).
+ */
+export async function findOrganizationIdByEmailDomain(
+  domain: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const cleaned = domain.trim().toLowerCase();
+  if (!cleaned) return null;
+
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("organizations")
+    .select("id")
+    .contains("email_domains", [cleaned])
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data.id;
+}
+
 export async function listOrganizationsByType(
   types: string[],
   client?: SupabaseClient,

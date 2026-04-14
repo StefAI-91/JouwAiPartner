@@ -26,10 +26,13 @@ export async function createOrganizationAction(
   const result = await createOrganization({
     name: parsed.data.name,
     type: parsed.data.type,
+    email: parsed.data.email ?? null,
+    email_domains: parsed.data.email_domains,
   });
   if ("error" in result) return result;
 
   revalidatePath("/clients");
+  revalidatePath("/administratie");
   return { success: true, data: result.data };
 }
 
@@ -48,7 +51,9 @@ export async function updateOrganizationAction(
   if ("error" in result) return result;
 
   revalidatePath(`/clients/${id}`);
+  revalidatePath(`/administratie/${id}`);
   revalidatePath("/clients");
+  revalidatePath("/administratie");
   revalidatePath("/");
   return { success: true };
 }
