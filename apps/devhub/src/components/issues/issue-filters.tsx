@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, X } from "lucide-react";
+import { ArrowUpDown, ChevronDown, X } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import {
   ISSUE_STATUSES,
@@ -15,6 +15,16 @@ import {
   ISSUE_COMPONENTS,
   ISSUE_COMPONENT_LABELS,
 } from "@repo/database/constants/issues";
+
+const SORT_OPTIONS = [
+  { value: "priority", label: "Priority" },
+  { value: "newest", label: "Nieuwste eerst" },
+  { value: "oldest", label: "Oudste eerst" },
+] as const;
+
+type SortValue = (typeof SORT_OPTIONS)[number]["value"];
+const SORT_VALUES = SORT_OPTIONS.map((o) => o.value) as readonly SortValue[];
+const DEFAULT_SORT: SortValue = "priority";
 
 const STATUS_OPTIONS = ISSUE_STATUSES.map((s) => ({ value: s, label: ISSUE_STATUS_LABELS[s] }));
 const PRIORITY_OPTIONS = ISSUE_PRIORITIES.map((p) => ({
@@ -153,6 +163,117 @@ function FilterDropdown({ label, paramKey, options, selected, onToggle }: Filter
   );
 }
 
+interface SortDropdownProps {
+  value: SortValue;
+  onChange: (value: SortValue) => void;
+}
+
+function SortDropdown({ value, onChange }: SortDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const isCustom = value !== DEFAULT_SORT;
+  const activeLabel = SORT_OPTIONS.find((o) => o.value === value)?.label ?? "Priority";
+
+  useEffect(() => {
+    if (!open) return;
+
+    function updatePosition() {
+      if (!buttonRef.current) return;
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({ top: rect.bottom + 4, left: rect.left });
+    }
+
+    updatePosition();
+
+    function handlePointerDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (buttonRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="flex-shrink-0">
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          "flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted",
+          isCustom && "border-primary/30 bg-primary/5 text-primary",
+        )}
+      >
+        <ArrowUpDown className="size-3 text-muted-foreground" />
+        {activeLabel}
+        <ChevronDown className="size-3 text-muted-foreground" />
+      </button>
+
+      {open &&
+        position &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{ position: "fixed", top: position.top, left: position.left }}
+            className="z-50 min-w-44 rounded-lg border border-border bg-popover py-1 shadow-lg"
+          >
+            {SORT_OPTIONS.map((opt) => {
+              const isSelected = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={isSelected}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-accent",
+                    isSelected && "font-medium text-primary",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-3.5 items-center justify-center rounded-full border",
+                      isSelected ? "border-primary" : "border-border",
+                    )}
+                  >
+                    {isSelected && <span className="size-1.5 rounded-full bg-primary" />}
+                  </span>
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>,
+          document.body,
+        )}
+    </div>
+  );
+}
+
 export function IssueFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -180,7 +301,31 @@ export function IssueFilters() {
         params.delete(key);
       }
 
+      // Filters change the result set — reset to page 1 to avoid landing on a stale page.
+      params.delete("page");
+
       router.push(`/issues?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
+
+  const rawSort = searchParams.get("sort");
+  const sortValue: SortValue = (SORT_VALUES as readonly string[]).includes(rawSort ?? "")
+    ? (rawSort as SortValue)
+    : DEFAULT_SORT;
+
+  const changeSort = useCallback(
+    (value: SortValue) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === DEFAULT_SORT) {
+        params.delete("sort");
+      } else {
+        params.set("sort", value);
+      }
+      // Sort change reshuffles everything — reset pagination.
+      params.delete("page");
+      const qs = params.toString();
+      router.push(qs ? `/issues?${qs}` : "/issues");
     },
     [router, searchParams],
   );
@@ -239,6 +384,10 @@ export function IssueFilters() {
           Clear
         </button>
       )}
+
+      <div className="ml-auto flex-shrink-0">
+        <SortDropdown value={sortValue} onChange={changeSort} />
+      </div>
     </div>
   );
 }

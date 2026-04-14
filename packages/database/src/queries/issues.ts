@@ -2,6 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 import { PRIORITY_ORDER } from "../constants/issues";
 
+export const ISSUE_SORTS = ["priority", "newest", "oldest"] as const;
+export type IssueSort = (typeof ISSUE_SORTS)[number];
+
 export interface IssueRow {
   id: string;
   project_id: string;
@@ -42,11 +45,16 @@ export const ISSUE_SELECT = `
 ` as const;
 
 /**
- * List issues with filters, pagination, and priority sorting.
+ * List issues with filters, pagination, and configurable sort.
  *
  * Scope: supply either `projectId` (single project) or `projectIds` (several
  * projects — used for members with multi-project access). At least one of
  * the two must be provided; an empty `projectIds` returns `[]`.
+ *
+ * Sort options:
+ * - "priority" (default): priority weight (urgent → low), then newest first
+ * - "newest": pure chronological, newest first
+ * - "oldest": pure chronological, oldest first
  */
 export async function listIssues(
   params: {
@@ -58,6 +66,7 @@ export async function listIssues(
     component?: string[];
     assignedTo?: string;
     search?: string;
+    sort?: IssueSort;
     limit?: number;
     offset?: number;
   },
@@ -66,6 +75,7 @@ export async function listIssues(
   const db = client ?? getAdminClient();
   const limit = params.limit ?? 50;
   const offset = params.offset ?? 0;
+  const sort: IssueSort = params.sort ?? "priority";
 
   if (params.projectIds && params.projectIds.length === 0) return [];
 
@@ -99,11 +109,16 @@ export async function listIssues(
     query = query.or(`title.ilike.%${sanitized}%,description.ilike.%${sanitized}%`);
   }
 
-  // Sort by priority (urgent first via PRIORITY_ORDER) then created_at DESC
-  query = query
-    .order("priority", { ascending: true })
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+  // Ordering — chronological sorts are pure; priority sort groups by weight.
+  if (sort === "oldest") {
+    query = query.order("created_at", { ascending: true });
+  } else if (sort === "newest") {
+    query = query.order("created_at", { ascending: false });
+  } else {
+    // "priority": alphabetical from DB, re-sorted by weight client-side below
+    query = query.order("priority", { ascending: true }).order("created_at", { ascending: false });
+  }
+  query = query.range(offset, offset + limit - 1);
 
   const { data, error } = await query;
 
@@ -114,14 +129,17 @@ export async function listIssues(
 
   if (!data) return [];
 
-  // Re-sort by priority weight since DB sorts alphabetically
   const rows = data as unknown as IssueRow[];
-  rows.sort((a, b) => {
-    const pa = PRIORITY_ORDER[a.priority] ?? 99;
-    const pb = PRIORITY_ORDER[b.priority] ?? 99;
-    if (pa !== pb) return pa - pb;
-    return 0; // keep DB order (created_at DESC) for same priority
-  });
+
+  if (sort === "priority") {
+    // Re-sort by priority weight since DB sorts alphabetically
+    rows.sort((a, b) => {
+      const pa = PRIORITY_ORDER[a.priority] ?? 99;
+      const pb = PRIORITY_ORDER[b.priority] ?? 99;
+      if (pa !== pb) return pa - pb;
+      return 0; // keep DB order (created_at DESC) for same priority
+    });
+  }
 
   return rows;
 }
