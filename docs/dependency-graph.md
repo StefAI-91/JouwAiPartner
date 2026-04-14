@@ -1,6 +1,6 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-13. Do not edit manually.
+> Auto-generated on 2026-04-14. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
