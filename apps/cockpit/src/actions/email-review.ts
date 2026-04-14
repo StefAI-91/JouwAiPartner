@@ -9,20 +9,18 @@ import {
   verifyEmailWithEditsSchema,
   rejectEmailSchema,
 } from "@/validations/email-review";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 
 export async function approveEmailAction(
   input: z.infer<typeof verifyEmailSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = verifyEmailSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Unauthorized" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
-
-  const result = await verifyEmail(parsed.data.emailId, user.id);
+  const result = await verifyEmail(parsed.data.emailId, auth.user.id);
   if ("error" in result) return result;
 
   // Trigger summary generation in background (non-blocking)
@@ -39,16 +37,15 @@ export async function approveEmailAction(
 export async function approveEmailWithEditsAction(
   input: z.infer<typeof verifyEmailWithEditsSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = verifyEmailWithEditsSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Unauthorized" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
-
   const result = await verifyEmailWithEdits(
     parsed.data.emailId,
-    user.id,
+    auth.user.id,
     parsed.data.extractionEdits ?? [],
     parsed.data.rejectedExtractionIds ?? [],
     parsed.data.typeChanges ?? [],
@@ -70,14 +67,13 @@ export async function approveEmailWithEditsAction(
 export async function rejectEmailAction(
   input: z.infer<typeof rejectEmailSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = rejectEmailSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Unauthorized" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
-
-  const result = await rejectEmail(parsed.data.emailId, user.id, parsed.data.reason);
+  const result = await rejectEmail(parsed.data.emailId, auth.user.id, parsed.data.reason);
   if ("error" in result) return result;
 
   revalidatePath("/review");

@@ -8,8 +8,8 @@ import { listIssues } from "@repo/database/queries/issues";
 import { getProjectById } from "@repo/database/queries/projects";
 import { saveProjectReview } from "@repo/database/mutations/project-reviews";
 import { runIssueReviewer, type IssueForReview } from "@repo/ai/agents/issue-reviewer";
-import { getAuthenticatedUser, isAuthBypassed } from "@repo/auth/helpers";
-import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
+import { isAuthBypassed } from "@repo/auth/helpers";
+import { assertProjectAccess, NotAuthorizedError, requireUserInAction } from "@repo/auth/access";
 
 const generateReviewSchema = z.object({
   projectId: z.string().uuid(),
@@ -22,14 +22,14 @@ const generateReviewSchema = z.object({
 export async function generateProjectReview(
   input: z.input<typeof generateReviewSchema>,
 ): Promise<{ success: true; reviewId: string } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = generateReviewSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig project ID" };
 
   try {
-    await assertProjectAccess(user.id, parsed.data.projectId);
+    await assertProjectAccess(auth.user.id, parsed.data.projectId);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
     throw e;
@@ -103,7 +103,7 @@ export async function generateProjectReview(
     // Save to database
     const review = await saveProjectReview({
       project_id: parsed.data.projectId,
-      generated_by: user.id,
+      generated_by: auth.user.id,
       total_issues: issues.length,
       issues_by_status: statusCounts,
       issues_by_priority: priorityCounts,

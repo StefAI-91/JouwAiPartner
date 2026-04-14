@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 import {
   linkSegmentToProject,
   removeSegmentTag,
@@ -22,16 +21,6 @@ const removeTagSchema = z.object({
   segmentId: z.string().uuid(),
   meetingId: z.string().uuid(),
 });
-
-async function requireAuth() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-  if (!(await isAdmin(user.id))) return null;
-  return user;
-}
 
 /**
  * Get segment's project_name_raw for feedback actions.
@@ -63,8 +52,8 @@ export async function linkSegmentToProjectAction(
   const parsed = linkSegmentSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
-  const user = await requireAuth();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   // Get project_name_raw before linking (for alias feedback)
   const nameRaw = await getSegmentNameRaw(parsed.data.segmentId);
@@ -111,8 +100,8 @@ export async function removeSegmentTagAction(
   const parsed = removeTagSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
-  const user = await requireAuth();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   // Get project_name_raw and meeting org_id before removing (for ignored_entity feedback)
   const nameRaw = await getSegmentNameRaw(parsed.data.segmentId);

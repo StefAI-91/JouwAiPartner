@@ -93,7 +93,7 @@ describeWithDb("Email Review Actions (integration)")("Email Review Actions (inte
       const action = await getAction();
       const result = await action({ emailId: TEST_IDS.email });
 
-      expect(result).toEqual({ error: "Unauthorized" });
+      expect(result).toEqual({ error: "Niet ingelogd" });
     });
 
     it("returns error on invalid input", async () => {
@@ -135,7 +135,7 @@ describeWithDb("Email Review Actions (integration)")("Email Review Actions (inte
       const action = await getAction();
       const result = await action({ emailId: TEST_IDS.email });
 
-      expect(result).toEqual({ error: "Unauthorized" });
+      expect(result).toEqual({ error: "Niet ingelogd" });
     });
   });
 
@@ -181,7 +181,7 @@ describeWithDb("Email Review Actions (integration)")("Email Review Actions (inte
         reason: "test",
       });
 
-      expect(result).toEqual({ error: "Unauthorized" });
+      expect(result).toEqual({ error: "Niet ingelogd" });
     });
   });
 });

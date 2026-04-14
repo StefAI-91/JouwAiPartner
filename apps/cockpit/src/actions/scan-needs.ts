@@ -2,20 +2,15 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 import { scanAllUnscannedMeetings } from "@repo/ai/pipeline/scan-needs";
 import { updateNeedStatus } from "@repo/database/mutations/extractions";
 
 export async function scanTeamNeedsAction(): Promise<
   { success: true; scanned: number; needs: number } | { error: string }
 > {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const result = await scanAllUnscannedMeetings();
 
@@ -36,12 +31,8 @@ const updateNeedStatusSchema = z.object({
 export async function updateNeedStatusAction(
   input: z.infer<typeof updateNeedStatusSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateNeedStatusSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };

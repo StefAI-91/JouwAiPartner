@@ -64,7 +64,7 @@ describeWithDb("Review Server Actions (integration)")("Review Server Actions (in
       const result = await approveMeetingAction({
         meetingId: TEST_IDS.meeting,
       });
-      expect(result).toEqual({ error: "Unauthorized" });
+      expect(result).toEqual({ error: "Niet ingelogd" });
     });
   });
 
@@ -99,7 +99,7 @@ describeWithDb("Review Server Actions (integration)")("Review Server Actions (in
         meetingId: TEST_IDS.meeting,
         reason: "Bad quality",
       });
-      expect(result).toEqual({ error: "Unauthorized" });
+      expect(result).toEqual({ error: "Niet ingelogd" });
     });
 
     it("rejects empty reason", async () => {

@@ -3,8 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getIssueById } from "@repo/database/queries/issues";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
+import { assertProjectAccess, NotAuthorizedError, requireUserInAction } from "@repo/auth/access";
 import { updateIssue, insertActivity } from "@repo/database/mutations/issues";
 import { runIssueClassifier } from "@repo/ai/agents/issue-classifier";
 
@@ -68,8 +67,8 @@ async function classifyIssueCore(
 export async function classifyIssueAction(
   input: z.input<typeof classifySchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = classifySchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig issue ID" };
@@ -77,14 +76,14 @@ export async function classifyIssueAction(
   const target = await getIssueById(parsed.data.id);
   if (!target) return { error: "Issue niet gevonden" };
   try {
-    await assertProjectAccess(user.id, target.project_id);
+    await assertProjectAccess(auth.user.id, target.project_id);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Issue niet gevonden" };
     throw e;
   }
 
   try {
-    const result = await classifyIssueCore(parsed.data.id, user.id);
+    const result = await classifyIssueCore(parsed.data.id, auth.user.id);
     if ("error" in result) return result;
 
     revalidatePath("/issues");
@@ -119,14 +118,14 @@ const bulkClassifySchema = z.object({
 export async function bulkReclassifyAction(
   input: z.input<typeof bulkClassifySchema>,
 ): Promise<{ success: true; classified: number; failed: number } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = bulkClassifySchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig project ID" };
 
   try {
-    await assertProjectAccess(user.id, parsed.data.projectId);
+    await assertProjectAccess(auth.user.id, parsed.data.projectId);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
     throw e;
@@ -144,7 +143,7 @@ export async function bulkReclassifyAction(
     let failed = 0;
 
     for (const issue of issues) {
-      const result = await classifyIssueCore(issue.id, user.id);
+      const result = await classifyIssueCore(issue.id, auth.user.id);
       if ("success" in result) {
         classified++;
       } else {

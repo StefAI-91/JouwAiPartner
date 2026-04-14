@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@repo/database/supabase/server";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 import { generateWeeklySummary } from "@repo/ai/pipeline/weekly-summary-pipeline";
 
 const generateWeeklySummarySchema = z.object({
@@ -14,17 +13,8 @@ const generateWeeklySummarySchema = z.object({
 export async function generateWeeklySummaryAction(
   input: z.infer<typeof generateWeeklySummarySchema>,
 ) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { error: "Niet ingelogd." };
-  }
-  if (!(await isAdmin(user.id))) {
-    return { error: "Geen toegang." };
-  }
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = generateWeeklySummarySchema.safeParse(input);
   if (!parsed.success) {

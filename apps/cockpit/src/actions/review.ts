@@ -15,24 +15,20 @@ import {
   verifyMeetingWithEditsSchema,
   rejectMeetingSchema,
 } from "@/validations/review";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
-
-// ── Helpers ──
+import { requireAdminInAction } from "@repo/auth/access";
 
 // ── Actions ──
 
 export async function approveMeetingAction(
   input: z.infer<typeof verifyMeetingSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = verifyMeetingSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Unauthorized" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
-
-  const result = await verifyMeeting(parsed.data.meetingId, user.id);
+  const result = await verifyMeeting(parsed.data.meetingId, auth.user.id);
   if ("error" in result) return result;
 
   // Trigger summary generation + needs scan in background (non-blocking)
@@ -52,12 +48,11 @@ export async function approveMeetingAction(
 export async function approveMeetingWithEditsAction(
   input: z.infer<typeof verifyMeetingWithEditsSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = verifyMeetingWithEditsSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
-
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Unauthorized" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
   // Save summary edit before verification (so it's persisted regardless)
   if (parsed.data.summaryEdit) {
@@ -70,7 +65,7 @@ export async function approveMeetingWithEditsAction(
 
   const result = await verifyMeetingWithEdits(
     parsed.data.meetingId,
-    user.id,
+    auth.user.id,
     parsed.data.extractionEdits ?? [],
     parsed.data.rejectedExtractionIds ?? [],
     parsed.data.typeChanges ?? [],
@@ -95,14 +90,13 @@ export async function approveMeetingWithEditsAction(
 export async function rejectMeetingAction(
   input: z.infer<typeof rejectMeetingSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = rejectMeetingSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Unauthorized" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
-
-  const result = await rejectMeeting(parsed.data.meetingId, user.id);
+  const result = await rejectMeeting(parsed.data.meetingId, auth.user.id);
   if ("error" in result) return result;
 
   revalidatePath("/review");

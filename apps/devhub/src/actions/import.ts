@@ -3,8 +3,12 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin, assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
+import {
+  assertProjectAccess,
+  isAdmin,
+  NotAuthorizedError,
+  requireUserInAction,
+} from "@repo/auth/access";
 import {
   getUserbackSyncCursor,
   countUserbackIssues,
@@ -42,8 +46,8 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
     }
   | { error: string }
 > {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = syncSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -52,12 +56,12 @@ export async function syncUserback(input: z.input<typeof syncSchema>): Promise<
 
   // Userback sync pulls external data + writes across issues — admin-only.
   try {
-    await assertProjectAccess(user.id, projectId);
+    await assertProjectAccess(auth.user.id, projectId);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
     throw e;
   }
-  if (!(await isAdmin(user.id))) return { error: "Alleen admins kunnen syncen" };
+  if (!(await isAdmin(auth.user.id))) return { error: "Alleen admins kunnen syncen" };
 
   const admin = getAdminClient();
 
@@ -112,8 +116,8 @@ export async function getSyncStatus(
 ): Promise<
   { success: true; data: { itemCount: number; lastSyncCursor: string | null } } | { error: string }
 > {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = syncStatusSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -121,7 +125,7 @@ export async function getSyncStatus(
   const { projectId } = parsed.data;
 
   try {
-    await assertProjectAccess(user.id, projectId);
+    await assertProjectAccess(auth.user.id, projectId);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
     throw e;
@@ -154,11 +158,11 @@ export async function backfillMedia(): Promise<
     }
   | { error: string }
 > {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   // Backfill touches all Userback issues across projects → admin-only.
-  if (!(await isAdmin(user.id))) return { error: "Alleen admins kunnen backfillen" };
+  if (!(await isAdmin(auth.user.id))) return { error: "Alleen admins kunnen backfillen" };
 
   const admin = getAdminClient();
 

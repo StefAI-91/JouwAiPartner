@@ -15,22 +15,20 @@ import {
   updateTaskSchema,
   taskIdSchema,
 } from "@repo/database/validations/tasks";
-import { getAuthenticatedUserId } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 
 // ── Actions ──
 
 export async function promoteToTaskAction(
   input: z.infer<typeof promoteToTaskSchema>,
 ): Promise<{ success: true; id: string } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = promoteToTaskSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
   }
-
-  const userId = await getAuthenticatedUserId();
-  if (!userId) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(userId))) return { error: "Geen toegang" };
 
   const supabase = await createClient();
 
@@ -44,7 +42,7 @@ export async function promoteToTaskAction(
       title: parsed.data.title,
       assigned_to: parsed.data.assignedTo || null,
       due_date: parsed.data.dueDate || null,
-      created_by: userId,
+      created_by: auth.user.id,
       already_done: parsed.data.alreadyDone,
     },
     supabase,
@@ -60,14 +58,13 @@ export async function promoteToTaskAction(
 export async function updateTaskAction(
   input: z.infer<typeof updateTaskSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = updateTaskSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
   }
-
-  const userId = await getAuthenticatedUserId();
-  if (!userId) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(userId))) return { error: "Geen toegang" };
 
   const supabase = await createClient();
   const result = await updateTask(
@@ -89,14 +86,13 @@ export async function updateTaskAction(
 export async function completeTaskAction(
   input: z.infer<typeof taskIdSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = taskIdSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
   }
-
-  const userId = await getAuthenticatedUserId();
-  if (!userId) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(userId))) return { error: "Geen toegang" };
 
   const supabase = await createClient();
   const result = await completeTask(parsed.data.taskId, supabase);
@@ -110,14 +106,13 @@ export async function completeTaskAction(
 export async function dismissTaskAction(
   input: z.infer<typeof taskIdSchema>,
 ): Promise<{ success: true } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
+
   const parsed = taskIdSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
   }
-
-  const userId = await getAuthenticatedUserId();
-  if (!userId) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(userId))) return { error: "Geen toegang" };
 
   const supabase = await createClient();
   const result = await dismissTask(parsed.data.taskId, supabase);

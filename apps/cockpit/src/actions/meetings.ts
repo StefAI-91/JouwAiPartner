@@ -29,17 +29,15 @@ import {
   updateMeetingMetadataSchema,
 } from "@repo/database/validations/meetings";
 import { deleteSchema } from "@repo/database/validations/entities";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 
 // ── Actions ──
 
 export async function updateMeetingTitleAction(
   input: z.infer<typeof updateTitleSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateTitleSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -56,9 +54,8 @@ export async function updateMeetingTitleAction(
 export async function updateMeetingSummaryAction(
   input: z.infer<typeof updateSummarySchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateSummarySchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -76,9 +73,8 @@ export async function updateMeetingSummaryAction(
 export async function updateMeetingTypeAction(
   input: z.infer<typeof updateMeetingTypeSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateMeetingTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig meeting type" };
@@ -95,9 +91,8 @@ export async function updateMeetingTypeAction(
 export async function updatePartyTypeAction(
   input: z.infer<typeof updatePartyTypeSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updatePartyTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldig party type" };
@@ -114,9 +109,8 @@ export async function updatePartyTypeAction(
 export async function updateMeetingOrganizationAction(
   input: z.infer<typeof updateOrganizationSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateOrganizationSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -133,9 +127,8 @@ export async function updateMeetingOrganizationAction(
 export async function linkMeetingProjectAction(
   input: z.infer<typeof meetingProjectSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = meetingProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -152,9 +145,8 @@ export async function linkMeetingProjectAction(
 export async function unlinkMeetingProjectAction(
   input: z.infer<typeof meetingProjectSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = meetingProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -171,9 +163,8 @@ export async function unlinkMeetingProjectAction(
 export async function linkMeetingParticipantAction(
   input: z.infer<typeof meetingParticipantSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = meetingParticipantSchema.safeParse(input);
   if (!parsed.success) {
@@ -192,9 +183,8 @@ export async function linkMeetingParticipantAction(
 export async function unlinkMeetingParticipantAction(
   input: z.infer<typeof meetingParticipantSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = meetingParticipantSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -212,9 +202,8 @@ export async function unlinkMeetingParticipantAction(
 export async function updateMeetingMetadataAction(
   input: z.infer<typeof updateMeetingMetadataSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateMeetingMetadataSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -280,9 +269,8 @@ export async function updateMeetingMetadataAction(
 export async function deleteMeetingAction(
   input: z.infer<typeof deleteSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = deleteSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };

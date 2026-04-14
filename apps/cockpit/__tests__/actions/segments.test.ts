@@ -13,9 +13,24 @@ const IDS = {
 
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createServerMock());
-vi.mock("@repo/auth/access", () => ({
-  isAdmin: vi.fn().mockResolvedValue(true),
-}));
+vi.mock("@repo/auth/access", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@repo/auth/access")>();
+  const { getMockUser } = await import("../helpers/mock-auth");
+  return {
+    ...actual,
+    isAdmin: vi.fn().mockResolvedValue(true),
+    requireAdminInAction: vi.fn(async () => {
+      const user = getMockUser();
+      if (!user) return { error: "Niet ingelogd" };
+      return { user: { id: user.id, email: user.email ?? "" } };
+    }),
+    requireUserInAction: vi.fn(async () => {
+      const user = getMockUser();
+      if (!user) return { error: "Niet ingelogd" };
+      return { user: { id: user.id, email: user.email ?? "" } };
+    }),
+  };
+});
 
 const mockLinkSegmentToProject = vi.fn();
 const mockRemoveSegmentTag = vi.fn();

@@ -8,10 +8,10 @@
 | Metric                                    | Count |
 | ----------------------------------------- | ----- |
 | Files scanned                             | 427   |
-| Exported functions/constants              | 614   |
+| Exported functions/constants              | 615   |
 | Exported types/interfaces                 | 126   |
-| Cross-package imports                     | 536   |
-| Critical integration points (3+ packages) | 7     |
+| Cross-package imports                     | 518   |
+| Critical integration points (3+ packages) | 6     |
 
 ## Package Dependency Flow
 
@@ -1141,6 +1141,7 @@
 - `requireAdmin()`
 - `assertProjectAccess()`
 - `requireAdminInAction()`
+- `requireUserInAction()`
 - `listAccessibleProjectIds()`
 
 **Depends on:**
@@ -1457,8 +1458,7 @@
 **Depends on:**
 
 - `@repo/database/mutations/emails` → linkEmailProject, unlinkEmailProject, updateEmailOrganization, updateEmailSenderPerson, updateEmailType, updateEmailPartyType
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/email-review.ts`
 
@@ -1472,8 +1472,7 @@
 
 - `@repo/database/mutations/emails` → verifyEmail, verifyEmailWithEdits, rejectEmail
 - `@repo/ai/pipeline/summary-pipeline` → triggerSummariesForEmail
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/extractions.ts`
 
@@ -1487,8 +1486,7 @@
 
 - `@repo/database/mutations/extractions` → createExtraction, updateExtraction, deleteExtraction
 - `@repo/database/validations/entities` → createExtractionSchema, updateExtractionSchema, deleteWithContextSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/meeting-pipeline.ts`
 
@@ -1513,8 +1511,7 @@
 - `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
 - `@repo/database/validations/meetings` → regenerateSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/meetings.ts`
 
@@ -1539,8 +1536,7 @@
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema
 - `@repo/database/validations/entities` → deleteSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/organizations.ts`
 
@@ -1555,8 +1551,7 @@
 - `@repo/database/mutations/organizations` → createOrganization, updateOrganization, deleteOrganization
 - `@repo/database/validations/entities` → updateOrganizationSchema, deleteSchema
 - `@repo/database/validations/meetings` → createOrganizationSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/people.ts`
 
@@ -1571,8 +1566,7 @@
 - `@repo/database/mutations/people` → createPerson, updatePerson, deletePerson
 - `@repo/database/validations/entities` → updatePersonSchema, deleteSchema
 - `@repo/database/validations/meetings` → createPersonSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/projects.ts`
 
@@ -1587,8 +1581,7 @@
 - `@repo/database/mutations/projects` → createProject, updateProject, deleteProject
 - `@repo/database/validations/entities` → updateProjectSchema, deleteSchema
 - `@repo/database/validations/meetings` → createProjectSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/review.ts`
 
@@ -1604,8 +1597,7 @@
 - `@repo/database/mutations/meetings` → updateMeetingSummaryOnly
 - `@repo/ai/pipeline/summary-pipeline` → triggerSummariesForMeeting
 - `@repo/ai/pipeline/scan-needs` → scanMeetingNeeds
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/scan-needs.ts`
 
@@ -1616,8 +1608,7 @@
 
 **Depends on:**
 
-- `@repo/database/supabase/server` → createClient
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 - `@repo/ai/pipeline/scan-needs` → scanAllUnscannedMeetings
 - `@repo/database/mutations/extractions` → updateNeedStatus
 
@@ -1630,8 +1621,7 @@
 
 **Depends on:**
 
-- `@repo/database/supabase/server` → createClient
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 - `@repo/database/mutations/meeting-project-summaries` → linkSegmentToProject, removeSegmentTag
 - `@repo/database/mutations/projects` → updateProjectAliases
 - `@repo/database/mutations/ignored-entities` → addIgnoredEntity
@@ -1646,8 +1636,7 @@
 **Depends on:**
 
 - `@repo/ai/pipeline/summary-pipeline` → generateProjectSummaries, generateOrgSummaries
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/tasks.ts`
 
@@ -1664,8 +1653,7 @@
 - `@repo/database/mutations/tasks` → createTaskFromExtraction, updateTask, completeTask, dismissTask
 - `@repo/database/queries/tasks` → hasTaskForExtraction
 - `@repo/database/validations/tasks` → promoteToTaskSchema, updateTaskSchema, taskIdSchema
-- `@repo/auth/helpers` → getAuthenticatedUserId
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 
 ### `apps/cockpit/src/actions/team.ts`
 
@@ -1690,8 +1678,7 @@
 
 **Depends on:**
 
-- `@repo/database/supabase/server` → createClient
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → requireAdminInAction
 - `@repo/ai/pipeline/weekly-summary-pipeline` → generateWeeklySummary
 
 ## Cockpit API Routes
@@ -3307,8 +3294,7 @@
 **Depends on:**
 
 - `@repo/database/queries/issues` → getIssueById
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError, requireUserInAction
 - `@repo/database/mutations/issues` → updateIssue, insertActivity
 - `@repo/ai/agents/issue-classifier` → runIssueClassifier
 
@@ -3326,8 +3312,7 @@
 - `@repo/database/queries/issues` → getIssueById
 - `@repo/database/queries/issue-comments` → getCommentById
 - `@repo/database/validations/issues` → createCommentSchema, updateCommentSchema, deleteCommentSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError, requireUserInAction
 
 ### `apps/devhub/src/actions/import.ts`
 
@@ -3340,8 +3325,7 @@
 **Depends on:**
 
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin, assertProjectAccess, NotAuthorizedError
+- `@repo/auth/access` → assertProjectAccess, isAdmin, NotAuthorizedError, requireUserInAction
 - `@repo/database/queries/userback-issues` → getUserbackSyncCursor, countUserbackIssues, listUserbackIssuesForBackfill
 - `@repo/database/queries/issue-attachments` → getIssueIdsWithAttachments
 - `@repo/database/integrations/userback` → extractMediaFromMetadata
@@ -3363,8 +3347,7 @@
 - `@repo/database/queries/issues` → getIssueById, getIssueCounts
 - `@repo/database/constants/issues` → CLOSED_STATUSES, type IssueStatus
 - `@repo/database/validations/issues` → createIssueSchema, updateIssueSchema, deleteIssueSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError, requireUserInAction
 
 ### `apps/devhub/src/actions/review.ts`
 
@@ -3380,8 +3363,8 @@
 - `@repo/database/queries/projects` → getProjectById
 - `@repo/database/mutations/project-reviews` → saveProjectReview
 - `@repo/ai/agents/issue-reviewer` → runIssueReviewer, type IssueForReview
-- `@repo/auth/helpers` → getAuthenticatedUser, isAuthBypassed
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/auth/helpers` → isAuthBypassed
+- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError, requireUserInAction
 
 ## DevHub API Routes
 
@@ -3828,13 +3811,13 @@ Which layers depend on which packages:
 | AI Core                | 8        | -   | -    | -   | -   | 8     |
 | AI Pipeline            | 40       | -   | -    | -   | -   | 40    |
 | Auth                   | 4        | -   | -    | -   | -   | 4     |
-| Cockpit Server Actions | 41       | 14  | 26   | -   | -   | 81    |
+| Cockpit Server Actions | 38       | 14  | 15   | -   | -   | 67    |
 | Cockpit API Routes     | 20       | 32  | -    | -   | 1   | 53    |
 | Cockpit Components     | 42       | -   | -    | 74  | -   | 116   |
 | Cockpit Middleware     | -        | -   | 1    | -   | -   | 1     |
 | Cockpit Pages          | 76       | -   | 2    | 23  | -   | 101   |
 | Database Queries       | -        | -   | 1    | -   | -   | 1     |
-| DevHub Server Actions  | 21       | 2   | 10   | -   | -   | 33    |
+| DevHub Server Actions  | 21       | 2   | 6    | -   | -   | 29    |
 | DevHub API Routes      | 3        | -   | 1    | -   | -   | 4     |
 | DevHub Components      | 13       | -   | -    | 26  | -   | 39    |
 | DevHub Middleware      | -        | -   | 1    | -   | -   | 1     |
@@ -3851,8 +3834,7 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/actions/email-review.ts`     | database, ai, auth | 3     |
 | `apps/cockpit/src/actions/meeting-pipeline.ts` | database, ai, auth | 3     |
 | `apps/cockpit/src/actions/review.ts`           | database, ai, auth | 3     |
-| `apps/cockpit/src/actions/scan-needs.ts`       | database, auth, ai | 3     |
-| `apps/cockpit/src/actions/weekly-summary.ts`   | database, auth, ai | 3     |
+| `apps/cockpit/src/actions/scan-needs.ts`       | auth, ai, database | 3     |
 | `apps/devhub/src/actions/classify.ts`          | database, auth, ai | 3     |
 | `apps/devhub/src/actions/review.ts`            | database, ai, auth | 3     |
 

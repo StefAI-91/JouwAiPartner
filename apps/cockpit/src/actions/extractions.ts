@@ -12,15 +12,13 @@ import {
   updateExtractionSchema,
   deleteWithContextSchema,
 } from "@repo/database/validations/entities";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 
 export async function createExtractionAction(
   input: z.infer<typeof createExtractionSchema>,
 ): Promise<{ success: true; data: { id: string } } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = createExtractionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -42,15 +40,14 @@ export async function createExtractionAction(
 export async function updateExtractionAction(
   input: z.infer<typeof updateExtractionSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateExtractionSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
   const { id, meetingId, ...data } = parsed.data;
-  const result = await updateExtraction(id, data, user.id);
+  const result = await updateExtraction(id, data, auth.user.id);
   if ("error" in result) return result;
 
   if (meetingId) {
@@ -62,9 +59,8 @@ export async function updateExtractionAction(
 export async function deleteExtractionAction(
   input: z.infer<typeof deleteWithContextSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = deleteWithContextSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };

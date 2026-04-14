@@ -9,16 +9,14 @@ import {
 } from "@repo/database/mutations/organizations";
 import { updateOrganizationSchema, deleteSchema } from "@repo/database/validations/entities";
 import { createOrganizationSchema } from "@repo/database/validations/meetings";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 import { cleanInput } from "./_utils";
 
 export async function createOrganizationAction(
   input: z.infer<typeof createOrganizationSchema>,
 ): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = createOrganizationSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -39,9 +37,8 @@ export async function createOrganizationAction(
 export async function updateOrganizationAction(
   input: z.infer<typeof updateOrganizationSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateOrganizationSchema.safeParse(cleanInput(input));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -61,9 +58,8 @@ export async function updateOrganizationAction(
 export async function deleteOrganizationAction(
   input: z.infer<typeof deleteSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = deleteSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };

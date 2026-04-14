@@ -16,22 +16,21 @@ import {
   updateIssueSchema,
   deleteIssueSchema,
 } from "@repo/database/validations/issues";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
+import { assertProjectAccess, NotAuthorizedError, requireUserInAction } from "@repo/auth/access";
 
 // ── Actions ──
 
 export async function createIssueAction(
   input: z.input<typeof createIssueSchema>,
 ): Promise<{ success: true; id: string } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = createIssueSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
   try {
-    await assertProjectAccess(user.id, parsed.data.project_id);
+    await assertProjectAccess(auth.user.id, parsed.data.project_id);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
     throw e;
@@ -42,7 +41,7 @@ export async function createIssueAction(
 
   await insertActivity({
     issue_id: result.data.id,
-    actor_id: user.id,
+    actor_id: auth.user.id,
     action: "created",
   });
 
@@ -56,8 +55,8 @@ export async function createIssueAction(
 export async function updateIssueAction(
   input: z.input<typeof updateIssueSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = updateIssueSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -70,7 +69,7 @@ export async function updateIssueAction(
   // Info-leak prevention (SEC-157 / EDGE-150): return "not found" rather
   // than "no access" so the client can't probe which issues exist.
   try {
-    await assertProjectAccess(user.id, current.project_id);
+    await assertProjectAccess(auth.user.id, current.project_id);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Issue niet gevonden" };
     throw e;
@@ -118,7 +117,7 @@ export async function updateIssueAction(
     activityPromises.push(
       insertActivity({
         issue_id: id,
-        actor_id: user.id,
+        actor_id: auth.user.id,
         action,
         field,
         old_value: oldVal != null ? String(oldVal) : undefined,
@@ -131,7 +130,7 @@ export async function updateIssueAction(
     activityPromises.push(
       insertActivity({
         issue_id: id,
-        actor_id: user.id,
+        actor_id: auth.user.id,
         action: "field_changed",
         field: "title",
         old_value: current.title,
@@ -148,7 +147,7 @@ export async function updateIssueAction(
         activityPromises.push(
           insertActivity({
             issue_id: id,
-            actor_id: user.id,
+            actor_id: auth.user.id,
             action: "label_added",
             new_value: label,
           }),
@@ -160,7 +159,7 @@ export async function updateIssueAction(
         activityPromises.push(
           insertActivity({
             issue_id: id,
-            actor_id: user.id,
+            actor_id: auth.user.id,
             action: "label_removed",
             old_value: label,
           }),
@@ -179,8 +178,8 @@ export async function updateIssueAction(
 export async function deleteIssueAction(
   input: z.input<typeof deleteIssueSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = deleteIssueSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
@@ -189,7 +188,7 @@ export async function deleteIssueAction(
   if (!current) return { error: "Issue niet gevonden" };
 
   try {
-    await assertProjectAccess(user.id, current.project_id);
+    await assertProjectAccess(auth.user.id, current.project_id);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Issue niet gevonden" };
     throw e;
@@ -210,14 +209,14 @@ const projectIdSchema = z.string().uuid();
 export async function getIssueCountsAction(
   projectId: string,
 ): Promise<{ data: Record<string, number> } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
+  const auth = await requireUserInAction();
+  if ("error" in auth) return auth;
 
   const parsed = projectIdSchema.safeParse(projectId);
   if (!parsed.success) return { error: "Ongeldig project ID" };
 
   try {
-    await assertProjectAccess(user.id, parsed.data);
+    await assertProjectAccess(auth.user.id, parsed.data);
   } catch (e) {
     if (e instanceof NotAuthorizedError) return { error: "Geen toegang tot dit project" };
     throw e;

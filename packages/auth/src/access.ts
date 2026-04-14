@@ -137,6 +137,24 @@ export async function requireAdminInAction(): Promise<
 }
 
 /**
+ * Convenience guard for Server Actions that allow any authenticated user
+ * (e.g. devhub members acting on projects they have access to). Typically
+ * follow up with `assertProjectAccess(auth.user.id, projectId)` for fine-grained
+ * authorization.
+ *
+ * Replaces the boilerplate:
+ *   const user = await getAuthenticatedUser();
+ *   if (!user) return { error: "Niet ingelogd" };
+ */
+export async function requireUserInAction(): Promise<
+  { user: { id: string; email: string } } | { error: string }
+> {
+  const user = await getAuthenticatedUser();
+  if (!user?.id) return { error: "Niet ingelogd" };
+  return { user: { id: user.id, email: user.email ?? "" } };
+}
+
+/**
  * Returns the list of project IDs a user may access.
  * - Admin → all rows from `projects.id`
  * - Member → only IDs present in `devhub_project_access`

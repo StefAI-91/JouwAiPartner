@@ -5,9 +5,24 @@ import { TEST_IDS } from "../../../../packages/database/__tests__/helpers/seed";
 
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createServerMock());
-vi.mock("@repo/auth/access", () => ({
-  isAdmin: vi.fn().mockResolvedValue(true),
-}));
+vi.mock("@repo/auth/access", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@repo/auth/access")>();
+  const { getMockUser } = await import("../helpers/mock-auth");
+  return {
+    ...actual,
+    isAdmin: vi.fn().mockResolvedValue(true),
+    requireAdminInAction: vi.fn(async () => {
+      const user = getMockUser();
+      if (!user) return { error: "Niet ingelogd" };
+      return { user: { id: user.id, email: user.email ?? "" } };
+    }),
+    requireUserInAction: vi.fn(async () => {
+      const user = getMockUser();
+      if (!user) return { error: "Niet ingelogd" };
+      return { user: { id: user.id, email: user.email ?? "" } };
+    }),
+  };
+});
 
 const mockScanAllUnscannedMeetings = vi.fn();
 vi.mock("@repo/ai/pipeline/scan-needs", () => ({
@@ -84,7 +99,7 @@ describe("Scan Needs Actions", () => {
       const action = await getAction();
       const result = await action();
 
-      expect(result).toEqual({ error: "Unauthorized" });
+      expect(result).toEqual({ error: "Niet ingelogd" });
       expect(mockScanAllUnscannedMeetings).not.toHaveBeenCalled();
     });
   });
@@ -127,7 +142,7 @@ describe("Scan Needs Actions", () => {
         status: "open",
       });
 
-      expect(result).toEqual({ error: "Unauthorized" });
+      expect(result).toEqual({ error: "Niet ingelogd" });
     });
   });
 });

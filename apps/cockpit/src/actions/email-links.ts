@@ -17,15 +17,13 @@ import {
   emailTypeSchema,
   emailPartyTypeSchema,
 } from "@/validations/email-links";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 
 export async function linkEmailProjectAction(
   input: z.infer<typeof emailProjectSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = emailProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -43,9 +41,8 @@ export async function linkEmailProjectAction(
 export async function unlinkEmailProjectAction(
   input: z.infer<typeof emailProjectSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = emailProjectSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -63,9 +60,8 @@ export async function unlinkEmailProjectAction(
 export async function updateEmailOrganizationAction(
   input: z.infer<typeof emailOrganizationSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = emailOrganizationSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -83,9 +79,8 @@ export async function updateEmailOrganizationAction(
 export async function updateEmailSenderPersonAction(
   input: z.infer<typeof emailSenderPersonSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = emailSenderPersonSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -102,9 +97,8 @@ export async function updateEmailSenderPersonAction(
 export async function updateEmailTypeAction(
   input: z.infer<typeof emailTypeSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = emailTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -121,9 +115,8 @@ export async function updateEmailTypeAction(
 export async function updateEmailPartyTypeAction(
   input: z.infer<typeof emailPartyTypeSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = emailPartyTypeSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };

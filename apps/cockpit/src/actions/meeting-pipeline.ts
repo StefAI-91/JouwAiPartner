@@ -19,17 +19,15 @@ import {
 } from "@repo/database/mutations/meeting-project-summaries";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import { regenerateSchema } from "@repo/database/validations/meetings";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
+import { requireAdminInAction } from "@repo/auth/access";
 
 // ── Regenerate Summary + Action Items ──
 
 export async function regenerateMeetingAction(
   input: z.infer<typeof regenerateSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = regenerateSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
@@ -194,9 +192,8 @@ export async function regenerateMeetingAction(
 export async function reprocessMeetingAction(
   input: z.infer<typeof regenerateSchema>,
 ): Promise<{ success: true } | { error: string }> {
-  const user = await getAuthenticatedUser();
-  if (!user) return { error: "Niet ingelogd" };
-  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return auth;
 
   const parsed = regenerateSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
