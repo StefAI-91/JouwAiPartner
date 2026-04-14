@@ -5,7 +5,7 @@ import { Users, X, Plus } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
 import { linkMeetingParticipantAction, unlinkMeetingParticipantAction } from "@/actions/meetings";
-import { createPersonAction } from "@/actions/entities";
+import { createPersonAction } from "@/actions/people";
 
 interface Person {
   id: string;

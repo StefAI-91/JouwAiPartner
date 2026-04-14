@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, ListChecks } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
-import { createExtractionAction } from "@/actions/entities";
+import { createExtractionAction } from "@/actions/extractions";
 
 interface AddExtractionFormProps {
   meetingId: string;
@@ -51,9 +51,7 @@ export function AddExtractionForm({ meetingId }: AddExtractionFormProps) {
           }}
           className="space-y-4"
         >
-          {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <ListChecks className="size-4 text-green-600" />

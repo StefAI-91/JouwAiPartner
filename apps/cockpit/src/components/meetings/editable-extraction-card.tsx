@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { ExtractionCard } from "@/components/shared/extraction-card";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { updateExtractionAction, deleteExtractionAction } from "@/actions/entities";
+import { updateExtractionAction, deleteExtractionAction } from "@/actions/extractions";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface EditableExtractionCardProps {

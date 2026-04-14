@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
-import { ISSUE_SELECT, type IssueRow, type IssueCommentRow } from "../queries/issues";
+import { ISSUE_SELECT, type IssueRow } from "../queries/issues";
+import type { IssueCommentRow } from "../queries/issue-comments";
 
 export interface InsertIssueData {
   project_id: string;
