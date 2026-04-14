@@ -16,6 +16,10 @@ vi.mock("@repo/database/mutations/emails", () => ({
 }));
 vi.mock("@repo/database/queries/people", () => ({
   findPeopleByEmails: vi.fn(),
+  findPersonOrgByEmail: vi.fn(),
+}));
+vi.mock("@repo/database/queries/organizations", () => ({
+  findOrganizationIdByEmailDomain: vi.fn(),
 }));
 vi.mock("../../src/embeddings", () => ({
   embedText: vi.fn(),
@@ -39,7 +43,8 @@ import {
   updateEmailSenderPerson,
   linkEmailProject,
 } from "@repo/database/mutations/emails";
-import { findPeopleByEmails } from "@repo/database/queries/people";
+import { findPersonOrgByEmail } from "@repo/database/queries/people";
+import { findOrganizationIdByEmailDomain } from "@repo/database/queries/organizations";
 import { embedText } from "../../src/embeddings";
 
 const mockClassifier = runEmailClassifier as ReturnType<typeof vi.fn>;
@@ -48,7 +53,8 @@ const mockResolveOrg = resolveOrganization as ReturnType<typeof vi.fn>;
 const mockUpdateClassification = updateEmailClassification as ReturnType<typeof vi.fn>;
 const mockUpdateSenderPerson = updateEmailSenderPerson as ReturnType<typeof vi.fn>;
 const mockLinkProject = linkEmailProject as ReturnType<typeof vi.fn>;
-const mockFindPeople = findPeopleByEmails as ReturnType<typeof vi.fn>;
+const mockFindPersonOrg = findPersonOrgByEmail as ReturnType<typeof vi.fn>;
+const mockFindOrgByDomain = findOrganizationIdByEmailDomain as ReturnType<typeof vi.fn>;
 const mockEmbedText = embedText as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
@@ -88,7 +94,8 @@ function setupHappyPath() {
     match_type: "exact",
   });
   mockUpdateClassification.mockResolvedValue({ success: true });
-  mockFindPeople.mockResolvedValue(new Map([["jan@klantbv.nl", "person-1"]]));
+  mockFindPersonOrg.mockResolvedValue({ personId: "person-1", organizationId: "org-1" });
+  mockFindOrgByDomain.mockResolvedValue(null);
   mockUpdateSenderPerson.mockResolvedValue({ success: true });
   mockLinkProject.mockResolvedValue({ success: true });
   mockEmbedText.mockResolvedValue([0.1, 0.2, 0.3]);
@@ -131,7 +138,7 @@ describe("processEmail", () => {
 
     await processEmail(baseEmail);
 
-    expect(mockFindPeople).toHaveBeenCalledWith(["jan@klantbv.nl"]);
+    expect(mockFindPersonOrg).toHaveBeenCalledWith("jan@klantbv.nl");
     expect(mockUpdateSenderPerson).toHaveBeenCalledWith("email-1", "person-1");
   });
 

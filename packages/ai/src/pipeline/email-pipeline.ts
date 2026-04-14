@@ -29,6 +29,7 @@ export interface EmailOrganizationResolution {
   unmatched_organization_name: string | null;
   sender_person_id: string | null;
   match_source: "classifier" | "person" | "domain" | "none";
+  errors: string[];
 }
 
 export async function resolveEmailOrganization(
@@ -40,6 +41,7 @@ export async function resolveEmailOrganization(
     unmatched_organization_name: null,
     sender_person_id: null,
     match_source: "none",
+    errors: [],
   };
 
   // Strategy 1: classifier organisatienaam
@@ -50,8 +52,11 @@ export async function resolveEmailOrganization(
         result.organization_id = orgResult.organization_id;
         result.match_source = "classifier";
       }
-    } catch {
-      // swallow — we proberen de volgende strategie nog
+    } catch (err) {
+      // Errors van strategy 1 worden gelogd zodat ze voor debugging te zien
+      // zijn, maar fataal zijn ze niet — strategy 2 en 3 krijgen alsnog een
+      // kans om een match te vinden.
+      result.errors.push(`Org resolution failed: ${err}`);
     }
   }
 
@@ -180,6 +185,9 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
   try {
     orgResolution = await resolveEmailOrganization(email.from_address, orgName);
     result.organization_id = orgResolution.organization_id;
+    if (orgResolution.errors.length > 0) {
+      result.errors.push(...orgResolution.errors);
+    }
 
     // Save sender person as soon as we find one — survives pipeline errors later
     if (orgResolution.sender_person_id) {
@@ -202,6 +210,7 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
       unmatched_organization_name: orgName,
       sender_person_id: null,
       match_source: "none",
+      errors: [],
     };
   }
 
