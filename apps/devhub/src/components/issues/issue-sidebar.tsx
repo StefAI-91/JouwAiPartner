@@ -6,10 +6,10 @@ import {
   ISSUE_STATUS_LABELS,
   ISSUE_PRIORITIES,
   ISSUE_PRIORITY_LABELS,
+  ISSUE_TYPES,
   ISSUE_TYPE_LABELS,
   ISSUE_COMPONENTS,
   ISSUE_COMPONENT_LABELS,
-  type IssueType,
 } from "@repo/database/constants/issues";
 import { SidebarSelect, SidebarAssignee } from "./sidebar-fields";
 import { SidebarAiClassification } from "./sidebar-ai-classification";
@@ -51,10 +51,13 @@ export function IssueSidebar({ issue, people, onFieldChange, isPending }: IssueS
           disabled={isPending}
         />
 
-        <div className="space-y-1">
-          <span className="text-xs font-medium text-muted-foreground">Type</span>
-          <p className="text-sm">{ISSUE_TYPE_LABELS[issue.type as IssueType] ?? issue.type}</p>
-        </div>
+        <SidebarSelect
+          label="Type"
+          value={issue.type}
+          options={ISSUE_TYPES.map((t) => ({ value: t, label: ISSUE_TYPE_LABELS[t] }))}
+          onChange={(v) => onFieldChange("type", v)}
+          disabled={isPending}
+        />
 
         <SidebarSelect
           label="Component"
