@@ -9,9 +9,9 @@
 
 The cockpit has an **AI assistant character** — a friendly robot mascot that communicates with the user. The interface feels like a conversation with a helpful colleague, not like navigating a generic SaaS tool.
 
-**Tone:** Warm, professional, casual English. Think "a calm colleague who has your back" — not "an excited app that celebrates everything."
+**Tone:** Warm, professional, casual. Think "a calm colleague who has your back" — not "an excited app that celebrates everything."
 
-**Language:** The entire UI is in English. Content (transcripts, extractions) stays in whatever language the meeting was in (usually Dutch).
+**Language:** The entire UI is in Dutch. Technical identifiers (DB columns, CHECK constraint values, code) stay in English. Content (transcripts, extractions) stays in whatever language the meeting was in (usually Dutch). See section 11 for the full language convention (RULE-007).
 
 **Examples of good tone:**
 
@@ -339,4 +339,51 @@ Page padding:       px-6 (24px) on mobile, px-12 (48px) on desktop
 | "Intensity Level: HIGH/MED/LOW"       | Confidence shown per extraction in detail view only (not on queue cards) |
 | Generic meeting names                 | Real data: Ordus, Fleur op zak, HelperU                                  |
 | No participant names on cards         | Participant names shown via people join                                  |
-| Dutch/English mixed UI                | Full English UI, content stays in original language                      |
+| Dutch/English mixed UI                | Full Dutch UI, technical identifiers (DB) stay English (RULE-007)        |
+
+---
+
+## 11. Language Convention (RULE-007)
+
+The platform follows a strict two-layer language split.
+
+### Dutch (gebruikersgericht)
+
+Everything a user, team member or reviewer sees or reads is in Dutch:
+
+- Route paths (`/administratie`, `/klanten`, `/projecten`, `/vergaderingen`)
+- Navigation labels ("Administratie", "Klanten", "Projecten")
+- Button text, form labels, field names, placeholders
+- Error messages, toasts, empty-state copy, tooltips
+- Page titles, headings, breadcrumbs, badges
+- Label-mappings for technical enum values — e.g. DB `type = 'advisor'` renders as "Adviseur" in the UI
+
+### English (technisch)
+
+Everything that lives below the UI layer stays in English:
+
+- Database column names (`email_type`, `party_type`, `meeting_type`, `organization_id`)
+- CHECK constraint values (`'client'`, `'advisor'`, `'internal'`, `'legal_finance'`)
+- Code identifiers: function names, variables, types, props, component names
+- File and folder names (kebab-case English, e.g. `organization-card.tsx`)
+- Git branch names, commit messages (imperative English, e.g. `feat(db): add advisor type`)
+- Test names, error codes, log output
+
+### Waarom deze split
+
+- **Classifier-output is stabiel**: CHECK-constraint waardes worden direct door AI-agents geproduceerd (`email_type='legal_finance'`). Nederlandse waardes ('financieel_juridisch') zouden alle prompts en validaties raken.
+- **Consistentie met Supabase/Postgres**: snake_case English column names zijn de facto standaard; tooling (types, admin UI, migraties) gaat daarvan uit.
+- **Onderhoud door niet-coders**: UI-wijzigingen kunnen worden gedaan zonder DB-begrip; DB-werk raakt geen gebruikerstekst.
+
+### UI-labels voor `organizations.type`
+
+| DB-waarde  | NL-label    |
+| ---------- | ----------- |
+| `client`   | Klant       |
+| `partner`  | Partner     |
+| `supplier` | Leverancier |
+| `advisor`  | Adviseur    |
+| `internal` | Intern      |
+| `other`    | Overig      |
+
+Deze mapping leeft als constante in de UI-laag (vervolg-sprint 033), niet in de database.

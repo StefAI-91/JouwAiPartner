@@ -81,6 +81,7 @@ export interface OrganizationDetail {
   status: string;
   contact_person: string | null;
   email: string | null;
+  email_domains: string[];
   projects: {
     id: string;
     name: string;
@@ -106,7 +107,7 @@ export async function getOrganizationById(
 
   const { data: org, error } = await db
     .from("organizations")
-    .select("id, name, type, status, contact_person, email")
+    .select("id, name, type, status, contact_person, email, email_domains")
     .eq("id", orgId)
     .single();
 
@@ -124,6 +125,7 @@ export async function getOrganizationById(
 
   return {
     ...org,
+    email_domains: (org.email_domains ?? []) as string[],
     projects: projects ?? [],
     meetings: meetings ?? [],
   };
@@ -134,4 +136,114 @@ export async function getAllOrganizations() {
 
   if (error || !data) return [];
   return data;
+}
+
+/**
+ * List organizations filtered by one or more relationship types.
+ *
+ * Geldige types: 'client' | 'partner' | 'supplier' | 'advisor' | 'internal' | 'other'.
+ *
+ * Gedrag bij lege `types`-array: retourneert een leeg array (early return).
+ * Dit is een bewuste keuze — een lege filter zonder types mag nooit de
+ * volledige lijst teruggeven (zou onveilig zijn bij toekomstige autorisatie).
+ *
+ * Hergebruikt dezelfde project-count + last-meeting-date berekening als
+ * listOrganizations, zodat de UI dezelfde OrganizationListItem shape krijgt.
+ *
+ * @example
+ *   listOrganizationsByType(['advisor'])           // alleen adviseurs
+ *   listOrganizationsByType(['advisor', 'internal']) // adviseurs + eigen bedrijf
+ */
+/**
+ * Zoek de organization.id die het opgegeven e-maildomein in zijn
+ * `email_domains` array heeft staan. Retourneert de eerste match of null.
+ *
+ * Gebruikt door de email-pipeline als derde fallback (na classifier-naam
+ * en sender-person matches). Zie sprint 034 / FUNC-036.
+ *
+ * Input wordt naar lowercase genormaliseerd; DB-waardes zijn altijd lowercase
+ * (zie `normalizeEmailDomains` in mutations/organizations.ts).
+ */
+export async function findOrganizationIdByEmailDomain(
+  domain: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const cleaned = domain.trim().toLowerCase();
+  if (!cleaned) return null;
+
+  const db = client ?? getAdminClient();
+  // Geen .maybeSingle() — die throwt als twee organisaties per ongeluk
+  // hetzelfde domein claimen. Onder PostgREST wordt .limit(1) genegeerd in
+  // combinatie met .maybeSingle(). We pakken de eerste rij defensief.
+  const { data, error } = await db
+    .from("organizations")
+    .select("id")
+    .contains("email_domains", [cleaned])
+    .limit(1);
+
+  if (error || !data || data.length === 0) return null;
+  return data[0].id;
+}
+
+export async function listOrganizationsByType(
+  types: string[],
+  client?: SupabaseClient,
+  options?: { limit?: number },
+): Promise<OrganizationListItem[]> {
+  if (types.length === 0) return [];
+
+  const db = client ?? getAdminClient();
+
+  const { data: orgs, error } = await db
+    .from("organizations")
+    .select("id, name, type, status, contact_person, email")
+    .in("type", types)
+    .order("name")
+    .limit(options?.limit ?? 500);
+
+  if (error || !orgs || orgs.length === 0) return [];
+
+  const orgIds = orgs.map((o) => o.id);
+
+  // Batch: project count per org
+  const { data: projects } = await db
+    .from("projects")
+    .select("organization_id")
+    .in("organization_id", orgIds);
+
+  const projectCountMap = new Map<string, number>();
+  if (projects) {
+    for (const p of projects) {
+      if (!p.organization_id) continue;
+      projectCountMap.set(p.organization_id, (projectCountMap.get(p.organization_id) ?? 0) + 1);
+    }
+  }
+
+  // Batch: last meeting date per org
+  const { data: meetings } = await db
+    .from("meetings")
+    .select("organization_id, date")
+    .in("organization_id", orgIds)
+    .order("date", { ascending: false });
+
+  const lastMeetingMap = new Map<string, string>();
+  if (meetings) {
+    for (const m of meetings) {
+      if (!m.organization_id || !m.date) continue;
+      if (!lastMeetingMap.has(m.organization_id)) {
+        lastMeetingMap.set(m.organization_id, m.date);
+      }
+    }
+  }
+
+  return orgs.map((o) => ({
+    id: o.id,
+    name: o.name,
+    type: o.type,
+    status: o.status,
+    contact_person: o.contact_person,
+    email: o.email,
+    project_count: projectCountMap.get(o.id) ?? 0,
+    last_meeting_date: lastMeetingMap.get(o.id) ?? null,
+  }));
 }

@@ -1,13 +1,17 @@
 import { z } from "zod";
 import { zUuid } from "./uuid";
+import { ORG_TYPES, ORG_STATUSES } from "../constants/organizations";
 
 export const updateOrganizationSchema = z.object({
   id: zUuid,
   name: z.string().min(1, "Naam is verplicht").max(200).optional(),
-  type: z.enum(["client", "partner", "supplier", "other"]).optional(),
-  status: z.enum(["prospect", "active", "inactive"]).optional(),
+  type: z.enum(ORG_TYPES).optional(),
+  status: z.enum(ORG_STATUSES).optional(),
   contact_person: z.string().max(200).nullable().optional(),
   email: z.string().email("Ongeldig e-mailadres").nullable().optional(),
+  email_domains: z
+    .array(z.string().regex(/^[a-z0-9.-]+\.[a-z]{2,}$/i, "Ongeldig domein"))
+    .optional(),
 });
 
 export const updateProjectSchema = z.object({

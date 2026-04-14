@@ -4,7 +4,7 @@ export const seedSection = {
   data: [
     {
       category: "Organisaties",
-      items: ["Flowwijs (eigen)", "Ordus (klant)", "Effect op maat (klant)"],
+      items: ["Jouw AI Partner (eigen)", "Ordus (klant)", "Effect op maat (klant)"],
     },
     {
       category: "Team (intern)",

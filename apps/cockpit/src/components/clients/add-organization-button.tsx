@@ -5,6 +5,19 @@ import { Plus } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
 import { createOrganizationAction } from "@/actions/organizations";
 import { ORG_TYPES } from "@repo/database/constants/organizations";
+import { ORG_TYPE_LABELS } from "@/components/shared/org-type-labels";
+
+// Types waar email + email-domeinen relevant zijn — adviseurs en leveranciers
+// hebben vaak een vast email-adres en een eigen domein dat we kunnen matchen
+// op inkomende post.
+const TYPES_WITH_EMAIL_FIELDS = ["advisor", "supplier"];
+
+function parseDomains(input: string): string[] {
+  return input
+    .split(",")
+    .map((d) => d.trim().toLowerCase())
+    .filter((d) => d.length > 0);
+}
 
 export function AddOrganizationButton() {
   const [open, setOpen] = useState(false);
@@ -13,6 +26,10 @@ export function AddOrganizationButton() {
 
   const [name, setName] = useState("");
   const [type, setType] = useState<string>("client");
+  const [email, setEmail] = useState("");
+  const [domainsInput, setDomainsInput] = useState("");
+
+  const showEmailFields = TYPES_WITH_EMAIL_FIELDS.includes(type);
 
   function handleSubmit() {
     setError(null);
@@ -20,12 +37,16 @@ export function AddOrganizationButton() {
       const result = await createOrganizationAction({
         name: name.trim(),
         type: type as (typeof ORG_TYPES)[number],
+        email: showEmailFields && email.trim() ? email.trim() : null,
+        email_domains: showEmailFields ? parseDomains(domainsInput) : undefined,
       });
       if ("error" in result) {
         setError(result.error);
       } else {
         setName("");
         setType("client");
+        setEmail("");
+        setDomainsInput("");
         setOpen(false);
       }
     });
@@ -73,11 +94,45 @@ export function AddOrganizationButton() {
             >
               {ORG_TYPES.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {ORG_TYPE_LABELS[t] ?? t}
                 </option>
               ))}
             </select>
           </div>
+
+          {showEmailFields && (
+            <>
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  E-mailadres <span className="text-muted-foreground">(optioneel)</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  placeholder="info@finconnect.nl"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  E-maildomeinen{" "}
+                  <span className="text-muted-foreground">(komma-gescheiden, optioneel)</span>
+                </label>
+                <input
+                  type="text"
+                  value={domainsInput}
+                  onChange={(e) => setDomainsInput(e.target.value)}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  placeholder="finconnect.nl, finconnect.com"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Mails vanaf deze domeinen worden automatisch aan deze organisatie gekoppeld.
+                </p>
+              </div>
+            </>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <button

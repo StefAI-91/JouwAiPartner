@@ -143,7 +143,7 @@ export const mcpTools: ToolInfo[] = [
       { name: "role", description: "Filter op rol (deels matchen)", required: false },
     ],
     exampleQuestions: [
-      "Wie werkt er bij Flowwijs?",
+      "Wie werkt er bij Jouw AI Partner?",
       "Wie zit er in het engineering team?",
       "Toon alle mede-eigenaren",
     ],

@@ -27,6 +27,26 @@ export async function listPeople(
   return data;
 }
 
+/**
+ * List people die gekoppeld zijn aan een specifieke organisatie.
+ * Gebruikt door de administratie-detailpagina om contactpersonen van een
+ * adviseur te tonen. Zie sprint 034.
+ */
+export async function listPeopleByOrganization(
+  orgId: string,
+  client?: SupabaseClient,
+): Promise<PersonListItem[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("people")
+    .select("id, name, email, team, role")
+    .eq("organization_id", orgId)
+    .order("name");
+
+  if (error || !data) return [];
+  return data;
+}
+
 export interface PersonWithOrg {
   id: string;
   name: string;
@@ -269,4 +289,37 @@ export async function findPeopleByEmails(emails: string[]): Promise<Map<string, 
     }
   }
   return result;
+}
+
+/**
+ * Zoek person+organization op basis van één e-mailadres.
+ *
+ * Retourneert ook `organizationId` (uit `people.organization_id`) zodat de
+ * email-pipeline kan bepalen bij welke organisatie een inkomende mail hoort
+ * op basis van de afzender. Zie sprint 034 / FUNC-035.
+ *
+ * Case-insensitive: input wordt naar lowercase gezet en getoetst tegen
+ * lowercase rijen (de DB bewaart emails in lowercase, dit is extra safeguard).
+ */
+export async function findPersonOrgByEmail(
+  email: string,
+  client?: SupabaseClient,
+): Promise<{ personId: string; organizationId: string | null } | null> {
+  const cleaned = email.trim().toLowerCase();
+  if (!cleaned) return null;
+
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("people")
+    .select("id, organization_id, email")
+    .eq("email", cleaned)
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    personId: data.id,
+    organizationId: data.organization_id ?? null,
+  };
 }
