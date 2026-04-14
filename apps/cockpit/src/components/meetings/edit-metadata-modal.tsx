@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { X } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
@@ -18,16 +18,18 @@ const PARTY_TYPES = [
   { value: "other", label: "Overig" },
 ] as const;
 
+interface MeetingMetadata {
+  id: string;
+  title: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  organization_id: string | null;
+}
+
 interface EditMetadataModalProps {
   open: boolean;
   onClose: () => void;
-  meeting: {
-    id: string;
-    title: string | null;
-    meeting_type: string | null;
-    party_type: string | null;
-    organization_id: string | null;
-  };
+  meeting: MeetingMetadata;
   linkedProjects: { id: string; name: string }[];
   linkedPeople: { id: string; name: string }[];
   allPeople: PersonWithOrg[];
@@ -35,8 +37,20 @@ interface EditMetadataModalProps {
   organizations: { id: string; name: string }[];
 }
 
-export function EditMetadataModal({
-  open,
+export function EditMetadataModal(props: EditMetadataModalProps) {
+  const { open, onClose } = props;
+  return (
+    <Modal open={open} onClose={onClose} title="Metadata bewerken" className="max-w-lg">
+      {open && <EditMetadataForm {...props} />}
+    </Modal>
+  );
+}
+
+/**
+ * Form body — rendered only while the modal is open so it remounts each time
+ * (fresh state from props, no reset effect).
+ */
+function EditMetadataForm({
   onClose,
   meeting,
   linkedProjects,
@@ -73,22 +87,6 @@ export function EditMetadataModal({
     ...allPeople,
     ...newPeople.map((p) => ({ ...p, role: null, organization: null })),
   ];
-
-  // Reset state when modal opens
-  useEffect(() => {
-    if (open) {
-      setTitle(meeting.title ?? "");
-      setMeetingType(meeting.meeting_type ?? "other");
-      setPartyType(meeting.party_type ?? "other");
-      setOrganizationId(meeting.organization_id);
-      setSelectedProjects(linkedProjects);
-      setSelectedPeople(linkedPeople);
-      setNewOrganizations([]);
-      setNewProjects([]);
-      setNewPeople([]);
-      setError(null);
-    }
-  }, [open, meeting, linkedProjects, linkedPeople]);
 
   // Computed available options (exclude already selected)
   const selectedProjectIds = new Set(selectedProjects.map((p) => p.id));
@@ -162,193 +160,191 @@ export function EditMetadataModal({
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title="Metadata bewerken" className="max-w-lg">
-        <div className="space-y-4">
-          {/* Title */}
-          <div>
-            <label htmlFor="meta-title" className="mb-1 block text-sm font-medium">
-              Titel
-            </label>
-            <input
-              id="meta-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isPending}
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-            />
-          </div>
+      <div className="space-y-4">
+        {/* Title */}
+        <div>
+          <label htmlFor="meta-title" className="mb-1 block text-sm font-medium">
+            Titel
+          </label>
+          <input
+            id="meta-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isPending}
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          />
+        </div>
 
-          {/* Meeting Type + Party Type in a row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="meta-meeting-type" className="mb-1 block text-sm font-medium">
-                Meeting type
-              </label>
-              <select
-                id="meta-meeting-type"
-                value={meetingType}
-                onChange={(e) => setMeetingType(e.target.value)}
-                disabled={isPending}
-                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-              >
-                {MEETING_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="meta-party-type" className="mb-1 block text-sm font-medium">
-                Party type
-              </label>
-              <select
-                id="meta-party-type"
-                value={partyType}
-                onChange={(e) => setPartyType(e.target.value)}
-                disabled={isPending}
-                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-              >
-                {PARTY_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Organization */}
+        {/* Meeting Type + Party Type in a row */}
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="meta-organization" className="mb-1 block text-sm font-medium">
-              Organisatie
+            <label htmlFor="meta-meeting-type" className="mb-1 block text-sm font-medium">
+              Meeting type
             </label>
             <select
-              id="meta-organization"
-              value={organizationId ?? ""}
-              onChange={(e) => handleOrganizationChange(e.target.value)}
+              id="meta-meeting-type"
+              value={meetingType}
+              onChange={(e) => setMeetingType(e.target.value)}
               disabled={isPending}
               className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
             >
-              <option value="">Geen organisatie</option>
-              {allOrganizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name}
+              {MEETING_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
                 </option>
               ))}
-              <option value="__new__">+ Nieuwe organisatie</option>
             </select>
           </div>
-
-          {/* Projects */}
           <div>
-            <label className="mb-1 block text-sm font-medium">Projecten</label>
-            {selectedProjects.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-1.5">
-                {selectedProjects.map((project) => (
-                  <span
-                    key={project.id}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
-                  >
-                    {project.name}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedProjects((prev) => prev.filter((p) => p.id !== project.id))
-                      }
-                      disabled={isPending}
-                      className="rounded-full p-0.5 hover:bg-background/80"
-                      aria-label={`${project.name} verwijderen`}
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+            <label htmlFor="meta-party-type" className="mb-1 block text-sm font-medium">
+              Party type
+            </label>
             <select
-              key={selectedProjects.length}
-              onChange={(e) => {
-                handleAddProject(e.target.value);
-                e.target.value = "";
-              }}
+              id="meta-party-type"
+              value={partyType}
+              onChange={(e) => setPartyType(e.target.value)}
               disabled={isPending}
-              defaultValue=""
-              className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
             >
-              <option value="" disabled>
-                Project toevoegen...
-              </option>
-              {availableProjects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
+              {PARTY_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
                 </option>
               ))}
-              <option value="__new__">+ Nieuw project aanmaken</option>
             </select>
-          </div>
-
-          {/* Participants */}
-          <div>
-            <label className="mb-1 block text-sm font-medium">Deelnemers</label>
-            {selectedPeople.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-1.5">
-                {selectedPeople.map((person) => (
-                  <span
-                    key={person.id}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
-                  >
-                    {person.name}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedPeople((prev) => prev.filter((p) => p.id !== person.id))
-                      }
-                      disabled={isPending}
-                      className="rounded-full p-0.5 hover:bg-background/80"
-                      aria-label={`${person.name} verwijderen`}
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <select
-              key={selectedPeople.length}
-              onChange={(e) => {
-                handleAddPerson(e.target.value);
-                e.target.value = "";
-              }}
-              disabled={isPending}
-              defaultValue=""
-              className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-            >
-              <option value="" disabled>
-                Deelnemer toevoegen...
-              </option>
-              {availablePeople.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {personLabel(person)}
-                </option>
-              ))}
-              <option value="__new__">+ Nieuw persoon toevoegen</option>
-            </select>
-          </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
-          {/* Footer */}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
-              Annuleren
-            </Button>
-            <Button onClick={handleSave} disabled={isPending}>
-              {isPending ? "Opslaan..." : "Opslaan"}
-            </Button>
           </div>
         </div>
-      </Modal>
+
+        {/* Organization */}
+        <div>
+          <label htmlFor="meta-organization" className="mb-1 block text-sm font-medium">
+            Organisatie
+          </label>
+          <select
+            id="meta-organization"
+            value={organizationId ?? ""}
+            onChange={(e) => handleOrganizationChange(e.target.value)}
+            disabled={isPending}
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          >
+            <option value="">Geen organisatie</option>
+            {allOrganizations.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+            <option value="__new__">+ Nieuwe organisatie</option>
+          </select>
+        </div>
+
+        {/* Projects */}
+        <div>
+          <label className="mb-1 block text-sm font-medium">Projecten</label>
+          {selectedProjects.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {selectedProjects.map((project) => (
+                <span
+                  key={project.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {project.name}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedProjects((prev) => prev.filter((p) => p.id !== project.id))
+                    }
+                    disabled={isPending}
+                    className="rounded-full p-0.5 hover:bg-background/80"
+                    aria-label={`${project.name} verwijderen`}
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <select
+            key={selectedProjects.length}
+            onChange={(e) => {
+              handleAddProject(e.target.value);
+              e.target.value = "";
+            }}
+            disabled={isPending}
+            defaultValue=""
+            className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          >
+            <option value="" disabled>
+              Project toevoegen...
+            </option>
+            {availableProjects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+            <option value="__new__">+ Nieuw project aanmaken</option>
+          </select>
+        </div>
+
+        {/* Participants */}
+        <div>
+          <label className="mb-1 block text-sm font-medium">Deelnemers</label>
+          {selectedPeople.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {selectedPeople.map((person) => (
+                <span
+                  key={person.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {person.name}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedPeople((prev) => prev.filter((p) => p.id !== person.id))
+                    }
+                    disabled={isPending}
+                    className="rounded-full p-0.5 hover:bg-background/80"
+                    aria-label={`${person.name} verwijderen`}
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <select
+            key={selectedPeople.length}
+            onChange={(e) => {
+              handleAddPerson(e.target.value);
+              e.target.value = "";
+            }}
+            disabled={isPending}
+            defaultValue=""
+            className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          >
+            <option value="" disabled>
+              Deelnemer toevoegen...
+            </option>
+            {availablePeople.map((person) => (
+              <option key={person.id} value={person.id}>
+                {personLabel(person)}
+              </option>
+            ))}
+            <option value="__new__">+ Nieuw persoon toevoegen</option>
+          </select>
+        </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
+            Annuleren
+          </Button>
+          <Button onClick={handleSave} disabled={isPending}>
+            {isPending ? "Opslaan..." : "Opslaan"}
+          </Button>
+        </div>
+      </div>
 
       {/* Sub-modals for creating new entities */}
       <CreateOrganizationModal

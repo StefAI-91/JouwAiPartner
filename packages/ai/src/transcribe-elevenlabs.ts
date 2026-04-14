@@ -57,12 +57,10 @@ export async function transcribeWithElevenLabs(
 
   if (!response.ok) {
     const errorBody = await response.text().catch(() => "unknown");
-    throw new Error(
-      `ElevenLabs Scribe API error ${response.status}: ${errorBody}`,
-    );
+    throw new Error(`ElevenLabs Scribe API error ${response.status}: ${errorBody}`);
   }
 
-  const data: ScribeResponse = await response.json();
+  const data = (await response.json()) as ScribeResponse;
 
   return {
     text: data.text,

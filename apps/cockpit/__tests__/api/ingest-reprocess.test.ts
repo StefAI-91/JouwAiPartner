@@ -73,6 +73,7 @@ import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
 import { deleteExtractionsByMeetingId } from "@repo/database/mutations/extractions";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { POST } from "../../src/app/api/ingest/reprocess/route";
+import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
 
 const CRON_SECRET = "test-cron-secret";
 
@@ -147,13 +148,16 @@ describe("POST /api/ingest/reprocess", () => {
     vi.mocked(getAdminClient).mockReturnValue(mockSupabase as never);
 
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-1",
       title: "Test meeting",
       date: "1711900800000",
       participants: ["Stef"],
       organizer_email: null,
       meeting_attendees: [],
-      sentences: [{ text: "hello", start_time: 0, end_time: 600, speaker_name: "Stef" }],
-      summary: { notes: "Summary notes", topics_discussed: [] },
+      sentences: [
+        firefliesSentence({ text: "hello", start_time: 0, end_time: 600, speaker_name: "Stef" }),
+      ],
+      summary: { ...emptyFirefliesSummary(), notes: "Summary notes" },
       audio_url: "https://audio.url/file.mp3",
     });
 
@@ -212,13 +216,14 @@ describe("POST /api/ingest/reprocess", () => {
     });
     vi.mocked(getAdminClient).mockReturnValue(mockSupabase as never);
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-1",
       title: "Test",
-      date: null,
+      date: "",
       participants: [],
       organizer_email: null,
       meeting_attendees: [],
       sentences: [],
-      summary: null,
+      summary: emptyFirefliesSummary(),
       audio_url: null,
     });
 

@@ -121,7 +121,7 @@ describe("POST /api/email/sync", () => {
       newTokens: null,
     } as never);
     vi.mocked(getExistingGmailIds).mockResolvedValue(new Set(["g1"]));
-    vi.mocked(insertEmails).mockResolvedValue({ count: 1 });
+    vi.mocked(insertEmails).mockResolvedValue({ success: true, count: 1, ids: [] });
     vi.mocked(updateGoogleAccountLastSync).mockResolvedValue(undefined as never);
     vi.mocked(getUnprocessedEmails).mockResolvedValue([]);
 
@@ -168,7 +168,7 @@ describe("POST /api/email/sync", () => {
       newTokens: { access_token: "new-token", expiry_date: Date.now() + 3600000 },
     } as never);
     vi.mocked(getExistingGmailIds).mockResolvedValue(new Set());
-    vi.mocked(insertEmails).mockResolvedValue({ count: 1 });
+    vi.mocked(insertEmails).mockResolvedValue({ success: true, count: 1, ids: [] });
     vi.mocked(updateGoogleAccountTokens).mockResolvedValue(undefined as never);
     vi.mocked(updateGoogleAccountLastSync).mockResolvedValue(undefined as never);
     vi.mocked(getUnprocessedEmails).mockResolvedValue([]);

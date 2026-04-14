@@ -35,6 +35,7 @@ import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 import { runReEmbedWorker } from "@repo/ai/pipeline/re-embed-worker";
 import { GET, POST } from "../../src/app/api/ingest/fireflies/route";
+import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
 
 const CRON_SECRET = "test-cron-secret";
 
@@ -101,13 +102,14 @@ describe("POST /api/ingest/fireflies", () => {
     vi.mocked(getExistingFirefliesIds).mockResolvedValue(new Set(["ff-1"]));
     vi.mocked(getExistingMeetingsByTitleDates).mockResolvedValue(new Map());
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-2",
       title: "Meeting 2",
       date: "1711900800000",
       participants: [],
       organizer_email: null,
       meeting_attendees: [],
       sentences: [],
-      summary: null,
+      summary: emptyFirefliesSummary(),
       audio_url: null,
     });
     vi.mocked(isValidDuration).mockReturnValue({ valid: true, duration: 10 });
@@ -155,13 +157,16 @@ describe("POST /api/ingest/fireflies", () => {
     vi.mocked(getExistingFirefliesIds).mockResolvedValue(new Set());
     vi.mocked(getExistingMeetingsByTitleDates).mockResolvedValue(new Map());
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-new",
       title: "New Meeting",
       date: "1711900800000",
       participants: ["Stef"],
       organizer_email: "stef@jouwai.nl",
       meeting_attendees: [],
-      sentences: [{ text: "hello", start_time: 0, end_time: 600, speaker_name: "Stef" }],
-      summary: { notes: "Summary", topics_discussed: [] },
+      sentences: [
+        firefliesSentence({ text: "hello", start_time: 0, end_time: 600, speaker_name: "Stef" }),
+      ],
+      summary: { ...emptyFirefliesSummary(), notes: "Summary" },
       audio_url: null,
     });
     vi.mocked(isValidDuration).mockReturnValue({ valid: true, duration: 10 });
@@ -193,13 +198,14 @@ describe("POST /api/ingest/fireflies", () => {
     vi.mocked(getExistingFirefliesIds).mockResolvedValue(new Set());
     vi.mocked(getExistingMeetingsByTitleDates).mockResolvedValue(new Map());
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-new",
       title: "New",
       date: "1711900800000",
       participants: [],
       organizer_email: null,
       meeting_attendees: [],
       sentences: [],
-      summary: null,
+      summary: emptyFirefliesSummary(),
       audio_url: null,
     });
     vi.mocked(isValidDuration).mockReturnValue({ valid: true, duration: 10 });
@@ -231,13 +237,14 @@ describe("POST /api/ingest/fireflies", () => {
     vi.mocked(getExistingMeetingsByTitleDates).mockResolvedValue(new Map());
     vi.mocked(fetchFirefliesTranscript)
       .mockResolvedValueOnce({
+        id: "ff-ok",
         title: "OK",
         date: "1711900800000",
         participants: [],
         organizer_email: null,
         meeting_attendees: [],
         sentences: [],
-        summary: null,
+        summary: emptyFirefliesSummary(),
         audio_url: null,
       })
       .mockResolvedValueOnce(null); // ff-fail: fetch fails

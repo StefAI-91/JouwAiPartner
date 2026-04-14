@@ -27,6 +27,7 @@ import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/databas
 import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 import { POST } from "../../src/app/api/webhooks/fireflies/route";
+import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
 
 const WEBHOOK_SECRET = "test-secret-123";
 
@@ -90,13 +91,14 @@ describe("POST /api/webhooks/fireflies", () => {
   it("skips meetings with duplicate title+date", async () => {
     vi.mocked(getMeetingByFirefliesId).mockResolvedValue(null);
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-dup",
       title: "Sprint planning",
       date: "1711900800000",
       participants: [],
       organizer_email: null,
       meeting_attendees: [],
       sentences: [],
-      summary: null,
+      summary: emptyFirefliesSummary(),
       audio_url: null,
     });
     vi.mocked(getMeetingByTitleAndDate).mockResolvedValue({ id: "dup-1" } as never);
@@ -115,13 +117,16 @@ describe("POST /api/webhooks/fireflies", () => {
   it("skips meetings with invalid duration", async () => {
     vi.mocked(getMeetingByFirefliesId).mockResolvedValue(null);
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-quick",
       title: "Quick test",
-      date: null,
+      date: "",
       participants: [],
       organizer_email: null,
       meeting_attendees: [],
-      sentences: [{ text: "hi", start_time: 0, end_time: 30, speaker_name: "A" }],
-      summary: null,
+      sentences: [
+        firefliesSentence({ text: "hi", start_time: 0, end_time: 30, speaker_name: "A" }),
+      ],
+      summary: emptyFirefliesSummary(),
       audio_url: null,
     });
     vi.mocked(getMeetingByTitleAndDate).mockResolvedValue(null);
@@ -141,13 +146,16 @@ describe("POST /api/webhooks/fireflies", () => {
   it("processes valid meeting through pipeline and returns success", async () => {
     vi.mocked(getMeetingByFirefliesId).mockResolvedValue(null);
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-client",
       title: "Client call",
       date: "1711900800000",
       participants: ["Stef", "Client"],
       organizer_email: "stef@jouwai.nl",
       meeting_attendees: [],
-      sentences: [{ text: "hello", start_time: 0, end_time: 600, speaker_name: "Stef" }],
-      summary: { notes: "Summary", topics_discussed: ["topic1"] },
+      sentences: [
+        firefliesSentence({ text: "hello", start_time: 0, end_time: 600, speaker_name: "Stef" }),
+      ],
+      summary: { ...emptyFirefliesSummary(), notes: "Summary", topics_discussed: ["topic1"] },
       audio_url: "https://audio.url",
     });
     vi.mocked(getMeetingByTitleAndDate).mockResolvedValue(null);
@@ -191,13 +199,14 @@ describe("POST /api/webhooks/fireflies", () => {
   it("returns 500 when pipeline crashes", async () => {
     vi.mocked(getMeetingByFirefliesId).mockResolvedValue(null);
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
+      id: "ff-crash",
       title: "Crash test",
-      date: null,
+      date: "",
       participants: [],
       organizer_email: null,
       meeting_attendees: [],
       sentences: [],
-      summary: null,
+      summary: emptyFirefliesSummary(),
       audio_url: null,
     });
     vi.mocked(isValidDuration).mockReturnValue({ valid: true, duration: 10 });

@@ -23,7 +23,7 @@ vi.mock("../../src/actions/classify", () => ({
 
 const mockCountUserbackIssues = vi.fn();
 const mockGetUserbackSyncCursor = vi.fn();
-vi.mock("@repo/database/queries/issues", () => ({
+vi.mock("@repo/database/queries/userback-issues", () => ({
   countUserbackIssues: (...args: unknown[]) => mockCountUserbackIssues(...args),
   getUserbackSyncCursor: (...args: unknown[]) => mockGetUserbackSyncCursor(...args),
 }));
@@ -158,11 +158,11 @@ describeWithDb("Import Actions (integration)")("Import Actions (integration)", (
       mockGetUserbackSyncCursor.mockResolvedValue("2026-04-10T12:00:00Z");
 
       const action = await getAction();
-      const result = await action(TEST_IDS.project);
+      const result = await action({ projectId: TEST_IDS.project });
 
       expect(result).toEqual({
-        itemCount: 42,
-        lastSyncCursor: "2026-04-10T12:00:00Z",
+        success: true,
+        data: { itemCount: 42, lastSyncCursor: "2026-04-10T12:00:00Z" },
       });
     });
 
@@ -171,10 +171,13 @@ describeWithDb("Import Actions (integration)")("Import Actions (integration)", (
       mockGetUserbackSyncCursor.mockResolvedValue(null);
 
       const action = await getAction();
-      const result = await action(TEST_IDS.project);
+      const result = await action({ projectId: TEST_IDS.project });
 
-      expect(result.lastSyncCursor).toBeNull();
-      expect(result.itemCount).toBe(0);
+      expect("data" in result).toBe(true);
+      if ("data" in result) {
+        expect(result.data.lastSyncCursor).toBeNull();
+        expect(result.data.itemCount).toBe(0);
+      }
     });
   });
 
