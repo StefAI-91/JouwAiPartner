@@ -61,8 +61,10 @@ export async function updateOrganization(
 /**
  * Normaliseer e-maildomeinen: lowercase, trim, dedupe, lege waardes eruit.
  * Retourneert altijd een array (leeg als input undefined/null/leeg).
+ *
+ * Geëxporteerd voor unit-tests; intern aangeroepen door create + update.
  */
-function normalizeEmailDomains(domains: string[] | undefined): string[] {
+export function normalizeEmailDomains(domains: string[] | undefined): string[] {
   if (!domains || domains.length === 0) return [];
   const seen = new Set<string>();
   const result: string[] = [];

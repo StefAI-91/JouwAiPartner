@@ -303,11 +303,13 @@ export async function findPeopleByEmails(emails: string[]): Promise<Map<string, 
  */
 export async function findPersonOrgByEmail(
   email: string,
+  client?: SupabaseClient,
 ): Promise<{ personId: string; organizationId: string | null } | null> {
   const cleaned = email.trim().toLowerCase();
   if (!cleaned) return null;
 
-  const { data, error } = await getAdminClient()
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
     .from("people")
     .select("id, organization_id, email")
     .eq("email", cleaned)

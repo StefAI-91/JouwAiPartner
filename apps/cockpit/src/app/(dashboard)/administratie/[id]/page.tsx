@@ -8,12 +8,17 @@ import { Badge } from "@repo/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { Mail, User, Globe, Users } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import { ORG_TYPE_LABELS } from "@/components/shared/org-type-labels";
 import { EditOrganization } from "@/components/clients/edit-organization";
 import { AdministratieEmails } from "@/components/administratie/administratie-emails";
+
+// Types die thuishoren onder /administratie. Andere types (client, partner)
+// horen onder /clients — we redirecten daarheen om een verwarrende detail-
+// view te voorkomen waar contactpersonen en e-mails geen logische plek hebben.
+const ADMINISTRATIE_TYPES = ["advisor", "internal", "supplier"];
 
 interface AdministratieDetailProps {
   params: Promise<{ id: string }>;
@@ -30,6 +35,9 @@ export default async function AdministratieDetailPage({ params }: AdministratieD
   ]);
 
   if (!org) notFound();
+  if (!ADMINISTRATIE_TYPES.includes(org.type)) {
+    redirect(`/clients/${id}`);
+  }
 
   return (
     <div className="space-y-8 px-4 py-8 lg:px-10">

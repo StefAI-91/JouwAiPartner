@@ -172,15 +172,17 @@ export async function findOrganizationIdByEmailDomain(
   if (!cleaned) return null;
 
   const db = client ?? getAdminClient();
+  // Geen .maybeSingle() — die throwt als twee organisaties per ongeluk
+  // hetzelfde domein claimen. Onder PostgREST wordt .limit(1) genegeerd in
+  // combinatie met .maybeSingle(). We pakken de eerste rij defensief.
   const { data, error } = await db
     .from("organizations")
     .select("id")
     .contains("email_domains", [cleaned])
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
 
-  if (error || !data) return null;
-  return data.id;
+  if (error || !data || data.length === 0) return null;
+  return data[0].id;
 }
 
 export async function listOrganizationsByType(

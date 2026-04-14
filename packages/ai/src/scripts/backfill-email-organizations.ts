@@ -110,10 +110,8 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry-run");
   const limitIdx = args.indexOf("--limit");
-  const hardLimit =
-    limitIdx !== -1 && args[limitIdx + 1]
-      ? parseInt(args[limitIdx + 1], 10)
-      : Number.POSITIVE_INFINITY;
+  const limitRaw = limitIdx !== -1 && args[limitIdx + 1] ? parseInt(args[limitIdx + 1], 10) : NaN;
+  const hardLimit = Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : Number.POSITIVE_INFINITY;
 
   log(
     `Starting backfill — ${dryRun ? "DRY RUN" : "WRITE MODE"}${
@@ -130,7 +128,16 @@ async function main() {
     errors: 0,
   };
 
+  // Pagination strategie hangt af van mode:
+  //  - WRITE: gekoppelde mails vallen uit de filter, dus we lezen altijd
+  //    vanaf de top (offset blijft 0). Filter zelf zorgt voor progressie.
+  //    Tracken: hoeveel rijen blijven onaangeroerd (still_unmatched) — als
+  //    een batch alleen onaangeroerde rijen heeft, is het volgende batch
+  //    identiek en moeten we stoppen.
+  //  - DRY-RUN: niks wordt geüpdatet, dus offset MOET ophogen om door de
+  //    set te lopen.
   let offset = 0;
+  let prevUnmatchedCount = -1;
   while (stats.scanned < hardLimit) {
     const remaining = hardLimit - stats.scanned;
     const pageSize = Math.min(BATCH_SIZE, remaining);
@@ -152,10 +159,29 @@ async function main() {
     }
 
     log(`Batch @ offset ${offset}: ${data.length} rows (total scanned so far ${stats.scanned})`);
+    const unmatchedBefore = stats.stillUnmatched;
     await processBatch(data, dryRun, stats);
+    const unmatchedDelta = stats.stillUnmatched - unmatchedBefore;
 
-    offset += data.length;
     if (data.length < pageSize) break;
+
+    if (dryRun) {
+      // Dry-run muteert niks → offset moet vooruit
+      offset += data.length;
+    } else {
+      // Write-mode: gekoppelde rijen vallen uit de filter, ongekoppelde rijen
+      // blijven boven aan de set staan. Offset alleen vooruit met het aantal
+      // dat ongekoppeld blijft, anders slaan we rijen over.
+      offset += unmatchedDelta;
+
+      // Veiligheidsklep: als de batch volledig ongekoppeld blijft (alle rijen
+      // matchen op niks) komt deze pagina elke iteratie weer terug. Stop dan.
+      if (unmatchedDelta === data.length && unmatchedDelta === prevUnmatchedCount) {
+        log("Batch fully unmatched and identical to previous — stopping to avoid loop.");
+        break;
+      }
+      prevUnmatchedCount = unmatchedDelta;
+    }
   }
 
   log("");
