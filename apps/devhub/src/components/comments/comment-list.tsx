@@ -1,4 +1,5 @@
-import type { IssueCommentRow, IssueActivityRow } from "@repo/database/queries/issues";
+import type { IssueCommentRow } from "@repo/database/queries/issue-comments";
+import type { IssueActivityRow } from "@repo/database/queries/issue-activity";
 import { timeAgo } from "@/components/shared/time-ago";
 import { Avatar } from "@/components/shared/avatar";
 

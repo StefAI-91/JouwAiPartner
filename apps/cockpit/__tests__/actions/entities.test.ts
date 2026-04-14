@@ -38,7 +38,7 @@ describeWithDb("Entity Server Actions (integration)")("Entity Server Actions (in
 
   describe("updateOrganizationAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/entities");
+      const mod = await import("../../src/actions/organizations");
       return mod.updateOrganizationAction;
     }
 
@@ -73,7 +73,7 @@ describeWithDb("Entity Server Actions (integration)")("Entity Server Actions (in
 
   describe("deleteOrganizationAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/entities");
+      const mod = await import("../../src/actions/organizations");
       return mod.deleteOrganizationAction;
     }
 
@@ -96,7 +96,7 @@ describeWithDb("Entity Server Actions (integration)")("Entity Server Actions (in
 
   describe("createExtractionAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/entities");
+      const mod = await import("../../src/actions/extractions");
       return mod.createExtractionAction;
     }
 
@@ -153,7 +153,7 @@ describeWithDb("Entity Server Actions (integration)")("Entity Server Actions (in
 
     describe("createOrganizationAction", () => {
       async function getAction() {
-        const mod = await import("../../src/actions/entities");
+        const mod = await import("../../src/actions/organizations");
         return mod.createOrganizationAction;
       }
 
@@ -184,7 +184,7 @@ describeWithDb("Entity Server Actions (integration)")("Entity Server Actions (in
 
     describe("createProjectAction", () => {
       async function getAction() {
-        const mod = await import("../../src/actions/entities");
+        const mod = await import("../../src/actions/projects");
         return mod.createProjectAction;
       }
 
@@ -220,7 +220,7 @@ describeWithDb("Entity Server Actions (integration)")("Entity Server Actions (in
 
     describe("createPersonAction", () => {
       async function getAction() {
-        const mod = await import("../../src/actions/entities");
+        const mod = await import("../../src/actions/people");
         return mod.createPersonAction;
       }
 

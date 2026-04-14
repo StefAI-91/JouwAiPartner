@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
-import { createOrganizationAction } from "@/actions/entities";
+import { createOrganizationAction } from "@/actions/organizations";
 import { ORG_TYPES } from "@repo/database/constants/organizations";
 
 export function AddOrganizationButton() {

@@ -1,12 +1,10 @@
 "use client";
 
 import { useTransition } from "react";
-import type {
-  IssueRow,
-  IssueCommentRow,
-  IssueActivityRow,
-  IssueAttachmentRow,
-} from "@repo/database/queries/issues";
+import type { IssueRow } from "@repo/database/queries/issues";
+import type { IssueCommentRow } from "@repo/database/queries/issue-comments";
+import type { IssueActivityRow } from "@repo/database/queries/issue-activity";
+import type { IssueAttachmentRow } from "@repo/database/queries/issue-attachments";
 import { updateIssueAction } from "@/actions/issues";
 
 import { IssueHeader } from "./issue-header";

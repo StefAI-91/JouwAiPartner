@@ -11,6 +11,7 @@ import {
   markMeetingEmbeddingStale,
   linkMeetingProject,
   unlinkMeetingProject,
+  deleteMeeting,
 } from "@repo/database/mutations/meetings";
 import {
   linkMeetingParticipant,
@@ -27,6 +28,7 @@ import {
   meetingParticipantSchema,
   updateMeetingMetadataSchema,
 } from "@repo/database/validations/meetings";
+import { deleteSchema } from "@repo/database/validations/entities";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 
@@ -272,5 +274,24 @@ export async function updateMeetingMetadataAction(
   revalidatePath("/projects");
   revalidatePath("/people");
   revalidatePath("/clients");
+  return { success: true };
+}
+
+export async function deleteMeetingAction(
+  input: z.infer<typeof deleteSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+
+  const parsed = deleteSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const result = await deleteMeeting(parsed.data.id);
+  if ("error" in result) return result;
+
+  revalidatePath("/meetings");
+  revalidatePath("/review");
+  revalidatePath("/");
   return { success: true };
 }

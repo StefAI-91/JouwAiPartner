@@ -96,7 +96,10 @@ export async function fetchFirefliesTranscript(
 
   if (!response.ok) return null;
 
-  const result = await response.json();
+  const result = (await response.json()) as {
+    errors?: { message: string }[];
+    data?: { transcript: FirefliesTranscript | null };
+  };
   if (result.errors?.length) {
     console.error("Fireflies API error:", result.errors[0].message);
     return null;
@@ -130,7 +133,10 @@ export async function listFirefliesTranscripts(limit: number = 30): Promise<Fire
 
   if (!response.ok) return [];
 
-  const result = await response.json();
+  const result = (await response.json()) as {
+    errors?: { message: string }[];
+    data?: { transcripts: FirefliesListItem[] };
+  };
   if (result.errors?.length) {
     console.error("Fireflies API error:", result.errors[0].message);
     return [];

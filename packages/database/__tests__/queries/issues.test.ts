@@ -10,14 +10,10 @@ import {
   TEST_IDS,
 } from "../helpers/seed";
 import { cleanupTestData, cleanupTestProfile } from "../helpers/cleanup";
-import {
-  listIssues,
-  getIssueById,
-  getIssueCounts,
-  listIssueComments,
-  listIssueActivity,
-  getIssueThumbnails,
-} from "../../src/queries/issues";
+import { listIssues, getIssueById, getIssueCounts } from "../../src/queries/issues";
+import { listIssueComments } from "../../src/queries/issue-comments";
+import { listIssueActivity } from "../../src/queries/issue-activity";
+import { getIssueThumbnails } from "../../src/queries/issue-attachments";
 
 let db: ReturnType<typeof getTestClient>;
 let profileId: string;

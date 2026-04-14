@@ -1,4 +1,4 @@
-import type { IssueAttachmentRow } from "@repo/database/queries/issues";
+import type { IssueAttachmentRow } from "@repo/database/queries/issue-attachments";
 import { Image as ImageIcon, Video, Paperclip, ExternalLink } from "lucide-react";
 
 function buildPublicUrl(storagePath: string): string {

@@ -8,7 +8,8 @@ import {
   deleteComment,
   insertActivity,
 } from "@repo/database/mutations/issues";
-import { getIssueById, getCommentById } from "@repo/database/queries/issues";
+import { getIssueById } from "@repo/database/queries/issues";
+import { getCommentById } from "@repo/database/queries/issue-comments";
 import {
   createCommentSchema,
   updateCommentSchema,

@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 405 |
-| Exported functions/constants | 597 |
+| Files scanned | 416 |
+| Exported functions/constants | 601 |
 | Exported types/interfaces | 125 |
-| Cross-package imports | 493 |
+| Cross-package imports | 517 |
 | Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
@@ -116,6 +116,30 @@
 **Exports:**
 - `getIgnoredEntityNames()`
 
+### `queries/issue-activity.ts`
+
+**Exports:**
+- `listIssueActivity()`
+
+**Types:** `IssueActivityRow`
+
+### `queries/issue-attachments.ts`
+
+**Exports:**
+- `getIssueThumbnails()`
+- `listIssueAttachments()`
+- `getIssueIdsWithAttachments()`
+
+**Types:** `IssueAttachmentRow`
+
+### `queries/issue-comments.ts`
+
+**Exports:**
+- `getCommentById()`
+- `listIssueComments()`
+
+**Types:** `IssueCommentRow`
+
 ### `queries/issues.ts`
 
 **Exports:**
@@ -124,19 +148,9 @@
 - `getIssueById()`
 - `getIssueCounts()`
 - `countCriticalUnassigned()`
-- `getCommentById()`
-- `listIssueComments()`
-- `getUserbackSyncCursor()`
-- `getExistingUserbackIds()`
-- `countUserbackIssues()`
-- `listIssueActivity()`
-- `getIssueThumbnails()`
-- `listIssueAttachments()`
-- `listUserbackIssuesForBackfill()`
-- `getIssueIdsWithAttachments()`
 - `ISSUE_SELECT`
 
-**Types:** `IssueRow`, `IssueCommentRow`, `IssueActivityRow`, `IssueAttachmentRow`
+**Types:** `IssueRow`
 
 ### `queries/meeting-project-summaries.ts`
 
@@ -268,6 +282,14 @@
 - `countAdmins()`
 
 **Types:** `TeamMember`, `TeamMemberWithAccess`
+
+### `queries/userback-issues.ts`
+
+**Exports:**
+- `getUserbackSyncCursor()`
+- `getExistingUserbackIds()`
+- `countUserbackIssues()`
+- `listUserbackIssuesForBackfill()`
 
 ### `queries/weekly-summary.ts`
 
@@ -1219,6 +1241,11 @@
 
 ## Cockpit Server Actions
 
+### `apps/cockpit/src/actions/_utils.ts`
+
+**Exports:**
+- `cleanInput()`
+
 ### `apps/cockpit/src/actions/email-links.ts`
 
 **Exports:**
@@ -1247,31 +1274,16 @@
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
-### `apps/cockpit/src/actions/entities.ts`
+### `apps/cockpit/src/actions/extractions.ts`
 
 **Exports:**
-- `createOrganizationAction()`
-- `updateOrganizationAction()`
-- `deleteOrganizationAction()`
-- `createProjectAction()`
-- `updateProjectAction()`
-- `deleteProjectAction()`
-- `createPersonAction()`
-- `updatePersonAction()`
-- `deletePersonAction()`
 - `createExtractionAction()`
 - `updateExtractionAction()`
 - `deleteExtractionAction()`
-- `deleteMeetingAction()`
 
 **Depends on:**
-- `@repo/database/mutations/organizations` → createOrganization, updateOrganization, deleteOrganization
-- `@repo/database/mutations/projects` → createProject, updateProject, deleteProject
-- `@repo/database/mutations/people` → createPerson, updatePerson, deletePerson
 - `@repo/database/mutations/extractions` → createExtraction, updateExtraction, deleteExtraction
-- `@repo/database/mutations/meetings` → deleteMeeting
-- `@repo/database/validations/entities` → updateOrganizationSchema, updateProjectSchema, updatePersonSchema, createExtractionSchema, updateExtractionSchema, deleteSchema, deleteWithContextSchema
-- `@repo/database/validations/meetings` → createOrganizationSchema, createProjectSchema, createPersonSchema
+- `@repo/database/validations/entities` → createExtractionSchema, updateExtractionSchema, deleteWithContextSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -1312,12 +1324,56 @@
 - `linkMeetingParticipantAction()`
 - `unlinkMeetingParticipantAction()`
 - `updateMeetingMetadataAction()`
+- `deleteMeetingAction()`
 
 **Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject
+- `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject, deleteMeeting
 - `@repo/database/mutations/meeting-participants` → linkMeetingParticipant, unlinkMeetingParticipant
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema
+- `@repo/database/validations/entities` → deleteSchema
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+
+### `apps/cockpit/src/actions/organizations.ts`
+
+**Exports:**
+- `createOrganizationAction()`
+- `updateOrganizationAction()`
+- `deleteOrganizationAction()`
+
+**Depends on:**
+- `@repo/database/mutations/organizations` → createOrganization, updateOrganization, deleteOrganization
+- `@repo/database/validations/entities` → updateOrganizationSchema, deleteSchema
+- `@repo/database/validations/meetings` → createOrganizationSchema
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+
+### `apps/cockpit/src/actions/people.ts`
+
+**Exports:**
+- `createPersonAction()`
+- `updatePersonAction()`
+- `deletePersonAction()`
+
+**Depends on:**
+- `@repo/database/mutations/people` → createPerson, updatePerson, deletePerson
+- `@repo/database/validations/entities` → updatePersonSchema, deleteSchema
+- `@repo/database/validations/meetings` → createPersonSchema
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+
+### `apps/cockpit/src/actions/projects.ts`
+
+**Exports:**
+- `createProjectAction()`
+- `updateProjectAction()`
+- `deleteProjectAction()`
+
+**Depends on:**
+- `@repo/database/mutations/projects` → createProject, updateProject, deleteProject
+- `@repo/database/validations/entities` → updateProjectSchema, deleteSchema
+- `@repo/database/validations/meetings` → createProjectSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -2288,6 +2344,30 @@
 **Exports:**
 - `CopyMeetingButton()`
 
+### `apps/cockpit/src/components/meetings/create-organization-modal.tsx`
+
+**Exports:**
+- `CreateOrganizationModal()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/meetings/create-person-sub-modal.tsx`
+
+**Exports:**
+- `CreatePersonSubModal()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/meetings/create-project-sub-modal.tsx`
+
+**Exports:**
+- `CreateProjectSubModal()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
 ### `apps/cockpit/src/components/meetings/edit-metadata-modal.tsx`
 
 **Exports:**
@@ -2686,7 +2766,8 @@
 
 **Depends on:**
 - `@repo/database/mutations/issues` → insertComment, updateComment, deleteComment, insertActivity
-- `@repo/database/queries/issues` → getIssueById, getCommentById
+- `@repo/database/queries/issues` → getIssueById
+- `@repo/database/queries/issue-comments` → getCommentById
 - `@repo/database/validations/issues` → createCommentSchema, updateCommentSchema, deleteCommentSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
@@ -2702,7 +2783,8 @@
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin, assertProjectAccess, NotAuthorizedError
-- `@repo/database/queries/issues` → getUserbackSyncCursor, countUserbackIssues, listUserbackIssuesForBackfill, getIssueIdsWithAttachments
+- `@repo/database/queries/userback-issues` → getUserbackSyncCursor, countUserbackIssues, listUserbackIssuesForBackfill
+- `@repo/database/queries/issue-attachments` → getIssueIdsWithAttachments
 - `@repo/database/integrations/userback` → extractMediaFromMetadata
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/database/mutations/issue-attachments` → storeIssueMedia
@@ -2808,7 +2890,8 @@
 - `CommentActivityFeed()`
 
 **Depends on:**
-- (type) `@repo/database/queries/issues` → IssueCommentRow, IssueActivityRow
+- (type) `@repo/database/queries/issue-comments` → IssueCommentRow
+- (type) `@repo/database/queries/issue-activity` → IssueActivityRow
 
 ### `apps/devhub/src/components/dashboard/area-summaries.tsx`
 
@@ -2853,7 +2936,7 @@
 - `IssueAttachments()`
 
 **Depends on:**
-- (type) `@repo/database/queries/issues` → IssueAttachmentRow
+- (type) `@repo/database/queries/issue-attachments` → IssueAttachmentRow
 
 ### `apps/devhub/src/components/issues/issue-detail.tsx`
 
@@ -2861,7 +2944,10 @@
 - `IssueDetail()`
 
 **Depends on:**
-- (type) `@repo/database/queries/issues` → IssueRow, IssueCommentRow, IssueActivityRow, IssueAttachmentRow
+- (type) `@repo/database/queries/issues` → IssueRow
+- (type) `@repo/database/queries/issue-comments` → IssueCommentRow
+- (type) `@repo/database/queries/issue-activity` → IssueActivityRow
+- (type) `@repo/database/queries/issue-attachments` → IssueAttachmentRow
 
 ### `apps/devhub/src/components/issues/issue-filters.tsx`
 
@@ -3100,17 +3186,17 @@ Which layers depend on which packages:
 | AI Core | 5 | - | - | - | - | 5 |
 | AI Pipeline | 39 | - | - | - | - | 39 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 36 | 14 | 20 | - | - | 70 |
+| Cockpit Server Actions | 41 | 14 | 26 | - | - | 81 |
 | Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
-| Cockpit Components | 39 | - | - | 67 | - | 106 |
+| Cockpit Components | 39 | - | - | 70 | - | 109 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 70 | - | 2 | 21 | - | 93 |
 | Database Queries | - | - | 1 | - | - | 1 |
-| DevHub Server Actions | 19 | 2 | 10 | - | - | 31 |
+| DevHub Server Actions | 21 | 2 | 10 | - | - | 33 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
-| DevHub Components | 9 | - | - | 26 | - | 35 |
+| DevHub Components | 13 | - | - | 26 | - | 39 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 10 | - | 8 | 8 | - | 26 |
+| DevHub Pages | 14 | - | 8 | 8 | - | 30 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
 
 ## Critical Integration Points
@@ -3166,9 +3252,9 @@ Tracing the most important data flows from action → pipeline → database.
 | `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `insertExtractions()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
-| `createExtraction()` | `apps/cockpit/src/actions/entities.ts` |
-| `updateExtraction()` | `apps/cockpit/src/actions/entities.ts` |
-| `deleteExtraction()` | `apps/cockpit/src/actions/entities.ts` |
+| `createExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
+| `updateExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
+| `deleteExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
 | `updateNeedStatus()` | `apps/cockpit/src/actions/scan-needs.ts` |
 
 ### mutations/ignored-entities.ts
@@ -3231,23 +3317,23 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingRawFireflies()` | `packages/ai/src/pipeline/steps/extract.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
-| `deleteMeeting()` | `apps/cockpit/src/actions/entities.ts` |
+| `deleteMeeting()` | `apps/cockpit/src/actions/meetings.ts` |
 
 ### mutations/organizations.ts
 
 | Mutation | Called from |
 |----------|------------|
-| `createOrganization()` | `apps/cockpit/src/actions/entities.ts` |
-| `updateOrganization()` | `apps/cockpit/src/actions/entities.ts` |
-| `deleteOrganization()` | `apps/cockpit/src/actions/entities.ts` |
+| `createOrganization()` | `apps/cockpit/src/actions/organizations.ts` |
+| `updateOrganization()` | `apps/cockpit/src/actions/organizations.ts` |
+| `deleteOrganization()` | `apps/cockpit/src/actions/organizations.ts` |
 
 ### mutations/people.ts
 
 | Mutation | Called from |
 |----------|------------|
-| `createPerson()` | `apps/cockpit/src/actions/entities.ts` |
-| `updatePerson()` | `apps/cockpit/src/actions/entities.ts` |
-| `deletePerson()` | `apps/cockpit/src/actions/entities.ts` |
+| `createPerson()` | `apps/cockpit/src/actions/people.ts` |
+| `updatePerson()` | `apps/cockpit/src/actions/people.ts` |
+| `deletePerson()` | `apps/cockpit/src/actions/people.ts` |
 
 ### mutations/project-reviews.ts
 
@@ -3259,10 +3345,10 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `createProject()` | `apps/cockpit/src/actions/entities.ts` |
+| `createProject()` | `apps/cockpit/src/actions/projects.ts` |
 | `updateProjectAliases()` | `packages/ai/src/pipeline/entity-resolution.ts`, `apps/cockpit/src/actions/segments.ts` |
-| `updateProject()` | `apps/cockpit/src/actions/entities.ts` |
-| `deleteProject()` | `apps/cockpit/src/actions/entities.ts` |
+| `updateProject()` | `apps/cockpit/src/actions/projects.ts` |
+| `deleteProject()` | `apps/cockpit/src/actions/projects.ts` |
 
 ### mutations/review.ts
 
@@ -3326,6 +3412,27 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getIgnoredEntityNames()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
+### queries/issue-activity.ts
+
+| Query | Used in |
+|-------|---------|
+| `listIssueActivity()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+
+### queries/issue-attachments.ts
+
+| Query | Used in |
+|-------|---------|
+| `getIssueThumbnails()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssueAttachments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getIssueIdsWithAttachments()` | `apps/devhub/src/actions/import.ts` |
+
+### queries/issue-comments.ts
+
+| Query | Used in |
+|-------|---------|
+| `getCommentById()` | `apps/devhub/src/actions/comments.ts` |
+| `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+
 ### queries/issues.ts
 
 | Query | Used in |
@@ -3335,15 +3442,6 @@ Which queries are used where across the codebase.
 | `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
-| `getCommentById()` | `apps/devhub/src/actions/comments.ts` |
-| `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
-| `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |
-| `listIssueActivity()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getIssueThumbnails()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `listIssueAttachments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `listUserbackIssuesForBackfill()` | `apps/devhub/src/actions/import.ts` |
-| `getIssueIdsWithAttachments()` | `apps/devhub/src/actions/import.ts` |
 
 ### queries/meeting-project-summaries.ts
 
@@ -3455,6 +3553,14 @@ Which queries are used where across the codebase.
 | `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
+
+### queries/userback-issues.ts
+
+| Query | Used in |
+|-------|---------|
+| `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
+| `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |
+| `listUserbackIssuesForBackfill()` | `apps/devhub/src/actions/import.ts` |
 
 ### queries/weekly-summary.ts
 

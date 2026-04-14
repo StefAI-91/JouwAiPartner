@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FollowUpChecklist } from "@/components/shared/follow-up-checklist";
 import { AddExtractionForm } from "@/components/meetings/add-extraction-form";
-import { updateExtractionAction, deleteExtractionAction } from "@/actions/entities";
+import { updateExtractionAction, deleteExtractionAction } from "@/actions/extractions";
 import { RegenerateMenu } from "@/components/shared/regenerate-menu";
 import { Mail } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";

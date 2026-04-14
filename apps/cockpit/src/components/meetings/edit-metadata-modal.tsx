@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { X } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
 import { updateMeetingMetadataAction } from "@/actions/meetings";
-import {
-  createOrganizationAction,
-  createProjectAction,
-  createPersonAction,
-} from "@/actions/entities";
+import { CreateOrganizationModal } from "./create-organization-modal";
+import { CreateProjectSubModal } from "./create-project-sub-modal";
+import { CreatePersonSubModal } from "./create-person-sub-modal";
 import { MEETING_TYPES } from "@repo/database/constants/meetings";
 import type { PersonWithOrg } from "@repo/database/queries/people";
 
@@ -20,16 +18,18 @@ const PARTY_TYPES = [
   { value: "other", label: "Overig" },
 ] as const;
 
+interface MeetingMetadata {
+  id: string;
+  title: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  organization_id: string | null;
+}
+
 interface EditMetadataModalProps {
   open: boolean;
   onClose: () => void;
-  meeting: {
-    id: string;
-    title: string | null;
-    meeting_type: string | null;
-    party_type: string | null;
-    organization_id: string | null;
-  };
+  meeting: MeetingMetadata;
   linkedProjects: { id: string; name: string }[];
   linkedPeople: { id: string; name: string }[];
   allPeople: PersonWithOrg[];
@@ -37,8 +37,20 @@ interface EditMetadataModalProps {
   organizations: { id: string; name: string }[];
 }
 
-export function EditMetadataModal({
-  open,
+export function EditMetadataModal(props: EditMetadataModalProps) {
+  const { open, onClose } = props;
+  return (
+    <Modal open={open} onClose={onClose} title="Metadata bewerken" className="max-w-lg">
+      {open && <EditMetadataForm {...props} />}
+    </Modal>
+  );
+}
+
+/**
+ * Form body — rendered only while the modal is open so it remounts each time
+ * (fresh state from props, no reset effect).
+ */
+function EditMetadataForm({
   onClose,
   meeting,
   linkedProjects,
@@ -75,22 +87,6 @@ export function EditMetadataModal({
     ...allPeople,
     ...newPeople.map((p) => ({ ...p, role: null, organization: null })),
   ];
-
-  // Reset state when modal opens
-  useEffect(() => {
-    if (open) {
-      setTitle(meeting.title ?? "");
-      setMeetingType(meeting.meeting_type ?? "other");
-      setPartyType(meeting.party_type ?? "other");
-      setOrganizationId(meeting.organization_id);
-      setSelectedProjects(linkedProjects);
-      setSelectedPeople(linkedPeople);
-      setNewOrganizations([]);
-      setNewProjects([]);
-      setNewPeople([]);
-      setError(null);
-    }
-  }, [open, meeting, linkedProjects, linkedPeople]);
 
   // Computed available options (exclude already selected)
   const selectedProjectIds = new Set(selectedProjects.map((p) => p.id));
@@ -164,193 +160,191 @@ export function EditMetadataModal({
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title="Metadata bewerken" className="max-w-lg">
-        <div className="space-y-4">
-          {/* Title */}
-          <div>
-            <label htmlFor="meta-title" className="mb-1 block text-sm font-medium">
-              Titel
-            </label>
-            <input
-              id="meta-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isPending}
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-            />
-          </div>
+      <div className="space-y-4">
+        {/* Title */}
+        <div>
+          <label htmlFor="meta-title" className="mb-1 block text-sm font-medium">
+            Titel
+          </label>
+          <input
+            id="meta-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isPending}
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          />
+        </div>
 
-          {/* Meeting Type + Party Type in a row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="meta-meeting-type" className="mb-1 block text-sm font-medium">
-                Meeting type
-              </label>
-              <select
-                id="meta-meeting-type"
-                value={meetingType}
-                onChange={(e) => setMeetingType(e.target.value)}
-                disabled={isPending}
-                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-              >
-                {MEETING_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="meta-party-type" className="mb-1 block text-sm font-medium">
-                Party type
-              </label>
-              <select
-                id="meta-party-type"
-                value={partyType}
-                onChange={(e) => setPartyType(e.target.value)}
-                disabled={isPending}
-                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-              >
-                {PARTY_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Organization */}
+        {/* Meeting Type + Party Type in a row */}
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="meta-organization" className="mb-1 block text-sm font-medium">
-              Organisatie
+            <label htmlFor="meta-meeting-type" className="mb-1 block text-sm font-medium">
+              Meeting type
             </label>
             <select
-              id="meta-organization"
-              value={organizationId ?? ""}
-              onChange={(e) => handleOrganizationChange(e.target.value)}
+              id="meta-meeting-type"
+              value={meetingType}
+              onChange={(e) => setMeetingType(e.target.value)}
               disabled={isPending}
               className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
             >
-              <option value="">Geen organisatie</option>
-              {allOrganizations.map((org) => (
-                <option key={org.id} value={org.id}>
-                  {org.name}
+              {MEETING_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
                 </option>
               ))}
-              <option value="__new__">+ Nieuwe organisatie</option>
             </select>
           </div>
-
-          {/* Projects */}
           <div>
-            <label className="mb-1 block text-sm font-medium">Projecten</label>
-            {selectedProjects.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-1.5">
-                {selectedProjects.map((project) => (
-                  <span
-                    key={project.id}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
-                  >
-                    {project.name}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedProjects((prev) => prev.filter((p) => p.id !== project.id))
-                      }
-                      disabled={isPending}
-                      className="rounded-full p-0.5 hover:bg-background/80"
-                      aria-label={`${project.name} verwijderen`}
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+            <label htmlFor="meta-party-type" className="mb-1 block text-sm font-medium">
+              Party type
+            </label>
             <select
-              key={selectedProjects.length}
-              onChange={(e) => {
-                handleAddProject(e.target.value);
-                e.target.value = "";
-              }}
+              id="meta-party-type"
+              value={partyType}
+              onChange={(e) => setPartyType(e.target.value)}
               disabled={isPending}
-              defaultValue=""
-              className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
             >
-              <option value="" disabled>
-                Project toevoegen...
-              </option>
-              {availableProjects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
+              {PARTY_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
                 </option>
               ))}
-              <option value="__new__">+ Nieuw project aanmaken</option>
             </select>
-          </div>
-
-          {/* Participants */}
-          <div>
-            <label className="mb-1 block text-sm font-medium">Deelnemers</label>
-            {selectedPeople.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-1.5">
-                {selectedPeople.map((person) => (
-                  <span
-                    key={person.id}
-                    className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
-                  >
-                    {person.name}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedPeople((prev) => prev.filter((p) => p.id !== person.id))
-                      }
-                      disabled={isPending}
-                      className="rounded-full p-0.5 hover:bg-background/80"
-                      aria-label={`${person.name} verwijderen`}
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <select
-              key={selectedPeople.length}
-              onChange={(e) => {
-                handleAddPerson(e.target.value);
-                e.target.value = "";
-              }}
-              disabled={isPending}
-              defaultValue=""
-              className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-            >
-              <option value="" disabled>
-                Deelnemer toevoegen...
-              </option>
-              {availablePeople.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {personLabel(person)}
-                </option>
-              ))}
-              <option value="__new__">+ Nieuw persoon toevoegen</option>
-            </select>
-          </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
-          {/* Footer */}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
-              Annuleren
-            </Button>
-            <Button onClick={handleSave} disabled={isPending}>
-              {isPending ? "Opslaan..." : "Opslaan"}
-            </Button>
           </div>
         </div>
-      </Modal>
+
+        {/* Organization */}
+        <div>
+          <label htmlFor="meta-organization" className="mb-1 block text-sm font-medium">
+            Organisatie
+          </label>
+          <select
+            id="meta-organization"
+            value={organizationId ?? ""}
+            onChange={(e) => handleOrganizationChange(e.target.value)}
+            disabled={isPending}
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          >
+            <option value="">Geen organisatie</option>
+            {allOrganizations.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+            <option value="__new__">+ Nieuwe organisatie</option>
+          </select>
+        </div>
+
+        {/* Projects */}
+        <div>
+          <label className="mb-1 block text-sm font-medium">Projecten</label>
+          {selectedProjects.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {selectedProjects.map((project) => (
+                <span
+                  key={project.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {project.name}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedProjects((prev) => prev.filter((p) => p.id !== project.id))
+                    }
+                    disabled={isPending}
+                    className="rounded-full p-0.5 hover:bg-background/80"
+                    aria-label={`${project.name} verwijderen`}
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <select
+            key={selectedProjects.length}
+            onChange={(e) => {
+              handleAddProject(e.target.value);
+              e.target.value = "";
+            }}
+            disabled={isPending}
+            defaultValue=""
+            className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          >
+            <option value="" disabled>
+              Project toevoegen...
+            </option>
+            {availableProjects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+            <option value="__new__">+ Nieuw project aanmaken</option>
+          </select>
+        </div>
+
+        {/* Participants */}
+        <div>
+          <label className="mb-1 block text-sm font-medium">Deelnemers</label>
+          {selectedPeople.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {selectedPeople.map((person) => (
+                <span
+                  key={person.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {person.name}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedPeople((prev) => prev.filter((p) => p.id !== person.id))
+                    }
+                    disabled={isPending}
+                    className="rounded-full p-0.5 hover:bg-background/80"
+                    aria-label={`${person.name} verwijderen`}
+                  >
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <select
+            key={selectedPeople.length}
+            onChange={(e) => {
+              handleAddPerson(e.target.value);
+              e.target.value = "";
+            }}
+            disabled={isPending}
+            defaultValue=""
+            className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+          >
+            <option value="" disabled>
+              Deelnemer toevoegen...
+            </option>
+            {availablePeople.map((person) => (
+              <option key={person.id} value={person.id}>
+                {personLabel(person)}
+              </option>
+            ))}
+            <option value="__new__">+ Nieuw persoon toevoegen</option>
+          </select>
+        </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
+            Annuleren
+          </Button>
+          <Button onClick={handleSave} disabled={isPending}>
+            {isPending ? "Opslaan..." : "Opslaan"}
+          </Button>
+        </div>
+      </div>
 
       {/* Sub-modals for creating new entities */}
       <CreateOrganizationModal
@@ -383,331 +377,5 @@ export function EditMetadataModal({
         organizations={allOrganizations}
       />
     </>
-  );
-}
-
-// ── Sub-modal: Create Organization ──
-
-function CreateOrganizationModal({
-  open,
-  onClose,
-  onCreated,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onCreated: (org: { id: string; name: string }) => void;
-}) {
-  const [name, setName] = useState("");
-  const [type, setType] = useState<string>("client");
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (open) {
-      setName("");
-      setType("client");
-      setError(null);
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open]);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setError("Naam is verplicht");
-      return;
-    }
-    setError(null);
-    startTransition(async () => {
-      const result = await createOrganizationAction({
-        name: trimmed,
-        type: type as "client" | "partner" | "supplier" | "other",
-      });
-      if ("error" in result) {
-        setError(result.error);
-      } else {
-        onCreated(result.data);
-      }
-    });
-  }
-
-  return (
-    <Modal open={open} onClose={onClose} title="Nieuwe organisatie">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="org-name" className="mb-1 block text-sm font-medium">
-            Naam
-          </label>
-          <input
-            ref={inputRef}
-            id="org-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={isPending}
-            placeholder="Bijv. Acme B.V."
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          />
-        </div>
-        <div>
-          <label htmlFor="org-type" className="mb-1 block text-sm font-medium">
-            Type
-          </label>
-          <select
-            id="org-type"
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            disabled={isPending}
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          >
-            <option value="client">Klant</option>
-            <option value="partner">Partner</option>
-            <option value="supplier">Leverancier</option>
-            <option value="other">Overig</option>
-          </select>
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
-            Annuleren
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            Aanmaken
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
-// ── Sub-modal: Create Project ──
-
-function CreateProjectSubModal({
-  open,
-  onClose,
-  onCreated,
-  organizations,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onCreated: (project: { id: string; name: string }) => void;
-  organizations: { id: string; name: string }[];
-}) {
-  const [name, setName] = useState("");
-  const [organizationId, setOrganizationId] = useState<string>("");
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (open) {
-      setName("");
-      setOrganizationId("");
-      setError(null);
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open]);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setError("Naam is verplicht");
-      return;
-    }
-    setError(null);
-    startTransition(async () => {
-      const result = await createProjectAction({
-        name: trimmed,
-        organizationId: organizationId || null,
-      });
-      if ("error" in result) {
-        setError(result.error);
-      } else {
-        onCreated(result.data);
-      }
-    });
-  }
-
-  return (
-    <Modal open={open} onClose={onClose} title="Nieuw project aanmaken">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="sub-project-name" className="mb-1 block text-sm font-medium">
-            Naam
-          </label>
-          <input
-            ref={inputRef}
-            id="sub-project-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={isPending}
-            placeholder="Bijv. Website Redesign"
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          />
-        </div>
-        <div>
-          <label htmlFor="sub-project-org" className="mb-1 block text-sm font-medium">
-            Organisatie (optioneel)
-          </label>
-          <select
-            id="sub-project-org"
-            value={organizationId}
-            onChange={(e) => setOrganizationId(e.target.value)}
-            disabled={isPending}
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          >
-            <option value="">Geen organisatie</option>
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
-            Annuleren
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            Aanmaken
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
-// ── Sub-modal: Create Person ──
-
-function CreatePersonSubModal({
-  open,
-  onClose,
-  onCreated,
-  organizations,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onCreated: (person: { id: string; name: string }) => void;
-  organizations: { id: string; name: string }[];
-}) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState("");
-  const [organizationId, setOrganizationId] = useState<string>("");
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (open) {
-      setName("");
-      setEmail("");
-      setRole("");
-      setOrganizationId("");
-      setError(null);
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open]);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setError("Naam is verplicht");
-      return;
-    }
-    setError(null);
-    startTransition(async () => {
-      const result = await createPersonAction({
-        name: trimmed,
-        email: email.trim() || null,
-        role: role.trim() || null,
-        organizationId: organizationId || null,
-      });
-      if ("error" in result) {
-        setError(result.error);
-      } else {
-        onCreated(result.data);
-      }
-    });
-  }
-
-  return (
-    <Modal open={open} onClose={onClose} title="Nieuw persoon toevoegen">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="sub-person-name" className="mb-1 block text-sm font-medium">
-            Naam
-          </label>
-          <input
-            ref={inputRef}
-            id="sub-person-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={isPending}
-            placeholder="Bijv. Jan de Vries"
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          />
-        </div>
-        <div>
-          <label htmlFor="sub-person-email" className="mb-1 block text-sm font-medium">
-            E-mail (optioneel)
-          </label>
-          <input
-            id="sub-person-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={isPending}
-            placeholder="jan@voorbeeld.nl"
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          />
-        </div>
-        <div>
-          <label htmlFor="sub-person-role" className="mb-1 block text-sm font-medium">
-            Rol (optioneel)
-          </label>
-          <input
-            id="sub-person-role"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            disabled={isPending}
-            placeholder="Bijv. CTO, Developer, PM"
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          />
-        </div>
-        <div>
-          <label htmlFor="sub-person-org" className="mb-1 block text-sm font-medium">
-            Organisatie (optioneel)
-          </label>
-          <select
-            id="sub-person-org"
-            value={organizationId}
-            onChange={(e) => setOrganizationId(e.target.value)}
-            disabled={isPending}
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          >
-            <option value="">Geen organisatie</option>
-            {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
-            Annuleren
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            Toevoegen
-          </Button>
-        </div>
-      </form>
-    </Modal>
   );
 }

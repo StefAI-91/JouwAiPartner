@@ -99,11 +99,14 @@ export function SideMenu({
   const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
+    // Avoid SSR hydration flicker — safe one-shot mount flag
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
-  // Close on route change
+  // Close menu whenever the route changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpen(false);
   }, [pathname]);
 

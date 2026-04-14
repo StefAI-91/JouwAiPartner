@@ -33,8 +33,10 @@ export function UserRow({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const banned = Boolean(
-    member.banned_until && new Date(member.banned_until).getTime() > Date.now(),
+  // Snapshot at mount — banned status is server-sourced and doesn't need
+  // live updates while the row is on screen.
+  const [banned] = useState(() =>
+    Boolean(member.banned_until && new Date(member.banned_until).getTime() > Date.now()),
   );
   const neverLoggedIn = !member.last_sign_in_at;
   const projectCount = member.role === "admin" ? projects.length : member.project_ids.length;

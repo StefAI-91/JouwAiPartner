@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getExistingUserbackIds } from "../queries/issues";
+import { getExistingUserbackIds } from "../queries/userback-issues";
 import { upsertUserbackIssues } from "../mutations/issues";
 import {
   fetchAllUserbackFeedback,

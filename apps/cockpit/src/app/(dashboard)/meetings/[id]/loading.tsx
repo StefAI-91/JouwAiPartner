@@ -17,8 +17,12 @@ export default function MeetingDetailLoading() {
           <div className="h-7 w-24 animate-pulse rounded-full bg-muted" />
         </div>
         <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-4 animate-pulse rounded bg-muted" style={{ width: `${70 + Math.random() * 30}%` }} />
+          {[92, 78, 85, 71, 96, 83, 74, 88].map((width, i) => (
+            <div
+              key={i}
+              className="h-4 animate-pulse rounded bg-muted"
+              style={{ width: `${width}%` }}
+            />
           ))}
         </div>
       </div>

@@ -5,7 +5,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/shared/modal";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { updateProjectAction, deleteProjectAction } from "@/actions/entities";
+import { updateProjectAction, deleteProjectAction } from "@/actions/projects";
 import { PROJECT_STATUSES, STATUS_LABELS } from "@repo/database/constants/projects";
 
 interface EditProjectProps {
