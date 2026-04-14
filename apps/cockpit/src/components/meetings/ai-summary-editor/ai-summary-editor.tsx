@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Sheet, SheetContent, SheetTrigger } from "@repo/ui/sheet";
 import { Button } from "@repo/ui/button";
 import { Sparkles, Send, Check, X, Loader2, History, Undo2 } from "lucide-react";
 import { DiffPreview } from "./diff-preview";
@@ -22,6 +21,10 @@ interface AiSummaryEditorProps {
  * MOCKUP — Floating "Bewerk met AI" button that opens a chat drawer.
  * Lets the user type natural-language instructions, see proposed diffs,
  * and apply/reject them per turn. No real AI call — see mock-responses.ts.
+ *
+ * Uses a plain state-driven drawer instead of the base-ui Sheet primitive
+ * because the Sheet's starting-style transitions did not behave reliably
+ * in this environment. A simpler fixed overlay works for the mockup.
  */
 export function AiSummaryEditor({ meetingTitle }: AiSummaryEditorProps) {
   const [open, setOpen] = useState(false);
@@ -44,6 +47,16 @@ export function AiSummaryEditor({ meetingTitle }: AiSummaryEditorProps) {
     }
   }, [messages, thinking]);
 
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open]);
+
   async function handleSend() {
     const text = input.trim();
     if (!text || thinking) return;
@@ -63,7 +76,6 @@ export function AiSummaryEditor({ meetingTitle }: AiSummaryEditorProps) {
   function handleApply(messageIndex: number) {
     setMessages((m) => {
       const next = [...m];
-      // Remove the proposal so the action buttons disappear
       const msg = next[messageIndex];
       if (msg.role === "assistant" && msg.proposal) {
         next[messageIndex] = { role: "assistant", content: msg.content };
@@ -105,113 +117,124 @@ export function AiSummaryEditor({ meetingTitle }: AiSummaryEditorProps) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <>
       {/* Floating action button — fixed bottom-right */}
-      <SheetTrigger
-        render={
-          <button
-            type="button"
-            className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-lg transition-all hover:shadow-xl hover:brightness-110 active:translate-y-px"
-          />
-        }
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-lg transition-all hover:shadow-xl hover:brightness-110 active:translate-y-px"
       >
         <Sparkles className="size-4" />
         Bewerk met AI
-      </SheetTrigger>
+      </button>
 
-      <SheetContent
-        side="right"
-        className="flex w-full flex-col sm:max-w-md md:max-w-lg"
-        showCloseButton={false}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Sparkles className="size-4" />
+      {/* Backdrop + drawer */}
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px] animate-in fade-in-0 duration-150"
+            onClick={() => setOpen(false)}
+          />
+          <div
+            className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white dark:bg-zinc-900 shadow-2xl animate-in slide-in-from-right duration-200"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Sparkles className="size-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium leading-tight">AI Summary Editor</p>
+                  <p className="truncate text-xs text-muted-foreground">{meetingTitle}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                {appliedCount > 0 && (
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    onClick={handleUndo}
+                    title="Laatste wijziging ongedaan maken"
+                  >
+                    <Undo2 className="size-4" />
+                  </Button>
+                )}
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={() => setOpen(false)}
+                  title="Sluiten"
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium leading-tight">AI Summary Editor</p>
-              <p className="truncate text-xs text-muted-foreground">{meetingTitle}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
+
+            {/* Revision log hint */}
             {appliedCount > 0 && (
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                onClick={handleUndo}
-                title="Laatste wijziging ongedaan maken"
-              >
-                <Undo2 className="size-4" />
-              </Button>
+              <div className="mx-4 mt-3 flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground">
+                <History className="size-3" />
+                {appliedCount} wijziging{appliedCount === 1 ? "" : "en"} toegepast — zichtbaar in
+                revision log
+              </div>
             )}
-            <Button size="icon-sm" variant="ghost" onClick={() => setOpen(false)} title="Sluiten">
-              <X className="size-4" />
-            </Button>
-          </div>
-        </div>
 
-        {/* Revision log hint */}
-        {appliedCount > 0 && (
-          <div className="mx-4 flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground">
-            <History className="size-3" />
-            {appliedCount} wijziging{appliedCount === 1 ? "" : "en"} toegepast — zichtbaar in
-            revision log
-          </div>
-        )}
-
-        {/* Message list */}
-        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-          {messages.map((msg, i) => (
-            <MessageBubble
-              key={i}
-              message={msg}
-              onApply={() => handleApply(i)}
-              onReject={() => handleReject(i)}
-            />
-          ))}
-          {thinking && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="size-3 animate-spin" />
-              AI denkt na...
+            {/* Message list */}
+            <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+              {messages.map((msg, i) => (
+                <MessageBubble
+                  key={i}
+                  message={msg}
+                  onApply={() => handleApply(i)}
+                  onReject={() => handleReject(i)}
+                />
+              ))}
+              {thinking && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="size-3 animate-spin" />
+                  AI denkt na...
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Composer */}
-        <div className="border-t border-border/60 p-3">
-          <div className="relative">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder="Zeg wat er moet veranderen..."
-              rows={2}
-              disabled={thinking}
-              className="w-full resize-none rounded-lg border border-border/60 bg-background px-3 py-2 pr-11 text-sm outline-none ring-ring/50 transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-3 disabled:opacity-50"
-            />
-            <Button
-              size="icon-sm"
-              variant="default"
-              onClick={handleSend}
-              disabled={thinking || !input.trim()}
-              className="absolute bottom-2 right-2"
-            >
-              <Send className="size-3.5" />
-            </Button>
+            {/* Composer */}
+            <div className="border-t border-border/60 p-3">
+              <div className="relative">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Zeg wat er moet veranderen..."
+                  rows={2}
+                  disabled={thinking}
+                  className="w-full resize-none rounded-lg border border-border/60 bg-background px-3 py-2 pr-11 text-sm outline-none ring-ring/50 transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-3 disabled:opacity-50"
+                />
+                <Button
+                  size="icon-sm"
+                  variant="default"
+                  onClick={handleSend}
+                  disabled={thinking || !input.trim()}
+                  className="absolute bottom-2 right-2"
+                >
+                  <Send className="size-3.5" />
+                </Button>
+              </div>
+              <p className="mt-1.5 px-1 text-[11px] text-muted-foreground">
+                Enter verstuurt · Shift+Enter = nieuwe regel
+              </p>
+            </div>
           </div>
-          <p className="mt-1.5 px-1 text-[11px] text-muted-foreground">
-            Enter verstuurt · Shift+Enter = nieuwe regel
-          </p>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </>
+      )}
+    </>
   );
 }
 
