@@ -22,8 +22,8 @@ export interface FocusProjectMvp {
 export const focusProjectsMvp: FocusProjectMvp[] = [
   {
     id: "p1",
-    name: "Flowwijs MVP",
-    organization: "Flowwijs",
+    name: "Jouw AI Partner MVP",
+    organization: "Jouw AI Partner",
     phase: "in_progress",
   },
   {
