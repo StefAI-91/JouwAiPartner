@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 427 |
-| Exported functions/constants | 615 |
-| Exported types/interfaces | 127 |
-| Cross-package imports | 536 |
+| Files scanned | 430 |
+| Exported functions/constants | 619 |
+| Exported types/interfaces | 129 |
+| Cross-package imports | 538 |
 | Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
@@ -2400,6 +2400,28 @@
 **Exports:**
 - `AddExtractionForm()`
 
+### `apps/cockpit/src/components/meetings/ai-summary-editor/ai-summary-editor.tsx`
+
+**Exports:**
+- `AiSummaryEditor()`
+
+**Depends on:**
+- `@repo/ui/sheet` → Sheet, SheetContent, SheetTrigger
+- `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/meetings/ai-summary-editor/diff-preview.tsx`
+
+**Exports:**
+- `DiffPreview()`
+
+### `apps/cockpit/src/components/meetings/ai-summary-editor/mock-responses.ts`
+
+**Exports:**
+- `pickMockProposal()`
+- `MOCK_THINK_MS`
+
+**Types:** `DiffBlock`, `MockProposal`
+
 ### `apps/cockpit/src/components/meetings/copy-meeting-button.tsx`
 
 **Exports:**
@@ -3254,7 +3276,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 41 | 14 | 26 | - | - | 81 |
 | Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
-| Cockpit Components | 42 | - | - | 74 | - | 116 |
+| Cockpit Components | 42 | - | - | 76 | - | 118 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | - | 2 | 23 | - | 101 |
 | Database Queries | - | - | 1 | - | - | 1 |

@@ -6,6 +6,7 @@ import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-p
 import { ExtractionTabsPanel } from "@/components/meetings/extraction-tabs-panel";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import { EditMetadataModal } from "@/components/meetings/edit-metadata-modal";
+import { AiSummaryEditor } from "@/components/meetings/ai-summary-editor/ai-summary-editor";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { Button } from "@repo/ui/button";
 import { Pencil, FolderKanban } from "lucide-react";
@@ -119,6 +120,8 @@ export function MeetingDetailView({
           editable
         />
       </div>
+
+      <AiSummaryEditor meetingTitle={meeting.title ?? "Deze meeting"} />
 
       <EditMetadataModal
         open={showEditModal}
