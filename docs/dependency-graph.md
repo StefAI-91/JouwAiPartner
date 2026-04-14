@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 427 |
-| Exported functions/constants | 614 |
-| Exported types/interfaces | 126 |
+| Exported functions/constants | 615 |
+| Exported types/interfaces | 127 |
 | Cross-package imports | 536 |
 | Critical integration points (3+ packages) | 7 |
 
@@ -149,9 +149,10 @@
 - `getIssueById()`
 - `getIssueCounts()`
 - `countCriticalUnassigned()`
+- `ISSUE_SORTS`
 - `ISSUE_SELECT`
 
-**Types:** `IssueRow`
+**Types:** `IssueSort`, `IssueRow`
 
 ### `queries/meeting-project-summaries.ts`
 

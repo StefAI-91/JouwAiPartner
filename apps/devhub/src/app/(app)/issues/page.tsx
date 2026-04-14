@@ -2,7 +2,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { listAccessibleProjectIds } from "@repo/auth/access";
-import { listIssues, countFilteredIssues } from "@repo/database/queries/issues";
+import { listIssues, countFilteredIssues, ISSUE_SORTS } from "@repo/database/queries/issues";
 import { getIssueThumbnails } from "@repo/database/queries/issue-attachments";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
@@ -16,6 +16,7 @@ const issueSearchParamsSchema = z.object({
   priority: z.string().optional(),
   type: z.string().optional(),
   component: z.string().optional(),
+  sort: z.enum(ISSUE_SORTS).optional(),
   page: z.coerce.number().int().min(1).optional(),
 });
 
@@ -76,7 +77,7 @@ export default async function IssuesPage({
   };
 
   const [issues, totalCount] = await Promise.all([
-    listIssues({ ...filterParams, limit: PAGE_SIZE, offset }, supabase),
+    listIssues({ ...filterParams, sort: params.sort, limit: PAGE_SIZE, offset }, supabase),
     countFilteredIssues(filterParams, supabase),
   ]);
 
