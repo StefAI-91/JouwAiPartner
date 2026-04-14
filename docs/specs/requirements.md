@@ -37,8 +37,9 @@ Totaal: 90 requirements.
 | FUNC-026 | Pre-filter: meetings met < 2 deelnemers worden overgeslagen (solo-recording is geen gesprek) | PRD sectie 5   | 002    |
 | FUNC-027 | Seed script met initiële organizations, people en projects (idempotent)                      | PRD sectie 10  | 001    |
 | FUNC-028 | Supabase TypeScript types regenereren na migraties                                           | PRD sectie 10  | 001    |
-| FUNC-029 | MCP get_organization_overview retourneert compleet klantoverzicht via SQL joins               | PRD sectie 8.3 | 004    |
+| FUNC-029 | MCP get_organization_overview retourneert compleet klantoverzicht via SQL joins              | PRD sectie 8.3 | 004    |
 | FUNC-030 | MCP list_meetings filtert op organization, project, datum, type met pagination               | PRD sectie 8.3 | 004    |
+| FUNC-031 | Query-helper listOrganizationsByType(types) filtert organizations op relatie-type            | Sprint 032     | 032    |
 
 ## Datamodel eisen
 
@@ -88,7 +89,7 @@ Totaal: 90 requirements.
 | DATA-050 | Tabel extractions: corrected_by UUID FK -> profiles, corrected_at TIMESTAMPTZ               | PRD sectie 3.8           | 001    |
 | DATA-051 | Tabel meetings: search_vector TSVECTOR met auto-update trigger (dutch config)               | PRD sectie 7.4           | 001    |
 | DATA-052 | Tabel extractions: search_vector TSVECTOR met auto-update trigger (dutch config)            | PRD sectie 7.4           | 001    |
-| DATA-053 | GIN indexes op search_vector kolommen voor full-text search                                  | PRD sectie 7.4           | 001    |
+| DATA-053 | GIN indexes op search_vector kolommen voor full-text search                                 | PRD sectie 7.4           | 001    |
 | DATA-042 | HNSW vector indexes op alle embedding-kolommen                                              | PRD sectie 8, sprint 001 | 001    |
 | DATA-043 | B-tree indexes op FK-kolommen en veelgebruikte filters                                      | PRD sectie 8, sprint 001 | 001    |
 | DATA-044 | Hybrid search functie: search_all_content() met vector + full-text via RRF                  | PRD sectie 7.4, 8        | 001    |
@@ -97,18 +98,22 @@ Totaal: 90 requirements.
 | DATA-047 | Vector search functie: search_meetings_by_participant()                                     | PRD sectie 8, sprint 001 | 001    |
 | DATA-048 | pg_cron + pg_net extensions voor re-embed worker scheduling                                 | PRD sectie 6.3           | 001    |
 | DATA-049 | Re-embed worker schedule elke 5 minuten via pg_cron                                         | PRD sectie 6.3           | 001    |
+| DATA-054 | organizations.type CHECK constraint accepteert 'advisor' (externe adviseurs)                | Sprint 032               | 032    |
+| DATA-055 | organizations.type CHECK constraint accepteert 'internal' (eigen bedrijfsentiteit)          | Sprint 032               | 032    |
+| DATA-056 | Seed-rij Flowwijs (a0000000-...-001) heeft type='internal' in plaats van 'other'            | Sprint 032               | 032    |
+| DATA-057 | organizations.type toegestaan: client, partner, supplier, advisor, internal, other          | Sprint 032               | 032    |
 
 ## AI pipeline eisen
 
-| ID     | Beschrijving                                                                            | Bron           | Sprint |
-| ------ | --------------------------------------------------------------------------------------- | -------------- | ------ |
-| AI-001 | Gatekeeper (Haiku 4.5) schema: meeting_type, party_type, relevance_score, organization_name | PRD sectie 5.1 | 002    |
-| AI-002 | Gatekeeper prompt: alleen classificatie, geen extractie-instructies                     | PRD sectie 5.1 | 002    |
-| AI-003 | Extractor (Sonnet) als apart AI-call na Gatekeeper                                      | PRD sectie 5.2 | 003    |
-| AI-004 | Extractor output: type, content, confidence, transcript_ref, metadata per extractie     | PRD sectie 5.2 | 003    |
-| AI-005 | Extractor wordt gestuurd door meeting_type voor type-specifieke extracties              | PRD sectie 5.2 | 003    |
-| AI-006 | Prompt caching inschakelen voor Gatekeeper en Extractor system prompts                  | PRD sectie 6.1 | 002-003 |
-| AI-007 | Transcript_ref validatie: quote checken tegen brontranscript, confidence→0 bij mismatch | PRD sectie 6.2 | 003    |
+| ID     | Beschrijving                                                                                | Bron           | Sprint  |
+| ------ | ------------------------------------------------------------------------------------------- | -------------- | ------- |
+| AI-001 | Gatekeeper (Haiku 4.5) schema: meeting_type, party_type, relevance_score, organization_name | PRD sectie 5.1 | 002     |
+| AI-002 | Gatekeeper prompt: alleen classificatie, geen extractie-instructies                         | PRD sectie 5.1 | 002     |
+| AI-003 | Extractor (Sonnet) als apart AI-call na Gatekeeper                                          | PRD sectie 5.2 | 003     |
+| AI-004 | Extractor output: type, content, confidence, transcript_ref, metadata per extractie         | PRD sectie 5.2 | 003     |
+| AI-005 | Extractor wordt gestuurd door meeting_type voor type-specifieke extracties                  | PRD sectie 5.2 | 003     |
+| AI-006 | Prompt caching inschakelen voor Gatekeeper en Extractor system prompts                      | PRD sectie 6.1 | 002-003 |
+| AI-007 | Transcript_ref validatie: quote checken tegen brontranscript, confidence→0 bij mismatch     | PRD sectie 6.2 | 003     |
 
 ## MCP eisen
 
@@ -120,16 +125,17 @@ Totaal: 90 requirements.
 | MCP-004 | get_action_items filtert extractions op type='action_item' met metadata                               | PRD sectie 7.3 | 004    |
 | MCP-005 | get_meeting_summary bevat meeting_type, party_type, organization, extractions                         | PRD sectie 8.3 | 004    |
 | MCP-006 | correct_extraction overschrijft content/metadata, zet corrected_by/corrected_at, embedding_stale=true | PRD sectie 9   | 004    |
-| MCP-007 | get_organization_overview retourneert meetings, extracties, projecten, people via SQL joins            | PRD sectie 8.3 | 004    |
+| MCP-007 | get_organization_overview retourneert meetings, extracties, projecten, people via SQL joins           | PRD sectie 8.3 | 004    |
 | MCP-008 | list_meetings filtert op organization, project, date_from, date_to, meeting_type met pagination       | PRD sectie 8.3 | 004    |
 
 ## Business rules
 
-| ID       | Beschrijving                                                   | Bron           | Sprint  |
-| -------- | -------------------------------------------------------------- | -------------- | ------- |
-| RULE-001 | Geen review-gate — alles is direct doorzoekbaar                | PRD sectie 1   | 003     |
-| RULE-002 | Bronvermelding verplicht bij elk MCP-antwoord                  | PRD sectie 7.1 | 004     |
-| RULE-003 | Confidence als indicator, niet als gate                        | PRD sectie 2   | 003     |
-| RULE-004 | Needs zijn cumulatief — geen status-veld, groeiend profiel     | PRD sectie 3.8 | 003     |
-| RULE-005 | Meeting transcript is bron van waarheid, extracties zijn index | PRD sectie 1   | -       |
-| RULE-006 | 2-staps AI: Haiku 4.5 voor triage, Sonnet voor extractie       | PRD sectie 5   | 002-003 |
+| ID       | Beschrijving                                                                | Bron           | Sprint  |
+| -------- | --------------------------------------------------------------------------- | -------------- | ------- |
+| RULE-001 | Geen review-gate — alles is direct doorzoekbaar                             | PRD sectie 1   | 003     |
+| RULE-002 | Bronvermelding verplicht bij elk MCP-antwoord                               | PRD sectie 7.1 | 004     |
+| RULE-003 | Confidence als indicator, niet als gate                                     | PRD sectie 2   | 003     |
+| RULE-004 | Needs zijn cumulatief — geen status-veld, groeiend profiel                  | PRD sectie 3.8 | 003     |
+| RULE-005 | Meeting transcript is bron van waarheid, extracties zijn index              | PRD sectie 1   | -       |
+| RULE-006 | 2-staps AI: Haiku 4.5 voor triage, Sonnet voor extractie                    | PRD sectie 5   | 002-003 |
+| RULE-007 | DB-kolommen + CHECK-waardes Engels; UI-labels, routes en teksten Nederlands | Sprint 032     | 032     |

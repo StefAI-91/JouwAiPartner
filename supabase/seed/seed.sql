@@ -7,7 +7,7 @@
 -- =============================================================================
 INSERT INTO organizations (id, name, aliases, type, contact_person, email, status)
 VALUES
-    ('a0000000-0000-0000-0000-000000000001', 'Flowwijs', ARRAY['JouwAiPartner', 'Jouw AI Partner', 'JAP'], 'other', 'Stef Banninga', NULL, 'active'),
+    ('a0000000-0000-0000-0000-000000000001', 'Flowwijs', ARRAY['JouwAiPartner', 'Jouw AI Partner', 'JAP'], 'internal', 'Stef Banninga', NULL, 'active'),
     ('a0000000-0000-0000-0000-000000000002', 'Ordus', ARRAY[]::TEXT[], 'client', 'Bart Nelissen', 'bartnelissen@ordus.nl', 'active'),
     ('a0000000-0000-0000-0000-000000000003', 'Effect op maat', ARRAY['Effect op Maat', 'EOM'], 'client', 'Fleur Timmerman', 'info@effectopmaat.nl', 'active')
 ON CONFLICT (id) DO UPDATE SET
