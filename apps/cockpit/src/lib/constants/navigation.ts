@@ -7,6 +7,7 @@ import {
   Calendar,
   Mail,
   Users,
+  Receipt,
 } from "lucide-react";
 
 export interface NavItem {
@@ -16,13 +17,14 @@ export interface NavItem {
   badgeKey?: "reviewCount";
 }
 
-/** Primary nav — shown in all nav components (5 items) */
+/** Primary nav — shown in all nav components (6 items) */
 export const primaryNavItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/intelligence", label: "Intelligence", icon: BrainCircuit },
   { href: "/review", label: "Review", icon: ClipboardCheck, badgeKey: "reviewCount" },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/directory", label: "Directory", icon: BookUser },
+  { href: "/administratie", label: "Administratie", icon: Receipt },
 ];
 
 /** Secondary nav — "Bronnen" section, desktop sidebar + mobile sheet only */

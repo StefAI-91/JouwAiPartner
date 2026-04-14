@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ORG_TYPES } from "../constants/organizations";
 
 // Note: meetingId, projectId, personId etc. komen altijd uit database-sourced props
 // (niet uit vrije gebruikersinvoer). De database dwingt UUID types af op deze kolommen.
@@ -52,7 +53,7 @@ export const meetingParticipantSchema = z.object({
 
 export const createOrganizationSchema = z.object({
   name: z.string().min(1, "Naam is verplicht").max(200),
-  type: z.enum(["client", "partner", "supplier", "other"]).optional(),
+  type: z.enum(ORG_TYPES).optional(),
 });
 
 export const createProjectSchema = z.object({

@@ -1,17 +1,21 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@repo/database/supabase/server";
-import { listOrganizations } from "@repo/database/queries/organizations";
+import { listOrganizationsByType } from "@repo/database/queries/organizations";
 import { Badge } from "@repo/ui/badge";
 import { Building2, CalendarDays, FolderKanban } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@repo/ui/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
+import { ORG_TYPE_LABELS } from "@/components/shared/org-type-labels";
 import { AddOrganizationButton } from "@/components/clients/add-organization-button";
+
+// Commerciële relaties — administratie-organisaties (advisor, internal) leven op /administratie.
+const CLIENT_PAGE_TYPES = ["client", "partner", "supplier", "other"];
 
 export default async function ClientsPage() {
   const supabase = await createClient();
-  const organizations = await listOrganizations(supabase);
+  const organizations = await listOrganizationsByType(CLIENT_PAGE_TYPES, supabase);
 
   if (organizations.length === 0) {
     return (
@@ -51,7 +55,7 @@ export default async function ClientsPage() {
                   <Badge
                     className={`text-[10px] ${ORG_TYPE_COLORS[org.type] ?? ORG_TYPE_COLORS.other}`}
                   >
-                    {org.type}
+                    {ORG_TYPE_LABELS[org.type] ?? org.type}
                   </Badge>
                   <Badge
                     className={`text-[10px] ${ORG_STATUS_COLORS[org.status] ?? ORG_STATUS_COLORS.inactive}`}

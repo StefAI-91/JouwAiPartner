@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
 import { createOrganizationAction } from "@/actions/organizations";
 import { ORG_TYPES } from "@repo/database/constants/organizations";
+import { ORG_TYPE_LABELS } from "@/components/shared/org-type-labels";
 
 export function AddOrganizationButton() {
   const [open, setOpen] = useState(false);
@@ -73,7 +74,7 @@ export function AddOrganizationButton() {
             >
               {ORG_TYPES.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {ORG_TYPE_LABELS[t] ?? t}
                 </option>
               ))}
             </select>
