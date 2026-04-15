@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@repo/database/supabase/server";
 import { getUnprocessedEmails } from "@repo/database/queries/emails";
 import { processEmailBatch } from "@repo/ai/pipeline/email-pipeline";
+import { isAdmin } from "@repo/auth/access";
 
 export const maxDuration = 300;
 
@@ -27,6 +28,12 @@ export async function POST(req: Request) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Admin-only: dit endpoint vuurt max 100 Haiku-calls af, dus geen
+  // self-service voor members/clients (consistent met unfilterEmailAction).
+  if (!(await isAdmin(user.id))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   let body: { limit?: number } = {};

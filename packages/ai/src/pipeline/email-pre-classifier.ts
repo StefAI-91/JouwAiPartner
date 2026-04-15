@@ -33,7 +33,15 @@ const NOTIFICATION_SENDER_PATTERNS: RegExp[] = [
   /^system@/i,
 ];
 
-/** Bekende tool-domeinen die puur notificaties sturen (GitHub, Slack, etc.) */
+/**
+ * Bekende tool-domeinen die PUUR notificaties sturen (GitHub, Slack, etc.).
+ *
+ * BELANGRIJK: zet hier NOOIT algemene email-providers (gmail.com, outlook.com,
+ * hotmail.com, ziggo.nl, etc.). Die matchen ook legitieme klant-/prospect-mail
+ * en zouden die zonder AI-check naar Gefilterd sturen. Google's notificaties
+ * komen sowieso via subdomeinen (calendar-noreply@google.com → matcht op
+ * NOTIFICATION_SENDER_PATTERNS) of sender-adressen als `no-reply@accounts.google.com`.
+ */
 const NOTIFICATION_DOMAINS: string[] = [
   "slack.com",
   "slackbot.com",
@@ -46,8 +54,6 @@ const NOTIFICATION_DOMAINS: string[] = [
   "supabase.io",
   "stripe.com",
   "calendly.com",
-  "google.com", // calendar notifications, docs share
-  "gmail.com", // gmail system messages
   "linear.app",
   "notion.so",
   "figma.com",
@@ -95,15 +101,18 @@ const NEWSLETTER_SUBJECT_PATTERNS: RegExp[] = [
   /deze week (in|bij)/i,
 ];
 
-/** Afzender-patronen voor newsletters (marketing) */
+/**
+ * Afzender-patronen voor newsletters (marketing).
+ *
+ * LET OP: `info@` zat hier eerder bij maar is te agressief — `info@kleinklant.nl`
+ * is in B2B-consultancy vaak een legitieme klantmailbox. Die laten we bewust
+ * door de AI-classifier beoordelen.
+ */
 const NEWSLETTER_SENDER_PATTERNS: RegExp[] = [
   /^marketing@/i,
   /^news@/i,
   /^nieuwsbrief@/i,
   /^newsletter@/i,
-  /^hello@/i,
-  /^hi@/i,
-  /^info@/i, // vaak marketing
 ];
 
 /** Cold outreach body/subject patterns (ongevraagde sales) */

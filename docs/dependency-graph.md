@@ -10,8 +10,8 @@
 | Files scanned | 436 |
 | Exported functions/constants | 632 |
 | Exported types/interfaces | 132 |
-| Cross-package imports | 555 |
-| Critical integration points (3+ packages) | 8 |
+| Cross-package imports | 557 |
+| Critical integration points (3+ packages) | 10 |
 
 ## Package Dependency Flow
 
@@ -1583,6 +1583,7 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → getUnprocessedEmails
 - `@repo/ai/pipeline/email-pipeline` → processEmailBatch
+- `@repo/auth/access` → isAdmin
 
 ### `apps/cockpit/src/app/api/email/reclassify/route.ts`
 
@@ -1595,6 +1596,7 @@
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/pipeline/email-pipeline` → processEmail
 - `@repo/database/mutations/emails` → updateEmailFilterStatus
+- `@repo/auth/access` → isAdmin
 
 ### `apps/cockpit/src/app/api/email/sync/route.ts`
 
@@ -3345,7 +3347,7 @@ Which layers depend on which packages:
 | AI Pipeline | 40 | - | - | - | - | 40 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 43 | 15 | 28 | - | - | 86 |
-| Cockpit API Routes | 27 | 36 | - | - | 1 | 64 |
+| Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 42 | - | - | 77 | - | 119 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | - | 2 | 23 | - | 101 |
@@ -3370,6 +3372,8 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
+| `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 

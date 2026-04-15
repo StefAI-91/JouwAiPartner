@@ -3,6 +3,7 @@ import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { processEmail } from "@repo/ai/pipeline/email-pipeline";
 import { updateEmailFilterStatus } from "@repo/database/mutations/emails";
+import { isAdmin } from "@repo/auth/access";
 
 export const maxDuration = 300;
 
@@ -37,6 +38,12 @@ export async function POST(req: Request) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Admin-only: dit endpoint start een batch-run van 200 emails door Haiku,
+  // dus we willen niet dat members of gasten deze kunnen afvuren (kosten).
+  if (!(await isAdmin(user.id))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   let body: { limit?: number; skipFiltered?: boolean; onlyKept?: boolean } = {};
