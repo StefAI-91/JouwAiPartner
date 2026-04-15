@@ -41,7 +41,7 @@ function computeAfterDate(lastSyncAt: string | null): string {
 }
 
 /**
- * POST /api/cron/email-sync
+ * GET/POST /api/cron/email-sync
  *
  * Hourly cron (via Vercel Scheduled Functions). Synchroniseert nieuwe
  * emails van alle actieve Google-accounts en draait de AI-pipeline op
@@ -50,6 +50,9 @@ function computeAfterDate(lastSyncAt: string | null): string {
  * Auth: CRON_SECRET bearer — dezelfde conventie als /api/cron/re-embed
  * en /api/cron/reclassify.
  *
+ * Vercel Cron stuurt GET requests; POST blijft beschikbaar voor handmatige
+ * triggers. Beide methodes delen dezelfde handler.
+ *
  * Hard caps om runaway kosten te voorkomen:
  *   - MAX_LOOKBACK_DAYS (7) — nooit verder terug dan 7 dagen
  *   - MAX_RESULTS_PER_ACCOUNT (50) — Gmail fetch cap per account
@@ -57,7 +60,7 @@ function computeAfterDate(lastSyncAt: string | null): string {
  *
  * Als de backlog groter is dan deze cap, eet de volgende cron-run 'm op.
  */
-export async function POST(req: NextRequest) {
+async function handleEmailSync(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
 
@@ -197,3 +200,6 @@ export async function POST(req: NextRequest) {
     errors: errors.length > 0 ? errors.slice(0, 20) : undefined,
   });
 }
+
+export const GET = handleEmailSync;
+export const POST = handleEmailSync;
