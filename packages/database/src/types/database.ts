@@ -211,6 +211,8 @@ export type Database = {
           email_type: string | null;
           embedding: string | null;
           embedding_stale: boolean | null;
+          filter_reason: string | null;
+          filter_status: string;
           from_address: string;
           from_name: string | null;
           gmail_id: string;
@@ -246,6 +248,8 @@ export type Database = {
           email_type?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean | null;
+          filter_reason?: string | null;
+          filter_status?: string;
           from_address: string;
           from_name?: string | null;
           gmail_id: string;
@@ -281,6 +285,8 @@ export type Database = {
           email_type?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean | null;
+          filter_reason?: string | null;
+          filter_status?: string;
           from_address?: string;
           from_name?: string | null;
           gmail_id?: string;

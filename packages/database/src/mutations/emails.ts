@@ -108,6 +108,27 @@ export async function updateEmailClassification(
   return { success: true };
 }
 
+/**
+ * Set or clear the gatekeeper filter status. Used by the pre-save filter
+ * logic in the email pipeline, and by the "alsnog doorlaten" actie op
+ * de detailpagina (status='kept', reason=null).
+ */
+export async function updateEmailFilterStatus(
+  emailId: string,
+  data: {
+    filter_status: "kept" | "filtered";
+    filter_reason: string | null;
+  },
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("emails")
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq("id", emailId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function linkEmailProject(
   emailId: string,
   projectId: string,
