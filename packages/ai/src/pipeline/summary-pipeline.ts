@@ -63,7 +63,9 @@ export async function generateProjectSummaries(
       .eq("verification_status", "verified")
       .order("date", { ascending: false });
 
-    // Get verified emails linked to this project
+    // Get verified emails linked to this project (filter out auto-filtered
+    // emails zoals newsletters, notifications, cold outreach — die horen
+    // niet in de project-briefing thuis).
     let formattedEmails: {
       subject: string | null;
       date: string;
@@ -76,6 +78,7 @@ export async function generateProjectSummaries(
         .select("subject, date, from_name, from_address, snippet")
         .in("id", linkedEmailIds)
         .eq("verification_status", "verified")
+        .eq("filter_status", "kept")
         .order("date", { ascending: false });
 
       formattedEmails = (emails ?? []).map((e) => ({
@@ -204,14 +207,17 @@ export async function generateOrgSummaries(
     // Get verified emails linked to this organization — via two paths:
     // 1) emails.organization_id = orgId (primary link)
     // 2) email_extractions.organization_id = orgId (extraction-level link)
-    // Deduplicate on email_id.
+    // Deduplicate on email_id. Filter out auto-filtered emails (newsletters,
+    // notifications, cold outreach, lage relevance) — die horen niet in de
+    // klant-briefing thuis, ook niet als ze per ongeluk verified raken.
     const emailIdSet = new Set<string>();
 
     const { data: directEmails } = await db
       .from("emails")
       .select("id")
       .eq("organization_id", organizationId)
-      .eq("verification_status", "verified");
+      .eq("verification_status", "verified")
+      .eq("filter_status", "kept");
     for (const e of directEmails ?? []) emailIdSet.add(e.id);
 
     const { data: extractionEmailLinks } = await db
@@ -234,6 +240,7 @@ export async function generateOrgSummaries(
         .select("subject, date, from_name, from_address, snippet")
         .in("id", Array.from(emailIdSet))
         .eq("verification_status", "verified")
+        .eq("filter_status", "kept")
         .order("date", { ascending: false });
 
       formattedEmails = (emails ?? []).map((e) => ({
