@@ -36,6 +36,11 @@ export default async function IssueDetailPage({ params }: { params: Promise<{ id
     name: m.full_name?.trim() || m.email,
   }));
 
+  const currentMember = members.find((m) => m.id === user.id);
+  const currentUser = currentMember
+    ? { id: currentMember.id, name: currentMember.full_name?.trim() || currentMember.email }
+    : null;
+
   return (
     <IssueDetail
       issue={issue}
@@ -43,6 +48,7 @@ export default async function IssueDetailPage({ params }: { params: Promise<{ id
       activities={activities}
       people={assignees}
       attachments={attachments}
+      currentUser={currentUser}
     />
   );
 }

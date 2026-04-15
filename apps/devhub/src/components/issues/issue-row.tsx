@@ -19,6 +19,7 @@ import {
   DropdownMenuItem,
 } from "@repo/ui/dropdown-menu";
 import { deleteIssueAction } from "@/actions/issues";
+import { issueCountStore } from "@/components/layout/issue-count-store";
 
 function IssueThumbnail({ storagePath }: { storagePath: string }) {
   const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/issue-attachments/${storagePath}`;
@@ -76,17 +77,31 @@ export function IssueRowItem({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [optimisticallyDeleted, setOptimisticallyDeleted] = useState(false);
 
   function handleDelete() {
+    // Hide the row instantly — the server action plus revalidate takes long
+    // enough that the confirm overlay lingering feels sluggish. If the
+    // delete fails we restore the row and surface the error.
+    setOptimisticallyDeleted(true);
+    setShowConfirm(false);
+    // Reflect the decrement in the sidebar counts immediately.
+    issueCountStore.bump(issue.project_id, issue.status, null);
+
     startTransition(async () => {
       const result = await deleteIssueAction({ id: issue.id });
       if ("error" in result) {
         console.error(result.error);
+        setOptimisticallyDeleted(false);
+        issueCountStore.bump(issue.project_id, null, issue.status);
       } else {
         router.refresh();
+        issueCountStore.refresh(issue.project_id);
       }
     });
   }
+
+  if (optimisticallyDeleted) return null;
 
   return (
     <div

@@ -2,11 +2,17 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { listAccessibleProjectIds } from "@repo/auth/access";
-import { listIssues, countFilteredIssues, ISSUE_SORTS } from "@repo/database/queries/issues";
+import {
+  listIssues,
+  countFilteredIssues,
+  getIssueCounts,
+  ISSUE_SORTS,
+} from "@repo/database/queries/issues";
 import { getIssueThumbnails } from "@repo/database/queries/issue-attachments";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
 import { PaginationControls } from "@/components/issues/pagination-controls";
+import { CountSeeder } from "@/components/layout/count-seeder";
 
 const PAGE_SIZE = 25;
 
@@ -76,9 +82,10 @@ export default async function IssuesPage({
     component: params.component?.split(","),
   };
 
-  const [issues, totalCount] = await Promise.all([
+  const [issues, totalCount, sidebarCounts] = await Promise.all([
     listIssues({ ...filterParams, sort: params.sort, limit: PAGE_SIZE, offset }, supabase),
     countFilteredIssues(filterParams, supabase),
+    getIssueCounts(projectId, supabase),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -90,6 +97,9 @@ export default async function IssuesPage({
 
   return (
     <div className="flex flex-1 flex-col px-4 sm:px-6 lg:px-8">
+      {/* Seed the sidebar badges from the server so they're correct on first
+          paint — avoids the "numbers pop in a second later" lag. */}
+      <CountSeeder projectId={projectId} counts={sidebarCounts} />
       <IssueFilters />
       <IssueList issues={issues} thumbnails={thumbnails} />
       <PaginationControls currentPage={currentPage} totalPages={totalPages} />

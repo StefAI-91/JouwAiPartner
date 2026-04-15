@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LayoutDashboard, LayoutList, Settings } from "lucide-react";
 import { cn } from "@repo/ui/utils";
-import { useEffect, useState, useTransition } from "react";
-import { NAV_ITEMS, issueHref, type StatusCounts } from "./sidebar-constants";
-import { getIssueCountsAction } from "@/actions/issues";
+import { useEffect, useSyncExternalStore } from "react";
+import { NAV_ITEMS, issueHref } from "./sidebar-constants";
+import { issueCountStore } from "./issue-count-store";
 
 interface SidebarNavProps {
   /** Icon size class — desktop uses size-5, mobile uses size-4 */
@@ -17,6 +17,26 @@ interface SidebarNavProps {
   onNavigate?: () => void;
 }
 
+function useIssueCounts(projectId: string | null) {
+  // Subscribe to the module-scope store. Cached counts are returned
+  // synchronously — the sidebar never renders "empty, then populated" for
+  // a project we've already seen.
+  const counts = useSyncExternalStore(
+    issueCountStore.subscribe,
+    () => issueCountStore.get(projectId),
+    () => (projectId ? {} : {}),
+  );
+
+  // Background refresh whenever the active project changes. Deduped in the
+  // store, so concurrent subscribers only trigger one request.
+  useEffect(() => {
+    if (!projectId) return;
+    issueCountStore.refresh(projectId);
+  }, [projectId]);
+
+  return counts;
+}
+
 export function SidebarNav({
   iconSize = "size-5",
   linkClassName = "py-2 text-[0.9rem]",
@@ -25,22 +45,7 @@ export function SidebarNav({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const projectId = searchParams.get("project");
-  const [counts, setCounts] = useState<StatusCounts>({});
-  const [, startTransition] = useTransition();
-
-  // Fetch counts via server action when projectId changes
-  useEffect(() => {
-    if (!projectId) return;
-    startTransition(async () => {
-      const result = await getIssueCountsAction(projectId);
-      if ("data" in result) {
-        setCounts(result.data);
-      }
-    });
-  }, [projectId]);
-
-  // When no project is selected, show empty counts
-  const displayCounts = projectId ? counts : {};
+  const counts = useIssueCounts(projectId);
 
   return (
     <>
@@ -80,7 +85,7 @@ export function SidebarNav({
 
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const count = displayCounts[item.status] ?? 0;
+          const count = counts[item.status as keyof typeof counts] ?? 0;
           return (
             <Link
               key={item.status}

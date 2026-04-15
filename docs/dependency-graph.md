@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 436 |
-| Exported functions/constants | 632 |
-| Exported types/interfaces | 132 |
-| Cross-package imports | 557 |
+| Files scanned | 439 |
+| Exported functions/constants | 635 |
+| Exported types/interfaces | 136 |
+| Cross-package imports | 559 |
 | Critical integration points (3+ packages) | 10 |
 
 ## Package Dependency Flow
@@ -154,7 +154,7 @@
 - `ISSUE_SORTS`
 - `ISSUE_SELECT`
 
-**Types:** `IssueSort`, `IssueRow`
+**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`
 
 ### `queries/meeting-project-summaries.ts`
 
@@ -3053,6 +3053,17 @@
 - (type) `@repo/database/queries/issue-comments` → IssueCommentRow
 - (type) `@repo/database/queries/issue-activity` → IssueActivityRow
 
+### `apps/devhub/src/components/comments/comment-section.tsx`
+
+**Exports:**
+- `CommentSection()`
+
+**Types:** `CurrentUser`
+
+**Depends on:**
+- (type) `@repo/database/queries/issue-comments` → IssueCommentRow
+- (type) `@repo/database/queries/issue-activity` → IssueActivityRow
+
 ### `apps/devhub/src/components/dashboard/area-summaries.tsx`
 
 **Exports:**
@@ -3206,6 +3217,18 @@
 **Depends on:**
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
+### `apps/devhub/src/components/layout/count-seeder.tsx`
+
+**Exports:**
+- `CountSeeder()`
+
+### `apps/devhub/src/components/layout/issue-count-store.ts`
+
+**Exports:**
+- `issueCountStore`
+
+**Types:** `StatusKey`, `StatusCounts`
+
 ### `apps/devhub/src/components/layout/mobile-sidebar.tsx`
 
 **Exports:**
@@ -3228,7 +3251,7 @@
 - `issueHref()`
 - `NAV_ITEMS`
 
-**Types:** `StatusCounts`, `NavItem`
+**Types:** `NavItem`
 
 ### `apps/devhub/src/components/layout/sidebar-nav.tsx`
 
@@ -3354,7 +3377,7 @@ Which layers depend on which packages:
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 21 | 2 | 10 | - | - | 33 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
-| DevHub Components | 13 | - | - | 26 | - | 39 |
+| DevHub Components | 15 | - | - | 26 | - | 41 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 14 | - | 8 | 8 | - | 30 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
@@ -3607,7 +3630,7 @@ Which queries are used where across the codebase.
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/page.tsx` |
+| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/meeting-project-summaries.ts

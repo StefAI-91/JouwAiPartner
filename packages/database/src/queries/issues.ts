@@ -218,42 +218,55 @@ export async function getIssueById(id: string, client?: SupabaseClient): Promise
   return data as unknown as IssueRow;
 }
 
+export type StatusCountKey = "triage" | "backlog" | "todo" | "in_progress" | "done" | "cancelled";
+
+export type StatusCounts = Record<StatusCountKey, number>;
+
+const STATUS_KEYS: readonly StatusCountKey[] = [
+  "triage",
+  "backlog",
+  "todo",
+  "in_progress",
+  "done",
+  "cancelled",
+];
+
 /**
- * Get issue counts per status for a project (uses DB-level counting).
+ * Get issue counts per status for a project.
+ *
+ * Previously ran 6 separate count queries (one per status). Consolidated into
+ * a single `select("status")` call and grouped in memory — one round trip
+ * instead of six, which is the difference between "instant" and "visible lag"
+ * for the sidebar badge.
  */
 export async function getIssueCounts(
   projectId: string,
   client?: SupabaseClient,
-): Promise<{
-  triage: number;
-  backlog: number;
-  todo: number;
-  in_progress: number;
-  done: number;
-  cancelled: number;
-}> {
+): Promise<StatusCounts> {
   const db = client ?? getAdminClient();
-  const statuses = ["triage", "backlog", "todo", "in_progress", "done", "cancelled"] as const;
 
-  const results = await Promise.all(
-    statuses.map((status) =>
-      db
-        .from("issues")
-        .select("id", { count: "exact", head: true })
-        .eq("project_id", projectId)
-        .eq("status", status),
-    ),
-  );
+  const counts: StatusCounts = {
+    triage: 0,
+    backlog: 0,
+    todo: 0,
+    in_progress: 0,
+    done: 0,
+    cancelled: 0,
+  };
 
-  const counts = { triage: 0, backlog: 0, todo: 0, in_progress: 0, done: 0, cancelled: 0 };
+  const { data, error } = await db.from("issues").select("status").eq("project_id", projectId);
 
-  for (let i = 0; i < statuses.length; i++) {
-    const { count, error } = results[i];
-    if (error) {
-      console.error(`[getIssueCounts] Error counting ${statuses[i]}:`, error.message);
-      continue;
+  if (error) {
+    console.error("[getIssueCounts] Database error:", error.message);
+    return counts;
+  }
+
+  if (!data) return counts;
+
+  for (const row of data as { status: string }[]) {
+    if ((STATUS_KEYS as readonly string[]).includes(row.status)) {
+      counts[row.status as StatusCountKey]++;
     }
-    counts[statuses[i]] = count ?? 0;
   }
 
   return counts;

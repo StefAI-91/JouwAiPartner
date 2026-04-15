@@ -4,22 +4,36 @@ import { useState, useTransition } from "react";
 import { createCommentAction } from "@/actions/comments";
 import { Button } from "@repo/ui/button";
 
-export function CommentForm({ issueId }: { issueId: string }) {
+interface CommentFormProps {
+  issueId: string;
+  /**
+   * Called synchronously inside the pending transition so the parent can
+   * append an optimistic entry to the feed. Receives the trimmed body.
+   */
+  onOptimisticAdd?: (body: string) => void;
+}
+
+export function CommentForm({ issueId, onOptimisticAdd }: CommentFormProps) {
   const [body, setBody] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!body.trim()) return;
+    const trimmed = body.trim();
+    if (!trimmed) return;
 
     setError(null);
+    // Clear the textarea immediately so the optimistic bubble feels snappy.
+    // If the server action fails we restore the text below.
+    setBody("");
+
     startTransition(async () => {
-      const result = await createCommentAction({ issue_id: issueId, body: body.trim() });
+      onOptimisticAdd?.(trimmed);
+      const result = await createCommentAction({ issue_id: issueId, body: trimmed });
       if ("error" in result) {
         setError(result.error);
-      } else {
-        setBody("");
+        setBody(trimmed);
       }
     });
   }

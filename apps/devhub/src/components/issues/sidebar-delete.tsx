@@ -4,22 +4,29 @@ import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { deleteIssueAction } from "@/actions/issues";
+import { issueCountStore } from "@/components/layout/issue-count-store";
 
 interface SidebarDeleteProps {
   issueId: string;
   projectId: string;
+  status: string;
   isPending: boolean;
 }
 
-export function SidebarDelete({ issueId, projectId, isPending }: SidebarDeleteProps) {
+export function SidebarDelete({ issueId, projectId, status, isPending }: SidebarDeleteProps) {
   const [, startTransition] = useTransition();
   const [showConfirm, setShowConfirm] = useState(false);
 
   function handleDelete() {
+    // Decrement the sidebar count before we navigate away so the badge is
+    // already correct when the issue list renders.
+    issueCountStore.bump(projectId, status, null);
+
     startTransition(async () => {
       const result = await deleteIssueAction({ id: issueId });
       if ("error" in result) {
         console.error(result.error);
+        issueCountStore.bump(projectId, null, status);
       } else {
         window.location.href = `/issues?project=${projectId}`;
       }

@@ -141,7 +141,12 @@ export function IssueSidebar({ issue, people, onFieldChange, isPending }: IssueS
           isPending={isPending}
         />
 
-        <SidebarDelete issueId={issue.id} projectId={issue.project_id} isPending={isPending} />
+        <SidebarDelete
+          issueId={issue.id}
+          projectId={issue.project_id}
+          status={issue.status}
+          isPending={isPending}
+        />
       </div>
     </aside>
   );
