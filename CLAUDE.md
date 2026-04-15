@@ -248,6 +248,33 @@ Organizations, projects, people, and extractions are manually editable via inlin
 - Statussen, rollen, niveaus → database tabel, geen enum in code.
 - Meer dan 3 items in een lijst → database.
 
+### Tests (anti-laundering)
+
+Tests zijn het vangnet voor de niet-coder die deze codebase maintaint. Als
+tests stilletjes versoepeld worden verdwijnt dat vangnet — de tests blijven
+groen terwijl productie stiekem stukgaat. Daarom:
+
+- **Falende test? Default-aanname: de CODE is stuk, niet de test.** Eerst
+  diagnose in de productie-code. Een test mag je pas aanpassen als je
+  expliciet kunt onderbouwen welk productie-gedrag bewust veranderd is.
+- **Nooit assertions afzwakken om groen te worden.** Geen `toBe(5)` →
+  `toBeDefined()`, geen `toBe(5)` → `toBeGreaterThan(0)`. Dat is doofpot,
+  geen fix.
+- **Nooit `it.skip` / `describe.skip` toevoegen** om een falende test te
+  omzeilen. Een test die niet draait is een test die liegt.
+- **Snapshots nooit blind updaten** (`vitest -u` zonder diff lezen). Een
+  snapshot hoort vast te leggen wat de code **hoort** te doen, niet wat hij
+  toevallig nu doet.
+- **Mocks zijn grens-tools, geen logica-vervangers.** Mock alleen de
+  database/netwerk/filesystem-grens zodat je captured payloads kunt
+  asserteren. Een test die een mock zó bijstelt dat de assertie klopt, test
+  niks meer.
+- **Test wijzigen of verwijderen mag** — mits de commit message uitlegt
+  welk gedrag bewust verdwenen is en waarom. Zonder die uitleg = niet doen.
+
+Als je twijfelt of een testwijziging laundering is: het antwoord is ja.
+Escaleer naar de gebruiker in plaats van door te drukken.
+
 ## Conventies
 
 **Bestanden:** kebab-case (`data-table.tsx`). **Components:** PascalCase. **Functies:** camelCase. **Types:** PascalCase. **DB tabellen/kolommen:** snake_case. **Constanten:** UPPER_SNAKE.
