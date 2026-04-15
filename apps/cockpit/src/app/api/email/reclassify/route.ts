@@ -9,14 +9,20 @@ export const maxDuration = 300;
 /**
  * POST /api/email/reclassify
  *
- * Herclassificeert bestaande emails met de huidige pipeline (inclusief de
- * deterministische pre-classifier). Gebruikt om na een filter-regel-update
- * de backlog opnieuw te beoordelen zonder handmatig per email te klikken.
+ * Herverwerkt emails met de huidige pipeline (inclusief de deterministische
+ * pre-classifier). Gebruikt na een filter-regel-update OF om een backlog van
+ * onverwerkte emails alsnog door de pipeline te halen.
+ *
+ * Scope standaard (skipFiltered=true):
+ *   - onverwerkte emails (is_processed=false) → door pipeline alsnog
+ *   - verwerkte + KEPT emails (filter_status='kept') → opnieuw beoordeeld
+ *   - al-gefilterde emails blijven gefilterd (geen onnodig werk)
+ *
+ * skipFiltered=false: pakt ALLE emails, ook die al in Gefilterd staan.
  *
  * Body (optioneel):
  *   - limit: max aantal emails (default 200, hard cap 500)
- *   - onlyKept: bool — alleen emails met filter_status='kept' opnieuw kijken
- *               (default true, zodat al-gefilterde mails niet onnodig hertest)
+ *   - skipFiltered: bool — default true (sla al-gefilterde over)
  *
  * Flow per email:
  *   1. Reset filter_status naar 'kept' (pipeline bepaalt opnieuw)
@@ -33,7 +39,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { limit?: number; onlyKept?: boolean } = {};
+  let body: { limit?: number; skipFiltered?: boolean; onlyKept?: boolean } = {};
   try {
     body = await req.json();
   } catch {
@@ -41,18 +47,21 @@ export async function POST(req: Request) {
   }
 
   const limit = Math.min(Math.max(body.limit ?? 200, 1), 500);
-  const onlyKept = body.onlyKept ?? true;
+  // Back-compat: onlyKept is het oude veld, skipFiltered het nieuwe
+  const skipFiltered = body.skipFiltered ?? body.onlyKept ?? true;
 
   const admin = getAdminClient();
   let query = admin
     .from("emails")
     .select("id, subject, from_address, from_name, to_addresses, date, body_text, snippet")
-    .eq("is_processed", true)
     .order("date", { ascending: false })
     .limit(limit);
 
-  if (onlyKept) {
-    query = query.eq("filter_status", "kept");
+  if (skipFiltered) {
+    // Pak alles BEHALVE al-gefilterde emails:
+    //   - unprocessed (is_processed=false) — nog niet beoordeeld
+    //   - processed + kept (filter_status='kept') — opnieuw evalueren
+    query = query.or("filter_status.eq.kept,is_processed.eq.false");
   }
 
   const { data: emails, error } = await query;

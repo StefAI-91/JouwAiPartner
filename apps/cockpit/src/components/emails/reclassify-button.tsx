@@ -15,7 +15,7 @@ export function ReclassifyButton() {
   async function handleReclassify() {
     if (
       !window.confirm(
-        "Alle processed emails opnieuw door de filter-gatekeeper halen? Dit kan even duren.",
+        "Alle inbox-emails (inclusief onverwerkte) opnieuw door de AI-gatekeeper halen? Dit kan een minuut of twee duren.",
       )
     ) {
       return;
@@ -28,7 +28,7 @@ export function ReclassifyButton() {
       const res = await fetch("/api/email/reclassify", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ limit: 200, onlyKept: true }),
+        body: JSON.stringify({ limit: 200, skipFiltered: true }),
       });
       const data = await res.json();
 
