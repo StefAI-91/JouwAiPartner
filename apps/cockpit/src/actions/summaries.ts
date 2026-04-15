@@ -34,10 +34,15 @@ export async function regenerateSummaryAction(
 
   if (entityType === "project") {
     revalidatePath(`/projects/${entityId}`);
+    revalidatePath("/projects");
   } else {
-    // Organization — briefing zichtbaar op beide detail-routes
+    // Organization — briefing zichtbaar op beide detail-routes. Lijstpagina's
+    // revalideren we ook, zodat toekomstige "laatste briefing"-previews
+    // niet stale worden.
     revalidatePath(`/clients/${entityId}`);
     revalidatePath(`/administratie/${entityId}`);
+    revalidatePath("/clients");
+    revalidatePath("/administratie");
   }
   revalidatePath("/");
 

@@ -204,20 +204,17 @@ export async function generateOrgSummaries(
       .eq("verification_status", "verified")
       .order("date", { ascending: false });
 
-    // Get verified emails linked to this organization — via two paths:
-    // 1) emails.organization_id = orgId (primary link)
+    // Get email IDs linked to this organization — via twee paden:
+    // 1) emails.organization_id = orgId (primary link — zónder extracties)
     // 2) email_extractions.organization_id = orgId (extraction-level link)
-    // Deduplicate on email_id. Filter out auto-filtered emails (newsletters,
-    // notifications, cold outreach, lage relevance) — die horen niet in de
-    // klant-briefing thuis, ook niet als ze per ongeluk verified raken.
+    // Dedup'n op email_id. De status-filters (verified + kept) passen we
+    // pas toe in de finale fetch, zodat we ze niet dubbel hoeven te draaien.
     const emailIdSet = new Set<string>();
 
     const { data: directEmails } = await db
       .from("emails")
       .select("id")
-      .eq("organization_id", organizationId)
-      .eq("verification_status", "verified")
-      .eq("filter_status", "kept");
+      .eq("organization_id", organizationId);
     for (const e of directEmails ?? []) emailIdSet.add(e.id);
 
     const { data: extractionEmailLinks } = await db
@@ -228,6 +225,9 @@ export async function generateOrgSummaries(
       if (l.email_id) emailIdSet.add(l.email_id);
     }
 
+    // Finale fetch filtert op verified + kept, zodat newsletters,
+    // notifications, cold outreach en onverified drafts niet in de briefing
+    // belanden, ongeacht via welk pad hun ID is binnengekomen.
     let formattedEmails: {
       subject: string | null;
       date: string;
@@ -261,11 +261,14 @@ export async function generateOrgSummaries(
       };
     }
 
-    // Count gekoppelde projecten (bepaalt briefing-invalshoek)
+    // Count actieve gekoppelde projecten (bepaalt briefing-invalshoek).
+    // Archived/afgeronde projecten (completed, lost) tellen niet mee — een
+    // org met alleen afgeronde projecten is effectief een relatie-only klant.
     const { count: projectCount } = await db
       .from("projects")
       .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId);
+      .eq("organization_id", organizationId)
+      .not("status", "in", '("completed","lost")');
 
     console.info(
       `[generateOrgSummaries] Found ${meetings?.length ?? 0} verified meetings, ` +

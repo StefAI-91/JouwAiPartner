@@ -8,18 +8,10 @@ import {
   CheckCircle2,
   CircleAlert,
   Mail,
-  Users,
+  Video,
 } from "lucide-react";
 import { formatDate } from "@repo/ui/format";
-
-interface OrgTimelineEntry {
-  date: string;
-  source_type: "meeting" | "email";
-  title: string;
-  summary: string;
-  key_decisions: string[];
-  open_actions: string[];
-}
+import type { OrgTimelineEntry } from "@repo/ai/validations/project-summary";
 
 interface OrgTimelineProps {
   timeline: OrgTimelineEntry[];
@@ -30,8 +22,13 @@ export function OrgTimeline({ timeline }: OrgTimelineProps) {
 
   if (timeline.length === 0) return null;
 
-  const visibleEntries = expanded ? timeline : timeline.slice(-3);
-  const hasMore = timeline.length > 3;
+  // Defensief sorteren (oud → nieuw): de prompt vraagt dit wel maar Haiku
+  // is niet deterministisch. Zonder deze sort zou een omgedraaide LLM-output
+  // de *oudste* drie i.p.v. nieuwste drie tonen in de collapsed state.
+  const sortedTimeline = [...timeline].sort((a, b) => a.date.localeCompare(b.date));
+  // Collapsed state: toon de 3 meest recente touchpoints (einde van de lijst).
+  const visibleEntries = expanded ? sortedTimeline : sortedTimeline.slice(-3);
+  const hasMore = sortedTimeline.length > 3;
 
   return (
     <section className="mb-6 rounded-lg bg-[#006B3F]/[0.03] px-5 py-4">
@@ -69,7 +66,7 @@ export function OrgTimeline({ timeline }: OrgTimelineProps) {
 
         <div className="space-y-4">
           {visibleEntries.map((entry, i) => {
-            const SourceIcon = entry.source_type === "email" ? Mail : Users;
+            const SourceIcon = entry.source_type === "email" ? Mail : Video;
             const sourceLabel = entry.source_type === "email" ? "E-mail" : "Meeting";
             return (
               <div key={`${entry.date}-${i}`} className="relative pl-6">

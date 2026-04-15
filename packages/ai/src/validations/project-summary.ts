@@ -104,3 +104,22 @@ export const OrgSummaryOutputSchema = z.object({
 });
 
 export type OrgSummaryOutput = z.infer<typeof OrgSummaryOutputSchema>;
+
+/**
+ * Veilig `OrgTimelineEntry[]` extraheren uit een `structured_content` JSON-blob.
+ *
+ * Het veld komt uit de DB als `Record<string, unknown> | null` en kan corrupt
+ * zijn (bijv. oude versies, handmatige migraties, onbekende source_types).
+ * Deze helper parse't met Zod en geeft een lege array terug als de inhoud
+ * niet klopt — zodat een corrupte briefing nooit een runtime-crash
+ * veroorzaakt in de UI.
+ */
+export function extractOrgTimeline(
+  structuredContent: Record<string, unknown> | null | undefined,
+): OrgTimelineEntry[] {
+  if (!structuredContent || typeof structuredContent !== "object") return [];
+  const raw = (structuredContent as { timeline?: unknown }).timeline;
+  if (!Array.isArray(raw)) return [];
+  const parsed = z.array(OrgTimelineEntrySchema).safeParse(raw);
+  return parsed.success ? parsed.data : [];
+}

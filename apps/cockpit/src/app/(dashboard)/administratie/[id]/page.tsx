@@ -18,6 +18,7 @@ import { OrgSummary } from "@/components/organizations/org-summary";
 import { OrgBriefing } from "@/components/organizations/org-briefing";
 import { OrgTimeline } from "@/components/organizations/org-timeline";
 import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
+import { extractOrgTimeline } from "@repo/ai/validations/project-summary";
 
 // Types die thuishoren onder /administratie. Andere types (client, partner)
 // horen onder /clients — we redirecten daarheen om een verwarrende detail-
@@ -43,19 +44,8 @@ export default async function AdministratieDetailPage({ params }: AdministratieD
     redirect(`/clients/${id}`);
   }
 
-  // Extract timeline from briefing structured_content
-  const structuredContent = org.briefing_summary?.structured_content;
-  const timeline =
-    structuredContent && Array.isArray((structuredContent as Record<string, unknown>).timeline)
-      ? ((structuredContent as Record<string, unknown>).timeline as {
-          date: string;
-          source_type: "meeting" | "email";
-          title: string;
-          summary: string;
-          key_decisions: string[];
-          open_actions: string[];
-        }[])
-      : [];
+  // Gevalideerde timeline uit briefing.structured_content (lege array als corrupt).
+  const timeline = extractOrgTimeline(org.briefing_summary?.structured_content);
 
   const hasSummary = Boolean(org.context_summary || org.briefing_summary);
 
