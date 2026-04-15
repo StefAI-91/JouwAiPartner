@@ -68,14 +68,20 @@ export async function regenerateMeetingAction(
   };
 
   try {
-    // Step 1: Summarizer + entity context in parallel (saves ~10-15s)
-    const [summarizerOutput, entityContext] = await Promise.all([
-      runSummarizer(transcript, context),
-      buildEntityContext(),
-    ]);
+    // Step 1: Build entity context FIRST so the Summarizer can use known project
+    // names/aliases for its [ProjectNaam] prefix on thema-koppen and vervolgstappen
+    // (sprint 035: AI-062). Previously this ran parallel with runSummarizer, which
+    // meant Sonnet had no project list and fell back to Algemeen too often.
+    const entityContext = await buildEntityContext();
+
+    // Step 2: Summarizer — now receives entityContext so prefixes match known projects.
+    const summarizerOutput = await runSummarizer(transcript, {
+      ...context,
+      entityContext: entityContext.contextString,
+    });
     const richSummary = formatSummary(summarizerOutput);
 
-    // Step 2: Gatekeeper + Extractor in parallel
+    // Step 3: Gatekeeper + Extractor in parallel
     // Gatekeeper uses summary for project-identification
     // Extractor starts without project constraint, we'll link after
     const [gatekeeperResult, extractorOutput] = await Promise.all([
