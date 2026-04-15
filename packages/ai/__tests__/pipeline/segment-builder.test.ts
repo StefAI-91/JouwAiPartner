@@ -117,6 +117,40 @@ describe("buildSegments", () => {
     expect(segments.find((s) => s.project_name_raw === null)!.kernpunten).toEqual(["K3"]);
   });
 
+  it("AI-068 regression: content reaches segments without [X] prefixes", () => {
+    // Simulate output from the refactored Tagger: content is already stripped.
+    // This regression asserts segments NEVER contain prefix markers.
+    const input: TaggerOutput = {
+      kernpunten: [
+        {
+          content: "**Besluit:** Upload-flow is af",
+          project_name: "Klantportaal",
+          project_id: "uuid-a",
+          confidence: 1.0,
+        },
+      ],
+      vervolgstappen: [
+        {
+          content: "Deploy naar staging — Wouter",
+          project_name: "Klantportaal",
+          project_id: "uuid-a",
+          confidence: 1.0,
+        },
+      ],
+    };
+
+    const segments = buildSegments(input);
+    const klantportaal = segments.find((s) => s.project_name_raw === "Klantportaal")!;
+
+    for (const kp of klantportaal.kernpunten) {
+      expect(kp).not.toMatch(/^\[[^\[\]]+\]\s+/);
+    }
+    for (const v of klantportaal.vervolgstappen) {
+      expect(v).not.toMatch(/^\[[^\[\]]+\]\s+/);
+    }
+    expect(klantportaal.summary_text).not.toMatch(/\n-\s*\[[^\[\]]+\]\s+/);
+  });
+
   it("formats summary_text correctly for Algemeen", () => {
     const input: TaggerOutput = {
       kernpunten: [
