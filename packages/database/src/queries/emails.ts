@@ -425,6 +425,21 @@ export async function getDraftEmailById(
   };
 }
 
+/**
+ * Telt hoeveel emails nog niet door de AI-pipeline zijn gegaan (is_processed=false).
+ * Gebruikt door de UI om een "Verwerk N nieuwe emails"-knop te tonen.
+ */
+export async function countUnprocessedEmails(client?: SupabaseClient): Promise<number> {
+  const db = client ?? getAdminClient();
+  const { count, error } = await db
+    .from("emails")
+    .select("id", { count: "exact", head: true })
+    .eq("is_processed", false);
+
+  if (error) return 0;
+  return count ?? 0;
+}
+
 export async function getUnprocessedEmails(limit: number = 20): Promise<
   {
     id: string;

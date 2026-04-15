@@ -8,12 +8,14 @@ import {
   listActiveGoogleAccountsSafe,
   countEmailsByDirection,
   countEmailsByFilterStatus,
+  countUnprocessedEmails,
   type EmailDirection,
   type EmailFilterStatus,
 } from "@repo/database/queries/emails";
 import { EmailList } from "@/components/emails/email-list";
 import { SyncButton } from "@/components/emails/sync-button";
 import { ReclassifyButton } from "@/components/emails/reclassify-button";
+import { ProcessPendingButton } from "@/components/emails/process-pending-button";
 import { GoogleAccountStatus } from "@/components/emails/google-account-status";
 
 function parseDirection(value: string | string[] | undefined): EmailDirection {
@@ -34,11 +36,12 @@ export default async function EmailsPage({
   const filterStatus = parseFilterStatus(filterParam);
 
   const supabase = await createClient();
-  const [accounts, emailData, directionCounts, filterCounts] = await Promise.all([
+  const [accounts, emailData, directionCounts, filterCounts, pendingCount] = await Promise.all([
     listActiveGoogleAccountsSafe(supabase),
     listEmails({ limit: 100, direction, filterStatus, client: supabase }),
     countEmailsByDirection({ client: supabase }),
     countEmailsByFilterStatus({ direction, client: supabase }),
+    countUnprocessedEmails(supabase),
   ]);
 
   const totalLabel =
@@ -59,6 +62,7 @@ export default async function EmailsPage({
         </div>
         {accounts.length > 0 && (
           <div className="flex items-center gap-2">
+            <ProcessPendingButton pendingCount={pendingCount} />
             <ReclassifyButton />
             <SyncButton />
           </div>

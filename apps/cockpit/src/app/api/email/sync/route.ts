@@ -120,8 +120,11 @@ export async function POST() {
   }
 
   // 2. Process unprocessed emails through AI pipeline
+  // Batch van 25 — de pre-classifier skipt de AI-call voor notifications/newsletters/
+  // cold outreach dus kost is beperkt. Voor grotere backlogs gebruikt de UI
+  // /api/email/process-pending (cap 100).
   try {
-    const unprocessed = await getUnprocessedEmails(5);
+    const unprocessed = await getUnprocessedEmails(25);
 
     if (unprocessed.length > 0) {
       const results = await processEmailBatch(

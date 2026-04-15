@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 433 |
-| Exported functions/constants | 626 |
+| Files scanned | 435 |
+| Exported functions/constants | 630 |
 | Exported types/interfaces | 132 |
-| Cross-package imports | 547 |
+| Cross-package imports | 551 |
 | Critical integration points (3+ packages) | 8 |
 
 ## Package Dependency Flow
@@ -109,6 +109,7 @@
 - `getExistingGmailIds()`
 - `listDraftEmails()`
 - `getDraftEmailById()`
+- `countUnprocessedEmails()`
 - `getUnprocessedEmails()`
 
 **Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
@@ -1560,6 +1561,17 @@
 - `@repo/ai/google-oauth` → getGoogleAuthUrl
 - `@repo/database/supabase/server` → createClient
 
+### `apps/cockpit/src/app/api/email/process-pending/route.ts`
+
+**Exports:**
+- `POST()`
+- `maxDuration`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+- `@repo/database/queries/emails` → getUnprocessedEmails
+- `@repo/ai/pipeline/email-pipeline` → processEmailBatch
+
 ### `apps/cockpit/src/app/api/email/reclassify/route.ts`
 
 **Exports:**
@@ -1872,7 +1884,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, countEmailsByFilterStatus, type EmailDirection, type EmailFilterStatus
+- `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, countEmailsByFilterStatus, countUnprocessedEmails, type EmailDirection, type EmailFilterStatus
 
 ### `apps/cockpit/src/app/(dashboard)/intelligence/page.tsx`
 
@@ -2383,6 +2395,14 @@
 
 **Exports:**
 - `PartyTypeSelector()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/emails/process-pending-button.tsx`
+
+**Exports:**
+- `ProcessPendingButton()`
 
 **Depends on:**
 - `@repo/ui/button` → Button
@@ -3313,8 +3333,8 @@ Which layers depend on which packages:
 | AI Pipeline | 40 | - | - | - | - | 40 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 43 | 15 | 28 | - | - | 86 |
-| Cockpit API Routes | 23 | 33 | - | - | 1 | 57 |
-| Cockpit Components | 42 | - | - | 76 | - | 118 |
+| Cockpit API Routes | 25 | 34 | - | - | 1 | 60 |
+| Cockpit Components | 42 | - | - | 77 | - | 119 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | - | 2 | 23 | - | 101 |
 | Database Queries | - | - | 1 | - | - | 1 |
@@ -3534,7 +3554,8 @@ Which queries are used where across the codebase.
 | `getExistingGmailIds()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
-| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
 ### queries/ignored-entities.ts
 
