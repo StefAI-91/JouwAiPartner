@@ -1,6 +1,6 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-14. Do not edit manually.
+> Auto-generated on 2026-04-15. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 427 |
-| Exported functions/constants | 615 |
+| Exported functions/constants | 617 |
 | Exported types/interfaces | 127 |
 | Cross-package imports | 536 |
 | Critical integration points (3+ packages) | 7 |
@@ -819,6 +819,8 @@
 ### `packages/ai/src/pipeline/tagger.ts`
 
 **Exports:**
+- `parsePrefix()`
+- `resolvePrefixProject()`
 - `runTagger()`
 
 **Types:** `TaggedItem`, `KnownProject`, `TaggerInput`, `TaggerOutput`

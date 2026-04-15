@@ -26,8 +26,11 @@ export const SummarizerOutputSchema = z.object({
   kernpunten: z
     .array(z.string())
     .describe(
-      "Kernpunten GEGROEPEERD PER THEMA. Afwisselend thema-koppen (format: '### Themanaam') en inhoudelijke punten. " +
-        "Thema-koppen zijn korte beschrijvingen van het onderwerp (max 4-5 woorden). " +
+      "Kernpunten GEGROEPEERD PER THEMA. Afwisselend thema-koppen (format: '### [ProjectNaam] Themanaam' " +
+        "of '### [Algemeen] Themanaam' voor niet-project-specifieke content) en inhoudelijke punten. " +
+        "Thema-koppen zijn korte beschrijvingen van het onderwerp (max 4-5 woorden na de prefix). " +
+        "De project-prefix tussen vierkante haken is VERPLICHT op elke thema-kop; gebruik EXACT de " +
+        "schrijfwijze uit BEKENDE ENTITEITEN of EXACT '[Algemeen]'. " +
         "Inhoudelijke punten beginnen met een bold label als ze een categorie hebben: " +
         "**Besluit:** ..., **Behoefte:** ..., **Signaal:** ..., **Risico:** ..., **Afspraak:** ..., **Visie:** ..., **Context:** ..., **Voorbeeld:** ... " +
         "Punten zonder categorie hebben geen label. " +
@@ -40,7 +43,11 @@ export const SummarizerOutputSchema = z.object({
     .array(z.string())
     .describe(
       "Concrete vervolgstappen die uit de meeting voortkomen. " +
-        "Formaat: 'Actie — eigenaar, deadline' als eigenaar/deadline bekend zijn.",
+        "Formaat: '[ProjectNaam] Actie — eigenaar, deadline' als eigenaar/deadline bekend zijn, " +
+        "of '[Algemeen] Actie — eigenaar, deadline' voor niet-project-specifieke acties. " +
+        "De project-prefix tussen vierkante haken is VERPLICHT op elke vervolgstap; gebruik EXACT " +
+        "de schrijfwijze uit BEKENDE ENTITEITEN of EXACT '[Algemeen]'. " +
+        "Elke vervolgstap attribueert zichzelf, geen erfenis van eerdere items.",
     ),
 });
 

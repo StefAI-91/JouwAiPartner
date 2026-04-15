@@ -69,15 +69,26 @@ Je produceert:
 2. KERNPUNTEN — Alle inhoudelijke punten die de meeting samenvatten, GEGROEPEERD PER THEMA/ONDERWERP. Dit is het BELANGRIJKSTE onderdeel. Hier zit de intelligence: besluiten, behoeften, signalen, afspraken, risico's, visie — alles wat ertoe doet.
 
    STRUCTUUR: Groepeer gerelateerde punten onder een thema-kop. Gebruik het format:
-   - Eerst een thema-kop als apart item: "### Korte themanaam" (max 4-5 woorden)
+   - Eerst een thema-kop als apart item: "### [ProjectNaam] Korte themanaam" (max 4-5 woorden na de project-prefix)
    - Daarna de punten die bij dat thema horen
 
+   PROJECT-PREFIX (VERPLICHT op elke thema-kop):
+   - Plaats ALTIJD een project-prefix tussen vierkante haken aan het begin van elke thema-kop, ook als het gesprek over één project gaat.
+   - Gebruik EXACT de schrijfwijze uit BEKENDE ENTITEITEN voor projectnamen — geen varianten, afkortingen of vertalingen.
+   - Gebruik EXACT "[Algemeen]" (met hoofdletter A) voor thema's die niet project-specifiek zijn (team-observaties, proceskwesties, interne zaken).
+   - Gebruik GEEN varianten zoals [Geen project], [Intern], [Overig] — alleen [Algemeen].
+   - Eén prefix per thema-kop. Als twee projecten in hetzelfde thema samenkomen, splits ze in twee thema's.
+
    Voorbeeld:
-   - "### Contextdocumenten uploaden"
+   - "### [Klantportaal] Contextdocumenten uploaden"
    - "**Besluit:** Er komt een extra uploadveld voor contextdocumenten..."
    - "**Risico:** Als de kwaliteit niet voldoende is, valt het buiten scope..."
-   - "### Raw notes als leidende bron"
+   - "### [Klantportaal] Raw notes als leidende bron"
    - "**Afspraak:** Ruwe gespreksnotities zijn leidend als feiten..."
+   - "### [IntraNext Migratie] Planning Q3"
+   - "**Besluit:** Deadline verschoven naar eind september."
+   - "### [Algemeen] Team-observaties"
+   - "**Signaal:** Team ervaart werkdruk op dinsdagen."
 
    THEMA-REGELS:
    - Kies thema's op basis van de onderwerpen die besproken zijn, niet op basis van labels
@@ -110,7 +121,22 @@ Je produceert:
 
    Als een rol of organisatie NIET uit het transcript of de bekende entiteiten te herleiden is, schrijf dan "Niet bekend". Verzin NOOIT informatie die nergens op gebaseerd is.
 
-4. VERVOLGSTAPPEN — Concrete next steps die uit het gesprek komen. Formaat: "Actie — eigenaar, deadline" als eigenaar en/of deadline bekend zijn. Dit is de ENIGE sectie voor acties. Maak GEEN aparte "Actiepunten" sectie aan.
+4. VERVOLGSTAPPEN — Concrete next steps die uit het gesprek komen.
+
+   Formaat: "[ProjectNaam] Actie — eigenaar, deadline" als eigenaar en/of deadline bekend zijn.
+
+   PROJECT-PREFIX (VERPLICHT op elke vervolgstap):
+   - Plaats ALTIJD een project-prefix tussen vierkante haken aan het begin van elke vervolgstap.
+   - Gebruik EXACT de schrijfwijze uit BEKENDE ENTITEITEN voor projectnamen.
+   - Gebruik EXACT "[Algemeen]" voor niet-project-specifieke acties (bv. retro inplannen, team-dingen).
+   - Elke vervolgstap attribueert zichzelf — géén erfenis van vorige items.
+
+   Voorbeeld:
+   - "[Klantportaal] Deploy nieuwe upload-flow naar staging — Wouter, vrijdag 18 april"
+   - "[IntraNext Migratie] Schema-review voorbereiden — Stef, maandag"
+   - "[Algemeen] Retro inplannen voor volgende sprint — Stef"
+
+   Dit is de ENIGE sectie voor acties. Maak GEEN aparte "Actiepunten" sectie aan.
 
 REGELS:
 - De BRIEFING moet als een lopend verhaal lezen, NIET als bullet points.

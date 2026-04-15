@@ -68,14 +68,20 @@ export async function regenerateMeetingAction(
   };
 
   try {
-    // Step 1: Summarizer + entity context in parallel (saves ~10-15s)
-    const [summarizerOutput, entityContext] = await Promise.all([
-      runSummarizer(transcript, context),
-      buildEntityContext(),
-    ]);
+    // Step 1: Build entity context FIRST so the Summarizer can use known project
+    // names/aliases for its [ProjectNaam] prefix on thema-koppen and vervolgstappen
+    // (sprint 035: AI-062). Previously this ran parallel with runSummarizer, which
+    // meant Sonnet had no project list and fell back to Algemeen too often.
+    const entityContext = await buildEntityContext();
+
+    // Step 2: Summarizer — now receives entityContext so prefixes match known projects.
+    const summarizerOutput = await runSummarizer(transcript, {
+      ...context,
+      entityContext: entityContext.contextString,
+    });
     const richSummary = formatSummary(summarizerOutput);
 
-    // Step 2: Gatekeeper + Extractor in parallel
+    // Step 3: Gatekeeper + Extractor in parallel
     // Gatekeeper uses summary for project-identification
     // Extractor starts without project constraint, we'll link after
     const [gatekeeperResult, extractorOutput] = await Promise.all([
@@ -203,11 +209,11 @@ export async function reprocessMeetingAction(
 
   const { meetingId } = parsed.data;
 
-  // 1. Fetch meeting to get fireflies_id
+  // 1. Fetch meeting to get fireflies_id + title (title is needed for rollback)
   const supabase = getAdminClient();
   const { data: meeting, error: fetchError } = await supabase
     .from("meetings")
-    .select("id, fireflies_id")
+    .select("id, fireflies_id, title")
     .eq("id", meetingId)
     .single();
 
@@ -226,16 +232,28 @@ export async function reprocessMeetingAction(
     return { error: "Kon transcript niet ophalen van Fireflies" };
   }
 
-  // 3. Clear fireflies_id on old meeting so the unique constraint doesn't block the new insert.
-  //    The old meeting stays intact until the pipeline succeeds.
+  // 3. Move the old meeting out of the way so both unique constraints
+  //    (fireflies_id AND (lower(title), date::date)) don't block the new insert.
+  //    We clear fireflies_id and prefix the title with a reprocessing marker.
+  //    The old meeting stays intact (and fully reversible) until the pipeline succeeds.
+  const reprocessMarker = `__reprocessing_${Date.now()}__`;
+  const parkedTitle = `${reprocessMarker}:${meeting.title as string}`;
   const { error: clearError } = await supabase
     .from("meetings")
-    .update({ fireflies_id: null })
+    .update({ fireflies_id: null, title: parkedTitle })
     .eq("id", meetingId);
 
   if (clearError) {
     return { error: `Voorbereiding mislukt: ${clearError.message}` };
   }
+
+  // Helper: restore the old meeting exactly as it was.
+  const restoreOldMeeting = async () => {
+    await supabase
+      .from("meetings")
+      .update({ fireflies_id: meeting.fireflies_id, title: meeting.title })
+      .eq("id", meetingId);
+  };
 
   // 4. Run full pipeline (gatekeeper → classify → speaker map → ElevenLabs → summarizer → extractor → embed)
   try {
@@ -270,15 +288,12 @@ export async function reprocessMeetingAction(
     });
 
     if (!pipelineResult.meetingId) {
-      // Pipeline failed — restore fireflies_id on old meeting so nothing is lost
-      await supabase
-        .from("meetings")
-        .update({ fireflies_id: meeting.fireflies_id })
-        .eq("id", meetingId);
+      // Pipeline failed — restore the old meeting so nothing is lost
+      await restoreOldMeeting();
       return { error: "Pipeline mislukt — oude meeting is behouden" };
     }
 
-    // 5. Pipeline succeeded — delete the old meeting (CASCADE cleans up related data)
+    // 5. Pipeline succeeded — delete the old (parked) meeting (CASCADE cleans up related data)
     await supabase.from("meetings").delete().eq("id", meetingId);
 
     revalidatePath(`/meetings/${pipelineResult.meetingId}`);
@@ -288,11 +303,8 @@ export async function reprocessMeetingAction(
     revalidatePath("/");
     return { success: true };
   } catch (err) {
-    // Pipeline crashed — restore fireflies_id on old meeting
-    await supabase
-      .from("meetings")
-      .update({ fireflies_id: meeting.fireflies_id })
-      .eq("id", meetingId);
+    // Pipeline crashed — restore the old meeting
+    await restoreOldMeeting();
     const errMsg = err instanceof Error ? err.message : String(err);
     return { error: `Herverwerking mislukt — oude meeting is behouden: ${errMsg}` };
   }
