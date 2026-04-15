@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 430 |
-| Exported functions/constants | 622 |
-| Exported types/interfaces | 130 |
-| Cross-package imports | 542 |
+| Files scanned | 433 |
+| Exported functions/constants | 626 |
+| Exported types/interfaces | 132 |
+| Cross-package imports | 547 |
 | Critical integration points (3+ packages) | 8 |
 
 ## Package Dependency Flow
@@ -621,7 +621,15 @@
 - `./context-injection` → buildEntityContext
 - `./entity-resolution` → resolveOrganization
 - `./email-filter-gatekeeper` → decideEmailFilter, type FilterReason
+- `./email-pre-classifier` → preClassifyEmail
 - `../embeddings` → embedText
+
+### `packages/ai/src/pipeline/email-pre-classifier.ts`
+
+**Exports:**
+- `preClassifyEmail()`
+
+**Types:** `PreClassifiedType`, `PreClassifierOutput`
 
 ### `packages/ai/src/pipeline/embed-pipeline.ts`
 
@@ -1552,6 +1560,18 @@
 - `@repo/ai/google-oauth` → getGoogleAuthUrl
 - `@repo/database/supabase/server` → createClient
 
+### `apps/cockpit/src/app/api/email/reclassify/route.ts`
+
+**Exports:**
+- `POST()`
+- `maxDuration`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/ai/pipeline/email-pipeline` → processEmail
+- `@repo/database/mutations/emails` → updateEmailFilterStatus
+
 ### `apps/cockpit/src/app/api/email/sync/route.ts`
 
 **Exports:**
@@ -2371,6 +2391,14 @@
 
 **Exports:**
 - `ProjectLinker()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/emails/reclassify-button.tsx`
+
+**Exports:**
+- `ReclassifyButton()`
 
 **Depends on:**
 - `@repo/ui/button` → Button
@@ -3285,8 +3313,8 @@ Which layers depend on which packages:
 | AI Pipeline | 40 | - | - | - | - | 40 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 43 | 15 | 28 | - | - | 86 |
-| Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
-| Cockpit Components | 42 | - | - | 75 | - | 117 |
+| Cockpit API Routes | 23 | 33 | - | - | 1 | 57 |
+| Cockpit Components | 42 | - | - | 76 | - | 118 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | - | 2 | 23 | - | 101 |
 | Database Queries | - | - | 1 | - | - | 1 |
@@ -3326,7 +3354,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `insertEmails()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateEmailClassification()` | `packages/ai/src/pipeline/email-pipeline.ts` |
-| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-filter.ts` |
+| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-filter.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-links.ts` |
 | `verifyEmail()` | `apps/cockpit/src/actions/email-review.ts` |
 | `verifyEmailWithEdits()` | `apps/cockpit/src/actions/email-review.ts` |

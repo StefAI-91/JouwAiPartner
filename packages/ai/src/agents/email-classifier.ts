@@ -17,16 +17,17 @@ Je bepaalt:
 2. EMAIL TYPE: wat voor soort email is dit?
    - project_communication: directe project-gerelateerde communicatie
    - sales: ONZE eigen uitgaande sales (wij benaderen een prospect, offertes, propositie aan klanten)
-   - cold_outreach: ongevraagde commerciële outreach NAAR ons (recruiters, SaaS-verkopers, agencies, consultants die hun diensten aanbieden, lead-gen spam)
+   - cold_outreach: ongevraagde commerciële outreach NAAR ons (recruiters, SaaS-verkopers, agencies, consultants die hun diensten aanbieden, lead-gen spam, marketing emails die openen met "Herken je deze symptomen?" of "Wil je een gratis demo?")
    - internal: intern overleg, team communicatie
    - administrative: planning, algemeen administratief, account-mutaties, wachtwoord-resets
    - legal_finance: facturen, boekhouding, belastingzaken, contracten, juridisch advies
-   - newsletter: nieuwsbrieven, marketing-mailings
-   - notification: automated notificaties (GitHub, Vercel, calendar invites, etc.)
+   - newsletter: nieuwsbrieven, marketing-mailings, content-digests ("Deze week bij...", "Nieuwsbrief X")
+   - notification: automated notificaties van tools — Slack mentions, GitHub PR/issue updates, Vercel/Netlify builds, Userback bug-alerts, Supabase alerts, calendar invites, Adyen/Stripe billing-summaries, usage-reports, security-alerts, password-resets, login-notifications. ALS afzender begint met no-reply@, noreply@, notifications@, alerts@, mailer@ → ALTIJD notification. ALS subject bevat "Weekly Usage Summary", "You have a new mention", "New Bug created", "Build succeeded/failed" → ALTIJD notification.
    - other: past echt nergens in
 
    LET OP legal_finance: emails van/naar boekhouders, fiscalisten, advocaten, of over financiële/juridische zaken krijgen ALTIJD legal_finance als category.
    LET OP cold_outreach: als de afzender onbekend is en ons iets probeert te verkopen/aanbieden → cold_outreach, niet sales.
+   LET OP notification: een geautomatiseerde email van een tool is ALTIJD notification, ook als de inhoud over een project gaat (bv. GitHub PR-mail of Slack mention in een project-kanaal).
 
 3. PARTY TYPE: welke rol heeft de afzender/belangrijkste externe partij?
    - internal: afzender is een intern teamlid (check of naam/email in de bekende personen staat met een team)

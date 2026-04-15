@@ -3,6 +3,7 @@ import type { EmailClassifierOutput } from "../agents/email-classifier";
 import { buildEntityContext } from "./context-injection";
 import { resolveOrganization } from "./entity-resolution";
 import { decideEmailFilter, type FilterReason } from "./email-filter-gatekeeper";
+import { preClassifyEmail } from "./email-pre-classifier";
 import {
   updateEmailClassification,
   updateEmailFilterStatus,
@@ -150,6 +151,49 @@ export async function processEmail(
     filter_reason: null,
     errors: [],
   };
+
+  // 0. Pre-classifier — deterministische regels voor onmiskenbare notifications,
+  // newsletters en cold outreach (no-reply@, slack/userback/github/etc. domeinen,
+  // subject-patterns als "Weekly Usage Summary"). Vangt AI-classifier fouten af
+  // en bespaart een Haiku call. Respecteert skipFilter (unfilter-actie).
+  if (!options.skipFilter) {
+    const preMatch = preClassifyEmail({
+      subject: email.subject,
+      from_address: email.from_address,
+      body_text: email.body_text,
+      snippet: email.snippet,
+    });
+
+    if (preMatch) {
+      // Synthetische classifier-output zodat downstream velden blijven kloppen.
+      result.classifier = {
+        relevance_score: 0.1,
+        reason: `Pre-classifier match: ${preMatch.matched_rule}`,
+        organization_name: null,
+        identified_projects: [],
+        email_type: preMatch.email_type,
+        party_type: "other",
+      };
+      result.filter_status = "filtered";
+      result.filter_reason = preMatch.email_type;
+
+      await updateEmailClassification(email.id, {
+        organization_id: null,
+        unmatched_organization_name: null,
+        relevance_score: 0.1,
+        email_type: preMatch.email_type,
+        party_type: "other",
+        is_processed: true,
+      });
+      await updateEmailFilterStatus(email.id, {
+        filter_status: "filtered",
+        filter_reason: preMatch.email_type,
+      });
+
+      // Geen embedding voor pre-classified ruis — puur audit, geen zoekwaarde
+      return result;
+    }
+  }
 
   // 1. Build entity context (projects, orgs, people from DB)
   let entityContext;

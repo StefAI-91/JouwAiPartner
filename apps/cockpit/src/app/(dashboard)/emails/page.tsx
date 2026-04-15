@@ -13,6 +13,7 @@ import {
 } from "@repo/database/queries/emails";
 import { EmailList } from "@/components/emails/email-list";
 import { SyncButton } from "@/components/emails/sync-button";
+import { ReclassifyButton } from "@/components/emails/reclassify-button";
 import { GoogleAccountStatus } from "@/components/emails/google-account-status";
 
 function parseDirection(value: string | string[] | undefined): EmailDirection {
@@ -56,7 +57,12 @@ export default async function EmailsPage({
           <h1>Emails</h1>
           <p className="mt-1 text-sm text-muted-foreground">{totalLabel}</p>
         </div>
-        {accounts.length > 0 && <SyncButton />}
+        {accounts.length > 0 && (
+          <div className="flex items-center gap-2">
+            <ReclassifyButton />
+            <SyncButton />
+          </div>
+        )}
       </div>
 
       <GoogleAccountStatus
