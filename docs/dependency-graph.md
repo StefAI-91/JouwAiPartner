@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-14. Do not edit manually.
+> Auto-generated on 2026-04-15. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 430 |
-| Exported functions/constants | 619 |
-| Exported types/interfaces | 129 |
-| Cross-package imports | 537 |
+| Files scanned | 436 |
+| Exported functions/constants | 626 |
+| Exported types/interfaces | 130 |
+| Cross-package imports | 540 |
 | Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
@@ -1798,6 +1798,16 @@
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
 
+### `apps/cockpit/src/app/(dashboard)/design/ai-editor/page.tsx`
+
+**Exports:**
+- `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/design/ai-editor/variant-switcher.tsx`
+
+**Exports:**
+- `VariantSwitcher()`
+
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
 **Exports:**
@@ -2420,6 +2430,38 @@
 - `MOCK_THINK_MS`
 
 **Types:** `DiffBlock`, `MockProposal`
+
+### `apps/cockpit/src/components/meetings/ai-summary-editor/variants/bubble-variant.tsx`
+
+**Exports:**
+- `BubbleVariant()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/meetings/ai-summary-editor/variants/shared.ts`
+
+**Exports:**
+- `useMockChat()`
+- `MOCK_SUMMARY_MD`
+
+**Types:** `ChatMessage`
+
+### `apps/cockpit/src/components/meetings/ai-summary-editor/variants/split-variant.tsx`
+
+**Exports:**
+- `SplitVariant()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/meetings/ai-summary-editor/variants/timeline-variant.tsx`
+
+**Exports:**
+- `TimelineVariant()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
 
 ### `apps/cockpit/src/components/meetings/copy-meeting-button.tsx`
 
@@ -3275,7 +3317,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 41 | 14 | 26 | - | - | 81 |
 | Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
-| Cockpit Components | 42 | - | - | 75 | - | 117 |
+| Cockpit Components | 42 | - | - | 78 | - | 120 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | - | 2 | 23 | - | 101 |
 | Database Queries | - | - | 1 | - | - | 1 |
