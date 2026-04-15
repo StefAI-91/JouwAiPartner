@@ -6,7 +6,7 @@ import { LayoutDashboard, LayoutList, Settings } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import { useEffect, useSyncExternalStore } from "react";
 import { NAV_ITEMS, issueHref } from "./sidebar-constants";
-import { issueCountStore } from "./issue-count-store";
+import { issueCountStore, EMPTY_COUNTS } from "./issue-count-store";
 
 interface SidebarNavProps {
   /** Icon size class — desktop uses size-5, mobile uses size-4 */
@@ -21,10 +21,15 @@ function useIssueCounts(projectId: string | null) {
   // Subscribe to the module-scope store. Cached counts are returned
   // synchronously — the sidebar never renders "empty, then populated" for
   // a project we've already seen.
+  //
+  // IMPORTANT: both snapshot callbacks MUST return a stable reference when
+  // there's nothing to show. Returning `{}` literally creates a new object
+  // every render and trips React error #185 ("getSnapshot should be cached")
+  // with an infinite render loop. EMPTY_COUNTS is a frozen singleton.
   const counts = useSyncExternalStore(
     issueCountStore.subscribe,
     () => issueCountStore.get(projectId),
-    () => (projectId ? {} : {}),
+    () => EMPTY_COUNTS,
   );
 
   // Background refresh whenever the active project changes. Deduped in the

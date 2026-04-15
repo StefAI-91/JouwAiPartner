@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 439 |
-| Exported functions/constants | 635 |
+| Exported functions/constants | 636 |
 | Exported types/interfaces | 136 |
 | Cross-package imports | 559 |
 | Critical integration points (3+ packages) | 10 |
@@ -3225,6 +3225,7 @@
 ### `apps/devhub/src/components/layout/issue-count-store.ts`
 
 **Exports:**
+- `EMPTY_COUNTS`
 - `issueCountStore`
 
 **Types:** `StatusKey`, `StatusCounts`

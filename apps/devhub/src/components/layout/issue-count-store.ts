@@ -22,6 +22,12 @@ import { getIssueCountsAction } from "@/actions/issues";
 export type StatusKey = "triage" | "backlog" | "todo" | "in_progress" | "done" | "cancelled";
 export type StatusCounts = Partial<Record<StatusKey, number>>;
 
+// Stable singleton for "no counts yet" so useSyncExternalStore sees the same
+// reference between renders. Returning a fresh `{}` each call blows up
+// React with "getSnapshot should be cached" (react-dev/errors/185) — the
+// snapshot would look different every render and trigger an infinite loop.
+export const EMPTY_COUNTS: StatusCounts = Object.freeze({}) as StatusCounts;
+
 const cache = new Map<string, StatusCounts>();
 const inFlight = new Map<string, Promise<void>>();
 const listeners = new Set<() => void>();
@@ -37,8 +43,8 @@ export const issueCountStore = {
   },
 
   get(projectId: string | null): StatusCounts {
-    if (!projectId) return {};
-    return cache.get(projectId) ?? {};
+    if (!projectId) return EMPTY_COUNTS;
+    return cache.get(projectId) ?? EMPTY_COUNTS;
   },
 
   set(projectId: string, counts: StatusCounts) {
