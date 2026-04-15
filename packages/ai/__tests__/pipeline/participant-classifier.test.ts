@@ -122,6 +122,31 @@ describe("classifyParticipants", () => {
     expect(result).toHaveLength(1);
     expect(result[0].label).toBe("internal");
   });
+
+  it("matcht email case-insensitief (ELLEN@CLIENT.COM == ellen@client.com)", () => {
+    // Case-invariant is belangrijk: Fireflies/Gmail leveren soms UPPERCASE.
+    // Als match alleen lower-case werkt, verliezen we een bekende klant als
+    // 'external' en valt hij terug op 'unknown'. Dat drijft party_type 'other'.
+    const known: KnownPerson[] = [
+      makePerson({
+        id: "p-case",
+        name: "Ellen",
+        email: "ellen@client.com",
+        organization_name: "Client BV",
+        organization_type: "client",
+      }),
+    ];
+    const result = classifyParticipantsWithCache(["ELLEN@CLIENT.COM"], known);
+    expect(result[0].label).toBe("external");
+    expect(result[0].organizationName).toBe("Client BV");
+  });
+
+  it("bare naam (geen @, geen DB-match) → 'unknown' (geen foutieve internal-fallback)", () => {
+    // Defensief: zonder @ EN zonder DB-match mag de classifier NOOIT 'internal'
+    // raden — dat zou vreemden als teamlid behandelen.
+    const result = classifyParticipantsWithCache(["Jan"], []);
+    expect(result[0].label).toBe("unknown");
+  });
 });
 
 describe("determinePartyType", () => {
@@ -163,5 +188,16 @@ describe("determinePartyType", () => {
 
   it("lege array → 'other'", () => {
     expect(determinePartyType([])).toBe("other");
+  });
+
+  it("één onbekende deelnemer naast internals → NIET 'internal' (default-deny)", () => {
+    // CRITICAAL: als er ook maar één onbekende is, mag het meeting NOOIT
+    // als puur intern gelabeld worden — dan ziet de Gatekeeper externe
+    // inhoud over het hoofd en krijgt de org-resolver geen signaal.
+    const result = determinePartyType([
+      { raw: "stef", label: "internal" },
+      { raw: "mystery", label: "unknown" },
+    ]);
+    expect(result).not.toBe("internal");
   });
 });

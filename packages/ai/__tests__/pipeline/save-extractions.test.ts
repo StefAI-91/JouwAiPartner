@@ -190,4 +190,127 @@ describe("saveExtractions", () => {
 
     consoleSpy.mockRestore();
   });
+
+  // ==========================================================================
+  // Contract / invariant tests — wat MOET altijd waar zijn over elke rij.
+  //
+  // Deze tests dekken stille regressies af die niet via een bug-rapport naar
+  // boven komen. Als één van deze breekt, zitten er stille gaten in de
+  // kennisbasis of komen ongeverifieerde feiten op productie.
+  // ==========================================================================
+
+  it("contract: elke rij krijgt verification_status='draft' (AI-output is nooit auto-verified)", async () => {
+    // RULE-002 / vision: alles moet eerst door een mens. Als deze regel stil
+    // breekt, lekken ongeverifieerde AI-feiten zonder review de MCP in.
+    mockLinkProjects.mockResolvedValue({ linked: 0, errors: [] });
+    mockInsertExtractions.mockResolvedValue({ success: true, count: 2 });
+
+    const output: ExtractorOutput = {
+      extractions: [baseExtraction, { ...baseExtraction, content: "Tweede" }],
+      entities: { clients: [] },
+    };
+    await saveExtractions(output, MEETING_ID, []);
+
+    const rows = mockInsertExtractions.mock.calls[0][0];
+    for (const row of rows) {
+      expect(row.verification_status).toBe("draft");
+    }
+  });
+
+  it("contract: elke rij krijgt embedding_stale=true (re-embed worker pakt hem op)", async () => {
+    mockLinkProjects.mockResolvedValue({ linked: 0, errors: [] });
+    mockInsertExtractions.mockResolvedValue({ success: true, count: 1 });
+
+    const output: ExtractorOutput = {
+      extractions: [baseExtraction],
+      entities: { clients: [] },
+    };
+    await saveExtractions(output, MEETING_ID, []);
+
+    const row = mockInsertExtractions.mock.calls[0][0][0];
+    expect(row.embedding_stale).toBe(true);
+  });
+
+  it("contract: transcript_ref blijft behouden (kern van 'geen antwoord zonder bron')", async () => {
+    // Zonder transcript_ref kan de MCP prompt z'n belofte niet waarmaken.
+    // Als deze propagatie stuk gaat verliezen we alle traceability.
+    mockLinkProjects.mockResolvedValue({ linked: 0, errors: [] });
+    mockInsertExtractions.mockResolvedValue({ success: true, count: 1 });
+
+    const output: ExtractorOutput = {
+      extractions: [{ ...baseExtraction, transcript_ref: "Stef: specs volgende week" }],
+      entities: { clients: [] },
+    };
+    await saveExtractions(output, MEETING_ID, []);
+
+    const row = mockInsertExtractions.mock.calls[0][0][0];
+    expect(row.transcript_ref).toBe("Stef: specs volgende week");
+  });
+
+  it("contract: deadline/effort_estimate/assignee/category verhuizen naar metadata JSONB", async () => {
+    // Deze velden bestaan niet als DB-kolom. Als deze mapping stil breekt
+    // verdwijnen deadlines en effort estimates uit de reviewer UI.
+    mockLinkProjects.mockResolvedValue({ linked: 0, errors: [] });
+    mockInsertExtractions.mockResolvedValue({ success: true, count: 1 });
+
+    const output: ExtractorOutput = {
+      extractions: [
+        {
+          ...baseExtraction,
+          deadline: "2025-12-01",
+          effort_estimate: "medium",
+          assignee: "Wouter",
+          category: "wachten_op_beslissing",
+        },
+      ],
+      entities: { clients: [] },
+    };
+    await saveExtractions(output, MEETING_ID, []);
+
+    const row = mockInsertExtractions.mock.calls[0][0][0];
+    expect(row.metadata.deadline).toBe("2025-12-01");
+    expect(row.metadata.effort_estimate).toBe("medium");
+    expect(row.metadata.assignee).toBe("Wouter");
+    expect(row.metadata.category).toBe("wachten_op_beslissing");
+  });
+
+  it("defensief: expliciete project-naam die NIET in Gatekeeper-map staat → project_id=null (geen fabricatie)", async () => {
+    // "Verzin geen match -- liever null dan een foute koppeling" (gatekeeper
+    // systeem-prompt). Als de fallback hier stil verandert naar 'primary',
+    // worden action_items aan het verkeerde project gekoppeld.
+    const projects: IdentifiedProject[] = [
+      { project_name: "Project Alpha", project_id: "proj-alpha", confidence: 0.9 },
+    ];
+    mockLinkProjects.mockResolvedValue({ linked: 1, errors: [] });
+    mockInsertExtractions.mockResolvedValue({ success: true, count: 1 });
+
+    const output: ExtractorOutput = {
+      extractions: [{ ...baseExtraction, project: "Onbekend Project Beta" }],
+      entities: { clients: [] },
+    };
+    await saveExtractions(output, MEETING_ID, projects);
+
+    const row = mockInsertExtractions.mock.calls[0][0][0];
+    expect(row.project_id).toBeNull();
+  });
+
+  it("defensief: primary-selectie negeert projecten met project_id=null", async () => {
+    // Een niet-geresolveerd project (project_id=null) mag nooit als primary
+    // fallback gelden — ook niet als z'n confidence het hoogst is.
+    const projects: IdentifiedProject[] = [
+      { project_name: "Ongezien", project_id: null, confidence: 0.95 },
+      { project_name: "Alpha", project_id: "proj-alpha", confidence: 0.5 },
+    ];
+    mockLinkProjects.mockResolvedValue({ linked: 1, errors: [] });
+    mockInsertExtractions.mockResolvedValue({ success: true, count: 1 });
+
+    const output: ExtractorOutput = {
+      extractions: [{ ...baseExtraction, project: null, scope: "project" }],
+      entities: { clients: [] },
+    };
+    await saveExtractions(output, MEETING_ID, projects);
+
+    const row = mockInsertExtractions.mock.calls[0][0][0];
+    expect(row.project_id).toBe("proj-alpha");
+  });
 });
