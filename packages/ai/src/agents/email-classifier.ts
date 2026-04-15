@@ -16,15 +16,17 @@ Je bepaalt:
 
 2. EMAIL TYPE: wat voor soort email is dit?
    - project_communication: directe project-gerelateerde communicatie
-   - sales: commercieel, offerte, propositie
+   - sales: ONZE eigen uitgaande sales (wij benaderen een prospect, offertes, propositie aan klanten)
+   - cold_outreach: ongevraagde commerciële outreach NAAR ons (recruiters, SaaS-verkopers, agencies, consultants die hun diensten aanbieden, lead-gen spam)
    - internal: intern overleg, team communicatie
-   - administrative: planning, algemeen administratief
+   - administrative: planning, algemeen administratief, account-mutaties, wachtwoord-resets
    - legal_finance: facturen, boekhouding, belastingzaken, contracten, juridisch advies
-   - newsletter: nieuwsbrieven, marketing
-   - notification: automated notificaties (GitHub, Vercel, etc.)
+   - newsletter: nieuwsbrieven, marketing-mailings
+   - notification: automated notificaties (GitHub, Vercel, calendar invites, etc.)
    - other: past echt nergens in
 
    LET OP legal_finance: emails van/naar boekhouders, fiscalisten, advocaten, of over financiële/juridische zaken krijgen ALTIJD legal_finance als category.
+   LET OP cold_outreach: als de afzender onbekend is en ons iets probeert te verkopen/aanbieden → cold_outreach, niet sales.
 
 3. PARTY TYPE: welke rol heeft de afzender/belangrijkste externe partij?
    - internal: afzender is een intern teamlid (check of naam/email in de bekende personen staat met een team)

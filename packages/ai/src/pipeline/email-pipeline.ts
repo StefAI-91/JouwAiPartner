@@ -2,8 +2,10 @@ import { runEmailClassifier } from "../agents/email-classifier";
 import type { EmailClassifierOutput } from "../agents/email-classifier";
 import { buildEntityContext } from "./context-injection";
 import { resolveOrganization } from "./entity-resolution";
+import { decideEmailFilter, type FilterReason } from "./email-filter-gatekeeper";
 import {
   updateEmailClassification,
+  updateEmailFilterStatus,
   updateEmailSenderPerson,
   linkEmailProject,
 } from "@repo/database/mutations/emails";
@@ -117,6 +119,8 @@ interface EmailPipelineResult {
   organization_id: string | null;
   projects_linked: number;
   embedded: boolean;
+  filter_status: "kept" | "filtered";
+  filter_reason: FilterReason | null;
   errors: string[];
 }
 
@@ -132,13 +136,18 @@ interface EmailPipelineResult {
  * 4. Link identified projects
  * 5. Mark processed + embed
  */
-export async function processEmail(email: EmailInput): Promise<EmailPipelineResult> {
+export async function processEmail(
+  email: EmailInput,
+  options: { skipFilter?: boolean } = {},
+): Promise<EmailPipelineResult> {
   const result: EmailPipelineResult = {
     emailId: email.id,
     classifier: null,
     organization_id: null,
     projects_linked: 0,
     embedded: false,
+    filter_status: "kept",
+    filter_reason: null,
     errors: [],
   };
 
@@ -176,6 +185,59 @@ export async function processEmail(email: EmailInput): Promise<EmailPipelineResu
       party_type: null,
       is_processed: true,
     });
+    return result;
+  }
+
+  // 2b. Gatekeeper filter — beslis of deze email in de inbox hoort of in de
+  // "Gefilterd"-tab belandt. Gefilterde emails slaan we nog wel op + embedden
+  // we (voor audit + zoekbaarheid), maar we slaan entity-linking en verdere
+  // verrijking over. De gebruiker kan via "Alsnog doorlaten" de volledige
+  // pipeline alsnog triggeren op de detailpagina (skipFilter=true).
+  const filterDecision = options.skipFilter
+    ? ({ filter_status: "kept", filter_reason: null } as const)
+    : decideEmailFilter({
+        relevance_score: result.classifier.relevance_score,
+        email_type: result.classifier.email_type,
+        party_type: result.classifier.party_type,
+      });
+  result.filter_status = filterDecision.filter_status;
+  result.filter_reason = filterDecision.filter_reason;
+
+  if (filterDecision.filter_status === "filtered") {
+    // Persist minimal state: classification velden + filter status
+    // (geen org resolution, geen project linking, geen sender_person match).
+    await updateEmailClassification(email.id, {
+      organization_id: null,
+      unmatched_organization_name: result.classifier.organization_name,
+      relevance_score: result.classifier.relevance_score,
+      email_type: result.classifier.email_type,
+      party_type: result.classifier.party_type,
+      is_processed: true,
+    });
+    await updateEmailFilterStatus(email.id, {
+      filter_status: "filtered",
+      filter_reason: filterDecision.filter_reason,
+    });
+
+    // Embed for audit-zoekbaarheid (gefilterde emails blijven doorzoekbaar)
+    try {
+      const textToEmbed = [email.subject, email.body_text ?? email.snippet]
+        .filter(Boolean)
+        .join("\n\n");
+      if (textToEmbed.length > 20) {
+        const embedding = await embedText(textToEmbed);
+        if (embedding) {
+          await getAdminClient()
+            .from("emails")
+            .update({ embedding: JSON.stringify(embedding), embedding_stale: false })
+            .eq("id", email.id);
+          result.embedded = true;
+        }
+      }
+    } catch (err) {
+      result.errors.push(`Embedding failed: ${err}`);
+    }
+
     return result;
   }
 

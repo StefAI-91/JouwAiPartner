@@ -29,6 +29,7 @@ export const EmailClassifierSchema = z.object({
     .enum([
       "project_communication",
       "sales",
+      "cold_outreach",
       "internal",
       "administrative",
       "legal_finance",

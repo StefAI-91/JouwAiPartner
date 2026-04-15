@@ -10,6 +10,7 @@ import { listProjects } from "@repo/database/queries/projects";
 import { listPeople } from "@repo/database/queries/people";
 import { Badge } from "@repo/ui/badge";
 import { EmailLinkEditor } from "@/components/emails/email-link-editor";
+import { FilteredBanner } from "@/components/emails/filtered-banner";
 
 function formatExtractionType(type: string): string {
   const map: Record<string, string> = {
@@ -90,8 +91,16 @@ export default async function EmailDetailPage({ params }: { params: Promise<{ id
           {email.verification_status === "verified" && (
             <Badge className="bg-green-100 text-green-700">Verified</Badge>
           )}
+          {email.filter_status === "filtered" && (
+            <Badge className="bg-slate-200 text-slate-700">Gefilterd</Badge>
+          )}
         </div>
       </div>
+
+      {/* Filter banner with unfilter action */}
+      {email.filter_status === "filtered" && (
+        <FilteredBanner emailId={email.id} filterReason={email.filter_reason} />
+      )}
 
       {/* Manual link editor */}
       <EmailLinkEditor

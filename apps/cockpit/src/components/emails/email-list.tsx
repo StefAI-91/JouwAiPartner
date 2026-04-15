@@ -32,6 +32,17 @@ function relevanceBadge(score: number | null) {
   return null;
 }
 
+function filterReasonLabel(reason: string | null): string | null {
+  if (!reason) return null;
+  const map: Record<string, string> = {
+    newsletter: "Nieuwsbrief",
+    notification: "Notificatie",
+    cold_outreach: "Cold outreach",
+    low_relevance: "Lage relevantie",
+  };
+  return map[reason] ?? reason;
+}
+
 export function EmailList({ emails, direction = "incoming" }: EmailListProps) {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const isOutgoing = direction === "outgoing";
@@ -109,6 +120,11 @@ export function EmailList({ emails, direction = "incoming" }: EmailListProps) {
                     </span>
                   )}
                   {relevanceBadge(email.relevance_score)}
+                  {email.filter_status === "filtered" && email.filter_reason && (
+                    <Badge className="bg-slate-100 text-slate-600 text-[10px]">
+                      {filterReasonLabel(email.filter_reason)}
+                    </Badge>
+                  )}
                   {!email.is_processed && (
                     <Badge variant="outline" className="h-4 text-[10px]">
                       Nieuw

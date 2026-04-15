@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 427 |
-| Exported functions/constants | 617 |
-| Exported types/interfaces | 127 |
-| Cross-package imports | 536 |
-| Critical integration points (3+ packages) | 7 |
+| Files scanned | 430 |
+| Exported functions/constants | 622 |
+| Exported types/interfaces | 130 |
+| Cross-package imports | 542 |
+| Critical integration points (3+ packages) | 8 |
 
 ## Package Dependency Flow
 
@@ -102,6 +102,7 @@
 - `getGoogleAccountById()`
 - `getGoogleAccountByEmail()`
 - `listEmails()`
+- `countEmailsByFilterStatus()`
 - `listEmailsByOrganization()`
 - `countEmailsByDirection()`
 - `getEmailById()`
@@ -110,7 +111,7 @@
 - `getDraftEmailById()`
 - `getUnprocessedEmails()`
 
-**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
+**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
 
 ### `queries/ignored-entities.ts`
 
@@ -322,6 +323,7 @@
 - `deactivateGoogleAccount()`
 - `insertEmails()`
 - `updateEmailClassification()`
+- `updateEmailFilterStatus()`
 - `linkEmailProject()`
 - `verifyEmail()`
 - `verifyEmailWithEdits()`
@@ -591,6 +593,13 @@
 - `@repo/database/queries/people` → getPeopleForContext
 - (type) `@repo/database/queries/projects` → ActiveProjectForContext
 
+### `packages/ai/src/pipeline/email-filter-gatekeeper.ts`
+
+**Exports:**
+- `decideEmailFilter()`
+
+**Types:** `FilterReason`, `FilterDecision`
+
 ### `packages/ai/src/pipeline/email-pipeline.ts`
 
 **Exports:**
@@ -601,7 +610,7 @@
 **Types:** `EmailOrganizationResolution`
 
 **Depends on:**
-- `@repo/database/mutations/emails` → updateEmailClassification, updateEmailSenderPerson, linkEmailProject
+- `@repo/database/mutations/emails` → updateEmailClassification, updateEmailFilterStatus, updateEmailSenderPerson, linkEmailProject
 - `@repo/database/queries/people` → findPersonOrgByEmail
 - `@repo/database/queries/organizations` → findOrganizationIdByEmailDomain
 - `@repo/database/supabase/admin` → getAdminClient
@@ -611,6 +620,7 @@
 - `../agents/email-classifier` → EmailClassifierOutput
 - `./context-injection` → buildEntityContext
 - `./entity-resolution` → resolveOrganization
+- `./email-filter-gatekeeper` → decideEmailFilter, type FilterReason
 - `../embeddings` → embedText
 
 ### `packages/ai/src/pipeline/embed-pipeline.ts`
@@ -1259,6 +1269,18 @@
 **Exports:**
 - `cleanInput()`
 
+### `apps/cockpit/src/actions/email-filter.ts`
+
+**Exports:**
+- `unfilterEmailAction()`
+
+**Depends on:**
+- `@repo/database/mutations/emails` → updateEmailFilterStatus
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/ai/pipeline/email-pipeline` → processEmail
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+
 ### `apps/cockpit/src/actions/email-links.ts`
 
 **Exports:**
@@ -1830,7 +1852,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, type EmailDirection
+- `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, countEmailsByFilterStatus, type EmailDirection, type EmailFilterStatus
 
 ### `apps/cockpit/src/app/(dashboard)/intelligence/page.tsx`
 
@@ -2309,6 +2331,14 @@
 
 **Exports:**
 - `EmailTypeSelector()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/emails/filtered-banner.tsx`
+
+**Exports:**
+- `FilteredBanner()`
 
 **Depends on:**
 - `@repo/ui/button` → Button
@@ -3254,9 +3284,9 @@ Which layers depend on which packages:
 | AI Core | 8 | - | - | - | - | 8 |
 | AI Pipeline | 40 | - | - | - | - | 40 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 41 | 14 | 26 | - | - | 81 |
+| Cockpit Server Actions | 43 | 15 | 28 | - | - | 86 |
 | Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
-| Cockpit Components | 42 | - | - | 74 | - | 116 |
+| Cockpit Components | 42 | - | - | 75 | - | 117 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | - | 2 | 23 | - | 101 |
 | Database Queries | - | - | 1 | - | - | 1 |
@@ -3274,6 +3304,7 @@ parts of the codebase — changes here have the widest blast radius.
 
 | File | Packages | Count |
 |------|----------|-------|
+| `apps/cockpit/src/actions/email-filter.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/email-review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/meeting-pipeline.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
@@ -3295,6 +3326,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `insertEmails()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateEmailClassification()` | `packages/ai/src/pipeline/email-pipeline.ts` |
+| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-filter.ts` |
 | `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-links.ts` |
 | `verifyEmail()` | `apps/cockpit/src/actions/email-review.ts` |
 | `verifyEmailWithEdits()` | `apps/cockpit/src/actions/email-review.ts` |
@@ -3467,6 +3499,7 @@ Which queries are used where across the codebase.
 | `listActiveGoogleAccountsSafe()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `listEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `countEmailsByFilterStatus()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `listEmailsByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
 | `countEmailsByDirection()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `getEmailById()` | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx` |

@@ -80,6 +80,7 @@ export async function getGoogleAccountByEmail(email: string): Promise<GoogleAcco
 }
 
 export type EmailDirection = "incoming" | "outgoing";
+export type EmailFilterStatus = "kept" | "filtered";
 
 export interface EmailListItem {
   id: string;
@@ -98,6 +99,8 @@ export interface EmailListItem {
   email_type: string | null;
   party_type: string | null;
   direction: EmailDirection;
+  filter_status: EmailFilterStatus;
+  filter_reason: string | null;
   organization: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
 }
@@ -107,6 +110,7 @@ export async function listEmails(options: {
   verificationStatus?: string;
   isProcessed?: boolean;
   direction?: EmailDirection;
+  filterStatus?: EmailFilterStatus;
   organizationId?: string;
   limit?: number;
   offset?: number;
@@ -118,7 +122,7 @@ export async function listEmails(options: {
     .select(
       `id, gmail_id, subject, from_address, from_name, to_addresses, date, snippet, labels,
        has_attachments, is_processed, verification_status, relevance_score,
-       email_type, party_type, direction,
+       email_type, party_type, direction, filter_status, filter_reason,
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name))`,
       { count: "exact" },
@@ -136,6 +140,9 @@ export async function listEmails(options: {
   }
   if (options.direction) {
     query = query.eq("direction", options.direction);
+  }
+  if (options.filterStatus) {
+    query = query.eq("filter_status", options.filterStatus);
   }
   if (options.organizationId) {
     query = query.eq("organization_id", options.organizationId);
@@ -166,6 +173,8 @@ export async function listEmails(options: {
     email_type: row.email_type as string | null,
     party_type: row.party_type as string | null,
     direction: (row.direction as EmailDirection) ?? "incoming",
+    filter_status: (row.filter_status as EmailFilterStatus) ?? "kept",
+    filter_reason: row.filter_reason as string | null,
     organization: row.organization as { id: string; name: string } | null,
     projects: ((row.projects as { project: { id: string; name: string } }[]) ?? []).map(
       (p) => p.project,
@@ -173,6 +182,30 @@ export async function listEmails(options: {
   }));
 
   return { items, count: count ?? 0 };
+}
+
+/**
+ * Telt emails per filter_status voor een gegeven direction. Handig voor
+ * de tab-switcher (Inbox vs Gefilterd) op de /emails pagina.
+ */
+export async function countEmailsByFilterStatus(options: {
+  direction?: EmailDirection;
+  client?: SupabaseClient;
+}): Promise<{ kept: number; filtered: number }> {
+  const db = options.client ?? getAdminClient();
+  const buildQuery = (status: EmailFilterStatus) => {
+    let q = db
+      .from("emails")
+      .select("id", { count: "exact", head: true })
+      .eq("filter_status", status);
+    if (options.direction) q = q.eq("direction", options.direction);
+    return q;
+  };
+  const [kept, filtered] = await Promise.all([buildQuery("kept"), buildQuery("filtered")]);
+  return {
+    kept: kept.count ?? 0,
+    filtered: filtered.count ?? 0,
+  };
 }
 
 /**
@@ -227,6 +260,8 @@ export interface EmailDetail {
   relevance_score: number | null;
   email_type: string | null;
   party_type: string | null;
+  filter_status: EmailFilterStatus;
+  filter_reason: string | null;
   sender_person_id: string | null;
   sender_person: { id: string; name: string; role: string | null } | null;
   organization_id: string | null;
@@ -254,7 +289,8 @@ export async function getEmailById(
     .select(
       `id, gmail_id, thread_id, subject, from_address, from_name, to_addresses, cc_addresses,
        date, body_text, snippet, labels, has_attachments, is_processed, verification_status,
-       relevance_score, email_type, party_type, sender_person_id, organization_id,
+       relevance_score, email_type, party_type, filter_status, filter_reason,
+       sender_person_id, organization_id,
        sender_person:people!emails_sender_person_id_fkey(id, name, role),
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name), source),
@@ -279,6 +315,11 @@ export async function getEmailById(
 
   return {
     ...data,
+    filter_status: ((data as { filter_status?: string }).filter_status ??
+      "kept") as EmailFilterStatus,
+    filter_reason: ((data as { filter_reason?: string | null }).filter_reason ?? null) as
+      | string
+      | null,
     sender_person: senderPerson,
     organization: org,
     projects: projects.map((p) => ({ ...p.project, source: p.source })),
@@ -325,6 +366,7 @@ export async function listDraftEmails(client?: SupabaseClient): Promise<ReviewEm
     )
     .eq("verification_status", "draft")
     .eq("is_processed", true)
+    .eq("filter_status", "kept")
     .order("date", { ascending: false });
 
   if (error) {
@@ -344,7 +386,8 @@ export async function getDraftEmailById(
     .select(
       `id, gmail_id, thread_id, subject, from_address, from_name, to_addresses, cc_addresses,
        date, body_text, snippet, labels, has_attachments, is_processed, verification_status,
-       relevance_score, email_type, party_type, sender_person_id, organization_id,
+       relevance_score, email_type, party_type, filter_status, filter_reason,
+       sender_person_id, organization_id,
        sender_person:people!emails_sender_person_id_fkey(id, name, role),
        organization:organizations!emails_organization_id_fkey(id, name),
        projects:email_projects(project:projects(id, name), source),
@@ -370,6 +413,11 @@ export async function getDraftEmailById(
 
   return {
     ...data,
+    filter_status: ((data as { filter_status?: string }).filter_status ??
+      "kept") as EmailFilterStatus,
+    filter_reason: ((data as { filter_reason?: string | null }).filter_reason ?? null) as
+      | string
+      | null,
     sender_person: senderPerson,
     organization: org,
     projects: projects.map((p) => ({ ...p.project, source: p.source })),
