@@ -12,6 +12,11 @@ import { formatDate } from "@repo/ui/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import { getMeetingHref } from "@/lib/meeting-href";
 import { EditOrganization } from "@/components/clients/edit-organization";
+import { OrgSummary } from "@/components/organizations/org-summary";
+import { OrgBriefing } from "@/components/organizations/org-briefing";
+import { OrgTimeline } from "@/components/organizations/org-timeline";
+import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
+import { extractOrgTimeline } from "@repo/ai/validations/project-summary";
 
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>;
@@ -23,6 +28,11 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   const org = await getOrganizationById(id, supabase);
 
   if (!org) notFound();
+
+  // Gevalideerde timeline uit briefing.structured_content (lege array als corrupt).
+  const timeline = extractOrgTimeline(org.briefing_summary?.structured_content);
+
+  const hasSummary = Boolean(org.context_summary || org.briefing_summary);
 
   return (
     <div className="space-y-8 px-4 py-8 lg:px-10">
@@ -65,6 +75,33 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           )}
         </div>
       </div>
+
+      {/* AI Samenvattingen */}
+      {hasSummary && (
+        <div className="space-y-4">
+          <OrgSummary
+            content={org.context_summary?.content ?? null}
+            createdAt={org.context_summary?.created_at}
+          />
+          <OrgBriefing
+            content={org.briefing_summary?.content ?? null}
+            createdAt={org.briefing_summary?.created_at}
+          />
+          {timeline.length > 0 && <OrgTimeline timeline={timeline} />}
+          <div className="flex justify-end">
+            <RegenerateSummaryButton entityType="organization" entityId={org.id} />
+          </div>
+        </div>
+      )}
+      {!hasSummary && (
+        <div className="flex items-center justify-between rounded-lg border border-dashed border-border/50 bg-muted/20 px-5 py-4">
+          <p className="text-sm text-muted-foreground">
+            Nog geen AI-briefing voor deze organisatie. Genereer er een op basis van verified
+            meetings en e-mails.
+          </p>
+          <RegenerateSummaryButton entityType="organization" entityId={org.id} />
+        </div>
+      )}
 
       {/* Projects */}
       <Card>

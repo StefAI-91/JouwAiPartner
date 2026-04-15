@@ -307,6 +307,7 @@ describe("triggerSummariesForMeeting", () => {
     mockOrgSummarizer.mockResolvedValue({
       context: "org ctx",
       briefing: "org br",
+      timeline: [],
     });
 
     // Should not throw even when some summaries fail
@@ -375,17 +376,21 @@ describe("triggerSummariesForEmail", () => {
     mockOrgSummarizer.mockResolvedValue({
       context: "org ctx",
       briefing: "org br",
+      timeline: [],
     });
     mockCreateVersion.mockResolvedValue({ success: true, data: { id: "s-1", version: 1 } });
     mockGetLatestSummary.mockResolvedValue(null);
 
     await triggerSummariesForEmail("e-1");
 
-    // Org summarizer should have been called
+    // Org summarizer should have been called with meetings, no emails (mock default),
+    // no existing context, and 0 projects (mock default count).
     expect(mockOrgSummarizer).toHaveBeenCalledWith(
       "Klant BV",
       [expect.objectContaining({ title: "Klant meeting" })],
-      undefined, // existingContext (mockGetLatestSummary returned null → .content is undefined)
+      undefined, // existingContext
+      undefined, // emails — mock returns no email rows
+      0, // projectCount — mock returns no projects
     );
   });
 
@@ -411,5 +416,156 @@ describe("triggerSummariesForEmail", () => {
 
     expect(mockProjectSummarizer).not.toHaveBeenCalled();
     expect(mockOrgSummarizer).not.toHaveBeenCalled();
+  });
+});
+
+describe("generateOrgSummaries — email paths", () => {
+  it("haalt emails op via directe link én extraction-link en dedupliceert", async () => {
+    queryResponses.set("organizations.id=org-1", {
+      data: { name: "Klant BV" },
+      error: null,
+    });
+    // Pad 1: directe emails.organization_id match
+    queryResponses.set("emails.organization_id=org-1", {
+      data: [{ id: "e-1" }, { id: "e-2" }],
+      error: null,
+    });
+    // Pad 2: email_extractions.organization_id match — e-2 zit ook in pad 1
+    queryResponses.set("email_extractions.organization_id=org-1", {
+      data: [{ email_id: "e-2" }, { email_id: "e-3" }],
+      error: null,
+    });
+    // Meetings — leeg
+    queryResponses.set("meetings.organization_id=org-1.verification_status=verified", {
+      data: [],
+      error: null,
+    });
+    // Finale fetch over verified + kept
+    queryResponses.set("emails.in.verification_status=verified.filter_status=kept", {
+      data: [
+        {
+          subject: "Voorbereiding",
+          date: "2026-04-13",
+          from_name: "Jan",
+          from_address: "jan@klant.nl",
+          snippet: "Hallo",
+        },
+      ],
+      error: null,
+    });
+    // Project count
+    queryResponses.set("projects.organization_id=org-1.not", {
+      data: null,
+      error: null,
+    });
+
+    mockGetLatestSummary.mockResolvedValue(null);
+    mockOrgSummarizer.mockResolvedValue({
+      context: "ctx",
+      briefing: "br",
+      timeline: [],
+    });
+    mockCreateVersion.mockResolvedValue({ success: true, data: { id: "s-1", version: 1 } });
+
+    const result = await generateOrgSummaries("org-1");
+
+    expect(result.success).toBe(true);
+    // Summarizer krijgt de gevonden emails in plaats van undefined
+    expect(mockOrgSummarizer).toHaveBeenCalledWith(
+      "Klant BV",
+      [], // geen meetings
+      undefined, // geen bestaande context
+      [expect.objectContaining({ subject: "Voorbereiding" })],
+      0, // geen actieve projecten
+    );
+  });
+
+  it("early-return als geen verified meetings én geen verified emails", async () => {
+    queryResponses.set("organizations.id=org-1", {
+      data: { name: "Stille Klant" },
+      error: null,
+    });
+    queryResponses.set("meetings.organization_id=org-1.verification_status=verified", {
+      data: [],
+      error: null,
+    });
+    queryResponses.set("emails.organization_id=org-1", {
+      data: [],
+      error: null,
+    });
+    queryResponses.set("email_extractions.organization_id=org-1", {
+      data: [],
+      error: null,
+    });
+
+    const result = await generateOrgSummaries("org-1");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Geen geverifieerde meetings of emails");
+    expect(mockOrgSummarizer).not.toHaveBeenCalled();
+  });
+
+  it("timeline wordt als structured_content opgeslagen op de briefing, niet op context", async () => {
+    queryResponses.set("organizations.id=org-1", {
+      data: { name: "Klant BV" },
+      error: null,
+    });
+    queryResponses.set("meetings.organization_id=org-1.verification_status=verified", {
+      data: [
+        {
+          id: "m-1",
+          title: "Klant meeting",
+          date: "2026-04-10",
+          ai_briefing: null,
+          summary: "Update",
+          meeting_type: "status_update",
+        },
+      ],
+      error: null,
+    });
+    queryResponses.set("emails.organization_id=org-1", { data: [], error: null });
+    queryResponses.set("email_extractions.organization_id=org-1", { data: [], error: null });
+    queryResponses.set("projects.organization_id=org-1.not", { data: null, error: null });
+
+    const timelineData = [
+      {
+        date: "2026-04-10",
+        source_type: "meeting" as const,
+        title: "Klant meeting",
+        summary: "Update",
+        key_decisions: [],
+        open_actions: [],
+      },
+    ];
+
+    mockGetLatestSummary.mockResolvedValue(null);
+    mockOrgSummarizer.mockResolvedValue({
+      context: "ctx",
+      briefing: "br",
+      timeline: timelineData,
+    });
+    mockCreateVersion.mockResolvedValue({ success: true, data: { id: "s-1", version: 1 } });
+
+    await generateOrgSummaries("org-1");
+
+    // Context-versie krijgt 6 args (geen structured_content)
+    expect(mockCreateVersion).toHaveBeenCalledWith(
+      "organization",
+      "org-1",
+      "context",
+      "ctx",
+      expect.any(Array),
+      expect.anything(),
+    );
+    // Briefing-versie krijgt 7 args mét { timeline }
+    expect(mockCreateVersion).toHaveBeenCalledWith(
+      "organization",
+      "org-1",
+      "briefing",
+      "br",
+      expect.any(Array),
+      expect.anything(),
+      { timeline: timelineData },
+    );
   });
 });

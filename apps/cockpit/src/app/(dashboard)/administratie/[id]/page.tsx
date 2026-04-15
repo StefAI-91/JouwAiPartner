@@ -14,6 +14,11 @@ import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organiza
 import { ORG_TYPE_LABELS } from "@/components/shared/org-type-labels";
 import { EditOrganization } from "@/components/clients/edit-organization";
 import { AdministratieEmails } from "@/components/administratie/administratie-emails";
+import { OrgSummary } from "@/components/organizations/org-summary";
+import { OrgBriefing } from "@/components/organizations/org-briefing";
+import { OrgTimeline } from "@/components/organizations/org-timeline";
+import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
+import { extractOrgTimeline } from "@repo/ai/validations/project-summary";
 
 // Types die thuishoren onder /administratie. Andere types (client, partner)
 // horen onder /clients — we redirecten daarheen om een verwarrende detail-
@@ -38,6 +43,11 @@ export default async function AdministratieDetailPage({ params }: AdministratieD
   if (!ADMINISTRATIE_TYPES.includes(org.type)) {
     redirect(`/clients/${id}`);
   }
+
+  // Gevalideerde timeline uit briefing.structured_content (lege array als corrupt).
+  const timeline = extractOrgTimeline(org.briefing_summary?.structured_content);
+
+  const hasSummary = Boolean(org.context_summary || org.briefing_summary);
 
   return (
     <div className="space-y-8 px-4 py-8 lg:px-10">
@@ -92,6 +102,33 @@ export default async function AdministratieDetailPage({ params }: AdministratieD
           )}
         </div>
       </div>
+
+      {/* AI Samenvattingen */}
+      {hasSummary && (
+        <div className="space-y-4">
+          <OrgSummary
+            content={org.context_summary?.content ?? null}
+            createdAt={org.context_summary?.created_at}
+          />
+          <OrgBriefing
+            content={org.briefing_summary?.content ?? null}
+            createdAt={org.briefing_summary?.created_at}
+          />
+          {timeline.length > 0 && <OrgTimeline timeline={timeline} />}
+          <div className="flex justify-end">
+            <RegenerateSummaryButton entityType="organization" entityId={org.id} />
+          </div>
+        </div>
+      )}
+      {!hasSummary && (
+        <div className="flex items-center justify-between rounded-lg border border-dashed border-border/50 bg-muted/20 px-5 py-4">
+          <p className="text-sm text-muted-foreground">
+            Nog geen AI-briefing voor deze organisatie. Genereer er een op basis van verified
+            meetings en e-mails.
+          </p>
+          <RegenerateSummaryButton entityType="organization" entityId={org.id} />
+        </div>
+      )}
 
       {/* Contactpersonen */}
       <Card>
