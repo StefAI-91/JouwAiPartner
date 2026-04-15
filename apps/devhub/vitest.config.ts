@@ -5,6 +5,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["__tests__/**/*.test.ts", "src/**/*.test.ts"],
+    // passWithNoTests: er zijn nog geen devhub-specifieke tests. Deze vlag
+    // zorgt dat `turbo test` niet rood wordt op een lege suite.
+    passWithNoTests: true,
   },
   resolve: {
     alias: {

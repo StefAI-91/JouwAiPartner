@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 442 |
-| Exported functions/constants | 642 |
+| Exported functions/constants | 641 |
 | Exported types/interfaces | 137 |
 | Cross-package imports | 565 |
 | Critical integration points (3+ packages) | 12 |
@@ -1518,9 +1518,8 @@
 ### `apps/cockpit/src/app/api/cron/email-sync/route.ts`
 
 **Exports:**
+- `POST()`
 - `maxDuration`
-- `GET`
-- `POST`
 
 **Depends on:**
 - `@repo/database/queries/emails` → listActiveGoogleAccounts, getExistingGmailIds, getUnprocessedEmails
