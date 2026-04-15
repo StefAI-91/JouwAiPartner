@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
+import { getLatestSummary } from "./summaries";
 
 export interface OrganizationListItem {
   id: string;
@@ -94,10 +95,21 @@ export interface OrganizationDetail {
     meeting_type: string | null;
     verification_status: string;
   }[];
+  context_summary: { content: string; version: number; created_at: string } | null;
+  briefing_summary: {
+    content: string;
+    version: number;
+    created_at: string;
+    structured_content: Record<string, unknown> | null;
+  } | null;
 }
 
 /**
- * Get organization by ID with linked projects and meetings.
+ * Get organization by ID with linked projects, meetings, and latest
+ * AI-generated summaries (context + briefing with optional timeline).
+ *
+ * De briefing-summary heeft `structured_content.timeline` als die bestaat —
+ * dat is de gemixte meeting+email timeline (zie generateOrgSummaries).
  */
 export async function getOrganizationById(
   orgId: string,
@@ -113,21 +125,39 @@ export async function getOrganizationById(
 
   if (error || !org) return null;
 
-  const [{ data: projects }, { data: meetings }] = await Promise.all([
-    db.from("projects").select("id, name, status").eq("organization_id", orgId).order("name"),
-    db
-      .from("meetings")
-      .select("id, title, date, meeting_type, verification_status")
-      .eq("organization_id", orgId)
-      .order("date", { ascending: false })
-      .limit(20),
-  ]);
+  const [{ data: projects }, { data: meetings }, contextSummary, briefingSummary] =
+    await Promise.all([
+      db.from("projects").select("id, name, status").eq("organization_id", orgId).order("name"),
+      db
+        .from("meetings")
+        .select("id, title, date, meeting_type, verification_status")
+        .eq("organization_id", orgId)
+        .order("date", { ascending: false })
+        .limit(20),
+      getLatestSummary("organization", orgId, "context", db),
+      getLatestSummary("organization", orgId, "briefing", db),
+    ]);
 
   return {
     ...org,
     email_domains: (org.email_domains ?? []) as string[],
     projects: projects ?? [],
     meetings: meetings ?? [],
+    context_summary: contextSummary
+      ? {
+          content: contextSummary.content,
+          version: contextSummary.version,
+          created_at: contextSummary.created_at,
+        }
+      : null,
+    briefing_summary: briefingSummary
+      ? {
+          content: briefingSummary.content,
+          version: briefingSummary.version,
+          created_at: briefingSummary.created_at,
+          structured_content: briefingSummary.structured_content,
+        }
+      : null,
   };
 }
 

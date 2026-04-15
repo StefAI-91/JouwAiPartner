@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 439 |
-| Exported functions/constants | 636 |
-| Exported types/interfaces | 136 |
-| Cross-package imports | 559 |
-| Critical integration points (3+ packages) | 10 |
+| Files scanned | 430 |
+| Exported functions/constants | 621 |
+| Exported types/interfaces | 128 |
+| Cross-package imports | 539 |
+| Critical integration points (3+ packages) | 7 |
 
 ## Package Dependency Flow
 
@@ -102,17 +102,15 @@
 - `getGoogleAccountById()`
 - `getGoogleAccountByEmail()`
 - `listEmails()`
-- `countEmailsByFilterStatus()`
 - `listEmailsByOrganization()`
 - `countEmailsByDirection()`
 - `getEmailById()`
 - `getExistingGmailIds()`
 - `listDraftEmails()`
 - `getDraftEmailById()`
-- `countUnprocessedEmails()`
 - `getUnprocessedEmails()`
 
-**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
+**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
 
 ### `queries/ignored-entities.ts`
 
@@ -154,7 +152,7 @@
 - `ISSUE_SORTS`
 - `ISSUE_SELECT`
 
-**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`
+**Types:** `IssueSort`, `IssueRow`
 
 ### `queries/meeting-project-summaries.ts`
 
@@ -324,7 +322,6 @@
 - `deactivateGoogleAccount()`
 - `insertEmails()`
 - `updateEmailClassification()`
-- `updateEmailFilterStatus()`
 - `linkEmailProject()`
 - `verifyEmail()`
 - `verifyEmailWithEdits()`
@@ -594,13 +591,6 @@
 - `@repo/database/queries/people` → getPeopleForContext
 - (type) `@repo/database/queries/projects` → ActiveProjectForContext
 
-### `packages/ai/src/pipeline/email-filter-gatekeeper.ts`
-
-**Exports:**
-- `decideEmailFilter()`
-
-**Types:** `FilterReason`, `FilterDecision`
-
 ### `packages/ai/src/pipeline/email-pipeline.ts`
 
 **Exports:**
@@ -611,7 +601,7 @@
 **Types:** `EmailOrganizationResolution`
 
 **Depends on:**
-- `@repo/database/mutations/emails` → updateEmailClassification, updateEmailFilterStatus, updateEmailSenderPerson, linkEmailProject
+- `@repo/database/mutations/emails` → updateEmailClassification, updateEmailSenderPerson, linkEmailProject
 - `@repo/database/queries/people` → findPersonOrgByEmail
 - `@repo/database/queries/organizations` → findOrganizationIdByEmailDomain
 - `@repo/database/supabase/admin` → getAdminClient
@@ -621,16 +611,7 @@
 - `../agents/email-classifier` → EmailClassifierOutput
 - `./context-injection` → buildEntityContext
 - `./entity-resolution` → resolveOrganization
-- `./email-filter-gatekeeper` → decideEmailFilter, type FilterReason
-- `./email-pre-classifier` → preClassifyEmail
 - `../embeddings` → embedText
-
-### `packages/ai/src/pipeline/email-pre-classifier.ts`
-
-**Exports:**
-- `preClassifyEmail()`
-
-**Types:** `PreClassifiedType`, `PreClassifierOutput`
 
 ### `packages/ai/src/pipeline/embed-pipeline.ts`
 
@@ -995,9 +976,10 @@
 **Exports:**
 - `TimelineEntrySchema`
 - `ProjectSummaryOutputSchema`
+- `OrgTimelineEntrySchema`
 - `OrgSummaryOutputSchema`
 
-**Types:** `TimelineEntry`, `ProjectSummaryOutput`, `OrgSummaryOutput`
+**Types:** `TimelineEntry`, `ProjectSummaryOutput`, `OrgTimelineEntry`, `OrgSummaryOutput`
 
 ### `packages/ai/src/validations/summarizer.ts`
 
@@ -1278,18 +1260,6 @@
 **Exports:**
 - `cleanInput()`
 
-### `apps/cockpit/src/actions/email-filter.ts`
-
-**Exports:**
-- `unfilterEmailAction()`
-
-**Depends on:**
-- `@repo/database/mutations/emails` → updateEmailFilterStatus
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/ai/pipeline/email-pipeline` → processEmail
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
 ### `apps/cockpit/src/actions/email-links.ts`
 
 **Exports:**
@@ -1513,18 +1483,6 @@
 
 ## Cockpit API Routes
 
-### `apps/cockpit/src/app/api/cron/email-sync/route.ts`
-
-**Exports:**
-- `POST()`
-- `maxDuration`
-
-**Depends on:**
-- `@repo/database/queries/emails` → listActiveGoogleAccounts, getExistingGmailIds, getUnprocessedEmails
-- `@repo/database/mutations/emails` → insertEmails, updateGoogleAccountTokens, updateGoogleAccountLastSync
-- `@repo/ai/gmail` → fetchEmails
-- `@repo/ai/pipeline/email-pipeline` → processEmailBatch
-
 ### `apps/cockpit/src/app/api/cron/re-embed/route.ts`
 
 **Exports:**
@@ -1572,31 +1530,6 @@
 **Depends on:**
 - `@repo/ai/google-oauth` → getGoogleAuthUrl
 - `@repo/database/supabase/server` → createClient
-
-### `apps/cockpit/src/app/api/email/process-pending/route.ts`
-
-**Exports:**
-- `POST()`
-- `maxDuration`
-
-**Depends on:**
-- `@repo/database/supabase/server` → createClient
-- `@repo/database/queries/emails` → getUnprocessedEmails
-- `@repo/ai/pipeline/email-pipeline` → processEmailBatch
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/app/api/email/reclassify/route.ts`
-
-**Exports:**
-- `POST()`
-- `maxDuration`
-
-**Depends on:**
-- `@repo/database/supabase/server` → createClient
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/ai/pipeline/email-pipeline` → processEmail
-- `@repo/database/mutations/emails` → updateEmailFilterStatus
-- `@repo/auth/access` → isAdmin
 
 ### `apps/cockpit/src/app/api/email/sync/route.ts`
 
@@ -1898,7 +1831,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, countEmailsByFilterStatus, countUnprocessedEmails, type EmailDirection, type EmailFilterStatus
+- `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, type EmailDirection
 
 ### `apps/cockpit/src/app/(dashboard)/intelligence/page.tsx`
 
@@ -2381,14 +2314,6 @@
 **Depends on:**
 - `@repo/ui/button` → Button
 
-### `apps/cockpit/src/components/emails/filtered-banner.tsx`
-
-**Exports:**
-- `FilteredBanner()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
 ### `apps/cockpit/src/components/emails/google-account-status.tsx`
 
 **Exports:**
@@ -2413,26 +2338,10 @@
 **Depends on:**
 - `@repo/ui/button` → Button
 
-### `apps/cockpit/src/components/emails/process-pending-button.tsx`
-
-**Exports:**
-- `ProcessPendingButton()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
 ### `apps/cockpit/src/components/emails/project-linker.tsx`
 
 **Exports:**
 - `ProjectLinker()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/reclassify-button.tsx`
-
-**Exports:**
-- `ReclassifyButton()`
 
 **Depends on:**
 - `@repo/ui/button` → Button
@@ -2606,6 +2515,30 @@
 
 **Depends on:**
 - `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/organizations/org-briefing.tsx`
+
+**Exports:**
+- `OrgBriefing()`
+
+**Depends on:**
+- `@repo/ui/format` → timeAgoDays
+
+### `apps/cockpit/src/components/organizations/org-summary.tsx`
+
+**Exports:**
+- `OrgSummary()`
+
+**Depends on:**
+- `@repo/ui/format` → timeAgoDays
+
+### `apps/cockpit/src/components/organizations/org-timeline.tsx`
+
+**Exports:**
+- `OrgTimeline()`
+
+**Depends on:**
+- `@repo/ui/format` → formatDate
 
 ### `apps/cockpit/src/components/people/add-person-button.tsx`
 
@@ -3053,17 +2986,6 @@
 - (type) `@repo/database/queries/issue-comments` → IssueCommentRow
 - (type) `@repo/database/queries/issue-activity` → IssueActivityRow
 
-### `apps/devhub/src/components/comments/comment-section.tsx`
-
-**Exports:**
-- `CommentSection()`
-
-**Types:** `CurrentUser`
-
-**Depends on:**
-- (type) `@repo/database/queries/issue-comments` → IssueCommentRow
-- (type) `@repo/database/queries/issue-activity` → IssueActivityRow
-
 ### `apps/devhub/src/components/dashboard/area-summaries.tsx`
 
 **Exports:**
@@ -3217,19 +3139,6 @@
 **Depends on:**
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
-### `apps/devhub/src/components/layout/count-seeder.tsx`
-
-**Exports:**
-- `CountSeeder()`
-
-### `apps/devhub/src/components/layout/issue-count-store.ts`
-
-**Exports:**
-- `EMPTY_COUNTS`
-- `issueCountStore`
-
-**Types:** `StatusKey`, `StatusCounts`
-
 ### `apps/devhub/src/components/layout/mobile-sidebar.tsx`
 
 **Exports:**
@@ -3252,7 +3161,7 @@
 - `issueHref()`
 - `NAV_ITEMS`
 
-**Types:** `NavItem`
+**Types:** `StatusCounts`, `NavItem`
 
 ### `apps/devhub/src/components/layout/sidebar-nav.tsx`
 
@@ -3370,15 +3279,15 @@ Which layers depend on which packages:
 | AI Core | 8 | - | - | - | - | 8 |
 | AI Pipeline | 40 | - | - | - | - | 40 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 43 | 15 | 28 | - | - | 86 |
-| Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
+| Cockpit Server Actions | 41 | 14 | 26 | - | - | 81 |
+| Cockpit API Routes | 20 | 32 | - | - | 1 | 53 |
 | Cockpit Components | 42 | - | - | 77 | - | 119 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | - | 2 | 23 | - | 101 |
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 21 | 2 | 10 | - | - | 33 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
-| DevHub Components | 15 | - | - | 26 | - | 41 |
+| DevHub Components | 13 | - | - | 26 | - | 39 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 14 | - | 8 | 8 | - | 30 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
@@ -3390,14 +3299,11 @@ parts of the codebase — changes here have the widest blast radius.
 
 | File | Packages | Count |
 |------|----------|-------|
-| `apps/cockpit/src/actions/email-filter.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/email-review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/meeting-pipeline.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
-| `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
-| `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
@@ -3410,11 +3316,10 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `upsertGoogleAccount()` | `apps/cockpit/src/app/api/email/auth/callback/route.ts` |
-| `updateGoogleAccountTokens()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
-| `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
-| `insertEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `updateGoogleAccountTokens()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `insertEmails()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateEmailClassification()` | `packages/ai/src/pipeline/email-pipeline.ts` |
-| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-filter.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-links.ts` |
 | `verifyEmail()` | `apps/cockpit/src/actions/email-review.ts` |
 | `verifyEmailWithEdits()` | `apps/cockpit/src/actions/email-review.ts` |
@@ -3585,17 +3490,15 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `listActiveGoogleAccountsSafe()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
-| `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `listEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
-| `countEmailsByFilterStatus()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `listEmailsByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
 | `countEmailsByDirection()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `getEmailById()` | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx` |
-| `getExistingGmailIds()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `getExistingGmailIds()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
-| `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
-| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
 
 ### queries/ignored-entities.ts
 
@@ -3631,7 +3534,7 @@ Which queries are used where across the codebase.
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
+| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/meeting-project-summaries.ts
@@ -3731,7 +3634,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getLatestSummary()` | `packages/database/src/queries/projects.ts`, `packages/database/src/queries/weekly-summary.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
+| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects.ts`, `packages/database/src/queries/weekly-summary.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
 
 ### queries/tasks.ts
 

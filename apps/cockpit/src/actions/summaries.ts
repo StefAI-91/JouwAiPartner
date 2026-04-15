@@ -34,6 +34,10 @@ export async function regenerateSummaryAction(
 
   if (entityType === "project") {
     revalidatePath(`/projects/${entityId}`);
+  } else {
+    // Organization — briefing zichtbaar op beide detail-routes
+    revalidatePath(`/clients/${entityId}`);
+    revalidatePath(`/administratie/${entityId}`);
   }
   revalidatePath("/");
 

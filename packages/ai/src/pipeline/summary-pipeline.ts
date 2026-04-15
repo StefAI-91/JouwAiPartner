@@ -162,8 +162,13 @@ export async function generateProjectSummaries(
 }
 
 /**
- * Generate or update organization summaries (context + briefing) based on
- * all verified extractions linked to the organization.
+ * Generate or update organization summaries (context + briefing + timeline)
+ * based on all verified meetings and emails linked to the organization.
+ * Called after a meeting or email is verified that is linked to this org.
+ *
+ * Briefing-perspectief schakelt op basis van aantal gekoppelde projecten:
+ * - 0 projecten → relatie-gerichte briefing
+ * - ≥1 project  → overkoepelende briefing over alle projecten heen
  */
 export async function generateOrgSummaries(
   organizationId: string,
@@ -196,19 +201,71 @@ export async function generateOrgSummaries(
       .eq("verification_status", "verified")
       .order("date", { ascending: false });
 
-    if (!meetings || meetings.length === 0) {
-      console.info(`[generateOrgSummaries] No verified meetings for org "${org.name}" — skipping`);
+    // Get verified emails linked to this organization — via two paths:
+    // 1) emails.organization_id = orgId (primary link)
+    // 2) email_extractions.organization_id = orgId (extraction-level link)
+    // Deduplicate on email_id.
+    const emailIdSet = new Set<string>();
+
+    const { data: directEmails } = await db
+      .from("emails")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .eq("verification_status", "verified");
+    for (const e of directEmails ?? []) emailIdSet.add(e.id);
+
+    const { data: extractionEmailLinks } = await db
+      .from("email_extractions")
+      .select("email_id")
+      .eq("organization_id", organizationId);
+    for (const l of extractionEmailLinks ?? []) {
+      if (l.email_id) emailIdSet.add(l.email_id);
+    }
+
+    let formattedEmails: {
+      subject: string | null;
+      date: string;
+      from: string;
+      snippet: string | null;
+    }[] = [];
+    if (emailIdSet.size > 0) {
+      const { data: emails } = await db
+        .from("emails")
+        .select("subject, date, from_name, from_address, snippet")
+        .in("id", Array.from(emailIdSet))
+        .eq("verification_status", "verified")
+        .order("date", { ascending: false });
+
+      formattedEmails = (emails ?? []).map((e) => ({
+        subject: e.subject,
+        date: e.date,
+        from: e.from_name ?? e.from_address,
+        snippet: e.snippet,
+      }));
+    }
+
+    if ((!meetings || meetings.length === 0) && formattedEmails.length === 0) {
+      console.info(
+        `[generateOrgSummaries] No verified meetings or emails for org "${org.name}" — skipping`,
+      );
       return {
         success: false,
-        error: "Geen geverifieerde meetings gevonden voor deze organisatie.",
+        error: "Geen geverifieerde meetings of emails gevonden voor deze organisatie.",
       };
     }
 
+    // Count gekoppelde projecten (bepaalt briefing-invalshoek)
+    const { count: projectCount } = await db
+      .from("projects")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId);
+
     console.info(
-      `[generateOrgSummaries] Found ${meetings.length} verified meetings, calling AI...`,
+      `[generateOrgSummaries] Found ${meetings?.length ?? 0} verified meetings, ` +
+        `${formattedEmails.length} verified emails, ${projectCount ?? 0} projects — calling AI...`,
     );
 
-    const formattedMeetings = meetings.map((m) => ({
+    const formattedMeetings = (meetings ?? []).map((m) => ({
       title: m.title,
       date: m.date,
       meetingType: m.meeting_type,
@@ -218,10 +275,20 @@ export async function generateOrgSummaries(
 
     const existingContext = await getLatestSummary("organization", organizationId, "context", db);
 
-    const output = await runOrgSummarizer(org.name, formattedMeetings, existingContext?.content);
+    const output = await runOrgSummarizer(
+      org.name,
+      formattedMeetings,
+      existingContext?.content,
+      formattedEmails.length > 0 ? formattedEmails : undefined,
+      projectCount ?? 0,
+    );
 
     const sourceMeetingIds =
       meetingIds.length > 0 ? meetingIds : await getOrgMeetingIds(organizationId, db);
+
+    // Timeline wordt op de briefing-summary opgeslagen als structured_content,
+    // identiek aan het project-summary patroon.
+    const timelineData = output.timeline.length > 0 ? { timeline: output.timeline } : null;
 
     const [contextResult, briefingResult] = await Promise.all([
       createSummaryVersion(
@@ -239,6 +306,7 @@ export async function generateOrgSummaries(
         output.briefing,
         sourceMeetingIds,
         db,
+        timelineData,
       ),
     ]);
 

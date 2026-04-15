@@ -307,6 +307,7 @@ describe("triggerSummariesForMeeting", () => {
     mockOrgSummarizer.mockResolvedValue({
       context: "org ctx",
       briefing: "org br",
+      timeline: [],
     });
 
     // Should not throw even when some summaries fail
@@ -375,17 +376,21 @@ describe("triggerSummariesForEmail", () => {
     mockOrgSummarizer.mockResolvedValue({
       context: "org ctx",
       briefing: "org br",
+      timeline: [],
     });
     mockCreateVersion.mockResolvedValue({ success: true, data: { id: "s-1", version: 1 } });
     mockGetLatestSummary.mockResolvedValue(null);
 
     await triggerSummariesForEmail("e-1");
 
-    // Org summarizer should have been called
+    // Org summarizer should have been called with meetings, no emails (mock default),
+    // no existing context, and 0 projects (mock default count).
     expect(mockOrgSummarizer).toHaveBeenCalledWith(
       "Klant BV",
       [expect.objectContaining({ title: "Klant meeting" })],
-      undefined, // existingContext (mockGetLatestSummary returned null → .content is undefined)
+      undefined, // existingContext
+      undefined, // emails — mock returns no email rows
+      0, // projectCount — mock returns no projects
     );
   });
 
