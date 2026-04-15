@@ -3,6 +3,10 @@
     {
       "path": "/api/ingest/fireflies",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/email-sync",
+      "schedule": "0 * * * *"
     }
   ]
 }

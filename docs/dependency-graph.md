@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 435 |
-| Exported functions/constants | 630 |
+| Files scanned | 436 |
+| Exported functions/constants | 632 |
 | Exported types/interfaces | 132 |
-| Cross-package imports | 551 |
+| Cross-package imports | 555 |
 | Critical integration points (3+ packages) | 8 |
 
 ## Package Dependency Flow
@@ -1512,6 +1512,18 @@
 - `@repo/ai/pipeline/weekly-summary-pipeline` → generateWeeklySummary
 
 ## Cockpit API Routes
+
+### `apps/cockpit/src/app/api/cron/email-sync/route.ts`
+
+**Exports:**
+- `POST()`
+- `maxDuration`
+
+**Depends on:**
+- `@repo/database/queries/emails` → listActiveGoogleAccounts, getExistingGmailIds, getUnprocessedEmails
+- `@repo/database/mutations/emails` → insertEmails, updateGoogleAccountTokens, updateGoogleAccountLastSync
+- `@repo/ai/gmail` → fetchEmails
+- `@repo/ai/pipeline/email-pipeline` → processEmailBatch
 
 ### `apps/cockpit/src/app/api/cron/re-embed/route.ts`
 
@@ -3333,7 +3345,7 @@ Which layers depend on which packages:
 | AI Pipeline | 40 | - | - | - | - | 40 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 43 | 15 | 28 | - | - | 86 |
-| Cockpit API Routes | 25 | 34 | - | - | 1 | 60 |
+| Cockpit API Routes | 27 | 36 | - | - | 1 | 64 |
 | Cockpit Components | 42 | - | - | 77 | - | 119 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | - | 2 | 23 | - | 101 |
@@ -3370,9 +3382,9 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `upsertGoogleAccount()` | `apps/cockpit/src/app/api/email/auth/callback/route.ts` |
-| `updateGoogleAccountTokens()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
-| `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
-| `insertEmails()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `updateGoogleAccountTokens()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `insertEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateEmailClassification()` | `packages/ai/src/pipeline/email-pipeline.ts` |
 | `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-filter.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-links.ts` |
@@ -3545,17 +3557,17 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `listActiveGoogleAccountsSafe()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
-| `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `listEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `countEmailsByFilterStatus()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `listEmailsByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
 | `countEmailsByDirection()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `getEmailById()` | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx` |
-| `getExistingGmailIds()` | `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `getExistingGmailIds()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
-| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
 ### queries/ignored-entities.ts
 
