@@ -271,6 +271,23 @@ groen terwijl productie stiekem stukgaat. Daarom:
   niks meer.
 - **Test wijzigen of verwijderen mag** — mits de commit message uitlegt
   welk gedrag bewust verdwenen is en waarom. Zonder die uitleg = niet doen.
+- **Schrijf gedragstests, geen implementatie-tests.** Assert op
+  input→output of observable side-effects: return values, DB-payload
+  capture via boundary-mock, HTTP response status+body, revalidatePath
+  calls. Wat een gebruiker of consumer ervaart.
+- **Verboden patronen bij nieuwe tests:**
+  - `toHaveBeenCalledWith` op interne helpers (`mockBuildText`,
+    `mockGetExtractions`). Mock alleen de grens (DB/netwerk/filesystem)
+    en assert op de _payload_ die naar de grens gaat, niet op het feit
+    dat hij werd aangeroepen.
+  - Chainable DB-mocks die query-strings matchen
+    (`.from(x).select(y).eq(...).single()` nabouwen). Als je meer mock-
+    setup schrijft dan test-asserts, stop — dan test je de mocks, niet
+    de code. Gebruik de echte DB via `describeWithDb` of een payload-
+    capture-mock.
+  - Tests die private velden inspecteren (`_registeredTools`,
+    `_serverInfo`, elke underscore-prefix). Als de publieke API niet
+    testbaar is, refactor voor testbaarheid — verzin geen achterdeur.
 
 Als je twijfelt of een testwijziging laundering is: het antwoord is ja.
 Escaleer naar de gebruiker in plaats van door te drukken.
