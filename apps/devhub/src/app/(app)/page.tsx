@@ -9,6 +9,7 @@ import { HealthHero } from "@/components/dashboard/health-hero";
 import { DashboardMetrics } from "@/components/dashboard/dashboard-metrics";
 import { AreaSummaries } from "@/components/dashboard/area-summaries";
 import { ActionItemsList } from "@/components/review/action-items-list";
+import { CountSeeder } from "@/components/layout/count-seeder";
 import { LayoutDashboard } from "lucide-react";
 
 export default async function DashboardPage({
@@ -51,6 +52,9 @@ export default async function DashboardPage({
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+      {/* Hand the sidebar badges the counts we already fetched so they don't
+          have to round-trip a second time on the client. */}
+      <CountSeeder projectId={projectId} counts={counts} />
       <DashboardHeader
         projectId={projectId}
         projectName={project?.name ?? "dit project"}

@@ -1,7 +1,5 @@
 import { CircleDot, Inbox, CheckCircle2, Loader2, XCircle, type LucideIcon } from "lucide-react";
 
-export type StatusCounts = Record<string, number>;
-
 export interface NavItem {
   label: string;
   status: string;
