@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight, Download, MessageSquare } from "lucide-react";
 
 export default function SettingsPage() {
   return (
@@ -17,6 +17,20 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm font-medium">Import</p>
               <p className="text-xs text-muted-foreground">Userback feedback importeren</p>
+            </div>
+          </div>
+          <ArrowRight className="size-4 text-muted-foreground" />
+        </Link>
+
+        <Link
+          href="/settings/slack"
+          className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+        >
+          <div className="flex items-center gap-3">
+            <MessageSquare className="size-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Slack notificaties</p>
+              <p className="text-xs text-muted-foreground">Meldingen bij urgente bugs</p>
             </div>
           </div>
           <ArrowRight className="size-4 text-muted-foreground" />

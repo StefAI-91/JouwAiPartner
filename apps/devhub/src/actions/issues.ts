@@ -18,6 +18,11 @@ import {
 } from "@repo/database/validations/issues";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
+import {
+  resolveSlackEvent,
+  notifySlackIfUrgent,
+  type SlackIssuePayload,
+} from "@repo/database/integrations/slack";
 
 // ── Actions ──
 
@@ -170,6 +175,41 @@ export async function updateIssueAction(
   }
 
   await Promise.all(activityPromises);
+
+  // Slack notification when priority is escalated to urgent
+  if (data.priority === "urgent" && current.priority !== "urgent") {
+    const slackEvent = resolveSlackEvent({
+      type: result.data.type,
+      severity: result.data.severity,
+      priority: "urgent",
+    });
+
+    if (slackEvent) {
+      const { getAdminClient } = await import("@repo/database/supabase/admin");
+      const db = getAdminClient();
+      const { data: project } = await db
+        .from("projects")
+        .select("name")
+        .eq("id", current.project_id)
+        .single();
+
+      const payload: SlackIssuePayload = {
+        issueId: id,
+        issueNumber: current.issue_number,
+        title: result.data.title,
+        projectName: project?.name ?? "Onbekend project",
+        severity: result.data.severity,
+        priority: "urgent",
+        type: result.data.type,
+        component: result.data.component,
+        trigger: "priority_change",
+      };
+
+      notifySlackIfUrgent(current.project_id, slackEvent, payload).catch((err) =>
+        console.error("[updateIssueAction] Slack notification failed:", err),
+      );
+    }
+  }
 
   revalidatePath("/issues");
   revalidatePath(`/issues/${id}`);

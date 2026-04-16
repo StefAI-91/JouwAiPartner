@@ -7,6 +7,11 @@ import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import { updateIssue, insertActivity } from "@repo/database/mutations/issues";
 import { runIssueClassifier } from "@repo/ai/agents/issue-classifier";
+import {
+  resolveSlackEvent,
+  notifySlackIfUrgent,
+  type SlackIssuePayload,
+} from "@repo/database/integrations/slack";
 
 const classifySchema = z.object({
   id: z.string().uuid(),
@@ -58,6 +63,40 @@ async function classifyIssueCore(
       confidence: result.confidence,
     },
   });
+
+  // Slack notification for urgent bugs (fire-and-forget)
+  const slackEvent = resolveSlackEvent({
+    type: result.type,
+    severity: result.severity,
+    priority: issue.priority,
+  });
+
+  if (slackEvent) {
+    const { getAdminClient } = await import("@repo/database/supabase/admin");
+    const db = getAdminClient();
+    const { data: project } = await db
+      .from("projects")
+      .select("name")
+      .eq("id", issue.project_id)
+      .single();
+
+    const payload: SlackIssuePayload = {
+      issueId,
+      issueNumber: issue.issue_number,
+      title: issue.title,
+      projectName: project?.name ?? "Onbekend project",
+      severity: result.severity,
+      priority: issue.priority,
+      type: result.type,
+      component: result.component,
+      trigger: "classification",
+    };
+
+    // Don't await — fire-and-forget so classification isn't slowed down
+    notifySlackIfUrgent(issue.project_id, slackEvent, payload).catch((err) =>
+      console.error("[classifyIssueCore] Slack notification failed:", err),
+    );
+  }
 
   return { success: true };
 }
