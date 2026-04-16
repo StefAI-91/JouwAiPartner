@@ -8,19 +8,21 @@ export const SLACK_NOTIFY_EVENTS = ["critical_issue", "high_bug", "priority_urge
 export type SlackNotifyEvent = (typeof SLACK_NOTIFY_EVENTS)[number];
 
 export interface SlackProjectConfig {
-  slack_webhook_url: string | null;
-  slack_notify_events: string[];
+  webhook_url: string;
+  notify_events: string[];
 }
 
 /**
- * Fetch Slack config for a project. Returns null if project not found.
+ * Fetch Slack config for a project from the dedicated project_slack_config table.
+ * Uses admin client because this table has admin-only RLS.
+ * Returns null if no config exists for this project.
  */
 export async function getSlackConfig(projectId: string): Promise<SlackProjectConfig | null> {
   const db = getAdminClient();
   const { data, error } = await db
-    .from("projects")
-    .select("slack_webhook_url, slack_notify_events")
-    .eq("id", projectId)
+    .from("project_slack_config")
+    .select("webhook_url, notify_events")
+    .eq("project_id", projectId)
     .single();
 
   if (error || !data) return null;
@@ -170,8 +172,8 @@ export async function notifySlackIfUrgent(
 ): Promise<boolean> {
   const config = await getSlackConfig(projectId);
 
-  if (!config?.slack_webhook_url) return false;
-  if (!config.slack_notify_events.includes(event)) return false;
+  if (!config?.webhook_url) return false;
+  if (!config.notify_events.includes(event)) return false;
 
-  return sendSlackNotification(config.slack_webhook_url, payload);
+  return sendSlackNotification(config.webhook_url, payload);
 }

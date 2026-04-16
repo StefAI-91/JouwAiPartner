@@ -176,11 +176,16 @@ export async function updateIssueAction(
 
   await Promise.all(activityPromises);
 
-  // Slack notification when priority is escalated to urgent
-  if (data.priority === "urgent" && current.priority !== "urgent") {
+  // Slack notification when priority is escalated to urgent.
+  // Skip if severity is already critical/high — those already triggered an alert at classification time.
+  const severity = result.data.severity;
+  const alreadyAlertedBySeverity =
+    result.data.type === "bug" && (severity === "critical" || severity === "high");
+
+  if (data.priority === "urgent" && current.priority !== "urgent" && !alreadyAlertedBySeverity) {
     const slackEvent = resolveSlackEvent({
       type: result.data.type,
-      severity: result.data.severity,
+      severity,
       priority: "urgent",
     });
 

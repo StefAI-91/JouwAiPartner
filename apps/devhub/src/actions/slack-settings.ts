@@ -33,17 +33,34 @@ export async function updateSlackConfigAction(
   }
 
   const db = getAdminClient();
-  const { error } = await db
-    .from("projects")
-    .update({
-      slack_webhook_url: parsed.data.webhookUrl || null,
-      slack_notify_events: parsed.data.notifyEvents,
-    })
-    .eq("id", parsed.data.projectId);
 
-  if (error) {
-    console.error("[updateSlackConfigAction]", error.message);
-    return { error: "Opslaan mislukt" };
+  if (parsed.data.webhookUrl) {
+    // Upsert: insert or update config
+    const { error } = await db.from("project_slack_config").upsert(
+      {
+        project_id: parsed.data.projectId,
+        webhook_url: parsed.data.webhookUrl,
+        notify_events: parsed.data.notifyEvents,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "project_id" },
+    );
+
+    if (error) {
+      console.error("[updateSlackConfigAction]", error.message);
+      return { error: "Opslaan mislukt" };
+    }
+  } else {
+    // Empty URL = disable notifications, delete the config row
+    const { error } = await db
+      .from("project_slack_config")
+      .delete()
+      .eq("project_id", parsed.data.projectId);
+
+    if (error) {
+      console.error("[updateSlackConfigAction]", error.message);
+      return { error: "Opslaan mislukt" };
+    }
   }
 
   revalidatePath("/settings/slack");

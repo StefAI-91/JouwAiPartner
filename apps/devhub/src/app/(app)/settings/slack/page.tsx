@@ -27,22 +27,22 @@ export default async function SlackSettingsPage() {
     );
   }
 
-  // Fetch Slack config for all accessible projects
+  // Fetch Slack config from dedicated table (admin-only RLS, accessed via admin client)
   const db = getAdminClient();
   const { data: slackConfigs } = await db
-    .from("projects")
-    .select("id, slack_webhook_url, slack_notify_events")
+    .from("project_slack_config")
+    .select("project_id, webhook_url, notify_events")
     .in(
-      "id",
+      "project_id",
       projects.map((p) => p.id),
     );
 
   const configMap = new Map(
     (slackConfigs ?? []).map((c) => [
-      c.id as string,
+      c.project_id as string,
       {
-        webhookUrl: c.slack_webhook_url as string | null,
-        events: (c.slack_notify_events as string[]) ?? [],
+        webhookUrl: c.webhook_url as string | null,
+        events: (c.notify_events as string[]) ?? [],
       },
     ]),
   );
