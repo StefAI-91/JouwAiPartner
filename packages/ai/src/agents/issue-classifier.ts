@@ -49,10 +49,12 @@ Je bepaalt:
    - /api -> api
 
 3. SEVERITY: hoe ernstig is dit?
-   - critical: applicatie onbruikbaar, data verlies, security issue
-   - high: belangrijke functie werkt niet, geen workaround
+   - critical: een core flow is geblokkeerd voor gebruikers (login, registratie, betaling, data opslaan/laden mislukt), data verlies of corruptie, security issue, of het probleem raakt meerdere gebruikers tegelijk. OOK als iemand beschrijft dat een pagina niet laadt, een formulier niet verstuurd kan worden, of een essentiële knop/link niet werkt.
+   - high: belangrijke functie werkt niet of geeft foute resultaten, geen workaround beschikbaar. De gebruiker kan de app nog wel gebruiken maar mist een belangrijk onderdeel.
    - medium: bug maar er is een workaround, of matig belangrijke feature request
    - low: cosmetisch, typo, nice-to-have verbetering
+
+   VUISTREGEL SEVERITY: als een gebruiker iets beschrijft dat hen BLOKKEERT in hun werk (niet verder kunnen, niet kunnen opslaan, niet kunnen inloggen) → critical. Als iets vervelend is maar ze kunnen er omheen werken → medium. Bij twijfel tussen critical en high → kies critical (liever een extra melding dan een gemiste blocker).
 
 4. REPRO_STEPS: genereer concrete reproductiestappen in het Nederlands.
    - Baseer op de beschrijving en pageUrl

@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-15. Do not edit manually.
+> Auto-generated on 2026-04-16. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 442 |
-| Exported functions/constants | 642 |
+| Files scanned | 447 |
+| Exported functions/constants | 645 |
 | Exported types/interfaces | 137 |
-| Cross-package imports | 565 |
+| Cross-package imports | 580 |
 | Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
@@ -2946,6 +2946,7 @@
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
 - `@repo/database/mutations/issues` → updateIssue, insertActivity
 - `@repo/ai/agents/issue-classifier` → runIssueClassifier
+- `@repo/database/integrations/slack` → resolveSlackEvent, notifySlackIfUrgent, type SlackIssuePayload
 
 ### `apps/devhub/src/actions/comments.ts`
 
@@ -2994,6 +2995,7 @@
 - `@repo/database/validations/issues` → createIssueSchema, updateIssueSchema, deleteIssueSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/database/integrations/slack` → resolveSlackEvent, notifySlackIfUrgent, type SlackIssuePayload
 
 ### `apps/devhub/src/actions/review.ts`
 
@@ -3009,6 +3011,18 @@
 - `@repo/ai/agents/issue-reviewer` → runIssueReviewer, type IssueForReview
 - `@repo/auth/helpers` → getAuthenticatedUser, isAuthBypassed
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+
+### `apps/devhub/src/actions/slack-settings.ts`
+
+**Exports:**
+- `updateSlackConfigAction()`
+- `testSlackWebhookAction()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+- `@repo/database/integrations/slack` → SLACK_NOTIFY_EVENTS
 
 ## DevHub API Routes
 
@@ -3035,6 +3049,15 @@
 **Depends on:**
 - `@repo/ui/button` → Button
 - `@repo/ui/utils` → cn
+
+### `apps/devhub/src/app/(app)/settings/slack/slack-config-card.tsx`
+
+**Exports:**
+- `SlackConfigCard()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+- (type) `@repo/database/integrations/slack` → SlackNotifyEvent
 
 ### `apps/devhub/src/app/auth/callback/route.ts`
 
@@ -3406,11 +3429,11 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 76 | 2 | 2 | 23 | - | 103 |
 | Database Queries | - | - | 1 | - | - | 1 |
-| DevHub Server Actions | 21 | 2 | 10 | - | - | 33 |
+| DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
 | DevHub Components | 15 | - | - | 26 | - | 41 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 14 | - | 8 | 8 | - | 30 |
+| DevHub Pages | 17 | - | 13 | 9 | - | 39 |
 | MCP Server | 23 | 1 | - | - | - | 24 |
 
 ## Critical Integration Points
@@ -3731,7 +3754,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listAccessibleProjects()` | `apps/devhub/src/app/(app)/layout.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
+| `listAccessibleProjects()` | `apps/devhub/src/app/(app)/layout.tsx`, `apps/devhub/src/app/(app)/page.tsx`, `apps/devhub/src/app/(app)/settings/slack/page.tsx` |
 
 ### queries/project-reviews.ts
 
