@@ -183,11 +183,7 @@ export async function updateIssueAction(
     current.severity !== data.severity &&
     updated.type === "bug";
 
-  const priorityEscalated =
-    data.priority === "urgent" &&
-    current.priority !== "urgent" &&
-    // Skip if severity is already critical/high — those already triggered (or will trigger) an alert
-    !(updated.type === "bug" && (updated.severity === "critical" || updated.severity === "high"));
+  const priorityEscalated = data.priority === "urgent" && current.priority !== "urgent";
 
   if (severityEscalated || priorityEscalated) {
     const slackEvent = resolveSlackEvent({
@@ -217,7 +213,8 @@ export async function updateIssueAction(
         trigger: severityEscalated ? "severity_change" : "priority_change",
       };
 
-      notifySlackIfUrgent(current.project_id, slackEvent, payload).catch((err) =>
+      // Await to prevent Vercel from killing the function before the HTTP call completes
+      await notifySlackIfUrgent(current.project_id, slackEvent, payload).catch((err) =>
         console.error("[updateIssueAction] Slack notification failed:", err),
       );
     }

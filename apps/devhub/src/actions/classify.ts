@@ -92,8 +92,8 @@ async function classifyIssueCore(
       trigger: "classification",
     };
 
-    // Don't await — fire-and-forget so classification isn't slowed down
-    notifySlackIfUrgent(issue.project_id, slackEvent, payload).catch((err) =>
+    // Await to prevent Vercel from killing the serverless function before the HTTP call completes
+    await notifySlackIfUrgent(issue.project_id, slackEvent, payload).catch((err) =>
       console.error("[classifyIssueCore] Slack notification failed:", err),
     );
   }
