@@ -8,6 +8,8 @@ import {
   classifyParticipants,
   classifyParticipantsWithCache,
   determinePartyType,
+  determineRuleBasedMeetingType,
+  isBoardMeeting,
 } from "../../src/pipeline/participant-classifier";
 import { getAllKnownPeople } from "@repo/database/queries/people";
 import type { KnownPerson } from "@repo/database/queries/people";
@@ -23,6 +25,7 @@ const makePerson = (overrides: Partial<KnownPerson> & { name: string }): KnownPe
   organization_id: null,
   organization_name: null,
   organization_type: null,
+  is_admin: false,
   ...overrides,
 });
 
@@ -177,7 +180,7 @@ describe("determinePartyType", () => {
     expect(determinePartyType(participants)).toBe("partner");
   });
 
-  it("onbekende mix → 'other'", () => {
+  it("onbekende mix zonder meetingType → 'other'", () => {
     const participants: ParticipantInfo[] = [
       { raw: "stef", label: "internal" },
       { raw: "onbekend", label: "unknown" },
@@ -190,6 +193,62 @@ describe("determinePartyType", () => {
     expect(determinePartyType([])).toBe("other");
   });
 
+  it("onbekende mix + meetingType=discovery → 'client'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal" },
+      { raw: "onbekend", label: "unknown" },
+    ];
+    expect(determinePartyType(participants, "discovery")).toBe("client");
+  });
+
+  it("onbekende mix + meetingType=sales → 'client'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal" },
+      { raw: "onbekend", label: "unknown" },
+    ];
+    expect(determinePartyType(participants, "sales")).toBe("client");
+  });
+
+  it("onbekende mix + meetingType=status_update → 'client'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal" },
+      { raw: "onbekend", label: "unknown" },
+    ];
+    expect(determinePartyType(participants, "status_update")).toBe("client");
+  });
+
+  it("onbekende mix + meetingType=project_kickoff → 'client'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal" },
+      { raw: "onbekend", label: "unknown" },
+    ];
+    expect(determinePartyType(participants, "project_kickoff")).toBe("client");
+  });
+
+  it("onbekende mix + meetingType=collaboration → 'partner'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal" },
+      { raw: "onbekend", label: "unknown" },
+    ];
+    expect(determinePartyType(participants, "collaboration")).toBe("partner");
+  });
+
+  it("bekende client org heeft voorrang op meetingType=collaboration", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal" },
+      { raw: "jan", label: "external", organizationType: "client" },
+    ];
+    expect(determinePartyType(participants, "collaboration")).toBe("client");
+  });
+
+  it("onbekende mix + meetingType=strategy → 'other' (geen override)", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal" },
+      { raw: "onbekend", label: "unknown" },
+    ];
+    expect(determinePartyType(participants, "strategy")).toBe("other");
+  });
+
   it("één onbekende deelnemer naast internals → NIET 'internal' (default-deny)", () => {
     // CRITICAAL: als er ook maar één onbekende is, mag het meeting NOOIT
     // als puur intern gelabeld worden — dan ziet de Gatekeeper externe
@@ -199,5 +258,150 @@ describe("determinePartyType", () => {
       { raw: "mystery", label: "unknown" },
     ]);
     expect(result).not.toBe("internal");
+  });
+});
+
+describe("isBoardMeeting", () => {
+  it("alle deelnemers admin → true", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "wouter", label: "internal", isAdmin: true },
+    ];
+
+    expect(isBoardMeeting(participants)).toBe(true);
+  });
+
+  it("één admin + één non-admin internal → false", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "ege", label: "internal", isAdmin: false },
+    ];
+
+    expect(isBoardMeeting(participants)).toBe(false);
+  });
+
+  it("admin + externe deelnemer → false", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "klant", label: "external", isAdmin: false },
+    ];
+
+    expect(isBoardMeeting(participants)).toBe(false);
+  });
+
+  it("admin + onbekende deelnemer → false", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "?", label: "unknown", isAdmin: false },
+    ];
+
+    expect(isBoardMeeting(participants)).toBe(false);
+  });
+
+  it("lege array → false", () => {
+    expect(isBoardMeeting([])).toBe(false);
+  });
+
+  it("classifyParticipantsWithCache vult is_admin uit KnownPerson", () => {
+    const knownPeople: KnownPerson[] = [
+      makePerson({
+        id: "p-1",
+        name: "Stef",
+        email: "stef@jouwaipartner.nl",
+        team: "management",
+        is_admin: true,
+      }),
+      makePerson({
+        id: "p-2",
+        name: "Wouter",
+        email: "wouter@jaip.nl",
+        team: "dev",
+        is_admin: true,
+      }),
+    ];
+
+    const result = classifyParticipantsWithCache(
+      ["stef@jouwaipartner.nl", "wouter@jaip.nl"],
+      knownPeople,
+    );
+
+    expect(result.every((p) => p.isAdmin)).toBe(true);
+    expect(isBoardMeeting(result)).toBe(true);
+  });
+});
+
+describe("determineRuleBasedMeetingType", () => {
+  it("alle intern + alle admin → 'board'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "wouter", label: "internal", isAdmin: true },
+    ];
+    expect(determineRuleBasedMeetingType(participants)).toBe("board");
+  });
+
+  it("alle intern, 3+ personen, niet allen admin → 'team_sync'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "wouter", label: "internal", isAdmin: true },
+      { raw: "ege", label: "internal", isAdmin: false },
+    ];
+    expect(determineRuleBasedMeetingType(participants)).toBe("team_sync");
+  });
+
+  it("alle intern, precies 2, niet allen admin → 'one_on_one'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "ege", label: "internal", isAdmin: false },
+    ];
+    expect(determineRuleBasedMeetingType(participants)).toBe("one_on_one");
+  });
+
+  it("3+ admins intern → 'board' (niet team_sync)", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "wouter", label: "internal", isAdmin: true },
+      { raw: "extra-admin", label: "internal", isAdmin: true },
+    ];
+    expect(determineRuleBasedMeetingType(participants)).toBe("board");
+  });
+
+  it("alle niet-interne deelnemers unknown → 'discovery'", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "onbekend", label: "unknown", isAdmin: false },
+    ];
+    expect(determineRuleBasedMeetingType(participants)).toBe("discovery");
+  });
+
+  it("bekende external aanwezig → null (AI beslist)", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "jan", label: "external", organizationType: "client", isAdmin: false },
+    ];
+    expect(determineRuleBasedMeetingType(participants)).toBeNull();
+  });
+
+  it("mix van unknown + external → null (AI beslist)", () => {
+    const participants: ParticipantInfo[] = [
+      { raw: "stef", label: "internal", isAdmin: true },
+      { raw: "onbekend", label: "unknown", isAdmin: false },
+      { raw: "jan", label: "external", organizationType: "client", isAdmin: false },
+    ];
+    expect(determineRuleBasedMeetingType(participants)).toBeNull();
+  });
+
+  it("lege array → null", () => {
+    expect(determineRuleBasedMeetingType([])).toBeNull();
+  });
+
+  it("één interne deelnemer → 'one_on_one' (solo meeting)", () => {
+    const participants: ParticipantInfo[] = [{ raw: "stef", label: "internal", isAdmin: true }];
+    // Single admin is still "board" since all participants are admin
+    expect(determineRuleBasedMeetingType(participants)).toBe("board");
+  });
+
+  it("één interne non-admin → 'one_on_one'", () => {
+    const participants: ParticipantInfo[] = [{ raw: "ege", label: "internal", isAdmin: false }];
+    expect(determineRuleBasedMeetingType(participants)).toBe("one_on_one");
   });
 });

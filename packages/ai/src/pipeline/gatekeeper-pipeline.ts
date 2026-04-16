@@ -9,7 +9,11 @@ import { buildEntityContext } from "./context-injection";
 import { findPeopleByEmails, getAllKnownPeople } from "@repo/database/queries/people";
 import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
 import { embedMeetingWithExtractions } from "./embed-pipeline";
-import { classifyParticipantsWithCache, determinePartyType } from "./participant-classifier";
+import {
+  classifyParticipantsWithCache,
+  determinePartyType,
+  determineRuleBasedMeetingType,
+} from "./participant-classifier";
 import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
@@ -22,6 +26,8 @@ import { updateSegmentEmbedding } from "@repo/database/mutations/meeting-project
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import { extractSpeakerNames, buildSpeakerMap, formatSpeakerContext } from "./speaker-map";
 import type { SpeakerMap } from "./speaker-map";
+import { generateMeetingTitle } from "./generate-title";
+import { updateMeetingTitle } from "@repo/database/mutations/meetings";
 
 interface MeetingAttendee {
   displayName: string;
@@ -169,7 +175,6 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     buildEntityContext(),
   ]);
   const classifiedParticipants = classifyParticipantsWithCache(allParticipantStrings, knownPeople);
-  const partyType = determinePartyType(classifiedParticipants);
 
   // Build speaker map from Fireflies sentence speaker names (reuse knownPeople)
   const speakerNames = input.sentences ? extractSpeakerNames(input.sentences) : [];
@@ -177,7 +182,10 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const speakerContext = speakerMap.size > 0 ? formatSpeakerContext(speakerMap) : null;
 
   // Step 3: Classify meeting with Gatekeeper AI (with entity context for project identification)
-  // Merge speaker map info into classified participants for richer gatekeeper context
+  // Merge speaker map info into classified participants for richer gatekeeper context.
+  // Sprint 035: isAdmin doorgeven zodat board-detectie consistent is tussen de
+  // gatekeeper-context en de deterministische override.
+  const adminIds = new Set(knownPeople.filter((p) => p.is_admin).map((p) => p.id));
   const gatekeeperParticipants: ParticipantInfo[] =
     speakerMap.size > 0
       ? [...speakerMap.values()].map((s) => ({
@@ -185,6 +193,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
           label: s.label,
           matchedName: s.name !== s.raw ? s.name : undefined,
           organizationName: s.organizationName,
+          isAdmin: s.personId ? adminIds.has(s.personId) : false,
         }))
       : classifiedParticipants;
 
@@ -195,6 +204,14 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     topics: input.topics,
     entityContext: entityContext.contextString,
   });
+
+  // Rule-based meeting type: deterministic rules override AI when possible.
+  // Gatekeeper still runs for relevance_score and project identification.
+  const ruleBasedType = determineRuleBasedMeetingType(classifiedParticipants);
+  const finalMeetingType = ruleBasedType ?? gatekeeperResult.meeting_type;
+
+  // Party type: uses final meeting type for better classification
+  const partyType = determinePartyType(classifiedParticipants, finalMeetingType);
 
   const identifiedProjects = gatekeeperResult.identified_projects;
 
@@ -211,6 +228,11 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     gatekeeperResult,
     partyTypeSource,
   );
+
+  // Add rule-based classification to audit trail
+  const pipelineAudit = rawFireflies.pipeline as Record<string, unknown>;
+  pipelineAudit.rule_based_meeting_type = ruleBasedType;
+  pipelineAudit.meeting_type_source = ruleBasedType ? "deterministic" : "gatekeeper";
 
   // Add speaker map to pipeline audit trail
   if (speakerMap.size > 0) {
@@ -229,11 +251,12 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const insertResult = await insertMeeting({
     fireflies_id: input.fireflies_id,
     title: input.title,
+    original_title: input.title,
     date: new Date(Number(input.date)).toISOString(),
     participants: input.participants,
     summary: input.summary,
     transcript: input.transcript,
-    meeting_type: gatekeeperResult.meeting_type,
+    meeting_type: finalMeetingType,
     party_type: partyType,
     relevance_score: gatekeeperResult.relevance_score,
     organization_id: orgResult.organization_id,
@@ -276,7 +299,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
 
   const summarizeContext = {
     title: input.title,
-    meeting_type: gatekeeperResult.meeting_type,
+    meeting_type: finalMeetingType,
     party_type: partyType,
     participants: input.participants,
     speakerContext,
@@ -285,6 +308,31 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   console.info(`Summarizer using ${transcriptSource} transcript`);
   const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
   if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
+
+  // Step 8a: AI title generation — uses rich summary for better subject extraction
+  try {
+    const firstProject = identifiedProjects.find((p) => p.project_id !== null);
+    const projectName = firstProject
+      ? (entityContext.projects.find((p) => p.id === firstProject.project_id)?.name ?? null)
+      : null;
+
+    const titleSummary = summarizeResult.richSummary ?? input.summary;
+    const generatedTitle = await generateMeetingTitle(titleSummary, {
+      meetingType: finalMeetingType,
+      partyType,
+      organizationName: orgResult.matched
+        ? (knownOrg?.organizationName ?? gatekeeperResult.organization_name)
+        : (gatekeeperResult.organization_name ?? null),
+      projectName,
+    });
+
+    await updateMeetingTitle(meetingId, generatedTitle);
+    console.info(`Title generated: ${generatedTitle}`);
+  } catch (titleErr) {
+    const msg = titleErr instanceof Error ? titleErr.message : String(titleErr);
+    console.error("Title generation failed (non-blocking):", msg);
+    errors.push(`Title generation: ${msg}`);
+  }
 
   // Step 8b: Tagger + Segment-bouw (RULE-015: error boundary, graceful degradation)
   let segmentsSaved = 0;

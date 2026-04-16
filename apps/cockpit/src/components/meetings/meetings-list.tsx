@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Building2, Users, ChevronRight, X } from "lucide-react";
 import { Badge } from "@repo/ui/badge";
-import { formatMeetingType } from "@repo/database/constants/meetings";
+import { MEETING_TYPES, formatMeetingType } from "@repo/database/constants/meetings";
 import { groupMeetingsByDate } from "@/lib/grouping";
 import type { VerifiedMeetingListItem } from "@repo/database/queries/meetings";
 
@@ -15,24 +15,36 @@ interface MeetingsListProps {
 export function MeetingsList({ meetings }: MeetingsListProps) {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+  // Sprint 035: bestuurlijke overleggen standaard verbergen — de hoofd-meetinglijst
+  // is een klantgericht overzicht, board-meetings horen daar niet tussen.
+  const [showBoard, setShowBoard] = useState(false);
+
+  // Basislijst vóór filters, met board-meetings weggefilterd als showBoard=false.
+  const scoped = useMemo(
+    () => (showBoard ? meetings : meetings.filter((m) => m.meeting_type !== "board")),
+    [meetings, showBoard],
+  );
+
+  const typeLabel = (value: string) =>
+    MEETING_TYPES.find((t) => t.value === value)?.label ?? formatMeetingType(value);
 
   const meetingTypes = useMemo(
-    () => [...new Set(meetings.map((m) => m.meeting_type).filter(Boolean))] as string[],
-    [meetings],
+    () => [...new Set(scoped.map((m) => m.meeting_type).filter(Boolean))] as string[],
+    [scoped],
   );
 
   const people = useMemo(() => {
     const map = new Map<string, string>();
-    for (const m of meetings) {
+    for (const m of scoped) {
       for (const p of m.participants) {
         map.set(p.id, p.name);
       }
     }
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  }, [meetings]);
+  }, [scoped]);
 
   const filtered = useMemo(() => {
-    let result = meetings;
+    let result = scoped;
     if (selectedType) {
       result = result.filter((m) => m.meeting_type === selectedType);
     }
@@ -40,7 +52,7 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
       result = result.filter((m) => m.participants.some((p) => p.id === selectedPerson));
     }
     return result;
-  }, [meetings, selectedType, selectedPerson]);
+  }, [scoped, selectedType, selectedPerson]);
 
   const groups = useMemo(() => groupMeetingsByDate(filtered), [filtered]);
   const hasFilters = selectedType !== null || selectedPerson !== null;
@@ -57,7 +69,7 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
           <option value="">Alle types</option>
           {meetingTypes.map((type) => (
             <option key={type} value={type}>
-              {formatMeetingType(type)}
+              {typeLabel(type)}
             </option>
           ))}
         </select>
@@ -90,9 +102,19 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
 
         {hasFilters && (
           <span className="text-xs text-muted-foreground">
-            {filtered.length} van {meetings.length}
+            {filtered.length} van {scoped.length}
           </span>
         )}
+
+        <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={showBoard}
+            onChange={(e) => setShowBoard(e.target.checked)}
+            className="h-3.5 w-3.5 rounded border-border text-primary"
+          />
+          Toon Management
+        </label>
       </div>
 
       {/* Grouped list */}
@@ -132,7 +154,7 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
                       )}
                       {meeting.meeting_type && (
                         <Badge variant="outline" className="h-4 text-[10px]">
-                          {formatMeetingType(meeting.meeting_type)}
+                          {typeLabel(meeting.meeting_type)}
                         </Badge>
                       )}
                     </div>

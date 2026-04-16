@@ -21,6 +21,7 @@ Je bepaalt:
    Kies het type dat het BESTE past. Gebruik de deelnemerslabels (INTERN/EXTERN) als leidraad.
 
    INTERN (alle deelnemers zijn INTERN):
+   - board: bestuurlijk overleg waarbij alle deelnemers admin zijn (Stef, Wouter). Strategische, financiële of operationele beslissingen op directieniveau.
    - strategy: strategieoverleg, roadmap, visie, langetermijnbeslissingen. Kenmerken: er worden richtinggevende keuzes gemaakt of bediscussieerd.
    - one_on_one: 1-op-1 gesprek tussen twee interne collega's. Kenmerken: precies 2 deelnemers, persoonlijk of operationeel.
    - team_sync: overige interne afstemming (standup, weekly, sprint review). Kenmerken: 3+ interne deelnemers, operationeel, voortgangsbespreking.
@@ -57,6 +58,8 @@ export interface ParticipantInfo {
   matchedName?: string;
   organizationName?: string | null;
   organizationType?: string | null;
+  /** True wanneer deze persoon gekoppeld is aan een profiles-row met role='admin' (sprint 035). */
+  isAdmin?: boolean;
 }
 
 export async function runGatekeeper(

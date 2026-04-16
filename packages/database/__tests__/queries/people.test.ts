@@ -150,5 +150,12 @@ describeWithDb("queries/people", () => {
       expect(person!.organization_name).toBe("Test Organization");
       expect(person!.organization_type).toBe("client");
     });
+
+    it("vult is_admin op basis van profiles.role='admin' (sprint 035)", async () => {
+      const result = await getAllKnownPeople();
+      const person = result.find((p) => p.id === TEST_IDS.person);
+      // Test seed-person heeft email test@example.com en is geen admin profile
+      expect(person?.is_admin).toBe(false);
+    });
   });
 });

@@ -4,7 +4,7 @@ import { getAdminClient } from "../supabase/admin";
 export async function createSummaryVersion(
   entityType: "project" | "organization" | "company",
   entityId: string,
-  summaryType: "context" | "briefing" | "weekly",
+  summaryType: "context" | "briefing" | "weekly" | "management_insights",
   content: string,
   sourceMeetingIds: string[] = [],
   client?: SupabaseClient,

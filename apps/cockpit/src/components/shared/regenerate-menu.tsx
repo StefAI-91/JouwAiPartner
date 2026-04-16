@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
 } from "@repo/ui/dropdown-menu";
 import { regenerateMeetingAction, reprocessMeetingAction } from "@/actions/meeting-pipeline";
+import { regenerateMeetingTitleAction } from "@/actions/meetings";
 
 interface RegenerateMenuProps {
   meetingId: string;
@@ -19,7 +20,7 @@ interface RegenerateMenuProps {
 
 export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState<"regenerate" | "reprocess" | null>(null);
+  const [loading, setLoading] = useState<"regenerate" | "reprocess" | "title" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleRegenerate() {
@@ -27,6 +28,20 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
     setError(null);
 
     const result = await regenerateMeetingAction({ meetingId });
+    if ("error" in result) {
+      setError(result.error);
+      setLoading(null);
+      return;
+    }
+    router.refresh();
+    setLoading(null);
+  }
+
+  async function handleRegenerateTitle() {
+    setLoading("title");
+    setError(null);
+
+    const result = await regenerateMeetingTitleAction({ meetingId });
     if ("error" in result) {
       setError(result.error);
       setLoading(null);
@@ -68,7 +83,9 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
                 ? "Regenereren..."
                 : loading === "reprocess"
                   ? "Herverwerken..."
-                  : "Regenereer"}
+                  : loading === "title"
+                    ? "Titel genereren..."
+                    : "Regenereer"}
             </Button>
           }
         />
@@ -76,6 +93,15 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
           align="end"
           className="w-56 border border-border bg-background shadow-lg dark:bg-card"
         >
+          <DropdownMenuItem onClick={handleRegenerateTitle}>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">Titel regenereren</span>
+              <span className="text-xs text-muted-foreground">
+                AI-titel op basis van samenvatting
+              </span>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleRegenerate}>
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Regenereer</span>

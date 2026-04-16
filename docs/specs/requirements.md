@@ -43,6 +43,9 @@ Totaal: 90 requirements.
 | FUNC-035 | Query findPersonOrgByEmail(email) retourneert personId + organizationId van bekende afzender | Sprint 034     | 034    |
 | FUNC-036 | Query findOrganizationIdByEmailDomain(domain) matcht email-domein op organizations           | Sprint 034     | 034    |
 | FUNC-037 | Query listEmailsByOrganization(orgId) lijst alle gekoppelde mails per organisatie            | Sprint 034     | 034    |
+| FUNC-038 | Query getAdminEmails() retourneert lower-case e-mailadressen van alle admin-profiles         | Sprint 035     | 035    |
+| FUNC-039 | Query listBoardMeetings() retourneert verified meetings met meeting_type='board', desc       | Sprint 035     | 035    |
+| FUNC-040 | KnownPerson uitgebreid met is_admin (join op profiles.email, case-insensitive)               | Sprint 035     | 035    |
 
 ## Datamodel eisen
 
@@ -107,6 +110,9 @@ Totaal: 90 requirements.
 | DATA-057 | organizations.type toegestaan: client, partner, supplier, advisor, internal, other          | Sprint 032               | 032    |
 | DATA-058 | Kolom organizations.email_domains TEXT[] DEFAULT '{}' voor domain-based email matching      | Sprint 034               | 034    |
 | DATA-059 | GIN-index idx_organizations_email_domains op email_domains array voor snelle lookups        | Sprint 034               | 034    |
+| DATA-060 | meetings.meeting_type CHECK constraint accepteert waarde 'board' (bestuurlijk overleg)      | Sprint 035               | 035    |
+| DATA-061 | MEETING_TYPES constant bevat entry { value: "board", label: "Management" }                  | Sprint 035               | 035    |
+| DATA-062 | MEETING_TYPES enum in gatekeeper-validatie bevat waarde "board"                             | Sprint 035               | 035    |
 
 ## AI pipeline eisen
 
@@ -121,6 +127,8 @@ Totaal: 90 requirements.
 | AI-007 | Transcript_ref validatie: quote checken tegen brontranscript, confidence→0 bij mismatch     | PRD sectie 6.2 | 003     |
 | AI-010 | Email-pipeline 3-stage org matching: classifier-naam → sender-person → email-domein         | Sprint 034     | 034     |
 | AI-011 | Backfill-script koppelt bestaande ongekoppelde mails via person + domain matching           | Sprint 034     | 034     |
+| AI-012 | Gatekeeper classificeert meeting_type='board' als alle deelnemers internal + is_admin       | Sprint 035     | 035     |
+| AI-013 | Backfill-script reclassify-board-meetings zet meeting_type='board' op bestaande admin-only  | Sprint 035     | 035     |
 
 ## MCP eisen
 
@@ -146,3 +154,15 @@ Totaal: 90 requirements.
 | RULE-005 | Meeting transcript is bron van waarheid, extracties zijn index              | PRD sectie 1   | -       |
 | RULE-006 | 2-staps AI: Haiku 4.5 voor triage, Sonnet voor extractie                    | PRD sectie 5   | 002-003 |
 | RULE-007 | DB-kolommen + CHECK-waardes Engels; UI-labels, routes en teksten Nederlands | Sprint 032     | 032     |
+
+## UI eisen
+
+| ID     | Beschrijving                                                                                   | Bron       | Sprint |
+| ------ | ---------------------------------------------------------------------------------------------- | ---------- | ------ |
+| UI-226 | Hub-tegel /intelligence "Management" (Crown-icon, geen Coming-Soon) → /intelligence/management | Sprint 035 | 035    |
+| UI-227 | Route /intelligence/management toont chronologische lijst van board-meetings                   | Sprint 035 | 035    |
+| UI-228 | Klik op board-meeting kaart opent bestaande /meetings/[id] detailpagina                        | Sprint 035 | 035    |
+| UI-229 | /intelligence/management heeft eigen loading.tsx en error.tsx                                  | Sprint 035 | 035    |
+| UI-230 | meetings-list.tsx verbergt board-meetings standaard; toggle "Toon Management" laat ze zien     | Sprint 035 | 035    |
+| UI-231 | meeting-type-selector toont "Management" als bewerkbare optie                                  | Sprint 035 | 035    |
+| UI-232 | /intelligence/leadership redirect naar /intelligence/management                                | Sprint 035 | 035    |

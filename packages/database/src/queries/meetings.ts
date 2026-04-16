@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export interface MeetingDetail {
   id: string;
   title: string | null;
+  original_title: string | null;
   date: string | null;
   meeting_type: string | null;
   party_type: string | null;
@@ -36,7 +37,7 @@ export async function getVerifiedMeetingById(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
+      `id, title, original_title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
        organization_id, verification_status, verified_at,
        verifier:profiles!meetings_verified_by_fkey(full_name),
        organization:organizations(name),
@@ -103,6 +104,68 @@ export async function listVerifiedMeetings(
   ).map(({ meeting_participants, ...rest }) => ({
     ...rest,
     participants: meeting_participants?.map((mp) => mp.person) ?? [],
+  }));
+
+  return { data: meetings, total: count ?? meetings.length };
+}
+
+export interface BoardMeetingListItem {
+  id: string;
+  title: string | null;
+  date: string | null;
+  summary: string | null;
+  participants: { id: string; name: string }[];
+  decision_count: number;
+  action_item_count: number;
+}
+
+interface BoardMeetingRow {
+  id: string;
+  title: string | null;
+  date: string | null;
+  summary: string | null;
+  meeting_participants: { person: { id: string; name: string } | null }[];
+  extractions: { type: string }[];
+}
+
+/**
+ * Lijst van bestuurlijke (board) meetings, sprint 035.
+ * Alleen verified, gesorteerd op datum desc, gepagineerd.
+ */
+export async function listBoardMeetings(
+  client?: SupabaseClient,
+  { limit = 20, offset = 0 }: { limit?: number; offset?: number } = {},
+): Promise<{ data: BoardMeetingListItem[]; total: number }> {
+  const db = client ?? getAdminClient();
+  const { data, error, count } = await db
+    .from("meetings")
+    .select(
+      `id, title, date, summary,
+       meeting_participants(person:people(id, name)),
+       extractions(type)`,
+      { count: "exact" },
+    )
+    .eq("meeting_type", "board")
+    .eq("verification_status", "verified")
+    .order("date", { ascending: false, nullsFirst: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    console.error("[listBoardMeetings] Database error:", error.message);
+    return { data: [], total: 0 };
+  }
+
+  const rows = (data ?? []) as unknown as BoardMeetingRow[];
+  const meetings: BoardMeetingListItem[] = rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    date: row.date,
+    summary: row.summary,
+    participants: (row.meeting_participants ?? [])
+      .map((mp) => mp.person)
+      .filter((p): p is { id: string; name: string } => p !== null),
+    decision_count: (row.extractions ?? []).filter((e) => e.type === "decision").length,
+    action_item_count: (row.extractions ?? []).filter((e) => e.type === "action_item").length,
   }));
 
   return { data: meetings, total: count ?? meetings.length };
@@ -294,4 +357,35 @@ export async function getVerifiedMeetingsWithoutSegments(): Promise<MeetingForBa
 
   if (error || !data) return [];
   return data as MeetingForBatchSegmentation[];
+}
+
+export interface MeetingForTitleGeneration {
+  id: string;
+  title: string | null;
+  summary: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  organization: { name: string } | null;
+  meeting_projects: { project: { id: string; name: string } }[];
+}
+
+/**
+ * Fetch meeting context needed for AI title generation.
+ * Works for both draft and verified meetings (no verification_status filter).
+ */
+export async function getMeetingForTitleGeneration(
+  meetingId: string,
+): Promise<MeetingForTitleGeneration | null> {
+  const { data, error } = await getAdminClient()
+    .from("meetings")
+    .select(
+      `id, title, summary, meeting_type, party_type,
+       organization:organizations(name),
+       meeting_projects(project:projects(id, name))`,
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data as unknown as MeetingForTitleGeneration;
 }

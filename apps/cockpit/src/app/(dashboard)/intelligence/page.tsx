@@ -27,11 +27,10 @@ export default async function IntelligencePage() {
       badge: needsCount,
     },
     {
-      href: "/intelligence/leadership",
-      label: "Leadership",
-      description: "Strategische inzichten",
+      href: "/intelligence/management",
+      label: "Management",
+      description: "Bestuurlijke overleggen",
       icon: Crown,
-      comingSoon: true,
     },
     {
       href: "/intelligence/weekly",

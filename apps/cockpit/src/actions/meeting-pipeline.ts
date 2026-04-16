@@ -2,7 +2,11 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { updateMeetingSummary, markMeetingEmbeddingStale } from "@repo/database/mutations/meetings";
+import {
+  updateMeetingSummary,
+  updateMeetingTitle,
+  markMeetingEmbeddingStale,
+} from "@repo/database/mutations/meetings";
 import { deleteExtractionsByMeetingId } from "@repo/database/mutations/extractions";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
@@ -105,6 +109,26 @@ export async function regenerateMeetingAction(
     );
     if ("error" in summaryResult) {
       return { error: `Summary opslaan mislukt: ${summaryResult.error}` };
+    }
+
+    // Step 4b: Regenerate title based on new summary
+    try {
+      const { generateMeetingTitle } = await import("@repo/ai/pipeline/generate-title");
+      const { getMeetingForTitleGeneration } = await import("@repo/database/queries/meetings");
+      const meetingContext = await getMeetingForTitleGeneration(meetingId);
+
+      if (meetingContext) {
+        const generatedTitle = await generateMeetingTitle(richSummary, {
+          meetingType: meetingContext.meeting_type || "other",
+          partyType: meetingContext.party_type || "other",
+          organizationName: meetingContext.organization?.name ?? null,
+          projectName: meetingContext.meeting_projects?.[0]?.project?.name ?? null,
+        });
+        await updateMeetingTitle(meetingId, generatedTitle);
+      }
+    } catch (titleErr) {
+      // Non-blocking: title generation failure should not stop regeneration
+      console.error("Title generation failed during regeneration (non-blocking):", titleErr);
     }
 
     // Step 5: Delete old extractions + save new ones (only after AI steps succeeded)

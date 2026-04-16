@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 447 |
-| Exported functions/constants | 645 |
-| Exported types/interfaces | 137 |
-| Cross-package imports | 580 |
-| Critical integration points (3+ packages) | 12 |
+| Files scanned | 465 |
+| Exported functions/constants | 676 |
+| Exported types/interfaces | 143 |
+| Cross-package imports | 601 |
+| Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
 
@@ -156,6 +156,12 @@
 
 **Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`
 
+### `queries/management-insights.ts`
+
+**Exports:**
+- `getManagementInsights()`
+- `getDismissedInsightKeys()`
+
 ### `queries/meeting-project-summaries.ts`
 
 **Exports:**
@@ -172,6 +178,7 @@
 **Exports:**
 - `getVerifiedMeetingById()`
 - `listVerifiedMeetings()`
+- `listBoardMeetings()`
 - `getMeetingByFirefliesId()`
 - `getExistingFirefliesIds()`
 - `getExistingMeetingsByTitleDates()`
@@ -182,8 +189,9 @@
 - `getMeetingExtractions()`
 - `getMeetingExtractionsBatch()`
 - `getVerifiedMeetingsWithoutSegments()`
+- `getMeetingForTitleGeneration()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `MeetingForReclassify`, `MeetingForBatchSegmentation`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`
 
 ### `queries/needs.ts`
 
@@ -216,6 +224,7 @@
 - `getPersonById()`
 - `getStalePeople()`
 - `getAllKnownPeople()`
+- `getAdminEmails()`
 - `getPeopleForContext()`
 - `findPeopleByNames()`
 - `findPeopleByEmails()`
@@ -385,6 +394,12 @@
 
 **Types:** `InsertIssueData`, `UpdateIssueData`
 
+### `mutations/management-insights.ts`
+
+**Exports:**
+- `saveManagementInsights()`
+- `dismissInsight()`
+
 ### `mutations/meeting-participants.ts`
 
 **Exports:**
@@ -532,6 +547,16 @@
 **Internal deps:**
 - `../validations/issue-review` → IssueReviewSchema, type IssueReviewOutput
 
+### `packages/ai/src/agents/management-insights.ts`
+
+**Exports:**
+- `runManagementInsightsAgent()`
+
+**Types:** `ManagementMeetingInput`
+
+**Internal deps:**
+- `../validations/management-insights` → ManagementInsightsOutputSchema, type ManagementInsightsOutput
+
 ### `packages/ai/src/agents/needs-scanner.ts`
 
 **Exports:**
@@ -559,6 +584,13 @@
 
 **Internal deps:**
 - `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput
+
+### `packages/ai/src/agents/title-generator.ts`
+
+**Exports:**
+- `generateMeetingSubject()`
+
+**Types:** `TitleSubjectOutput`
 
 ### `packages/ai/src/agents/weekly-summarizer.ts`
 
@@ -677,6 +709,7 @@
 - `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries
 - `@repo/database/mutations/meeting-project-summaries` → updateSegmentEmbedding
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
+- `@repo/database/mutations/meetings` → updateMeetingTitle
 
 **Internal deps:**
 - `../agents/gatekeeper` → runGatekeeper
@@ -687,7 +720,7 @@
 - `./entity-resolution` → resolveOrganization
 - `./context-injection` → buildEntityContext
 - `./embed-pipeline` → embedMeetingWithExtractions
-- `./participant-classifier` → classifyParticipantsWithCache, determinePartyType
+- `./participant-classifier` → classifyParticipantsWithCache, determinePartyType, determineRuleBasedMeetingType
 - `./build-raw-fireflies` → buildRawFireflies
 - `./steps/transcribe` → runTranscribeStep
 - `./steps/summarize` → runSummarizeStep
@@ -697,12 +730,42 @@
 - `../embeddings` → embedBatch
 - `./speaker-map` → extractSpeakerNames, buildSpeakerMap, formatSpeakerContext
 - `./speaker-map` → SpeakerMap
+- `./generate-title` → generateMeetingTitle
+
+### `packages/ai/src/pipeline/generate-title.ts`
+
+**Exports:**
+- `buildMeetingTitle()`
+- `generateMeetingTitle()`
+
+**Types:** `TitleContext`
+
+**Depends on:**
+- `@repo/database/constants/meetings` → MEETING_TYPE_PREFIX
+
+**Internal deps:**
+- `../agents/title-generator` → generateMeetingSubject
+
+### `packages/ai/src/pipeline/management-insights-pipeline.ts`
+
+**Exports:**
+- `generateManagementInsights()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → listBoardMeetings
+- `@repo/database/mutations/management-insights` → saveManagementInsights
+
+**Internal deps:**
+- `../agents/management-insights` → runManagementInsightsAgent
 
 ### `packages/ai/src/pipeline/participant-classifier.ts`
 
 **Exports:**
 - `classifyParticipants()`
 - `classifyParticipantsWithCache()`
+- `isBoardMeeting()`
+- `determineRuleBasedMeetingType()`
 - `determinePartyType()`
 
 **Depends on:**
@@ -711,7 +774,7 @@
 
 **Internal deps:**
 - `../agents/gatekeeper` → ParticipantInfo
-- `../validations/gatekeeper` → PartyType
+- `../validations/gatekeeper` → MeetingType, PartyType
 
 ### `packages/ai/src/pipeline/re-embed-worker.ts`
 
@@ -981,6 +1044,16 @@
 - `IssueReviewSchema`
 
 **Types:** `IssueReviewOutput`, `Pattern`, `Risk`, `ActionItem`
+
+### `packages/ai/src/validations/management-insights.ts`
+
+**Exports:**
+- `MogelijkeOpvolgingSchema`
+- `KlantPipelineSchema`
+- `TerugkerendThemaSchema`
+- `ManagementInsightsOutputSchema`
+
+**Types:** `ManagementInsightsOutput`
 
 ### `packages/ai/src/validations/needs-scanner.ts`
 
@@ -1333,6 +1406,18 @@
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
+### `apps/cockpit/src/actions/management-insights.ts`
+
+**Exports:**
+- `generateManagementInsightsAction()`
+- `dismissInsightAction()`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+- `@repo/auth/access` → isAdmin
+- `@repo/ai/pipeline/management-insights-pipeline` → generateManagementInsights
+- `@repo/database/mutations/management-insights` → dismissInsight
+
 ### `apps/cockpit/src/actions/meeting-pipeline.ts`
 
 **Exports:**
@@ -1340,7 +1425,7 @@
 - `reprocessMeetingAction()`
 
 **Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingSummary, markMeetingEmbeddingStale
+- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale
 - `@repo/database/mutations/extractions` → deleteExtractionsByMeetingId
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
@@ -1370,13 +1455,14 @@
 - `linkMeetingParticipantAction()`
 - `unlinkMeetingParticipantAction()`
 - `updateMeetingMetadataAction()`
+- `regenerateMeetingTitleAction()`
 - `deleteMeetingAction()`
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject, deleteMeeting
 - `@repo/database/mutations/meeting-participants` → linkMeetingParticipant, unlinkMeetingParticipant
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema
+- `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema, regenerateSchema
 - `@repo/database/validations/entities` → deleteSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
@@ -1664,6 +1750,15 @@
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
 - (type) `@repo/ai/validations/gatekeeper` → IdentifiedProject
 
+### `apps/cockpit/src/app/api/management-insights/generate/route.ts`
+
+**Exports:**
+- `POST()`
+- `maxDuration`
+
+**Depends on:**
+- `@repo/ai/pipeline/management-insights-pipeline` → generateManagementInsights
+
 ### `apps/cockpit/src/app/api/mcp/route.ts`
 
 **Exports:**
@@ -1905,6 +2000,17 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, countEmailsByFilterStatus, countUnprocessedEmails, type EmailDirection, type EmailFilterStatus
 
+### `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`
+
+**Exports:**
+- `dynamic`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+- `@repo/database/queries/meetings` → listBoardMeetings
+- `@repo/database/queries/management-insights` → getManagementInsights, getDismissedInsightKeys
+- `@repo/ai/validations/management-insights` → ManagementInsightsOutputSchema
+
 ### `apps/cockpit/src/app/(dashboard)/intelligence/page.tsx`
 
 **Exports:**
@@ -1985,6 +2091,8 @@
 - `@repo/database/queries/dashboard` → listRecentVerifiedMeetings, listTodaysBriefingMeetings, getExtractionCountsByMeetingIds
 - `@repo/database/queries/tasks` → listAllTasks
 - `@repo/database/queries/people` → listPeopleForAssignment
+- `@repo/database/queries/management-insights` → getManagementInsights
+- `@repo/ai/validations/management-insights` → ManagementInsightsOutputSchema
 
 ### `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`
 
@@ -2283,6 +2391,14 @@
 **Exports:**
 - `Greeting()`
 
+### `apps/cockpit/src/components/dashboard/management-insights-strip.tsx`
+
+**Exports:**
+- `ManagementInsightsStrip()`
+
+**Depends on:**
+- (type) `@repo/ai/agents/management-insights` → ManagementInsightsOutput
+
 ### `apps/cockpit/src/components/dashboard/meeting-carousel.tsx`
 
 **Exports:**
@@ -2458,6 +2574,34 @@
 **Depends on:**
 - `@repo/ui/button` → Button
 
+### `apps/cockpit/src/components/intelligence/board-meeting-card.tsx`
+
+**Exports:**
+- `BoardMeetingCard()`
+
+**Depends on:**
+- (type) `@repo/database/queries/meetings` → BoardMeetingListItem
+
+### `apps/cockpit/src/components/intelligence/generate-insights-button.tsx`
+
+**Exports:**
+- `GenerateInsightsButton()`
+
+### `apps/cockpit/src/components/intelligence/management-insight-card.tsx`
+
+**Exports:**
+- `OpvolgingItem()`
+- `PipelineItem()`
+- `ThemaItem()`
+
+### `apps/cockpit/src/components/intelligence/management-insights-panel.tsx`
+
+**Exports:**
+- `ManagementInsightsPanel()`
+
+**Depends on:**
+- (type) `@repo/ai/agents/management-insights` → ManagementInsightsOutput
+
 ### `apps/cockpit/src/components/intelligence/needs-category-list.tsx`
 
 **Exports:**
@@ -2588,7 +2732,7 @@
 
 **Depends on:**
 - `@repo/ui/badge` → Badge
-- `@repo/database/constants/meetings` → formatMeetingType
+- `@repo/database/constants/meetings` → MEETING_TYPES, formatMeetingType
 - (type) `@repo/database/queries/meetings` → VerifiedMeetingListItem
 
 ### `apps/cockpit/src/components/meetings/party-type-selector.tsx`
@@ -3420,14 +3564,14 @@ Which layers depend on which packages:
 
 | Layer | database | ai | auth | ui | mcp | Total |
 |-------|---|---|---|---|---|-------|
-| AI Core | 8 | - | - | - | - | 8 |
-| AI Pipeline | 40 | - | - | - | - | 40 |
+| AI Core | 10 | - | - | - | - | 10 |
+| AI Pipeline | 45 | - | - | - | - | 45 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 43 | 15 | 28 | - | - | 86 |
-| Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 42 | 1 | - | 80 | - | 123 |
+| Cockpit Server Actions | 45 | 16 | 29 | - | - | 90 |
+| Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
+| Cockpit Components | 43 | 3 | - | 80 | - | 126 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 76 | 2 | 2 | 23 | - | 103 |
+| Cockpit Pages | 80 | 4 | 2 | 23 | - | 109 |
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
@@ -3445,6 +3589,7 @@ parts of the codebase — changes here have the widest blast radius.
 |------|----------|-------|
 | `apps/cockpit/src/actions/email-filter.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/email-review.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/meeting-pipeline.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
@@ -3524,6 +3669,13 @@ Tracing the most important data flows from action → pipeline → database.
 | `deleteComment()` | `apps/devhub/src/actions/comments.ts` |
 | `insertActivity()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts` |
 
+### mutations/management-insights.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `saveManagementInsights()` | `packages/ai/src/pipeline/management-insights-pipeline.ts` |
+| `dismissInsight()` | `apps/cockpit/src/actions/management-insights.ts` |
+
 ### mutations/meeting-participants.ts
 
 | Mutation | Called from |
@@ -3551,7 +3703,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
 | `updateMeetingType()` | `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingPartyType()` | `apps/cockpit/src/actions/meetings.ts` |
-| `updateMeetingTitle()` | `apps/cockpit/src/actions/meetings.ts` |
+| `updateMeetingTitle()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
@@ -3689,6 +3841,13 @@ Which queries are used where across the codebase.
 | `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
+### queries/management-insights.ts
+
+| Query | Used in |
+|-------|---------|
+| `getManagementInsights()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
+| `getDismissedInsightKeys()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
+
 ### queries/meeting-project-summaries.ts
 
 | Query | Used in |
@@ -3705,6 +3864,7 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getVerifiedMeetingById()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
 | `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
+| `listBoardMeetings()` | `packages/ai/src/pipeline/management-insights-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
 | `getMeetingByFirefliesId()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `getExistingFirefliesIds()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
@@ -3727,7 +3887,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
 | `getAllOrganizations()` | `packages/ai/src/pipeline/context-injection.ts`, `packages/ai/src/pipeline/entity-resolution.ts` |
 | `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
@@ -3745,7 +3905,7 @@ Which queries are used where across the codebase.
 | `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
 | `getPersonById()` | `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx` |
 | `getStalePeople()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
-| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant-classifier.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant-classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getPeopleForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `findPeopleByEmails()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts` |
 | `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
@@ -3767,7 +3927,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
@@ -3786,7 +3946,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects.ts`, `packages/database/src/queries/weekly-summary.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
+| `getLatestSummary()` | `packages/database/src/queries/management-insights.ts`, `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects.ts`, `packages/database/src/queries/weekly-summary.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
 
 ### queries/tasks.ts
 
@@ -3800,7 +3960,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 

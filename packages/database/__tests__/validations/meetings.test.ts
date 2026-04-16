@@ -56,6 +56,7 @@ describe("updateMeetingTypeSchema", () => {
       "strategy",
       "one_on_one",
       "team_sync",
+      "board",
       "discovery",
       "sales",
       "project_kickoff",

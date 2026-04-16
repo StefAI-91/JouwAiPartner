@@ -4,6 +4,7 @@ export const MEETING_TYPES = [
   "strategy",
   "one_on_one",
   "team_sync",
+  "board",
   "discovery",
   "sales",
   "project_kickoff",

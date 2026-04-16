@@ -8,8 +8,8 @@ import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import { EditMetadataModal } from "@/components/meetings/edit-metadata-modal";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { Button } from "@repo/ui/button";
-import { Pencil, FolderKanban } from "lucide-react";
-import { updateMeetingSummaryAction } from "@/actions/meetings";
+import { Pencil, FolderKanban, RefreshCw } from "lucide-react";
+import { updateMeetingSummaryAction, regenerateMeetingTitleAction } from "@/actions/meetings";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
@@ -37,6 +37,25 @@ export function MeetingDetailView({
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [currentTitle, setCurrentTitle] = useState(meeting.title);
+  const [titleError, setTitleError] = useState<string | null>(null);
+
+  const handleRegenerateTitle = useCallback(async () => {
+    setRegenerating(true);
+    setTitleError(null);
+    try {
+      const result = await regenerateMeetingTitleAction({ meetingId: meeting.id });
+      if ("error" in result) {
+        console.error("[handleRegenerateTitle]", result.error);
+        setTitleError(result.error);
+      } else {
+        setCurrentTitle(result.title);
+      }
+    } finally {
+      setRegenerating(false);
+    }
+  }, [meeting.id]);
 
   const handleSummaryEdit = useCallback(
     async (content: string) => {
@@ -51,7 +70,7 @@ export function MeetingDetailView({
   return (
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
-        meeting={meeting}
+        meeting={{ ...meeting, title: currentTitle }}
         summaryAction={
           <div className="flex items-center gap-1.5">
             <PipelineInfo rawFireflies={meeting.raw_fireflies} />
@@ -70,7 +89,20 @@ export function MeetingDetailView({
                 <Pencil className="size-3" data-icon="inline-start" />
                 Metadata bewerken
               </Button>
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={handleRegenerateTitle}
+                disabled={regenerating}
+              >
+                <RefreshCw
+                  className={`size-3 ${regenerating ? "animate-spin" : ""}`}
+                  data-icon="inline-start"
+                />
+                {regenerating ? "Genereren..." : "Titel regenereren"}
+              </Button>
             </div>
+            {titleError && <p className="text-xs text-destructive">{titleError}</p>}
 
             {/* Static project display */}
             {linkedProjects.length > 0 && (
@@ -92,6 +124,13 @@ export function MeetingDetailView({
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Original Fireflies title */}
+            {meeting.original_title && meeting.original_title !== currentTitle && (
+              <p className="text-xs text-muted-foreground">
+                Originele titel: {meeting.original_title}
+              </p>
             )}
 
             {/* Static organization display */}

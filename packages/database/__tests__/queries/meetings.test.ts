@@ -13,6 +13,7 @@ import { cleanupTestData } from "../helpers/cleanup";
 import {
   getVerifiedMeetingById,
   listVerifiedMeetings,
+  listBoardMeetings,
   getExistingFirefliesIds,
   getExistingMeetingsByTitleDates,
   getMeetingByTitleAndDate,
@@ -134,6 +135,69 @@ describeWithDb("queries/meetings", () => {
       const { data } = await listVerifiedMeetings(db, { limit: 1, offset: 0 });
 
       expect(data.length).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe("listBoardMeetings()", () => {
+    it("returns only verified board meetings ordered by date DESC", async () => {
+      await seedMeeting({
+        id: TEST_IDS.meeting,
+        verification_status: "verified",
+        meeting_type: "board",
+        title: "Board verified",
+        date: "2026-02-01T10:00:00Z",
+      });
+      await seedMeeting({
+        id: TEST_IDS.meeting2,
+        verification_status: "verified",
+        meeting_type: "team_sync",
+        title: "Team sync verified",
+        date: "2026-02-02T10:00:00Z",
+        fireflies_id: `test-ff-team-${Date.now()}`,
+      });
+
+      const { data } = await listBoardMeetings(db, { limit: 50 });
+
+      const ids = data.map((m) => m.id);
+      expect(ids).toContain(TEST_IDS.meeting);
+      expect(ids).not.toContain(TEST_IDS.meeting2);
+    });
+
+    it("excludes draft board meetings", async () => {
+      await seedMeeting({
+        id: TEST_IDS.meeting,
+        verification_status: "draft",
+        meeting_type: "board",
+      });
+
+      const { data } = await listBoardMeetings(db, { limit: 50 });
+
+      expect(data.map((m) => m.id)).not.toContain(TEST_IDS.meeting);
+    });
+
+    it("counts decisions and action_items per meeting", async () => {
+      await seedMeeting({
+        id: TEST_IDS.meeting,
+        verification_status: "verified",
+        meeting_type: "board",
+        title: "Board with extractions",
+      });
+      await seedExtraction({
+        id: TEST_IDS.extraction,
+        meeting_id: TEST_IDS.meeting,
+        type: "decision",
+      });
+      await seedExtraction({
+        id: TEST_IDS.extraction2,
+        meeting_id: TEST_IDS.meeting,
+        type: "action_item",
+      });
+
+      const { data } = await listBoardMeetings(db, { limit: 50 });
+      const found = data.find((m) => m.id === TEST_IDS.meeting);
+
+      expect(found?.decision_count).toBe(1);
+      expect(found?.action_item_count).toBe(1);
     });
   });
 

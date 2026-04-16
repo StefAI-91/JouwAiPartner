@@ -12,6 +12,7 @@ export async function insertMeeting(meeting: {
   relevance_score: number;
   organization_id: string | null;
   unmatched_organization_name: string | null;
+  original_title?: string | null;
   raw_fireflies?: Record<string, unknown> | null;
   embedding_stale: boolean;
   verification_status?: string;
