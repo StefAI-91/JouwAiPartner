@@ -183,11 +183,7 @@ export async function updateIssueAction(
     current.severity !== data.severity &&
     updated.type === "bug";
 
-  const priorityEscalated =
-    data.priority === "urgent" &&
-    current.priority !== "urgent" &&
-    // Skip if severity is already critical/high — those already triggered (or will trigger) an alert
-    !(updated.type === "bug" && (updated.severity === "critical" || updated.severity === "high"));
+  const priorityEscalated = data.priority === "urgent" && current.priority !== "urgent";
 
   if (severityEscalated || priorityEscalated) {
     const slackEvent = resolveSlackEvent({
