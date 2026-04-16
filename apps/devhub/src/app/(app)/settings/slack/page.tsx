@@ -1,12 +1,18 @@
 import { createPageClient } from "@repo/auth/helpers";
 import { listAccessibleProjects } from "@repo/database/queries/project-access";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { isAdmin } from "@repo/auth/access";
 import { getAdminClient } from "@repo/database/supabase/admin";
+import { redirect } from "next/navigation";
 import { SlackConfigCard } from "./slack-config-card";
 
 export default async function SlackSettingsPage() {
   const [user, supabase] = await Promise.all([getAuthenticatedUser(), createPageClient()]);
   if (!user) return null;
+
+  if (!(await isAdmin(user.id))) {
+    redirect("/settings");
+  }
 
   const projects = await listAccessibleProjects(user.id, supabase);
 
