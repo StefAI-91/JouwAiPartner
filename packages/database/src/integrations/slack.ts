@@ -58,7 +58,7 @@ export interface SlackIssuePayload {
   priority: string;
   type: string;
   component: string | null;
-  trigger: "classification" | "priority_change";
+  trigger: "classification" | "priority_change" | "severity_change";
   url?: string;
 }
 
@@ -77,7 +77,9 @@ function buildSlackBlocks(payload: SlackIssuePayload) {
   const triggerLabel =
     payload.trigger === "classification"
       ? "Nieuw geclassificeerd"
-      : "Priority geëscaleerd naar urgent";
+      : payload.trigger === "severity_change"
+        ? `Severity gewijzigd naar ${severityLabel}`
+        : "Priority geëscaleerd naar urgent";
 
   const issueUrl =
     payload.url ??

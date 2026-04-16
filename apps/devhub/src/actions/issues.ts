@@ -176,17 +176,24 @@ export async function updateIssueAction(
 
   await Promise.all(activityPromises);
 
-  // Slack notification when priority is escalated to urgent.
-  // Skip if severity is already critical/high — those already triggered an alert at classification time.
-  const severity = result.data.severity;
-  const alreadyAlertedBySeverity =
-    result.data.type === "bug" && (severity === "critical" || severity === "high");
+  // Slack notifications for urgent changes (fire-and-forget)
+  const updated = result.data;
+  const severityEscalated =
+    (data.severity === "critical" || data.severity === "high") &&
+    current.severity !== data.severity &&
+    updated.type === "bug";
 
-  if (data.priority === "urgent" && current.priority !== "urgent" && !alreadyAlertedBySeverity) {
+  const priorityEscalated =
+    data.priority === "urgent" &&
+    current.priority !== "urgent" &&
+    // Skip if severity is already critical/high — those already triggered (or will trigger) an alert
+    !(updated.type === "bug" && (updated.severity === "critical" || updated.severity === "high"));
+
+  if (severityEscalated || priorityEscalated) {
     const slackEvent = resolveSlackEvent({
-      type: result.data.type,
-      severity,
-      priority: "urgent",
+      type: updated.type,
+      severity: updated.severity,
+      priority: updated.priority,
     });
 
     if (slackEvent) {
@@ -200,14 +207,14 @@ export async function updateIssueAction(
 
       const payload: SlackIssuePayload = {
         issueId: id,
-        issueNumber: current.issue_number,
-        title: result.data.title,
+        issueNumber: updated.issue_number,
+        title: updated.title,
         projectName: project?.name ?? "Onbekend project",
-        severity: result.data.severity,
-        priority: "urgent",
-        type: result.data.type,
-        component: result.data.component,
-        trigger: "priority_change",
+        severity: updated.severity,
+        priority: updated.priority,
+        type: updated.type,
+        component: updated.component,
+        trigger: severityEscalated ? "severity_change" : "priority_change",
       };
 
       notifySlackIfUrgent(current.project_id, slackEvent, payload).catch((err) =>
