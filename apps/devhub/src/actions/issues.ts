@@ -213,7 +213,8 @@ export async function updateIssueAction(
         trigger: severityEscalated ? "severity_change" : "priority_change",
       };
 
-      notifySlackIfUrgent(current.project_id, slackEvent, payload).catch((err) =>
+      // Await to prevent Vercel from killing the function before the HTTP call completes
+      await notifySlackIfUrgent(current.project_id, slackEvent, payload).catch((err) =>
         console.error("[updateIssueAction] Slack notification failed:", err),
       );
     }
