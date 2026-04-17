@@ -1,10 +1,13 @@
 import { createAuthMiddleware } from "@repo/auth/middleware";
 
+// Portal is voor clients, maar admins mogen ook binnen om het portaal te
+// previewen vanuit intern perspectief (cross-quadrant view). Members horen
+// hier niet en worden naar devhub geredirect als ze hier landen.
 export const middleware = createAuthMiddleware({
   loginPath: "/login",
   defaultRedirect: "/",
-  requireRole: "client",
-  forbiddenRedirect: process.env.NEXT_PUBLIC_COCKPIT_URL ?? "/login",
+  requireRole: ["admin", "client"],
+  forbiddenRedirect: process.env.NEXT_PUBLIC_DEVHUB_URL ?? "/login",
   publicPaths: ["/auth/callback"],
 });
 

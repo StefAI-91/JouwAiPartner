@@ -42,12 +42,15 @@ interface AuthMiddlewareOptions {
   loginPath?: string;
   defaultRedirect?: string;
   /**
-   * Require this role on `profiles.role` for access. When the user is
-   * authenticated but does not have the required role, the request is
-   * redirected to `forbiddenRedirect` — unless the user is a `client`
+   * Require one of these roles on `profiles.role` for access. When the user
+   * is authenticated but does not have one of the allowed roles, the request
+   * is redirected to `forbiddenRedirect` — unless the user is a `client`
    * AND `clientRedirect` is configured, in which case that wins.
+   *
+   * Accepts a single role for backwards-compat with cockpit/devhub, or an
+   * array so portal can allow admin+client (admins previewen het portaal).
    */
-  requireRole?: "admin" | "member" | "client";
+  requireRole?: "admin" | "member" | "client" | Array<"admin" | "member" | "client">;
   /**
    * Absolute or relative URL used when the user is authenticated but lacks
    * the required role. Defaults to the value of `loginPath` when omitted.
@@ -129,7 +132,11 @@ function redirectTo(request: NextRequest, target: string, cookieSource?: NextRes
 export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
   const loginPath = options?.loginPath ?? "/login";
   const defaultRedirect = options?.defaultRedirect ?? "/";
-  const requireRole = options?.requireRole;
+  const requireRoleList = options?.requireRole
+    ? Array.isArray(options.requireRole)
+      ? options.requireRole
+      : [options.requireRole]
+    : null;
   const forbiddenRedirect = options?.forbiddenRedirect ?? loginPath;
   const clientRedirect = options?.clientRedirect;
   const publicPaths = options?.publicPaths ?? [];
@@ -201,7 +208,7 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
     // (cockpit/devhub punt portal users to portal) and the requireRole gate.
     // Performed BEFORE the page renders so no data leaks for users lacking
     // the role (SEC-153).
-    if (user && (requireRole || clientRedirect)) {
+    if (user && (requireRoleList || clientRedirect)) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
@@ -209,12 +216,13 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
         .maybeSingle();
 
       const role = profile?.role ?? null;
+      const clientAllowedHere = requireRoleList?.includes("client") ?? false;
 
       // Kies het uiteindelijke redirect-target voor deze user.
       let target: string | null = null;
-      if (clientRedirect && role === "client" && requireRole !== "client") {
+      if (clientRedirect && role === "client" && !clientAllowedHere) {
         target = clientRedirect;
-      } else if (requireRole && role !== requireRole) {
+      } else if (requireRoleList && (!role || !requireRoleList.includes(role))) {
         target = forbiddenRedirect;
       }
 

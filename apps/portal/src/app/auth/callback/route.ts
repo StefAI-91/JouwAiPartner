@@ -5,10 +5,11 @@ import { createClient } from "@repo/database/supabase/server";
 /**
  * Magic link / invite callback for the portal.
  *
- * Accepts both PKCE (`?code=`) and OTP (`?token_hash=&type=`) links. If the
- * authenticated user is not a client (admin/member), we punt them to the
- * cockpit URL — they have no business on the portal. Clients land on `next`
- * (if same-origin) or "/".
+ * Accepts both PKCE (`?code=`) and OTP (`?token_hash=&type=`) links.
+ * - Client → land op `next` (same-origin) of "/"
+ * - Admin  → land ook op "/" (admins mogen het portaal previewen)
+ * - Member → doorsturen naar devhub; members horen hier niet
+ * - Geen profiel of onbekend → signOut + /login?error=no_access
  */
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
@@ -41,14 +42,18 @@ export async function GET(req: NextRequest) {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.role !== "client") {
-    const cockpitUrl = process.env.NEXT_PUBLIC_COCKPIT_URL;
-    if (cockpitUrl) return NextResponse.redirect(new URL(cockpitUrl));
+  const role = profile?.role ?? null;
 
-    await supabase.auth.signOut();
-    return NextResponse.redirect(new URL("/login?error=no_access", req.url));
+  if (role === "client" || role === "admin") {
+    const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+    return NextResponse.redirect(new URL(target, req.url));
   }
 
-  const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
-  return NextResponse.redirect(new URL(target, req.url));
+  if (role === "member") {
+    const devhubUrl = process.env.NEXT_PUBLIC_DEVHUB_URL;
+    if (devhubUrl) return NextResponse.redirect(new URL(devhubUrl));
+  }
+
+  await supabase.auth.signOut();
+  return NextResponse.redirect(new URL("/login?error=no_access", req.url));
 }
