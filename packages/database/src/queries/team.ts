@@ -1,11 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
+export type TeamRole = "admin" | "member";
+
 export interface TeamMember {
   id: string;
   email: string;
   full_name: string | null;
-  role: "admin" | "member";
+  role: TeamRole;
   created_at: string;
 }
 
@@ -16,12 +18,16 @@ export interface TeamMemberWithAccess extends TeamMember {
 /**
  * List all profiles (team members) with their role. Admin-only query — caller
  * must enforce access before invoking (e.g. via `requireAdmin()`).
+ *
+ * Clients (portal users) worden expliciet uitgefilterd: de admin-UI is enkel
+ * voor internal team members. Clients worden beheerd via de portal-invite flow.
  */
 export async function listTeamMembers(client?: SupabaseClient): Promise<TeamMember[]> {
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("profiles")
     .select("id, email, full_name, role, created_at")
+    .in("role", ["admin", "member"])
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -48,6 +54,10 @@ export async function getUserWithAccess(
     .maybeSingle();
 
   if (profileErr || !profile) return null;
+
+  // Clients horen niet in de devhub admin-UI; zelfs als de caller hun id door-
+  // geeft: geen toegang via deze query.
+  if (profile.role !== "admin" && profile.role !== "member") return null;
 
   const { data: access } = await db
     .from("devhub_project_access")

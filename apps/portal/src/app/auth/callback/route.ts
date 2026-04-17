@@ -3,11 +3,12 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@repo/database/supabase/server";
 
 /**
- * AUTH-171: Magic link / invite callback for DevHub.
+ * Magic link / invite callback for the portal.
  *
- * Accepts both PKCE (`?code=`) and OTP (`?token_hash=&type=`) links. Anyone
- * with devhub access (admin or member) lands on `next` (if same-origin) or
- * "/". Client users are bounced to the portal — they should never see devhub.
+ * Accepts both PKCE (`?code=`) and OTP (`?token_hash=&type=`) links. If the
+ * authenticated user is not a client (admin/member), we punt them to the
+ * cockpit URL — they have no business on the portal. Clients land on `next`
+ * (if same-origin) or "/".
  */
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get("code");
@@ -40,9 +41,10 @@ export async function GET(req: NextRequest) {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.role === "client") {
-    const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL;
-    if (portalUrl) return NextResponse.redirect(new URL(portalUrl));
+  if (profile?.role !== "client") {
+    const cockpitUrl = process.env.NEXT_PUBLIC_COCKPIT_URL;
+    if (cockpitUrl) return NextResponse.redirect(new URL(cockpitUrl));
+
     await supabase.auth.signOut();
     return NextResponse.redirect(new URL("/login?error=no_access", req.url));
   }

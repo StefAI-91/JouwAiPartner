@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@repo/database/supabase/server";
-import { isAdmin } from "@repo/auth/access";
 
 /**
  * AUTH-171: Magic link / invite callback for Cockpit.
@@ -10,6 +9,7 @@ import { isAdmin } from "@repo/auth/access";
  * routes by role:
  *   - admin   → `next` param (if same-origin) or "/"
  *   - member  → NEXT_PUBLIC_DEVHUB_URL (members never enter cockpit)
+ *   - client  → NEXT_PUBLIC_PORTAL_URL (clients belong on the portal)
  *
  * Errors land back on `/login?error=<code>` so the login page can surface a
  * banner and offer a resend button.
@@ -39,10 +39,25 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=session", req.url));
   }
 
-  if (await isAdmin(user.id)) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const role = profile?.role ?? null;
+
+  if (role === "admin") {
     // Only honour same-origin `next` to avoid open-redirect abuse.
     const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
     return NextResponse.redirect(new URL(target, req.url));
+  }
+
+  if (role === "client") {
+    const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL;
+    if (portalUrl) return NextResponse.redirect(new URL(portalUrl));
+    await supabase.auth.signOut();
+    return NextResponse.redirect(new URL("/login?error=no_access", req.url));
   }
 
   const devhubUrl = process.env.NEXT_PUBLIC_DEVHUB_URL;

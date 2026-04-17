@@ -1,0 +1,175 @@
+"use client";
+
+import { useState } from "react";
+import { z } from "zod";
+import { createClient } from "@repo/database/supabase/client";
+import { useRouter } from "next/navigation";
+import { Button } from "@repo/ui/button";
+
+const emailSchema = z.object({ email: z.string().email("Ongeldig e-mailadres") });
+const codeSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "Code moet 6 cijfers zijn"),
+});
+
+type MagicLinkState = "idle" | "sending" | "awaiting-code" | "verifying" | "error";
+
+export function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [state, setState] = useState<MagicLinkState>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
+
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const parsed = emailSchema.safeParse({ email });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Ongeldig e-mailadres");
+      setState("error");
+      return;
+    }
+
+    setState("sending");
+
+    // shouldCreateUser=false + uniform success UI prevents user enumeration.
+    // Client accounts zijn invite-only — alleen bestaande profiles kunnen in.
+    await supabase.auth.signInWithOtp({
+      email: parsed.data.email,
+      options: { shouldCreateUser: false },
+    });
+
+    setState("awaiting-code");
+  }
+
+  async function handleCodeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const parsed = codeSchema.safeParse({ code: code.trim() });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Code moet 6 cijfers zijn");
+      return;
+    }
+
+    setState("verifying");
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: parsed.data.code,
+      type: "email",
+    });
+
+    if (verifyError) {
+      setError("Code is onjuist of verlopen. Controleer de code of vraag een nieuwe aan.");
+      setState("awaiting-code");
+      return;
+    }
+
+    router.push("/");
+    router.refresh();
+  }
+
+  function handleReset() {
+    setState("idle");
+    setEmail("");
+    setCode("");
+    setError(null);
+  }
+
+  if (state === "awaiting-code" || state === "verifying") {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-6 text-center">
+          <p className="text-sm font-medium">Check je inbox</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Als dit e-mailadres toegang heeft, ontvang je een 6-cijferige code. Vul de code
+            hieronder in om in te loggen.
+          </p>
+        </div>
+
+        <form onSubmit={handleCodeSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="code" className="block text-sm font-medium">
+              Inlogcode
+            </label>
+            <input
+              id="code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              required
+              autoFocus
+              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-center text-lg tracking-[0.4em] outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              placeholder="123456"
+            />
+          </div>
+
+          {error && (
+            <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={state === "verifying" || code.length !== 6}
+            className="w-full glow-primary h-12 text-base"
+            size="lg"
+          >
+            {state === "verifying" ? "Bezig..." : "Inloggen"}
+          </Button>
+        </form>
+
+        <button
+          type="button"
+          onClick={handleReset}
+          className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
+        >
+          Andere e-mail gebruiken
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleMagicLink} className="space-y-4">
+      <div className="space-y-2">
+        <label htmlFor="email" className="block text-sm font-medium">
+          E-mail
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/20"
+          placeholder="je@bedrijf.nl"
+        />
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
+      <Button
+        type="submit"
+        disabled={state === "sending"}
+        className="w-full glow-primary h-12 text-base"
+        size="lg"
+      >
+        {state === "sending" ? "Bezig..." : "Stuur inlogcode"}
+      </Button>
+    </form>
+  );
+}

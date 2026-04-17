@@ -1143,6 +1143,42 @@ export type Database = {
           },
         ];
       };
+      portal_project_access: {
+        Row: {
+          created_at: string;
+          id: string;
+          profile_id: string;
+          project_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          profile_id: string;
+          project_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          profile_id?: string;
+          project_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "portal_project_access_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "portal_project_access_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -1150,7 +1186,8 @@ export type Database = {
           email: string;
           full_name: string | null;
           id: string;
-          role: "admin" | "member";
+          organization_id: string | null;
+          role: "admin" | "member" | "client";
           updated_at: string | null;
         };
         Insert: {
@@ -1159,7 +1196,8 @@ export type Database = {
           email: string;
           full_name?: string | null;
           id: string;
-          role?: "admin" | "member";
+          organization_id?: string | null;
+          role?: "admin" | "member" | "client";
           updated_at?: string | null;
         };
         Update: {
@@ -1168,10 +1206,19 @@ export type Database = {
           email?: string;
           full_name?: string | null;
           id?: string;
-          role?: "admin" | "member";
+          organization_id?: string | null;
+          role?: "admin" | "member" | "client";
           updated_at?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       projects: {
         Row: {
@@ -1393,7 +1440,26 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      portal_meetings: {
+        Row: {
+          ai_briefing: string | null;
+          created_at: string | null;
+          date: string | null;
+          id: string | null;
+          meeting_type: string | null;
+          organization_id: string | null;
+          organizer_email: string | null;
+          participants: string[] | null;
+          party_type: string | null;
+          summary: string | null;
+          title: string | null;
+          unmatched_organization_name: string | null;
+          updated_at: string | null;
+          verification_status: string | null;
+          verified_at: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       batch_update_embeddings: {

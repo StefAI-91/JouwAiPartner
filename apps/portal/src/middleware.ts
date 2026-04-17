@@ -1,7 +1,10 @@
 import { createAuthMiddleware } from "@repo/auth/middleware";
 
 export const middleware = createAuthMiddleware({
-  clientRedirect: process.env.NEXT_PUBLIC_PORTAL_URL,
+  loginPath: "/login",
+  defaultRedirect: "/",
+  requireRole: "client",
+  forbiddenRedirect: process.env.NEXT_PUBLIC_COCKPIT_URL ?? "/login",
   publicPaths: ["/auth/callback"],
 });
 

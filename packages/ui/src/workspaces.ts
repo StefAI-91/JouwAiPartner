@@ -30,7 +30,7 @@ const PROD_FALLBACKS = {
   cockpit: "https://jouw-ai-partner.vercel.app",
   devhub: "https://jouw-ai-partner-devhub.vercel.app",
   // TODO: portal production URL invullen zodra gedeployed.
-  portal: "",
+  portal: "https://jouw-ai-partner-portal.vercel.app",
 } as const;
 
 function isProduction(): boolean {
@@ -77,8 +77,8 @@ export function getWorkspaces(): Workspace[] {
       label: "Portal",
       description: "Client transparency",
       icon: MessagesSquare,
-      url: readEnv("NEXT_PUBLIC_PORTAL_URL", "", PROD_FALLBACKS.portal),
-      status: "coming_soon",
+      url: readEnv("NEXT_PUBLIC_PORTAL_URL", "http://localhost:3002", PROD_FALLBACKS.portal),
+      status: "active",
     },
   ];
 }

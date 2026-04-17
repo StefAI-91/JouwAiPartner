@@ -16,9 +16,11 @@ export class NotAuthorizedError extends Error {
   }
 }
 
+export type ProfileRole = "admin" | "member" | "client";
+
 type CurrentProfile = {
   id: string;
-  role: "admin" | "member";
+  role: ProfileRole;
   email: string;
 };
 
