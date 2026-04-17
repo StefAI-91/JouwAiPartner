@@ -10,7 +10,7 @@
 | Files scanned | 467 |
 | Exported functions/constants | 680 |
 | Exported types/interfaces | 145 |
-| Cross-package imports | 601 |
+| Cross-package imports | 600 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -2197,7 +2197,6 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/auth/access` → isAdmin
 
 ### `apps/cockpit/src/app/layout.tsx`
 
@@ -3587,7 +3586,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 43 | 3 | - | 80 | - | 126 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 80 | 4 | 2 | 23 | - | 109 |
+| Cockpit Pages | 80 | 4 | 1 | 23 | - | 108 |
 | Database Queries | - | - | 1 | - | - | 1 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |

@@ -7,14 +7,22 @@ interface AuthMiddlewareOptions {
   /**
    * Require this role on `profiles.role` for access. When the user is
    * authenticated but does not have the required role, the request is
-   * redirected to `forbiddenRedirect`.
+   * redirected to `forbiddenRedirect` — unless the user is a `client`
+   * AND `clientRedirect` is configured, in which case that wins.
    */
-  requireRole?: "admin" | "member";
+  requireRole?: "admin" | "member" | "client";
   /**
    * Absolute or relative URL used when the user is authenticated but lacks
    * the required role. Defaults to the value of `loginPath` when omitted.
    */
   forbiddenRedirect?: string;
+  /**
+   * Optional override: redirect authenticated client users here before the
+   * role gate runs. Used by cockpit and devhub to bounce portal users to
+   * the portal app so they never see internal tooling. Pass an absolute URL
+   * (e.g. `NEXT_PUBLIC_PORTAL_URL`).
+   */
+  clientRedirect?: string;
   /**
    * Route prefixes that are always allowed for unauthenticated users and are
    * NOT subject to the role gate. Used for auth callback handlers that need
@@ -53,6 +61,7 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
   const defaultRedirect = options?.defaultRedirect ?? "/";
   const requireRole = options?.requireRole;
   const forbiddenRedirect = options?.forbiddenRedirect ?? loginPath;
+  const clientRedirect = options?.clientRedirect;
   const publicPaths = options?.publicPaths ?? [];
 
   const isPublicPath = (pathname: string) =>
@@ -116,17 +125,24 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
       return NextResponse.redirect(url);
     }
 
-    // Role gate — only applied when `requireRole` is configured and the user
-    // is authenticated. Performed BEFORE the page renders so no data leaks
-    // for users lacking the role (SEC-153).
-    if (user && requireRole) {
+    // Role gate — fetch the role once and apply both the client redirect
+    // (cockpit/devhub punt portal users to portal) and the requireRole gate.
+    // Performed BEFORE the page renders so no data leaks for users lacking
+    // the role (SEC-153).
+    if (user && (requireRole || clientRedirect)) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .maybeSingle();
 
-      if (profile?.role !== requireRole) {
+      const role = profile?.role ?? null;
+
+      if (clientRedirect && role === "client" && requireRole !== "client") {
+        return redirectTo(request, clientRedirect);
+      }
+
+      if (requireRole && role !== requireRole) {
         return redirectTo(request, forbiddenRedirect);
       }
     }
