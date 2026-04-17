@@ -82,6 +82,19 @@ function isAuthBypassed(): boolean {
   );
 }
 
+/**
+ * Detecteer of een redirect-target op dezelfde app naar `loginPath` wijst.
+ * Wanneer de user een geldige sessie heeft en we ze daarheen zouden sturen,
+ * bouncet de "/login → /" logica ze meteen terug: loop. We moeten dan eerst
+ * `signOut` aanroepen.
+ */
+function isSameAppLoginTarget(target: string, loginPath: string): boolean {
+  if (/^https?:\/\//i.test(target)) return false;
+  return (
+    target === loginPath || target.startsWith(`${loginPath}?`) || target.startsWith(`${loginPath}/`)
+  );
+}
+
 function redirectTo(request: NextRequest, target: string, cookieSource?: NextResponse) {
   // Absolute URL → alleen accepteren als origin in de allowlist staat,
   // anders vallen we terug op /login om open-redirect te voorkomen.
@@ -197,12 +210,38 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
 
       const role = profile?.role ?? null;
 
+      // Kies het uiteindelijke redirect-target voor deze user.
+      let target: string | null = null;
       if (clientRedirect && role === "client" && requireRole !== "client") {
-        return redirectTo(request, clientRedirect, supabaseResponse);
+        target = clientRedirect;
+      } else if (requireRole && role !== requireRole) {
+        target = forbiddenRedirect;
       }
 
-      if (requireRole && role !== requireRole) {
-        return redirectTo(request, forbiddenRedirect, supabaseResponse);
+      if (target !== null) {
+        // Twee scenario's die anders in een loop resulteren:
+        //   (a) target is relatief naar /login op deze app → /login bouncet
+        //       session-holders terug naar /, en wij sturen ze weer naar /login.
+        //   (b) target is een absolute URL die niet in de allowlist staat →
+        //       redirectTo valt terug op /login → zelfde loop.
+        // In beide gevallen sign-outten we de user eerst zodat ze daadwerkelijk
+        // op /login belanden zonder sessie. Gebeurt wanneer env vars zoals
+        // NEXT_PUBLIC_COCKPIT_URL / NEXT_PUBLIC_PORTAL_URL niet correct gezet
+        // zijn op deze Vercel app.
+        const isAbsolute = /^https?:\/\//i.test(target);
+        const willLoop =
+          isSameAppLoginTarget(target, loginPath) || (isAbsolute && !isAllowedAbsolute(target));
+
+        if (willLoop) {
+          await supabase.auth.signOut();
+          const url = request.nextUrl.clone();
+          url.pathname = loginPath;
+          url.search = "?error=no_access";
+          const response = NextResponse.redirect(url);
+          supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+          return response;
+        }
+        return redirectTo(request, target, supabaseResponse);
       }
     }
 
