@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 467 |
 | Exported functions/constants | 680 |
-| Exported types/interfaces | 145 |
+| Exported types/interfaces | 147 |
 | Cross-package imports | 600 |
 | Critical integration points (3+ packages) | 13 |
 
@@ -306,7 +306,7 @@
 - `getUserWithAccess()`
 - `countAdmins()`
 
-**Types:** `TeamMember`, `TeamMemberWithAccess`
+**Types:** `TeamRole`, `TeamMember`, `TeamMemberWithAccess`
 
 ### `queries/userback-issues.ts`
 
@@ -1117,6 +1117,8 @@
 - `assertProjectAccess()`
 - `requireAdminInAction()`
 - `listAccessibleProjectIds()`
+
+**Types:** `ProfileRole`
 
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient

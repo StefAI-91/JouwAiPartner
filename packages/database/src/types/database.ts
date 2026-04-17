@@ -1440,7 +1440,26 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      portal_meetings: {
+        Row: {
+          ai_briefing: string | null;
+          created_at: string | null;
+          date: string | null;
+          id: string | null;
+          meeting_type: string | null;
+          organization_id: string | null;
+          organizer_email: string | null;
+          participants: string[] | null;
+          party_type: string | null;
+          summary: string | null;
+          title: string | null;
+          unmatched_organization_name: string | null;
+          updated_at: string | null;
+          verification_status: string | null;
+          verified_at: string | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       batch_update_embeddings: {

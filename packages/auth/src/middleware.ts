@@ -1,6 +1,43 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * Known workspace origins. A redirect target moet of relatief zijn, of naar
+ * een van deze hosts wijzen. Voorkomt open-redirect als een env var per
+ * ongeluk op een externe hostname staat (preview-misconfig, supply chain).
+ */
+function buildOriginAllowlist(): Set<string> {
+  const origins = new Set<string>();
+  for (const raw of [
+    process.env.NEXT_PUBLIC_COCKPIT_URL,
+    process.env.NEXT_PUBLIC_DEVHUB_URL,
+    process.env.NEXT_PUBLIC_PORTAL_URL,
+  ]) {
+    if (!raw) continue;
+    try {
+      origins.add(new URL(raw).origin);
+    } catch {
+      // Ongeldige URL in env var — silently skip; redirectTo valt dan terug
+      // op de relatieve loginPath.
+    }
+  }
+  // Vercel prod-fallbacks (zie @repo/ui/workspaces) zodat ook bij afwezige
+  // env vars de bekende deployments geaccepteerd worden.
+  origins.add("https://jouw-ai-partner.vercel.app");
+  origins.add("https://jouw-ai-partner-devhub.vercel.app");
+  origins.add("https://jouw-ai-partner-portal.vercel.app");
+  return origins;
+}
+
+function isAllowedAbsolute(target: string): boolean {
+  try {
+    const url = new URL(target);
+    return buildOriginAllowlist().has(url.origin);
+  } catch {
+    return false;
+  }
+}
+
 interface AuthMiddlewareOptions {
   loginPath?: string;
   defaultRedirect?: string;
@@ -45,15 +82,35 @@ function isAuthBypassed(): boolean {
   );
 }
 
-function redirectTo(request: NextRequest, target: string) {
-  // Absolute URL → redirect directly. Relative → keep host and set pathname.
+function redirectTo(request: NextRequest, target: string, cookieSource?: NextResponse) {
+  // Absolute URL → alleen accepteren als origin in de allowlist staat,
+  // anders vallen we terug op /login om open-redirect te voorkomen.
+  let response: NextResponse;
   if (/^https?:\/\//i.test(target)) {
-    return NextResponse.redirect(new URL(target));
+    if (!isAllowedAbsolute(target)) {
+      const fallback = request.nextUrl.clone();
+      fallback.pathname = "/login";
+      fallback.search = "";
+      response = NextResponse.redirect(fallback);
+    } else {
+      response = NextResponse.redirect(new URL(target));
+    }
+  } else {
+    const url = request.nextUrl.clone();
+    url.pathname = target;
+    url.search = "";
+    response = NextResponse.redirect(url);
   }
-  const url = request.nextUrl.clone();
-  url.pathname = target;
-  url.search = "";
-  return NextResponse.redirect(url);
+
+  // Neem cookies van de supabase-response over zodat refresh-token-rotaties
+  // niet verloren gaan bij een middleware-redirect. Zonder dit komt de user
+  // na refresh weer in de login-loop.
+  if (cookieSource) {
+    cookieSource.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie);
+    });
+  }
+  return response;
 }
 
 export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
@@ -116,13 +173,15 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
     } = await supabase.auth.getUser();
 
     if (!user && !request.nextUrl.pathname.startsWith(loginPath)) {
-      return redirectTo(request, loginPath);
+      return redirectTo(request, loginPath, supabaseResponse);
     }
 
     if (user && request.nextUrl.pathname.startsWith(loginPath)) {
       const url = request.nextUrl.clone();
       url.pathname = defaultRedirect;
-      return NextResponse.redirect(url);
+      const response = NextResponse.redirect(url);
+      supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+      return response;
     }
 
     // Role gate — fetch the role once and apply both the client redirect
@@ -139,11 +198,11 @@ export function createAuthMiddleware(options?: AuthMiddlewareOptions) {
       const role = profile?.role ?? null;
 
       if (clientRedirect && role === "client" && requireRole !== "client") {
-        return redirectTo(request, clientRedirect);
+        return redirectTo(request, clientRedirect, supabaseResponse);
       }
 
       if (requireRole && role !== requireRole) {
-        return redirectTo(request, forbiddenRedirect);
+        return redirectTo(request, forbiddenRedirect, supabaseResponse);
       }
     }
 
