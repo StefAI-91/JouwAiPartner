@@ -223,17 +223,17 @@ Elke requirement is toegewezen aan een sprint. Geen requirement is ongedekt.
 
 | Requirement | Sprint  | Status  |
 | ----------- | ------- | ------- |
-| AUTH-P01    | CP-001  | Backlog |
+| AUTH-P01    | CP-001  | Done    |
 | AUTH-P02    | CP-002  | Backlog |
-| AUTH-P03    | CP-001  | Backlog |
+| AUTH-P03    | CP-001  | Done    |
 | AUTH-P04    | CP-002  | Backlog |
 | AUTH-P05    | CP-002  | Backlog |
-| RLS-P01     | CP-001  | Backlog |
-| RLS-P02     | CP-001  | Backlog |
-| RLS-P03     | CP-001  | Backlog |
-| RLS-P04     | CP-001  | Backlog |
-| RLS-P05     | CP-001  | Backlog |
-| RLS-P06     | CP-001  | Backlog |
+| RLS-P01     | CP-001  | Done    |
+| RLS-P02     | CP-001  | Done    |
+| RLS-P03     | CP-001  | Done    |
+| RLS-P04     | CP-001  | Done    |
+| RLS-P05     | CP-001  | Done    |
+| RLS-P06     | CP-001  | Done    |
 | PROJ-P01    | CP-003  | Backlog |
 | PROJ-P02    | CP-003  | Backlog |
 | PROJ-P03    | CP-003  | Backlog |
