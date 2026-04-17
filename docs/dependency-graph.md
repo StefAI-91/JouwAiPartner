@@ -10,7 +10,7 @@
 | Files scanned | 467 |
 | Exported functions/constants | 680 |
 | Exported types/interfaces | 147 |
-| Cross-package imports | 600 |
+| Cross-package imports | 601 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -239,6 +239,9 @@
 - `hasPortalProjectAccess()`
 
 **Types:** `PortalProject`
+
+**Depends on:**
+- `@repo/auth/access` → isAdmin
 
 ### `queries/project-access.ts`
 
@@ -3589,7 +3592,7 @@ Which layers depend on which packages:
 | Cockpit Components | 43 | 3 | - | 80 | - | 126 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 80 | 4 | 1 | 23 | - | 108 |
-| Database Queries | - | - | 1 | - | - | 1 |
+| Database Queries | - | - | 2 | - | - | 2 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
 | DevHub Components | 15 | - | - | 26 | - | 41 |

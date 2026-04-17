@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isAdmin } from "@repo/auth/access";
 import { getAdminClient } from "../supabase/admin";
 
 export interface PortalProject {
@@ -9,12 +10,15 @@ export interface PortalProject {
   status: string | null;
 }
 
+const PORTAL_PROJECT_COLS = "id, name, project_key, organization_id, status";
+
 /**
- * List all projects a portal (client) user has access to via
- * `portal_project_access`. Returns an empty array if the user has no rows.
+ * List all projects visible in the portal for the given user.
  *
- * Caller should already have established that the user is a client — this
- * function does not check role, it just joins on the access table.
+ * - Admin → alle projecten (preview-modus zodat admins het portaal kunnen
+ *   bekijken vanuit intern perspectief, analoog aan `listAccessibleProjectIds`).
+ * - Client → alleen de projecten met een rij in `portal_project_access`.
+ * - Anders (member/onbekend) → lege lijst.
  */
 export async function listPortalProjects(
   profileId: string,
@@ -24,9 +28,18 @@ export async function listPortalProjects(
 
   const db = client ?? getAdminClient();
 
+  if (await isAdmin(profileId, db)) {
+    const { data, error } = await db.from("projects").select(PORTAL_PROJECT_COLS).order("name");
+    if (error) {
+      console.error("[listPortalProjects] Admin fetch error:", error.message);
+      return [];
+    }
+    return (data ?? []) as PortalProject[];
+  }
+
   const { data, error } = await db
     .from("portal_project_access")
-    .select("projects(id, name, project_key, organization_id, status)")
+    .select(`projects(${PORTAL_PROJECT_COLS})`)
     .eq("profile_id", profileId);
 
   if (error) {
@@ -42,11 +55,10 @@ export async function listPortalProjects(
 }
 
 /**
- * Boolean check whether a client user has portal access to a specific project.
+ * Boolean check whether a user has portal access to a specific project.
  *
- * Uses the `portal_project_access` table directly — no admin bypass, since
- * this is intended to be called after we know the user is a client. Admin
- * checks should use `isAdmin()` from `@repo/auth/access`.
+ * Admins krijgen altijd `true` (preview-modus). Clients via
+ * `portal_project_access`. Overige rollen → `false`.
  */
 export async function hasPortalProjectAccess(
   profileId: string,
@@ -56,6 +68,8 @@ export async function hasPortalProjectAccess(
   if (!profileId || !projectId) return false;
 
   const db = client ?? getAdminClient();
+
+  if (await isAdmin(profileId, db)) return true;
 
   const { data, error } = await db
     .from("portal_project_access")
