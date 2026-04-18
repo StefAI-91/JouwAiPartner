@@ -229,9 +229,23 @@ export async function runMeetingStructurer(
     .join("\n");
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-5-20250929"),
+    model: anthropic("claude-sonnet-4-6"),
     maxRetries: 3,
+    // Deterministisch voor consistente extracties — cruciaal bij
+    // classificatie-taken waar je reproduceerbaarheid wilt (en waar
+    // de harness diffs tussen runs moet kunnen tonen).
+    temperature: 0,
+    // Ruim voldoende voor briefing + alle 14-type kernpunten op lange
+    // discovery-meetings (15-25 items). Pas omhoog als je output ziet
+    // worden afgekapt.
+    maxOutputTokens: 16000,
     schema: MeetingStructurerOutputSchema,
+    providerOptions: {
+      // 4.6 default `effort` is "high" — dat verbruikt veel thinking
+      // tokens zonder veel meerwaarde voor gestructureerde extractie.
+      // "medium" is ruim voldoende en fors goedkoper.
+      anthropic: { effort: "medium" },
+    },
     messages: [
       {
         role: "system",
