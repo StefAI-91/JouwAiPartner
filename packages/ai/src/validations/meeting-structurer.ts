@@ -35,9 +35,23 @@ const DecisionMetadata = z.object({
 const RiskMetadata = z.object({
   severity: z.enum(["low", "medium", "high", "critical"]).nullable().optional(),
   category: z
-    .enum(["financial", "scope", "technical", "client_relationship", "team", "timeline"])
+    .enum([
+      "financial",
+      "scope",
+      "technical",
+      "client_relationship",
+      "team",
+      "timeline",
+      "strategic",
+      "reputation",
+    ])
     .nullable()
     .optional(),
+  jaip_impact_area: z
+    .enum(["delivery", "margin", "strategy", "client", "team", "reputation"])
+    .nullable()
+    .optional(),
+  raised_by: z.string().nullable().optional(),
 });
 
 const NeedMetadata = z.object({

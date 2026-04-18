@@ -69,12 +69,52 @@ decision — een besluit dat genomen is (niet een voornemen of overweging).
     - decided_by: persoon of "team" | null
     - impact_area: "pricing" | "scope" | "technical" | "hiring" | "process" | "other" | null
 
-risk — concrete waarschuwing met vermoedelijke negatieve impact.
-  Onderscheid van signal: risk = waarschuwing met impact, signal = observatie. BIJ TWIJFEL → kies signal.
+risk — concrete waarschuwing (expliciet of impliciet) dat iets JAIP kan schaden.
+
+  KERNVRAAG: Moet JAIP hiervoor gewaarschuwd worden? Als het antwoord niet duidelijk "ja" is → geen risk.
+
+  JAIP kan geraakt worden op:
+  - leveringsvermogen (capaciteit, bus-factor, kwaliteit van oplevering, technische haalbaarheid)
+  - marge en financieel (kosten die uit de hand lopen, onduidelijke facturatie, verloren investering)
+  - strategische positie (markt verschuift, propositie verouderd, concurrentie, verkeerde richting)
+  - klantrelatie (moeizame communicatie, adoptie-problemen, scope-conflict, tegenvallende partij)
+  - team (overbelasting, verkeerde hire, ownership-gat, single point of failure)
+  - reputatie en aansprakelijkheid (fout advies aan eindklant, compliance, AVG)
+
+  Onderscheid van signal: risk = waarschuwing met dreiging van nadeel voor JAIP. Signal = observatie zonder concrete dreiging (marktfeit, gebruikersreactie, trend).
+  Onderscheid van context: risk = vooruitkijkend ("als we niets doen, gebeurt X"). Context = achtergrondinformatie, ook over zwaktes of werkwijzes, zonder impliciete waarschuwing.
+  Onderscheid van question: risk verpakt als vraag ("wat als ze geen adoptie hebben?", "stel we moeten pivoten?") is een risk, GEEN question — de vraag impliceert de waarschuwing.
+  Onderscheid van need: need = wens/pijnpunt die opgelost moet worden. Risk = waarschuwing die genegeerd kan worden met negatieve gevolgen.
+
+  BELANGRIJK — deze typen uitspraken vaak classificeren als risk:
+  - Zelfkritiek of zelfgerapporteerde zwakte door een spreker ("ik heb de neiging in schoonheid te sterven", "ik heb geen stresstest", "ik ben bang dat jij vast gaat lopen")
+  - Hypothetische waarschuwingen ("wat als...", "stel dat...", "straks gaan mensen dit zelf doen")
+  - Opstapeling van twijfels over een klant, partij of aanpak, ook zonder één sterke quote
+  - Herhaling van een eerder geuite zorg — herhaling verhoogt severity
+  - Expliciete vraag of bestaande strategie/aanpak nog klopt
+  - Adoptie-zorgen ("wat als ze er geen gebruik van maken?")
+  - Financiële/operationele risks verpakt als technisch detail (duur model, token-kosten, afhankelijkheid van input-kwaliteit van klant)
+
+  BELANGRIJK — deze typen uitspraken zijn GEEN risk:
+  - Alledaagse operationele frustratie zonder materiële impact ("klant reageert traag via app", "SVPE moeilijk te bereiken voor afspraak") → context of signal
+  - Persoonlijke, juridische of gezondheidssituaties van spreker, ook als ze JAIP indirect raken → context met sensitive: true
+  - Algemene marktobservaties zonder specifieke dreiging voor JAIP's positie ("AI ontwikkelt snel") → signal of vision
+  - Scope-discussies die nog open zijn tussen sprekers zonder duidelijke dreiging → question of idea
+  - Verleden-tense problemen die al opgelost zijn → niet extraheren
+
+  Default-gedrag: als een uitspraak een waarschuwende toon heeft OF een impliciete dreiging voor JAIP bevat, classificeer als risk — ook als de zinsconstructie neutraal, vragend of reflectief is. Weeg JAIP-impact zwaarder dan oppervlakkige zinsstructuur.
+
+  Gebruik lagere confidence (0.4–0.7) voor risks die uit opstapeling of impliciete toon komen in plaats van één sterke quote — maar extraheer ze wél.
+
   metadata:
     - severity: "low" | "medium" | "high" | "critical" | null
-      (critical = blokkeert deploy nu, high = dreigt deadline binnen weken, medium = maakt werk moeilijker, low = zachte waarschuwing)
-    - category: "financial" | "scope" | "technical" | "client_relationship" | "team" | "timeline" | null
+      (critical = acuut, blokkeert leveringsvermogen of dreigt klantverlies nu;
+       high = raakt JAIP binnen weken op capaciteit/marge/strategie/levering;
+       medium = maakt werk moeilijker of bedreigt specifiek project;
+       low = zachte waarschuwing, monitor-waardig)
+    - category: "financial" | "scope" | "technical" | "client_relationship" | "team" | "timeline" | "strategic" | "reputation" | null
+    - jaip_impact_area: "delivery" | "margin" | "strategy" | "client" | "team" | "reputation" | null
+    - raised_by: naam van spreker die het risk aankaartte | "impliciet" als het uit toon/opstapeling komt | null
 
 need — een wens, behoefte of pijnpunt van klant of team.
   Onderscheid van question (open vraag) en risk (dreiging).
