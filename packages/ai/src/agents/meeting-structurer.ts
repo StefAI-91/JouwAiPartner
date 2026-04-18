@@ -193,11 +193,12 @@ Default als geen cue: +5 werkdagen.
 - Wees ruimhartig met kernpunten. Een korte standup heeft 5-10, een discovery 15-25 items.
 - Voor elk item in kernpunten is het metadata-object VERPLICHT gevuld met alle velden die bij het type horen. Vul elk veld in óf met een waarde uit de toegestane enum, óf expliciet met null. Een leeg metadata-object ({}) is NIET toegestaan. Als je geen waarde kunt bepalen, gebruik dan null — niet weglaten.
 - Confidence-regels:
-  * 1.0 = expliciet benoemd + letterlijke quote gevonden
-  * 0.7–0.9 = sterk geïmpliceerd + goede quote aanwezig
-  * 0.4–0.6 = afgeleid uit toon/opstapeling + quote aanwezig die dit ondersteunt
-  * 0.0 = UITSLUITEND wanneer geen quote uit transcript beschikbaar is
-- Gebruik NOOIT confidence 0.0 als source_quote gevuld is. Als je een quote hebt, kies een waarde tussen 0.4 en 1.0 op basis van hoe expliciet het risk is.
+  * 0.9–1.0 = expliciet benoemd door spreker + letterlijke, duidelijke quote. Gebruik dit bij woorden als "ik ben bang dat", "dit is een risico", "we moeten waken voor", "wat als" met duidelijke dreiging, "gevaar", of concrete waarschuwende uitspraken.
+  * 0.7–0.9 = sterk geïmpliceerd + goede quote aanwezig. De waarschuwing is duidelijk maar niet met expliciete risk-woorden geformuleerd.
+  * 0.4–0.6 = afgeleid uit toon of opstapeling van meerdere uitspraken + quote aanwezig die dit ondersteunt maar niet zelfstandig overtuigt.
+  * 0.0 = UITSLUITEND wanneer geen source_quote beschikbaar is.
+- Gebruik NOOIT confidence 0.0 als source_quote gevuld is.
+- Default neiging: als je twijfelt tussen 0.3 en 0.7, kies 0.7. Expliciete risks met goede quote horen niet onder de 0.6 te vallen.
 - source_quote MOET letterlijk uit transcript komen (max 200 chars). Anders null + confidence 0.0.
 - theme_project: gebruik EXACT de schrijfwijze uit BEKENDE ENTITEITEN. Gebruik "Algemeen" voor niet-project-specifiek. Gebruik nooit varianten ([Geen project], [Intern], [Overig]).
 - Sorteer kernpunten zo dat items van hetzelfde thema bij elkaar staan; thema's op belang.
