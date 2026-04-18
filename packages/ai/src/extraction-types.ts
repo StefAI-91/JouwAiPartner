@@ -47,6 +47,63 @@ export function isExtractionType(type: string): type is ExtractionType {
 }
 
 /**
+ * Per-type allow-list voor metadata-velden. Gebruikt door
+ * `filterMetadataByType` om de bloat uit de agent-output te strippen:
+ * het model levert altijd het volledige universele metadata-object
+ * (required onder Anthropic's 16-union limiet), maar alleen de velden
+ * die semantisch bij het type horen moeten overleven naar DB/UI.
+ *
+ * Null-waarden binnen toegestane velden blijven behouden — null betekent
+ * "model kon dit niet bepalen", wat een betekenisvolle uitkomst is.
+ */
+export const METADATA_FIELDS_PER_TYPE: Record<ExtractionType, readonly string[]> = {
+  action_item: [
+    "category",
+    "follow_up_contact",
+    "assignee",
+    "deadline",
+    "suggested_deadline",
+    "effort_estimate",
+    "deadline_reasoning",
+    "scope",
+  ],
+  decision: ["status", "decided_by", "impact_area"],
+  risk: ["severity", "category", "jaip_impact_area", "raised_by"],
+  need: ["party", "urgency", "category"],
+  commitment: ["committer", "committed_to", "direction"],
+  question: ["needs_answer_from", "urgency"],
+  signal: ["direction", "domain"],
+  context: ["about_person", "about_org", "domain", "sensitive"],
+  vision: ["horizon"],
+  idea: ["proposed_by"],
+  insight: ["scope"],
+  client_sentiment: ["sentiment", "about"],
+  pricing_signal: ["signal_type", "amount_hint"],
+  milestone: ["status", "date_hint"],
+};
+
+/**
+ * Strip metadata-velden die niet bij `type` horen. Velden die wél bij
+ * het type horen blijven onaangetast, inclusief null-waarden. Onbekende
+ * types → lege metadata (defensive — zou nooit moeten voorkomen sinds
+ * `type` door de Zod-enum loopt).
+ */
+export function filterMetadataByType<T extends Record<string, unknown>>(
+  type: string,
+  metadata: T,
+): Partial<T> {
+  const allowed = METADATA_FIELDS_PER_TYPE[type as ExtractionType];
+  if (!allowed) return {};
+  const filtered: Record<string, unknown> = {};
+  for (const field of allowed) {
+    if (field in metadata) {
+      filtered[field] = metadata[field];
+    }
+  }
+  return filtered as Partial<T>;
+}
+
+/**
  * Dutch label used as the bold marker in summary markdown
  * (`**Risico:** ...`). Picked so legacy markdown round-trips cleanly.
  *

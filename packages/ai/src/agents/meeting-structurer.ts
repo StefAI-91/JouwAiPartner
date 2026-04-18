@@ -7,6 +7,7 @@ import {
   type Kernpunt,
   type MeetingStructurerParticipant,
 } from "../validations/meeting-structurer";
+import { filterMetadataByType } from "../extraction-types";
 
 export type { MeetingStructurerOutput };
 
@@ -331,7 +332,11 @@ function normaliseStructurerOutput(raw: RawMeetingStructurerOutput): MeetingStru
         source_quote: emptyToNull(k.source_quote),
         project: emptyToNull(k.project),
         confidence: k.confidence,
-        metadata: normaliseMetadata(k.metadata),
+        // Strip metadata-velden die niet bij het type horen. Het model
+        // levert altijd alle 23 velden (Anthropic 16-union limiet), maar
+        // alleen de type-specifieke velden horen verder in de pipeline.
+        // Null-waarden binnen toegestane velden blijven behouden.
+        metadata: filterMetadataByType(k.type, normaliseMetadata(k.metadata)),
       }),
     ),
   };

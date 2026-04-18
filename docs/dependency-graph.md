@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 490 |
-| Exported functions/constants | 728 |
+| Exported functions/constants | 730 |
 | Exported types/interfaces | 169 |
 | Cross-package imports | 627 |
 | Critical integration points (3+ packages) | 14 |
@@ -615,6 +615,7 @@
 
 **Internal deps:**
 - `../validations/meeting-structurer` → MeetingStructurerOutputSchema, type MeetingStructurerOutput, type RawMeetingStructurerOutput, type Kernpunt, type MeetingStructurerParticipant
+- `../extraction-types` → filterMetadataByType
 
 ### `packages/ai/src/agents/needs-scanner.ts`
 
@@ -1028,9 +1029,11 @@
 - `isTier1()`
 - `isTier2()`
 - `isExtractionType()`
+- `filterMetadataByType()`
 - `TIER_1_TYPES`
 - `TIER_2_TYPES`
 - `ALL_EXTRACTION_TYPES`
+- `METADATA_FIELDS_PER_TYPE`
 - `TYPE_MARKDOWN_LABEL`
 - `MARKDOWN_LABEL_TO_TYPE`
 
