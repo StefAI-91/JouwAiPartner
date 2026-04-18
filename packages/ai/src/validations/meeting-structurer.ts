@@ -284,22 +284,19 @@ export const KernpuntSchema = z.object({
         .optional(),
 
       // --- Vrije-tekst velden ---
+      // Anthropic's structured-output endpoint limiteert optionals op 24.
+      // Minder-kritieke velden (suggested_deadline, deadline_reasoning,
+      // about_person/org, proposed_by, about, amount_hint, date_hint) zijn
+      // geschrapt om onder die grens te komen; het model beschrijft deze
+      // info nu in de `content`-string als het relevant is.
       follow_up_contact: z.string().nullable().optional(),
       assignee: z.string().nullable().optional(),
       deadline: z.string().nullable().optional(),
-      suggested_deadline: z.string().nullable().optional(),
-      deadline_reasoning: z.string().nullable().optional(),
       decided_by: z.string().nullable().optional(),
       raised_by: z.string().nullable().optional(),
       committer: z.string().nullable().optional(),
       committed_to: z.string().nullable().optional(),
       needs_answer_from: z.string().nullable().optional(),
-      about_person: z.string().nullable().optional(),
-      about_org: z.string().nullable().optional(),
-      proposed_by: z.string().nullable().optional(),
-      about: z.string().nullable().optional(),
-      amount_hint: z.string().nullable().optional(),
-      date_hint: z.string().nullable().optional(),
     })
     .describe(
       "Per-type metadata. Vul de velden in die bij het item-type horen (zie prompt per type). Niet-relevante velden: laat op null.",

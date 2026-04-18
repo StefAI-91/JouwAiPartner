@@ -55,10 +55,8 @@ action_item — opvolgbare actie waarbij JAIP iemand kan e-mailen.
     - category: "wachten_op_extern" (externe partij moet leveren) | "wachten_op_beslissing" (iemand moet beslissen) | null
     - follow_up_contact: VERPLICHT — naam van de gesprekspartner uit deze meeting via wie JAIP opvolgt
     - assignee: persoon die uitvoert (mag intern of extern zijn) | null
-    - deadline: ISO YYYY-MM-DD als expliciet genoemd | null
-    - suggested_deadline: ISO YYYY-MM-DD geschat (zie deadline-regels) | null
+    - deadline: ISO YYYY-MM-DD als expliciet genoemd, anders geschat op basis van de deadline-regels | null
     - effort_estimate: "small" | "medium" | "large" | null
-    - deadline_reasoning: korte uitleg welke cue/default je gebruikte | null
     - scope: "project" | "personal" | null
   Schrijf content beginnend met de NAAM van follow_up_contact: "Lieke navragen of de intake al binnen is".
   Sluit interne JAIP-taken expliciet uit (wij bouwen X, ik schrijf de offerte).
@@ -164,10 +162,9 @@ signal — observatie, marktinformatie, trend, gebruikersreactie. Geen waarschuw
 context — achtergrond, expertise, methodiek of werkwijze die relevant is voor het project of de samenwerking.
   Onderscheid van need (wenselijk) en decision (beslist).
   metadata:
-    - about_person: naam | null
-    - about_org: organisatie | null
     - domain: "methodology" | "background" | "expertise" | "process" | "preferences" | "personal" | null
     - sensitive: true voor gezondheid/gezinssituatie/persoonlijke druk; false anders | null
+  Noem bij wie de context hoort (persoon/organisatie) expliciet in 'content'.
 
 vision — langetermijnrichting, strategische ambitie, koers.
   Géén concrete actie of deadline (dan is het waarschijnlijk decision).
@@ -176,11 +173,11 @@ vision — langetermijnrichting, strategische ambitie, koers.
 
 TIER 2 (compact — best-effort, alleen admin-zichtbaar tot consumer komt):
 
-idea — overwogen richting, geen besluit. metadata: { proposed_by: name | null }.
+idea — overwogen richting, geen besluit. Noem de bedenker in 'content'.
 insight — meta-observatie, patroon dat iemand benoemt. metadata: { scope: "meeting"|"project"|"team"|"company" | null }.
-client_sentiment — emotioneel signaal van klant (frustratie, enthousiasme, twijfel). metadata: { sentiment: "positive"|"neutral"|"concerning" | null, about: string | null }.
-pricing_signal — budget-uitspraak, willingness-to-pay, vergelijking met concurrent. metadata: { signal_type: "budget_constraint"|"willingness_to_pay"|"comparison"|"request" | null, amount_hint: string | null }.
-milestone — concreet projectvoortgangs-moment ("admin panel staat live", "demo gehaald"). metadata: { status: "upcoming"|"reached"|"missed" | null, date_hint: string | null }.
+client_sentiment — emotioneel signaal van klant (frustratie, enthousiasme, twijfel). metadata: { sentiment: "positive"|"neutral"|"concerning" | null }. Noem waar het over gaat in 'content'.
+pricing_signal — budget-uitspraak, willingness-to-pay, vergelijking met concurrent. metadata: { signal_type: "budget_constraint"|"willingness_to_pay"|"comparison"|"request" | null }. Noem bedragen/hints direct in 'content'.
+milestone — concreet projectvoortgangs-moment ("admin panel staat live", "demo gehaald"). metadata: { status: "upcoming"|"reached"|"missed" | null }. Noem de datum/periode in 'content'.
 
 --- DEADLINE-REGELS (alleen voor action_item) ---
 Cues (vanaf MEETINGDATUM, werkdagen, geen weekenden):
