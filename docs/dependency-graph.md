@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 468 |
-| Exported functions/constants | 686 |
+| Files scanned | 469 |
+| Exported functions/constants | 687 |
 | Exported types/interfaces | 153 |
-| Cross-package imports | 602 |
+| Cross-package imports | 604 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -2210,6 +2210,15 @@
 - `@repo/database/queries/review` → listDraftMeetings, getReviewStats
 - `@repo/database/queries/emails` → listDraftEmails
 
+### `apps/cockpit/src/app/(dashboard)/shift/page.tsx`
+
+**Exports:**
+- `dynamic`
+
+**Depends on:**
+- `@repo/ui/badge` → Badge
+- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
+
 ### `apps/cockpit/src/app/auth/callback/route.ts`
 
 **Exports:**
@@ -3606,7 +3615,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 43 | 3 | - | 80 | - | 126 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 80 | 4 | 1 | 23 | - | 108 |
+| Cockpit Pages | 80 | 4 | 1 | 25 | - | 110 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
