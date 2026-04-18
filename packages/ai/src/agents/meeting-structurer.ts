@@ -3,6 +3,9 @@ import { anthropic } from "@ai-sdk/anthropic";
 import {
   MeetingStructurerOutputSchema,
   type MeetingStructurerOutput,
+  type RawMeetingStructurerOutput,
+  type Kernpunt,
+  type MeetingStructurerParticipant,
 } from "../validations/meeting-structurer";
 
 export type { MeetingStructurerOutput };
@@ -291,7 +294,7 @@ export async function runMeetingStructurer(
   const normalisedTranscript = normaliseForQuoteMatch(transcript);
   for (const k of object.kernpunten) {
     k.confidence = Math.max(0, Math.min(1, k.confidence));
-    if (k.source_quote) {
+    if (k.source_quote && k.source_quote !== "") {
       const refNorm = normaliseForQuoteMatch(k.source_quote);
       if (!normalisedTranscript.includes(refNorm)) {
         k.confidence = Math.min(k.confidence, 0.3);
@@ -299,7 +302,77 @@ export async function runMeetingStructurer(
     }
   }
 
-  return object;
+  return normaliseStructurerOutput(object);
+}
+
+/**
+ * Converteer "" en "n/a" sentinels (nodig in de Anthropic JSON Schema
+ * om onder de 16-union limiet te blijven) terug naar null voor
+ * downstream consumers (save-extractions, render-summary, UI).
+ */
+function normaliseStructurerOutput(raw: RawMeetingStructurerOutput): MeetingStructurerOutput {
+  return {
+    briefing: raw.briefing,
+    entities: raw.entities,
+    deelnemers: raw.deelnemers.map(
+      (d): MeetingStructurerParticipant => ({
+        name: d.name,
+        role: emptyToNull(d.role),
+        organization: emptyToNull(d.organization),
+        stance: emptyToNull(d.stance),
+      }),
+    ),
+    kernpunten: raw.kernpunten.map(
+      (k): Kernpunt => ({
+        type: k.type,
+        content: k.content,
+        theme: emptyToNull(k.theme),
+        theme_project: emptyToNull(k.theme_project),
+        source_quote: emptyToNull(k.source_quote),
+        project: emptyToNull(k.project),
+        confidence: k.confidence,
+        metadata: normaliseMetadata(k.metadata),
+      }),
+    ),
+  };
+}
+
+function emptyToNull(s: string): string | null {
+  return s === "" ? null : s;
+}
+
+function sentinelToNull<T extends string>(v: T): Exclude<T, "n/a"> | null {
+  return v === "n/a" ? null : (v as Exclude<T, "n/a">);
+}
+
+function normaliseMetadata(
+  m: RawMeetingStructurerOutput["kernpunten"][number]["metadata"],
+): Kernpunt["metadata"] {
+  return {
+    effort_estimate: sentinelToNull(m.effort_estimate),
+    impact_area: sentinelToNull(m.impact_area),
+    severity: sentinelToNull(m.severity),
+    jaip_impact_area: sentinelToNull(m.jaip_impact_area),
+    party: sentinelToNull(m.party),
+    horizon: sentinelToNull(m.horizon),
+    sentiment: sentinelToNull(m.sentiment),
+    signal_type: sentinelToNull(m.signal_type),
+    sensitive: m.sensitive,
+    category: sentinelToNull(m.category),
+    scope: sentinelToNull(m.scope),
+    status: sentinelToNull(m.status),
+    urgency: sentinelToNull(m.urgency),
+    direction: sentinelToNull(m.direction),
+    domain: sentinelToNull(m.domain),
+    follow_up_contact: emptyToNull(m.follow_up_contact),
+    assignee: emptyToNull(m.assignee),
+    deadline: emptyToNull(m.deadline),
+    decided_by: emptyToNull(m.decided_by),
+    raised_by: emptyToNull(m.raised_by),
+    committer: emptyToNull(m.committer),
+    committed_to: emptyToNull(m.committed_to),
+    needs_answer_from: emptyToNull(m.needs_answer_from),
+  };
 }
 
 function normaliseForQuoteMatch(text: string): string {

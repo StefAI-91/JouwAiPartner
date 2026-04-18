@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 490 |
-| Exported functions/constants | 727 |
-| Exported types/interfaces | 167 |
+| Exported functions/constants | 728 |
+| Exported types/interfaces | 169 |
 | Cross-package imports | 627 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -614,7 +614,7 @@
 **Types:** `MeetingStructurerContext`
 
 **Internal deps:**
-- `../validations/meeting-structurer` → MeetingStructurerOutputSchema, type MeetingStructurerOutput
+- `../validations/meeting-structurer` → MeetingStructurerOutputSchema, type MeetingStructurerOutput, type RawMeetingStructurerOutput, type Kernpunt, type MeetingStructurerParticipant
 
 ### `packages/ai/src/agents/needs-scanner.ts`
 
@@ -1173,16 +1173,16 @@
 
 **Exports:**
 - `validateKernpuntMetadata()`
+- `MeetingStructurerParticipantSchema`
 - `TYPE_METADATA_SCHEMAS`
 - `KernpuntSchema`
 - `EntitiesSchema`
 - `MeetingStructurerOutputSchema`
 
-**Types:** `Kernpunt`, `MeetingStructurerOutput`
+**Types:** `Kernpunt`, `MeetingStructurerParticipant`, `MeetingStructurerOutput`, `RawMeetingStructurerOutput`
 
 **Internal deps:**
-- `./summarizer` → ParticipantProfileSchema
-- `../extraction-types` → ALL_EXTRACTION_TYPES
+- `../extraction-types` → ALL_EXTRACTION_TYPES, type ExtractionType
 
 ### `packages/ai/src/validations/needs-scanner.ts`
 

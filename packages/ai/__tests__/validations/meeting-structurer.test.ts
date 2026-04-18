@@ -7,6 +7,35 @@ import {
 } from "../../src/validations/meeting-structurer";
 import { ALL_EXTRACTION_TYPES, TIER_1_TYPES, TIER_2_TYPES } from "../../src/extraction-types";
 
+// Raw shape die Anthropic produceert: alle metadata-velden required,
+// sentinels "n/a" / "" voor "niet van toepassing". Past bij de nieuwe
+// strict schema (onder Anthropic's 16-union limiet).
+const fullMetadata = {
+  effort_estimate: "n/a",
+  impact_area: "technical",
+  severity: "n/a",
+  jaip_impact_area: "n/a",
+  party: "n/a",
+  horizon: "n/a",
+  sentiment: "n/a",
+  signal_type: "n/a",
+  sensitive: false,
+  category: "n/a",
+  scope: "n/a",
+  status: "open",
+  urgency: "n/a",
+  direction: "n/a",
+  domain: "n/a",
+  follow_up_contact: "",
+  assignee: "",
+  deadline: "",
+  decided_by: "Stef",
+  raised_by: "",
+  committer: "",
+  committed_to: "",
+  needs_answer_from: "",
+};
+
 const baseKernpunt = {
   type: "decision" as const,
   content: "Besloten om Supabase Auth te gebruiken voor CAI Studio.",
@@ -15,13 +44,13 @@ const baseKernpunt = {
   source_quote: "We gaan met Supabase Auth werken.",
   project: "CAI Studio",
   confidence: 0.9,
-  metadata: { status: "open", decided_by: "Stef", impact_area: "technical" },
+  metadata: fullMetadata,
 };
 
 const baseOutput = {
   briefing: "Stef en Wouter bespraken auth-strategie voor CAI Studio.",
   kernpunten: [baseKernpunt],
-  deelnemers: [{ name: "Stef", role: "Lead", organization: "JAIP", stance: null }],
+  deelnemers: [{ name: "Stef", role: "Lead", organization: "JAIP", stance: "" }],
   entities: { clients: ["CAI"], people: [] },
 };
 
@@ -48,7 +77,6 @@ describe("MeetingStructurerOutputSchema", () => {
     const kernpunten = ALL_EXTRACTION_TYPES.map((type) => ({
       ...baseKernpunt,
       type,
-      metadata: {},
     }));
     const result = MeetingStructurerOutputSchema.safeParse({ ...baseOutput, kernpunten });
     expect(result.success).toBe(true);
@@ -61,14 +89,18 @@ describe("MeetingStructurerOutputSchema", () => {
 });
 
 describe("KernpuntSchema", () => {
-  it("requires source_quote to be string-or-null (no undefined)", () => {
+  it("requires source_quote to be a string (no undefined)", () => {
     const { source_quote: _, ...rest } = baseKernpunt;
     expect(KernpuntSchema.safeParse(rest).success).toBe(false);
   });
 
-  it("accepts metadata as a free-form record (per-type validation is separate)", () => {
+  it("rejects incomplete metadata (strict schema voor Anthropic 16-union limiet)", () => {
+    // Schema is nu strict: alle 23 metadata-velden verplicht. Dit voorkomt
+    // dat Anthropic de schema afwijst met "too many parameters with union
+    // types". De TS publieke Kernpunt-type is losser (Partial) en wordt
+    // door de agent gevuld uit "n/a"/"" sentinels.
     const k = { ...baseKernpunt, metadata: { whatever: "the agent emits" } };
-    expect(KernpuntSchema.safeParse(k).success).toBe(true);
+    expect(KernpuntSchema.safeParse(k).success).toBe(false);
   });
 });
 
