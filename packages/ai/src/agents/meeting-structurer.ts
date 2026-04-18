@@ -54,16 +54,33 @@ Je produceert:
 TIER 1 (volledige instructies — verschijnen op project-werkblad):
 
 action_item — opvolgbare actie waarbij JAIP iemand kan e-mailen.
-  Litmustest: kunnen wij een concrete persoon mailen om dit op te volgen? Zo nee → GEEN action_item.
-  metadata:
-    - category: "wachten_op_extern" (externe partij moet leveren) | "wachten_op_beslissing" (iemand moet beslissen) | null
-    - follow_up_contact: VERPLICHT — naam van de gesprekspartner uit deze meeting via wie JAIP opvolgt
-    - assignee: persoon die uitvoert (mag intern of extern zijn) | null
-    - deadline: ISO YYYY-MM-DD als expliciet genoemd, anders geschat op basis van de deadline-regels | null
+  Litmustest: is er een concrete actor + een opvolg-moment (deadline of natuurlijk check-in)? Zo nee → GEEN action_item.
+
+  INTERNE JAIP-TAKEN ZIJN WEL action_item als ze trackable zijn:
+  - "Wouter bespreekt Kai-prioriteit met Joep" → ja (opvolgbaar besluit)
+  - "Tibor plant meeting in na ontvangst plan" → ja (trackable)
+  - "Stef reviewt de prompt" → ja (concrete opdracht)
+
+  INTERNE JAIP-TAKEN ZIJN GEEN action_item bij:
+  - Pure werk-uitvoering ("wij bouwen feature X", "ik schrijf offerte", "Stef codet de pipeline")
+  - Reflectie zonder deadline ("daar moet ik over nadenken", "we moeten het eens hebben over")
+  - Voornemens zonder eigenaar ("we zouden eens moeten...")
+
+  Onderscheid met commitment: action_item heeft een trackable opvolg-lus + deadline. Commitment is een belofte die geborgd wordt via context, zonder actieve opvolging.
+
+  Wees STRIKT: bij twijfel, kies geen action_item. Werk op precisie, niet op recall.
+
+  metadata voor action_item bevat UITSLUITEND deze velden:
+    - category: "wachten_op_extern" | "wachten_op_beslissing" | null
+    - follow_up_contact: VERPLICHT — naam gesprekspartner uit deze meeting via wie JAIP opvolgt
+    - assignee: persoon die uitvoert | null
+    - deadline: ISO YYYY-MM-DD (zie deadline-regels) | null
     - effort_estimate: "small" | "medium" | "large" | null
-    - scope: "project" | "personal" | null
+    - scope: "project" (binnen lopend JAIP-project) | "personal" (netwerk/partner/interne afstemming) | null
+
+  Velden van andere types (severity, raised_by, sentiment, signal_type, party, horizon, etc.) mogen NIET in het metadata-object van een action_item voorkomen — ook niet met null-waarde.
+
   Schrijf content beginnend met de NAAM van follow_up_contact: "Lieke navragen of de intake al binnen is".
-  Sluit interne JAIP-taken expliciet uit (wij bouwen X, ik schrijf de offerte).
 
 decision — een besluit dat genomen is (niet een voornemen of overweging).
   metadata:
@@ -185,11 +202,24 @@ milestone — concreet projectvoortgangs-moment ("admin panel staat live", "demo
 
 --- DEADLINE-REGELS (alleen voor action_item) ---
 Cues (vanaf MEETINGDATUM, werkdagen, geen weekenden):
-"vandaag" → meetingdatum; "morgen" → +1; "deze week" → vrijdag; "volgende week" → vrijdag volgende week;
-"voor de volgende sessie/sprint" → +2 weken; "z.s.m./urgent" → +2 werkdagen; "eind van de maand" → laatste werkdag.
+"nu / zo / meteen / direct / gelijk / straks vandaag" → meetingdatum;
+"vandaag" → meetingdatum;
+"morgen" → +1;
+"deze week" → vrijdag;
+"volgende week" → vrijdag volgende week;
+"dit weekend" → eerstvolgende maandag;
+"voor de volgende sessie/sprint" → +2 weken;
+"z.s.m./urgent" → +2 werkdagen;
+"eind van de maand" → laatste werkdag.
 Default als geen cue: +5 werkdagen.
 
 --- ALGEMENE REGELS ---
+- SPREKER-IDENTIFICATIE:
+  Als het transcript sprekers als "speaker_0", "speaker_1", "speaker_2" labelt, identificeer de echte namen uit context:
+  - Aanspreekvormen ("Tibor, één momentje" → de aangesprokene is Tibor)
+  - Zelfverwijzing ("dit is de dokter moment met Tibor" → spreker is Tibor)
+  - Inhoudelijke rol + BEKENDE ENTITEITEN
+  Als een spreker echt niet te identificeren is, gebruik "onbekende spreker" — NOOIT "derde spreker", "speaker_2" of "spreker" in de output.
 - Wees ruimhartig met kernpunten. Een korte standup heeft 5-10, een discovery 15-25 items.
 - Voor elk item in kernpunten is het metadata-object VERPLICHT gevuld met alle velden die bij het type horen. Vul elk veld in óf met een waarde uit de toegestane enum, óf expliciet met null. Een leeg metadata-object ({}) is NIET toegestaan. Als je geen waarde kunt bepalen, gebruik dan null — niet weglaten.
 - Confidence-regels:
