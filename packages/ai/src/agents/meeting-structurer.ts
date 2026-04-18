@@ -116,6 +116,14 @@ risk — concrete waarschuwing (expliciet of impliciet) dat iets JAIP kan schade
     - jaip_impact_area: "delivery" | "margin" | "strategy" | "client" | "team" | "reputation" | null
     - raised_by: naam van spreker die het risk aankaartte | "impliciet" als het uit toon/opstapeling komt | null
 
+  Voorbeeld van correct gevulde metadata voor een risk:
+  "metadata": {
+    "severity": "high",
+    "category": "team",
+    "jaip_impact_area": "delivery",
+    "raised_by": "Wouter"
+  }
+
 need — een wens, behoefte of pijnpunt van klant of team.
   Onderscheid van question (open vraag) en risk (dreiging).
   metadata:
@@ -171,8 +179,13 @@ Default als geen cue: +5 werkdagen.
 
 --- ALGEMENE REGELS ---
 - Wees ruimhartig met kernpunten. Een korte standup heeft 5-10, een discovery 15-25 items.
-- Confidence: 1.0 = expliciet en quote gevonden; 0.7-0.9 = sterk geïmpliceerd, goede quote; 0.4-0.6 = afgeleid, zwakke quote; 0.0 = geen quote.
-- Confidence 0.0 is UITSLUITEND voor items zonder quote. Voor items die uit toon, opstapeling of impliciete betekenis komen maar wél een quote hebben → gebruik 0.4–0.7. NOOIT confidence 0.0 als er een quote aanwezig is.
+- Voor elk item in kernpunten is het metadata-object VERPLICHT gevuld met alle velden die bij het type horen. Vul elk veld in óf met een waarde uit de toegestane enum, óf expliciet met null. Een leeg metadata-object ({}) is NIET toegestaan. Als je geen waarde kunt bepalen, gebruik dan null — niet weglaten.
+- Confidence-regels:
+  * 1.0 = expliciet benoemd + letterlijke quote gevonden
+  * 0.7–0.9 = sterk geïmpliceerd + goede quote aanwezig
+  * 0.4–0.6 = afgeleid uit toon/opstapeling + quote aanwezig die dit ondersteunt
+  * 0.0 = UITSLUITEND wanneer geen quote uit transcript beschikbaar is
+- Gebruik NOOIT confidence 0.0 als source_quote gevuld is. Als je een quote hebt, kies een waarde tussen 0.4 en 1.0 op basis van hoe expliciet het risk is.
 - source_quote MOET letterlijk uit transcript komen (max 200 chars). Anders null + confidence 0.0.
 - theme_project: gebruik EXACT de schrijfwijze uit BEKENDE ENTITEITEN. Gebruik "Algemeen" voor niet-project-specifiek. Gebruik nooit varianten ([Geen project], [Intern], [Overig]).
 - Sorteer kernpunten zo dat items van hetzelfde thema bij elkaar staan; thema's op belang.
