@@ -18,6 +18,7 @@ import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
 import { runExtractStep } from "./steps/extract";
+import { runStructureStep, isMeetingStructurerEnabled } from "./steps/structure";
 import { runTagger } from "./tagger";
 import { buildSegments } from "./segment-builder";
 import { embedBatch } from "../embeddings";
@@ -293,7 +294,12 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const transcribeResult = await runTranscribeStep(meetingId, input.audio_url);
   if (transcribeResult.error) errors.push(`ElevenLabs: ${transcribeResult.error}`);
 
-  // Step 8: Summarizer
+  // Step 8 + 9: Summarize + extract.
+  //
+  // Depending on USE_MEETING_STRUCTURER we either run the legacy two-agent
+  // pair (Summarizer → Extractor) or the merged MeetingStructurer that
+  // emits both in one Sonnet-call. On failure of the merged agent we fall
+  // back to legacy so a bug in the new agent never breaks Fireflies-flow.
   const bestTranscript = transcribeResult.transcript ?? input.transcript;
   const transcriptSource = transcribeResult.transcript ? "elevenlabs" : "fireflies";
 
@@ -305,9 +311,57 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     speakerContext,
     entityContext: entityContext.contextString,
   };
-  console.info(`Summarizer using ${transcriptSource} transcript`);
-  const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
-  if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
+
+  let summarized = false;
+  let richSummary: string | null = null;
+  let kernpuntenForTagger: string[] = [];
+  let vervolgstappenForTagger: string[] = [];
+  let extractorOutput: ExtractorOutput | null = null;
+  let extractionsSaved = 0;
+
+  const useStructurer = isMeetingStructurerEnabled();
+
+  if (useStructurer) {
+    console.info(`MeetingStructurer (flag on) using ${transcriptSource} transcript`);
+    const structureResult = await runStructureStep(
+      meetingId,
+      bestTranscript,
+      { ...summarizeContext, meeting_date: input.date },
+      rawFireflies,
+      transcriptSource,
+      identifiedProjects,
+    );
+
+    if (structureResult.success) {
+      summarized = true;
+      richSummary = structureResult.richSummary;
+      kernpuntenForTagger = structureResult.kernpunten;
+      vervolgstappenForTagger = structureResult.vervolgstappen;
+      extractionsSaved = structureResult.extractionsSaved;
+      // Shape-compat: downstream uses of extractorOutput only read
+      // `entities.clients`. The structurer emits entities with the same
+      // shape so consumers that survive the flip do not need to branch.
+      extractorOutput = structureResult.structurerOutput
+        ? ({
+            extractions: [],
+            entities: { clients: structureResult.structurerOutput.entities.clients },
+          } as ExtractorOutput)
+        : null;
+    } else {
+      errors.push(`MeetingStructurer: ${structureResult.error} — falling back to legacy`);
+    }
+  }
+
+  // Legacy path: flag off OR structurer failed above.
+  if (!summarized) {
+    console.info(`Summarizer (legacy) using ${transcriptSource} transcript`);
+    const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
+    if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
+    summarized = summarizeResult.success;
+    richSummary = summarizeResult.richSummary;
+    kernpuntenForTagger = summarizeResult.kernpunten;
+    vervolgstappenForTagger = summarizeResult.vervolgstappen;
+  }
 
   // Step 8a: AI title generation — uses rich summary for better subject extraction
   try {
@@ -316,7 +370,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       ? (entityContext.projects.find((p) => p.id === firstProject.project_id)?.name ?? null)
       : null;
 
-    const titleSummary = summarizeResult.richSummary ?? input.summary;
+    const titleSummary = richSummary ?? input.summary;
     const generatedTitle = await generateMeetingTitle(titleSummary, {
       meetingType: finalMeetingType,
       partyType,
@@ -336,7 +390,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
 
   // Step 8b: Tagger + Segment-bouw (RULE-015: error boundary, graceful degradation)
   let segmentsSaved = 0;
-  if (summarizeResult.kernpunten.length > 0 || summarizeResult.vervolgstappen.length > 0) {
+  if (kernpuntenForTagger.length > 0 || vervolgstappenForTagger.length > 0) {
     try {
       // Fetch ignored entity names for this meeting's organization
       const orgId = orgResult.organization_id;
@@ -345,8 +399,8 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         : new Set<string>();
 
       const taggerOutput = runTagger({
-        kernpunten: summarizeResult.kernpunten,
-        vervolgstappen: summarizeResult.vervolgstappen,
+        kernpunten: kernpuntenForTagger,
+        vervolgstappen: vervolgstappenForTagger,
         identified_projects: identifiedProjects,
         knownProjects: entityContext.projects.map((p) => ({
           id: p.id,
@@ -401,18 +455,23 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     }
   }
 
-  // Step 9: Extractor
-  const extractorSummary = summarizeResult.richSummary ?? input.summary;
-  console.info(`Extractor using ${transcriptSource} transcript`);
-  const extractResult = await runExtractStep(
-    meetingId,
-    bestTranscript,
-    { ...summarizeContext, summary: extractorSummary, meeting_date: input.date },
-    rawFireflies,
-    transcriptSource,
-    identifiedProjects,
-  );
-  if (extractResult.error) errors.push(`Extractor: ${extractResult.error}`);
+  // Step 9: Extractor — only when we are on the legacy path. The
+  // structurer already persisted all 14 types via saveStructuredExtractions.
+  if (!useStructurer || extractorOutput === null) {
+    const extractorSummary = richSummary ?? input.summary;
+    console.info(`Extractor using ${transcriptSource} transcript`);
+    const extractResult = await runExtractStep(
+      meetingId,
+      bestTranscript,
+      { ...summarizeContext, summary: extractorSummary, meeting_date: input.date },
+      rawFireflies,
+      transcriptSource,
+      identifiedProjects,
+    );
+    if (extractResult.error) errors.push(`Extractor: ${extractResult.error}`);
+    extractorOutput = extractResult.extractorOutput;
+    extractionsSaved = extractResult.extractionsSaved;
+  }
 
   // Step 10: Embed meeting + extractions
   let embedded = false;
@@ -429,13 +488,13 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     gatekeeper: gatekeeperResult,
     partyType,
     identifiedProjects,
-    extractor: extractResult.extractorOutput,
+    extractor: extractorOutput,
     meetingId,
-    extractions_saved: extractResult.extractionsSaved,
+    extractions_saved: extractionsSaved,
     segments_saved: segmentsSaved,
     embedded,
     elevenlabs_transcribed: transcribeResult.success,
-    summarized: summarizeResult.success,
+    summarized,
     errors,
   };
 }

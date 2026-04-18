@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 485 |
-| Exported functions/constants | 719 |
-| Exported types/interfaces | 165 |
-| Cross-package imports | 617 |
+| Files scanned | 486 |
+| Exported functions/constants | 723 |
+| Exported types/interfaces | 166 |
+| Cross-package imports | 618 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -639,6 +639,8 @@
 
 **Exports:**
 - `renderMeetingSummary()`
+- `buildLegacyKernpunten()`
+- `buildLegacyVervolgstappen()`
 
 **Internal deps:**
 - `../validations/meeting-structurer` → MeetingStructurerOutput, Kernpunt
@@ -793,6 +795,7 @@
 - `./steps/transcribe` → runTranscribeStep
 - `./steps/summarize` → runSummarizeStep
 - `./steps/extract` → runExtractStep
+- `./steps/structure` → runStructureStep, isMeetingStructurerEnabled
 - `./tagger` → runTagger
 - `./segment-builder` → buildSegments
 - `../embeddings` → embedBatch
@@ -923,6 +926,24 @@
 **Internal deps:**
 - `../../agents/extractor` → runExtractor, ExtractorOutput
 - `../save-extractions` → saveExtractions
+- `../../validations/gatekeeper` → IdentifiedProject
+
+### `packages/ai/src/pipeline/steps/structure.ts`
+
+**Exports:**
+- `runStructureStep()`
+- `isMeetingStructurerEnabled()`
+
+**Types:** `StructureResult`
+
+**Depends on:**
+- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingRawFireflies
+
+**Internal deps:**
+- `../../agents/meeting-structurer` → runMeetingStructurer
+- `../../validations/meeting-structurer` → MeetingStructurerOutput
+- `../../agents/render-summary` → renderMeetingSummary, buildLegacyKernpunten, buildLegacyVervolgstappen
+- `../save-extractions` → saveStructuredExtractions
 - `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/summarize.ts`
@@ -3754,7 +3775,7 @@ Which layers depend on which packages:
 | Layer | database | ai | auth | ui | mcp | Total |
 |-------|---|---|---|---|---|-------|
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 45 | - | - | - | - | 45 |
+| AI Pipeline | 46 | - | - | - | - | 46 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 45 | 16 | 29 | - | - | 90 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
@@ -3896,9 +3917,9 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
-| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/structure.ts`, `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
 | `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/actions/review.ts` |
-| `updateMeetingRawFireflies()` | `packages/ai/src/pipeline/steps/extract.ts` |
+| `updateMeetingRawFireflies()` | `packages/ai/src/pipeline/steps/extract.ts`, `packages/ai/src/pipeline/steps/structure.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `deleteMeeting()` | `apps/cockpit/src/actions/meetings.ts` |

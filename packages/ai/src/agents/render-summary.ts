@@ -40,6 +40,66 @@ export function renderMeetingSummary(output: MeetingStructurerOutput): string {
 }
 
 /**
+ * Build the legacy-shape `kernpunten: string[]` that the tagger consumes.
+ * Interleaves `### [Project] Theme` headers with `**Label:** content` (or
+ * bare) bullets so the tagger's existing parser keeps working unchanged.
+ *
+ * Action items are excluded — they belong in `vervolgstappen`.
+ */
+export function buildLegacyKernpunten(kernpunten: Kernpunt[]): string[] {
+  const items = kernpunten.filter((k) => k.type !== "action_item");
+  if (items.length === 0) return [];
+
+  const groupKeyOrder: string[] = [];
+  const groups = new Map<string, { project: string; theme: string; items: Kernpunt[] }>();
+
+  for (const k of items) {
+    const project = k.theme_project?.trim() || "Algemeen";
+    const theme = k.theme?.trim() ?? "";
+    const key = `${project}::${theme}`;
+    if (!groups.has(key)) {
+      groupKeyOrder.push(key);
+      groups.set(key, { project, theme, items: [] });
+    }
+    groups.get(key)!.items.push(k);
+  }
+
+  const lines: string[] = [];
+  for (const key of groupKeyOrder) {
+    const group = groups.get(key)!;
+    lines.push(group.theme ? `### [${group.project}] ${group.theme}` : `### [${group.project}]`);
+    for (const item of group.items) {
+      lines.push(formatBullet(item));
+    }
+  }
+  return lines;
+}
+
+/**
+ * Build the legacy-shape `vervolgstappen: string[]` from action_item
+ * kernpunten. Format: `[Project] content — assignee, deadline`. Matches
+ * the summarizer's current output so the tagger can parse them.
+ */
+export function buildLegacyVervolgstappen(kernpunten: Kernpunt[]): string[] {
+  return kernpunten
+    .filter((k) => k.type === "action_item")
+    .map((k) => {
+      const meta = k.metadata as {
+        assignee?: string | null;
+        deadline?: string | null;
+        suggested_deadline?: string | null;
+      };
+      const projectPrefix = k.project?.trim() || "Algemeen";
+      const trailingParts: string[] = [];
+      if (meta.assignee) trailingParts.push(meta.assignee);
+      const date = meta.deadline ?? meta.suggested_deadline;
+      if (date) trailingParts.push(date);
+      const trailing = trailingParts.length > 0 ? ` — ${trailingParts.join(", ")}` : "";
+      return `[${projectPrefix}] ${k.content}${trailing}`;
+    });
+}
+
+/**
  * Render the kernpunten section. Groups items by `(theme_project, theme)`
  * preserving first-seen order, emits a `### [Project] Theme` header per
  * group, and a `- **Label:** content` (or bare `- content`) per item.
