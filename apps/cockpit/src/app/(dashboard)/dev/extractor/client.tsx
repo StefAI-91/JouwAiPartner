@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronDown, Loader2, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Copy, Loader2, Sparkles } from "lucide-react";
 import {
   runDevExtractorAction,
   getMeetingStructurerPromptAction,
@@ -131,8 +131,8 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
 
           {/* 3-panel diff */}
           <div className="grid gap-3 md:grid-cols-3">
-            <Panel title="Transcript">
-              <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-foreground/80">
+            <Panel title="Transcript" copyValue={result.transcript}>
+              <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-foreground/80 select-text">
                 {result.transcript}
               </pre>
             </Panel>
@@ -193,11 +193,13 @@ function Panel({
   title,
   count,
   accent,
+  copyValue,
   children,
 }: {
   title: string;
   count?: number;
   accent?: boolean;
+  copyValue?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -206,12 +208,63 @@ function Panel({
         accent ? "ring-primary/30" : "ring-foreground/10"
       }`}
     >
-      <div className="flex items-center justify-between border-b px-3 py-2">
+      <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
         <p className="text-xs font-semibold">{title}</p>
-        {count !== undefined && <span className="text-[10px] text-muted-foreground">{count}</span>}
+        <div className="flex items-center gap-2">
+          {count !== undefined && (
+            <span className="text-[10px] text-muted-foreground">{count}</span>
+          )}
+          {copyValue && <CopyButton value={copyValue} />}
+        </div>
       </div>
       <div className="flex-1 overflow-auto p-3">{children}</div>
     </div>
+  );
+}
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      // Fallback voor oudere browsers / insecure origins
+      const ta = document.createElement("textarea");
+      ta.value = value;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+      } finally {
+        document.body.removeChild(ta);
+      }
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="flex items-center gap-1 rounded border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
+      aria-label="Kopieer naar klembord"
+    >
+      {copied ? (
+        <>
+          <Check className="size-3 text-green-600" />
+          Gekopieerd
+        </>
+      ) : (
+        <>
+          <Copy className="size-3" />
+          Kopieer
+        </>
+      )}
+    </button>
   );
 }
 
