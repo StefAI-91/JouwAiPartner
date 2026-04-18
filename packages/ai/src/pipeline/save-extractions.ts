@@ -2,6 +2,11 @@ import { linkAllMeetingProjects } from "@repo/database/mutations/meetings";
 import { insertExtractions } from "@repo/database/mutations/extractions";
 import { ExtractorOutput, ExtractionItem } from "../validations/extractor";
 import type { IdentifiedProject } from "../validations/gatekeeper";
+import {
+  validateKernpuntMetadata,
+  type Kernpunt,
+  type MeetingStructurerOutput,
+} from "../validations/meeting-structurer";
 
 /**
  * Build a map of project_name -> project_id from Gatekeeper's identified projects.
@@ -99,6 +104,103 @@ export async function saveExtractions(
   // Step 3: Build and insert extraction rows
   const rows = buildExtractionRows(
     extractorOutput.extractions,
+    meetingId,
+    projectMap,
+    primaryProjectId,
+  );
+
+  if (rows.length > 0) {
+    const result = await insertExtractions(rows);
+    if ("error" in result) {
+      console.error("Failed to insert extractions:", result.error);
+      return { extractions_saved: 0, projects_linked: linkResult.linked };
+    }
+  }
+
+  return {
+    extractions_saved: rows.length,
+    projects_linked: linkResult.linked,
+  };
+}
+
+/**
+ * Build extraction rows from MeetingStructurer kernpunten. Mirrors the
+ * legacy mapping (project resolution + invariant fields) but accepts the
+ * 14-type structured shape and validates per-type metadata.
+ *
+ * Invalid metadata is logged and the row is still saved with an empty
+ * metadata object — losing one optional field is preferable to dropping
+ * the entire extraction (err on keeping).
+ */
+function buildStructuredRows(
+  kernpunten: Kernpunt[],
+  meetingId: string,
+  projectMap: Map<string, string | null>,
+  primaryProjectId: string | null,
+) {
+  return kernpunten.map((k) => {
+    const validated = validateKernpuntMetadata(k);
+    const metadata: Record<string, unknown> = validated.ok ? { ...validated.metadata } : {};
+
+    if (!validated.ok) {
+      console.warn(
+        `[saveStructuredExtractions] metadata invalid for type=${k.type}: ${validated.error}`,
+      );
+    }
+
+    // Theme + project name mirror legacy markdown — useful for the
+    // re-render path and for the harness diff view.
+    if (k.theme) metadata.theme = k.theme;
+    if (k.theme_project) metadata.theme_project = k.theme_project;
+    if (k.project) metadata.project = k.project;
+
+    let projectId: string | null = null;
+    if (k.project) {
+      projectId = projectMap.get(k.project.toLowerCase()) ?? null;
+    } else if (k.type === "action_item" && metadata.scope === "personal") {
+      projectId = null;
+    } else {
+      projectId = primaryProjectId;
+    }
+
+    return {
+      meeting_id: meetingId,
+      type: k.type,
+      content: k.content,
+      confidence: k.confidence,
+      transcript_ref: k.source_quote,
+      metadata,
+      project_id: projectId,
+      embedding_stale: true,
+      verification_status: "draft",
+    };
+  });
+}
+
+/**
+ * Save MeetingStructurer output to the unified `extractions` table.
+ * Equivalent to legacy `saveExtractions` but accepts the new structured
+ * 14-type shape — used once the `USE_MEETING_STRUCTURER` flag is on
+ * (PW-02 stap 3 wires this up).
+ */
+export async function saveStructuredExtractions(
+  structurerOutput: MeetingStructurerOutput,
+  meetingId: string,
+  identifiedProjects: IdentifiedProject[],
+): Promise<{
+  extractions_saved: number;
+  projects_linked: number;
+}> {
+  const linkResult = await linkAllMeetingProjects(meetingId, identifiedProjects);
+  if (linkResult.errors.length > 0) {
+    console.error("Failed to link some projects:", linkResult.errors);
+  }
+
+  const projectMap = buildProjectMap(identifiedProjects);
+  const primaryProjectId = findPrimaryProjectId(identifiedProjects);
+
+  const rows = buildStructuredRows(
+    structurerOutput.kernpunten,
     meetingId,
     projectMap,
     primaryProjectId,

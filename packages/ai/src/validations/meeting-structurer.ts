@@ -12,8 +12,12 @@ const ActionItemMetadata = z.object({
   category: z.enum(["wachten_op_extern", "wachten_op_beslissing"]).nullable().optional(),
   follow_up_contact: z.string().nullable().optional(),
   assignee: z.string().nullable().optional(),
-  deadline: z.string().nullable().describe("ISO date YYYY-MM-DD if explicit"),
-  suggested_deadline: z.string().nullable().describe("ISO date YYYY-MM-DD when no explicit"),
+  deadline: z.string().nullable().optional().describe("ISO date YYYY-MM-DD if explicit"),
+  suggested_deadline: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("ISO date YYYY-MM-DD when no explicit"),
   effort_estimate: z.enum(["small", "medium", "large"]).nullable().optional(),
   deadline_reasoning: z.string().nullable().optional(),
   scope: z.enum(["project", "personal"]).nullable().optional(),

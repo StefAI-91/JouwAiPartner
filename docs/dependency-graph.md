@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 485 |
-| Exported functions/constants | 718 |
+| Exported functions/constants | 719 |
 | Exported types/interfaces | 165 |
 | Cross-package imports | 617 |
 | Critical integration points (3+ packages) | 13 |
@@ -863,6 +863,7 @@
 
 **Exports:**
 - `saveExtractions()`
+- `saveStructuredExtractions()`
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → linkAllMeetingProjects
@@ -871,6 +872,7 @@
 **Internal deps:**
 - `../validations/extractor` → ExtractorOutput, ExtractionItem
 - `../validations/gatekeeper` → IdentifiedProject
+- `../validations/meeting-structurer` → validateKernpuntMetadata, type Kernpunt, type MeetingStructurerOutput
 
 ### `packages/ai/src/pipeline/scan-needs.ts`
 
