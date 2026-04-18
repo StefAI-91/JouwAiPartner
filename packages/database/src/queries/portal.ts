@@ -228,3 +228,92 @@ export async function getProjectIssueCounts(
 
   return counts;
 }
+
+/**
+ * Portal-statusgroepen zoals klanten ze zien. De keys matchen
+ * `PortalIssueCounts` en `STATUS_COLORS` in `apps/portal/src/lib/issue-status.ts`.
+ */
+export type PortalStatusFilter = "ontvangen" | "ingepland" | "in_behandeling" | "afgerond";
+
+const PORTAL_STATUS_TO_INTERNAL: Record<PortalStatusFilter, string[]> = {
+  ontvangen: ["triage"],
+  ingepland: ["backlog", "todo"],
+  in_behandeling: ["in_progress"],
+  afgerond: ["done", "cancelled"],
+};
+
+export interface PortalIssue {
+  id: string;
+  issue_number: number;
+  title: string;
+  description: string | null;
+  status: string;
+  type: string;
+  priority: string;
+  created_at: string;
+  closed_at: string | null;
+}
+
+const PORTAL_ISSUE_COLS =
+  "id, issue_number, title, description, status, type, priority, created_at, closed_at";
+
+/**
+ * Portal issue lijst voor een project — alleen klant-relevante velden, geen
+ * comments/assignees/interne metadata. Optioneel filteren op vertaalde
+ * status-groep (bv. "ingepland" → interne statussen backlog+todo).
+ */
+export async function listPortalIssues(
+  projectId: string,
+  client?: SupabaseClient,
+  filters?: { status?: PortalStatusFilter },
+): Promise<PortalIssue[]> {
+  const db = client ?? getAdminClient();
+
+  let query = db
+    .from("issues")
+    .select(PORTAL_ISSUE_COLS)
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false });
+
+  if (filters?.status) {
+    const internal = PORTAL_STATUS_TO_INTERNAL[filters.status];
+    query = query.in("status", internal);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("[listPortalIssues]", error.message);
+    return [];
+  }
+
+  return (data ?? []) as PortalIssue[];
+}
+
+/**
+ * Haal één issue op binnen de scope van een project. Retourneert `null` als
+ * het issue niet bestaat of bij een ander project hoort — dat laatste voorkomt
+ * dat een gebruiker via URL-manipulatie issues van andere projecten opvraagt
+ * (RLS is de primaire lijn van verdediging, dit is extra defensief).
+ */
+export async function getPortalIssue(
+  issueId: string,
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<PortalIssue | null> {
+  const db = client ?? getAdminClient();
+
+  const { data, error } = await db
+    .from("issues")
+    .select(PORTAL_ISSUE_COLS)
+    .eq("id", issueId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getPortalIssue]", error.message);
+    return null;
+  }
+
+  return (data as PortalIssue | null) ?? null;
+}
