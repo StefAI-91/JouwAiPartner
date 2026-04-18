@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 486 |
-| Exported functions/constants | 723 |
-| Exported types/interfaces | 166 |
-| Cross-package imports | 618 |
-| Critical integration points (3+ packages) | 13 |
+| Files scanned | 490 |
+| Exported functions/constants | 727 |
+| Exported types/interfaces | 167 |
+| Cross-package imports | 627 |
+| Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
 
@@ -1484,6 +1484,21 @@
 **Exports:**
 - `cleanInput()`
 
+### `apps/cockpit/src/actions/dev-extractor.ts`
+
+**Exports:**
+- `runDevExtractorAction()`
+- `getMeetingStructurerPromptAction()`
+
+**Types:** `DevExtractorResult`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdminInAction
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/ai/agents/meeting-structurer` → runMeetingStructurer, MEETING_STRUCTURER_SYSTEM_PROMPT
+- `@repo/ai/extraction-types` → ALL_EXTRACTION_TYPES
+- (type) `@repo/ai/validations/meeting-structurer` → Kernpunt
+
 ### `apps/cockpit/src/actions/email-filter.ts`
 
 **Exports:**
@@ -2098,6 +2113,23 @@
 - `@repo/database/queries/organizations` → listOrganizationsByType
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/extractor/client.tsx`
+
+**Exports:**
+- `DevExtractorClient()`
+
+**Depends on:**
+- `@repo/ai/extraction-types` → ALL_EXTRACTION_TYPES
+- (type) `@repo/ai/extraction-types` → ExtractionType
+
+### `apps/cockpit/src/app/(dashboard)/dev/extractor/page.tsx`
+
+**Exports:**
+- `dynamic`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
 
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
@@ -3777,11 +3809,11 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 46 | - | - | - | - | 46 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 45 | 16 | 29 | - | - | 90 |
+| Cockpit Server Actions | 46 | 19 | 30 | - | - | 95 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 45 | 4 | - | 89 | - | 138 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 80 | 5 | 1 | 25 | - | 111 |
+| Cockpit Pages | 81 | 7 | 2 | 25 | - | 115 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
@@ -3797,6 +3829,7 @@ parts of the codebase — changes here have the widest blast radius.
 
 | File | Packages | Count |
 |------|----------|-------|
+| `apps/cockpit/src/actions/dev-extractor.ts` | auth, database, ai | 3 |
 | `apps/cockpit/src/actions/email-filter.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/email-review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
