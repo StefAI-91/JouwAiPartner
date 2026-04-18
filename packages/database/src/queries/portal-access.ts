@@ -47,7 +47,7 @@ export async function listPortalProjects(
     return [];
   }
 
-  const rows = (data ?? []) as Array<{ projects: PortalProject | null }>;
+  const rows = (data ?? []) as unknown as Array<{ projects: PortalProject | null }>;
   return rows
     .map((row) => row.projects)
     .filter((p): p is PortalProject => p !== null)

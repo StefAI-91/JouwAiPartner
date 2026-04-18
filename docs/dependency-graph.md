@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-17. Do not edit manually.
+> Auto-generated on 2026-04-18. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 467 |
-| Exported functions/constants | 680 |
-| Exported types/interfaces | 147 |
-| Cross-package imports | 601 |
+| Files scanned | 468 |
+| Exported functions/constants | 684 |
+| Exported types/interfaces | 151 |
+| Cross-package imports | 602 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -239,6 +239,19 @@
 - `hasPortalProjectAccess()`
 
 **Types:** `PortalProject`
+
+**Depends on:**
+- `@repo/auth/access` → isAdmin
+
+### `queries/portal.ts`
+
+**Exports:**
+- `listPortalProjectsWithDetails()`
+- `getPortalProjectDashboard()`
+- `listRecentProjectIssues()`
+- `getProjectIssueCounts()`
+
+**Types:** `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin
@@ -3592,7 +3605,7 @@ Which layers depend on which packages:
 | Cockpit Components | 43 | 3 | - | 80 | - | 126 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 80 | 4 | 1 | 23 | - | 108 |
-| Database Queries | - | - | 2 | - | - | 2 |
+| Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
 | DevHub Components | 15 | - | - | 26 | - | 41 |
