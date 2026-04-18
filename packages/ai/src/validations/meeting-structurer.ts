@@ -156,8 +156,14 @@ export const KernpuntSchema = z.object({
   confidence: z
     .number()
     .describe("0-1 confidence. Below 0.5 means the agent is unsure — UI may filter."),
+  // Metadata is a loose object — per-type validation happens on our side
+  // via `validateKernpuntMetadata`. Using `z.object({}).catchall(z.unknown())`
+  // instead of `z.record(z.string(), z.unknown())` because the latter emits
+  // `propertyNames` in JSON Schema, which Anthropic's structured-output
+  // endpoint rejects with "property 'propertyNames' is not supported".
   metadata: z
-    .record(z.string(), z.unknown())
+    .object({})
+    .catchall(z.unknown())
     .describe("Type-specific metadata. Shape depends on type — see TYPE_METADATA_SCHEMAS."),
 });
 
