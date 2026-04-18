@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 481 |
-| Exported functions/constants | 702 |
-| Exported types/interfaces | 159 |
+| Files scanned | 485 |
+| Exported functions/constants | 718 |
+| Exported types/interfaces | 165 |
 | Cross-package imports | 617 |
 | Critical integration points (3+ packages) | 13 |
 
@@ -605,6 +605,17 @@
 **Internal deps:**
 - `../validations/management-insights` → ManagementInsightsOutputSchema, type ManagementInsightsOutput
 
+### `packages/ai/src/agents/meeting-structurer.ts`
+
+**Exports:**
+- `runMeetingStructurer()`
+- `MEETING_STRUCTURER_SYSTEM_PROMPT`
+
+**Types:** `MeetingStructurerContext`
+
+**Internal deps:**
+- `../validations/meeting-structurer` → MeetingStructurerOutputSchema, type MeetingStructurerOutput
+
 ### `packages/ai/src/agents/needs-scanner.ts`
 
 **Exports:**
@@ -623,6 +634,15 @@
 
 **Internal deps:**
 - `../validations/project-summary` → ProjectSummaryOutputSchema, OrgSummaryOutputSchema, type ProjectSummaryOutput, type OrgSummaryOutput
+
+### `packages/ai/src/agents/render-summary.ts`
+
+**Exports:**
+- `renderMeetingSummary()`
+
+**Internal deps:**
+- `../validations/meeting-structurer` → MeetingStructurerOutput, Kernpunt
+- `../extraction-types` → TYPE_MARKDOWN_LABEL
 
 ### `packages/ai/src/agents/summarizer.ts`
 
@@ -979,6 +999,20 @@
 - `embedText()`
 - `embedBatch()`
 
+### `packages/ai/src/extraction-types.ts`
+
+**Exports:**
+- `isTier1()`
+- `isTier2()`
+- `isExtractionType()`
+- `TIER_1_TYPES`
+- `TIER_2_TYPES`
+- `ALL_EXTRACTION_TYPES`
+- `TYPE_MARKDOWN_LABEL`
+- `MARKDOWN_LABEL_TO_TYPE`
+
+**Types:** `Tier1Type`, `Tier2Type`, `ExtractionType`
+
 ### `packages/ai/src/fireflies.ts`
 
 **Exports:**
@@ -1111,6 +1145,21 @@
 - `ManagementInsightsOutputSchema`
 
 **Types:** `ManagementInsightsOutput`
+
+### `packages/ai/src/validations/meeting-structurer.ts`
+
+**Exports:**
+- `validateKernpuntMetadata()`
+- `TYPE_METADATA_SCHEMAS`
+- `KernpuntSchema`
+- `EntitiesSchema`
+- `MeetingStructurerOutputSchema`
+
+**Types:** `Kernpunt`, `MeetingStructurerOutput`
+
+**Internal deps:**
+- `./summarizer` → ParticipantProfileSchema
+- `../extraction-types` → ALL_EXTRACTION_TYPES
 
 ### `packages/ai/src/validations/needs-scanner.ts`
 
