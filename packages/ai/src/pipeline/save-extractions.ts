@@ -173,6 +173,8 @@ function buildStructuredRows(
       project_id: projectId,
       embedding_stale: true,
       verification_status: "draft",
+      // Alleen action_item levert follow_up_context; andere types krijgen null.
+      follow_up_context: k.type === "action_item" ? k.follow_up_context : null,
     };
   });
 }

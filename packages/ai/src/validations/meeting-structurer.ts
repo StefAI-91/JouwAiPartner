@@ -26,18 +26,27 @@ export const MeetingStructurerParticipantSchema = z.object({
  */
 
 const ActionItemMetadata = z.object({
-  category: z.enum(["wachten_op_extern", "wachten_op_beslissing"]).nullable().optional(),
+  jaip_category: z
+    .enum([
+      "client_opvolging",
+      "financieel",
+      "strategisch_besluit",
+      "partner_netwerk",
+      "interne_afstemming",
+      "overig",
+    ])
+    .nullable()
+    .optional(),
   follow_up_contact: z.string().nullable().optional(),
   assignee: z.string().nullable().optional(),
-  deadline: z.string().nullable().optional().describe("ISO date YYYY-MM-DD if explicit"),
-  suggested_deadline: z
-    .string()
-    .nullable()
-    .optional()
-    .describe("ISO date YYYY-MM-DD when no explicit"),
+  deadline: z.string().nullable().optional().describe("ISO date YYYY-MM-DD"),
   effort_estimate: z.enum(["small", "medium", "large"]).nullable().optional(),
-  deadline_reasoning: z.string().nullable().optional(),
   scope: z.enum(["project", "personal"]).nullable().optional(),
+  contact_channel: z.enum(["email", "whatsapp", "phone", "meeting"]).nullable().optional(),
+  relationship_context: z
+    .enum(["prospect", "lopende_klant", "partner", "intern", "netwerk"])
+    .nullable()
+    .optional(),
 });
 
 const DecisionMetadata = z.object({
@@ -185,6 +194,15 @@ export const KernpuntSchema = z.object({
   confidence: z
     .number()
     .describe("0-1 confidence. Below 0.5 means the agent is unsure — UI may filter."),
+  // VERPLICHT voor action_item (100-150 woorden Nederlands); lege string voor
+  // alle andere types. Bevat inhoud + waarom + gewenste uitkomst + nuances,
+  // bedoeld als context voor een opvolg-AI. Wordt opgeslagen in een aparte
+  // DB-kolom, niet in metadata.
+  follow_up_context: z
+    .string()
+    .describe(
+      "Dutch follow-up context (100-150 words) — REQUIRED for action_item, empty string for all other types.",
+    ),
   // Universal metadata schema: alle velden als REQUIRED (zonder nullable/optional)
   // om onder Anthropic's limiet van 16 union-typed parameters te blijven.
   // Sentinel-conventie: lege string "" of enum-waarde "n/a" = veld niet van
@@ -265,6 +283,11 @@ export const KernpuntSchema = z.object({
       committer: z.string(),
       committed_to: z.string(),
       needs_answer_from: z.string(),
+      // --- action_item-specifiek: string (geen enum) om onder de Anthropic
+      //     16-union limiet te blijven. Prompt handhaaft de enum-waarden. ---
+      jaip_category: z.string(),
+      contact_channel: z.string(),
+      relationship_context: z.string(),
     })
     .describe(
       "Per-type metadata. Vul de velden die bij het item-type horen met de juiste waarde. Voor velden die niet bij dit type horen: gebruik 'n/a' (enums) of '' (strings).",
@@ -300,6 +323,8 @@ export type Kernpunt = {
   source_quote: string | null;
   project: string | null;
   confidence: number;
+  /** Uitgebreide opvolg-context (100-150 woorden). Alleen voor action_item. */
+  follow_up_context: string | null;
   metadata: {
     effort_estimate?: "small" | "medium" | "large" | null;
     impact_area?: "pricing" | "scope" | "technical" | "hiring" | "process" | "other" | null;
@@ -324,6 +349,9 @@ export type Kernpunt = {
     committer?: string | null;
     committed_to?: string | null;
     needs_answer_from?: string | null;
+    jaip_category?: string | null;
+    contact_channel?: string | null;
+    relationship_context?: string | null;
     theme?: string | null;
     theme_project?: string | null;
     project?: string | null;

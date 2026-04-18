@@ -58,14 +58,14 @@ export function isExtractionType(type: string): type is ExtractionType {
  */
 export const METADATA_FIELDS_PER_TYPE: Record<ExtractionType, readonly string[]> = {
   action_item: [
-    "category",
+    "jaip_category",
     "follow_up_contact",
     "assignee",
     "deadline",
-    "suggested_deadline",
     "effort_estimate",
-    "deadline_reasoning",
     "scope",
+    "contact_channel",
+    "relationship_context",
   ],
   decision: ["status", "decided_by", "impact_area"],
   risk: ["severity", "category", "jaip_impact_area", "raised_by"],

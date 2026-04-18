@@ -69,6 +69,7 @@ export async function insertExtractions(
     project_id: string | null;
     embedding_stale: boolean;
     verification_status: string;
+    follow_up_context?: string | null;
   }[],
 ): Promise<{ success: true; count: number } | { error: string }> {
   if (rows.length === 0) return { success: true, count: 0 };

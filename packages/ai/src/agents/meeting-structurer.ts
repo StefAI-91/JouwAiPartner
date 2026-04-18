@@ -40,9 +40,10 @@ Je produceert:
    - content: korte Nederlandse zin (max 30 woorden) die het punt beschrijft
    - theme: korte thema-naam (max 4-5 woorden) — meerdere items kunnen hetzelfde thema delen
    - theme_project: project-naam EXACT zoals in BEKENDE ENTITEITEN, of "Algemeen" voor niet-project-specifiek, of null als onbekend
-   - source_quote: EXACTE quote uit transcript (max 200 chars) — null als niet beschikbaar
+   - source_quote: EXACTE quote uit transcript (max 200 chars) — null als niet beschikbaar. MOET één aaneengesloten passage zijn — gebruik NOOIT '...' om twee quotes samen te plakken.
    - project: project-naam (zelfde regels als theme_project) — null voor niet-project-specifiek
    - confidence: 0.0–1.0 (zie regels onderaan)
+   - follow_up_context: verplichte Nederlandse context-beschrijving (100-150 woorden) UITSLUITEND voor action_item-items; voor alle andere types: lege string ""
    - metadata: type-specifieke velden (zie hieronder per type)
 
 3. DEELNEMERS — Profiel per deelnemer: name, role, organization, stance. Gebruik wat je uit transcript kunt afleiden, plus BEKENDE ENTITEITEN. Verzin niets — null als onbekend.
@@ -53,34 +54,90 @@ Je produceert:
 
 TIER 1 (volledige instructies — verschijnen op project-werkblad):
 
-action_item — opvolgbare actie waarbij JAIP iemand kan e-mailen.
-  Litmustest: is er een concrete actor + een opvolg-moment (deadline of natuurlijk check-in)? Zo nee → GEEN action_item.
+action_item — een opvolgbare actie waarvan JAIP schade oploopt als ze niet gebeurt: klant verliezen, geld mislopen, beslissing blokkeren, partnership verwateren, of momentum verliezen op een deal.
 
-  INTERNE JAIP-TAKEN ZIJN WEL action_item als ze trackable zijn:
-  - "Wouter bespreekt Kai-prioriteit met Joep" → ja (opvolgbaar besluit)
-  - "Tibor plant meeting in na ontvangst plan" → ja (trackable)
-  - "Stef reviewt de prompt" → ja (concrete opdracht)
+  KERNVRAAG (JAIP-lens): Als niemand hier binnen de deadline opvolgt, loopt JAIP dan iets mis?
+  Als het antwoord niet duidelijk "ja" is → geen action_item.
 
-  INTERNE JAIP-TAKEN ZIJN GEEN action_item bij:
-  - Pure werk-uitvoering ("wij bouwen feature X", "ik schrijf offerte", "Stef codet de pipeline")
-  - Reflectie zonder deadline ("daar moet ik over nadenken", "we moeten het eens hebben over")
-  - Voornemens zonder eigenaar ("we zouden eens moeten...")
+  LITMUSTEST (procedureel): Is er een concrete actor + een opvolg-moment (deadline of natuurlijk check-in) + kan JAIP iemand hierover aanspreken?
+  Als één van deze drie ontbreekt → geen action_item.
 
-  Onderscheid met commitment: action_item heeft een trackable opvolg-lus + deadline. Commitment is een belofte die geborgd wordt via context, zonder actieve opvolging.
+  Beide tests moeten slagen.
 
-  Wees STRIKT: bij twijfel, kies geen action_item. Werk op precisie, niet op recall.
+  JAIP-categorieën (wat raakt JAIP als dit niet gebeurt):
+  - client_opvolging: prospect/klant-actie, deal-momentum, input van klant, testje/pilot opvolgen
+  - financieel: factuur versturen/bestrijden, kostenonderhandeling, betaling najagen, BTW/boekhouding
+  - strategisch_besluit: intern besluit met impact, scope-discussie, partner-voorwaarden, prio-gesprek
+  - partner_netwerk: lead uit netwerk nabellen, samenwerkings-voorstel, partner-afspraak concreet maken
+  - interne_afstemming: interne check-in DIE JAIP BLOKKEERT — niet routine-overleg
+  - overig: valt niet in bovenstaande maar voldoet wel aan beide tests
+
+  BELANGRIJK — deze typen uitspraken zijn WEL action_item:
+  - Interne trackable acties met eigenaar: "Wouter bespreekt X met Joep", "Stef reviewt de prompt"
+  - Externe opvolg-acties: "Tibor stuurt voorstel naar klant", "iemand belt prospect na"
+  - Financiële acties: "factuur versturen", "onderhandelen met leverancier"
+  - Besluit-blokkades: "Wouter moet knoop doorhakken over scope"
+  - Deal-momentum: "opvolgen wanneer testje van Robin is gedraaid"
+
+  BELANGRIJK — deze typen uitspraken zijn GEEN action_item:
+  - Pure werk-uitvoering: "wij bouwen feature X", "ik schrijf de offerte", "Stef codet de pipeline"
+    (dit hoort in een backlog, niet in meetingopvolging)
+  - Reflectief zonder deadline: "daar moet ik over nadenken", "we moeten het eens hebben over"
+  - Voornemens zonder eigenaar: "we zouden eigenlijk...", "iemand moet X doen"
+  - Operationele routine: "standup maandag", "facturatie einde van maand"
+  - Gezamenlijke afspraken zonder opvolg-lus: "we plannen een meeting" (dit is een commitment, geen action_item)
+  - Emotionele/meta-afspraken: "we moeten beter communiceren"
+
+  Onderscheid met commitment: action_item heeft een trackable opvolg-lus + deadline waar JAIP op stuurt. Commitment is een belofte die via context geborgd wordt zonder actieve opvolging.
+
+  Wees STRIKT: bij twijfel, geen action_item. Werk op precisie, niet op recall.
+
+  VERPLICHTE VELDEN VOOR action_item (naast de standaard content/theme/source_quote/etc.):
+
+  follow_up_context: VERPLICHT string, 100-150 woorden, in het Nederlands. Beschrijft voor een opvolg-AI:
+    - Wat precies opgevolgd moet worden (inhoudelijk, concreet)
+    - Waarom het besproken werd / waar het op voortbouwt
+    - Wat de gewenste reactie of uitkomst is
+    - Relevante nuances, blokkers of context uit het gesprek
+    - Toon/relatie-context indien relevant (eerste contact, gevoelig onderwerp, lopende deal)
+    Als je geen fatsoenlijke follow_up_context kunt schrijven (te weinig context in transcript), is het GEEN action_item. Extract niet.
+    Gebruik alleen informatie die uit transcript of BEKENDE ENTITEITEN afleidbaar is. Verzin geen details.
+
+  Schrijf content (de korte titel, max 30 woorden) beginnend met de NAAM van follow_up_contact: "Tibor stuurt voorstel over rollenverdeling inclusief The Dock-scenario".
 
   metadata voor action_item bevat UITSLUITEND deze velden:
-    - category: "wachten_op_extern" | "wachten_op_beslissing" | null
+    - jaip_category: "client_opvolging" | "financieel" | "strategisch_besluit" | "partner_netwerk" | "interne_afstemming" | "overig" | null
     - follow_up_contact: VERPLICHT — naam gesprekspartner uit deze meeting via wie JAIP opvolgt
-    - assignee: persoon die uitvoert | null
+    - assignee: persoon die de actie uitvoert (intern of extern) | null
     - deadline: ISO YYYY-MM-DD (zie deadline-regels) | null
     - effort_estimate: "small" | "medium" | "large" | null
     - scope: "project" (binnen lopend JAIP-project) | "personal" (netwerk/partner/interne afstemming) | null
+    - contact_channel: "email" | "whatsapp" | "phone" | "meeting" | null
+    - relationship_context: "prospect" | "lopende_klant" | "partner" | "intern" | "netwerk" | null
 
-  Velden van andere types (severity, raised_by, sentiment, signal_type, party, horizon, etc.) mogen NIET in het metadata-object van een action_item voorkomen — ook niet met null-waarde.
+  Velden van andere types (severity, raised_by, sentiment, signal_type, party, horizon, urgency, status, category, impact_area, etc.) mogen NIET in het metadata-object van een action_item voorkomen — ook niet met null-waarde.
 
-  Schrijf content beginnend met de NAAM van follow_up_contact: "Lieke navragen of de intake al binnen is".
+  Voorbeeld van een correct action_item:
+  {
+    "type": "action_item",
+    "content": "Tibor stuurt voorstel over zijn rol en ownership in samenwerking, inclusief The Dock-scenario.",
+    "theme": "Rollenverdeling samenwerking",
+    "theme_project": "Algemeen",
+    "source_quote": "moet jij mij dan niet juist een voorstel doen over hoe jij dat ziet?",
+    "project": null,
+    "confidence": 0.9,
+    "follow_up_context": "Wouter heeft Tibor gevraagd een concreet voorstel te maken over hoe hij zijn rol en ownership in de samenwerking met JAIP ziet. Aanleiding: Tibor wil langetermijn iets opbouwen en participeren, niet per deal afgerekend worden. Wouter kan het niet voor Tibor invullen — Tibor moet het zelf schetsen. Specifiek genoemd: het scenario waarin The Dock strategische partner wordt en Tibor daar een rol tussenin speelt. Ook gevraagd: hoe het werkt bij grotere trajecten waar Tibor's verkoopwaarde duidelijk is (bijv. Levent), maar rollen na oplevering onduidelijk zijn. Gewenste uitkomst: een voorstel van Tibor dat Wouter kan beoordelen, waarna een vervolgmeeting gepland wordt. Gevoelig onderwerp — raakt Tibor's positie in het bedrijf.",
+    "metadata": {
+      "jaip_category": "strategisch_besluit",
+      "follow_up_contact": "Tibor",
+      "assignee": "Tibor",
+      "deadline": "2026-04-22",
+      "effort_estimate": "medium",
+      "scope": "personal",
+      "contact_channel": "email",
+      "relationship_context": "partner"
+    }
+  }
 
 decision — een besluit dat genomen is (niet een voornemen of overweging).
   metadata:
@@ -202,24 +259,24 @@ milestone — concreet projectvoortgangs-moment ("admin panel staat live", "demo
 
 --- DEADLINE-REGELS (alleen voor action_item) ---
 Cues (vanaf MEETINGDATUM, werkdagen, geen weekenden):
-"nu / zo / meteen / direct / gelijk / straks vandaag" → meetingdatum;
+"nu / zo / meteen / direct / gelijk / straks vandaag / later vandaag" → meetingdatum;
 "vandaag" → meetingdatum;
 "morgen" → +1;
 "deze week" → vrijdag;
-"volgende week" → vrijdag volgende week;
 "dit weekend" → eerstvolgende maandag;
+"volgende week" → vrijdag volgende week;
 "voor de volgende sessie/sprint" → +2 weken;
-"z.s.m./urgent" → +2 werkdagen;
+"z.s.m. / urgent" → +2 werkdagen;
 "eind van de maand" → laatste werkdag.
-Default als geen cue: +5 werkdagen.
+Default als geen cue aanwezig: +5 werkdagen.
 
 --- ALGEMENE REGELS ---
 - SPREKER-IDENTIFICATIE:
-  Als het transcript sprekers als "speaker_0", "speaker_1", "speaker_2" labelt, identificeer de echte namen uit context:
-  - Aanspreekvormen ("Tibor, één momentje" → de aangesprokene is Tibor)
+  Als het transcript sprekers labelt als "speaker_0", "speaker_1", "speaker_2" etc., identificeer de echte namen uit context:
+  - Aanspreekvormen ("Tibor, één momentje" → aangesprokene is Tibor)
   - Zelfverwijzing ("dit is de dokter moment met Tibor" → spreker is Tibor)
-  - Inhoudelijke rol + BEKENDE ENTITEITEN
-  Als een spreker echt niet te identificeren is, gebruik "onbekende spreker" — NOOIT "derde spreker", "speaker_2" of "spreker" in de output.
+  - Inhoudelijke rol en kruisverwijzing met BEKENDE ENTITEITEN
+  Als een spreker echt niet te identificeren is, gebruik "onbekende spreker". Gebruik NOOIT "derde spreker", "speaker_2", "spreker 1" of varianten in de output — altijd een echte naam of "onbekende spreker".
 - Wees ruimhartig met kernpunten. Een korte standup heeft 5-10, een discovery 15-25 items.
 - Voor elk item in kernpunten is het metadata-object VERPLICHT gevuld met alle velden die bij het type horen. Vul elk veld in óf met een waarde uit de toegestane enum, óf expliciet met null. Een leeg metadata-object ({}) is NIET toegestaan. Als je geen waarde kunt bepalen, gebruik dan null — niet weglaten.
 - Confidence-regels:
@@ -363,9 +420,10 @@ function normaliseStructurerOutput(raw: RawMeetingStructurerOutput): MeetingStru
         source_quote: emptyToNull(k.source_quote),
         project: emptyToNull(k.project),
         confidence: k.confidence,
+        follow_up_context: emptyToNull(k.follow_up_context),
         // Strip metadata-velden die niet bij het type horen. Het model
-        // levert altijd alle 23 velden (Anthropic 16-union limiet), maar
-        // alleen de type-specifieke velden horen verder in de pipeline.
+        // levert altijd alle universele velden (Anthropic 16-union limiet),
+        // maar alleen de type-specifieke velden horen verder in de pipeline.
         // Null-waarden binnen toegestane velden blijven behouden.
         metadata: filterMetadataByType(k.type, normaliseMetadata(k.metadata)),
       }),
@@ -408,6 +466,9 @@ function normaliseMetadata(
     committer: emptyToNull(m.committer),
     committed_to: emptyToNull(m.committed_to),
     needs_answer_from: emptyToNull(m.needs_answer_from),
+    jaip_category: emptyToNull(m.jaip_category),
+    contact_channel: emptyToNull(m.contact_channel),
+    relationship_context: emptyToNull(m.relationship_context),
   };
 }
 

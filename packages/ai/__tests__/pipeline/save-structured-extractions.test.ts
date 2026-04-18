@@ -31,6 +31,7 @@ function makeKernpunt(overrides: Partial<Kernpunt> = {}): Kernpunt {
     source_quote: "exacte quote",
     project: "Project A",
     confidence: 0.9,
+    follow_up_context: null,
     metadata: { status: "open" },
     ...overrides,
   };

@@ -34,6 +34,9 @@ const fullMetadata = {
   committer: "",
   committed_to: "",
   needs_answer_from: "",
+  jaip_category: "",
+  contact_channel: "",
+  relationship_context: "",
 };
 
 const baseKernpunt = {
@@ -44,6 +47,7 @@ const baseKernpunt = {
   source_quote: "We gaan met Supabase Auth werken.",
   project: "CAI Studio",
   confidence: 0.9,
+  follow_up_context: "",
   metadata: fullMetadata,
 };
 

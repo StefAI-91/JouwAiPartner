@@ -33,6 +33,9 @@ const universalMetadata = {
   committer: null,
   committed_to: null,
   needs_answer_from: null,
+  jaip_category: null,
+  contact_channel: null,
+  relationship_context: null,
 };
 
 describe("METADATA_FIELDS_PER_TYPE", () => {
@@ -52,16 +55,16 @@ describe("METADATA_FIELDS_PER_TYPE", () => {
     ]);
   });
 
-  it("action_item allow-list covers the 8 deadline/assignee fields", () => {
+  it("action_item allow-list covers the JAIP-lens + contact + assignee fields", () => {
     expect([...METADATA_FIELDS_PER_TYPE.action_item]).toEqual([
-      "category",
+      "jaip_category",
       "follow_up_contact",
       "assignee",
       "deadline",
-      "suggested_deadline",
       "effort_estimate",
-      "deadline_reasoning",
       "scope",
+      "contact_channel",
+      "relationship_context",
     ]);
   });
 });
@@ -113,24 +116,29 @@ describe("filterMetadataByType", () => {
   it("keeps only action_item fields on an action_item kernpunt", () => {
     const filtered = filterMetadataByType("action_item", {
       ...universalMetadata,
-      category: "wachten_op_extern",
+      jaip_category: "client_opvolging",
       follow_up_contact: "Lieke",
       assignee: "Lieke",
       deadline: "2026-04-25",
       effort_estimate: "small",
       scope: "project",
+      contact_channel: "email",
+      relationship_context: "lopende_klant",
     });
 
     expect(filtered).toEqual({
-      category: "wachten_op_extern",
+      jaip_category: "client_opvolging",
       follow_up_contact: "Lieke",
       assignee: "Lieke",
       deadline: "2026-04-25",
       effort_estimate: "small",
       scope: "project",
+      contact_channel: "email",
+      relationship_context: "lopende_klant",
     });
     expect("severity" in filtered).toBe(false);
     expect("jaip_impact_area" in filtered).toBe(false);
+    expect("category" in filtered).toBe(false); // oude veld, vervangen door jaip_category
   });
 
   it("keeps only decision fields on a decision kernpunt (null impact_area preserved)", () => {

@@ -352,6 +352,7 @@ export type Database = {
           created_at: string | null;
           embedding: string | null;
           embedding_stale: boolean | null;
+          follow_up_context: string | null;
           id: string;
           meeting_id: string;
           metadata: Json | null;
@@ -372,6 +373,7 @@ export type Database = {
           created_at?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean | null;
+          follow_up_context?: string | null;
           id?: string;
           meeting_id: string;
           metadata?: Json | null;
@@ -392,6 +394,7 @@ export type Database = {
           created_at?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean | null;
+          follow_up_context?: string | null;
           id?: string;
           meeting_id?: string;
           metadata?: Json | null;
