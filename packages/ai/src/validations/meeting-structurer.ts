@@ -170,15 +170,140 @@ export const KernpuntSchema = z.object({
   confidence: z
     .number()
     .describe("0-1 confidence. Below 0.5 means the agent is unsure — UI may filter."),
-  // Metadata is a loose object — per-type validation happens on our side
-  // via `validateKernpuntMetadata`. Using `z.object({}).catchall(z.unknown())`
-  // instead of `z.record(z.string(), z.unknown())` because the latter emits
-  // `propertyNames` in JSON Schema, which Anthropic's structured-output
-  // endpoint rejects with "property 'propertyNames' is not supported".
+  // Universal metadata schema: alle velden die over de 14 types heen
+  // kunnen voorkomen, elk optional+nullable. Zonder deze expliciete
+  // properties ziet Anthropic's structured-output endpoint geen
+  // structuur en emit het model {} — de prompt alleen is niet genoeg.
+  // Per-type validatie gebeurt downstream via TYPE_METADATA_SCHEMAS.
   metadata: z
-    .object({})
-    .catchall(z.unknown())
-    .describe("Type-specific metadata. Shape depends on type — see TYPE_METADATA_SCHEMAS."),
+    .object({
+      // --- Enum-velden uniek per type ---
+      effort_estimate: z.enum(["small", "medium", "large"]).nullable().optional(),
+      impact_area: z
+        .enum(["pricing", "scope", "technical", "hiring", "process", "other"])
+        .nullable()
+        .optional(),
+      severity: z.enum(["low", "medium", "high", "critical"]).nullable().optional(),
+      jaip_impact_area: z
+        .enum(["delivery", "margin", "strategy", "client", "team", "reputation"])
+        .nullable()
+        .optional(),
+      party: z.enum(["client", "team", "partner"]).nullable().optional(),
+      horizon: z.enum(["short_term", "long_term"]).nullable().optional(),
+      sentiment: z.enum(["positive", "neutral", "concerning"]).nullable().optional(),
+      signal_type: z
+        .enum(["budget_constraint", "willingness_to_pay", "comparison", "request"])
+        .nullable()
+        .optional(),
+      sensitive: z.boolean().nullable().optional(),
+
+      // --- Enum-velden met overlap tussen types: unie van alle waarden ---
+      // (prompt definieert welke waarde bij welk type hoort; save-layer
+      //  valideert per-type via TYPE_METADATA_SCHEMAS)
+      category: z
+        .enum([
+          // action_item
+          "wachten_op_extern",
+          "wachten_op_beslissing",
+          // risk
+          "financial",
+          "scope",
+          "technical",
+          "client_relationship",
+          "team",
+          "timeline",
+          "strategic",
+          "reputation",
+          // need
+          "tooling",
+          "knowledge",
+          "capacity",
+          "process",
+          "client",
+          "other",
+        ])
+        .nullable()
+        .optional(),
+      scope: z
+        .enum([
+          "project", // action_item + insight
+          "personal", // action_item
+          "meeting", // insight
+          "team", // insight
+          "company", // insight
+        ])
+        .nullable()
+        .optional(),
+      status: z
+        .enum([
+          "open", // decision
+          "closed", // decision
+          "upcoming", // milestone
+          "reached", // milestone
+          "missed", // milestone
+        ])
+        .nullable()
+        .optional(),
+      urgency: z
+        .enum([
+          "nice_to_have", // need
+          "should_have", // need
+          "must_have", // need
+          "low", // question
+          "medium", // question
+          "high", // question
+        ])
+        .nullable()
+        .optional(),
+      direction: z
+        .enum([
+          "outgoing", // commitment
+          "incoming", // commitment
+          "positive", // signal
+          "neutral", // signal
+          "concerning", // signal
+        ])
+        .nullable()
+        .optional(),
+      domain: z
+        .enum([
+          // signal
+          "market",
+          "client",
+          "team",
+          "technical",
+          // context
+          "methodology",
+          "background",
+          "expertise",
+          "process",
+          "preferences",
+          "personal",
+        ])
+        .nullable()
+        .optional(),
+
+      // --- Vrije-tekst velden ---
+      follow_up_contact: z.string().nullable().optional(),
+      assignee: z.string().nullable().optional(),
+      deadline: z.string().nullable().optional(),
+      suggested_deadline: z.string().nullable().optional(),
+      deadline_reasoning: z.string().nullable().optional(),
+      decided_by: z.string().nullable().optional(),
+      raised_by: z.string().nullable().optional(),
+      committer: z.string().nullable().optional(),
+      committed_to: z.string().nullable().optional(),
+      needs_answer_from: z.string().nullable().optional(),
+      about_person: z.string().nullable().optional(),
+      about_org: z.string().nullable().optional(),
+      proposed_by: z.string().nullable().optional(),
+      about: z.string().nullable().optional(),
+      amount_hint: z.string().nullable().optional(),
+      date_hint: z.string().nullable().optional(),
+    })
+    .describe(
+      "Per-type metadata. Vul de velden in die bij het item-type horen (zie prompt per type). Niet-relevante velden: laat op null.",
+    ),
 });
 
 export const EntitiesSchema = z.object({

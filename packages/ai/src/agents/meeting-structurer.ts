@@ -275,18 +275,34 @@ export async function runMeetingStructurer(
     ],
   });
 
-  // Defensive post-processing: clamp confidence and verify quote presence.
+  // Defensive post-processing: clamp confidence en verifieer quote-aanwezigheid.
+  // Quote-vergelijking is tolerant voor smart/straight quotes, dashes en
+  // whitespace — het model paraphraseert punctuatie regelmatig zonder dat
+  // de inhoud mis is. Mismatch cap't confidence op 0.3 (niet zero), zodat
+  // het item wel surfaced in de UI maar duidelijk "niet verifieerbaar" is.
+  const normalisedTranscript = normaliseForQuoteMatch(transcript);
   for (const k of object.kernpunten) {
     k.confidence = Math.max(0, Math.min(1, k.confidence));
     if (k.source_quote) {
-      const refLower = k.source_quote.toLowerCase();
-      if (!transcript.toLowerCase().includes(refLower)) {
-        k.confidence = 0.0;
+      const refNorm = normaliseForQuoteMatch(k.source_quote);
+      if (!normalisedTranscript.includes(refNorm)) {
+        k.confidence = Math.min(k.confidence, 0.3);
       }
     }
   }
 
   return object;
+}
+
+function normaliseForQuoteMatch(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201B\u2032]/g, "'") // smart single quotes → straight
+    .replace(/[\u201C\u201D\u201F\u2033]/g, '"') // smart double quotes → straight
+    .replace(/[\u2013\u2014\u2212]/g, "-") // en/em dash + minus → hyphen
+    .replace(/\u00a0/g, " ") // non-breaking space → regular
+    .replace(/\s+/g, " ") // collapse whitespace
+    .trim();
 }
 
 /** Exposed for harness / tests so the prompt can be inspected. */
