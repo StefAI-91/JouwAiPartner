@@ -1,63 +1,54 @@
 # Micro Sprint EX-004: Need extractor
 
-> **Scope:** Type-specialist agent voor `need` (behoefte). Let op: bestaande `needs-scanner.ts` agent wordt hier niet vervangen maar aangevuld — zie reconciliatie-notitie.
+> **Scope:** Type-specialist agent voor `need` (behoefte). Bestaande `needs-scanner.ts` blijft draaien — we voegen meeting-level extractie toe.
 
 ## Doel
 
-Needs structureel extracten uit meetings (zowel klant-needs als intern-team needs), met party/urgency/category-metadata zodat Communicator (later) ze kan gebruiken om klant-antwoorden te gronden, en zodat we intern zicht krijgen op terugkerende behoeften.
-
-## Reconciliatie met bestaande `needs-scanner.ts`
-
-De huidige `needs-scanner.ts` is een **aparte pipeline-stap** die nachtelijk draait over alle verified meetings heen. Deze sprint raakt die agent **niet aan** — we bouwen een parallel `need-extractor.ts` dat tijdens de extractie per-meeting direct needs uithaalt. In EX-009 kan geconsolideerd worden (mogelijk wordt de scanner overbodig).
+Needs structureel per-meeting extracten (zowel klant-needs als intern-team needs), met party/urgency/category-metadata. De bestaande nachtelijke `needs-scanner.ts` blijft werken; beide schrijven naar dezelfde `extractions` tabel met `type='need'` en coexisten.
 
 ## Requirements
 
-| ID        | Beschrijving                                                                                          |
-| --------- | ----------------------------------------------------------------------------------------------------- |
-| AI-E040   | Nieuwe agent `need-extractor.ts` (Sonnet) extract needs uit transcript                                |
-| AI-E041   | Retourneert `party` (client/team/partner)                                                             |
-| AI-E042   | Retourneert `urgency` (nice_to_have/should_have/must_have)                                            |
-| AI-E043   | Retourneert `category` (tooling/knowledge/capacity/process/client/other)                              |
-| AI-E044   | Prompt onderscheidt need (gewenste staat) van question (open vraag) en risk (dreiging)                |
-| AI-E045   | Impliciete needs ("het zou fijn zijn als...") wel extracten met lagere confidence                     |
-| DATA-E040 | `need` in type-enum                                                                                   |
-| DATA-E041 | Metadata-velden gedocumenteerd                                                                        |
-| FUNC-E050 | `need` in harness dropdown                                                                            |
-| FUNC-E051 | Paneel "Behoeften" in project-werkblad, gesorteerd op urgency DESC                                    |
-| FUNC-E052 | Paneel toont party-badge (klant/team/partner)                                                         |
-| QUAL-E040 | Spot-check 5 meetings >= 80%                                                                          |
-| QUAL-E041 | Party-attributie correct in >= 90%                                                                    |
-| RULE-E040 | Reconcilement met needs-scanner: beide schrijven naar `extractions` met `type='need'`, geen conflicts |
-| RULE-E041 | `need` extracties krijgen `metadata.source_agent` (`need-extractor` of `needs-scanner`)               |
-| EDGE-E040 | Klant-klacht ("ik vind X frustrerend") → need voor mitigatie, urgency=must_have                       |
+| ID        | Beschrijving                                                              |
+| --------- | ------------------------------------------------------------------------- |
+| AI-E040   | Nieuwe agent `need-extractor.ts` (Sonnet) extract needs per meeting       |
+| AI-E041   | Retourneert `party` (client/team/partner)                                 |
+| AI-E042   | Retourneert `urgency` (nice_to_have/should_have/must_have)                |
+| AI-E043   | Retourneert `category` (tooling/knowledge/capacity/process/client/other)  |
+| AI-E044   | Prompt onderscheidt need van question (open vraag) en risk (dreiging)     |
+| DATA-E040 | `need` toegevoegd aan type-enum (als nog niet aanwezig via needs-scanner) |
+| FUNC-E050 | `need` in harness dropdown                                                |
+| FUNC-E051 | Paneel "Behoeften" op project-werkblad, gesorteerd op urgency DESC        |
+| FUNC-E052 | Toont party-badge (klant/team/partner)                                    |
+| QUAL-E040 | Spot-check door Stef op 5 meetings >= 80%, party-attributie >= 90%        |
+| EDGE-E040 | Klant-klacht ("ik vind X frustrerend") → need voor mitigatie              |
 
 ## Bronverwijzingen
 
-- Bestaande: `packages/ai/src/agents/needs-scanner.ts`
-- Bestaande: `packages/ai/src/pipeline/scan-needs.ts`
-- EX-001 (infrastructuur)
+- EX-001 (prerequisite): tier-infrastructuur
+- Bestaande agent: `packages/ai/src/agents/needs-scanner.ts`
+- Bestaande pipeline-stap: `packages/ai/src/pipeline/scan-needs.ts`
 
 ## Context
 
 ### Probleem
 
-Needs worden nu nachtelijk door scanner geaggregeerd, maar op meeting-niveau ontbreekt real-time extractie. Voor het project-werkblad willen we direct na een meeting zien welke needs er speelden.
+`needs-scanner.ts` draait nachtelijk over verified meetings heen. Voor het project-werkblad willen we direct na een meeting zien welke needs er speelden — niet wachten tot de nacht.
 
 ### Oplossing
 
-Meeting-level need-extractie via specialist agent, parallel aan bestaande nightly scanner. Beide schrijven naar dezelfde tabel met verschillende `source_agent`. Later (EX-009 of daarna) mogelijk consolideren.
+Meeting-level need-extractie tijdens de normale pipeline. Beide agents (de nachtelijke scanner en de nieuwe per-meeting extractor) schrijven naar dezelfde `extractions` tabel met `type='need'`. Geen conflict — same row-shape. In EX-009 kan geconsolideerd worden of blijft het naast elkaar.
 
 ### Files touched
 
-| Bestand                                                       | Wijziging                              |
-| ------------------------------------------------------------- | -------------------------------------- |
-| `packages/ai/src/agents/test-extractors/need-extractor.ts`    | nieuw                                  |
-| `packages/ai/src/validations/test-extractors/need.ts`         | nieuw                                  |
-| `packages/ai/src/agents/test-extractors/registry.ts`          | entry                                  |
-| `supabase/migrations/20260423000001_extraction_type_need.sql` | nieuw (+ optioneel source_agent kolom) |
-| `packages/database/src/queries/needs.ts`                      | extend met `tuning_status` filter      |
-| `apps/cockpit/src/components/projects/needs-panel.tsx`        | nieuw                                  |
-| Tests                                                         | nieuw                                  |
+| Bestand                                                       | Wijziging                            |
+| ------------------------------------------------------------- | ------------------------------------ |
+| `packages/ai/src/agents/test-extractors/need-extractor.ts`    | nieuw                                |
+| `packages/ai/src/validations/test-extractors/need.ts`         | nieuw                                |
+| `packages/ai/src/agents/test-extractors/registry.ts`          | entry                                |
+| `supabase/migrations/20260423000001_extraction_type_need.sql` | `need` aan type-enum als nodig       |
+| `packages/database/src/queries/needs.ts`                      | extend (nieuwe `listNeedsByProject`) |
+| `apps/cockpit/src/components/projects/needs-panel.tsx`        | nieuw                                |
+| Tests                                                         | nieuw                                |
 
 ## Prerequisites
 
@@ -67,40 +58,32 @@ EX-000, EX-001 done.
 
 ### TDD-first
 
-- [ ] Agent tests: party-identificatie; urgency-calibratie; onderscheid need/question.
-- [ ] Panel tests: sortering urgency; party-badges.
+- [ ] Agent tests: party + urgency + category; onderscheid need/question.
+- [ ] Panel tests: sortering; party-badges; lege-staat.
 
-### Database
+### Database + code
 
-- [ ] Migratie type-enum. Optioneel: `source_agent` kolom op extractions.
-- [ ] Types regenereren.
-
-### Agent
-
-- [ ] Zod schema + prompt met 5 voorbeelden.
-- [ ] Registry entry.
-
-### Harness + UI
-
-- [ ] Dropdown optie. Query, panel, integratie.
+- [ ] Migratie (als `need` nog niet in enum).
+- [ ] Zod + agent + 5 voorbeelden.
+- [ ] Registry + dropdown.
+- [ ] Query + panel.
 
 ### Tunen
 
-- [ ] 5 meetings, iteratie, 80%+ target.
+- [ ] 5 meetings, iteratie.
 
 ### Validatie
 
-- [ ] Type-check, lint, test groen.
-- [ ] Verifieer geen regressie op bestaande needs-scanner output.
+- [ ] Tests + checks groen.
+- [ ] Verifieer: bestaande needs-scanner output werkt nog (geen regressie).
 
 ## Acceptatiecriteria
 
-- [ ] [AI-E040-E045] Agent werkt.
-- [ ] [DATA-E040-E041] DB klaar.
-- [ ] [FUNC-E050-E052] Panel functioneel.
-- [ ] [QUAL-E040, E041] Spot-check en party-accuracy.
-- [ ] [RULE-E040, E041] Coexistence met needs-scanner zonder breaking changes.
-- [ ] [EDGE-E040] Klacht → need-mitigatie extractie.
+- [ ] [AI-E040-E044] Agent werkt.
+- [ ] [DATA-E040] DB klaar.
+- [ ] [FUNC-E050-E052] Panel werkt.
+- [ ] [QUAL-E040] Spot-check + party-accuracy.
+- [ ] [EDGE-E040] Klacht → need.
 
 ## Dependencies
 
@@ -108,6 +91,7 @@ EX-001.
 
 ## Out of scope
 
-- Vervanging van needs-scanner (later in EX-009 of eigen sprint).
+- `source_agent` kolom (defer tot EX-009 als het écht nodig blijkt).
+- Vervanging van needs-scanner (aparte sprint later).
 - Cross-project need-aggregatie.
-- Communicator agent die needs gebruikt voor klant-antwoorden.
+- Communicator agent die needs gebruikt.

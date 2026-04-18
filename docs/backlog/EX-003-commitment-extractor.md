@@ -4,50 +4,43 @@
 
 ## Doel
 
-Commitments expliciet extracten: elke keer dat iemand iets belooft (aan iemand anders) in een meeting. Dit geeft voor het eerst een gestructureerd "wie wacht op wie"-overzicht per project, zowel in-bound (externen beloven ons) als out-bound (wij beloven externen).
+Commitments expliciet extracten: elke keer dat iemand iets belooft aan iemand anders. Levert voor het eerst een gestructureerd "wie wacht op wie"-overzicht, zowel outgoing (wij beloven extern) als incoming (extern belooft ons).
 
 ## Requirements
 
-| ID        | Beschrijving                                                                                                            |
-| --------- | ----------------------------------------------------------------------------------------------------------------------- |
-| AI-E030   | Nieuwe agent `commitment-extractor.ts` (Sonnet) extract commitments                                                     |
-| AI-E031   | Retourneert `committer` (wie belooft) en `committed_to` (aan wie)                                                       |
-| AI-E032   | Retourneert `direction`: `outgoing` (wij beloven extern) of `incoming` (extern belooft ons)                             |
-| AI-E033   | Retourneert optioneel `deadline_hint` als tijd genoemd is                                                               |
-| AI-E034   | Prompt onderscheidt commitment (personenlijke belofte) van action_item (trackable follow-up) van agreement (wederzijds) |
-| AI-E035   | Impliciete commitments ("ik kijk er naar") worden wel geëxtraheerd met lagere confidence                                |
-| DATA-E030 | `commitment` in type-enum                                                                                               |
-| DATA-E031 | Index op `(project_id, metadata->>'direction', tuning_status)` voor snelle filter                                       |
-| FUNC-E040 | `commitment` in harness dropdown                                                                                        |
-| FUNC-E041 | Paneel "Wie wacht op wie" in project-werkblad toont commitments gesorteerd op leeftijd                                  |
-| FUNC-E042 | Paneel kleurt outgoing anders dan incoming (visueel verschil wie de bal heeft)                                          |
-| FUNC-E043 | Commitments ouder dan 7 dagen krijgen waarschuwings-badge                                                               |
-| QUAL-E030 | Spot-check op 5 meetings >= 80% correct                                                                                 |
-| QUAL-E031 | Correcte direction-identificatie in >= 90% van gevallen                                                                 |
-| RULE-E030 | Commitments met `tuning_status='untuned'` niet in productie                                                             |
-| EDGE-E030 | "We bespreken dit volgende week" → agreement, geen commitment (niemand persoonlijk)                                     |
-| EDGE-E031 | Commitment tussen 2 externe partijen (niet wij) → agent extract het maar flags via metadata                             |
+| ID        | Beschrijving                                                                                   |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| AI-E030   | Nieuwe agent `commitment-extractor.ts` (Sonnet) extract commitments                            |
+| AI-E031   | Retourneert `committer` (wie belooft) en `committed_to` (aan wie)                              |
+| AI-E032   | Retourneert `direction`: `outgoing` (wij beloven) of `incoming` (zij beloven ons)              |
+| AI-E033   | Prompt onderscheidt commitment van action_item (trackable follow-up) en agreement (wederzijds) |
+| DATA-E030 | `commitment` in type-enum                                                                      |
+| FUNC-E040 | `commitment` in harness dropdown                                                               |
+| FUNC-E041 | Paneel "Wie wacht op wie" op project-werkblad, gesorteerd op leeftijd DESC                     |
+| FUNC-E042 | Outgoing en incoming visueel onderscheiden                                                     |
+| FUNC-E043 | Commitments ouder dan 7 dagen → waarschuwingsbadge (client-side berekening uit created_at)     |
+| QUAL-E030 | Spot-check door Stef op 5 meetings >= 80% correct, direction >= 90%                            |
+| EDGE-E030 | "We bespreken dit volgende week" → agreement, geen commitment                                  |
 
 ## Bronverwijzingen
 
-- EX-001 t/m EX-002 (patroon + infrastructuur)
+- EX-001 (prerequisite): tier-infrastructuur
 - Shift mockup: paneel "Wie wacht op wie"
-- Verwantschap met action_item — let op overlap
 
 ## Context
 
 ### Probleem
 
-"Wie wacht op wie" is nu een gut-feeling-vraag. Wouter denkt dat Joris iets moet leveren, Joris denkt dat Wouter nog iets moet doen. Zonder gestructureerde commitment-tracking gaat er tijd verloren op dubbel-werk of onbeantwoorde ballen.
+"Wie wacht op wie" is gut-feeling. Wouter denkt Joris moet leveren, Joris denkt Wouter. Zonder gestructureerde commitment-tracking gaat tijd verloren op dubbel-werk of onbeantwoorde ballen.
 
 ### Oplossing
 
-Expliciete commitment-extractie die distinguished van action_item: action_item is wat wíj kunnen opvolgen (mailen), commitment is een beloofde hand-over tussen personen. Dezelfde zin kan beide opleveren — dat is oké, ze dekken verschillende lagen.
+Expliciete commitment-extractie. Commitment ≠ action_item — dezelfde zin kan beide opleveren. Voorbeeld "Wouter werkt met Tibor aan presentatie":
 
-Voorbeeld: "Wouter werkt met Tibor aan presentatie"
+- commitment: Wouter → Tibor (outgoing)
+- action_item: optioneel (Stef mailt Wouter voor status)
 
-- commitment: Wouter → aan Tibor (outgoing) / Tibor → aan Wouter (incoming, afh. wie het geïnitieerd heeft)
-- action_item: mogelijk óók (Stef kan Wouter mailen om voortgang te checken)
+Direction is het kern-onderscheid tussen deze feature en action_item.
 
 ### Files touched
 
@@ -56,11 +49,11 @@ Voorbeeld: "Wouter werkt met Tibor aan presentatie"
 | `packages/ai/src/agents/test-extractors/commitment-extractor.ts`    | nieuw                                 |
 | `packages/ai/src/validations/test-extractors/commitment.ts`         | nieuw                                 |
 | `packages/ai/src/agents/test-extractors/registry.ts`                | entry                                 |
-| `supabase/migrations/20260422000001_extraction_type_commitment.sql` | nieuw                                 |
+| `supabase/migrations/20260422000001_extraction_type_commitment.sql` | type-enum                             |
 | `packages/database/src/queries/commitments.ts`                      | `listCommitmentsByProject(projectId)` |
 | `apps/cockpit/src/components/projects/commitments-panel.tsx`        | nieuw                                 |
 | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`           | paneel toevoegen                      |
-| Tests: agent + panel                                                | nieuw                                 |
+| Tests                                                               | nieuw                                 |
 
 ## Prerequisites
 
@@ -70,40 +63,31 @@ EX-000, EX-001 done.
 
 ### TDD-first
 
-- [ ] Agent tests: direction-identificatie, onderscheid commitment/action/agreement, impliciete vs expliciete.
-- [ ] Panel tests: outgoing/incoming gescheiden, age-badges, lege staat.
+- [ ] Agent tests: direction-identificatie; commitment vs action vs agreement.
+- [ ] Panel tests: outgoing/incoming onderscheid; age-badges; lege-staat.
 
-### Database
+### Database + code
 
-- [ ] Migratie: type-enum + index.
-- [ ] Types regenereren.
-
-### Agent
-
-- [ ] Zod schema + prompt + 5 echte voorbeelden.
-- [ ] Registry entry.
-
-### Harness + UI
-
-- [ ] Dropdown optie.
-- [ ] Query + panel, integratie.
+- [ ] Migratie + types regenereren.
+- [ ] Zod + agent + 5 voorbeelden.
+- [ ] Registry + dropdown.
+- [ ] Query + panel.
 
 ### Tunen
 
-- [ ] 5 meetings via harness, itereer tot 80%+ en correcte direction.
+- [ ] 5 meetings, iteratie tot 80%+ en direction >= 90%.
 
 ### Validatie
 
-- [ ] Type-check, lint, test groen.
+- [ ] Tests + checks groen.
 
 ## Acceptatiecriteria
 
-- [ ] [AI-E030-E035] Agent werkt.
-- [ ] [DATA-E030-E031] DB klaar.
-- [ ] [FUNC-E040-E043] Panel werkt met visuele directionaliteit.
-- [ ] [QUAL-E030, E031] Spot-check en direction-accuracy.
-- [ ] [RULE-E030] untuned hidden.
-- [ ] [EDGE-E030, E031] Edge-cases.
+- [ ] [AI-E030-E033] Agent werkt.
+- [ ] [DATA-E030] DB klaar.
+- [ ] [FUNC-E040-E043] Panel met directionaliteit.
+- [ ] [QUAL-E030] Spot-check en direction-accuracy.
+- [ ] [EDGE-E030] Agreement-disambiguation.
 
 ## Dependencies
 
@@ -111,6 +95,8 @@ EX-001.
 
 ## Out of scope
 
+- `deadline_hint` metadata (defer — UI gebruikt het nog niet).
 - Notifications bij commitment-age > N dagen.
 - Auto-escalatie naar Slack.
-- Cross-commitment dependency chains.
+- Preemptieve indexes op `direction` (voeg toe als performance dat vraagt).
+- Commitment tussen 2 externe partijen (niet wij) — edge case, defer.
