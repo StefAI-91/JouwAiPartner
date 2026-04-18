@@ -137,7 +137,11 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
               </pre>
             </Panel>
 
-            <Panel title={`DB — type="${type}"`} count={result.currentInDb.length}>
+            <Panel
+              title={`DB — type="${type}"`}
+              count={result.currentInDb.length}
+              copyValue={JSON.stringify(result.currentInDb, null, 2)}
+            >
               {result.currentInDb.length === 0 ? (
                 <p className="text-xs italic text-muted-foreground">
                   Niets opgeslagen voor dit type.
@@ -150,13 +154,26 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
                       <p className="mt-1 text-[10px] text-muted-foreground">
                         conf {row.confidence?.toFixed(2) ?? "—"} · {summariseMetadata(row.metadata)}
                       </p>
+                      <details className="mt-1.5">
+                        <summary className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
+                          raw metadata
+                        </summary>
+                        <pre className="mt-1 overflow-auto rounded bg-muted/30 p-2 text-[10px] leading-snug">
+                          {JSON.stringify(row.metadata, null, 2)}
+                        </pre>
+                      </details>
                     </li>
                   ))}
                 </ul>
               )}
             </Panel>
 
-            <Panel title={`Fresh — type="${type}"`} count={result.freshOutput.length} accent>
+            <Panel
+              title={`Fresh — type="${type}"`}
+              count={result.freshOutput.length}
+              accent
+              copyValue={JSON.stringify(result.freshOutput, null, 2)}
+            >
               {result.freshOutput.length === 0 ? (
                 <p className="text-xs italic text-muted-foreground">
                   Agent emit geen items van dit type op deze meeting.
@@ -177,6 +194,25 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
                           {k.source_quote}
                         </blockquote>
                       )}
+                      <details className="mt-1.5">
+                        <summary className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
+                          raw JSON
+                        </summary>
+                        <pre className="mt-1 overflow-auto rounded bg-background p-2 text-[10px] leading-snug">
+                          {JSON.stringify(
+                            {
+                              theme: k.theme,
+                              theme_project: k.theme_project,
+                              project: k.project,
+                              confidence: k.confidence,
+                              source_quote: k.source_quote,
+                              metadata: k.metadata,
+                            },
+                            null,
+                            2,
+                          )}
+                        </pre>
+                      </details>
                     </li>
                   ))}
                 </ul>

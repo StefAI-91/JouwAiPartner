@@ -172,6 +172,7 @@ Default als geen cue: +5 werkdagen.
 --- ALGEMENE REGELS ---
 - Wees ruimhartig met kernpunten. Een korte standup heeft 5-10, een discovery 15-25 items.
 - Confidence: 1.0 = expliciet en quote gevonden; 0.7-0.9 = sterk geïmpliceerd, goede quote; 0.4-0.6 = afgeleid, zwakke quote; 0.0 = geen quote.
+- Confidence 0.0 is UITSLUITEND voor items zonder quote. Voor items die uit toon, opstapeling of impliciete betekenis komen maar wél een quote hebben → gebruik 0.4–0.7. NOOIT confidence 0.0 als er een quote aanwezig is.
 - source_quote MOET letterlijk uit transcript komen (max 200 chars). Anders null + confidence 0.0.
 - theme_project: gebruik EXACT de schrijfwijze uit BEKENDE ENTITEITEN. Gebruik "Algemeen" voor niet-project-specifiek. Gebruik nooit varianten ([Geen project], [Intern], [Overig]).
 - Sorteer kernpunten zo dat items van hetzelfde thema bij elkaar staan; thema's op belang.
