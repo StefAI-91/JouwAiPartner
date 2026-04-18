@@ -53,7 +53,6 @@ export async function submitFeedback(input: unknown): Promise<SubmitFeedbackResu
       source: "portal",
       reporter_email: profile.email,
       source_metadata: {
-        submitted_by: profile.email,
         submitted_at: new Date().toISOString(),
       },
     },

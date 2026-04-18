@@ -253,7 +253,7 @@
 - `listPortalIssues()`
 - `getPortalIssue()`
 
-**Types:** `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`, `PortalStatusFilter`, `PortalIssue`
+**Types:** `PortalStatusFilter`, `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`, `PortalIssue`
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin

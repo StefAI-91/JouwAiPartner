@@ -1,18 +1,14 @@
 import { createPageClient } from "@repo/auth/helpers";
-import { listPortalIssues, type PortalStatusFilter } from "@repo/database/queries/portal";
+import { PORTAL_STATUS_GROUPS, type PortalStatusKey } from "@repo/database/constants/issues";
+import { listPortalIssues } from "@repo/database/queries/portal";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueStatusFilter } from "@/components/issues/issue-status-filter";
 
-const VALID_FILTERS: PortalStatusFilter[] = [
-  "ontvangen",
-  "ingepland",
-  "in_behandeling",
-  "afgerond",
-];
+const VALID_FILTERS = new Set<string>(PORTAL_STATUS_GROUPS.map((g) => g.key));
 
-function parseFilter(raw: string | undefined): PortalStatusFilter | null {
+function parseFilter(raw: string | undefined): PortalStatusKey | null {
   if (!raw) return null;
-  return VALID_FILTERS.includes(raw as PortalStatusFilter) ? (raw as PortalStatusFilter) : null;
+  return VALID_FILTERS.has(raw) ? (raw as PortalStatusKey) : null;
 }
 
 export default async function ProjectIssuesPage({

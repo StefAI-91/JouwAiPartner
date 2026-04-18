@@ -1,6 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isAdmin } from "@repo/auth/access";
-import { getAdminClient } from "../supabase/admin";
+import {
+  PORTAL_KEY_TO_INTERNAL_STATUSES,
+  PORTAL_STATUS_GROUPS,
+  type PortalStatusKey,
+} from "../constants/issues";
+
+export type PortalStatusFilter = PortalStatusKey;
 
 export interface PortalProjectWithDetails {
   id: string;
@@ -19,14 +25,16 @@ const PORTAL_PROJECT_DETAIL_COLS = `
  * List portal projects voor een profile, inclusief organisatie en laatste
  * activiteit (afgeleid van issues.updated_at). Admins zien alle projecten
  * (preview-mode), clients alleen projecten met rij in `portal_project_access`.
+ *
+ * `client` is verplicht omdat portal queries altijd in de context van een
+ * ingelogde request draaien; een accidentele fallback naar de service-role
+ * admin-client zou RLS omzeilen voor clients.
  */
 export async function listPortalProjectsWithDetails(
   profileId: string,
-  client?: SupabaseClient,
+  client: SupabaseClient,
 ): Promise<PortalProjectWithDetails[]> {
   if (!profileId) return [];
-
-  const db = client ?? getAdminClient();
 
   let projects: {
     id: string;
@@ -35,8 +43,8 @@ export async function listPortalProjectsWithDetails(
     organization: { id: string; name: string } | null;
   }[] = [];
 
-  if (await isAdmin(profileId, db)) {
-    const { data, error } = await db
+  if (await isAdmin(profileId, client)) {
+    const { data, error } = await client
       .from("projects")
       .select(PORTAL_PROJECT_DETAIL_COLS)
       .order("name");
@@ -46,7 +54,7 @@ export async function listPortalProjectsWithDetails(
     }
     projects = (data ?? []) as unknown as typeof projects;
   } else {
-    const { data, error } = await db
+    const { data, error } = await client
       .from("portal_project_access")
       .select(`projects(${PORTAL_PROJECT_DETAIL_COLS})`)
       .eq("profile_id", profileId);
@@ -63,22 +71,7 @@ export async function listPortalProjectsWithDetails(
   if (projects.length === 0) return [];
 
   const projectIds = projects.map((p) => p.id);
-
-  const { data: issueRows } = await db
-    .from("issues")
-    .select("project_id, updated_at")
-    .in("project_id", projectIds);
-
-  const lastActivityMap = new Map<string, string>();
-  if (issueRows) {
-    for (const row of issueRows as { project_id: string; updated_at: string | null }[]) {
-      if (!row.updated_at) continue;
-      const existing = lastActivityMap.get(row.project_id);
-      if (!existing || row.updated_at > existing) {
-        lastActivityMap.set(row.project_id, row.updated_at);
-      }
-    }
-  }
+  const lastActivityMap = await fetchLastActivityMap(client, projectIds);
 
   return projects
     .map((p) => ({
@@ -96,6 +89,40 @@ export async function listPortalProjectsWithDetails(
     });
 }
 
+/**
+ * Bouwt een `project_id → max(updated_at)` mapping zonder N+1: haalt per
+ * project alleen het laatst bijgewerkte issue op via parallelle `limit(1)`
+ * queries. Bij N projecten zijn dat N goedkope index-lookups i.p.v. één scan
+ * die alle rijen door de wire pompt.
+ */
+async function fetchLastActivityMap(
+  client: SupabaseClient,
+  projectIds: string[],
+): Promise<Map<string, string>> {
+  if (projectIds.length === 0) return new Map();
+
+  const results = await Promise.all(
+    projectIds.map(async (projectId) => {
+      const { data, error } = await client
+        .from("issues")
+        .select("updated_at")
+        .eq("project_id", projectId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error || !data) return [projectId, null] as const;
+      return [projectId, (data as { updated_at: string | null }).updated_at] as const;
+    }),
+  );
+
+  const map = new Map<string, string>();
+  for (const [id, ts] of results) {
+    if (ts) map.set(id, ts);
+  }
+  return map;
+}
+
 export interface PortalProjectDashboard {
   id: string;
   name: string;
@@ -104,17 +131,14 @@ export interface PortalProjectDashboard {
 }
 
 /**
- * Fetch minimale project-gegevens voor het portal dashboard. Gebruikt door
- * zowel de dashboardpagina als het layout voor de subnav-header. RLS blokt
+ * Fetch minimale project-gegevens voor het portal dashboard. RLS blokt
  * automatisch wanneer een client geen toegang heeft.
  */
 export async function getPortalProjectDashboard(
   projectId: string,
-  client?: SupabaseClient,
+  client: SupabaseClient,
 ): Promise<PortalProjectDashboard | null> {
-  const db = client ?? getAdminClient();
-
-  const { data, error } = await db
+  const { data, error } = await client
     .from("projects")
     .select(PORTAL_PROJECT_DETAIL_COLS)
     .eq("id", projectId)
@@ -157,11 +181,9 @@ export interface RecentPortalIssue {
 export async function listRecentProjectIssues(
   projectId: string,
   limit: number,
-  client?: SupabaseClient,
+  client: SupabaseClient,
 ): Promise<RecentPortalIssue[]> {
-  const db = client ?? getAdminClient();
-
-  const { data, error } = await db
+  const { data, error } = await client
     .from("issues")
     .select("id, issue_number, title, status, updated_at, created_at")
     .eq("project_id", projectId)
@@ -176,71 +198,34 @@ export async function listRecentProjectIssues(
   return (data ?? []) as RecentPortalIssue[];
 }
 
-export interface PortalIssueCounts {
-  ontvangen: number;
-  ingepland: number;
-  in_behandeling: number;
-  afgerond: number;
-}
+export type PortalIssueCounts = Record<PortalStatusKey, number>;
 
 /**
- * Tel issues per vertaalde portal-statusgroep. Interne statussen worden
- * gebundeld volgens de STATUS_MAP uit `docs/specs/portal-mvp.md`.
+ * Tel issues per portal-statusgroep — via N parallelle DB-counts i.p.v. alle
+ * rijen ophalen en in JS tellen. Elke count is een head-only index-lookup.
  */
 export async function getProjectIssueCounts(
   projectId: string,
-  client?: SupabaseClient,
+  client: SupabaseClient,
 ): Promise<PortalIssueCounts> {
-  const db = client ?? getAdminClient();
+  const entries = await Promise.all(
+    PORTAL_STATUS_GROUPS.map(async (group) => {
+      const { count, error } = await client
+        .from("issues")
+        .select("id", { count: "exact", head: true })
+        .eq("project_id", projectId)
+        .in("status", [...group.internalStatuses]);
 
-  const counts: PortalIssueCounts = {
-    ontvangen: 0,
-    ingepland: 0,
-    in_behandeling: 0,
-    afgerond: 0,
-  };
+      if (error) {
+        console.error(`[getProjectIssueCounts:${group.key}]`, error.message);
+        return [group.key, 0] as const;
+      }
+      return [group.key, count ?? 0] as const;
+    }),
+  );
 
-  const { data, error } = await db.from("issues").select("status").eq("project_id", projectId);
-
-  if (error) {
-    console.error("[getProjectIssueCounts]", error.message);
-    return counts;
-  }
-
-  for (const row of (data ?? []) as { status: string }[]) {
-    switch (row.status) {
-      case "triage":
-        counts.ontvangen++;
-        break;
-      case "backlog":
-      case "todo":
-        counts.ingepland++;
-        break;
-      case "in_progress":
-        counts.in_behandeling++;
-        break;
-      case "done":
-      case "cancelled":
-        counts.afgerond++;
-        break;
-    }
-  }
-
-  return counts;
+  return Object.fromEntries(entries) as PortalIssueCounts;
 }
-
-/**
- * Portal-statusgroepen zoals klanten ze zien. De keys matchen
- * `PortalIssueCounts` en `STATUS_COLORS` in `apps/portal/src/lib/issue-status.ts`.
- */
-export type PortalStatusFilter = "ontvangen" | "ingepland" | "in_behandeling" | "afgerond";
-
-const PORTAL_STATUS_TO_INTERNAL: Record<PortalStatusFilter, string[]> = {
-  ontvangen: ["triage"],
-  ingepland: ["backlog", "todo"],
-  in_behandeling: ["in_progress"],
-  afgerond: ["done", "cancelled"],
-};
 
 export interface PortalIssue {
   id: string;
@@ -257,26 +242,32 @@ export interface PortalIssue {
 const PORTAL_ISSUE_COLS =
   "id, issue_number, title, description, status, type, priority, created_at, closed_at";
 
+const DEFAULT_ISSUES_PAGE_SIZE = 50;
+const MAX_ISSUES_PAGE_SIZE = 200;
+
 /**
  * Portal issue lijst voor een project — alleen klant-relevante velden, geen
  * comments/assignees/interne metadata. Optioneel filteren op vertaalde
- * status-groep (bv. "ingepland" → interne statussen backlog+todo).
+ * status-groep (bv. "ingepland" → interne statussen backlog+todo) en
+ * pagineren zodat een project met honderden issues de request niet opblaast.
  */
 export async function listPortalIssues(
   projectId: string,
-  client?: SupabaseClient,
-  filters?: { status?: PortalStatusFilter },
+  client: SupabaseClient,
+  filters?: { status?: PortalStatusFilter; limit?: number; offset?: number },
 ): Promise<PortalIssue[]> {
-  const db = client ?? getAdminClient();
+  const limit = Math.min(filters?.limit ?? DEFAULT_ISSUES_PAGE_SIZE, MAX_ISSUES_PAGE_SIZE);
+  const offset = Math.max(filters?.offset ?? 0, 0);
 
-  let query = db
+  let query = client
     .from("issues")
     .select(PORTAL_ISSUE_COLS)
     .eq("project_id", projectId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (filters?.status) {
-    const internal = PORTAL_STATUS_TO_INTERNAL[filters.status];
+    const internal = PORTAL_KEY_TO_INTERNAL_STATUSES[filters.status];
     query = query.in("status", internal);
   }
 
@@ -299,11 +290,9 @@ export async function listPortalIssues(
 export async function getPortalIssue(
   issueId: string,
   projectId: string,
-  client?: SupabaseClient,
+  client: SupabaseClient,
 ): Promise<PortalIssue | null> {
-  const db = client ?? getAdminClient();
-
-  const { data, error } = await db
+  const { data, error } = await client
     .from("issues")
     .select(PORTAL_ISSUE_COLS)
     .eq("id", issueId)

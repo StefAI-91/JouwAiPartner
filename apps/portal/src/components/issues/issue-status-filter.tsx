@@ -1,26 +1,23 @@
 import Link from "next/link";
 import { cn } from "@repo/ui/utils";
-import type { PortalStatusFilter } from "@repo/database/queries/portal";
+import { PORTAL_STATUS_GROUPS, type PortalStatusKey } from "@repo/database/constants/issues";
 
 interface IssueStatusFilterProps {
   projectId: string;
-  active: PortalStatusFilter | null;
+  active: PortalStatusKey | null;
 }
-
-const FILTERS: { key: PortalStatusFilter | null; label: string }[] = [
-  { key: null, label: "Alle" },
-  { key: "ontvangen", label: "Ontvangen" },
-  { key: "ingepland", label: "Ingepland" },
-  { key: "in_behandeling", label: "In behandeling" },
-  { key: "afgerond", label: "Afgerond" },
-];
 
 export function IssueStatusFilter({ projectId, active }: IssueStatusFilterProps) {
   const base = `/projects/${projectId}/issues`;
 
+  const filters: { key: PortalStatusKey | null; label: string }[] = [
+    { key: null, label: "Alle" },
+    ...PORTAL_STATUS_GROUPS.map((g) => ({ key: g.key as PortalStatusKey, label: g.label })),
+  ];
+
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {FILTERS.map((filter) => {
+      {filters.map((filter) => {
         const href = filter.key ? `${base}?status=${filter.key}` : base;
         const isActive = active === filter.key;
         return (

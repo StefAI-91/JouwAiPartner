@@ -2,16 +2,10 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { cn } from "@repo/ui/utils";
 import { formatDate } from "@repo/ui/format";
 import type { PortalIssue } from "@repo/database/queries/portal";
-import {
-  STATUS_COLORS,
-  STATUS_MAP,
-  translateStatus,
-  type PortalStatusGroup,
-} from "@/lib/issue-status";
 import { IssueTypeBadge } from "./issue-type-badge";
+import { PortalStatusBadge } from "./portal-status-badge";
 
 interface IssueDetailProps {
   projectId: string;
@@ -31,10 +25,6 @@ const PROSE_CLASSES = [
 ].join(" ");
 
 export function IssueDetail({ projectId, issue }: IssueDetailProps) {
-  const label = translateStatus(issue.status);
-  const group = STATUS_MAP[issue.status] as PortalStatusGroup | undefined;
-  const colorClass = group ? STATUS_COLORS[group] : "bg-muted text-muted-foreground";
-
   return (
     <article className="flex flex-col gap-5">
       <Link
@@ -48,7 +38,7 @@ export function IssueDetail({ projectId, issue }: IssueDetailProps) {
       <header className="space-y-3">
         <div className="flex items-center gap-2 text-xs">
           <span className="font-mono text-muted-foreground">#{issue.issue_number}</span>
-          <span className={cn("rounded-full border px-2 py-0.5", colorClass)}>{label}</span>
+          <PortalStatusBadge status={issue.status} />
           <IssueTypeBadge type={issue.type} />
         </div>
         <h1 className="text-2xl font-semibold text-foreground">{issue.title}</h1>

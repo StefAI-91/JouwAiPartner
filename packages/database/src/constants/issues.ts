@@ -79,3 +79,78 @@ export const PRIORITY_ORDER: Record<string, number> = {
   medium: 2,
   low: 3,
 };
+
+// ── Portal-specifieke statusgroepen ──
+//
+// Klanten zien geen interne DevHub workflow (triage/backlog/...) maar vier
+// grovere buckets. Dit is de bron van waarheid voor zowel de vertaling (portal
+// UI), het filter (portal queries) als de metric-aggregatie. Wijzig alleen
+// hier — label, key en bijbehorende interne statussen blijven in sync.
+
+export const PORTAL_STATUS_GROUPS = [
+  {
+    key: "ontvangen",
+    label: "Ontvangen",
+    internalStatuses: ["triage"],
+  },
+  {
+    key: "ingepland",
+    label: "Ingepland",
+    internalStatuses: ["backlog", "todo"],
+  },
+  {
+    key: "in_behandeling",
+    label: "In behandeling",
+    internalStatuses: ["in_progress"],
+  },
+  {
+    key: "afgerond",
+    label: "Afgerond",
+    internalStatuses: ["done", "cancelled"],
+  },
+] as const satisfies ReadonlyArray<{
+  key: string;
+  label: string;
+  internalStatuses: IssueStatus[];
+}>;
+
+export type PortalStatusKey = (typeof PORTAL_STATUS_GROUPS)[number]["key"];
+export type PortalStatusLabel = (typeof PORTAL_STATUS_GROUPS)[number]["label"];
+
+/**
+ * Interne status → portal-groep key. Afgeleid van `PORTAL_STATUS_GROUPS`.
+ */
+export const INTERNAL_STATUS_TO_PORTAL_KEY: Record<IssueStatus, PortalStatusKey> =
+  PORTAL_STATUS_GROUPS.reduce(
+    (acc, group) => {
+      for (const status of group.internalStatuses) {
+        acc[status] = group.key;
+      }
+      return acc;
+    },
+    {} as Record<IssueStatus, PortalStatusKey>,
+  );
+
+/**
+ * Portal-groep key → interne statussen die erin vallen. Afgeleid.
+ */
+export const PORTAL_KEY_TO_INTERNAL_STATUSES: Record<PortalStatusKey, IssueStatus[]> =
+  PORTAL_STATUS_GROUPS.reduce(
+    (acc, group) => {
+      acc[group.key] = [...group.internalStatuses];
+      return acc;
+    },
+    {} as Record<PortalStatusKey, IssueStatus[]>,
+  );
+
+/**
+ * Portal-groep key → klantlabel.
+ */
+export const PORTAL_STATUS_LABELS: Record<PortalStatusKey, PortalStatusLabel> =
+  PORTAL_STATUS_GROUPS.reduce(
+    (acc, group) => {
+      acc[group.key] = group.label;
+      return acc;
+    },
+    {} as Record<PortalStatusKey, PortalStatusLabel>,
+  );
