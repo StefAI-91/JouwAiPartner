@@ -106,6 +106,17 @@ risk — concrete waarschuwing (expliciet of impliciet) dat iets JAIP kan schade
 
   Gebruik lagere confidence (0.4–0.7) voor risks die uit opstapeling of impliciete toon komen in plaats van één sterke quote — maar extraheer ze wél.
 
+  MEETINGS MET EXTERNE PROSPECTS/KLANTEN:
+  Bij meetings met externe partijen (prospects, leads, klanten van JAIP) blijft de risk-lens strikt JAIP-gericht. Problemen van de externe partij zijn GEEN risk — die zijn op hun best een need, signal of context. Een risk is wat JAIP bedreigt in deze deal, relatie of verkoopproces:
+  - Ambigue scope of ontbrekende pijnpunt bij prospect (geen concrete opdracht mogelijk)
+  - Domeinkennis-gap tussen JAIP en prospect die levering kan schaden
+  - Verkeerde verwachtingen of overcommitment tijdens het gesprek
+  - Lange sales-cyclus zonder doorontwikkeling
+  - Prospect verwart JAIP met ongeschikte diensten (bijv. interne training in plaats van AI-product)
+  - Belangenconflicten met andere JAIP-klanten of -partners
+
+  Problemen van de prospect zelf (hun bedrijfsrisico's, hun markt, hun productuitdagingen) → deze zijn kansen voor JAIP, geen risks voor JAIP.
+
   metadata:
     - severity: "low" | "medium" | "high" | "critical" | null
       (critical = acuut, blokkeert leveringsvermogen of dreigt klantverlies nu;
