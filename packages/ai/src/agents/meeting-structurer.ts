@@ -182,6 +182,41 @@ risk — concrete waarschuwing (expliciet of impliciet) dat iets JAIP kan schade
 
   Gebruik lagere confidence (0.4–0.7) voor risks die uit opstapeling of impliciete toon komen in plaats van één sterke quote — maar extraheer ze wél.
 
+  CROSS-TURN PATROON-DETECTIE (belangrijk voor strategische en team-risks):
+
+  Niet alle risks staan in één zin. Sommige worden pas zichtbaar als je het hele transcript overziet en patronen herkent. Scan actief op:
+
+  1. Herhaalde zorg over dezelfde persoon, rol of thema
+     - Als één persoon in meerdere turns dingen zegt over drukte, context-overload, of "te veel tegelijk" → overbelasting-risk
+     - Als meerdere sprekers onafhankelijk twijfels uiten over dezelfde partij, aanpak of klant → opstapelend risk
+     - Herhaling verhoogt severity, zelfs als geen enkele losse zin sterk is
+
+  2. Bus-factor en single-point-of-failure patronen
+     - Zinnen waaruit blijkt dat één persoon overal tussen hangt en niet vervangbaar is
+     - Spreker die aangeeft uit een rol te willen zonder dat er opvolging klaar staat
+     - Taken die stil vallen zonder die ene persoon
+     Dit is altijd een team-risk met jaip_impact_area "delivery" of "team".
+
+  3. Strategie-twijfel zichtbaar in vragen
+     - "Wat bouwen we eigenlijk?" / "Waar gaan we naartoe?" / "Klopt onze positionering nog?"
+     - Vooral als dit niet eenmalig is maar terugkeert in het gesprek
+     - Classificeer als strategic risk, niet als question
+
+  4. Wrong-hire-risico bij vacature-discussies
+     - Sprekers die het niet eens zijn over het profiel
+     - Weifelende besluitvorming over rol of seniority
+     - Aanname-keuzes gemaakt zonder onderbouwing ("ik denk dat we X nodig hebben, maar weet niet zeker")
+     Classificeer als team-risk, niet als decision of idea.
+
+  5. Marktverschuiving die propositie raakt
+     - Uitspraken dat wat JAIP nu verkoopt binnenkort commodity wordt
+     - "Straks kunnen mensen dit zelf" / "De markt verandert sneller dan wij"
+     - Niet één signaal, maar opstapelende observaties → strategic risk
+
+  Werkwijze: nadat je de expliciete risks hebt geëxtraheerd, scan het transcript opnieuw op deze 5 patronen. Extraheer ze ook als ze uit meerdere turns komen. Gebruik confidence 0.5-0.7 voor deze opstapelings-risks (lager dan expliciete, maar wel boven de extract-drempel).
+
+  Source_quote voor cross-turn risks: kies de sterkste enkele quote die representatief is voor het patroon. raised_by kan "impliciet" zijn als het uit meerdere sprekers komt.
+
   MEETINGS MET EXTERNE PROSPECTS/KLANTEN:
   Bij meetings met externe partijen (prospects, leads, klanten van JAIP) blijft de risk-lens strikt JAIP-gericht. Problemen van de externe partij zijn GEEN risk — die zijn op hun best een need, signal of context. Een risk is wat JAIP bedreigt in deze deal, relatie of verkoopproces:
   - Ambigue scope of ontbrekende pijnpunt bij prospect (geen concrete opdracht mogelijk)
@@ -349,16 +384,20 @@ export async function runMeetingStructurer(
     // classificatie-taken waar je reproduceerbaarheid wilt (en waar
     // de harness diffs tussen runs moet kunnen tonen).
     temperature: 0,
-    // Ruim voldoende voor briefing + alle 14-type kernpunten op lange
-    // discovery-meetings (15-25 items). Pas omhoog als je output ziet
-    // worden afgekapt.
-    maxOutputTokens: 16000,
+    // Ruim budget voor briefing + alle 14-type kernpunten op lange
+    // discovery-meetings (15-25 items). Bij effort "high" telt dit als
+    // thinking + output samen — thinking kan 15-25k tokens zijn op
+    // cross-turn reasoning, dus ruim boven de ~10k output-tokens die we
+    // voor 20-25 items nodig hebben.
+    maxOutputTokens: 32000,
     schema: MeetingStructurerOutputSchema,
     providerOptions: {
-      // 4.6 default `effort` is "high" — dat verbruikt veel thinking
-      // tokens zonder veel meerwaarde voor gestructureerde extractie.
-      // "medium" is ruim voldoende en fors goedkoper.
-      anthropic: { effort: "medium" },
+      // Effort "high" nodig voor cross-turn patroon-detectie: strategische
+      // en team-risks komen uit opstapeling over meerdere turns, niet uit
+      // één sterke quote. Op medium miste het model ze systematisch op
+      // de 6 referentie-meetings. Kosten-impact: ~$0.15-0.25 extra per
+      // meeting (vooral door extra thinking-tokens).
+      anthropic: { effort: "high" },
     },
     messages: [
       {
