@@ -147,7 +147,7 @@ export interface DevRiskSpecialistResult {
     metadata: Record<string, unknown>;
     created_at: string;
   }[];
-  /** Verse RiskSpecialist-output uit Haiku 4.5. */
+  /** Verse RiskSpecialist-output uit Sonnet 4.6. */
   freshRisks: RiskSpecialistItem[];
   /** Run-metrics voor A/B-vergelijking. */
   metrics: RiskSpecialistRunMetrics;

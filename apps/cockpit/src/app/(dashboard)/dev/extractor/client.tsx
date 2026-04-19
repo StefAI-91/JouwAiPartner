@@ -127,7 +127,7 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
           onClick={handleRunSpecialist}
           disabled={isSpecialistPending || !meetingId}
           className="flex h-9 items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-4 text-sm font-medium text-amber-900 transition-opacity hover:opacity-90 disabled:opacity-50 dark:text-amber-300"
-          title="A/B-experiment: alleen risks, Haiku 4.5 met high reasoning"
+          title="A/B-experiment: alleen risks, Sonnet 4.6 met high reasoning"
         >
           {isSpecialistPending ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -288,7 +288,7 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
               <Shield className="size-3.5" /> RiskSpecialist A/B
             </p>
             <span className="text-muted-foreground">
-              prompt {specialistResult.promptVersion} · Haiku 4.5 high
+              prompt {specialistResult.promptVersion} · Sonnet 4.6 high
             </span>
             <span className="text-muted-foreground">{specialistResult.metrics.latency_ms}ms</span>
             <span className="text-muted-foreground">
@@ -297,7 +297,7 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
               {specialistResult.metrics.reasoning_tokens ?? "?"}t
             </span>
             <span className="ml-auto font-medium">
-              Haiku: {specialistResult.freshRisks.length} risks · DB (structurer):{" "}
+              Specialist: {specialistResult.freshRisks.length} risks · DB (structurer):{" "}
               {specialistResult.currentInDb.length}
             </span>
           </div>
@@ -340,7 +340,7 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
             >
               {specialistResult.freshRisks.length === 0 ? (
                 <p className="text-xs italic text-muted-foreground">
-                  Haiku-specialist emit geen risks voor deze meeting.
+                  RiskSpecialist emit geen risks voor deze meeting.
                 </p>
               ) : (
                 <ul className="space-y-2">
