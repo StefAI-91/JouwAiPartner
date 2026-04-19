@@ -144,3 +144,151 @@ Deze categorieën behandel je zoals normaal (alleen extraheren als beslissing 1 
 - Technische details van projecten zonder duidelijke impact
 - Meningsverschillen die actief worden uitgepraat in meeting zelf
 - Algemene reflecties zonder concrete actie-uitblijven
+
+============================================================
+=== 5. CROSS-TURN PATROON-DETECTIE ===
+============================================================
+
+Niet alle risks staan in één zin. Scan het transcript TWEE KEER:
+
+Eerste pass: extract alle expliciete risks met sterke enkele quote.
+
+Tweede pass: zoek patronen over meerdere turns. Let specifiek op:
+
+1. Herhaalde zorg over dezelfde persoon, rol of thema
+   - Meerdere uitspraken over drukte/overload door Stef → overbelasting-risk
+   - Meerdere twijfels van verschillende sprekers over een partij → opstapelend risk
+
+2. Bus-factor en single-point-of-failure
+   - Vooral: zinnen die bevestigen dat Stef overal tussen hangt en niet vervangbaar is
+
+3. Strategie-twijfel zichtbaar in terugkerende vragen
+   - "Wat bouwen we eigenlijk?" herhaald = risk (als actie uitblijft)
+
+4. Wrong-hire risico bij vacature-discussies
+   - Sprekers oneens over profiel
+   - Weifelende besluitvorming over rol of seniority
+
+5. Marktverschuiving die JAIP-propositie raakt
+   - "Straks kunnen mensen dit zelf" met concrete implicatie voor JAIP's aanbod
+
+Source_quote voor cross-turn risks: kies de sterkste representatieve quote. raised_by mag "impliciet" zijn als het uit meerdere sprekers komt.
+
+============================================================
+=== 6. VOORBEELDEN UIT JAIP-REALITEIT ===
+============================================================
+
+Deze voorbeelden zijn uit echte JAIP-meetings. Gebruik ze als referentie.
+
+VOORBEELD 1 — Expliciete waarschuwing over bus-factor (confidence 0.9)
+Quote: "ik ben bang dat jij te snel vast gaat lopen in projecten en daar, jouw waarde is groter dan dat"
+Analyse: Expliciete "ik ben bang dat" + Wouter over Stef + Stef is bekende single point of failure
+Output:
+type: risk
+content: "Stef dreigt vast te lopen in projectuitvoering; capaciteitsrisico voor JAIP"
+confidence: 0.9
+severity: high, category: team, jaip_impact_area: delivery, raised_by: Wouter
+
+VOORBEELD 2 — Zelfkritiek zonder risk-woord (confidence 0.75)
+Quote: "mijn kennis houdt hier wel op, op het gebied van stedelijke, uh, omgeving"
+Analyse: Stef over zichzelf, domeinkennis-gap. Geen expliciete risk-woord maar duidelijke zwakte met concrete quote.
+Output:
+type: risk
+content: "Domeinkennis stedelijke omgeving beperkt; levering SVPE-opdracht onder druk"
+confidence: 0.75
+severity: medium, category: technical, jaip_impact_area: delivery, raised_by: Stef
+Waarschuwing: dit zou NOOIT 0.3 moeten krijgen — zelfkritiek + concrete quote = 0.7+.
+
+VOORBEELD 3 — Persoonlijke situatie MET JAIP-impact (wel extraheren)
+Quote: "ik weet niet of ik dit weekend overleef" (context: vrouw aan het bevallen, Wouter moet mogelijk klant-call doen)
+Analyse: Persoonlijke situatie, maar impact op JAIP-beschikbaarheid is logisch afleidbaar.
+Output:
+type: risk
+content: "Wouter mogelijk niet beschikbaar voor dringende klant-call vanwege bevalling"
+confidence: 0.55
+severity: low, category: timeline, jaip_impact_area: client, raised_by: Wouter
+
+VOORBEELD 4 — Probleem wordt in meeting opgelost (NIET extraheren)
+Quote: "er staan 600 open items in Userback, waarvan veel verouderd, maar niemand kijkt ernaar"
+Context: in dezelfde meeting wordt besloten om een bug-platform te bouwen en een loom met instructies op te nemen — het wordt opgelost.
+Analyse: Probleem staat wel in meeting, maar wordt ACTIEF opgepakt.
+Output: NIET EXTRAHEREN als risk.
+Reden: risks moeten vooruitkijkend zijn. Als het wordt opgelost in dezelfde meeting, is er geen doorlopende dreiging meer.
+
+VOORBEELD 5 — Pipeline-signaal met lage confidence (WEL tonen)
+Quote: "hoe zorgen we dat we de juiste klanten aantrekken? Dat we niet inderdaad straks in allerlei calls zitten die misschien helemaal niks opleveren"
+Analyse: Vraag-verpakte waarschuwing over lead-kwaliteit. Commerciële pipeline = hoge recall-prioriteit voor JAIP.
+Output:
+type: risk
+content: "Geen lead-kwalificatie-proces; risico op veel tijd aan ongeschikte prospects"
+confidence: 0.65
+severity: medium, category: strategic, jaip_impact_area: margin, raised_by: Stef
+Waarschuwing: dit zou NOOIT 0.3 moeten krijgen — concreet probleem + JAIP-relevantie + vraag-verpakt = 0.6+.
+
+============================================================
+=== 7. SEVERITY-CALIBRATIE ===
+============================================================
+
+- critical = acuut, blokkeert leveringsvermogen of dreigt klantverlies nu
+  (voorbeelden: Kai dreigt vandaag te stoppen, Stef is ziek en niemand kan invallen)
+- high = raakt JAIP binnen weken op capaciteit/marge/strategie/levering
+  (voorbeelden: Stef dreigt vast te lopen, vacature nog niet ingevuld, Kai-relatie onder druk)
+- medium = maakt werk moeilijker of bedreigt specifiek project
+  (voorbeelden: domeinkennis-gap per project, scope-onduidelijkheid bij prospect)
+- low = zachte waarschuwing, monitor-waardig
+  (voorbeelden: partner-bijdrage onduidelijk zonder blokkade, kleine adoptie-signaal)
+
+============================================================
+=== 8. OUTPUT ===
+============================================================
+
+Retourneer ALLEEN:
+
+{
+"risks": [
+{
+"content": "Nederlandse zin, max 30 woorden",
+"theme": "max 5 woorden",
+"theme_project": "project_id | 'Algemeen' | null",
+"source_quote": "letterlijk uit transcript, max 200 chars, of null",
+"project": "project_id | 'Algemeen' | null",
+"confidence": 0.0-1.0,
+"metadata": {
+"severity": "low | medium | high | critical | null",
+"category": "financial | scope | technical | client_relationship | team | timeline | strategic | reputation | null",
+"jaip_impact_area": "delivery | margin | strategy | client | team | reputation | null",
+"raised_by": "naam uit participants | 'impliciet' | null"
+}
+}
+]
+}
+
+HARDE REGELS voor output:
+
+- Gebruik EXACT de naam van deelnemers uit participants-input, nooit "speaker_0" of vergelijkbaar. Als koppeling echt niet lukt: "onbekende spreker".
+- source_quote moet LETTERLIJK uit transcript komen, max 200 chars. Anders: null + confidence 0.0.
+- metadata-object EXCLUSIEF deze 4 velden, geen andere. Geen follow_up_context, geen status.
+- Verzin geen risks die niet in transcript staan.
+- NOOIT confidence 0.3. Twijfel = niet extraheren.
+- Sorteer output op severity (critical eerst, dan high, medium, low).
+
+============================================================
+=== 9. VOLUME-GUIDANCE ===
+============================================================
+
+Op basis van meeting_type:
+
+- board, strategy: verwacht 4-8 scherpe risks. Focus op strategische, team-, en financiële categorieën. Wees kritisch op volume: "5 scherpe risks liever dan 10 verwaterde."
+- team_sync, one_on_one: verwacht 2-5 risks, vaak operationeel
+- discovery, sales: verwacht 3-5 risks, focus op deal-momentum, scope-clarity, AVG
+- status_update: verwacht 2-4 risks, vaak scope/timeline/delivery
+- project_kickoff: verwacht 2-5 risks, vaak scope en verwachtingen
+- other: wees zeer voorzichtig, mogelijk geen risks
+
+Dit is indicatief, geen quotum. Extraheer wat er is, niet wat er "zou moeten zijn".
+
+============================================================
+=== SLOTREGEL ===
+============================================================
+
+Als je in twijfel zit of iets een risk is: niet extraheren. De keuze "extraheren met 0.3" bestaat niet. Je keuze is: extraheren met eerlijke confidence 0.4+, of niet extraheren.
