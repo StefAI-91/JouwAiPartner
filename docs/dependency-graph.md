@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 496 |
-| Exported functions/constants | 739 |
-| Exported types/interfaces | 178 |
-| Cross-package imports | 631 |
+| Files scanned | 497 |
+| Exported functions/constants | 743 |
+| Exported types/interfaces | 182 |
+| Cross-package imports | 633 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -121,6 +121,13 @@
 
 **Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
 
+### `queries/extractions.ts`
+
+**Exports:**
+- `getExtractionsForMeetingByType()`
+
+**Types:** `ExtractionForHarness`
+
 ### `queries/ignored-entities.ts`
 
 **Exports:**
@@ -191,6 +198,8 @@
 - `getExistingMeetingsByTitleDates()`
 - `getMeetingByTitleAndDate()`
 - `listMeetingsForReclassify()`
+- `listMeetingsWithTranscript()`
+- `getMeetingForDevExtractor()`
 - `getMeetingForEmbedding()`
 - `getExtractionIdsAndContent()`
 - `getMeetingExtractions()`
@@ -198,7 +207,7 @@
 - `getVerifiedMeetingsWithoutSegments()`
 - `getMeetingForTitleGeneration()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`
 
 ### `queries/needs.ts`
 
@@ -405,12 +414,13 @@
 - `getExtractionForCorrection()`
 - `correctExtraction()`
 - `insertExtractions()`
+- `replaceMeetingExtractions()`
 - `createExtraction()`
 - `updateExtraction()`
 - `deleteExtraction()`
 - `updateNeedStatus()`
 
-**Types:** `NeedStatus`
+**Types:** `ExtractionInsertRow`, `NeedStatus`
 
 ### `mutations/ignored-entities.ts`
 
@@ -891,7 +901,7 @@
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → linkAllMeetingProjects
-- `@repo/database/mutations/extractions` → insertExtractions
+- `@repo/database/mutations/extractions` → insertExtractions, replaceMeetingExtractions
 
 **Internal deps:**
 - `../validations/extractor` → ExtractorOutput, ExtractionItem
@@ -1538,7 +1548,8 @@
 
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → getMeetingForDevExtractor
+- `@repo/database/queries/extractions` → getExtractionsForMeetingByType
 - `@repo/ai/agents/meeting-structurer` → runMeetingStructurer, MEETING_STRUCTURER_SYSTEM_PROMPT
 - `@repo/ai/agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_SYSTEM_PROMPT, RISK_SPECIALIST_PROMPT_VERSION
 - `@repo/ai/extraction-types` → ALL_EXTRACTION_TYPES
@@ -2177,6 +2188,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
+- `@repo/database/queries/meetings` → listMeetingsWithTranscript
 
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
@@ -3856,11 +3868,11 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 47 | - | - | - | - | 47 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 46 | 22 | 30 | - | - | 98 |
+| Cockpit Server Actions | 47 | 22 | 30 | - | - | 99 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 45 | 4 | - | 89 | - | 138 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 81 | 7 | 2 | 25 | - | 115 |
+| Cockpit Pages | 82 | 7 | 2 | 25 | - | 116 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
@@ -3936,6 +3948,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `insertExtractions()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
+| `replaceMeetingExtractions()` | `packages/ai/src/pipeline/save-extractions.ts` |
 | `createExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
 | `updateExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
 | `deleteExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
@@ -4106,6 +4119,12 @@ Which queries are used where across the codebase.
 | `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
+### queries/extractions.ts
+
+| Query | Used in |
+|-------|---------|
+| `getExtractionsForMeetingByType()` | `apps/cockpit/src/actions/dev-extractor.ts` |
+
 ### queries/ignored-entities.ts
 
 | Query | Used in |
@@ -4172,6 +4191,8 @@ Which queries are used where across the codebase.
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getMeetingByTitleAndDate()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `listMeetingsWithTranscript()` | `apps/cockpit/src/app/(dashboard)/dev/extractor/page.tsx` |
+| `getMeetingForDevExtractor()` | `apps/cockpit/src/actions/dev-extractor.ts` |
 | `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts` |

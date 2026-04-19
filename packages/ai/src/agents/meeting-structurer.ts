@@ -44,6 +44,19 @@ Je produceert:
    - project: project-naam (zelfde regels als theme_project) — null voor niet-project-specifiek
    - confidence: 0.0–1.0 (zie regels onderaan)
    - follow_up_context: verplichte Nederlandse context-beschrijving (100-150 woorden) UITSLUITEND voor action_item-items; voor alle andere types: lege string ""
+   - reasoning: VERPLICHT voor elk item. Korte Nederlandse toelichting (1-3 zinnen, typisch 20-300 karakters) waarin je uitlegt:
+       1. Welk signaal in het transcript dit type (risk/action_item/etc.) rechtvaardigt
+       2. Welke indicatoren de confidence dragen (expliciete taal? impliciet uit toon? opstapeling?)
+       3. Als er twijfel was tussen types, welk alternatief is overwogen en waarom dit type gekozen is
+     Houd reasoning zakelijk en informatief. Geen meta-opmerkingen over de prompt zelf ("de prompt vraagt...", "volgens de regels...").
+     Voorbeelden van goede reasoning:
+       - "Expliciete waarschuwing door Wouter over Stef's beschikbaarheid; 'ik ben bang dat' + concrete capaciteits-context. Overwogen als signal maar de dreiging voor JAIP-delivery maakt het risk."
+       - "Zelfkritiek door Stef over eigen domeinkennis-gap; quote staat zonder explicit risk-woord maar zwakte is duidelijk in SVPE-context. Confidence middelhoog omdat impact afhangt van scope van de opdracht."
+       - "Directe follow-up-actie genoemd door Wouter; gesprekspartner is Lieke, deadline impliciet deze week. Geen twijfel over type, dit is duidelijk action_item."
+     Voorbeelden van slechte reasoning (vermijden):
+       - "Het is een risk." (geen uitleg)
+       - "Hoge confidence." (herhaalt alleen een ander veld)
+       - "De prompt zegt dat dit een risk is." (meta-commentaar)
    - metadata: type-specifieke velden (zie hieronder per type)
 
 3. DEELNEMERS — Profiel per deelnemer: name, role, organization, stance. Gebruik wat je uit transcript kunt afleiden, plus BEKENDE ENTITEITEN. Verzin niets — null als onbekend.
@@ -460,6 +473,7 @@ function normaliseStructurerOutput(raw: RawMeetingStructurerOutput): MeetingStru
         project: emptyToNull(k.project),
         confidence: k.confidence,
         follow_up_context: emptyToNull(k.follow_up_context),
+        reasoning: emptyToNull(k.reasoning),
         // Strip metadata-velden die niet bij het type horen. Het model
         // levert altijd alle universele velden (Anthropic 16-union limiet),
         // maar alleen de type-specifieke velden horen verder in de pipeline.

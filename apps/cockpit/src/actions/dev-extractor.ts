@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { requireAdminInAction } from "@repo/auth/access";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import { getMeetingForDevExtractor } from "@repo/database/queries/meetings";
+import { getExtractionsForMeetingByType } from "@repo/database/queries/extractions";
 import {
   runMeetingStructurer,
   MEETING_STRUCTURER_SYSTEM_PROMPT,
@@ -72,39 +73,24 @@ export async function runDevExtractorAction(
   const parsed = runDevExtractorSchema.safeParse(input);
   if (!parsed.success) return { success: false, error: "Ongeldige invoer" };
 
-  const db = getAdminClient();
+  const meeting = await getMeetingForDevExtractor(parsed.data.meetingId);
+  if (!meeting) return { success: false, error: "Meeting niet gevonden" };
 
-  const { data: meeting, error: meetingErr } = await db
-    .from("meetings")
-    .select(
-      "id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, participants",
-    )
-    .eq("id", parsed.data.meetingId)
-    .single();
-
-  if (meetingErr || !meeting) return { success: false, error: "Meeting niet gevonden" };
-
-  const transcript =
-    (meeting.transcript_elevenlabs as string | null) ?? (meeting.transcript as string | null) ?? "";
+  const transcript = meeting.transcript_elevenlabs ?? meeting.transcript ?? "";
   if (!transcript)
     return { success: false, error: "Geen transcript beschikbaar voor deze meeting" };
 
   // Fetch current DB state for this type only — the UI shows a side-by-side
   // diff, so we only need the filtered slice.
-  const { data: currentRows } = await db
-    .from("extractions")
-    .select("id, content, confidence, metadata, created_at")
-    .eq("meeting_id", parsed.data.meetingId)
-    .eq("type", parsed.data.type)
-    .order("created_at", { ascending: false });
+  const currentRows = await getExtractionsForMeetingByType(parsed.data.meetingId, parsed.data.type);
 
   try {
     const output = await runMeetingStructurer(transcript, {
-      title: (meeting.title as string | null) ?? "",
-      meeting_type: (meeting.meeting_type as string | null) ?? "unknown",
-      party_type: (meeting.party_type as string | null) ?? "unknown",
-      meeting_date: (meeting.date as string | null) ?? new Date().toISOString().slice(0, 10),
-      participants: ((meeting.participants as string[] | null) ?? []) as string[],
+      title: meeting.title ?? "",
+      meeting_type: meeting.meeting_type ?? "unknown",
+      party_type: meeting.party_type ?? "unknown",
+      meeting_date: meeting.date ?? new Date().toISOString().slice(0, 10),
+      participants: (meeting.participants ?? []) as string[],
     });
 
     const freshOutput = output.kernpunten.filter((k) => k.type === parsed.data.type);
@@ -113,15 +99,15 @@ export async function runDevExtractorAction(
       success: true,
       data: {
         transcript,
-        currentInDb: (currentRows ?? []) as DevExtractorResult["currentInDb"],
+        currentInDb: currentRows,
         freshOutput,
         freshBriefing: output.briefing,
         meeting: {
-          id: meeting.id as string,
-          title: (meeting.title as string | null) ?? null,
-          date: (meeting.date as string | null) ?? null,
-          meeting_type: (meeting.meeting_type as string | null) ?? null,
-          party_type: (meeting.party_type as string | null) ?? null,
+          id: meeting.id,
+          title: meeting.title,
+          date: meeting.date,
+          meeting_type: meeting.meeting_type,
+          party_type: meeting.party_type,
         },
       },
     };
@@ -190,53 +176,38 @@ export async function runDevRiskSpecialistAction(
   const parsed = runRiskSpecialistSchema.safeParse(input);
   if (!parsed.success) return { success: false, error: "Ongeldige invoer" };
 
-  const db = getAdminClient();
+  const meeting = await getMeetingForDevExtractor(parsed.data.meetingId);
+  if (!meeting) return { success: false, error: "Meeting niet gevonden" };
 
-  const { data: meeting, error: meetingErr } = await db
-    .from("meetings")
-    .select(
-      "id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, participants",
-    )
-    .eq("id", parsed.data.meetingId)
-    .single();
-
-  if (meetingErr || !meeting) return { success: false, error: "Meeting niet gevonden" };
-
-  const transcript =
-    (meeting.transcript_elevenlabs as string | null) ?? (meeting.transcript as string | null) ?? "";
+  const transcript = meeting.transcript_elevenlabs ?? meeting.transcript ?? "";
   if (!transcript)
     return { success: false, error: "Geen transcript beschikbaar voor deze meeting" };
 
-  const { data: currentRows } = await db
-    .from("extractions")
-    .select("id, content, confidence, metadata, created_at")
-    .eq("meeting_id", parsed.data.meetingId)
-    .eq("type", "risk")
-    .order("created_at", { ascending: false });
+  const currentRows = await getExtractionsForMeetingByType(parsed.data.meetingId, "risk");
 
   try {
     const { output, metrics } = await runRiskSpecialist(transcript, {
-      title: (meeting.title as string | null) ?? "",
-      meeting_type: (meeting.meeting_type as string | null) ?? "unknown",
-      party_type: (meeting.party_type as string | null) ?? "unknown",
-      meeting_date: (meeting.date as string | null) ?? new Date().toISOString().slice(0, 10),
-      participants: ((meeting.participants as string[] | null) ?? []) as string[],
+      title: meeting.title ?? "",
+      meeting_type: meeting.meeting_type ?? "unknown",
+      party_type: meeting.party_type ?? "unknown",
+      meeting_date: meeting.date ?? new Date().toISOString().slice(0, 10),
+      participants: (meeting.participants ?? []) as string[],
     });
 
     return {
       success: true,
       data: {
         transcript,
-        currentInDb: (currentRows ?? []) as DevRiskSpecialistResult["currentInDb"],
+        currentInDb: currentRows,
         freshRisks: (output as RiskSpecialistOutput).risks,
         metrics,
         promptVersion: RISK_SPECIALIST_PROMPT_VERSION,
         meeting: {
-          id: meeting.id as string,
-          title: (meeting.title as string | null) ?? null,
-          date: (meeting.date as string | null) ?? null,
-          meeting_type: (meeting.meeting_type as string | null) ?? null,
-          party_type: (meeting.party_type as string | null) ?? null,
+          id: meeting.id,
+          title: meeting.title,
+          date: meeting.date,
+          meeting_type: meeting.meeting_type,
+          party_type: meeting.party_type,
         },
       },
     };

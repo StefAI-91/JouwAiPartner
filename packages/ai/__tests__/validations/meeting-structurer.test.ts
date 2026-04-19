@@ -48,6 +48,7 @@ const baseKernpunt = {
   project: "CAI Studio",
   confidence: 0.9,
   follow_up_context: "",
+  reasoning: "Expliciet besluit genomen door Stef; eenduidige quote, geen ander type overwogen.",
   metadata: fullMetadata,
 };
 

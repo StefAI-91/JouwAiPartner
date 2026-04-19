@@ -1,34 +1,17 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@repo/database/supabase/server";
+import { listMeetingsWithTranscript } from "@repo/database/queries/meetings";
 import { DevExtractorClient } from "./client";
-
-interface MeetingOption {
-  id: string;
-  title: string | null;
-  date: string | null;
-  meeting_type: string | null;
-}
 
 export default async function DevExtractorPage() {
   const supabase = await createClient();
 
   // Recent 40 meetings met transcript — gatekeeper-pipeline heeft al gedraaid,
-  // er zit content in de extractor-tafel om mee te vergelijken.
-  const { data } = await supabase
-    .from("meetings")
-    .select("id, title, date, meeting_type, transcript, transcript_elevenlabs")
-    .order("date", { ascending: false, nullsFirst: false })
-    .limit(40);
-
-  const meetings: MeetingOption[] = (data ?? [])
-    .filter((m) => m.transcript || m.transcript_elevenlabs)
-    .map((m) => ({
-      id: m.id,
-      title: m.title,
-      date: m.date,
-      meeting_type: m.meeting_type,
-    }));
+  // er zit content in de extractor-tafel om mee te vergelijken. Filter gebeurt
+  // op de DB; de transcript-kolommen zelf worden pas geladen in de Server Action
+  // zodra Stef een meeting selecteert (bespaart ~40-100 KB per row op page-load).
+  const meetings = await listMeetingsWithTranscript(40, supabase);
 
   return (
     <div className="px-4 py-8 lg:px-10">

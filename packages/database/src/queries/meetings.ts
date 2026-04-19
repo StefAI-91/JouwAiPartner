@@ -273,6 +273,72 @@ export async function listMeetingsForReclassify(
   return data as MeetingForReclassify[];
 }
 
+export interface DevExtractorMeetingOption {
+  id: string;
+  title: string | null;
+  date: string | null;
+  meeting_type: string | null;
+}
+
+/**
+ * Lijst meetings die een transcript hebben (transcript of transcript_elevenlabs).
+ * Puur voor de /dev/extractor harness — selecteert alleen wat de dropdown
+ * nodig heeft, géén transcript-kolommen (die halen we per-meeting op in de
+ * action zodra Stef er één aanklikt). Filter gebeurt op de DB via `.or(...)`.
+ */
+export async function listMeetingsWithTranscript(
+  limit: number = 40,
+  client?: SupabaseClient,
+): Promise<DevExtractorMeetingOption[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select("id, title, date, meeting_type")
+    .or("transcript.not.is.null,transcript_elevenlabs.not.is.null")
+    .order("date", { ascending: false, nullsFirst: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("[listMeetingsWithTranscript]", error.message);
+    return [];
+  }
+  return (data ?? []) as DevExtractorMeetingOption[];
+}
+
+export interface MeetingForDevExtractor {
+  id: string;
+  title: string | null;
+  date: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  transcript: string | null;
+  transcript_elevenlabs: string | null;
+  participants: string[] | null;
+}
+
+/**
+ * Haal één meeting op inclusief transcript-varianten voor de /dev/extractor
+ * harness. Apart van getVerifiedMeetingById omdat deze ook draft meetings
+ * toestaat en geen extractions-join doet (extractions komen via
+ * getExtractionsForMeetingByType).
+ */
+export async function getMeetingForDevExtractor(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<MeetingForDevExtractor | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      "id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, participants",
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data as MeetingForDevExtractor;
+}
+
 export async function getMeetingForEmbedding(
   meetingId: string,
 ): Promise<{ title: string | null; participants: string[] | null; summary: string | null } | null> {

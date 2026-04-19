@@ -58,19 +58,23 @@ export async function correctExtraction(
   return { success: true };
 }
 
+export interface ExtractionInsertRow {
+  meeting_id: string;
+  type: string;
+  content: string;
+  confidence: number;
+  transcript_ref: string | null;
+  metadata: Record<string, unknown>;
+  project_id: string | null;
+  embedding_stale: boolean;
+  verification_status: string;
+  follow_up_context?: string | null;
+  /** Agent-reasoning (1-3 NL zinnen). Optioneel — null voor legacy rijen. */
+  reasoning?: string | null;
+}
+
 export async function insertExtractions(
-  rows: {
-    meeting_id: string;
-    type: string;
-    content: string;
-    confidence: number;
-    transcript_ref: string | null;
-    metadata: Record<string, unknown>;
-    project_id: string | null;
-    embedding_stale: boolean;
-    verification_status: string;
-    follow_up_context?: string | null;
-  }[],
+  rows: ExtractionInsertRow[],
 ): Promise<{ success: true; count: number } | { error: string }> {
   if (rows.length === 0) return { success: true, count: 0 };
 
@@ -78,6 +82,29 @@ export async function insertExtractions(
 
   if (error) return { error: error.message };
   return { success: true, count: rows.length };
+}
+
+/**
+ * Atomic DELETE+INSERT voor alle extractions van één meeting via RPC
+ * `reset_extractions_for_meeting`. Gebruikt door de MeetingStructurer-save
+ * om re-runs idempotent te houden — als de pipeline 2x draait blijft de
+ * row-count gelijk i.p.v. te verdubbelen (PW-QC-02 D4).
+ *
+ * Als rows leeg is: wist alleen bestaande extractions en return 0.
+ * Bij crash tussen DELETE en INSERT rolt Postgres de transactie terug
+ * zodat de DB nooit in een tussenstaat staat (EDGE-QC-011).
+ */
+export async function replaceMeetingExtractions(
+  meetingId: string,
+  rows: ExtractionInsertRow[],
+): Promise<{ success: true; count: number } | { error: string }> {
+  const { data, error } = await getAdminClient().rpc("reset_extractions_for_meeting", {
+    p_meeting_id: meetingId,
+    p_rows: rows,
+  });
+
+  if (error) return { error: error.message };
+  return { success: true, count: (data as number) ?? rows.length };
 }
 
 export async function createExtraction(data: {

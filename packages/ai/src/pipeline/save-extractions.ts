@@ -1,5 +1,5 @@
 import { linkAllMeetingProjects } from "@repo/database/mutations/meetings";
-import { insertExtractions } from "@repo/database/mutations/extractions";
+import { insertExtractions, replaceMeetingExtractions } from "@repo/database/mutations/extractions";
 import { ExtractorOutput, ExtractionItem } from "../validations/extractor";
 import type { IdentifiedProject } from "../validations/gatekeeper";
 import {
@@ -175,6 +175,9 @@ function buildStructuredRows(
       verification_status: "draft",
       // Alleen action_item levert follow_up_context; andere types krijgen null.
       follow_up_context: k.type === "action_item" ? k.follow_up_context : null,
+      // Agent-reasoning gaat 1-op-1 naar de DB-kolom. Null voor (toekomstige)
+      // agents die het veld nog niet leveren — kolom is nullable.
+      reasoning: k.reasoning,
     };
   });
 }
@@ -184,6 +187,11 @@ function buildStructuredRows(
  * Equivalent to legacy `saveExtractions` but accepts the new structured
  * 14-type shape — used once the `USE_MEETING_STRUCTURER` flag is on
  * (PW-02 stap 3 wires this up).
+ *
+ * Idempotent: gebruikt de `reset_extractions_for_meeting` RPC zodat een
+ * re-run op dezelfde meeting exact 1 set extractions achterlaat, niet
+ * een dubbele set (PW-QC-02 D4). DELETE+INSERT draait in één transactie;
+ * bij een crash midden in de operatie blijft de DB consistent.
  */
 export async function saveStructuredExtractions(
   structurerOutput: MeetingStructurerOutput,
@@ -208,16 +216,25 @@ export async function saveStructuredExtractions(
     primaryProjectId,
   );
 
-  if (rows.length > 0) {
-    const result = await insertExtractions(rows);
-    if ("error" in result) {
-      console.error("Failed to insert extractions:", result.error);
-      return { extractions_saved: 0, projects_linked: linkResult.linked };
-    }
+  // Replace i.p.v. insert — als er al extractions voor deze meeting zijn
+  // (bijv. van een eerdere run of van de legacy pair) worden die eerst
+  // atomair gewist voordat de nieuwe set wordt weggeschreven.
+  //
+  // Empty-rows is een no-op: als de agent 0 kernpunten teruggaf (bijv. na
+  // een regressie) raken we de bestaande set niet kwijt. "Err on keeping" —
+  // liever stale data dan silent verlies door een AI-hik.
+  if (rows.length === 0) {
+    return { extractions_saved: 0, projects_linked: linkResult.linked };
+  }
+
+  const result = await replaceMeetingExtractions(meetingId, rows);
+  if ("error" in result) {
+    console.error("Failed to replace extractions:", result.error);
+    return { extractions_saved: 0, projects_linked: linkResult.linked };
   }
 
   return {
-    extractions_saved: rows.length,
+    extractions_saved: result.count,
     projects_linked: linkResult.linked,
   };
 }
