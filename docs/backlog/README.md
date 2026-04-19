@@ -27,6 +27,17 @@ Zie [`DH-013-020-access-control-index.md`](./DH-013-020-access-control-index.md)
 | ~~`DH-019-invite-flow.md`~~                   | _Gedaan 2026-04-13 — verplaatst naar `sprints/done/`_ | DH-013, DH-014, DH-018 |
 | ~~`DH-020-admin-team-ui.md`~~                 | _Gedaan 2026-04-13 — verplaatst naar `sprints/done/`_ | DH-013/14/15/19        |
 
+## PW Quality-Check tranche (PW-QC-01 t/m PW-QC-04)
+
+Zie [`PW-QC-index.md`](./PW-QC-index.md) voor overzicht en prioritering. Bron: code-quality review op commit-range `de1d90d..b9a792a` (PW-02 MeetingStructurer + RiskSpecialist).
+
+| File                                  | Sprint                                                  | Prerequisites    |
+| ------------------------------------- | ------------------------------------------------------- | ---------------- |
+| `PW-QC-01-security-error-handling.md` | Auth-volgorde, loading/error routes, action-shape       | —                |
+| `PW-QC-02-database-discipline.md`     | Queries centraliseren, idempotency, migratie-veiligheid | —                |
+| `PW-QC-03-ai-pipeline-hygiene.md`     | Prompt-sync, confidence, post-processing, shared utils  | PW-QC-02 (losse) |
+| `PW-QC-04-file-splits-and-tests.md`   | Files >150 regels splitsen + anti-laundering tests      | PW-QC-01/02/03   |
+
 ## Completed (moved to `sprints/done/`)
 
 The following were completed and moved on 2026-04-10:
