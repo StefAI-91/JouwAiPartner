@@ -20,7 +20,7 @@ import {
  */
 
 /** Bump when the prompt changes in a way that breaks comparison with earlier runs. */
-export const RISK_SPECIALIST_PROMPT_VERSION = "v2";
+export const RISK_SPECIALIST_PROMPT_VERSION = "v3";
 
 const SYSTEM_PROMPT = `Je bent de Risk Specialist. Je hebt één taak: uit een meeting-transcript alle risks extraheren die JAIP moet kennen. Je classificeert niet tussen types, je schrijft geen samenvatting, je identificeert geen deelnemers — dat is al gedaan door andere agents.
 
