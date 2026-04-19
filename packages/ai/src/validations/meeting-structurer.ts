@@ -203,6 +203,15 @@ export const KernpuntSchema = z.object({
     .describe(
       "Dutch follow-up context (100-150 words) — REQUIRED for action_item, empty string for all other types.",
     ),
+  // Verplicht voor alle types. 1-3 Nederlandse zinnen waarin de agent uitlegt
+  // waarom dit item dit type kreeg, welke confidence-indicatoren meespeelden
+  // en welke alternatieve types overwogen zijn. Bedoeld voor calibratie +
+  // debug — geen gebruikers-UI. Aparte DB-kolom, niet in metadata.
+  reasoning: z
+    .string()
+    .describe(
+      "Dutch 1-3 sentence reasoning: why this type, confidence indicators, alternatives considered.",
+    ),
   // Universal metadata schema: alle velden als REQUIRED (zonder nullable/optional)
   // om onder Anthropic's limiet van 16 union-typed parameters te blijven.
   // Sentinel-conventie: lege string "" of enum-waarde "n/a" = veld niet van
@@ -325,6 +334,8 @@ export type Kernpunt = {
   confidence: number;
   /** Uitgebreide opvolg-context (100-150 woorden). Alleen voor action_item. */
   follow_up_context: string | null;
+  /** Agent-reasoning: 1-3 NL zinnen over waarom dit type + confidence-indicatoren. */
+  reasoning: string | null;
   metadata: {
     effort_estimate?: "small" | "medium" | "large" | null;
     impact_area?: "pricing" | "scope" | "technical" | "hiring" | "process" | "other" | null;

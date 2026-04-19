@@ -53,6 +53,8 @@ function makeOutput(): MeetingStructurerOutput {
         source_quote: "We gaan met Supabase Auth werken.",
         project: "CAI Studio",
         confidence: 0.9,
+        follow_up_context: null,
+        reasoning: "Expliciet besluit genomen door team; geen alternatief overwogen.",
         metadata: { status: "open" },
       },
       {
@@ -63,6 +65,10 @@ function makeOutput(): MeetingStructurerOutput {
         source_quote: "We moeten Joris even mailen.",
         project: "CAI Studio",
         confidence: 0.95,
+        follow_up_context:
+          "Wouter mailt Joris om de credentials voor de productie-omgeving op te vragen zodat de deploy deze week door kan gaan.",
+        reasoning:
+          "Directe opvolgactie met eigenaar (Wouter) en ontvanger (Joris); geen twijfel over type.",
         metadata: {
           category: "wachten_op_extern",
           follow_up_contact: "Joris",

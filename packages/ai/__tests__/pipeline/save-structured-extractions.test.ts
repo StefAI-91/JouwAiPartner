@@ -60,6 +60,7 @@ function makeKernpunt(overrides: Partial<Kernpunt> = {}): Kernpunt {
     project: "Project A",
     confidence: 0.9,
     follow_up_context: null,
+    reasoning: "Expliciete beslissing in transcript; Stef bevestigt besluit.",
     metadata: { status: "open" },
     ...overrides,
   };
@@ -187,6 +188,41 @@ describe("saveStructuredExtractions", () => {
     await saveStructuredExtractions(makeOutput([makeKernpunt()]), MEETING_ID, []);
 
     expect(rowsFromCall()[0].embedding_stale).toBe(true);
+  });
+
+  it("contract: reasoning wordt 1-op-1 doorgegeven naar de DB-kolom", async () => {
+    mockLinkProjects.mockResolvedValue({ linked: 0, errors: [] });
+    mockReplaceExtractions.mockResolvedValue({ success: true, count: 1 });
+
+    await saveStructuredExtractions(
+      makeOutput([
+        makeKernpunt({
+          reasoning:
+            "Expliciete waarschuwing door Wouter; 'ik ben bang dat'-formulering + concrete dreiging voor delivery.",
+        }),
+      ]),
+      MEETING_ID,
+      [],
+    );
+
+    const row = rowsFromCall()[0] as { reasoning: string | null };
+    expect(row.reasoning).toBe(
+      "Expliciete waarschuwing door Wouter; 'ik ben bang dat'-formulering + concrete dreiging voor delivery.",
+    );
+  });
+
+  it("contract: ontbrekende reasoning (null) blijft null op de DB-row, zonder te crashen", async () => {
+    mockLinkProjects.mockResolvedValue({ linked: 0, errors: [] });
+    mockReplaceExtractions.mockResolvedValue({ success: true, count: 1 });
+
+    await saveStructuredExtractions(
+      makeOutput([makeKernpunt({ reasoning: null })]),
+      MEETING_ID,
+      [],
+    );
+
+    const row = rowsFromCall()[0] as { reasoning: string | null };
+    expect(row.reasoning).toBeNull();
   });
 
   it("contract: source_quote is persisted as transcript_ref (no answer without source)", async () => {

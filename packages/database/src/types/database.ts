@@ -408,6 +408,7 @@ export type Database = {
           metadata: Json | null;
           organization_id: string | null;
           project_id: string | null;
+          reasoning: string | null;
           search_vector: unknown;
           transcript_ref: string | null;
           type: string;
@@ -429,6 +430,7 @@ export type Database = {
           metadata?: Json | null;
           organization_id?: string | null;
           project_id?: string | null;
+          reasoning?: string | null;
           search_vector?: unknown;
           transcript_ref?: string | null;
           type: string;
@@ -450,6 +452,7 @@ export type Database = {
           metadata?: Json | null;
           organization_id?: string | null;
           project_id?: string | null;
+          reasoning?: string | null;
           search_vector?: unknown;
           transcript_ref?: string | null;
           type?: string;

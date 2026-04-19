@@ -20,7 +20,7 @@ import {
  */
 
 /** Bump when the prompt changes in a way that breaks comparison with earlier runs. */
-export const RISK_SPECIALIST_PROMPT_VERSION = "v3";
+export const RISK_SPECIALIST_PROMPT_VERSION = "v4";
 
 const SYSTEM_PROMPT = `Je bent de Risk Specialist voor JouwAIPartner (JAIP). Je hebt één taak: uit een meeting-transcript alle risks extraheren die JAIP moet kennen.
 
@@ -306,7 +306,8 @@ Retourneer ALLEEN:
 "category": "financial | scope | technical | client_relationship | team | timeline | strategic | reputation | null",
 "jaip_impact_area": "delivery | margin | strategy | client | team | reputation | null",
 "raised_by": "naam uit participants | 'impliciet' | null"
-}
+},
+"reasoning": "1-3 NL zinnen: welk signaal maakt dit een risk, wat draagt de confidence, welk alternatief overwogen"
 }
 ]
 }
@@ -319,6 +320,13 @@ HARDE REGELS voor output:
 - Verzin geen risks die niet in transcript staan.
 - NOOIT confidence 0.3. Twijfel = niet extraheren.
 - Sorteer output op severity (critical eerst, dan high, medium, low).
+- reasoning is VERPLICHT per item. Schrijf zakelijk, 20-300 karakters, in het Nederlands, en beantwoord:
+  (a) welk signaal in het transcript maakt dit een risk (niet signal/context),
+  (b) wat draagt de confidence (expliciete risk-woorden? zelfkritiek? opstapeling?),
+  (c) als twijfel bestond tussen types: welk alternatief en waarom risk gekozen.
+  Geen meta-commentaar over de prompt zelf ("de regels zeggen…"). Geen herhaling van andere velden.
+  Goed voorbeeld: "Expliciete waarschuwing door Wouter over Stef's bus-factor; 'ik ben bang dat' + herhaald patroon. Overwogen als signal maar de concrete JAIP-delivery-dreiging maakt het risk."
+  Slecht voorbeeld: "Dit is een risk." of "Hoge confidence." of "De prompt vraagt dit."
 
 ============================================================
 === 9. VOLUME-GUIDANCE ===
@@ -478,6 +486,7 @@ function normaliseRiskSpecialistOutput(raw: RawRiskSpecialistOutput): RiskSpecia
           jaip_impact_area: sentinelToNull(r.metadata.jaip_impact_area),
           raised_by: emptyToNull(r.metadata.raised_by),
         },
+        reasoning: emptyToNull(r.reasoning),
       }),
     ),
   };

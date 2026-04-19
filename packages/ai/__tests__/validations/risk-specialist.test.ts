@@ -16,6 +16,8 @@ const validRaw = {
         jaip_impact_area: "delivery",
         raised_by: "Wouter",
       },
+      reasoning:
+        "Zelfkritiek van Stef met concrete quote; herhaald patroon over bus-factor. Overwogen als signal maar JAIP-delivery-dreiging maakt het risk.",
     },
   ],
 };
@@ -69,6 +71,7 @@ describe("RiskSpecialistRawOutputSchema", () => {
             jaip_impact_area: "n/a",
             raised_by: "",
           },
+          reasoning: "",
         },
       ],
     };

@@ -54,6 +54,13 @@ export const RiskSpecialistRawItemSchema = z.object({
     ]),
     raised_by: z.string().describe("Name from participants, 'impliciet', or empty string."),
   }),
+  // Verplichte NL toelichting (1-3 zinnen): waarom dit risk, confidence-drivers,
+  // overwogen alternatieven. Bedoeld voor calibratie + debug, niet voor UI.
+  reasoning: z
+    .string()
+    .describe(
+      "Dutch 1-3 sentence reasoning: why this is a risk (not signal/context), confidence drivers, alternatives considered.",
+    ),
 });
 
 export const RiskSpecialistRawOutputSchema = z.object({
@@ -87,6 +94,8 @@ export type RiskSpecialistItem = {
     jaip_impact_area: "delivery" | "margin" | "strategy" | "client" | "team" | "reputation" | null;
     raised_by: string | null;
   };
+  /** Agent-reasoning: 1-3 NL zinnen over waarom dit risk + confidence-drivers. */
+  reasoning: string | null;
 };
 
 export type RiskSpecialistOutput = {

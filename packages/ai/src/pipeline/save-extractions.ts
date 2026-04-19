@@ -175,6 +175,9 @@ function buildStructuredRows(
       verification_status: "draft",
       // Alleen action_item levert follow_up_context; andere types krijgen null.
       follow_up_context: k.type === "action_item" ? k.follow_up_context : null,
+      // Agent-reasoning gaat 1-op-1 naar de DB-kolom. Null voor (toekomstige)
+      // agents die het veld nog niet leveren — kolom is nullable.
+      reasoning: k.reasoning,
     };
   });
 }

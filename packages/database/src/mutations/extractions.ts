@@ -69,6 +69,8 @@ export interface ExtractionInsertRow {
   embedding_stale: boolean;
   verification_status: string;
   follow_up_context?: string | null;
+  /** Agent-reasoning (1-3 NL zinnen). Optioneel — null voor legacy rijen. */
+  reasoning?: string | null;
 }
 
 export async function insertExtractions(
