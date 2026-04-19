@@ -61,3 +61,69 @@ JAIP kan geraakt worden op zes gebieden:
 - klantrelatie (moeizame communicatie, adoptie, scope-conflict, tevredenheid bij Kai)
 - team (overbelasting, verkeerde hire, single point of failure, ownership-gat)
 - reputatie en aansprakelijkheid (mislukt project, fout advies, AVG-compliance)
+
+============================================================
+=== 3. BESLISSINGSREGELS (HET KERN-FILTER) ===
+============================================================
+
+BESLISSING 1: "Is dit überhaupt een risk?"
+
+Hier ben je STRIKT. Als je twijfelt: niet extraheren. Nooit de middenweg 0.3 kiezen.
+
+Regels voor wat WEL risk is:
+
+- Zorg wordt geuit, en er is geen actieve beweging om het op te lossen binnen dit gesprek of direct daarna
+- Waarschuwing over JAIP-impact, ook als spreker dat niet expliciet zegt (je mag de connectie afleiden als die logisch is)
+- Zelfkritiek van een teamlid over eigen zwakte of overbelasting
+- Herhaling van een eerder geuite zorg zonder resolutie
+- Hypothetische waarschuwingen met duidelijke dreiging ("wat als...", "stel dat...")
+
+Regels voor wat GEEN risk is:
+
+1. PERSOONLIJKE SITUATIES (gezondheid, gezin, juridisch)
+   - Geen risk op zichzelf
+   - WEL risk als de impact op JAIP-werk expliciet of logisch afleidbaar is: "ik weet niet of ik dit weekend overleef" (vrouw bevalt, en dit raakt een klant-call) = risk
+   - Zonder duidelijke JAIP-impact: context, niet risk
+
+2. PROBLEMEN VAN EXTERNE PARTIJEN
+   - Kai heeft cashflow-problemen = op zichzelf geen JAIP-risk
+   - Kai heeft cashflow-problemen EN kan onze factuur niet betalen = WEL risk (directe JAIP-impact)
+   - Prospect heeft interne strategie-problemen = niet ons risk, eerder een kans
+
+3. MARKT-OBSERVATIES ZONDER CONCRETE IMPLICATIE
+   - "AI ontwikkelt snel" op zichzelf = geen risk
+   - "Mensen gaan MVP's zelf bouwen en dat raakt onze propositie direct" = WEL risk (concrete implicatie)
+
+4. STRATEGISCHE VRAGEN EENMALIG
+   - "Wat bouwen we eigenlijk?" eenmalig uitgesproken = question of vision, geen risk
+   - Herhaald dezelfde vraag over meerdere meetings zonder resolutie = WEL risk
+
+5. INTERNE REFLECTIES
+   - "Daar moeten we nog eens over nadenken" = context, normaal denkwerk
+   - Chronische blokkade (altijd twijfelen, nooit besluit) = WEL risk
+
+6. PROBLEMEN DIE IN DEZE MEETING AL WORDEN OPGELOST
+   - "100 bugs in Userback" + "maar we hebben nu het bug-platform dat het oplost" = GEEN risk meer, het wordt actief opgepakt
+   - Onthoud: een risk vereist dat iets NOG dreigt, niet dat iets ooit gedreigd heeft
+
+7. TECHNISCHE COMPLEXITEIT ALS NORMALE CONDITIE
+   - "Dit is mega complex" = context, niet automatisch risk
+   - "Dit is mega complex en we hebben niemand die dit kan overzien" = WEL risk
+
+8. MENINGSVERSCHILLEN OVER AANPAK
+   - Stef en Wouter zijn het oneens over profielkeuze = discussie, geen risk
+   - Zonder resolutie na herhaalde discussie waarbij besluit blijft uitblijven = WEL risk
+
+BESLISSING 2: "Hoe zeker ben ik?"
+
+Pas NA Beslissing 1. Als je doorgelaten hebt: confidence eerlijk toekennen, ondergrens 0.4.
+
+Confidence-schaal:
+
+- 0.85-1.0: expliciete risk-woorden in quote ("ik ben bang dat", "dit is een risico", "gevaar", "wat als" + duidelijke dreiging)
+- 0.7-0.85: duidelijke zelfkritiek of zelfgerapporteerde zwakte met concrete quote, zonder risk-woord
+- 0.55-0.7: vraag-verpakte waarschuwing of concreet probleem met goede quote
+- 0.4-0.55: opstapeling van meerdere zwakke signalen, enkele quote dekt niet zelfstandig
+- 0.0: ALLEEN als er geen source_quote beschikbaar is
+
+VERBODEN: confidence 0.3. Als je twijfelt of iets risk is, kies niet-extraheren. Nooit 0.3 als compromis.
