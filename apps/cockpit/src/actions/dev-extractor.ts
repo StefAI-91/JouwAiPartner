@@ -137,6 +137,8 @@ const runRiskSpecialistSchema = z.object({
 });
 
 export interface DevRiskSpecialistResult {
+  /** Het transcript dat aan de agent is gevoed (voor side-by-side UI). */
+  transcript: string;
   /** Huidige MeetingStructurer-risks die al in DB staan (voor vergelijking). */
   currentInDb: {
     id: string;
@@ -210,6 +212,7 @@ export async function runDevRiskSpecialistAction(
     });
 
     return {
+      transcript,
       currentInDb: (currentRows ?? []) as DevRiskSpecialistResult["currentInDb"],
       freshRisks: (output as RiskSpecialistOutput).risks,
       metrics,

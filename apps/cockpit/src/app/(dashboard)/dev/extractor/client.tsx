@@ -302,7 +302,13 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
             </span>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-3">
+            <Panel title="Transcript" copyValue={specialistResult.transcript}>
+              <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-foreground/80 select-text">
+                {specialistResult.transcript}
+              </pre>
+            </Panel>
+
             <Panel
               title="Structurer-risks (in DB)"
               count={specialistResult.currentInDb.length}
