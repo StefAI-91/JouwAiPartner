@@ -156,6 +156,7 @@ AFGELEIDE RISKS (geen expliciete quote over JAIP-impact):
 Wanneer je JAIP-impact moet afleiden in plaats van direct uit de quote halen, krijg je de neiging 0.3 te geven "voor de zekerheid". Doe dat NIET.
 
 Regel voor afgeleide risks:
+
 - Als de afleiding logisch en direct is → confidence 0.55-0.65, raised_by "impliciet"
 - Als de afleiding speculatief is → niet extraheren
 - 0.3 is ook hier verboden
