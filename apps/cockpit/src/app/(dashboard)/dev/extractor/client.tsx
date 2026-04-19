@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, ChevronDown, Copy, Loader2, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Copy, Loader2, Shield, Sparkles } from "lucide-react";
 import {
   runDevExtractorAction,
+  runDevRiskSpecialistAction,
   getMeetingStructurerPromptAction,
+  getRiskSpecialistPromptAction,
   type DevExtractorResult,
+  type DevRiskSpecialistResult,
 } from "@/actions/dev-extractor";
 import { ALL_EXTRACTION_TYPES } from "@repo/ai/extraction-types";
 import type { ExtractionType } from "@repo/ai/extraction-types";
@@ -21,10 +24,14 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
   const [meetingId, setMeetingId] = useState(meetings[0]?.id ?? "");
   const [type, setType] = useState<ExtractionType>("risk");
   const [result, setResult] = useState<DevExtractorResult | null>(null);
+  const [specialistResult, setSpecialistResult] = useState<DevRiskSpecialistResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [specialistPrompt, setSpecialistPrompt] = useState<string | null>(null);
+  const [showSpecialistPrompt, setShowSpecialistPrompt] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isSpecialistPending, startSpecialistTransition] = useTransition();
 
   function handleRun() {
     if (!meetingId) return;
@@ -37,6 +44,17 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
     });
   }
 
+  function handleRunSpecialist() {
+    if (!meetingId) return;
+    setError(null);
+    setSpecialistResult(null);
+    startSpecialistTransition(async () => {
+      const res = await runDevRiskSpecialistAction({ meetingId });
+      if ("error" in res) setError(res.error);
+      else setSpecialistResult(res);
+    });
+  }
+
   async function handleTogglePrompt() {
     if (!showPrompt && !prompt) {
       const res = await getMeetingStructurerPromptAction();
@@ -44,6 +62,15 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
       else setPrompt(res.prompt);
     }
     setShowPrompt((v) => !v);
+  }
+
+  async function handleToggleSpecialistPrompt() {
+    if (!showSpecialistPrompt && !specialistPrompt) {
+      const res = await getRiskSpecialistPromptAction();
+      if ("error" in res) setError(res.error);
+      else setSpecialistPrompt(res.prompt);
+    }
+    setShowSpecialistPrompt((v) => !v);
   }
 
   return (
@@ -97,19 +124,51 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
 
         <button
           type="button"
+          onClick={handleRunSpecialist}
+          disabled={isSpecialistPending || !meetingId}
+          className="flex h-9 items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-4 text-sm font-medium text-amber-900 transition-opacity hover:opacity-90 disabled:opacity-50 dark:text-amber-300"
+          title="A/B-experiment: alleen risks, Haiku 4.5 met high reasoning"
+        >
+          {isSpecialistPending ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Shield className="size-3.5" />
+          )}
+          {isSpecialistPending ? "Bezig…" : "Run RiskSpecialist"}
+        </button>
+
+        <button
+          type="button"
           onClick={handleTogglePrompt}
           className="flex h-9 items-center gap-1 rounded-md border bg-background px-3 text-xs text-muted-foreground hover:text-foreground"
         >
           <ChevronDown
             className={`size-3 transition-transform ${showPrompt ? "rotate-180" : ""}`}
           />
-          System-prompt
+          Structurer-prompt
+        </button>
+
+        <button
+          type="button"
+          onClick={handleToggleSpecialistPrompt}
+          className="flex h-9 items-center gap-1 rounded-md border bg-background px-3 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <ChevronDown
+            className={`size-3 transition-transform ${showSpecialistPrompt ? "rotate-180" : ""}`}
+          />
+          RiskSpecialist-prompt
         </button>
       </div>
 
       {showPrompt && prompt && (
         <pre className="max-h-80 overflow-auto rounded-lg border bg-muted/30 p-3 text-[11px] leading-relaxed whitespace-pre-wrap">
           {prompt}
+        </pre>
+      )}
+
+      {showSpecialistPrompt && specialistPrompt && (
+        <pre className="max-h-80 overflow-auto rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-[11px] leading-relaxed whitespace-pre-wrap">
+          {specialistPrompt}
         </pre>
       )}
 
@@ -220,6 +279,95 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
             </Panel>
           </div>
         </>
+      )}
+
+      {specialistResult && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-500/40 bg-amber-500/5 px-4 py-2 text-xs">
+            <p className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+              <Shield className="size-3.5" /> RiskSpecialist A/B
+            </p>
+            <span className="text-muted-foreground">
+              prompt {specialistResult.promptVersion} · Haiku 4.5 high
+            </span>
+            <span className="text-muted-foreground">{specialistResult.metrics.latency_ms}ms</span>
+            <span className="text-muted-foreground">
+              in {specialistResult.metrics.input_tokens ?? "?"}t · out{" "}
+              {specialistResult.metrics.output_tokens ?? "?"}t · reason{" "}
+              {specialistResult.metrics.reasoning_tokens ?? "?"}t
+            </span>
+            <span className="ml-auto font-medium">
+              Haiku: {specialistResult.freshRisks.length} risks · DB (structurer):{" "}
+              {specialistResult.currentInDb.length}
+            </span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <Panel
+              title="Structurer-risks (in DB)"
+              count={specialistResult.currentInDb.length}
+              copyValue={JSON.stringify(specialistResult.currentInDb, null, 2)}
+            >
+              {specialistResult.currentInDb.length === 0 ? (
+                <p className="text-xs italic text-muted-foreground">
+                  Geen risks in DB voor deze meeting.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {specialistResult.currentInDb.map((row) => (
+                    <li key={row.id} className="rounded border bg-background p-2 text-xs">
+                      <p className="leading-snug">{row.content}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        conf {row.confidence?.toFixed(2) ?? "—"} · {summariseMetadata(row.metadata)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+
+            <Panel
+              title="RiskSpecialist-risks (fresh)"
+              count={specialistResult.freshRisks.length}
+              accent
+              copyValue={JSON.stringify(specialistResult.freshRisks, null, 2)}
+            >
+              {specialistResult.freshRisks.length === 0 ? (
+                <p className="text-xs italic text-muted-foreground">
+                  Haiku-specialist emit geen risks voor deze meeting.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {specialistResult.freshRisks.map((r, i) => (
+                    <li
+                      key={i}
+                      className="rounded border border-amber-500/30 bg-amber-500/5 p-2 text-xs"
+                    >
+                      <p className="leading-snug">{r.content}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        conf {r.confidence.toFixed(2)} ·{" "}
+                        {summariseMetadata(r.metadata as Record<string, unknown>)}
+                      </p>
+                      {r.source_quote && (
+                        <blockquote className="mt-1 border-l-2 border-muted pl-2 text-[10px] italic text-muted-foreground">
+                          {r.source_quote}
+                        </blockquote>
+                      )}
+                      <details className="mt-1.5">
+                        <summary className="cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
+                          raw JSON
+                        </summary>
+                        <pre className="mt-1 overflow-auto rounded bg-background p-2 text-[10px] leading-snug">
+                          {JSON.stringify(r, null, 2)}
+                        </pre>
+                      </details>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panel>
+          </div>
+        </div>
       )}
     </div>
   );

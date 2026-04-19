@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 494 |
-| Exported functions/constants | 737 |
-| Exported types/interfaces | 176 |
-| Cross-package imports | 628 |
+| Exported functions/constants | 739 |
+| Exported types/interfaces | 177 |
+| Cross-package imports | 631 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -1531,15 +1531,20 @@
 **Exports:**
 - `runDevExtractorAction()`
 - `getMeetingStructurerPromptAction()`
+- `runDevRiskSpecialistAction()`
+- `getRiskSpecialistPromptAction()`
 
-**Types:** `DevExtractorResult`
+**Types:** `DevExtractorResult`, `DevRiskSpecialistResult`
 
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/agents/meeting-structurer` → runMeetingStructurer, MEETING_STRUCTURER_SYSTEM_PROMPT
+- `@repo/ai/agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_SYSTEM_PROMPT, RISK_SPECIALIST_PROMPT_VERSION
 - `@repo/ai/extraction-types` → ALL_EXTRACTION_TYPES
 - (type) `@repo/ai/validations/meeting-structurer` → Kernpunt
+- (type) `@repo/ai/validations/risk-specialist` → RiskSpecialistItem, RiskSpecialistOutput
+- (type) `@repo/ai/agents/risk-specialist` → RiskSpecialistRunMetrics
 
 ### `apps/cockpit/src/actions/email-filter.ts`
 
@@ -3851,7 +3856,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 47 | - | - | - | - | 47 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 46 | 19 | 30 | - | - | 95 |
+| Cockpit Server Actions | 46 | 22 | 30 | - | - | 98 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 45 | 4 | - | 89 | - | 138 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
