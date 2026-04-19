@@ -191,13 +191,13 @@ OVER 0.3 — DE BEWUSTE TWIJFELKLASSIFICATIE:
 0.3 is NIET verboden, maar WEL BEPERKT tot drie specifieke situaties:
 
 (a) Impliciet patroon zonder sterke enkele quote, waar je het risk wel voelt maar niet hard kunt maken
-    Voorbeeld: meerdere zwakke signalen over Stef-overbelasting over verschillende meetings
+Voorbeeld: meerdere zwakke signalen over Stef-overbelasting over verschillende meetings
 
 (b) Grensgeval tussen insight/risk of klant-probleem/JAIP-risk waar je verdedigbaar beide kanten op kunt
-    Voorbeeld: SVP kan referentie niet publiek maken — is dit SVP-probleem of JAIP-groei-probleem?
+Voorbeeld: SVP kan referentie niet publiek maken — is dit SVP-probleem of JAIP-groei-probleem?
 
 (c) Probleem dat in meeting wordt aangepakt maar waar oplossing nog niet landt — "monitor-waardig"
-    Voorbeeld: Kenji op vakantie, plan net gemaakt, nog niet getest
+Voorbeeld: Kenji op vakantie, plan net gemaakt, nog niet getest
 
 In ALLE ANDERE gevallen is 0.3 verboden. Als je twijfelt tussen 0.4 en 0.3: kies 0.4 als je het risk verdedigbaar vindt, anders niet-extraheren.
 
