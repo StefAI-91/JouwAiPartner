@@ -348,18 +348,19 @@ export async function runRiskSpecialist(
     model: anthropic("claude-haiku-4-5-20251001"),
     maxRetries: 3,
     temperature: 0,
-    // maxOutputTokens telt als thinking + response samen. Bij 2000
-    // thinking budget + ~5-10 risks (~150 tokens/risk) blijft 2000-2500
-    // tokens voor de response — ruim voldoende voor single-type output.
-    maxOutputTokens: 4000,
+    // maxOutputTokens telt als thinking + response samen. Met 4000/2000
+    // bleven er slechts 2000 tokens voor de response — bij v2-prompt met
+    // extra instructieblokken gebruikt Haiku vaak al >2000 thinking-tokens
+    // waardoor er geen output meer past en Anthropic 'no object generated'
+    // terug geeft. 8000 totaal + 3000 thinking = 5000 output, ruim voor
+    // 10 risks (~150-200 tokens per item, ~1500-2000 JSON-overhead).
+    maxOutputTokens: 8000,
     schema: RiskSpecialistRawOutputSchema,
     providerOptions: {
       // Haiku 4.5 ondersteunt extended thinking, maar niet de `effort`-
       // parameter die Opus 4.5+ gebruikt. We moeten `thinking` direct
-      // configureren met een expliciet budget. 2000 tokens is ruim
-      // genoeg voor cross-turn patroon-detectie op één-typs output;
-      // Sonnet heeft meer nodig vanwege de bredere 14-typs taak.
-      anthropic: { thinking: { type: "enabled", budgetTokens: 2000 } },
+      // configureren met een expliciet budget.
+      anthropic: { thinking: { type: "enabled", budgetTokens: 3000 } },
     },
     messages: [
       {
