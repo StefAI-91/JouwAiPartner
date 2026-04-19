@@ -380,7 +380,7 @@ export async function runRiskSpecialist(
     .join("\n");
 
   const { object, usage } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
+    model: anthropic("claude-sonnet-4-6"),
     maxRetries: 3,
     temperature: 0,
     // maxOutputTokens telt als thinking + response samen. Met 4000/2000
@@ -392,10 +392,9 @@ export async function runRiskSpecialist(
     maxOutputTokens: 8000,
     schema: RiskSpecialistRawOutputSchema,
     providerOptions: {
-      // Haiku 4.5 ondersteunt extended thinking, maar niet de `effort`-
-      // parameter die Opus 4.5+ gebruikt. We moeten `thinking` direct
-      // configureren met een expliciet budget.
-      anthropic: { thinking: { type: "enabled", budgetTokens: 3000 } },
+      // Sonnet 4.6 accepteert de `effort`-parameter; "high" zet extended
+      // thinking aan op het hoogste niveau (SDK kiest het budget).
+      anthropic: { effort: "high" },
     },
     messages: [
       {
