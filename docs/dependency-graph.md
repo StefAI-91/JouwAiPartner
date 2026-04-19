@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 494 |
+| Files scanned | 496 |
 | Exported functions/constants | 739 |
-| Exported types/interfaces | 177 |
+| Exported types/interfaces | 178 |
 | Cross-package imports | 631 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -1534,7 +1534,7 @@
 - `runDevRiskSpecialistAction()`
 - `getRiskSpecialistPromptAction()`
 
-**Types:** `DevExtractorResult`, `DevRiskSpecialistResult`
+**Types:** `DevExtractorResult`, `ActionResult`, `DevRiskSpecialistResult`
 
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction

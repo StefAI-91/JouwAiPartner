@@ -39,8 +39,8 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
     setResult(null);
     startTransition(async () => {
       const res = await runDevExtractorAction({ meetingId, type });
-      if ("error" in res) setError(res.error);
-      else setResult(res);
+      if (!res.success) setError(res.error);
+      else setResult(res.data);
     });
   }
 
@@ -50,16 +50,16 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
     setSpecialistResult(null);
     startSpecialistTransition(async () => {
       const res = await runDevRiskSpecialistAction({ meetingId });
-      if ("error" in res) setError(res.error);
-      else setSpecialistResult(res);
+      if (!res.success) setError(res.error);
+      else setSpecialistResult(res.data);
     });
   }
 
   async function handleTogglePrompt() {
     if (!showPrompt && !prompt) {
       const res = await getMeetingStructurerPromptAction();
-      if ("error" in res) setError(res.error);
-      else setPrompt(res.prompt);
+      if (!res.success) setError(res.error);
+      else setPrompt(res.data.prompt);
     }
     setShowPrompt((v) => !v);
   }
@@ -67,8 +67,8 @@ export function DevExtractorClient({ meetings }: { meetings: MeetingOption[] }) 
   async function handleToggleSpecialistPrompt() {
     if (!showSpecialistPrompt && !specialistPrompt) {
       const res = await getRiskSpecialistPromptAction();
-      if ("error" in res) setError(res.error);
-      else setSpecialistPrompt(res.prompt);
+      if (!res.success) setError(res.error);
+      else setSpecialistPrompt(res.data.prompt);
     }
     setShowSpecialistPrompt((v) => !v);
   }

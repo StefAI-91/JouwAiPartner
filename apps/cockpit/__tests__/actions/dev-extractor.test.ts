@@ -129,8 +129,25 @@ describe("runDevExtractorAction", () => {
     (requireAdminInAction as ReturnType<typeof vi.fn>).mockResolvedValue({ error: "Geen toegang" });
 
     const result = await runDevExtractorAction({ meetingId: VALID_MEETING_ID, type: "risk" });
-    expect("error" in result && result.error).toBe("Geen toegang");
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toBe("Geen toegang");
     expect(mockRunStructurer).not.toHaveBeenCalled();
+  });
+
+  // QUAL-QC-001: auth blokkeert vóór Zod-parse (defense-in-depth).
+  it("blocks non-admin callers EVEN with invalid input (auth gate runs first)", async () => {
+    (requireAdminInAction as ReturnType<typeof vi.fn>).mockResolvedValue({ error: "Geen toegang" });
+
+    const result = await runDevExtractorAction({
+      meetingId: "not-a-uuid",
+      // @ts-expect-error — bewust ongeldig type
+      type: "garbage",
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toBe("Geen toegang");
   });
 
   it("rejects invalid UUID meetingId", async () => {
@@ -138,7 +155,9 @@ describe("runDevExtractorAction", () => {
       meetingId: "not-a-uuid",
       type: "risk",
     });
-    expect("error" in result && result.error).toBe("Ongeldige invoer");
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toBe("Ongeldige invoer");
   });
 
   it("rejects unknown extraction type", async () => {
@@ -147,13 +166,17 @@ describe("runDevExtractorAction", () => {
       // @ts-expect-error — testing runtime rejection
       type: "totally_made_up",
     });
-    expect("error" in result && result.error).toBe("Ongeldige invoer");
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toBe("Ongeldige invoer");
   });
 
   it("returns 'Meeting niet gevonden' when the meeting lookup fails", async () => {
     mockMeetingFetch = { data: null as never, error: { message: "no rows" } };
     const result = await runDevExtractorAction({ meetingId: VALID_MEETING_ID, type: "risk" });
-    expect("error" in result && result.error).toBe("Meeting niet gevonden");
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toBe("Meeting niet gevonden");
   });
 
   it("returns 'Geen transcript beschikbaar' when both transcripts are null", async () => {
@@ -162,9 +185,12 @@ describe("runDevExtractorAction", () => {
       error: null,
     };
     const result = await runDevExtractorAction({ meetingId: VALID_MEETING_ID, type: "risk" });
-    expect("error" in result && result.error).toBe("Geen transcript beschikbaar voor deze meeting");
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toBe("Geen transcript beschikbaar voor deze meeting");
   });
 
+  // QUAL-QC-002: success-path retourneert { success: true, data: … }.
   it("filters fresh output to the requested type and returns it alongside DB rows", async () => {
     mockRunStructurer.mockResolvedValue({
       briefing: "Korte briefing.",
@@ -195,16 +221,16 @@ describe("runDevExtractorAction", () => {
     });
 
     const result = await runDevExtractorAction({ meetingId: VALID_MEETING_ID, type: "risk" });
-    expect("error" in result).toBe(false);
-    if ("error" in result) return;
+    expect(result.success).toBe(true);
+    if (!result.success) return;
 
-    expect(result.freshOutput).toHaveLength(1);
-    expect(result.freshOutput[0].type).toBe("risk");
-    expect(result.freshOutput[0].content).toBe("Credentials zijn 4 dagen oud.");
-    expect(result.freshBriefing).toBe("Korte briefing.");
-    expect(result.currentInDb).toHaveLength(1);
-    expect(result.currentInDb[0].id).toBe("ex-1");
-    expect(result.transcript).toContain("Joris");
+    expect(result.data.freshOutput).toHaveLength(1);
+    expect(result.data.freshOutput[0].type).toBe("risk");
+    expect(result.data.freshOutput[0].content).toBe("Credentials zijn 4 dagen oud.");
+    expect(result.data.freshBriefing).toBe("Korte briefing.");
+    expect(result.data.currentInDb).toHaveLength(1);
+    expect(result.data.currentInDb[0].id).toBe("ex-1");
+    expect(result.data.transcript).toContain("Joris");
   });
 
   it("contract: never writes to the database (ephemeral tuning tool)", async () => {
@@ -225,20 +251,25 @@ describe("runDevExtractorAction", () => {
     mockRunStructurer.mockRejectedValue(new Error("Rate limited"));
 
     const result = await runDevExtractorAction({ meetingId: VALID_MEETING_ID, type: "risk" });
-    expect("error" in result && result.error).toContain("Rate limited");
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toContain("Rate limited");
   });
 });
 
 describe("getMeetingStructurerPromptAction", () => {
   it("returns the prompt for admins", async () => {
     const result = await getMeetingStructurerPromptAction();
-    expect("prompt" in result).toBe(true);
-    if ("prompt" in result) expect(result.prompt).toBe("test prompt");
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.prompt).toBe("test prompt");
   });
 
   it("denies non-admins", async () => {
     (requireAdminInAction as ReturnType<typeof vi.fn>).mockResolvedValue({ error: "Geen toegang" });
     const result = await getMeetingStructurerPromptAction();
-    expect("error" in result && result.error).toBe("Geen toegang");
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toBe("Geen toegang");
   });
 });
