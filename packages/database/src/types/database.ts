@@ -343,6 +343,56 @@ export type Database = {
           },
         ];
       };
+      experimental_risk_extractions: {
+        Row: {
+          created_at: string;
+          error: string | null;
+          id: string;
+          input_tokens: number | null;
+          latency_ms: number | null;
+          meeting_id: string;
+          model: string;
+          output_tokens: number | null;
+          prompt_version: string;
+          reasoning_tokens: number | null;
+          risks: Json;
+        };
+        Insert: {
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          latency_ms?: number | null;
+          meeting_id: string;
+          model: string;
+          output_tokens?: number | null;
+          prompt_version: string;
+          reasoning_tokens?: number | null;
+          risks: Json;
+        };
+        Update: {
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          latency_ms?: number | null;
+          meeting_id?: string;
+          model?: string;
+          output_tokens?: number | null;
+          prompt_version?: string;
+          reasoning_tokens?: number | null;
+          risks?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "experimental_risk_extractions_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       extractions: {
         Row: {
           confidence: number | null;

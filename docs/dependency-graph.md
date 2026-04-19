@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 490 |
-| Exported functions/constants | 730 |
-| Exported types/interfaces | 169 |
-| Cross-package imports | 627 |
+| Files scanned | 494 |
+| Exported functions/constants | 737 |
+| Exported types/interfaces | 176 |
+| Cross-package imports | 628 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -391,6 +391,13 @@
 - `updateRowEmbedding()`
 - `batchUpdateEmbeddings()`
 
+### `mutations/experimental-risk-extractions.ts`
+
+**Exports:**
+- `insertExperimentalRiskExtraction()`
+
+**Types:** `ExperimentalRiskExtractionInput`
+
 ### `mutations/extractions.ts`
 
 **Exports:**
@@ -647,6 +654,18 @@
 - `../validations/meeting-structurer` → MeetingStructurerOutput, Kernpunt
 - `../extraction-types` → TYPE_MARKDOWN_LABEL
 
+### `packages/ai/src/agents/risk-specialist.ts`
+
+**Exports:**
+- `runRiskSpecialist()`
+- `RISK_SPECIALIST_PROMPT_VERSION`
+- `RISK_SPECIALIST_SYSTEM_PROMPT`
+
+**Types:** `RiskSpecialistContext`, `RiskSpecialistRunMetrics`, `RiskSpecialistRunResult`
+
+**Internal deps:**
+- `../validations/risk-specialist` → RiskSpecialistRawOutputSchema, type RiskSpecialistItem, type RiskSpecialistOutput, type RawRiskSpecialistOutput
+
 ### `packages/ai/src/agents/summarizer.ts`
 
 **Exports:**
@@ -797,6 +816,7 @@
 - `./steps/summarize` → runSummarizeStep
 - `./steps/extract` → runExtractStep
 - `./steps/structure` → runStructureStep, isMeetingStructurerEnabled
+- `./steps/risk-specialist-experiment` → runRiskSpecialistExperiment
 - `./tagger` → runTagger
 - `./segment-builder` → buildSegments
 - `../embeddings` → embedBatch
@@ -928,6 +948,17 @@
 - `../../agents/extractor` → runExtractor, ExtractorOutput
 - `../save-extractions` → saveExtractions
 - `../../validations/gatekeeper` → IdentifiedProject
+
+### `packages/ai/src/pipeline/steps/risk-specialist-experiment.ts`
+
+**Exports:**
+- `runRiskSpecialistExperiment()`
+
+**Depends on:**
+- `@repo/database/mutations/experimental-risk-extractions` → insertExperimentalRiskExtraction
+
+**Internal deps:**
+- `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
 
 ### `packages/ai/src/pipeline/steps/structure.ts`
 
@@ -1205,6 +1236,14 @@
 - `OrgSummaryOutputSchema`
 
 **Types:** `TimelineEntry`, `ProjectSummaryOutput`, `OrgTimelineEntry`, `OrgSummaryOutput`
+
+### `packages/ai/src/validations/risk-specialist.ts`
+
+**Exports:**
+- `RiskSpecialistRawItemSchema`
+- `RiskSpecialistRawOutputSchema`
+
+**Types:** `RawRiskSpecialistOutput`, `RiskSpecialistItem`, `RiskSpecialistOutput`
 
 ### `packages/ai/src/validations/summarizer.ts`
 
@@ -3810,7 +3849,7 @@ Which layers depend on which packages:
 | Layer | database | ai | auth | ui | mcp | Total |
 |-------|---|---|---|---|---|-------|
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 46 | - | - | - | - | 46 |
+| AI Pipeline | 47 | - | - | - | - | 47 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 46 | 19 | 30 | - | - | 95 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
@@ -3877,6 +3916,12 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `updateRowEmbedding()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `batchUpdateEmbeddings()` | `packages/ai/src/pipeline/embed-pipeline.ts`, `packages/ai/src/pipeline/re-embed-worker.ts` |
+
+### mutations/experimental-risk-extractions.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist-experiment.ts` |
 
 ### mutations/extractions.ts
 

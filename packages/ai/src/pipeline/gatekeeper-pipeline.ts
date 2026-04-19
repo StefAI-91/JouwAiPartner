@@ -19,6 +19,7 @@ import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
 import { runExtractStep } from "./steps/extract";
 import { runStructureStep, isMeetingStructurerEnabled } from "./steps/structure";
+import { runRiskSpecialistExperiment } from "./steps/risk-specialist-experiment";
 import { runTagger } from "./tagger";
 import { buildSegments } from "./segment-builder";
 import { embedBatch } from "../embeddings";
@@ -319,6 +320,21 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   let extractorOutput: ExtractorOutput | null = null;
   let extractionsSaved = 0;
 
+  // A/B-experiment: Haiku-only RiskSpecialist runs parallel to the
+  // MeetingStructurer and writes to een aparte tabel. Geen impact op UI
+  // of hoofdpipeline — geheel zelfgedragen error-handling in de step.
+  // Start vóór de structurer zodat ze echt parallel lopen; we awaiten
+  // aan het einde van de step zodat Vercel de function niet afsluit
+  // voordat de save klaar is.
+  const riskSpecialistPromise = runRiskSpecialistExperiment(meetingId, bestTranscript, {
+    ...summarizeContext,
+    meeting_date: input.date,
+    identified_projects: identifiedProjects.map((p) => ({
+      project_name: p.project_name,
+      project_id: p.project_id,
+    })),
+  });
+
   const useStructurer = isMeetingStructurerEnabled();
 
   if (useStructurer) {
@@ -483,6 +499,11 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     console.error("Embedding failed:", errMsg);
     errors.push(`Embedding: ${errMsg}`);
   }
+
+  // Ensure the RiskSpecialist-experiment-save is complete voor we return —
+  // Vercel sluit serverless-functions zodra de response uit is. Errors
+  // zijn binnen de step al behandeld en gelogd.
+  await riskSpecialistPromise;
 
   return {
     gatekeeper: gatekeeperResult,
