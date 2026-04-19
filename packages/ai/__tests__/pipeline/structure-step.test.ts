@@ -10,6 +10,7 @@ vi.mock("@repo/database/mutations/meetings", () => ({
 }));
 vi.mock("@repo/database/mutations/extractions", () => ({
   insertExtractions: vi.fn(),
+  replaceMeetingExtractions: vi.fn(),
 }));
 
 import { runStructureStep, isMeetingStructurerEnabled } from "../../src/pipeline/steps/structure";
@@ -19,14 +20,14 @@ import {
   updateMeetingRawFireflies,
   linkAllMeetingProjects,
 } from "@repo/database/mutations/meetings";
-import { insertExtractions } from "@repo/database/mutations/extractions";
+import { replaceMeetingExtractions } from "@repo/database/mutations/extractions";
 import type { MeetingStructurerOutput } from "../../src/validations/meeting-structurer";
 
 const mockRunStructurer = runMeetingStructurer as ReturnType<typeof vi.fn>;
 const mockUpdateSummary = updateMeetingSummary as ReturnType<typeof vi.fn>;
 const mockUpdateRaw = updateMeetingRawFireflies as ReturnType<typeof vi.fn>;
 const mockLinkProjects = linkAllMeetingProjects as ReturnType<typeof vi.fn>;
-const mockInsertExtractions = insertExtractions as ReturnType<typeof vi.fn>;
+const mockReplaceExtractions = replaceMeetingExtractions as ReturnType<typeof vi.fn>;
 
 const MEETING_ID = "meeting-uuid-1";
 
@@ -81,7 +82,7 @@ beforeEach(() => {
   mockUpdateSummary.mockResolvedValue({ success: true });
   mockUpdateRaw.mockResolvedValue({ success: true });
   mockLinkProjects.mockResolvedValue({ linked: 1, errors: [] });
-  mockInsertExtractions.mockResolvedValue({ success: true, count: 0 });
+  mockReplaceExtractions.mockResolvedValue({ success: true, count: 0 });
 });
 
 describe("runStructureStep", () => {
@@ -151,15 +152,16 @@ describe("runStructureStep", () => {
 
   it("calls saveStructuredExtractions which persists all kernpunten", async () => {
     mockRunStructurer.mockResolvedValue(makeOutput());
-    mockInsertExtractions.mockResolvedValue({ success: true, count: 2 });
+    mockReplaceExtractions.mockResolvedValue({ success: true, count: 2 });
 
     const result = await runStructureStep(MEETING_ID, "transcript", baseContext, {}, "elevenlabs", [
       { project_name: "CAI Studio", project_id: "proj-cai", confidence: 0.95 },
     ]);
 
     expect(result.extractionsSaved).toBe(2);
-    const rows = mockInsertExtractions.mock.calls[0][0];
-    expect(rows.map((r: { type: string }) => r.type)).toEqual(["decision", "action_item"]);
+    // replace mutation-signatuur: (meetingId, rows) → rows op index 1.
+    const rows = mockReplaceExtractions.mock.calls[0][1] as { type: string }[];
+    expect(rows.map((r) => r.type)).toEqual(["decision", "action_item"]);
   });
 
   it("returns success=false with error when the agent throws — no DB writes", async () => {
@@ -177,7 +179,7 @@ describe("runStructureStep", () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain("Anthropic 429");
     expect(mockUpdateSummary).not.toHaveBeenCalled();
-    expect(mockInsertExtractions).not.toHaveBeenCalled();
+    expect(mockReplaceExtractions).not.toHaveBeenCalled();
   });
 
   it("returns success=false when updateMeetingSummary errors (does not swallow)", async () => {
