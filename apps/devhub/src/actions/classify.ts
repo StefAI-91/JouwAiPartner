@@ -72,19 +72,14 @@ async function classifyIssueCore(
   });
 
   if (slackEvent) {
-    const { getAdminClient } = await import("@repo/database/supabase/admin");
-    const db = getAdminClient();
-    const { data: project } = await db
-      .from("projects")
-      .select("name")
-      .eq("id", issue.project_id)
-      .single();
+    const { getProjectName } = await import("@repo/database/queries/projects");
+    const projectName = await getProjectName(issue.project_id);
 
     const payload: SlackIssuePayload = {
       issueId,
       issueNumber: issue.issue_number,
       title: issue.title,
-      projectName: project?.name ?? "Onbekend project",
+      projectName: projectName ?? "Onbekend project",
       severity: result.severity,
       priority: issue.priority,
       type: result.type,

@@ -9,7 +9,7 @@ import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { embedMeetingWithExtractions } from "@repo/ai/pipeline/embed-pipeline";
 import { markMeetingEmbeddingStale } from "@repo/database/mutations/meetings";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import { getMeetingByFirefliesIdForReprocess } from "@repo/database/queries/meetings";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
 import { runTagger } from "@repo/ai/pipeline/tagger";
 import { buildSegments } from "@repo/ai/pipeline/segment-builder";
@@ -45,19 +45,9 @@ export async function POST(req: NextRequest) {
   const { fireflies_id } = parsed.data;
 
   // 1. Find existing meeting in DB
-  const { data: meeting, error: meetingError } = await getAdminClient()
-    .from("meetings")
-    .select(
-      "id, title, date, meeting_type, party_type, participants, organization_id, raw_fireflies",
-    )
-    .eq("fireflies_id", fireflies_id)
-    .single();
-
-  if (meetingError || !meeting) {
-    return NextResponse.json(
-      { error: `Meeting not found: ${meetingError?.message}` },
-      { status: 404 },
-    );
+  const meeting = await getMeetingByFirefliesIdForReprocess(fireflies_id);
+  if (!meeting) {
+    return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
   }
 
   // 2. Fetch full transcript from Fireflies (to get audio_url)
@@ -98,7 +88,7 @@ export async function POST(req: NextRequest) {
 
   console.info(`Reprocess: Starting Summarizer (${transcriptSource})...`);
   const summarizeResult = await runSummarizeStep(meeting.id, summarizerTranscript, {
-    title: meeting.title,
+    title: meeting.title ?? "",
     meeting_type: meeting.meeting_type ?? "unknown",
     party_type: meeting.party_type ?? "other",
     participants: meeting.participants ?? [],
@@ -186,7 +176,7 @@ export async function POST(req: NextRequest) {
       meeting.id,
       summarizerTranscript,
       {
-        title: meeting.title,
+        title: meeting.title ?? "",
         meeting_type: meeting.meeting_type ?? "unknown",
         party_type: meeting.party_type ?? "other",
         participants: meeting.participants ?? [],

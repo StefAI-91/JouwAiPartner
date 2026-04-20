@@ -1,5 +1,7 @@
 # Query Inventory — Q2a Spike
 
+**Status:** Q2b completed 2026-04-20. Resterende 7 calls (Server Components + auth-callbacks) staan in scope van Q2c.
+
 **Datum:** 2026-04-20
 **Sprint:** Q2a (spike, geen code-wijziging)
 **Doel:** volledige lijst van alle directe Supabase-calls buiten `packages/database/`, plus beslissingen over client-scope-beleid, lint-tooling en scope van Q2b.

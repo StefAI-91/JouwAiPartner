@@ -32,6 +32,10 @@ vi.mock("@repo/database/supabase/admin", () => ({
   getAdminClient: vi.fn(),
 }));
 
+vi.mock("@repo/database/queries/meetings", () => ({
+  getMeetingByFirefliesIdForReprocess: vi.fn(),
+}));
+
 vi.mock("@repo/ai/pipeline/context-injection", () => ({
   buildEntityContext: vi.fn(() => ({ projects: [], organizations: [], people: [] })),
 }));
@@ -61,21 +65,11 @@ import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { runTranscribeStep } from "@repo/ai/pipeline/steps/transcribe";
 import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import { getMeetingByFirefliesIdForReprocess } from "@repo/database/queries/meetings";
 import { POST } from "../../src/app/api/ingest/reprocess/route";
 import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
 
 const CRON_SECRET = "test-cron-secret";
-
-function createChainMock(resolveWith: { data: unknown; error: unknown }) {
-  const chain: Record<string, unknown> = {};
-  const methods = ["select", "eq", "single", "from"];
-  for (const method of methods) {
-    chain[method] = vi.fn(() => chain);
-  }
-  chain.then = (resolve: (v: unknown) => void) => resolve(resolveWith);
-  return chain;
-}
 
 function makeRequest(body: Record<string, unknown>): Request {
   return new Request("http://localhost/api/ingest/reprocess", {
@@ -111,11 +105,7 @@ describe("POST /api/ingest/reprocess", () => {
   });
 
   it("returns 404 when meeting is not found", async () => {
-    const mockSupabase = createChainMock({
-      data: null,
-      error: { message: "Not found" },
-    });
-    vi.mocked(getAdminClient).mockReturnValue(mockSupabase as never);
+    vi.mocked(getMeetingByFirefliesIdForReprocess).mockResolvedValue(null);
 
     const req = makeRequest({ fireflies_id: "nonexistent" });
     const res = await POST(req as never);
@@ -134,8 +124,7 @@ describe("POST /api/ingest/reprocess", () => {
       raw_fireflies: null,
     };
 
-    const mockSupabase = createChainMock({ data: mockMeeting, error: null });
-    vi.mocked(getAdminClient).mockReturnValue(mockSupabase as never);
+    vi.mocked(getMeetingByFirefliesIdForReprocess).mockResolvedValue(mockMeeting);
 
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
       id: "ff-1",
@@ -176,11 +165,16 @@ describe("POST /api/ingest/reprocess", () => {
   });
 
   it("returns 502 when Fireflies transcript fetch fails", async () => {
-    const mockSupabase = createChainMock({
-      data: { id: "m1", title: "Test", raw_fireflies: null },
-      error: null,
+    vi.mocked(getMeetingByFirefliesIdForReprocess).mockResolvedValue({
+      id: "m1",
+      title: "Test",
+      date: null,
+      meeting_type: null,
+      party_type: null,
+      participants: null,
+      organization_id: null,
+      raw_fireflies: null,
     });
-    vi.mocked(getAdminClient).mockReturnValue(mockSupabase as never);
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue(null);
 
     const req = makeRequest({ fireflies_id: "ff-1" });
@@ -189,11 +183,16 @@ describe("POST /api/ingest/reprocess", () => {
   });
 
   it("returns 422 when no audio_url available", async () => {
-    const mockSupabase = createChainMock({
-      data: { id: "m1", title: "Test", raw_fireflies: null },
-      error: null,
+    vi.mocked(getMeetingByFirefliesIdForReprocess).mockResolvedValue({
+      id: "m1",
+      title: "Test",
+      date: null,
+      meeting_type: null,
+      party_type: null,
+      participants: null,
+      organization_id: null,
+      raw_fireflies: null,
     });
-    vi.mocked(getAdminClient).mockReturnValue(mockSupabase as never);
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
       id: "ff-1",
       title: "Test",
