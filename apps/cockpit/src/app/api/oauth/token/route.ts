@@ -1,17 +1,11 @@
-import {
-  consumeAuthCode,
-  verifyCodeChallenge,
-  signAccessToken,
-} from "@/lib/oauth";
+import { consumeAuthCode, verifyCodeChallenge, signAccessToken } from "@/lib/oauth";
 
 // OAuth 2.1 Token Endpoint
 // Exchanges authorization code + PKCE verifier for an access token (JWT).
 
 export async function POST(request: Request) {
   const body = await request.formData().catch(() => null);
-  const params = body
-    ? Object.fromEntries(body.entries())
-    : await request.json().catch(() => ({}));
+  const params = body ? Object.fromEntries(body.entries()) : await request.json().catch(() => ({}));
 
   const grantType = params.grant_type as string;
   const code = params.code as string;
@@ -20,10 +14,7 @@ export async function POST(request: Request) {
   const codeVerifier = params.code_verifier as string;
 
   if (grantType !== "authorization_code") {
-    return Response.json(
-      { error: "unsupported_grant_type" },
-      { status: 400 },
-    );
+    return Response.json({ error: "unsupported_grant_type" }, { status: 400 });
   }
 
   if (!code || !codeVerifier || !clientId) {

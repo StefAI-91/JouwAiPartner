@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, X, Trash2, UserCircle, Calendar } from "lucide-react";
+import { Check, X, Trash2 } from "lucide-react";
 import { promoteToTaskAction } from "@/actions/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 

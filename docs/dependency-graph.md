@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 495 |
-| Exported functions/constants | 745 |
+| Files scanned | 485 |
+| Exported functions/constants | 735 |
 | Exported types/interfaces | 184 |
-| Cross-package imports | 621 |
+| Cross-package imports | 607 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -2661,30 +2661,6 @@
 **Depends on:**
 - `@repo/database/constants/organizations` → ORG_TYPES, ORG_STATUSES
 
-### `apps/cockpit/src/components/dashboard/ai-pulse-strip.tsx`
-
-**Exports:**
-- `AiPulseStrip()`
-
-**Depends on:**
-- (type) `@repo/database/queries/dashboard` → AiPulseData
-
-### `apps/cockpit/src/components/dashboard/attention-zone.tsx`
-
-**Exports:**
-- `AttentionZone()`
-
-### `apps/cockpit/src/components/dashboard/decisions-card.tsx`
-
-**Exports:**
-- `DecisionsCard()`
-
-**Depends on:**
-- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
-- `@repo/ui/badge` → Badge
-- (type) `@repo/database/queries/decisions` → RecentDecision
-- `@repo/ui/format` → formatDateShort, truncate
-
 ### `apps/cockpit/src/components/dashboard/greeting.tsx`
 
 **Exports:**
@@ -2708,17 +2684,6 @@
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDateShort
 - (type) `@repo/database/queries/dashboard` → BriefingMeeting, ExtractionCounts
-
-### `apps/cockpit/src/components/dashboard/meetings-card.tsx`
-
-**Exports:**
-- `MeetingsCard()`
-
-**Depends on:**
-- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
-- `@repo/ui/badge` → Badge
-- (type) `@repo/database/queries/meetings` → RecentMeeting
-- `@repo/ui/format` → formatDateShort
 
 ### `apps/cockpit/src/components/dashboard/recent-verified-meetings.tsx`
 
@@ -2914,11 +2879,6 @@
 **Exports:**
 - `ScanNeedsButton()`
 
-### `apps/cockpit/src/components/layout/bottom-nav.tsx`
-
-**Exports:**
-- `BottomNav()`
-
 ### `apps/cockpit/src/components/layout/desktop-sidebar.tsx`
 
 **Exports:**
@@ -2980,14 +2940,6 @@
 - `@repo/ui/button` → Button
 - `@repo/database/constants/meetings` → MEETING_TYPES
 - (type) `@repo/database/queries/people` → PersonWithOrg
-
-### `apps/cockpit/src/components/meetings/editable-extraction-card.tsx`
-
-**Exports:**
-- `EditableExtractionCard()`
-
-**Depends on:**
-- (type) `@repo/database/queries/people` → PersonForAssignment
 
 ### `apps/cockpit/src/components/meetings/editable-title.tsx`
 
@@ -3771,38 +3723,6 @@
 **Depends on:**
 - `@repo/ui/utils` → cn
 
-### `apps/devhub/src/components/review/health-score.tsx`
-
-**Exports:**
-- `HealthScore()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-
-### `apps/devhub/src/components/review/metrics-grid.tsx`
-
-**Exports:**
-- `MetricsGrid()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-
-### `apps/devhub/src/components/review/patterns-list.tsx`
-
-**Exports:**
-- `PatternsList()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-
-### `apps/devhub/src/components/review/risks-list.tsx`
-
-**Exports:**
-- `RisksList()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-
 ### `apps/devhub/src/components/shared/avatar.tsx`
 
 **Exports:**
@@ -3868,13 +3788,13 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 47 | 22 | 30 | - | - | 99 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
-| Cockpit Components | 43 | 3 | - | 80 | - | 126 |
+| Cockpit Components | 39 | 3 | - | 74 | - | 116 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 82 | 7 | 2 | 25 | - | 116 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
-| DevHub Components | 15 | - | - | 26 | - | 41 |
+| DevHub Components | 15 | - | - | 22 | - | 37 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 17 | - | 13 | 9 | - | 39 |
 | MCP Server | 23 | 1 | - | - | - | 24 |

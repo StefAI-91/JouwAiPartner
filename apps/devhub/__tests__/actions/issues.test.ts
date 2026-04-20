@@ -4,7 +4,7 @@ import {
   mockUnauthenticated,
   createIntegrationServerMock,
 } from "../helpers/mock-auth";
-import { createNextCacheMock, resetNextMocks, getRevalidatePathCalls } from "../helpers/mock-next";
+import { createNextCacheMock, resetNextMocks } from "../helpers/mock-next";
 import { TEST_IDS } from "../../../../packages/database/__tests__/helpers/seed";
 import { describeWithDb } from "../helpers/describe-with-db";
 

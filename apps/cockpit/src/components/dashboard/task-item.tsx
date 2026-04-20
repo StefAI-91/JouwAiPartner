@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { formatDateShort } from "@repo/ui/format";
 import { updateTaskAction, completeTaskAction, dismissTaskAction } from "@/actions/tasks";
-import { Check, X, ChevronDown, CircleCheck, ExternalLink } from "lucide-react";
+import { Check, X, ChevronDown, ExternalLink } from "lucide-react";
 import { getUrgency } from "@/lib/urgency";
 import type { TaskRow } from "@repo/database/queries/tasks";
 import type { PersonForAssignment } from "@repo/database/queries/people";

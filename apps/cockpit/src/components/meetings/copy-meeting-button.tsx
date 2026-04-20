@@ -104,11 +104,7 @@ export function CopyMeetingButton({ meeting }: CopyMeetingButtonProps) {
       className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       title="Kopieer meeting als markdown"
     >
-      {copied ? (
-        <Check className="size-3.5 text-green-600" />
-      ) : (
-        <Copy className="size-3.5" />
-      )}
+      {copied ? <Check className="size-3.5 text-green-600" /> : <Copy className="size-3.5" />}
     </button>
   );
 }

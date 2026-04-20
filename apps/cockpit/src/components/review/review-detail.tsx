@@ -72,7 +72,6 @@ export function ReviewDetail({
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTranscriptRef, setActiveTranscriptRef] = useState<string | null>(null);
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [summaryEdit, setSummaryEdit] = useState<string | null>(null);
 
@@ -93,11 +92,6 @@ export function ReviewDetail({
 
   const handleDelete = useCallback((id: string) => {
     setDeletedIds((prev) => new Set(prev).add(id));
-  }, []);
-
-  const handleRefClick = useCallback((ref: string) => {
-    setActiveTranscriptRef(ref);
-    setTimeout(() => setActiveTranscriptRef(null), 3000);
   }, []);
 
   async function handleApprove() {
@@ -145,8 +139,6 @@ export function ReviewDetail({
   const actionItems = meeting.extractions.filter(
     (e) => e.type === "action_item" && !deletedIds.has(e.id),
   );
-  const activeExtractions = meeting.extractions.filter((e) => !deletedIds.has(e.id));
-
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
 
@@ -185,7 +177,6 @@ export function ReviewDetail({
             <CopyMeetingButton meeting={meeting} />
           </div>
         }
-        activeTranscriptRef={activeTranscriptRef}
         onSummaryEdit={handleSummaryEdit}
       />
 
