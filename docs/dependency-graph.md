@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 485 |
-| Exported functions/constants | 735 |
+| Files scanned | 483 |
+| Exported functions/constants | 733 |
 | Exported types/interfaces | 184 |
-| Cross-package imports | 607 |
+| Cross-package imports | 605 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -3062,14 +3062,6 @@
 **Depends on:**
 - `@repo/database/constants/projects` → PROJECT_STATUSES, STATUS_LABELS
 
-### `apps/cockpit/src/components/projects/project-briefing.tsx`
-
-**Exports:**
-- `ProjectBriefing()`
-
-**Depends on:**
-- `@repo/ui/format` → timeAgoDays
-
 ### `apps/cockpit/src/components/projects/project-card.tsx`
 
 **Exports:**
@@ -3092,14 +3084,6 @@
 
 **Depends on:**
 - (type) `@repo/database/queries/meeting-project-summaries` → ProjectSegment
-
-### `apps/cockpit/src/components/projects/project-summary.tsx`
-
-**Exports:**
-- `ProjectSummary()`
-
-**Depends on:**
-- `@repo/ui/format` → timeAgoDays
 
 ### `apps/cockpit/src/components/projects/project-timeline.tsx`
 
@@ -3788,7 +3772,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 47 | 22 | 30 | - | - | 99 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
-| Cockpit Components | 39 | 3 | - | 74 | - | 116 |
+| Cockpit Components | 39 | 3 | - | 72 | - | 114 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 82 | 7 | 2 | 25 | - | 116 |
 | Database Queries | - | - | 3 | - | - | 3 |
