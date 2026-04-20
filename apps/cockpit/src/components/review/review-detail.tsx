@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@repo/ui/tabs";
 import { ReviewActionBar } from "./review-action-bar";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EditableTitle } from "@/components/meetings/editable-title";
+import { displayMeetingTitle } from "@repo/database/utils/meeting-display";
 import { MeetingTypeSelector } from "@/components/meetings/meeting-type-selector";
 import { PartyTypeSelector } from "@/components/meetings/party-type-selector";
 import { PeopleSelector } from "@/components/meetings/people-selector";
@@ -151,7 +152,9 @@ export function ReviewDetail({
     <div className="flex min-h-[calc(100vh-3.5rem-7rem)] flex-col lg:flex-row">
       <MeetingTranscriptPanel
         meeting={meeting}
-        titleSlot={<EditableTitle meetingId={meeting.id} initialTitle={meeting.title} />}
+        titleSlot={
+          <EditableTitle meetingId={meeting.id} initialTitle={displayMeetingTitle(meeting)} />
+        }
         meetingTypeSlot={
           <div className="flex items-center gap-1.5">
             <MeetingTypeSelector meetingId={meeting.id} currentType={meeting.meeting_type} />

@@ -21,6 +21,7 @@ export async function getReviewQueueCount(client?: SupabaseClient): Promise<numb
 export interface RecentVerifiedMeeting {
   id: string;
   title: string | null;
+  meeting_title: string | null;
   date: string | null;
   verified_at: string | null;
   organization: { name: string } | null;
@@ -37,7 +38,7 @@ export async function listRecentVerifiedMeetings(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, verified_at,
+      `id, title, meeting_title, date, verified_at,
        organization:organizations(name)`,
     )
     .eq("verification_status", "verified")
@@ -51,6 +52,7 @@ export async function listRecentVerifiedMeetings(
 export interface BriefingMeeting {
   id: string;
   title: string | null;
+  meeting_title: string | null;
   date: string | null;
   ai_briefing: string;
   meeting_type: string | null;
@@ -69,7 +71,7 @@ export async function listBriefingMeetings(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, ai_briefing, meeting_type, party_type,
+      `id, title, meeting_title, date, ai_briefing, meeting_type, party_type,
        organization:organizations(name)`,
     )
     .eq("verification_status", "verified")
@@ -105,7 +107,7 @@ export async function listTodaysBriefingMeetings(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, ai_briefing, meeting_type, party_type,
+      `id, title, meeting_title, date, ai_briefing, meeting_type, party_type,
        organization:organizations(name)`,
     )
     .eq("verification_status", "verified")

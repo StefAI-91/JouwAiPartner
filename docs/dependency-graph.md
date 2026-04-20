@@ -10,7 +10,7 @@
 | Files scanned | 475 |
 | Exported functions/constants | 712 |
 | Exported types/interfaces | 176 |
-| Cross-package imports | 598 |
+| Cross-package imports | 604 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -2577,6 +2577,7 @@
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDateShort
 - (type) `@repo/database/queries/dashboard` → BriefingMeeting, ExtractionCounts
+- `@repo/database/utils/meeting-display` → displayMeetingTitle
 
 ### `apps/cockpit/src/components/dashboard/recent-verified-meetings.tsx`
 
@@ -2587,6 +2588,7 @@
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
 - (type) `@repo/database/queries/dashboard` → RecentVerifiedMeeting
 - `@repo/ui/format` → formatDateShort
+- `@repo/database/utils/meeting-display` → displayMeetingTitle
 
 ### `apps/cockpit/src/components/dashboard/task-item.tsx`
 
@@ -2858,6 +2860,7 @@
 
 **Depends on:**
 - `@repo/ui/button` → Button
+- `@repo/database/utils/meeting-display` → displayMeetingTitle
 - (type) `@repo/database/queries/meetings` → MeetingDetail
 - (type) `@repo/database/queries/people` → PersonWithOrg, PersonForAssignment
 - (type) `@repo/database/queries/meeting-project-summaries` → MeetingSegment
@@ -2878,6 +2881,7 @@
 **Depends on:**
 - `@repo/ui/badge` → Badge
 - `@repo/database/constants/meetings` → MEETING_TYPES, formatMeetingType
+- `@repo/database/utils/meeting-display` → displayMeetingTitle
 - (type) `@repo/database/queries/meetings` → VerifiedMeetingListItem
 
 ### `apps/cockpit/src/components/meetings/party-type-selector.tsx`
@@ -3040,6 +3044,7 @@
 
 **Depends on:**
 - `@repo/ui/format` → timeAgo
+- `@repo/database/utils/meeting-display` → displayMeetingTitle
 
 ### `apps/cockpit/src/components/review/review-detail.tsx`
 
@@ -3048,6 +3053,7 @@
 
 **Depends on:**
 - `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
+- `@repo/database/utils/meeting-display` → displayMeetingTitle
 - (type) `@repo/database/queries/people` → PersonForAssignment
 - (type) `@repo/database/queries/meeting-project-summaries` → MeetingSegment
 
@@ -3678,7 +3684,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 45 | 17 | 29 | - | - | 91 |
 | Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
-| Cockpit Components | 41 | 6 | - | 75 | - | 122 |
+| Cockpit Components | 47 | 6 | - | 75 | - | 128 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |

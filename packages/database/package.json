@@ -13,7 +13,8 @@
     "./types/*": "./src/types/*.ts",
     "./integrations/*": "./src/integrations/*.ts",
     "./constants/*": "./src/constants/*.ts",
-    "./validations/*": "./src/validations/*.ts"
+    "./validations/*": "./src/validations/*.ts",
+    "./utils/*": "./src/utils/*.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

@@ -7,6 +7,7 @@ import { Button } from "@repo/ui/button";
 import { Badge } from "@repo/ui/badge";
 import { formatDateShort } from "@repo/ui/format";
 import type { BriefingMeeting, ExtractionCounts } from "@repo/database/queries/dashboard";
+import { displayMeetingTitle } from "@repo/database/utils/meeting-display";
 
 interface MeetingCarouselProps {
   meetings: BriefingMeeting[];
@@ -148,7 +149,7 @@ export function MeetingCarousel({ meetings, extractionCounts, dayLabel }: Meetin
             <div className="mb-4 flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <h3 className="truncate text-lg font-semibold leading-snug">
-                  {meeting.title ?? "Meeting zonder titel"}
+                  {displayMeetingTitle(meeting) || "Meeting zonder titel"}
                 </h3>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   {meeting.organization && (

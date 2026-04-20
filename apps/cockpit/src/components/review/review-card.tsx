@@ -6,11 +6,13 @@ import { ExtractionDots } from "@/components/shared/extraction-dots";
 import { approveMeetingAction } from "@/actions/review";
 import { useState } from "react";
 import { timeAgo } from "@repo/ui/format";
+import { displayMeetingTitle } from "@repo/database/utils/meeting-display";
 
 interface ReviewCardProps {
   meeting: {
     id: string;
     title: string | null;
+    meeting_title: string | null;
     date: string | null;
     meeting_type: string | null;
     party_type: string | null;
@@ -56,7 +58,7 @@ export function ReviewCard({ meeting }: ReviewCardProps) {
 
       {/* Title */}
       <h3 className="mt-3 font-heading text-lg font-semibold leading-snug">
-        {meeting.title ?? "Untitled meeting"}
+        {displayMeetingTitle(meeting) || "Untitled meeting"}
       </h3>
 
       {/* Participants */}

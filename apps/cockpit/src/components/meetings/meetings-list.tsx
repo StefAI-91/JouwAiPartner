@@ -6,6 +6,7 @@ import { Building2, Users, ChevronRight, X } from "lucide-react";
 import { Badge } from "@repo/ui/badge";
 import { MEETING_TYPES, formatMeetingType } from "@repo/database/constants/meetings";
 import { groupMeetingsByDate } from "@/lib/grouping";
+import { displayMeetingTitle } from "@repo/database/utils/meeting-display";
 import type { VerifiedMeetingListItem } from "@repo/database/queries/meetings";
 
 interface MeetingsListProps {
@@ -137,7 +138,7 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium leading-snug">
-                      {meeting.title ?? "Untitled"}
+                      {displayMeetingTitle(meeting) || "Untitled"}
                     </p>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
                       {meeting.organization && (

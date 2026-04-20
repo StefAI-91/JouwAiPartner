@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export interface MeetingDetail {
   id: string;
   title: string | null;
+  meeting_title: string | null;
   original_title: string | null;
   date: string | null;
   meeting_type: string | null;
@@ -38,7 +39,7 @@ export async function getVerifiedMeetingById(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, original_title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
+      `id, title, meeting_title, original_title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
        organization_id, verification_status, verified_at,
        verifier:profiles!meetings_verified_by_fkey(full_name),
        organization:organizations(name),
@@ -70,6 +71,7 @@ export interface RecentMeeting {
 export interface VerifiedMeetingListItem {
   id: string;
   title: string | null;
+  meeting_title: string | null;
   date: string | null;
   meeting_type: string | null;
   organization: { name: string } | null;
@@ -84,7 +86,7 @@ export async function listVerifiedMeetings(
   const { data, error, count } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type,
+      `id, title, meeting_title, date, meeting_type,
        organization:organizations(name),
        meeting_participants(person:people(id, name))`,
       { count: "exact" },

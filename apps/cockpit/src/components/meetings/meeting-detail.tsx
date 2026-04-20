@@ -10,6 +10,7 @@ import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { Button } from "@repo/ui/button";
 import { Pencil, FolderKanban } from "lucide-react";
 import { updateMeetingSummaryAction } from "@/actions/meetings";
+import { displayMeetingTitle } from "@repo/database/utils/meeting-display";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
@@ -37,7 +38,8 @@ export function MeetingDetailView({
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
   const [showEditModal, setShowEditModal] = useState(false);
-  const currentTitle = meeting.title;
+  const currentTitle = displayMeetingTitle(meeting);
+  const firefliesTitle = meeting.original_title ?? meeting.title;
 
   const handleSummaryEdit = useCallback(
     async (content: string) => {
@@ -95,11 +97,9 @@ export function MeetingDetailView({
               </div>
             )}
 
-            {/* Original Fireflies title */}
-            {meeting.original_title && meeting.original_title !== currentTitle && (
-              <p className="text-xs text-muted-foreground">
-                Originele titel: {meeting.original_title}
-              </p>
+            {/* Original Fireflies title as subtitle when it differs from the gatekeeper-rendered title */}
+            {firefliesTitle && firefliesTitle !== currentTitle && (
+              <p className="text-xs text-muted-foreground">Originele titel: {firefliesTitle}</p>
             )}
 
             {/* Static organization display */}

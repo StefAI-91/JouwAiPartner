@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { CalendarDays, ChevronRight } from "lucide-react";
 import type { RecentVerifiedMeeting } from "@repo/database/queries/dashboard";
 import { formatDateShort } from "@repo/ui/format";
+import { displayMeetingTitle } from "@repo/database/utils/meeting-display";
 
 interface RecentVerifiedMeetingsProps {
   meetings: RecentVerifiedMeeting[];
@@ -29,7 +30,7 @@ export function RecentVerifiedMeetings({ meetings }: RecentVerifiedMeetingsProps
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium leading-snug">
-                      {meeting.title ?? "Untitled"}
+                      {displayMeetingTitle(meeting) || "Untitled"}
                     </p>
                     <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
                       {meeting.organization && <span>{meeting.organization.name}</span>}

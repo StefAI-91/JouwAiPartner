@@ -4,6 +4,7 @@ import { getAdminClient } from "../supabase/admin";
 export interface ReviewMeeting {
   id: string;
   title: string | null;
+  meeting_title: string | null;
   date: string | null;
   meeting_type: string | null;
   party_type: string | null;
@@ -18,7 +19,7 @@ export async function listDraftMeetings(client?: SupabaseClient): Promise<Review
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, created_at,
+      `id, title, meeting_title, date, meeting_type, party_type, created_at,
        organization:organizations(name),
        meeting_participants(person:people(id, name)),
        extractions(id, type, content, confidence)`,
@@ -36,6 +37,8 @@ export async function listDraftMeetings(client?: SupabaseClient): Promise<Review
 export interface ReviewMeetingDetail {
   id: string;
   title: string | null;
+  meeting_title: string | null;
+  original_title: string | null;
   date: string | null;
   meeting_type: string | null;
   party_type: string | null;
@@ -66,7 +69,7 @@ export async function getDraftMeetingById(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
+      `id, title, meeting_title, original_title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
        organization_id, organization:organizations(name),
        meeting_participants(person:people(id, name)),
        meeting_projects(project:projects(id, name)),
