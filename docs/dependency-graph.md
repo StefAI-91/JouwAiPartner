@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 506 |
-| Exported functions/constants | 757 |
-| Exported types/interfaces | 188 |
-| Cross-package imports | 634 |
+| Files scanned | 495 |
+| Exported functions/constants | 745 |
+| Exported types/interfaces | 184 |
+| Cross-package imports | 621 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -65,13 +65,6 @@
 - `listVerifiedActionItems()`
 
 **Types:** `ActionItemRow`
-
-### `queries/active-projects-with-urgency.ts`
-
-**Exports:**
-- `listActiveProjectsWithUrgency()`
-
-**Types:** `ActiveProjectWithUrgency`
 
 ### `queries/content.ts`
 
@@ -292,13 +285,6 @@
 - `getHealthTrend()`
 
 **Types:** `ProjectReviewRow`
-
-### `queries/project-workspace.ts`
-
-**Exports:**
-- `getProjectWorkspaceData()`
-
-**Types:** `WorkspaceActionItem`, `ProjectWorkspaceData`
 
 ### `queries/projects.ts`
 
@@ -2397,7 +2383,6 @@
 - `@repo/database/queries/tasks` → listAllTasks
 - `@repo/database/queries/people` → listPeopleForAssignment
 - `@repo/database/queries/management-insights` → getManagementInsights
-- `@repo/database/queries/active-projects-with-urgency` → listActiveProjectsWithUrgency
 - `@repo/ai/validations/management-insights` → ManagementInsightsOutputSchema
 
 ### `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`
@@ -2429,10 +2414,10 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/database/queries/project-workspace` → getProjectWorkspaceData
+- `@repo/database/queries/projects` → getProjectById
+- `@repo/database/queries/meeting-project-summaries` → getSegmentsByProjectId
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/database/queries/people` → listPeople
-- `@repo/ai/utils/summary-markdown-parser` → parseMarkdownExtractions
 
 ### `apps/cockpit/src/app/(dashboard)/projects/page.tsx`
 
@@ -2734,16 +2719,6 @@
 - `@repo/ui/badge` → Badge
 - (type) `@repo/database/queries/meetings` → RecentMeeting
 - `@repo/ui/format` → formatDateShort
-
-### `apps/cockpit/src/components/dashboard/project-switcher.tsx`
-
-**Exports:**
-- `ProjectSwitcher()`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
-- `@repo/ui/format` → daysUntil, formatDateShort
-- (type) `@repo/database/queries/active-projects-with-urgency` → ActiveProjectWithUrgency
 
 ### `apps/cockpit/src/components/dashboard/recent-verified-meetings.tsx`
 
@@ -3194,66 +3169,6 @@
 
 **Depends on:**
 - `@repo/database/constants/projects` → ALL_STEPS, OTHER_STEPS, STATUS_LABELS, getPhaseSteps
-
-### `apps/cockpit/src/components/projects/workspace/decisions-panel.tsx`
-
-**Exports:**
-- `DecisionsPanel()`
-
-### `apps/cockpit/src/components/projects/workspace/panel-card.tsx`
-
-**Exports:**
-- `PanelCard()`
-- `PanelEmpty()`
-- `SourceLink()`
-
-**Depends on:**
-- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
-- `@repo/ui/utils` → cn
-
-### `apps/cockpit/src/components/projects/workspace/pulse-panel.tsx`
-
-**Exports:**
-- `PulsePanel()`
-
-**Depends on:**
-- `@repo/ui/format` → formatDateShort, timeAgoDays
-
-### `apps/cockpit/src/components/projects/workspace/risks-panel.tsx`
-
-**Exports:**
-- `RisksPanel()`
-
-### `apps/cockpit/src/components/projects/workspace/types.ts`
-
-**Types:** `WorkspaceParsedItem`
-
-**Depends on:**
-- (type) `@repo/ai/utils/summary-markdown-parser` → ParsedExtractionType
-
-### `apps/cockpit/src/components/projects/workspace/waiting-client-panel.tsx`
-
-**Exports:**
-- `WaitingClientPanel()`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
-- `@repo/ui/format` → formatDateShort
-- (type) `@repo/database/queries/project-workspace` → WorkspaceActionItem
-
-### `apps/cockpit/src/components/projects/workspace/waiting-placeholder.tsx`
-
-**Exports:**
-- `WaitingPlaceholder()`
-
-### `apps/cockpit/src/components/projects/workspace/workspace-header.tsx`
-
-**Exports:**
-- `WorkspaceHeader()`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
-- `@repo/ui/format` → daysUntil, formatDate
 
 ### `apps/cockpit/src/components/review/email-review-card.tsx`
 
@@ -3953,9 +3868,9 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 47 | 22 | 30 | - | - | 99 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
-| Cockpit Components | 45 | 4 | - | 89 | - | 138 |
+| Cockpit Components | 43 | 3 | - | 80 | - | 126 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 82 | 8 | 2 | 25 | - | 117 |
+| Cockpit Pages | 82 | 7 | 2 | 25 | - | 116 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
@@ -4164,12 +4079,6 @@ Tracing the most important data flows from action → pipeline → database.
 
 Which queries are used where across the codebase.
 
-### queries/active-projects-with-urgency.ts
-
-| Query | Used in |
-|-------|---------|
-| `listActiveProjectsWithUrgency()` | `apps/cockpit/src/app/(dashboard)/page.tsx` |
-
 ### queries/content.ts
 
 | Query | Used in |
@@ -4260,7 +4169,7 @@ Which queries are used where across the codebase.
 | `getSegmentsByMeetingIds()` | `packages/mcp/src/tools/meetings.ts` |
 | `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
 | `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
-| `getSegmentsByProjectId()` | `packages/database/src/queries/project-workspace.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
+| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/meetings.ts
 
@@ -4329,18 +4238,12 @@ Which queries are used where across the codebase.
 | `getLatestProjectReview()` | `apps/devhub/src/app/(app)/page.tsx` |
 | `getHealthTrend()` | `apps/devhub/src/app/(app)/page.tsx` |
 
-### queries/project-workspace.ts
-
-| Query | Used in |
-|-------|---------|
-| `getProjectWorkspaceData()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
-
 ### queries/projects.ts
 
 | Query | Used in |
 |-------|---------|
 | `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
-| `getProjectById()` | `packages/database/src/queries/project-workspace.ts`, `apps/devhub/src/actions/review.ts` |
+| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
