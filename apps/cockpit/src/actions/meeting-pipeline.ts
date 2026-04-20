@@ -223,6 +223,105 @@ export async function regenerateMeetingAction(
   return { success: true };
 }
 
+// ── Regenerate Risks Only (alleen RiskSpecialist opnieuw draaien) ──
+
+/**
+ * Lichte regenerate die alleen de RiskSpecialist opnieuw draait en de
+ * risks in `extractions` vervangt. Summary, action_items, segments en
+ * project-koppelingen blijven ongemoeid.
+ *
+ * Gebruikt de eerder door de Gatekeeper geïdentificeerde projecten uit
+ * `raw_fireflies.pipeline.gatekeeper.identified_projects` zodat project_id-
+ * mapping exact hetzelfde blijft als bij de originele run — geen tweede
+ * Gatekeeper-call nodig.
+ */
+export async function regenerateRisksAction(
+  input: z.infer<typeof regenerateSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+
+  const parsed = regenerateSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const { meetingId } = parsed.data;
+
+  const supabase = getAdminClient();
+  const { data: meeting, error: fetchError } = await supabase
+    .from("meetings")
+    .select(
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
+       raw_fireflies, meeting_participants(person:people(name))`,
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (fetchError || !meeting) {
+    return { error: "Meeting niet gevonden" };
+  }
+
+  const transcript = (meeting.transcript_elevenlabs || meeting.transcript) as string | null;
+  if (!transcript) {
+    return { error: "Geen transcript beschikbaar voor deze meeting" };
+  }
+
+  const participants = (
+    meeting.meeting_participants as unknown as { person: { name: string } }[]
+  ).map((mp) => mp.person.name);
+
+  // Haal identified_projects uit raw_fireflies zodat we exact dezelfde
+  // project-mapping gebruiken als de originele pipeline. Bij legacy
+  // meetings waar die kolom nog leeg is vallen we terug op een lege lijst
+  // — RiskSpecialist schrijft dan risks met project_id=null, wat acceptabel
+  // is (beter dan falen).
+  type RawProject = { project_name?: unknown; project_id?: unknown; confidence?: unknown };
+  const rawFf = meeting.raw_fireflies as Record<string, unknown> | null;
+  const pipeline = rawFf?.pipeline as Record<string, unknown> | undefined;
+  const gkData = pipeline?.gatekeeper as Record<string, unknown> | undefined;
+  const rawProjects = Array.isArray(gkData?.identified_projects)
+    ? (gkData.identified_projects as RawProject[])
+    : [];
+  const identifiedProjects = rawProjects
+    .filter((p): p is RawProject & { project_name: string } => typeof p.project_name === "string")
+    .map((p) => ({
+      project_name: p.project_name,
+      project_id: typeof p.project_id === "string" ? p.project_id : null,
+      confidence: typeof p.confidence === "number" ? p.confidence : 0.5,
+    }));
+
+  try {
+    const entityContext = await buildEntityContext();
+
+    await runRiskSpecialistStep(
+      meetingId,
+      transcript,
+      {
+        title: (meeting.title as string) || "Onbekend",
+        meeting_type: (meeting.meeting_type as string) || "other",
+        party_type: (meeting.party_type as string) || "other",
+        participants,
+        speakerContext: null,
+        entityContext: entityContext.contextString,
+        meeting_date: (meeting.date as string) || new Date().toISOString().split("T")[0],
+        identified_projects: identifiedProjects.map((p) => ({
+          project_name: p.project_name,
+          project_id: p.project_id,
+        })),
+      },
+      identifiedProjects,
+    );
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    return { error: `Risks regenereren mislukt: ${errMsg}` };
+  }
+
+  revalidatePath(`/meetings/${meetingId}`);
+  revalidatePath(`/review/${meetingId}`);
+  revalidatePath("/review");
+  return { success: true };
+}
+
 // ── Full Reprocess (re-fetch from Fireflies + full pipeline) ──
 
 export async function reprocessMeetingAction(
