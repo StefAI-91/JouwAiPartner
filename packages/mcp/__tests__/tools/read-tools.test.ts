@@ -17,6 +17,25 @@ import { registerPeopleTools } from "../../src/tools/people";
 import { registerOrganizationOverviewTools } from "../../src/tools/get-organization-overview";
 import { createMockSupabase, captureToolHandlers, getText } from "./_helpers";
 
+// ── Tool-registry tripwire ───────────────────────────────────────────────────
+// Concrete check (Q3b §1.3) ipv 5x toBeDefined-smoketests: assert dat elke
+// register-functie precies de verwachte set tool-namen registreert. Zo
+// vangen we én typo's bij registratie én stille verwijdering, zonder zwakke
+// assertions per tool.
+
+describe("read-tools registry", () => {
+  it.each([
+    [registerDecisionTools, ["get_decisions"]],
+    [registerOrganizationTools, ["get_organizations"]],
+    [registerProjectTools, ["get_projects"]],
+    [registerPeopleTools, ["get_people"]],
+    [registerOrganizationOverviewTools, ["get_organization_overview"]],
+  ])("registreert exact de verwachte tool-namen", (registerFn, expectedNames) => {
+    const handlers = captureToolHandlers(registerFn);
+    expect(Object.keys(handlers).sort()).toEqual(expectedNames.sort());
+  });
+});
+
 // ── Decisions ────────────────────────────────────────────────────────────────
 
 describe("get_decisions", () => {
@@ -25,10 +44,6 @@ describe("get_decisions", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("registers the tool", () => {
-    expect(handler).toBeDefined();
   });
 
   it("formats decisions with verification status and profile names", async () => {
@@ -128,10 +143,6 @@ describe("get_organizations", () => {
     vi.clearAllMocks();
   });
 
-  it("registers the tool", () => {
-    expect(handler).toBeDefined();
-  });
-
   it("lists organizations with aliases and contact info", async () => {
     const mockOrgs = [
       {
@@ -206,10 +217,6 @@ describe("get_projects", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getSegmentCountsByProjectIds).mockResolvedValue(new Map());
-  });
-
-  it("registers the tool", () => {
-    expect(handler).toBeDefined();
   });
 
   it("lists projects with segment counts", async () => {
@@ -299,10 +306,6 @@ describe("get_people", () => {
     vi.clearAllMocks();
   });
 
-  it("registers the tool", () => {
-    expect(handler).toBeDefined();
-  });
-
   it("lists people with role, team, and email", async () => {
     const mockPeople = [
       {
@@ -389,10 +392,6 @@ describe("get_organization_overview", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("registers the tool", () => {
-    expect(handler).toBeDefined();
   });
 
   it("combines org data with projects, meetings, and extractions", async () => {
