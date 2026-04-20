@@ -1,46 +1,96 @@
-import { BarChart3, Plus } from "lucide-react";
-import { Button } from "@repo/ui/button";
-import { SystemOverview } from "@/components/agents/system-overview";
-import { AgentCardFull } from "@/components/agents/agent-card-full";
-import { AgentCardCompact, AddAgentPlaceholder } from "@/components/agents/agent-card-compact";
+import { AGENT_REGISTRY, readAgentPrompt } from "@repo/ai/agents/registry";
+import { estimateRunCostUsd } from "@repo/ai/agents/pricing";
+import {
+  getAgentMetrics,
+  listRecentAgentRuns,
+  type AgentMetrics,
+} from "@repo/database/queries/agent-runs";
+import { SystemOverview, type SystemStats } from "@/components/agents/system-overview";
+import { AgentCard } from "@/components/agents/agent-card";
 import { ActivityFeed } from "@/components/agents/activity-feed";
-import { agents, activityFeed, systemStats } from "./_data";
 
 export const dynamic = "force-dynamic";
 
-export default function AgentsPage() {
-  const live = agents.filter((a) => a.status === "live");
-  const building = agents.filter((a) => a.status === "building");
-  const planned = agents.filter((a) => a.status === "planned");
+export default async function AgentsPage() {
+  const agents = AGENT_REGISTRY;
+  const liveAgents = agents.filter((a) => a.status === "live");
+  const buildingAgents = agents.filter((a) => a.status === "building");
+
+  const [metricsList, feed] = await Promise.all([
+    getAgentMetrics(agents.map((a) => a.id)),
+    listRecentAgentRuns(20),
+  ]);
+
+  const metricsById: Record<string, AgentMetrics> = {};
+  for (const m of metricsList) metricsById[m.agent_name] = m;
+
+  const agentsById = Object.fromEntries(agents.map((a) => [a.id, a]));
+
+  const prompts: Record<string, string> = {};
+  for (const a of agents) {
+    try {
+      prompts[a.id] = readAgentPrompt(a);
+    } catch {
+      prompts[a.id] = "(prompt niet gevonden)";
+    }
+  }
+
+  const costPerAgent: Record<string, number> = {};
+  let totalCostToday = 0;
+  for (const agent of agents) {
+    const m = metricsById[agent.id];
+    const modelForCost = m?.last_model ?? agent.model;
+    const cost = m
+      ? estimateRunCostUsd(modelForCost, {
+          input: m.total_input_tokens_today,
+          output: m.total_output_tokens_today,
+          cached: m.total_cached_tokens_today,
+        })
+      : 0;
+    costPerAgent[agent.id] = cost;
+    totalCostToday += cost;
+  }
+
+  const runsToday = metricsList.reduce((sum, m) => sum + m.runs_today, 0);
+  const runs7d = metricsList.reduce((sum, m) => sum + m.runs_7d, 0);
+  const errorsToday = feed.filter(
+    (e) =>
+      e.status === "error" && new Date(e.created_at).toDateString() === new Date().toDateString(),
+  ).length;
+
+  const agentsWith7dData = metricsList.filter((m) => m.runs_7d > 0);
+  const overallSuccessRate =
+    agentsWith7dData.length > 0
+      ? Math.round(
+          agentsWith7dData.reduce((s, m) => s + (m.success_rate_7d ?? 100), 0) /
+            agentsWith7dData.length,
+        )
+      : 100;
+
+  const stats: SystemStats = {
+    activeCount: liveAgents.length,
+    buildingCount: buildingAgents.length,
+    activeNames: liveAgents.map((a) => a.name),
+    runsToday,
+    runs7d,
+    costToday: totalCostToday,
+    successRate7d: overallSuccessRate,
+    runsErrorToday: errorsToday,
+  };
 
   return (
     <div className="px-4 pb-32 pt-6 lg:px-10">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight">Agents</h1>
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
-              Preview · mock data
-            </span>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Je digitale team · {agents.length} collega&apos;s verdeeld over vier quadranten
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <BarChart3 className="mr-1.5 h-4 w-4" />
-            Logs
-          </Button>
-          <Button size="sm">
-            <Plus className="mr-1.5 h-4 w-4" />
-            Nieuwe agent
-          </Button>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-xl font-bold tracking-tight">Agents</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Je digitale team · {liveAgents.length} live,{" "}
+          {buildingAgents.length > 0 && `${buildingAgents.length} in ontwikkeling · `}
+          klik een kaart om het system prompt te zien
+        </p>
       </div>
 
       <section className="mb-8">
-        <SystemOverview stats={systemStats} />
+        <SystemOverview stats={stats} />
       </section>
 
       <section className="mb-10">
@@ -49,30 +99,41 @@ export default function AgentsPage() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
           </span>
-          <h2 className="text-lg font-semibold">Live · {live.length} agents</h2>
-          <span className="text-sm text-muted-foreground">deze draaien productie-workloads</span>
+          <h2 className="text-lg font-semibold">Live · {liveAgents.length} agents</h2>
+          <span className="text-sm text-muted-foreground">draaien productie-workloads</span>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {live.map((agent) => (
-            <AgentCardFull key={agent.id} agent={agent} />
+          {liveAgents.map((agent) => (
+            <AgentCard
+              key={agent.id}
+              agent={agent}
+              metrics={metricsById[agent.id]}
+              costTodayUsd={costPerAgent[agent.id] ?? 0}
+              systemPrompt={prompts[agent.id] ?? ""}
+            />
           ))}
         </div>
       </section>
 
-      {building.length > 0 && (
+      {buildingAgents.length > 0 && (
         <section className="mb-10">
           <div className="mb-4 flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-amber-500" />
             <h2 className="text-lg font-semibold">
-              In ontwikkeling · {building.length} agent{building.length === 1 ? "" : "s"}
+              In ontwikkeling · {buildingAgents.length} agent
+              {buildingAgents.length === 1 ? "" : "s"}
             </h2>
-            <span className="text-sm text-muted-foreground">
-              wordt nu gebouwd — nog niet productie
-            </span>
+            <span className="text-sm text-muted-foreground">wordt nu gebouwd / afgestemd</span>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {building.map((agent) => (
-              <AgentCardFull key={agent.id} agent={agent} />
+            {buildingAgents.map((agent) => (
+              <AgentCard
+                key={agent.id}
+                agent={agent}
+                metrics={metricsById[agent.id]}
+                costTodayUsd={costPerAgent[agent.id] ?? 0}
+                systemPrompt={prompts[agent.id] ?? ""}
+              />
             ))}
           </div>
         </section>
@@ -80,35 +141,14 @@ export default function AgentsPage() {
 
       <section className="mb-10">
         <div className="mb-4 flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-slate-400" />
-          <h2 className="text-lg font-semibold">Op de roadmap · {planned.length} agents</h2>
-          <span className="text-sm text-muted-foreground">
-            conceptueel gedefinieerd, wachten op sprint
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
           </span>
+          <h2 className="text-lg font-semibold">Recente runs</h2>
+          <span className="text-sm text-muted-foreground">laatste 20 calls</span>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {planned.map((agent) => (
-            <AgentCardCompact key={agent.id} agent={agent} />
-          ))}
-          <AddAgentPlaceholder />
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
-            </span>
-            <h2 className="text-lg font-semibold">Live activiteit</h2>
-            <span className="text-sm text-muted-foreground">laatste 30 minuten</span>
-          </div>
-          <a className="text-sm text-muted-foreground hover:text-foreground" href="#">
-            Volledige logs →
-          </a>
-        </div>
-        <ActivityFeed events={activityFeed} />
+        <ActivityFeed events={feed} agentsById={agentsById} />
       </section>
     </div>
   );

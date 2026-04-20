@@ -10,7 +10,10 @@ export interface AgentMetrics {
   success_rate_7d: number | null;
   total_input_tokens_today: number;
   total_output_tokens_today: number;
+  total_cached_tokens_today: number;
   avg_latency_ms_7d: number | null;
+  /** Snapshot van het meest-recente model dat deze agent draaide — voor pricing lookup. */
+  last_model: string | null;
 }
 
 export interface AgentRunRow {
@@ -27,6 +30,17 @@ export interface AgentRunRow {
   prompt_version: string | null;
   error_message: string | null;
   metadata: Record<string, unknown>;
+}
+
+interface AgentRunAggregateRow {
+  agent_name: string;
+  created_at: string;
+  model: string;
+  status: "success" | "error";
+  latency_ms: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cached_tokens: number | null;
 }
 
 /**
@@ -51,16 +65,18 @@ export async function getAgentMetrics(
 
   const { data, error } = await db
     .from("agent_runs")
-    .select("agent_name, created_at, status, latency_ms, input_tokens, output_tokens")
+    .select(
+      "agent_name, created_at, model, status, latency_ms, input_tokens, output_tokens, cached_tokens",
+    )
     .in("agent_name", agentNames)
     .gte("created_at", sevenDaysAgo)
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`agent_runs fetch failed: ${error.message}`);
 
-  const byAgent = new Map<string, AgentRunRow[]>();
+  const byAgent = new Map<string, AgentRunAggregateRow[]>();
   for (const name of agentNames) byAgent.set(name, []);
-  for (const row of (data ?? []) as AgentRunRow[]) {
+  for (const row of (data ?? []) as AgentRunAggregateRow[]) {
     byAgent.get(row.agent_name)?.push(row);
   }
 
@@ -77,9 +93,11 @@ export async function getAgentMetrics(
       runs_7d: rows.length,
       last_run_at: lastRun?.created_at ?? null,
       last_run_status: lastRun?.status ?? null,
+      last_model: lastRun?.model ?? null,
       success_rate_7d: rows.length > 0 ? Math.round((successCount / rows.length) * 100) : null,
       total_input_tokens_today: todayRows.reduce((sum, r) => sum + (r.input_tokens ?? 0), 0),
       total_output_tokens_today: todayRows.reduce((sum, r) => sum + (r.output_tokens ?? 0), 0),
+      total_cached_tokens_today: todayRows.reduce((sum, r) => sum + (r.cached_tokens ?? 0), 0),
       avg_latency_ms_7d:
         latencies.length > 0
           ? Math.round(latencies.reduce((s, v) => s + v, 0) / latencies.length)

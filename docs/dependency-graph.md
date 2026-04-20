@@ -8,10 +8,10 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 495 |
-| Exported functions/constants | 750 |
+| Exported functions/constants | 748 |
 | Exported types/interfaces | 194 |
-| Cross-package imports | 608 |
-| Critical integration points (3+ packages) | 14 |
+| Cross-package imports | 616 |
+| Critical integration points (3+ packages) | 15 |
 
 ## Package Dependency Flow
 
@@ -652,6 +652,13 @@
 - `../validations/needs-scanner` → NeedsScannerOutputSchema, NeedsScannerOutput
 - `./run-logger` → withAgentRun
 
+### `packages/ai/src/agents/pricing.ts`
+
+**Exports:**
+- `estimateRunCostUsd()`
+
+**Types:** `ModelPricing`
+
 ### `packages/ai/src/agents/project-summarizer.ts`
 
 **Exports:**
@@ -663,6 +670,15 @@
 **Internal deps:**
 - `../validations/project-summary` → ProjectSummaryOutputSchema, OrgSummaryOutputSchema, type ProjectSummaryOutput, type OrgSummaryOutput
 - `./run-logger` → withAgentRun
+
+### `packages/ai/src/agents/registry.ts`
+
+**Exports:**
+- `readAgentPrompt()`
+- `getAgentById()`
+- `AGENT_REGISTRY`
+
+**Types:** `AgentStatus`, `AgentQuadrant`, `AgentDefinition`
 
 ### `packages/ai/src/agents/render-summary.ts`
 
@@ -2161,22 +2177,15 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/organizations` → listOrganizationsByType
 
-### `apps/cockpit/src/app/(dashboard)/agents/_data.ts`
-
-**Exports:**
-- `agents`
-- `activityFeed`
-- `systemStats`
-
-**Types:** `Quadrant`, `AgentStatus`, `Agent`, `ActivityEvent`, `SystemStats`
-
 ### `apps/cockpit/src/app/(dashboard)/agents/page.tsx`
 
 **Exports:**
 - `dynamic`
 
 **Depends on:**
-- `@repo/ui/button` → Button
+- `@repo/ai/agents/registry` → AGENT_REGISTRY, readAgentPrompt
+- `@repo/ai/agents/pricing` → estimateRunCostUsd
+- `@repo/database/queries/agent-runs` → getAgentMetrics, listRecentAgentRuns, type AgentMetrics
 
 ### `apps/cockpit/src/app/(dashboard)/architectuur/_data/embeddings.ts`
 
@@ -2588,29 +2597,36 @@
 **Exports:**
 - `ActivityFeed()`
 
-### `apps/cockpit/src/components/agents/agent-card-compact.tsx`
+**Depends on:**
+- (type) `@repo/database/queries/agent-runs` → AgentRunRow
+- (type) `@repo/ai/agents/registry` → AgentDefinition
+
+### `apps/cockpit/src/components/agents/agent-card.tsx`
 
 **Exports:**
-- `AgentCardCompact()`
-- `AddAgentPlaceholder()`
+- `AgentCard()`
 
-### `apps/cockpit/src/components/agents/agent-card-full.tsx`
-
-**Exports:**
-- `AgentCardFull()`
+**Depends on:**
+- (type) `@repo/ai/agents/registry` → AgentDefinition
+- (type) `@repo/database/queries/agent-runs` → AgentMetrics
+- `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle
 
 ### `apps/cockpit/src/components/agents/quadrant-styles.ts`
 
 **Exports:**
 - `quadrantHeader`
 - `quadrantBadge`
-- `quadrantDot`
 - `quadrantLabel`
+
+**Depends on:**
+- (type) `@repo/ai/agents/registry` → AgentQuadrant
 
 ### `apps/cockpit/src/components/agents/system-overview.tsx`
 
 **Exports:**
 - `SystemOverview()`
+
+**Types:** `SystemStats`
 
 ### `apps/cockpit/src/components/architectuur/embeddings-card.tsx`
 
@@ -3858,9 +3874,9 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 47 | 22 | 30 | - | - | 99 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
-| Cockpit Components | 39 | 3 | - | 72 | - | 114 |
+| Cockpit Components | 41 | 6 | - | 73 | - | 120 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 82 | 7 | 2 | 27 | - | 118 |
+| Cockpit Pages | 83 | 9 | 2 | 26 | - | 120 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
@@ -3888,6 +3904,7 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` | database, ui, ai | 3 |
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
 | `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
@@ -4074,6 +4091,13 @@ Tracing the most important data flows from action → pipeline → database.
 ## Query Usage Map
 
 Which queries are used where across the codebase.
+
+### queries/agent-runs.ts
+
+| Query | Used in |
+|-------|---------|
+| `getAgentMetrics()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
+| `listRecentAgentRuns()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
 
 ### queries/content.ts
 
