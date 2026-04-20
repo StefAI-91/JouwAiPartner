@@ -46,9 +46,7 @@ CREATE INDEX IF NOT EXISTS agent_runs_agent_created_idx
 CREATE INDEX IF NOT EXISTS agent_runs_created_idx
   ON agent_runs(created_at DESC);
 
-COMMENT ON TABLE agent_runs IS
-  'Centraal run-log voor alle AI-agents. Append-only. Voedt de /agents ' ||
-  'observability pagina met runs, kosten, latency en error-rate per agent.';
+COMMENT ON TABLE agent_runs IS 'Centraal run-log voor alle AI-agents. Append-only. Voedt de /agents observability pagina met runs, kosten, latency en error-rate per agent.';
 
 -- RLS: authenticated mag lezen (admin-pagina). Insert via service role
 -- client vanuit de pipeline. Geen fine-grained policies — admin-only UI.
