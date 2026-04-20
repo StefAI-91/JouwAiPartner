@@ -219,6 +219,8 @@ Organizations, projects, people, and extractions are manually editable via inlin
 - **Geen `select('*')`.** Selecteer alleen kolommen die je nodig hebt.
 - **Geen queries in loops (N+1).** Gebruik Supabase joins voor relaties.
 - **Centraliseer queries in `packages/database/src/queries/`.** Eén plek per domein. Mutations in `packages/database/src/mutations/`.
+- **Geen directe `.from()` in `apps/*/actions` of `apps/*/app/api`.** Gebruik een helper uit `@repo/database/queries/*` of `@repo/database/mutations/*`. Check via `npm run check:queries`; de pre-commit hook blokkeert overtredingen.
+- **Client-scope beleid:** helpers accepteren een optionele `client?: SupabaseClient`; default is admin (service-role). Zie [`packages/database/README.md`](packages/database/README.md) voor signatuur-voorbeelden en uitzonderingen.
 - **Filter op de database.** Niet ophalen en dan in JS filteren.
 - **Pagination bij grote datasets.** Gebruik `.range()`.
 - **Seed data is idempotent.** Altijd `ON CONFLICT DO UPDATE`.

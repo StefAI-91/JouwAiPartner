@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 478 |
-| Exported functions/constants | 715 |
-| Exported types/interfaces | 180 |
-| Cross-package imports | 597 |
+| Files scanned | 480 |
+| Exported functions/constants | 722 |
+| Exported types/interfaces | 185 |
+| Cross-package imports | 598 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -340,8 +340,9 @@
 - `listTeamMembers()`
 - `getUserWithAccess()`
 - `countAdmins()`
+- `getProfileRole()`
 
-**Types:** `TeamRole`, `TeamMember`, `TeamMemberWithAccess`
+**Types:** `TeamRole`, `ProfileRole`, `TeamMember`, `TeamMemberWithAccess`
 
 ### `queries/userback-issues.ts`
 
@@ -538,6 +539,14 @@
 - `verifyMeetingWithEdits()`
 - `rejectMeeting()`
 
+### `mutations/slack-config.ts`
+
+**Exports:**
+- `upsertSlackConfig()`
+- `deleteSlackConfig()`
+
+**Types:** `UpsertSlackConfigInput`
+
 ### `mutations/summaries.ts`
 
 **Exports:**
@@ -550,6 +559,16 @@
 - `updateTask()`
 - `completeTask()`
 - `dismissTask()`
+
+### `mutations/team.ts`
+
+**Exports:**
+- `upsertProfile()`
+- `updateProfileRole()`
+- `clearProjectAccess()`
+- `insertProjectAccess()`
+
+**Types:** `ProfileRole`, `UpsertProfileInput`, `ProjectAccessRow`
 
 ## AI Agents
 
@@ -1761,7 +1780,8 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/team` → countAdmins, getUserWithAccess
+- `@repo/database/queries/team` → countAdmins, getProfileRole, getUserWithAccess
+- `@repo/database/mutations/team` → upsertProfile, updateProfileRole, clearProjectAccess, insertProjectAccess
 - `@repo/database/validations/team` → inviteUserSchema, updateUserAccessSchema, deactivateUserSchema, type InviteUserInput, type UpdateUserAccessInput, type DeactivateUserInput
 
 ### `apps/cockpit/src/actions/weekly-summary.ts`
@@ -3338,10 +3358,10 @@
 - `testSlackWebhookAction()`
 
 **Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 - `@repo/database/integrations/slack` → SLACK_NOTIFY_EVENTS
+- `@repo/database/mutations/slack-config` → upsertSlackConfig, deleteSlackConfig
 
 ## DevHub API Routes
 
@@ -3711,7 +3731,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 45 | - | - | - | - | 45 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 44 | 15 | 29 | - | - | 88 |
+| Cockpit Server Actions | 45 | 15 | 29 | - | - | 89 |
 | Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
 | Cockpit Components | 41 | 6 | - | 75 | - | 122 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -3909,6 +3929,13 @@ Tracing the most important data flows from action → pipeline → database.
 | `verifyMeetingWithEdits()` | `apps/cockpit/src/actions/review.ts` |
 | `rejectMeeting()` | `apps/cockpit/src/actions/review.ts` |
 
+### mutations/slack-config.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `upsertSlackConfig()` | `apps/devhub/src/actions/slack-settings.ts` |
+| `deleteSlackConfig()` | `apps/devhub/src/actions/slack-settings.ts` |
+
 ### mutations/summaries.ts
 
 | Mutation | Called from |
@@ -3923,6 +3950,15 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
 | `completeTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
 | `dismissTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
+
+### mutations/team.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
+| `updateProfileRole()` | `apps/cockpit/src/actions/team.ts` |
+| `clearProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
+| `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
 
 ## Query Usage Map
 
@@ -4126,6 +4162,7 @@ Which queries are used where across the codebase.
 | `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
+| `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 
 ### queries/userback-issues.ts
 

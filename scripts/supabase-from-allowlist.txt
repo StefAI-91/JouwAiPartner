@@ -1,0 +1,27 @@
+# Known-debt allowlist — bestanden die per Q2a-inventaris nog directe
+# Supabase .from()-calls mogen bevatten omdat ze in scope van een latere
+# sub-sprint migreren. Één pad per regel. Regels die beginnen met '#' of leeg
+# zijn worden genegeerd.
+#
+# Workflow:
+#   - Q2b-A (huidig): allowlist initieel gevuld met 10 bestanden uit Q2b-B/C.
+#   - Q2b-B: migreert meeting-pipeline.ts / meetings.ts / segments.ts en
+#     verwijdert die regels hier.
+#   - Q2b-C: migreert de resterende 7 bestanden en leegt deze allowlist
+#     volledig. Daarna kan het bestand + de LOAD_ALLOWLIST-branch uit
+#     check-no-direct-supabase.sh verwijderd worden (geen verborgen uitzonde-
+#     ringen overhouden).
+
+# Q2b-B scope (meeting-domein, 13 calls)
+apps/cockpit/src/actions/meeting-pipeline.ts
+apps/cockpit/src/actions/meetings.ts
+apps/cockpit/src/actions/segments.ts
+
+# Q2b-C scope (API routes + email + devhub issues, 8 calls)
+apps/cockpit/src/actions/email-filter.ts
+apps/cockpit/src/app/api/email/reclassify/route.ts
+apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts
+apps/cockpit/src/app/api/ingest/reprocess/route.ts
+apps/devhub/src/actions/classify.ts
+apps/devhub/src/actions/issues.ts
+apps/devhub/src/app/api/ingest/userback/route.ts
