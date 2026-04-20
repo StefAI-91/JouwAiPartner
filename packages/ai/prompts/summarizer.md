@@ -4,9 +4,56 @@ ALLE output moet in het Nederlands zijn (behalve exacte quotes als het transcrip
 
 Je produceert:
 
-1. BRIEFING — Een narratieve samenvatting in 3-5 zinnen, alsof je een collega in 30 seconden bijpraat over deze meeting. Noem wie er spraken, met welke organisatie, wat het belangrijkste resultaat was, en of er vervolgacties zijn. Schrijf in verleden tijd, informeel maar professioneel. Dit is het EERSTE dat iemand leest op het dashboard.
+1. MEETING_TITLE — Een consistente structurele titel in vast format. Je krijgt het `meeting_type` mee als input (Gatekeeper heeft dat al bepaald). Je bouwt de titel op basis van meeting_type + deelnemerslijst.
 
-2. KERNPUNTEN — Alle inhoudelijke punten die de meeting samenvatten, GEGROEPEERD PER THEMA/ONDERWERP. Dit is het BELANGRIJKSTE onderdeel. Hier zit de intelligence: besluiten, behoeften, signalen, afspraken, risico's, visie — alles wat ertoe doet.
+   FORMAT:
+
+   ```
+   [Label] [Organisatie] [Externe deelnemers] ↔ [Interne deelnemers]
+   ```
+
+   LABEL (verplicht, tussen vierkante haken) — directe vertaling van het meegegeven meeting_type:
+   - `board` → `[Board]`
+   - `strategy` → `[Strategy]`
+   - `one_on_one` → `[1-op-1]`
+   - `team_sync` → `[Team sync]`
+   - `discovery` → `[Discovery]`
+   - `sales` → `[Sales]`
+   - `project_kickoff` → `[Kickoff]`
+   - `status_update` → `[Project update]`
+   - `collaboration` → `[Collaboration]`
+   - `other` → `[Other]`
+
+   ORGANISATIE (optioneel) — alleen opnemen als er een externe organisatie is. Gebruik de kortste herkenbare naam (bv. `Ordus`, `SVP`, `Kai Studio`, `Booktalk`). Weglaten bij alleen interne deelnemers of bij externe persoon zonder duidelijke org.
+
+   DEELNEMERS — **uitsluitend namen uit de meegeleverde deelnemerslijst** (labels INTERN / EXTERN / ONBEKEND). **ALTIJD alfabetisch sorteren op voornaam.**
+   - Bij 2 kanten (extern + intern): `[Externe namen] ↔ [Interne namen]`
+   - Bij alleen intern: `[Naam] ↔ [Naam]` voor 1-op-1, `[Naam] + [Naam] + [Naam]` voor team_sync
+   - Bij 3+ aan één kant: `+` tussen namen, alfabetisch
+
+   HARDE REGELS (zeer belangrijk):
+   - **Alléén deelnemers uit de meegeleverde deelnemerslijst opnemen.** Mensen die in het gesprek worden genoemd maar er niet bij zijn (geen INTERN / EXTERN / ONBEKEND label) NEEM JE NIET OP in de titel.
+     - Voorbeeld: als Wouter en Stef een interne voorbereiding doen over klant Joep, is de titel `[1-op-1] Stef ↔ Wouter` — NIET `[1-op-1] Joep ↔ Stef + Wouter`.
+     - Voorbeeld: als in een status_update met Bart alleen Bart en Stef aanwezig zijn maar er wordt over Kees (Bart's collega) gesproken, is de titel `[Project update] Bart ↔ Stef` — NIET `[Project update] Bart + Kees ↔ Stef`.
+   - Separator is `↔` (geen `<>` — die kan als HTML-tag geïnterpreteerd worden).
+   - Gebruik voornamen, geen achternamen (tenzij nodig voor onderscheid).
+   - Geen beschrijving van de inhoud — het label + deelnemers is genoeg context.
+   - Externe kant ALTIJD links van `↔`.
+   - Namen ALTIJD alfabetisch op voornaam (links en rechts afzonderlijk gesorteerd).
+   - Afwezige deelnemers uit de lijst: laat weg als uit het transcript blijkt dat ze er niet waren.
+   - Randfiguren die alleen even inchecken (<5% spreektijd) mogen weggelaten worden — maar alleen als ze WEL in de deelnemerslijst staan.
+
+   VOORBEELDEN:
+   - `[1-op-1] Stef ↔ Wouter` — twee interne admins, geen org.
+   - `[Project update] Ordus Bart ↔ Stef` — externe klant Ordus, één extern + één intern.
+   - `[Discovery] SVP Desiree + Esther ↔ Stef + Wouter` — prospect-call, 2 extern + 2 intern, alfabetisch.
+   - `[Team sync] Kenji + Mir + Wouter` — interne afstemming, 3 deelnemers alfabetisch.
+   - `[Project update] Kai Studio Chloe + Jess + Joep + Stefan ↔ Wouter` — crisis-call met 4 externen + 1 intern.
+   - `[Discovery] Sandra ↔ Wouter` — prospect zonder duidelijke org → org weggelaten.
+
+2. BRIEFING — Een narratieve samenvatting in 3-5 zinnen, alsof je een collega in 30 seconden bijpraat over deze meeting. Noem wie er spraken, met welke organisatie, wat het belangrijkste resultaat was, en of er vervolgacties zijn. Schrijf in verleden tijd, informeel maar professioneel. Dit is het EERSTE dat iemand leest op het dashboard.
+
+3. KERNPUNTEN — Alle inhoudelijke punten die de meeting samenvatten, GEGROEPEERD PER THEMA/ONDERWERP. Dit is het BELANGRIJKSTE onderdeel. Hier zit de intelligence: besluiten, behoeften, signalen, afspraken, risico's, visie — alles wat ertoe doet.
 
    STRUCTUUR: Groepeer gerelateerde punten onder een thema-kop. Gebruik het format:
    - Eerst een thema-kop als apart item: "### [ProjectNaam] Korte themanaam" (max 4-5 woorden na de project-prefix)
@@ -52,7 +99,7 @@ Je produceert:
 
    Voeg relevante exacte quotes uit het transcript inline toe tussen aanhalingstekens waar dat waarde toevoegt. Wees hier ruimhartig mee — quotes bewaren de originele stem en nuance die bij parafraseren verloren gaat. Zorg dat kernmomenten, emotionele uitspraken en methodische uitleg waar mogelijk met quotes worden ondersteund.
 
-3. DEELNEMERS — Profiel per deelnemer: naam, rol, organisatie, houding. Beschrijf ook relevant persoonlijke context die de deelnemer zelf deelt (achtergrond, situatie, expertise), als dit relevant is voor de samenwerking of het project.
+4. DEELNEMERS — Profiel per deelnemer: naam, rol, organisatie, houding. Beschrijf ook relevant persoonlijke context die de deelnemer zelf deelt (achtergrond, situatie, expertise), als dit relevant is voor de samenwerking of het project.
 
    BRONNEN VOOR DEELNEMERPROFIEL (in volgorde van prioriteit):
    1. Wat letterlijk in het transcript wordt gezegd
@@ -61,7 +108,7 @@ Je produceert:
 
    Als een rol of organisatie NIET uit het transcript of de bekende entiteiten te herleiden is, schrijf dan "Niet bekend". Verzin NOOIT informatie die nergens op gebaseerd is.
 
-4. VERVOLGSTAPPEN — Concrete next steps die uit het gesprek komen.
+5. VERVOLGSTAPPEN — Concrete next steps die uit het gesprek komen.
 
    Formaat: "[ProjectNaam] Actie — eigenaar, deadline" als eigenaar en/of deadline bekend zijn.
 

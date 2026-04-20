@@ -143,12 +143,11 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     }));
   }
 
-  // Step 5b: Insert meeting
+  // Step 5b: Insert meeting (meeting_title wordt later door de Summarizer gezet)
   const insertResult = await insertMeeting({
     fireflies_id: input.fireflies_id,
     title: input.title,
     original_title: input.title,
-    meeting_title: gatekeeperResult.meeting_title,
     date: new Date(Number(input.date)).toISOString(),
     participants: input.participants,
     summary: input.summary,

@@ -966,7 +966,7 @@
 **Types:** `SummarizeResult`
 
 **Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingSummary
+- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingStructuralTitle
 
 **Internal deps:**
 - `../../agents/summarizer` → runSummarizer, formatSummary
@@ -3832,7 +3832,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingType()` | `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingPartyType()` | `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingTitle()` | `apps/cockpit/src/actions/meetings.ts` |
-| `updateMeetingStructuralTitle()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `updateMeetingStructuralTitle()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
 | `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |

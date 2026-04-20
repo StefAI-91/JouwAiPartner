@@ -1,9 +1,13 @@
 import { runSummarizer, formatSummary } from "../../agents/summarizer";
-import { updateMeetingSummary } from "@repo/database/mutations/meetings";
+import {
+  updateMeetingSummary,
+  updateMeetingStructuralTitle,
+} from "@repo/database/mutations/meetings";
 
 export interface SummarizeResult {
   success: boolean;
   richSummary: string | null;
+  meetingTitle: string | null;
   kernpunten: string[];
   vervolgstappen: string[];
   error: string | null;
@@ -41,19 +45,29 @@ export async function runSummarizeStep(
       return {
         success: false,
         richSummary,
+        meetingTitle: summarizerOutput.meeting_title,
         kernpunten: summarizerOutput.kernpunten,
         vervolgstappen: summarizerOutput.vervolgstappen,
         error: updateResult.error,
       };
     }
 
+    // Persist structural meeting_title (non-blocking).
+    try {
+      await updateMeetingStructuralTitle(meetingId, summarizerOutput.meeting_title);
+    } catch (titleErr) {
+      console.error("Structural title write failed (non-blocking):", titleErr);
+    }
+
     console.info(
       `Summarizer: ${summarizerOutput.kernpunten.length} kernpunten, ` +
-        `${summarizerOutput.deelnemers.length} deelnemers, ${summarizerOutput.vervolgstappen.length} vervolgstappen`,
+        `${summarizerOutput.deelnemers.length} deelnemers, ${summarizerOutput.vervolgstappen.length} vervolgstappen, ` +
+        `title="${summarizerOutput.meeting_title}"`,
     );
     return {
       success: true,
       richSummary,
+      meetingTitle: summarizerOutput.meeting_title,
       kernpunten: summarizerOutput.kernpunten,
       vervolgstappen: summarizerOutput.vervolgstappen,
       error: null,
@@ -61,6 +75,13 @@ export async function runSummarizeStep(
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error("Summarizer failed (non-blocking):", errMsg);
-    return { success: false, richSummary: null, kernpunten: [], vervolgstappen: [], error: errMsg };
+    return {
+      success: false,
+      richSummary: null,
+      meetingTitle: null,
+      kernpunten: [],
+      vervolgstappen: [],
+      error: errMsg,
+    };
   }
 }

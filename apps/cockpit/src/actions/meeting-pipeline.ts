@@ -117,10 +117,10 @@ export async function regenerateMeetingAction(
       return { error: `Summary opslaan mislukt: ${summaryResult.error}` };
     }
 
-    // Step 4b: Persist the structural meeting_title from the gatekeeper run
-    // above. Non-blocking — a failing write shouldn't abort regeneration.
+    // Step 4b: Persist the structural meeting_title from the Summarizer run
+    // (Sonnet 4.5 produces it now, not the Gatekeeper). Non-blocking.
     try {
-      await updateMeetingStructuralTitle(meetingId, gatekeeperResult.meeting_title);
+      await updateMeetingStructuralTitle(meetingId, summarizerOutput.meeting_title);
     } catch (titleErr) {
       console.error("Structural title write failed during regeneration (non-blocking):", titleErr);
     }
@@ -370,9 +370,12 @@ export async function regenerateRisksAction(
 
 /**
  * Draait uitsluitend de Gatekeeper op de bestaande samenvatting en werkt
- * meeting_title + classificatie (meeting_type, party_type, relevance_score,
- * organization) bij. Ideaal voor iteratie op de gatekeeper-prompt zonder
- * dat de dure Summarizer/RiskSpecialist opnieuw draaien.
+ * de classificatie bij: meeting_type, party_type, relevance_score,
+ * organization. Ideaal voor iteratie op de gatekeeper-prompt.
+ *
+ * NB: meeting_title wordt NIET meer door de Gatekeeper gezet — dat doet
+ * de Summarizer. Voor title-iteratie moet je de volledige regenerate
+ * draaien (Sonnet 4.5).
  */
 export async function regenerateGatekeeperOnlyAction(
   input: z.infer<typeof regenerateSchema>,
@@ -413,8 +416,6 @@ export async function regenerateGatekeeperOnlyAction(
       date: (meeting.date as string) ?? undefined,
       entityContext: entityContext.contextString,
     });
-
-    await updateMeetingStructuralTitle(meetingId, gatekeeperResult.meeting_title);
 
     const ruleBasedType = determineRuleBasedMeetingType(classifiedParticipants);
     const finalMeetingType = ruleBasedType ?? gatekeeperResult.meeting_type;

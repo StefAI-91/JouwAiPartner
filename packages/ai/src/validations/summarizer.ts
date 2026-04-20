@@ -16,6 +16,13 @@ export const ParticipantProfileSchema = z.object({
 });
 
 export const SummarizerOutputSchema = z.object({
+  meeting_title: z
+    .string()
+    .describe(
+      "Consistente structurele titel: [Label] [Org] [Externe deelnemers] ↔ [Interne deelnemers]. " +
+        "Label volgt uit meeting_type (zie prompt). Alléén namen uit de meegeleverde deelnemerslijst " +
+        "opnemen — personen die alleen besproken worden mogen NIET in de titel.",
+    ),
   briefing: z
     .string()
     .describe(

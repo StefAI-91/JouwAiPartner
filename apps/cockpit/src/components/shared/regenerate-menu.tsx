@@ -117,9 +117,9 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
         >
           <DropdownMenuItem onClick={handleGatekeeperOnly}>
             <div className="flex flex-col gap-0.5">
-              <span className="font-medium">Alleen gatekeeper (titel + type)</span>
+              <span className="font-medium">Alleen gatekeeper (classificatie)</span>
               <span className="text-xs text-muted-foreground">
-                1 Haiku-call, samenvatting blijft
+                1 Haiku-call; type + org + relevance. Titel blijft.
               </span>
             </div>
           </DropdownMenuItem>

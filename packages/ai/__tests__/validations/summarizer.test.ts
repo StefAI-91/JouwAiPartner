@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { SummarizerOutputSchema, ParticipantProfileSchema } from "../../src/validations/summarizer";
 
 const validOutput = {
+  meeting_title: "[1-op-1] Stef ↔ Wouter",
   briefing: "Stef en Wouter bespraken de platformstrategie voor Q2.",
   kernpunten: ["Migratie naar Vitest", "Dashboard redesign"],
   deelnemers: [
@@ -22,6 +23,11 @@ describe("SummarizerOutputSchema", () => {
 
   it("rejects missing briefing", () => {
     const { briefing: _, ...rest } = validOutput;
+    expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
+  });
+
+  it("rejects missing meeting_title", () => {
+    const { meeting_title: _, ...rest } = validOutput;
     expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
   });
 

@@ -9,7 +9,6 @@ const validBase = {
   relevance_score: 0.8,
   reason: "Important business meeting",
   meeting_type: "team_sync" as const,
-  meeting_title: "[Team sync] Kenji + Mir + Wouter",
   organization_name: null,
   identified_projects: [],
 };
@@ -45,23 +44,6 @@ describe("GatekeeperSchema", () => {
       meeting_type: "invalid_type",
     });
     expect(result.success).toBe(false);
-  });
-
-  it("requires meeting_title to be present", () => {
-    const { meeting_title: _omit, ...withoutTitle } = validBase;
-    void _omit;
-    const result = GatekeeperSchema.safeParse(withoutTitle);
-    expect(result.success).toBe(false);
-  });
-
-  it("accepts external meeting_title with org and separator", () => {
-    const result = GatekeeperSchema.safeParse({
-      ...validBase,
-      meeting_type: "status_update" as const,
-      meeting_title: "[Project update] Ordus Bart ↔ Stef",
-      organization_name: "Ordus",
-    });
-    expect(result.success).toBe(true);
   });
 
   it("accepts identified_projects with known project_id", () => {
