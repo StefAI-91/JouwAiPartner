@@ -273,31 +273,36 @@ All agents share the same principles:
 
 ### 4.1 Agent Roster
 
-**Built agents (11):**
+> **Last synced:** 2026-04-20 (Q4b). Feitelijke bron van waarheid: `packages/ai/src/agents/registry.ts`. Zie ook `docs/specs/agents.md` voor de afgeleide, leesbare lijst.
 
-| Agent                  | Model     | Quadrant | Purpose                                                                                    |
-| ---------------------- | --------- | -------- | ------------------------------------------------------------------------------------------ |
-| **Gatekeeper**         | Haiku 4.5 | Cockpit  | Classify meetings: type, party type, relevance, organization, project matching             |
-| **Summarizer**         | Sonnet    | Cockpit  | Generate structured meeting summaries: briefing, kernpunten, vervolgstappen                |
-| **Extractor**          | Sonnet    | Cockpit  | Extract actionable items from meetings (wachten_op_extern, wachten_op_beslissing)          |
-| **Needs Scanner**      | Sonnet    | Cockpit  | Identify unmet needs from verified meetings (tooling, kennis, capaciteit, proces, klant)   |
-| **Email Classifier**   | Haiku 4.5 | Cockpit  | Classify emails: relevance, type, party, organization + project matching                   |
-| **Email Extractor**    | Sonnet    | Cockpit  | Extract insights from emails (decisions, needs, project updates, requests)                 |
-| **Project Summarizer** | Sonnet    | Cockpit  | Generate project/org summaries: context, briefing, timeline from all verified data         |
-| **Weekly Summarizer**  | Sonnet    | Cockpit  | Management summaries: project health (groen/oranje/rood), cross-project risks, focus items |
-| **Issue Classifier**   | Haiku 4.5 | DevHub   | Classify issues: type, component, severity, repro steps                                    |
-| **Issue Executor**     | Sonnet    | DevHub   | Create execution plans: 3-6 concrete steps, complexity estimate, edge cases                |
-| **Issue Reviewer**     | Sonnet    | DevHub   | Project health analysis: score (0-100), patterns, risks, recommendations                   |
+**Built agents (12):**
 
-**Planned agents (5):**
+| Agent                   | Model      | Quadrant | Purpose                                                                                                     |
+| ----------------------- | ---------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| **Gatekeeper**          | Haiku 4.5  | Cockpit  | Classify meetings: type, party type, relevance, organization, project matching                              |
+| **Summarizer**          | Sonnet 4.5 | Cockpit  | Generate structured meeting summaries: briefing, kernpunten, vervolgstappen                                 |
+| **Title Generator**     | Haiku 4.5  | Cockpit  | Generate short, informative meeting titles                                                                  |
+| **Needs Scanner**       | Haiku 4.5  | Cockpit  | Identify unmet needs from verified meetings (tooling, kennis, capaciteit, proces)                           |
+| **Management Insights** | Sonnet 4.5 | Cockpit  | Cross-meeting patterns on board-level overleggen (opvolging, klant-pipeline, thema's)                       |
+| **Weekly Summarizer**   | Sonnet 4.5 | Cockpit  | Management summaries: project health (groen/oranje/rood), cross-project risks                               |
+| **Project Summarizer**  | Haiku 4.5  | Cockpit  | Generate project context + briefing + timeline from all meetings and emails                                 |
+| **Org Summarizer**      | Haiku 4.5  | Cockpit  | Per-organization context + timeline (focus: relationship or cross-project)                                  |
+| **Email Classifier**    | Haiku 4.5  | Cockpit  | Classify emails: relevance, type, party, organization + project matching                                    |
+| **Issue Classifier**    | Haiku 4.5  | DevHub   | Classify issues: type, component, severity, repro steps                                                     |
+| **Issue Reviewer**      | Sonnet 4.5 | DevHub   | Project health analysis: score (0-100), patterns, risks, recommendations                                    |
+| **Risk Specialist**     | Sonnet 4.6 | Cockpit  | Dedicated risk-extractor (high-effort, cross-turn patroon-detectie) — enige extractie-bron sinds 2026-04-18 |
 
-| Agent            | Model        | Quadrant | Purpose                                                                    |
-| ---------------- | ------------ | -------- | -------------------------------------------------------------------------- |
-| **Planner**      | Sonnet       | DevHub   | Turn decisions/needs into implementation plans and ticket specs            |
-| **Curator**      | Sonnet       | Cockpit  | Nightly: dedupe, detect staleness, resolve contradictions across knowledge |
-| **Analyst**      | Opus         | Cockpit  | Daily: cross-source patterns, trends, risk flags, sentiment tracking       |
-| **Communicator** | Sonnet       | Portal   | Draft client-facing answers, progress updates, Q&A responses               |
-| **Support**      | Haiku/Sonnet | Delivery | Chatbot: answer questions from verified knowledge, report bugs, escalate   |
+**Planned agents (7):**
+
+| Agent               | Model        | Quadrant | Purpose                                                                                                                                     |
+| ------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Email Extractor** | Sonnet       | Cockpit  | Agent-file bestaat in `packages/ai/src/agents/email-extractor.ts` maar heeft geen call-site. Activeren zodra email-extracties gewenst zijn. |
+| **Issue Executor**  | Sonnet       | DevHub   | Agent-file bestaat (`issue-executor.ts`) maar is geparkeerd tot Phase C (AI execution).                                                     |
+| **Planner**         | Sonnet       | DevHub   | Turn decisions/needs into implementation plans and ticket specs                                                                             |
+| **Curator**         | Sonnet       | Cockpit  | Nightly: dedupe, detect staleness, resolve contradictions across knowledge                                                                  |
+| **Analyst**         | Opus         | Cockpit  | Daily: cross-source patterns, trends, risk flags, sentiment tracking                                                                        |
+| **Communicator**    | Sonnet       | Portal   | Draft client-facing answers, progress updates, Q&A responses                                                                                |
+| **Support**         | Haiku/Sonnet | Delivery | Chatbot: answer questions from verified knowledge, report bugs, escalate                                                                    |
 
 **Planned infrastructure (1):**
 
@@ -311,31 +316,36 @@ All agents share the same principles:
 | ------------ | ----------- | -------- | -------------------------------------------------------------------------- |
 | **Executor** | Sonnet/Opus | DevHub   | Pick up `ai_autonomous` tickets, write code, create PRs (requires Phase C) |
 
+**Historische wijziging (2026-04-18):** De generieke `Extractor` (Sonnet) is uit de codebase verwijderd; `Risk Specialist` (Sonnet 4.6, high effort) is sindsdien de enige extractie-bron. Zie commits `cf3bc18`, `e52b4af`.
+
 ### 4.2 Agent Evolution Roadmap
 
 ```
-TODAY (Built — 11 agents)
+TODAY (Built — 12 agents)
 ├── Cockpit: Knowledge Ingestion
 │   ├── Gatekeeper: classifies meetings (type, party, relevance, org, project)
 │   ├── Summarizer: structured meeting summaries (briefing, kernpunten, vervolgstappen)
-│   ├── Extractor: extracts actionable items from meetings
+│   ├── Title Generator: korte informatieve meeting-titels
 │   ├── Needs Scanner: identifies unmet needs across verified meetings
+│   ├── Management Insights: cross-meeting patronen voor bestuur
+│   ├── Weekly Summarizer: management reports with project health scoring
+│   ├── Project Summarizer: project context + briefing + timeline
+│   ├── Org Summarizer: per-organisatie context + timeline
 │   ├── Email Classifier: classifies incoming emails
-│   ├── Email Extractor: extracts insights from emails
-│   ├── Project Summarizer: generates project/org context + briefing + timeline
-│   └── Weekly Summarizer: management reports with project health scoring
+│   └── Risk Specialist: dedicated risk-extractor (Sonnet 4.6, high effort)
 │
 └── DevHub: Issue Processing
     ├── Issue Classifier: triages issues (type, component, severity, repro)
-    ├── Issue Executor: creates implementation plans with steps
     └── Issue Reviewer: project health analysis with patterns + risks
 
 NEXT (Near-term — Phase A/B)
+├── Email Extractor: activeer bestaande agent-file voor email-insights
 ├── Planner: turns decisions/needs into ticket specs
 ├── Curator: nightly knowledge hygiene (dedupe, staleness, contradictions)
 └── Communicator: drafts client-facing answers for portal
 
 FUTURE (Long-term — Phase C/D/E)
+├── Issue Executor: activeer bestaande agent-file voor AI-execution
 ├── Executor: AI writes code and opens PRs
 ├── Support: embedded chatbot in client apps
 ├── Analyst: cross-project pattern detection

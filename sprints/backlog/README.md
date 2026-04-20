@@ -1,69 +1,84 @@
 # Sprint Backlog
 
-Master backlog for all upcoming work. Sprint numbering continues from 029 (sprints 001-028 are done).
+Master backlog voor alle aankomende sprints. Sprint-telling + breakdown staat in `docs/specs/docs-inventory.md §1`.
 
-## Backlog Overview
+> **Last synced:** 2026-04-20 (Q4b).
+> **Completed sprints:** zie `sprints/done/` (72 bestanden). Samenvatting in de toplevel van deze README onder "Completed Sprints Summary".
 
-| #        | Sprint                                                       | Area          | Status  |
-| -------- | ------------------------------------------------------------ | ------------- | ------- |
-| 029      | Project page rebuild (AI summaries, action items, decisions) | Cockpit UI    | Backlog |
-| 030      | Organization page + AI summary                               | Cockpit UI    | Backlog |
-| DH-008   | Status page (public, per-project, read-only)                 | DevHub fase 2 | Backlog |
-| DH-009   | Duplicate detection via embeddings                           | DevHub fase 2 | Backlog |
-| 031      | Shared packages cleanup (constants, validations, formatting) | Monorepo      | Backlog |
-| T01      | AI Pipeline kritieke tests (9 modules)                       | Testing       | Backlog |
-| T02      | Database mutations tests (10 modules)                        | Testing       | Backlog |
-| T03      | Database queries tests (18 modules)                          | Testing       | Backlog |
-| T04      | Cockpit actions tests — ontbrekende modules (6 actions)      | Testing       | Backlog |
-| T05      | DevHub actions tests (6 modules)                             | Testing       | Backlog |
-| T06      | MCP tools tests (12 modules)                                 | Testing       | Backlog |
-| T07      | API routes tests (13 routes)                                 | Testing       | Backlog |
-| R01      | Database + Rinkel API client                                 | VoIP pipeline | Backlog |
-| R02      | Call processing pipeline                                     | VoIP pipeline | Backlog |
-| R03      | UI updates for call data                                     | VoIP pipeline | Backlog |
-| R04      | Audio storage + playback                                     | VoIP pipeline | Backlog |
-| PW-QC-01 | Security + error handling op /dev/extractor actions          | Quality       | Backlog |
-| PW-QC-02 | Database discipline (queries, idempotency, migratie-safety)  | Quality       | Backlog |
-| PW-QC-03 | AI-pipeline hygiëne (prompt-sync, confidence, shared utils)  | Quality       | Backlog |
-| PW-QC-04 | File splits + anti-laundering tests                          | Quality       | Backlog |
-| Q2a      | Query inventory spike (volledige .from()-lijst + beleid)     | Quality       | Backlog |
-| Q2b      | Query centralisatie execution (na Q2a)                       | Quality       | Backlog |
-| Q3a      | Test infra audit spike (mocks, env, portal/ui setup)         | Quality       | Backlog |
-| Q3b      | Test vangnet execution (na Q3a)                              | Quality       | Backlog |
-| Q4a      | Docs audit spike (sprint-telling, agents, READMEs)           | Quality       | Backlog |
-| Q4b      | Spec sync execution (na Q4a)                                 | Quality       | Backlog |
+## Open backlog
+
+Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Kolom "Locatie" geeft aan waar het bestand staat.
+
+| #        | Sprint                                                       | Area          | Locatie            | Status        |
+| -------- | ------------------------------------------------------------ | ------------- | ------------------ | ------------- |
+| 029      | Project page rebuild (AI summaries, action items, decisions) | Cockpit UI    | `sprints/backlog/` | Backlog       |
+| 030      | Organization page + AI summary                               | Cockpit UI    | `sprints/backlog/` | Backlog       |
+| 038      | Summarizer project-prefix (hernummerd van 035 ivm collisie)  | Cockpit AI    | `sprints/backlog/` | Backlog       |
+| 037      | Management insights                                          | Cockpit AI    | `sprints/backlog/` | Backlog       |
+| DH-008   | Status page (public, per-project, read-only)                 | DevHub fase 2 | `docs/backlog/`    | Backlog       |
+| DH-009   | Duplicate detection via embeddings                           | DevHub fase 2 | `docs/backlog/`    | Backlog       |
+| DH-013   | Access control DB foundation                                 | DevHub access | `docs/backlog/`    | Backlog       |
+| DH-014   | Auth helpers + assertions                                    | DevHub access | `docs/backlog/`    | Backlog       |
+| DH-015   | Cockpit admin-only guards                                    | DevHub access | `docs/backlog/`    | Backlog       |
+| DH-016   | DevHub project-access enforcement                            | DevHub access | `docs/backlog/`    | Backlog       |
+| PW-01    | Project workspace UI                                         | Project view  | `docs/backlog/`    | Backlog       |
+| PW-02    | Meeting structurer                                           | Project AI    | `docs/backlog/`    | Backlog       |
+| PW-03    | Project orchestrator                                         | Project AI    | `docs/backlog/`    | Backlog       |
+| PW-QC-01 | Security + error handling op /dev/extractor actions          | Quality       | `docs/backlog/`    | Backlog       |
+| PW-QC-02 | Database discipline (queries, idempotency, migratie-safety)  | Quality       | `docs/backlog/`    | Backlog       |
+| PW-QC-03 | AI-pipeline hygiëne (prompt-sync, confidence, shared utils)  | Quality       | `docs/backlog/`    | Backlog       |
+| PW-QC-04 | File splits + anti-laundering tests                          | Quality       | `docs/backlog/`    | Backlog       |
+| T01      | AI Pipeline kritieke tests (9 modules)                       | Testing       | `sprints/backlog/` | Backlog       |
+| R01      | Database + Rinkel API client                                 | VoIP pipeline | `sprints/backlog/` | Backlog       |
+| R02      | Call processing pipeline                                     | VoIP pipeline | `sprints/backlog/` | Backlog       |
+| R03      | UI updates for call data                                     | VoIP pipeline | `sprints/backlog/` | Backlog       |
+| R04      | Audio storage + playback                                     | VoIP pipeline | `sprints/backlog/` | Backlog       |
+| Q4b      | Spec sync execution (na Q4a)                                 | Quality       | `sprints/backlog/` | In uitvoering |
 
 ## Completed Sprints Summary
 
-All completed sprints are in `sprints/done/`. Total: 39 sprints.
+Voor de volledige lijst: `ls sprints/done/` (72 sprint-specs). Totaal-breakdown per prefix staat in `docs/specs/docs-inventory.md §1.2`.
 
 ### v1 — Core Platform (sprints 001-007)
 
-Meetings pipeline, database, MCP server, AI agents (Gatekeeper + Extractor), embeddings.
+Meetings pipeline, database, MCP server, AI agents (Gatekeeper + extracties), embeddings.
 
 ### v2 — Review & Dashboard (sprints 008-014)
 
 Monorepo, review gate, meeting detail, projects, dashboard, MCP verification filter.
 
-### v2.5 — Testing (sprints 015-019)
+### v2.5 — Test Framework Kickoff (sprints 015-019)
 
-Test framework, Zod schema tests, test utilities, server action integration tests, MCP tests.
-Note: sprints 015 and 016 each have two files (different workstreams ran in parallel).
-
-### v4 — Behavioral Test Coverage (sprints T01-T07)
-
-Gedragstests voor alle kritieke lagen, geprioriteerd op blast radius via dependency graph.
-Volgorde: T01 (pipelines) → T02 (mutations) → T03 (queries) → T04 (cockpit actions) → T05 (devhub actions) → T06 (MCP tools) → T07 (API routes).
-Principe: geen false positives, test observeerbaar gedrag, niet implementatiedetails.
+Test framework, Zod schema tests, test utilities, server action integration tests, MCP tests. Sprints 015 en 016 hebben elk twee files (parallelle workstreams).
 
 ### v3 — Segmented Summaries (sprints 020-028)
 
 Database migrations, Gatekeeper project-ID, tagger + segments, Extractor constraints, review UI, MCP search, feedback loop, meeting detail, batch migration.
 
-### Foundation — Shared Packages (FND-001 to FND-004)
+### v3.5 — Administratie + Board (sprints 031-036)
 
-Shared UI components, auth helpers, shared constants/validations, DevHub architecture fix.
+Shared packages cleanup (031), administratie-datamodel (032), administratie-UI (033), email-koppeling adviseurs (034), board meetings management (035), org summary + emails timeline (036).
 
-### DevHub Fase 1 — Bug Intake & Triage (DH-001 to DH-007)
+### v4 — Behavioral Test Coverage (T02-T07)
 
-Database, queries/mutations, app shell, issue list, CRUD + detail, AI classification, Userback sync.
+Gedragstests voor kritieke lagen: database mutations (T02), queries (T03), cockpit actions (T04), devhub actions (T05), MCP tools (T06), API routes (T07). T01 (AI pipeline) nog backlog.
+
+### Foundation — Shared Packages (FND-001 ... FND-004)
+
+Shared UI-components, auth helpers, shared constants/validations, DevHub-architectuur-fix.
+
+### DevHub Fase 1 — Bug Intake & Triage (DH-001 ... DH-007)
+
+Database, queries/mutations, app shell, issue list, CRUD + detail, AI-classification, Userback sync.
+
+### DevHub Fase 1.5 — Architecture + Auth (DH-010, DH-011, DH-012, DH-017, DH-018, DH-019, DH-020)
+
+Architecture fixes, component refactor, error handling, RLS project access, magic-link login, invite-flow, admin-team UI.
+
+### Portal MVP — CP-001..005
+
+Database foundation, app scaffolding + auth, project overview dashboard, issue tracker, feedback form. Portal app nog niet gedeployed.
+
+### Quality — Q2a, Q2b-A/B/C, Q3a, Q3b, Q4a
+
+Query inventory spike (Q2a), query centralisatie in drie tranches (Q2b-A/B/C), test infra spike (Q3a) + vangnet execution (Q3b), docs audit spike (Q4a).

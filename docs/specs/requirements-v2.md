@@ -3,6 +3,9 @@
 Gegenereerd uit `docs/specs/v2-review-dashboard.md` op 2026-03-31.
 Totaal: 98 requirements.
 
+> **Last verified:** 2026-04-20 (Q4b, steekproef-strategie per Q4a-5).
+> **Bekende drift:** middel — review-flow grotendeels nog geldig, maar segmented summaries + board meetings (sprints 020-028, 035) hebben requirements toegevoegd die niet in dit register staan.
+
 ---
 
 ## Functionele eisen

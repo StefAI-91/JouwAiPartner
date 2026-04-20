@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Before doing any work**, read [`docs/dependency-graph.md`](docs/dependency-graph.md) for a complete map of all functions, queries, mutations, actions, and pipelines — including what calls what. This gives you instant context on blast radius and data flow without needing to search.
 
-> The graph is auto-generated from the actual codebase. Regenerate with `npm run dep-graph`.
+> The graph is auto-generated from the actual codebase. The Husky pre-commit hook regenerates it automatically when `.ts`/`.tsx` files in `packages/` or `apps/` are staged. Handmatige trigger: `npm run dep-graph`.
 
 ## Vision: AI-Native Operating System
 
@@ -27,7 +27,7 @@ Data flows in a continuous loop: Knowledge In (cockpit) → Work Created → Wor
 
 AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes all company data, processes it through AI agents, and exposes it via MCP server, web dashboard, and client portal.
 
-**Current state:** 39 sprints done (28 core + 4 foundation + 7 DevHub). Cockpit fully built (meetings, review, dashboard, emails). DevHub fase 1 complete (DH-001 through DH-007: issues, AI classification, Userback sync). Portal not yet started. Next: cockpit↔devhub bridge, then portal MVP.
+**Current state (2026-04-20):** 72 sprints done (36 core + 5 CP-portal + 4 foundation + 14 DevHub + 6 testing + 7 quality). Zie `sprints/done/` voor de volledige lijst en `docs/specs/docs-inventory.md §1` voor de per-prefix breakdown. Cockpit fully built (meetings, review, dashboard, emails). DevHub fase 1 complete (DH-001..007, DH-010..012, DH-017..020). Portal MVP: CP-001..005 done (wireframed). Next: cockpit↔devhub bridge, then portal launch.
 **Team:** 6 people, 3 internal reviewers (Stef, Wouter, Ege). Platform maintained by Stef (non-coder) via Claude Code.
 **Verification model:** All content must be human-verified before becoming queryable truth (review gate). This applies to all quadrants.
 **DevHub:** Internal tool — not a product for clients. Optimized for team workflow and AI agent execution.
@@ -341,6 +341,13 @@ Escaleer naar de gebruiker in plaats van door te drukken.
 - Full platform spec: `docs/specs/platform-spec.md` (technical source of truth)
 - DevHub requirements: `docs/specs/requirements-devhub.md`
 - Archived docs in `docs/archive/` (PRD v1, PRD v2, business model v1)
+
+### Sync-ritme
+
+- **Vóór elke nieuwe sprint:** run de `sync` subagent (`.claude/agents/agent-sync.md`) om te checken dat specs/backlog/code nog op één lijn staan.
+- **Na elke merged sprint:** update `docs/specs/docs-inventory.md §1` sprint-telling + markeer eventuele nieuwe drift.
+- **Periodiek (kwartaal):** run een volledige docs-audit-spike (analoog aan Q4a) als sanity-check.
+- Het Q4a spike-rapport `docs/specs/docs-inventory.md` is de kanonieke input voor de sync-agent.
 
 ## Routes
 
