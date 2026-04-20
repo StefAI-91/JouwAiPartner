@@ -1,6 +1,14 @@
 # Sprint COMM-003: UI consolideren + oude kolommen deprecaten
 
-> **Scope-afbakening.** Derde en laatste sprint van de communications-refactor. Bouwt op COMM-001 (supertype + dual-write) en COMM-002 (queries + RLS + classifier). In deze sprint wordt `communications` de enige bron van waarheid voor gedeelde velden: UI leest eruit, dual-write triggers verdwijnen, en gedeelde kolommen op `meetings`/`emails` worden `GENERATED ALWAYS AS` kopieën óf gedropt. Review queue wordt kanaaloverstijgend.
+> **Scope-afbakening.** Derde en laatste sprint van de communications-refactor. Bouwt op COMM-001 (supertype + dual-write) en COMM-002 (queries + RLS + classifier). In deze sprint wordt `communications` de enige bron van waarheid voor gedeelde velden: UI leest eruit, dual-write triggers verdwijnen, en gedeelde kolommen op `meetings`/`emails` worden gedropt (Postgres `GENERATED ALWAYS AS` kent geen subquery — dus DROP + JOIN is de enige optie). Review queue wordt kanaaloverstijgend.
+
+> **Scope-wijzigingen t.o.v. eerste versie (na assumption-validation):**
+>
+> - `PartyTypeBadge` component bestaat **nergens** — party_type wordt nu overal inline als string gerenderd. Taak 7 heeft meer call-sites dan gedacht.
+> - Review queue gebruikt React `useState`-filter, emails-pagina gebruikt URL search params. Deze sprint forceert **URL search params overal** voor herlaad-safe filters.
+> - Geen feature-flag infrastructuur → "fallback naar oude /review" is geschrapt. In plaats daarvan: grondige tests + canary via preview-deploys.
+> - `getVerifiedMeetingById()` doet nu géén join op communications — Taak 5 moet deze expliciet toevoegen.
+> - GENERATED ALWAYS AS met subquery kan niet in Postgres → alle besluiten zijn DROP, geen generate.
 
 ## Doel
 
@@ -104,40 +112,67 @@ Per kolom uit COMM-001 gedeelde lijst:
 
 ### Taak 6: Unified review UI
 
-- [ ] `apps/cockpit/src/app/(dashboard)/review/page.tsx`
-  - Kanaal-switcher (tabs of filter: "Alles / Meetings / Emails")
-  - Lijst gesorteerd op `occurred_at` DESC met kanaal-badge + party_type-badge
+**Huidige staat (gevalideerd):**
+
+- `review/page.tsx` rendert `<ReviewQueue>` (client component) met React `useState<Filter>` voor kanaal-toggle (meetings/emails)
+- Twee aparte queries: `listDraftMeetings()` + `listDraftEmails()`, on-page opgehaald
+- `/review/[id]` + `/review/email/[id]` detail-routes bestaan al — behouden
+- `loading.tsx` + `error.tsx` aanwezig per route, patroon wordt hergebruikt
+
+**Refactor:**
+
+- [ ] `apps/cockpit/src/app/(dashboard)/review/page.tsx` wordt Server Component die `searchParams` leest
+  - URL params: `?channel=meeting|email|all&party_type=X&sort=date` — consistent met `/emails` pagina die dit al doet
+  - Gebruik `listDraftCommunications({ channel?, party_type?, limit, offset })` uit COMM-002 FUNC-080
+  - Lijst gesorteerd op `occurred_at` DESC met kanaal-badge + party_type-badge (zie Taak 7)
   - Batch-actie: "Goedkeur alle van party_type = accountant" (optioneel, nice-to-have)
-- [ ] Behoud `/review/[id]` + `/review/email/[id]` voor detail-review
+- [ ] `ReviewQueue` client component wordt vereenvoudigd: krijgt data via props (Server Component parent), gebruikt `<Link>` naar filter-URLs ipv `useState`
+- [ ] Behoud `/review/[id]` + `/review/email/[id]` voor detail-review (geen URL-unificatie in deze sprint)
 - [ ] Empty state + loading
 - [ ] Bestaande reviewer-tests groen houden
 
-**Geraakt:** `review/page.tsx`, review-componenten.
+**Risico-mitigatie (geen feature flag):**
+
+- Canary via preview-deploy op PR: test met productie-data snapshot voor merge
+- Behoud git-revert plan als fallback i.p.v. runtime-flag
+
+**Geraakt:** `review/page.tsx`, `review-queue.tsx`, review-componenten.
 
 ### Taak 7: Gedeelde party-type badge component
 
-- [ ] `packages/ui/src/party-type-badge.tsx` (Client Component)
-  - Props: `type: PartyType`, `size?: 'sm' | 'md'`
-  - Kleur + label mapping (groen=internal, blauw=client, paars=partner, oranje=advisor-varianten, grijs=other)
-  - Import `PartyType` uit `@repo/ai/validations/communication`
-- [ ] Vervang inline badges in review-, meeting-, email-lijsten door deze component
+**Validatie-bevinding:** `PartyTypeBadge` bestaat nergens. Party_type wordt overal **inline als string** gerenderd. Bekende call-sites:
 
-**Geraakt:** `packages/ui/src/party-type-badge.tsx`, alle call-sites.
+- `apps/cockpit/src/components/review/review-card.tsx` (regel ~50-52, inline string)
+- `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx` (regel ~113, prop maar geen render)
+- `apps/cockpit/src/components/emails/party-type-selector.tsx` — dropdown (geen badge maar gerelateerd, Label-map hergebruiken)
+- Meeting list cards (te vinden via grep op `party_type`)
+
+- [ ] Nieuw: `packages/ui/src/party-type-badge.tsx` (Server Component, tenzij tooltip nodig is)
+  - Props: `type: PartyType | null`, `size?: 'sm' | 'md'`
+  - Kleur + label mapping: groen=internal, blauw=client, paars=partner, oranje=advisor-varianten (accountant/tax_advisor/lawyer/advisor), grijs=other/null
+  - Import `PartyType` uit `@repo/ai/validations/communication`
+  - Label-mapping gedeeld met bestaande `party-type-selector.tsx` (refactor selector om label-map uit badge-file te importeren)
+- [ ] Grep project op `party_type` en vervang elke inline string-render door `<PartyTypeBadge type={...} />`
+- [ ] Accepteer dat dit 5-10 call-sites raakt (verwacht in cockpit: review-card, emails-[id], meetings-[id], meetings-list, emails-list)
+
+**Geraakt:** `packages/ui/src/party-type-badge.tsx` (nieuw), alle call-sites in cockpit.
 
 ### Taak 8: Search consolidatie
 
-- [ ] `queries/search.ts` (of equivalent): full-text + semantic search gaat nu via `communications.search_vector` + `communications.embedding`
-- [ ] MCP search-tool blijft draaien — check dat het resultaat shape niet breekt (kan nog kanaal-specifieke velden mee-hydrateren via JOIN)
-- [ ] Re-embed cron/pipeline: werkt nu op communications-rows, niet meer op meetings/emails aparte
+**Validatie-bevinding:** search gebeurt al via één RPC `search_all_content` (`20260329000010_search_functions.sql`) die meetings + extractions combineert via UNION. Aparte `search_meetings`/`search_emails` RPCs bestaan niet. Consolidatie in COMM-002 is de aangewezen plek — deze taak is nu voornamelijk clean-up.
 
-**Geraakt:** search queries, MCP search tool, re-embed script.
+- [ ] Update `search_all_content` RPC om `communications.embedding` + `search_vector` te lezen i.p.v. `meetings.*` (stuk code uit COMM-002 FUNC-084)
+- [ ] MCP search-tool blijft draaien — check dat het resultaat shape niet breekt (kan nog kanaal-specifieke velden mee-hydrateren via JOIN op meetings/emails voor transcript/body_text)
+- [ ] Re-embed cron/pipeline: werkt nu op communications-rows (zie `20260329000011_pg_cron_reembed.sql`) — migreer cron SQL naar `communications` tabel
+
+**Geraakt:** search RPC, MCP search tool, re-embed cron migratie.
 
 ### Taak 9: Drift-preventie contract test
 
-- [ ] `packages/database/src/__tests__/communications-drift-prevention.test.ts`
-  - Query `information_schema.columns` voor meetings + emails
-  - Assert dat geen van de 14 gedeelde kolomnamen meer bestaat op meetings of emails
-  - Assert dat er geen trigger meer is op meetings/emails met naam `%sync_communication%`
+- [ ] `packages/database/__tests__/communications-drift-prevention.test.ts`
+  - Query `information_schema.columns` (readable voor authenticated role — admin client niet strikt nodig, maar gebruik 'm voor test-stabiliteit)
+  - Assert dat geen van de 13 gedeelde kolomnamen meer bestaat op meetings of emails
+  - Assert dat er geen trigger meer is op meetings/emails met naam `%sync_communication%` (query `information_schema.triggers`)
 - [ ] Draait in CI
 
 **Geraakt:** nieuwe test.
@@ -157,11 +192,11 @@ Per kolom uit COMM-001 gedeelde lijst:
 
 ## Risico's
 
-- **Kolom DROP is onomkeerbaar** — rollback vereist backup restore. Mitigatie: draai eerst in staging, behoud Supabase backup 30 dagen na deploy, fase: eerst `ALTER COLUMN ... DROP NOT NULL` + rename naar `_deprecated_*` voor 1 sprint, dán pas DROPpen. Of: accepteer risico en draai in één migratie met expliciet team go/no-go.
+- **Kolom DROP is onomkeerbaar** — rollback vereist backup restore. Mitigatie: draai eerst in staging, behoud Supabase backup 30 dagen na deploy, fase-optie: eerst rename naar `_deprecated_*` voor 1 sprint, dán pas DROPpen. Of: accepteer risico en draai in één migratie met expliciet team go/no-go.
 - **Re-embed pipeline breekt** — oude pipeline leest van `meetings.embedding`, nieuwe moet `communications.embedding`. Mitigatie: re-embed script in Taak 8 vóór DROP-migratie.
 - **MCP downstream consumers** — clients die MCP gebruiken kunnen op oude response-shape bouwen. Mitigatie: behoud huidige shape via JOIN; breaking MCP changes in aparte sprint.
 - **Search-index rebuild tijd** — HNSW op communications is al in COMM-001 aangemaakt en via dual-write gevuld. Na DROP op meetings: geen rebuild nodig.
-- **Unified review UI-regressie** — behoud oude `/review` als feature flag fallback eerste week in productie.
+- **Unified review UI-regressie (geen feature flag beschikbaar)** — geen runtime-fallback. Mitigatie: preview-deploy testen met productie-data snapshot, canary via staging, git-revert plan als PR rolt terug.
 
 ## Bronverwijzingen
 
