@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PARTY_TYPES, type PartyType } from "./communication";
 
 export const MEETING_TYPES = [
   "strategy",
@@ -15,8 +16,10 @@ export const MEETING_TYPES = [
 
 export type MeetingType = (typeof MEETING_TYPES)[number];
 
-export const PARTY_TYPES = ["client", "partner", "internal", "other"] as const;
-export type PartyType = (typeof PARTY_TYPES)[number];
+// Re-export shared party_type enum — sinds HF-001 staat de bron in
+// ./communication.ts zodat emails + meetings dezelfde set gebruiken.
+export { PARTY_TYPES };
+export type { PartyType };
 
 export const IdentifiedProjectSchema = z.object({
   project_name: z.string().describe("Project name as matched to DB or mentioned in transcript"),

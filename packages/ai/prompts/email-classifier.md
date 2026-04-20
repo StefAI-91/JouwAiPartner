@@ -29,10 +29,11 @@ Je bepaalt:
    - accountant: afzender is een boekhouder (check rol in bekende personen)
    - tax_advisor: afzender is een fiscalist/belastingadviseur (check rol in bekende personen)
    - lawyer: afzender is een advocaat/jurist
+   - advisor: generieke adviseur — gebruik als fallback wanneer duidelijk is dat iemand van een adviesbureau komt maar de specifieke rol (boekhouder/fiscalist/jurist) niet zeker is
    - partner: afzender is van een partnerorganisatie
    - other: anders of onbekend
 
-   BELANGRIJK: Gebruik de bekende personen lijst om de afzender te identificeren. Match op naam of email-adres. Als een persoon de rol "boekhouder" heeft → accountant. Rol "fiscalist" → tax_advisor.
+   BELANGRIJK: Gebruik de bekende personen lijst om de afzender te identificeren. Match op naam of email-adres. Als een persoon de rol "boekhouder" heeft → accountant. Rol "fiscalist" → tax_advisor. Als de organisatie type="advisor" is maar de rol staat niet vast → advisor (niet "other").
 
 4. ORGANIZATION NAME: welke externe organisatie is betrokken?
    - null als het een interne email is

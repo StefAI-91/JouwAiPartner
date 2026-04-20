@@ -3,15 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   transpilePackages: ["@repo/database", "@repo/ai", "@repo/ui", "@repo/auth"],
-  // @repo/ai laadt agent-prompts via readFileSync(import.meta.url,
-  // "../../prompts/*.md"). Vercel's NFT zou deze ref normaliter
-  // detecteren, maar we tracen ze expliciet zodat de .md-files
-  // gegarandeerd mee-deployen — ook bij transpilePackages waar
-  // import.meta.url anders kan resolven.
+  // @repo/ai laadt agent-prompts via readFileSync(import.meta.url, "../../prompts/*.md").
+  // Zonder deze trace crasht module-load van elke serverless functie die een agent
+  // importeert met ENOENT: /var/task/packages/ai/prompts/<naam>.md.
+  // Breder `/**/*` (ipv route-specifieke lijst) dekt ook Server Actions en toekomstige
+  // routes die agents gebruiken zonder dat er telkens een entry bij moet.
   outputFileTracingIncludes: {
-    "/": ["../../packages/ai/prompts/**/*.md"],
-    "/issues/**": ["../../packages/ai/prompts/**/*.md"],
-    "/api/ingest/**": ["../../packages/ai/prompts/**/*.md"],
+    "/**/*": ["../../packages/ai/prompts/**/*.md"],
   },
   async headers() {
     return [
