@@ -6,8 +6,10 @@
 -- functie die via supabase-js RPC aangeroepen kan worden.
 --
 -- Functie is STABLE + SECURITY DEFINER zodat ze werkt ongeacht de
--- aanroepende rol. Alleen authenticated users mogen 'm uitvoeren
--- (gelijk patroon als `is_client` / `has_portal_access`).
+-- aanroepende rol. Alleen de service_role mag 'm uitvoeren — de test
+-- gebruikt `getTestClient()` dat de service-role-key laadt. Geen
+-- behoefte om elke authenticated user alle CHECK-definities in public
+-- te kunnen laten lezen (schema-info-leak, al is het minor).
 
 CREATE OR REPLACE FUNCTION public.pg_get_check_constraint_def(
     p_table TEXT,
@@ -31,5 +33,5 @@ AS $$
 $$;
 
 REVOKE ALL ON FUNCTION public.pg_get_check_constraint_def(TEXT, TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.pg_get_check_constraint_def(TEXT, TEXT) TO authenticated;
+REVOKE ALL ON FUNCTION public.pg_get_check_constraint_def(TEXT, TEXT) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.pg_get_check_constraint_def(TEXT, TEXT) TO service_role;

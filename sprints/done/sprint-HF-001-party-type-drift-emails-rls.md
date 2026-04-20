@@ -132,23 +132,36 @@ Na deze sprint:
 
 **Geraakt:** nieuwe migratie.
 
-### Taak 4: Rule-based party_type in email-classifier (quick win)
+### Taak 4: Rule-based party_type in email-classifier — **NIET GEDAAN, verschoven**
 
-- [ ] `packages/ai/src/agents/email-classifier.ts`:
-  - Vóór de LLM-call: check of `senderDomain` matcht met een `organizations.email_domains` (query bestaat al als `findOrganizationIdByEmailDomain()` in `queries/organizations.ts`)
-  - Als match: map `organizations.type` naar party_type volgens deze tabel:
-    | organizations.type | party_type (fallback) |
-    | ------------------ | --------------------- |
-    | internal | internal |
-    | client | client |
-    | partner | partner |
-    | supplier | other |
-    | advisor | advisor (LLM mag specificeren naar accountant/tax_advisor/lawyer) |
-    | other | other |
-  - Geef deze seed mee aan de LLM als "tentative party_type" — LLM kan specificeren (advisor → accountant) maar mag niet afwijken naar iets volledig anders
-- [ ] Test: email van bekende boekhouder-domein → `accountant` (als LLM dat pakt) of `advisor` fallback; nooit `client` of `partner`
+> **Status na uitvoering HF-001:** deze taak is tijdens implementatie bewust
+> overgeslagen. Alleen de email-classifier-prompt is uitgebreid met `advisor`
+> als fallback (via de shared PartyTypeSchema). De rule-based seed via
+> `findOrganizationIdByEmailDomain()` + tentative-seed naar de LLM is NIET
+> geïmplementeerd.
+>
+> **Reden:** sprint-spec markeerde Taak 4 als "(Optioneel — toevoegen als
+> quick win)". De rule-based seed zou eigen test-matrix vereisen
+> (prompt-regressie + cache-gedrag) en de LLM-prompt heeft al expliciete
+> rol-hints (`boekhouder → accountant`). Toevoegen zou test-complexiteit
+> introduceren zonder dat het het kernprobleem van HF-001 (drift + RLS-gap)
+> oplost.
+>
+> **Wanneer alsnog doen:** als empirisch blijkt dat dezelfde boekhouder in
+> emails vs meetings verschillend gelabeld wordt (monitor via `organizations.
+email_domains` join + `emails.party_type` distributie). Dan inplannen als
+> aparte mini-sprint met eigen tests. Tot die tijd: deze taak blijft hier
+> gedocumenteerd maar niet in backlog.
 
-**Geraakt:** `packages/ai/src/agents/email-classifier.ts` + tests.
+Oorspronkelijke scope (voor referentie, NIET geïmplementeerd):
+
+- `packages/ai/src/agents/email-classifier.ts`:
+  - Vóór de LLM-call: check of `senderDomain` matcht met een `organizations.email_domains`
+  - Map `organizations.type` naar party_type: `internal→internal, client→client, partner→partner, supplier→other, advisor→advisor (LLM mag specificeren), other→other`
+  - Geef deze seed mee aan de LLM als "tentative party_type"
+- Test: email van bekende boekhouder-domein → `accountant` of `advisor` fallback; nooit `client` of `partner`
+
+**Geraakt (bij wel-implementatie):** `packages/ai/src/agents/email-classifier.ts` + tests.
 
 ### Taak 5: Contract-test drift-preventie
 
