@@ -9,7 +9,7 @@ import {
   type RiskSpecialistOutput,
   type RawRiskSpecialistOutput,
 } from "../validations/risk-specialist";
-import { emptyToNull, normaliseForQuoteMatch, sentinelToNull } from "../utils/normalise";
+import { emptyToNull, sentinelToNull } from "../utils/normalise";
 
 /**
  * Experimental single-type specialist: runs parallel to MeetingStructurer
@@ -126,21 +126,14 @@ export async function runRiskSpecialist(
     ],
   });
 
-  // Defensive post-processing: clamp confidence + quote-verificatie.
-  // Cap-waarde 0.25 (niet 0.3) is bewust gekozen: v5 staat 0.3 toe als
-  // "bewuste twijfelclassificatie" door het model (sectie 3 / CONFIDENCE-
-  // DISCIPLINE). Een cap op 0.3 zou betekenen dat quote-mismatches niet
-  // meer te onderscheiden zijn van bewuste-twijfel-rijen in de DB.
-  // 0.25 is ondubbelzinnig "cap hit", geen geldige model-output.
-  const normalisedTranscript = normaliseForQuoteMatch(transcript);
+  // Clamp naar [0,1] — Anthropic's schema kent geen min/max dus we borgen
+  // de range hier. Bewust GEEN quote-mismatch-cap: de normaliser dekt
+  // punctuatie/diakrieten niet af, waardoor vrijwel elke Sonnet-quote ten
+  // onrechte op 0.25 gecapt werd. Downstream wil Sonnet's eigen confidence
+  // gebruiken voor severity-filtering; quote-verificatie wordt later als
+  // apart signaal toegevoegd (geen confidence-overschrijving).
   for (const r of object.risks) {
     r.confidence = Math.max(0, Math.min(1, r.confidence));
-    if (r.source_quote && r.source_quote !== "") {
-      const refNorm = normaliseForQuoteMatch(r.source_quote);
-      if (!normalisedTranscript.includes(refNorm)) {
-        r.confidence = Math.min(r.confidence, 0.25);
-      }
-    }
   }
 
   const latencyMs = Date.now() - startedAt;

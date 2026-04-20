@@ -662,7 +662,7 @@
 
 **Internal deps:**
 - `../validations/risk-specialist` → RiskSpecialistRawOutputSchema, type RiskSpecialistItem, type RiskSpecialistOutput, type RawRiskSpecialistOutput
-- `../utils/normalise` → emptyToNull, normaliseForQuoteMatch, sentinelToNull
+- `../utils/normalise` → emptyToNull, sentinelToNull
 
 ### `packages/ai/src/agents/summarizer.ts`
 

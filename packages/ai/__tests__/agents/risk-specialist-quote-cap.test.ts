@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Boundary-mock: we controleren de generateObject-response zonder echte
-// Anthropic-call. We asserten op de post-processed output van runRiskSpecialist:
-// specifiek dat een quote-mismatch confidence capt op 0.25 (niet 0.3).
-// Zie agent-file voor uitleg: v5 staat 0.3 toe als bewuste twijfel-
-// classificatie, dus de cap moet ondubbelzinnig ≠ 0.3 zijn.
+// Anthropic-call. De quote-mismatch-cap is verwijderd (zie risk-specialist.ts):
+// Sonnet's eigen confidence moet bruikbaar blijven voor severity-filtering.
+// Deze tests borgen: (a) clamp naar [0,1] blijft werken, (b) een quote die
+// niet in het transcript staat laat confidence ONGEWIJZIGD.
 vi.mock("ai", () => ({
   generateObject: vi.fn(),
 }));
@@ -42,8 +42,11 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("RiskSpecialist quote-cap (PW-QC-04 QUAL-QC-032)", () => {
-  it("capt confidence op 0.25 als source_quote niet in transcript staat", async () => {
+describe("RiskSpecialist confidence post-processing", () => {
+  it("laat confidence ongewijzigd als source_quote NIET in transcript staat", async () => {
+    // Cap is bewust verwijderd: Sonnet's confidence is leidend zodat
+    // downstream op severity kan filteren. Quote-verificatie wordt later
+    // als apart signaal teruggebracht zonder de confidence te overschrijven.
     mockGenerateObject.mockResolvedValue({
       object: {
         risks: [risk({ source_quote: "quote die niet in transcript staat", confidence: 0.9 })],
@@ -59,8 +62,7 @@ describe("RiskSpecialist quote-cap (PW-QC-04 QUAL-QC-032)", () => {
       participants: ["Stef", "Wouter"],
     });
 
-    expect(output.risks[0].confidence).toBe(0.25);
-    expect(output.risks[0].confidence).not.toBe(0.3);
+    expect(output.risks[0].confidence).toBe(0.9);
   });
 
   it("laat confidence ongewijzigd als source_quote wél in transcript staat", async () => {
@@ -81,13 +83,14 @@ describe("RiskSpecialist quote-cap (PW-QC-04 QUAL-QC-032)", () => {
     expect(output.risks[0].confidence).toBe(0.85);
   });
 
-  it("laat bewuste 0.3-twijfelclassificatie ongemoeid als quote wél matcht", async () => {
-    // Het model mag 0.3 kiezen als bewuste twijfelclassificatie onder v5.
-    // Als de quote wél matcht moet 0.3 exact 0.3 blijven — niet per ongeluk
-    // naar 0.25 ge-capt worden door een cap op de verkeerde plek.
-    const quote = "Dit is een transcript";
+  it("clampt confidence naar [0,1] als het model buiten de range antwoordt", async () => {
     mockGenerateObject.mockResolvedValue({
-      object: { risks: [risk({ source_quote: quote, confidence: 0.3 })] },
+      object: {
+        risks: [
+          risk({ source_quote: "", confidence: 1.4 }),
+          risk({ source_quote: "", confidence: -0.2 }),
+        ],
+      },
       usage: { inputTokens: 10, outputTokens: 10, reasoningTokens: 5 },
     });
 
@@ -99,6 +102,7 @@ describe("RiskSpecialist quote-cap (PW-QC-04 QUAL-QC-032)", () => {
       participants: ["Stef"],
     });
 
-    expect(output.risks[0].confidence).toBe(0.3);
+    expect(output.risks[0].confidence).toBe(1);
+    expect(output.risks[1].confidence).toBe(0);
   });
 });
