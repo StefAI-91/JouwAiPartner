@@ -1,14 +1,14 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-19. Do not edit manually.
+> Auto-generated on 2026-04-20. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 497 |
-| Exported functions/constants | 743 |
+| Files scanned | 498 |
+| Exported functions/constants | 746 |
 | Exported types/interfaces | 182 |
 | Cross-package imports | 633 |
 | Critical integration points (3+ packages) | 14 |
@@ -633,6 +633,7 @@
 **Internal deps:**
 - `../validations/meeting-structurer` → MeetingStructurerOutputSchema, type MeetingStructurerOutput, type RawMeetingStructurerOutput, type Kernpunt, type MeetingStructurerParticipant
 - `../extraction-types` → filterMetadataByType
+- `../utils/normalise` → emptyToNull, normaliseForQuoteMatch, sentinelToNull
 
 ### `packages/ai/src/agents/needs-scanner.ts`
 
@@ -675,6 +676,7 @@
 
 **Internal deps:**
 - `../validations/risk-specialist` → RiskSpecialistRawOutputSchema, type RiskSpecialistItem, type RiskSpecialistOutput, type RawRiskSpecialistOutput
+- `../utils/normalise` → emptyToNull, normaliseForQuoteMatch, sentinelToNull
 
 ### `packages/ai/src/agents/summarizer.ts`
 
@@ -1124,6 +1126,13 @@
 
 **Internal deps:**
 - `./fireflies` → FirefliesTranscript
+
+### `packages/ai/src/utils/normalise.ts`
+
+**Exports:**
+- `normaliseForQuoteMatch()`
+- `emptyToNull()`
+- `sentinelToNull()`
 
 ### `packages/ai/src/utils/summary-markdown-parser.ts`
 
