@@ -39,6 +39,21 @@ export async function generateProjectReview(
     // Use admin client in bypass mode (no user session), otherwise user-scoped client
     const db = isAuthBypassed() ? getAdminClient() : await createClient();
 
+    // project_reviews.generated_by FKs to profiles(id). The handle_new_user
+    // trigger should keep profiles in sync with auth.users, but legacy or
+    // trigger-missed users may not have a row yet — self-heal via admin
+    // upsert (profiles has no INSERT policy for authenticated users).
+    // Dev-bypass user ID isn't in auth.users, so skip.
+    if (!isAuthBypassed() && user.email) {
+      await getAdminClient()
+        .from("profiles")
+        .upsert(
+          { id: user.id, email: user.email.toLowerCase() },
+          { onConflict: "id", ignoreDuplicates: true },
+        );
+    }
+    const generatedBy = isAuthBypassed() ? null : user.id;
+
     // Fetch all issues for the project (up to 500)
     const issues = await listIssues({ projectId: parsed.data.projectId, limit: 500 }, db);
 
@@ -103,7 +118,7 @@ export async function generateProjectReview(
     // Save to database
     const review = await saveProjectReview({
       project_id: parsed.data.projectId,
-      generated_by: user.id,
+      generated_by: generatedBy,
       total_issues: issues.length,
       issues_by_status: statusCounts,
       issues_by_priority: priorityCounts,
