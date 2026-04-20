@@ -24,7 +24,7 @@ import { emptyToNull, sentinelToNull } from "../utils/normalise";
  */
 
 /** Bump when the prompt changes in a way that breaks comparison with earlier runs. */
-export const RISK_SPECIALIST_PROMPT_VERSION = "v5";
+export const RISK_SPECIALIST_PROMPT_VERSION = "v6";
 
 /**
  * Model-id die aan Anthropic wordt gegeven én als audit-waarde naar

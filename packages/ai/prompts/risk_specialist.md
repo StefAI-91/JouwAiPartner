@@ -135,17 +135,25 @@ Regels voor wat GEEN risk is:
    - Stef en Wouter zijn het oneens over profielkeuze = discussie, geen risk
    - Zonder resolutie na herhaalde discussie waarbij besluit blijft uitblijven = WEL risk
 
-9. COACHING EN MENTORING (NIEUW, gebaseerd op observaties)
-   - Senior die junior onderwijst over principes ("grote files veroorzaken regressies") = COACHING, geen risk
-   - Waarschuwing die onderwijsdoel dient, niet doel is om JAIP te waarschuwen = geen risk
-   - Test: als deze zin wordt uitgesproken tegen een junior in didactische context, met als doel hem/haar beter te laten worden → coaching, geen risk
+9. TERUGKIJKENDE REFLECTIE VS VOORUITKIJKENDE WAARSCHUWING
+   - "We hebben te snel gebouwd zonder refactoring" = insight over verleden, GEEN risk
+   - "Als we zo doorgaan zonder refactoring, verliezen we klanten" = WEL risk (vooruitkijkend)
+   - Sleuteltest: beschrijft de uitspraak hoe iets is ONTSTAAN (past tense focus), of waarschuwt het voor wat NOG kan gebeuren (future tense focus)?
+   - Erkenning van eigen fout ("dat was mijn blinde vlek") zonder concrete doorlopende dreiging = insight
+   - Erkenning van eigen fout MET doorlopende consequentie die nog niet opgelost is = WEL risk
+   - Let op: in crisis-meetings wordt vaak gereflecteerd op hoe het zo is gekomen — deze reflecties zijn meestal insight, niet risk. De concrete doorlopende dreiging die daaruit voortkomt kan wel apart als risk.
 
-10. NEED VS RISK (NIEUW, gebaseerd op observaties)
+10. COACHING EN MENTORING (NIEUW, gebaseerd op observaties)
+    - Senior die junior onderwijst over principes ("grote files veroorzaken regressies") = COACHING, geen risk
+    - Waarschuwing die onderwijsdoel dient, niet doel is om JAIP te waarschuwen = geen risk
+    - Test: als deze zin wordt uitgesproken tegen een junior in didactische context, met als doel hem/haar beter te laten worden → coaching, geen risk
+
+11. NEED VS RISK (NIEUW, gebaseerd op observaties)
     - "We hebben een senior developer nodig" = NEED (wens/pijnpunt)
     - "Stef loopt vast omdat de senior developer er nog niet is" = RISK (concrete waarschuwing)
     - Test: geeft de uitspraak een wens weer (we willen/nodig) of een concrete dreiging (als dit niet verandert, dan...)?
 
-11. INTERNE TEAMDYNAMIEK
+12. INTERNE TEAMDYNAMIEK
     - Partner onderbreekt partner voor koersbijstelling in klantgesprek = normale dynamiek, geen risk
     - Alleen extraheren als tegenstrijdige signalen structureel leiden tot verlies van klant-vertrouwen
 
@@ -310,7 +318,21 @@ Analyse: Probleem staat wel in meeting, maar wordt ACTIEF opgepakt.
 Output: NIET EXTRAHEREN als risk.
 Reden: risks moeten vooruitkijkend zijn.
 
-VOORBEELD 6 — Pipeline-signaal met vraag-verpakte vorm (WEL extraheren, confidence 0.65-0.7)
+VOORBEELD 6 — Terugkijkende reflectie (NIET extraheren als risk)
+Quote: "we hebben veel te grote plannen voor een veel te klein tijdsbestek, waardoor er geen tijd is geweest om te refactoren en te zorgen voor stabiliteit"
+Context: Wouter beschrijft hoe de Kai-instabiliteit is ontstaan. In dezelfde meeting wordt besloten om nu wel focus op bugs te leggen.
+Analyse: Dit is een retrospectieve uitleg van hoe het zo is gekomen (past tense focus), niet een waarschuwing voor wat nog gaat gebeuren. De doorlopende dreiging (klantverloop door instabiliteit) zit in aparte uitspraken — die kunnen wel apart als risk.
+Output: NIET EXTRAHEREN als risk. Dit is insight of context over het ontstaan van de situatie.
+Waarschuwing: verward dit niet met de concrete vooruitkijkende dreiging die eruit voortkomt. "Klanten haken af door instabiliteit" = WEL risk. "We hebben te snel gebouwd" op zichzelf = insight.
+
+VOORBEELD 7 — Zelfkritiek zonder doorlopende dreiging (NIET extraheren als risk)
+Quote: "ik heb mensen te veel geactiveerd terwijl er zoveel bugs nog in zaten... dat was mijn blinde vlek"
+Context: Joep erkent in crisis-meeting een structurele communicatiefout. Zegt direct dat hij het "nu ga oppakken" in de aankomende klant-communicatie.
+Analyse: Erkenning van eigen fout + concrete doorlopende consequentie is al elders geborgd (apology-geloofwaardigheid is apart risk). De erkenning zelf is insight over wat misging, niet een waarschuwing voor wat nog komt.
+Output: NIET EXTRAHEREN als risk. Dit is insight.
+Waarschuwing: dit voorbeeld laat zien dat "blinde vlek-erkenning" op zichzelf geen risk is — het wordt pas risk als de fout nog doorwerkt zonder plan om hem te adresseren.
+
+VOORBEELD 8 — Pipeline-signaal met vraag-verpakte vorm (WEL extraheren, confidence 0.65-0.7)
 Quote: "hoe zorgen we dat we de juiste klanten aantrekken? Dat we niet inderdaad straks in allerlei calls zitten die misschien helemaal niks opleveren"
 Analyse: Vraag-verpakte waarschuwing over lead-kwaliteit. Commerciële pipeline + raakt kernkwetsbaarheid 3.
 Output:
@@ -319,19 +341,19 @@ content: "Geen lead-kwalificatie-proces; risico op veel tijd aan ongeschikte pro
 confidence: 0.7
 severity: high (kernkwetsbaarheid-regel, niet medium), category: strategic, jaip_impact_area: margin, raised_by: Stef
 
-VOORBEELD 7 — Coaching ≠ risk (NIEUW, NIET extraheren)
+VOORBEELD 9 — Coaching ≠ risk (NIEUW, NIET extraheren)
 Quote: "if Claude will change something, it might change something that is already working"
 Context: Stef legt aan junior developer Eke uit waarom grote codebestanden problemen geven. Didactische uitspraak.
 Output: NIET extraheren.
 Reden: Dit is mentoring, niet een waarschuwing voor JAIP. Stef kent het principe, de zin bestaat om Eke te onderwijzen.
 
-VOORBEELD 8 — Insight ≠ risk (NIEUW, NIET extraheren)
+VOORBEELD 10 — Insight ≠ risk (NIEUW, NIET extraheren)
 Quote: "we're building way too fast, this piece of software"
 Context: Wouter reflecteert achteraf op Kai na de bugs. In dezelfde meeting wordt bugfixing besproken als actie.
 Output: NIET extraheren als risk. Dit is insight type, niet risk.
 Reden: Terugkijkende reflectie op al-bekend patroon. Actie is gaande. Geen vooruitkijkende waarschuwing meer.
 
-VOORBEELD 9 — Cross-entity patroon (NIEUW, WEL extraheren, confidence 0.7)
+VOORBEELD 11 — Cross-entity patroon (NIEUW, WEL extraheren, confidence 0.7)
 Signalen door heel transcript heen:
 
 - Fleur heeft sessie gehad met Tibor "helemaal de andere kant op"
@@ -345,7 +367,7 @@ content: "Patroon: Tibor gaat met Fleur-klant in gesprek buiten JAIP om; risico 
 confidence: 0.7
 severity: high, category: client_relationship, jaip_impact_area: client, raised_by: "impliciet"
 
-VOORBEELD 10 — Impliciete AVG (NIEUW, WEL extraheren, confidence 0.7, severity high)
+VOORBEELD 12 — Impliciete AVG (NIEUW, WEL extraheren, confidence 0.7, severity high)
 Quote: "Sommige huisartsen die knallen die tekst wel in de soep, dus dan hebben we hem wel"
 Context: medische klant-data gaat door AI-systeem zonder dat AVG genoemd wordt.
 Output:
@@ -355,7 +377,7 @@ confidence: 0.7
 severity: high, category: reputation, jaip_impact_area: reputation, raised_by: "impliciet"
 Reden: impliciete-AVG-trigger geldt ook zonder dat het woord AVG valt.
 
-VOORBEELD 11 — Discovery zonder deadline (NIEUW, WEL extraheren, confidence 0.5, severity high)
+VOORBEELD 13 — Discovery zonder deadline (NIEUW, WEL extraheren, confidence 0.5, severity high)
 Signaal: discovery-call eindigt met "laten we contact houden, e-mail voor nieuwe afspraak" zonder budget-indicatie, deadline of actiepunten.
 Output:
 type: risk
