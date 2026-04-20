@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { updateEmailFilterStatus } from "@repo/database/mutations/emails";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import { getEmailForPipelineInput } from "@repo/database/queries/emails";
 import { processEmail } from "@repo/ai/pipeline/email-pipeline";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
@@ -41,28 +41,11 @@ export async function unfilterEmailAction(
   if ("error" in clearResult) return clearResult;
 
   // 2. Fetch raw email for pipeline input
-  const { data: email, error: fetchErr } = await getAdminClient()
-    .from("emails")
-    .select("id, subject, from_address, from_name, to_addresses, date, body_text, snippet")
-    .eq("id", parsed.data.emailId)
-    .single();
-
-  if (fetchErr || !email) return { error: "Email niet gevonden" };
+  const email = await getEmailForPipelineInput(parsed.data.emailId);
+  if (!email) return { error: "Email niet gevonden" };
 
   // 3. Re-run full pipeline with filter bypass
-  const result = await processEmail(
-    {
-      id: email.id,
-      subject: email.subject,
-      from_address: email.from_address,
-      from_name: email.from_name,
-      to_addresses: email.to_addresses ?? [],
-      date: email.date,
-      body_text: email.body_text,
-      snippet: email.snippet,
-    },
-    { skipFilter: true },
-  );
+  const result = await processEmail(email, { skipFilter: true });
 
   // 4. Revalidate views
   revalidatePath(`/emails/${parsed.data.emailId}`);

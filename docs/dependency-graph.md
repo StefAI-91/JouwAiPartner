@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 480 |
-| Exported functions/constants | 733 |
-| Exported types/interfaces | 188 |
-| Cross-package imports | 600 |
+| Exported functions/constants | 739 |
+| Exported types/interfaces | 191 |
+| Cross-package imports | 602 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -118,9 +118,11 @@
 - `listDraftEmails()`
 - `getDraftEmailById()`
 - `countUnprocessedEmails()`
+- `getEmailForPipelineInput()`
+- `listEmailsForReclassify()`
 - `getUnprocessedEmails()`
 
-**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
+**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`, `EmailForPipelineInput`
 
 ### `queries/extractions.ts`
 
@@ -214,8 +216,10 @@
 - `getMeetingOrganizationId()`
 - `listMeetingProjectIds()`
 - `listMeetingParticipantIds()`
+- `getMeetingForBackfill()`
+- `getMeetingByFirefliesIdForReprocess()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
 
 ### `queries/needs.ts`
 
@@ -311,6 +315,8 @@
 - `getProjectByNameIlike()`
 - `getAllProjects()`
 - `getActiveProjectsForContext()`
+- `getProjectName()`
+- `getProjectByUserbackProjectId()`
 - `matchProjectsByEmbedding()`
 
 **Types:** `ProjectListItem`, `ProjectDetail`, `FocusProject`, `ActiveProjectForContext`
@@ -1566,7 +1572,7 @@
 
 **Depends on:**
 - `@repo/database/mutations/emails` → updateEmailFilterStatus
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/emails` → getEmailForPipelineInput
 - `@repo/ai/pipeline/email-pipeline` → processEmail
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
@@ -1890,7 +1896,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/emails` → listEmailsForReclassify
 - `@repo/ai/pipeline/email-pipeline` → processEmail
 - `@repo/database/mutations/emails` → updateEmailFilterStatus
 - `@repo/auth/access` → isAdmin
@@ -1916,7 +1922,8 @@
 
 **Depends on:**
 - `@repo/ai/fireflies` → fetchFirefliesTranscript
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → getMeetingForBackfill
+- `@repo/database/mutations/meetings` → updateMeetingRawFireflies
 
 ### `apps/cockpit/src/app/api/ingest/fireflies/route.ts`
 
@@ -1947,7 +1954,7 @@
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/embed-pipeline` → embedMeetingWithExtractions
 - `@repo/database/mutations/meetings` → markMeetingEmbeddingStale
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → getMeetingByFirefliesIdForReprocess
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
 - `@repo/ai/pipeline/tagger` → runTagger
 - `@repo/ai/pipeline/segment-builder` → buildSegments
@@ -3388,6 +3395,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/projects` → getProjectByUserbackProjectId
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/auth/access` → isAdmin
 
@@ -3745,13 +3753,13 @@ Which layers depend on which packages:
 | AI Pipeline | 45 | - | - | - | - | 45 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 47 | 15 | 29 | - | - | 91 |
-| Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
+| Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 41 | 6 | - | 75 | - | 122 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
-| DevHub API Routes | 3 | - | 1 | - | - | 4 |
+| DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | 15 | - | - | 22 | - | 37 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 17 | - | 13 | 9 | - | 39 |
@@ -3900,6 +3908,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
 | `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/actions/review.ts` |
+| `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `deleteMeeting()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
@@ -4017,6 +4026,8 @@ Which queries are used where across the codebase.
 | `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `getEmailForPipelineInput()` | `apps/cockpit/src/actions/email-filter.ts` |
+| `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
 ### queries/ignored-entities.ts
@@ -4097,6 +4108,8 @@ Which queries are used where across the codebase.
 | `getMeetingOrganizationId()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/segments.ts` |
 | `listMeetingProjectIds()` | `apps/cockpit/src/actions/meetings.ts` |
 | `listMeetingParticipantIds()` | `apps/cockpit/src/actions/meetings.ts` |
+| `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
+| `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### queries/needs.ts
 
@@ -4155,6 +4168,7 @@ Which queries are used where across the codebase.
 | `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
+| `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 
 ### queries/review.ts

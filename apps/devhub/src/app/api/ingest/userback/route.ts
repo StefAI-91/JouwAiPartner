@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
+import { getProjectByUserbackProjectId } from "@repo/database/queries/projects";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
 import { isAdmin } from "@repo/auth/access";
 import { classifyIssueBackground } from "@/actions/classify";
@@ -32,11 +33,7 @@ export async function GET(req: NextRequest) {
     const admin = getAdminClient();
 
     // Get project with userback_project_id = '127499'
-    const { data: project } = await admin
-      .from("projects")
-      .select("id")
-      .eq("userback_project_id", "127499")
-      .single();
+    const project = await getProjectByUserbackProjectId("127499", admin);
 
     if (!project) {
       return NextResponse.json(

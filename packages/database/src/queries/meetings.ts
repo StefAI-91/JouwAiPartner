@@ -625,3 +625,69 @@ export async function listMeetingParticipantIds(
   }
   return (data ?? []).map((r) => r.person_id as string);
 }
+
+// ── Q2b-C: helpers voor backfill + reprocess API routes ──
+
+export interface MeetingForBackfill {
+  id: string;
+  fireflies_id: string | null;
+  raw_fireflies: Record<string, unknown> | null;
+}
+
+/**
+ * Slanke read voor de sentences-backfill route: `id`, `fireflies_id` en het
+ * huidige `raw_fireflies`-object (zodat de caller de sentences-array kan
+ * mergen zonder overige velden te overschrijven).
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getMeetingForBackfill(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<MeetingForBackfill | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select("id, fireflies_id, raw_fireflies")
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data as MeetingForBackfill;
+}
+
+export interface MeetingByFirefliesIdForReprocess {
+  id: string;
+  title: string | null;
+  date: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  participants: string[] | null;
+  organization_id: string | null;
+  raw_fireflies: Record<string, unknown> | null;
+}
+
+/**
+ * Variant van `getMeetingByFirefliesId` die de extra velden ophaalt die de
+ * reprocess-route nodig heeft voor de hele pipeline (summarize → tagger →
+ * risk-specialist). Apart gehouden zodat `getMeetingByFirefliesId` compact
+ * blijft voor callers die alleen een id nodig hebben.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getMeetingByFirefliesIdForReprocess(
+  firefliesId: string,
+  client?: SupabaseClient,
+): Promise<MeetingByFirefliesIdForReprocess | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      "id, title, date, meeting_type, party_type, participants, organization_id, raw_fireflies",
+    )
+    .eq("fireflies_id", firefliesId)
+    .single();
+
+  if (error || !data) return null;
+  return data as MeetingByFirefliesIdForReprocess;
+}

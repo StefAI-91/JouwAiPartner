@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@repo/database/supabase/server";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import { listEmailsForReclassify } from "@repo/database/queries/emails";
 import { processEmail } from "@repo/ai/pipeline/email-pipeline";
 import { updateEmailFilterStatus } from "@repo/database/mutations/emails";
 import { isAdmin } from "@repo/auth/access";
@@ -57,27 +57,9 @@ export async function POST(req: Request) {
   // Back-compat: onlyKept is het oude veld, skipFiltered het nieuwe
   const skipFiltered = body.skipFiltered ?? body.onlyKept ?? true;
 
-  const admin = getAdminClient();
-  let query = admin
-    .from("emails")
-    .select("id, subject, from_address, from_name, to_addresses, date, body_text, snippet")
-    .order("date", { ascending: false })
-    .limit(limit);
+  const emails = await listEmailsForReclassify({ limit, skipFiltered });
 
-  if (skipFiltered) {
-    // Pak alles BEHALVE al-gefilterde emails:
-    //   - unprocessed (is_processed=false) — nog niet beoordeeld
-    //   - processed + kept (filter_status='kept') — opnieuw evalueren
-    query = query.or("filter_status.eq.kept,is_processed.eq.false");
-  }
-
-  const { data: emails, error } = await query;
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  if (!emails || emails.length === 0) {
+  if (emails.length === 0) {
     return NextResponse.json({ processed: 0, filtered: 0, kept: 0 });
   }
 
@@ -93,16 +75,7 @@ export async function POST(req: Request) {
         filter_reason: null,
       });
 
-      const result = await processEmail({
-        id: email.id,
-        subject: email.subject,
-        from_address: email.from_address,
-        from_name: email.from_name,
-        to_addresses: email.to_addresses ?? [],
-        date: email.date,
-        body_text: email.body_text,
-        snippet: email.snippet,
-      });
+      const result = await processEmail(email);
 
       if (result.filter_status === "filtered") {
         filtered++;
