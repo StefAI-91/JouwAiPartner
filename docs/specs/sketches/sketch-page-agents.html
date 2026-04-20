@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schets · Agents pagina</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* Pulse for active agents */
+    @keyframes softPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+      50%      { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+    }
+    .pulse-dot { animation: softPulse 2s infinite; }
+
+    /* Floating animation for mascots on hover */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-4px); }
+    }
+    .agent-card:hover .mascot { animation: float 1.2s ease-in-out infinite; }
+
+    /* Activity ticker */
+    @keyframes slide {
+      0%   { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .dashed-border {
+      background-image: repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(0,0,0,0.03) 6px, rgba(0,0,0,0.03) 12px);
+    }
+
+    /* Quadrant color system */
+    .grad-cockpit   { background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%); }
+    .grad-devhub    { background: linear-gradient(135deg, #ede9fe 0%, #c4b5fd 100%); }
+    .grad-portal    { background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%); }
+    .grad-delivery  { background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%); }
+    .grad-cross     { background: linear-gradient(135deg, #f3f4f6 0%, #9ca3af 100%); }
+
+    .ring-cockpit  { --tw-ring-color: #3b82f6; }
+    .ring-devhub   { --tw-ring-color: #8b5cf6; }
+    .ring-portal   { --tw-ring-color: #10b981; }
+    .ring-delivery { --tw-ring-color: #f97316; }
+    .ring-cross    { --tw-ring-color: #6b7280; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+  <!-- Schets indicator -->
+  <div class="bg-amber-400 text-amber-950 text-center py-2 text-sm font-semibold tracking-tight">
+    ✏️ Schets · Agents-pagina · niet-definitief · focus op concept, niet op pixels
+  </div>
+
+  <!-- Top nav (simplified) -->
+  <nav class="bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-2">
+          <div class="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">J</div>
+          <span class="font-semibold text-slate-900">JouwAiPartner · Cockpit</span>
+        </div>
+        <div class="hidden md:flex items-center gap-1 text-sm">
+          <a class="px-3 py-1.5 rounded-md text-slate-600 hover:bg-slate-100">Dashboard</a>
+          <a class="px-3 py-1.5 rounded-md text-slate-600 hover:bg-slate-100">Meetings</a>
+          <a class="px-3 py-1.5 rounded-md text-slate-600 hover:bg-slate-100">Review</a>
+          <a class="px-3 py-1.5 rounded-md bg-slate-900 text-white font-medium">Agents</a>
+          <a class="px-3 py-1.5 rounded-md text-slate-600 hover:bg-slate-100">Clients</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="text-xs text-slate-500">20 apr 2026</div>
+        <div class="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center text-sm font-semibold text-slate-700">S</div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-900">Agents</h1>
+        <p class="text-slate-600 mt-1">Je digitale team · <span class="font-medium text-slate-900">11 collega's</span> verdeeld over vier quadranten</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50">
+          📊 Logs bekijken
+        </button>
+        <button class="px-3 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800">
+          + Nieuwe agent
+        </button>
+      </div>
+    </div>
+
+    <!-- System overview strip -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-500">Actief nu</span>
+          <div class="h-2 w-2 rounded-full bg-green-500 pulse-dot"></div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-bold text-slate-900">3</span>
+          <span class="text-sm text-slate-500">/ 11 agents</span>
+        </div>
+        <div class="mt-1 text-xs text-slate-500">Gatekeeper · Extractor · Classifier</div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-500">Runs vandaag</span>
+          <span class="text-xs text-green-600 font-medium">↑ 18%</span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-bold text-slate-900">101</span>
+          <span class="text-sm text-slate-500">gisteren 86</span>
+        </div>
+        <div class="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden flex">
+          <div class="bg-blue-500" style="width: 47%"></div>
+          <div class="bg-blue-400" style="width: 23%"></div>
+          <div class="bg-purple-500" style="width: 30%"></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-500">Kosten vandaag</span>
+          <span class="text-xs text-slate-400">budget €10/dag</span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-bold text-slate-900">€2,05</span>
+          <span class="text-sm text-slate-500">van €10</span>
+        </div>
+        <div class="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div class="bg-gradient-to-r from-green-400 to-green-600 h-full" style="width: 20%"></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-5 border border-slate-200">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-500">Gezondheid</span>
+          <span class="text-xs text-green-600 font-medium">● alles goed</span>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-bold text-slate-900">100%</span>
+          <span class="text-sm text-slate-500">uptime 7d</span>
+        </div>
+        <div class="mt-1 text-xs text-slate-500">Geen incidenten deze week</div>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1">
+        <button class="px-3 py-1.5 text-sm font-medium bg-slate-900 text-white rounded-md">Alle <span class="ml-1 text-slate-400">11</span></button>
+        <button class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-blue-500"></span> Cockpit <span class="text-slate-400">5</span>
+        </button>
+        <button class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-purple-500"></span> DevHub <span class="text-slate-400">3</span>
+        </button>
+        <button class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Portal <span class="text-slate-400">1</span>
+        </button>
+        <button class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-orange-500"></span> Delivery <span class="text-slate-400">1</span>
+        </button>
+        <button class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-slate-500"></span> Cross <span class="text-slate-400">1</span>
+        </button>
+      </div>
+      <div class="flex items-center gap-2">
+        <select class="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white">
+          <option>Status: alle</option>
+          <option>Live</option>
+          <option>In ontwikkeling</option>
+          <option>Gepland</option>
+        </select>
+        <select class="px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white">
+          <option>Sorteer: quadrant</option>
+          <option>Meest actief</option>
+          <option>Hoogste kosten</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Sectie: Live agents -->
+    <section class="mb-10">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="h-2 w-2 rounded-full bg-green-500 pulse-dot"></div>
+        <h2 class="text-lg font-semibold text-slate-900">Live · 3 agents</h2>
+        <span class="text-sm text-slate-500">deze draaien productie-workloads</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <!-- Gatekeeper -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all overflow-hidden">
+          <div class="grad-cockpit px-5 py-5 flex items-center gap-4 relative">
+            <div class="mascot h-16 w-16 rounded-2xl bg-white shadow-md flex items-center justify-center text-4xl ring-4 ring-white/60">🛡️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h3 class="font-bold text-slate-900">Gatekeeper</h3>
+                <span class="text-[10px] px-1.5 py-0.5 bg-white/70 text-slate-700 rounded font-semibold uppercase tracking-wide">Haiku 4.5</span>
+              </div>
+              <p class="text-xs text-slate-700 mt-0.5">De poortwachter</p>
+              <div class="mt-1.5 flex items-center gap-1.5 text-xs">
+                <span class="h-1.5 w-1.5 rounded-full bg-green-500 pulse-dot"></span>
+                <span class="text-green-700 font-medium">Actief</span>
+                <span class="text-slate-500">· 12 min geleden</span>
+              </div>
+            </div>
+            <span class="absolute top-3 right-3 text-[10px] px-2 py-0.5 bg-blue-600 text-white rounded-full font-semibold">Cockpit</span>
+          </div>
+          <div class="px-5 py-4">
+            <p class="text-sm text-slate-600 leading-snug">Classificeert inkomende meetings op type, party en relevantie voordat ze de pijplijn ingaan.</p>
+            <div class="mt-4 grid grid-cols-3 gap-3 pt-4 border-t border-slate-100">
+              <div>
+                <div class="text-xs text-slate-500">Runs</div>
+                <div class="text-sm font-semibold text-slate-900">47</div>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500">Kosten</div>
+                <div class="text-sm font-semibold text-slate-900">€0,12</div>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500">Success</div>
+                <div class="text-sm font-semibold text-green-600">100%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extractor -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all overflow-hidden">
+          <div class="grad-cockpit px-5 py-5 flex items-center gap-4 relative">
+            <div class="mascot h-16 w-16 rounded-2xl bg-white shadow-md flex items-center justify-center text-4xl ring-4 ring-white/60">🕵️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h3 class="font-bold text-slate-900">Extractor</h3>
+                <span class="text-[10px] px-1.5 py-0.5 bg-white/70 text-slate-700 rounded font-semibold uppercase tracking-wide">Sonnet</span>
+              </div>
+              <p class="text-xs text-slate-700 mt-0.5">De detective</p>
+              <div class="mt-1.5 flex items-center gap-1.5 text-xs">
+                <span class="h-1.5 w-1.5 rounded-full bg-green-500 pulse-dot"></span>
+                <span class="text-green-700 font-medium">Actief</span>
+                <span class="text-slate-500">· 8 min geleden</span>
+              </div>
+            </div>
+            <span class="absolute top-3 right-3 text-[10px] px-2 py-0.5 bg-blue-600 text-white rounded-full font-semibold">Cockpit</span>
+          </div>
+          <div class="px-5 py-4">
+            <p class="text-sm text-slate-600 leading-snug">Haalt decisions, action items, needs en insights uit transcripts — met confidence + bronverwijzing.</p>
+            <div class="mt-4 grid grid-cols-3 gap-3 pt-4 border-t border-slate-100">
+              <div>
+                <div class="text-xs text-slate-500">Runs</div>
+                <div class="text-sm font-semibold text-slate-900">23</div>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500">Kosten</div>
+                <div class="text-sm font-semibold text-slate-900">€1,84</div>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500">Success</div>
+                <div class="text-sm font-semibold text-green-600">96%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classifier -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all overflow-hidden">
+          <div class="grad-devhub px-5 py-5 flex items-center gap-4 relative">
+            <div class="mascot h-16 w-16 rounded-2xl bg-white shadow-md flex items-center justify-center text-4xl ring-4 ring-white/60">🗂️</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h3 class="font-bold text-slate-900">Classifier</h3>
+                <span class="text-[10px] px-1.5 py-0.5 bg-white/70 text-slate-700 rounded font-semibold uppercase tracking-wide">Haiku 4.5</span>
+              </div>
+              <p class="text-xs text-slate-700 mt-0.5">De sorteerder</p>
+              <div class="mt-1.5 flex items-center gap-1.5 text-xs">
+                <span class="h-1.5 w-1.5 rounded-full bg-green-500 pulse-dot"></span>
+                <span class="text-green-700 font-medium">Actief</span>
+                <span class="text-slate-500">· 3 min geleden</span>
+              </div>
+            </div>
+            <span class="absolute top-3 right-3 text-[10px] px-2 py-0.5 bg-purple-600 text-white rounded-full font-semibold">DevHub</span>
+          </div>
+          <div class="px-5 py-4">
+            <p class="text-sm text-slate-600 leading-snug">Labelt binnenkomende issues op type, component en severity. Stelt repro-stappen voor.</p>
+            <div class="mt-4 grid grid-cols-3 gap-3 pt-4 border-t border-slate-100">
+              <div>
+                <div class="text-xs text-slate-500">Runs</div>
+                <div class="text-sm font-semibold text-slate-900">31</div>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500">Kosten</div>
+                <div class="text-sm font-semibold text-slate-900">€0,09</div>
+              </div>
+              <div>
+                <div class="text-xs text-slate-500">Success</div>
+                <div class="text-sm font-semibold text-green-600">100%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Sectie: In ontwikkeling -->
+    <section class="mb-10">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="h-2 w-2 rounded-full bg-amber-500"></div>
+        <h2 class="text-lg font-semibold text-slate-900">In ontwikkeling · 1 agent</h2>
+        <span class="text-sm text-slate-500">wordt nu gebouwd — nog niet productie</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <!-- Risk Analyzer -->
+        <div class="agent-card group bg-white rounded-2xl border-2 border-amber-300 hover:shadow-lg transition-all overflow-hidden relative">
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400"></div>
+          <div class="grad-cockpit px-5 py-5 flex items-center gap-4 relative">
+            <div class="mascot h-16 w-16 rounded-2xl bg-white shadow-md flex items-center justify-center text-4xl ring-4 ring-amber-200/60">🦉</div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h3 class="font-bold text-slate-900">Risk Analyzer</h3>
+                <span class="text-[10px] px-1.5 py-0.5 bg-white/70 text-slate-700 rounded font-semibold uppercase tracking-wide">Sonnet</span>
+              </div>
+              <p class="text-xs text-slate-700 mt-0.5">De wachter</p>
+              <div class="mt-1.5 flex items-center gap-1.5 text-xs">
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                <span class="text-amber-700 font-medium">Bouwen</span>
+                <span class="text-slate-500">· sprint actief</span>
+              </div>
+            </div>
+            <span class="absolute top-3 right-3 text-[10px] px-2 py-0.5 bg-blue-600 text-white rounded-full font-semibold">Cockpit</span>
+          </div>
+          <div class="px-5 py-4">
+            <p class="text-sm text-slate-600 leading-snug">Spot risico's in projecten: deadlines, afhankelijkheden, tegenstrijdige decisions. Waarschuwt voordat het misgaat.</p>
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              <div class="flex items-center justify-between text-xs mb-1.5">
+                <span class="text-slate-600 font-medium">Voortgang sprint</span>
+                <span class="text-slate-900 font-semibold">4 / 7 taken</span>
+              </div>
+              <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-amber-400 to-amber-600 h-full" style="width: 57%"></div>
+              </div>
+              <div class="mt-2 text-xs text-slate-500">Verwacht live: deze week</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Sectie: Gepland -->
+    <section class="mb-10">
+      <div class="flex items-center gap-2 mb-4">
+        <div class="h-2 w-2 rounded-full bg-slate-400"></div>
+        <h2 class="text-lg font-semibold text-slate-900">Op de roadmap · 7 agents</h2>
+        <span class="text-sm text-slate-500">conceptueel gedefinieerd, wachten op sprint</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Planner -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 border-dashed hover:border-slate-300 hover:shadow-md transition-all overflow-hidden dashed-border">
+          <div class="grad-devhub px-4 py-4 flex items-center gap-3 relative opacity-70">
+            <div class="mascot h-12 w-12 rounded-xl bg-white/80 shadow-sm flex items-center justify-center text-2xl">📐</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-900 text-sm truncate">Planner</h3>
+              <p class="text-[11px] text-slate-700">De architect · Sonnet</p>
+            </div>
+            <span class="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 bg-purple-600 text-white rounded-full font-semibold">DevHub</span>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-xs text-slate-600 leading-snug">Zet decisions en needs om in uitvoerbare plannen + tickets.</p>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Gepland</span>
+              <span class="text-[11px] text-slate-600">Q3 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Executor -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 border-dashed hover:border-slate-300 hover:shadow-md transition-all overflow-hidden dashed-border">
+          <div class="grad-devhub px-4 py-4 flex items-center gap-3 relative opacity-70">
+            <div class="mascot h-12 w-12 rounded-xl bg-white/80 shadow-sm flex items-center justify-center text-2xl">🤖</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-900 text-sm truncate">Executor</h3>
+              <p class="text-[11px] text-slate-700">De bouwer · Opus</p>
+            </div>
+            <span class="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 bg-purple-600 text-white rounded-full font-semibold">DevHub</span>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-xs text-slate-600 leading-snug">Pakt tickets op, schrijft code, opent PR's voor review.</p>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Gepland</span>
+              <span class="text-[11px] text-slate-600">Q3 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Curator -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 border-dashed hover:border-slate-300 hover:shadow-md transition-all overflow-hidden dashed-border">
+          <div class="grad-cockpit px-4 py-4 flex items-center gap-3 relative opacity-70">
+            <div class="mascot h-12 w-12 rounded-xl bg-white/80 shadow-sm flex items-center justify-center text-2xl">🧹</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-900 text-sm truncate">Curator</h3>
+              <p class="text-[11px] text-slate-700">De tuinman · Sonnet</p>
+            </div>
+            <span class="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 bg-blue-600 text-white rounded-full font-semibold">Cockpit</span>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-xs text-slate-600 leading-snug">Nachtelijke opruiming: duplicaten, staleness, tegenstrijdigheden.</p>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Gepland</span>
+              <span class="text-[11px] text-slate-600">Q2 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analyst -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 border-dashed hover:border-slate-300 hover:shadow-md transition-all overflow-hidden dashed-border">
+          <div class="grad-cockpit px-4 py-4 flex items-center gap-3 relative opacity-70">
+            <div class="mascot h-12 w-12 rounded-xl bg-white/80 shadow-sm flex items-center justify-center text-2xl">🔬</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-900 text-sm truncate">Analyst</h3>
+              <p class="text-[11px] text-slate-700">De strateeg · Opus</p>
+            </div>
+            <span class="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 bg-blue-600 text-white rounded-full font-semibold">Cockpit</span>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-xs text-slate-600 leading-snug">Dagelijkse pattern-analyse over alle bronnen heen. Trends + risico's.</p>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Gepland</span>
+              <span class="text-[11px] text-slate-600">Q3 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Communicator -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 border-dashed hover:border-slate-300 hover:shadow-md transition-all overflow-hidden dashed-border">
+          <div class="grad-portal px-4 py-4 flex items-center gap-3 relative opacity-70">
+            <div class="mascot h-12 w-12 rounded-xl bg-white/80 shadow-sm flex items-center justify-center text-2xl">💬</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-900 text-sm truncate">Communicator</h3>
+              <p class="text-[11px] text-slate-700">De stem · Sonnet</p>
+            </div>
+            <span class="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 bg-emerald-600 text-white rounded-full font-semibold">Portal</span>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-xs text-slate-600 leading-snug">Schrijft klant-updates en antwoorden in jouw tone of voice.</p>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Gepland</span>
+              <span class="text-[11px] text-slate-600">Q4 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Support -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 border-dashed hover:border-slate-300 hover:shadow-md transition-all overflow-hidden dashed-border">
+          <div class="grad-delivery px-4 py-4 flex items-center gap-3 relative opacity-70">
+            <div class="mascot h-12 w-12 rounded-xl bg-white/80 shadow-sm flex items-center justify-center text-2xl">🎧</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-900 text-sm truncate">Support</h3>
+              <p class="text-[11px] text-slate-700">De helper · Haiku</p>
+            </div>
+            <span class="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 bg-orange-600 text-white rounded-full font-semibold">Delivery</span>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-xs text-slate-600 leading-snug">Chatbot in klant-apps: beantwoordt vragen, escaleert tickets.</p>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Gepland</span>
+              <span class="text-[11px] text-slate-600">Q4 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dispatcher -->
+        <div class="agent-card group bg-white rounded-2xl border border-slate-200 border-dashed hover:border-slate-300 hover:shadow-md transition-all overflow-hidden dashed-border">
+          <div class="grad-cross px-4 py-4 flex items-center gap-3 relative opacity-70">
+            <div class="mascot h-12 w-12 rounded-xl bg-white/80 shadow-sm flex items-center justify-center text-2xl">📡</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-slate-900 text-sm truncate">Dispatcher</h3>
+              <p class="text-[11px] text-slate-700">De traffic control · Haiku</p>
+            </div>
+            <span class="absolute top-2 right-2 text-[9px] px-1.5 py-0.5 bg-slate-600 text-white rounded-full font-semibold">Cross</span>
+          </div>
+          <div class="px-4 py-3">
+            <p class="text-xs text-slate-600 leading-snug">Routeert alerts en insights naar Slack, email of andere kanalen.</p>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wide font-medium">Gepland</span>
+              <span class="text-[11px] text-slate-600">Q2 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Placeholder: jouw volgende agent -->
+        <div class="bg-slate-100/60 rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-8 text-center hover:bg-slate-100 hover:border-slate-400 transition cursor-pointer min-h-[180px]">
+          <div class="h-10 w-10 rounded-full bg-white flex items-center justify-center text-slate-400 text-xl mb-2">+</div>
+          <div class="text-sm font-medium text-slate-600">Nieuwe agent toevoegen</div>
+          <div class="text-xs text-slate-500 mt-1">Definieer rol, model en quadrant</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Activity feed -->
+    <section class="mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <div class="h-2 w-2 rounded-full bg-blue-500 pulse-dot"></div>
+          <h2 class="text-lg font-semibold text-slate-900">Live activiteit</h2>
+          <span class="text-sm text-slate-500">laatste 30 minuten</span>
+        </div>
+        <a class="text-sm text-slate-600 hover:text-slate-900">Volledige logs →</a>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">
+
+        <div class="flex items-center gap-3 px-5 py-3">
+          <div class="h-8 w-8 rounded-lg grad-devhub flex items-center justify-center text-lg">🗂️</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-slate-900"><span class="font-semibold">Classifier</span> classificeerde issue <span class="text-purple-600 font-medium">#DH-142</span> — <span class="text-slate-600">bug · auth · high</span></div>
+            <div class="text-xs text-slate-500 mt-0.5">3 min geleden · Haiku · €0,003 · 1,2s</div>
+          </div>
+          <span class="text-xs px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-medium">✓ success</span>
+        </div>
+
+        <div class="flex items-center gap-3 px-5 py-3">
+          <div class="h-8 w-8 rounded-lg grad-cockpit flex items-center justify-center text-lg">🕵️</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-slate-900"><span class="font-semibold">Extractor</span> haalde <span class="text-blue-600 font-medium">7 extractions</span> uit meeting <span class="text-blue-600 font-medium">"Roadmap Q3 — Acme"</span></div>
+            <div class="text-xs text-slate-500 mt-0.5">8 min geleden · Sonnet · €0,08 · 4,7s · 3 decisions · 2 action items · 2 insights</div>
+          </div>
+          <span class="text-xs px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-medium">✓ success</span>
+        </div>
+
+        <div class="flex items-center gap-3 px-5 py-3">
+          <div class="h-8 w-8 rounded-lg grad-cockpit flex items-center justify-center text-lg">🛡️</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-slate-900"><span class="font-semibold">Gatekeeper</span> liet meeting <span class="text-blue-600 font-medium">"Standup"</span> door — <span class="text-slate-600">type: internal · relevance 0,82</span></div>
+            <div class="text-xs text-slate-500 mt-0.5">12 min geleden · Haiku · €0,002 · 0,9s</div>
+          </div>
+          <span class="text-xs px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-medium">✓ success</span>
+        </div>
+
+        <div class="flex items-center gap-3 px-5 py-3">
+          <div class="h-8 w-8 rounded-lg grad-cockpit flex items-center justify-center text-lg">🛡️</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-slate-900"><span class="font-semibold">Gatekeeper</span> hield meeting tegen — <span class="text-slate-600">relevance 0,23 · reason: persoonlijk gesprek</span></div>
+            <div class="text-xs text-slate-500 mt-0.5">18 min geleden · Haiku · €0,001 · 0,8s</div>
+          </div>
+          <span class="text-xs px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-medium">⊘ blocked</span>
+        </div>
+
+        <div class="flex items-center gap-3 px-5 py-3">
+          <div class="h-8 w-8 rounded-lg grad-devhub flex items-center justify-center text-lg">🗂️</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-slate-900"><span class="font-semibold">Classifier</span> classificeerde issue <span class="text-purple-600 font-medium">#DH-141</span> — <span class="text-slate-600">feature · ui · medium</span></div>
+            <div class="text-xs text-slate-500 mt-0.5">22 min geleden · Haiku · €0,003 · 1,1s</div>
+          </div>
+          <span class="text-xs px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-medium">✓ success</span>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-200 bg-white py-6 mt-10">
+    <div class="max-w-7xl mx-auto px-6 flex items-center justify-between text-xs text-slate-500">
+      <div>11 agents · 3 live · 1 in ontwikkeling · 7 gepland</div>
+      <div>Schets · Claude Code · JouwAiPartner cockpit</div>
+    </div>
+  </footer>
+
+</body>
+</html>
