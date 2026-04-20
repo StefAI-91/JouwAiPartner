@@ -26,6 +26,10 @@ Master backlog for all upcoming work. Sprint numbering continues from 029 (sprin
 | PW-QC-02 | Database discipline (queries, idempotency, migratie-safety)  | Quality       | Backlog |
 | PW-QC-03 | AI-pipeline hygiëne (prompt-sync, confidence, shared utils)  | Quality       | Backlog |
 | PW-QC-04 | File splits + anti-laundering tests                          | Quality       | Backlog |
+| Q1       | Schema consolidatie (extractions unificeren, audit-laag)     | Quality       | Backlog |
+| Q2       | Query & mutation centralisatie (actions → packages/database) | Quality       | Backlog |
+| Q3       | Test vangnet herstel (skipped tests, zwakke assertions)      | Quality       | Backlog |
+| Q4       | Spec & documentatie sync (sprint-count, agents, READMEs)     | Quality       | Backlog |
 
 ## Completed Sprints Summary
 
