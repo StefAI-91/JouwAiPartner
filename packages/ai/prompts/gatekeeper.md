@@ -153,7 +153,8 @@ Genereer een consistente titel in vast format.
    - Weglaten bij alleen interne deelnemers
    - Weglaten bij externe persoon zonder organisatie (bijv. prospect zonder duidelijke org, of partner zonder bedrijf)
 
-3. **Deelnemers** — **ALTIJD alfabetisch sorteren op voornaam**. Geen uitzonderingen.
+3. **Deelnemers** — **uitsluitend namen uit de deelnemerslijst** die je bovenaan
+   krijgt (INTERN / EXTERN / ONBEKEND labels). **ALTIJD alfabetisch sorteren op voornaam**.
    - **Bij 2 kanten (extern vs intern):** `[Externe namen] ↔ [Interne namen]`
      - Externe kant ALTIJD links van `↔`, interne kant rechts
      - Voorbeeld: `Bart ↔ Stef`, `Desiree + Esther ↔ Stef + Wouter`
@@ -162,15 +163,27 @@ Genereer een consistente titel in vast format.
    - **Bij 3+ aan één kant:** `+` tussen namen, alfabetisch
      - Voorbeeld: `Chloe + Jess + Joep + Stefan ↔ Wouter`
 
-**Harde regels:**
+**Harde regels (zeer belangrijk):**
 
-- Separator is `↔` (geen `<>` — die kan als HTML-tag geïnterpreteerd worden)
-- Gebruik voornamen, geen achternamen (tenzij nodig voor onderscheid)
-- Geen beschrijving van de inhoud — het label + deelnemers is genoeg context
-- Externe kant ALTIJD links van `↔`
-- Namen ALTIJD alfabetisch op voornaam (links en rechts afzonderlijk gesorteerd)
-- Bij afwezige deelnemers: laat weg (bijv. Stef afwezig bij team_sync → niet vermelden)
-- Randfiguren die alleen even inchecken (bijv. standup-crossover, <5% spreektijd) mogen weggelaten worden
+- **Alléén deelnemers uit de meegeleverde deelnemerslijst opnemen.**
+  Mensen die in het gesprek worden genoemd maar er niet bij zijn (geen
+  INTERN / EXTERN / ONBEKEND label), NEEM JE NIET OP in de titel.
+  - Voorbeeld: als Wouter en Stef een interne voorbereiding doen over
+    klant Joep, is de titel `[1-op-1] Stef ↔ Wouter` — NIET
+    `[1-op-1] Joep ↔ Stef + Wouter`.
+  - Voorbeeld: als in een status_update met Bart alleen Bart en Stef
+    aanwezig zijn maar er wordt over Kees (Bart's collega) gesproken,
+    is de titel `[Project update] Bart ↔ Stef` — NIET
+    `[Project update] Bart + Kees ↔ Stef`.
+- Separator is `↔` (geen `<>` — die kan als HTML-tag geïnterpreteerd worden).
+- Gebruik voornamen, geen achternamen (tenzij nodig voor onderscheid).
+- Geen beschrijving van de inhoud — het label + deelnemers is genoeg context.
+- Externe kant ALTIJD links van `↔`.
+- Namen ALTIJD alfabetisch op voornaam (links en rechts afzonderlijk gesorteerd).
+- Afwezige deelnemers uit de lijst: laat weg (bijv. Stef stond in de uitnodiging
+  maar was er niet → niet vermelden als dat uit het transcript blijkt).
+- Randfiguren die alleen even inchecken (bijv. standup-crossover, <5% spreektijd)
+  mogen weggelaten worden — maar alleen als ze WEL in de deelnemerslijst staan.
 
 **Wanneer organisatie weglaten:**
 - Alleen interne deelnemers
