@@ -26,6 +26,14 @@ import { emptyToNull, sentinelToNull } from "../utils/normalise";
 /** Bump when the prompt changes in a way that breaks comparison with earlier runs. */
 export const RISK_SPECIALIST_PROMPT_VERSION = "v5";
 
+/**
+ * Model-id die aan Anthropic wordt gegeven én als audit-waarde naar
+ * `experimental_risk_extractions.model` gaat. Één bron-van-waarheid zodat
+ * de pipeline niet meer kan drift'en ten opzichte van wat er daadwerkelijk
+ * draait (zie eerdere bug: tracker logde Haiku terwijl agent op Sonnet liep).
+ */
+export const RISK_SPECIALIST_MODEL = "claude-sonnet-4-6";
+
 const SYSTEM_PROMPT = readFileSync(
   // packages/ai/src/agents/ → ../../prompts/ (binnen @repo/ai package)
   resolve(dirname(fileURLToPath(import.meta.url)), "../../prompts/risk_specialist.md"),
@@ -95,7 +103,7 @@ export async function runRiskSpecialist(
     .join("\n");
 
   const { object, usage } = await generateObject({
-    model: anthropic("claude-sonnet-4-6"),
+    model: anthropic(RISK_SPECIALIST_MODEL),
     maxRetries: 3,
     temperature: 0,
     // maxOutputTokens telt als thinking + response samen. Met 4000/2000

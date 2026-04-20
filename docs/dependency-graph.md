@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 483 |
-| Exported functions/constants | 733 |
+| Exported functions/constants | 734 |
 | Exported types/interfaces | 184 |
 | Cross-package imports | 605 |
 | Critical integration points (3+ packages) | 14 |
@@ -656,6 +656,7 @@
 **Exports:**
 - `runRiskSpecialist()`
 - `RISK_SPECIALIST_PROMPT_VERSION`
+- `RISK_SPECIALIST_MODEL`
 - `RISK_SPECIALIST_SYSTEM_PROMPT`
 
 **Types:** `RiskSpecialistContext`, `RiskSpecialistRunMetrics`, `RiskSpecialistRunResult`
@@ -989,7 +990,7 @@
 - `@repo/database/mutations/experimental-risk-extractions` → insertExperimentalRiskExtraction
 
 **Internal deps:**
-- `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
+- `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_MODEL, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
 
 ### `packages/ai/src/pipeline/steps/structure.ts`
 

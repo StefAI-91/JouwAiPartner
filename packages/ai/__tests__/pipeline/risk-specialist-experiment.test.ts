@@ -16,6 +16,7 @@ vi.mock("@repo/database/mutations/experimental-risk-extractions", () => ({
 import { runRiskSpecialistExperiment } from "../../src/pipeline/steps/risk-specialist-experiment";
 import {
   runRiskSpecialist,
+  RISK_SPECIALIST_MODEL,
   RISK_SPECIALIST_PROMPT_VERSION,
 } from "../../src/agents/risk-specialist";
 import { insertExperimentalRiskExtraction } from "@repo/database/mutations/experimental-risk-extractions";
@@ -77,7 +78,7 @@ describe("runRiskSpecialistExperiment", () => {
     expect(mockInsert).toHaveBeenCalledTimes(1);
     const payload = mockInsert.mock.calls[0][0];
     expect(payload.meeting_id).toBe(MEETING_ID);
-    expect(payload.model).toBe("claude-haiku-4-5-20251001");
+    expect(payload.model).toBe(RISK_SPECIALIST_MODEL);
     expect(payload.prompt_version).toBe(RISK_SPECIALIST_PROMPT_VERSION);
     expect(payload.risks).toHaveLength(3);
     expect(payload.latency_ms).toBe(2500);

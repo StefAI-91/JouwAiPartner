@@ -1,5 +1,6 @@
 import {
   runRiskSpecialist,
+  RISK_SPECIALIST_MODEL,
   RISK_SPECIALIST_PROMPT_VERSION,
   type RiskSpecialistContext,
 } from "../../agents/risk-specialist";
@@ -21,7 +22,7 @@ export async function runRiskSpecialistExperiment(
   transcript: string,
   context: RiskSpecialistContext,
 ): Promise<void> {
-  const model = "claude-haiku-4-5-20251001";
+  const model = RISK_SPECIALIST_MODEL;
   const promptVersion = RISK_SPECIALIST_PROMPT_VERSION;
 
   try {
