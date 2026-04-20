@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import {
   updateMeetingSummary,
   updateMeetingStructuralTitle,
+  updateMeetingClassification,
   markMeetingEmbeddingStale,
 } from "@repo/database/mutations/meetings";
 import { getAdminClient } from "@repo/database/supabase/admin";
@@ -12,6 +13,13 @@ import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
 import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
+import {
+  classifyParticipantsWithCache,
+  determineRuleBasedMeetingType,
+  determinePartyType,
+} from "@repo/ai/pipeline/participant-classifier";
+import { resolveOrganization } from "@repo/ai/pipeline/entity-resolution";
+import { getAllKnownPeople } from "@repo/database/queries/people";
 import { runTagger } from "@repo/ai/pipeline/tagger";
 import { buildSegments } from "@repo/ai/pipeline/segment-builder";
 import { embedBatch } from "@repo/ai/embeddings";
@@ -43,7 +51,8 @@ export async function regenerateMeetingAction(
   const { data: meeting, error: fetchError } = await supabase
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
+      `id, title, date, meeting_type, party_type, organization_id, participants,
+       raw_fireflies, transcript, transcript_elevenlabs,
        meeting_participants(person:people(name))`,
     )
     .eq("id", meetingId)
@@ -83,12 +92,17 @@ export async function regenerateMeetingAction(
     });
     const richSummary = formatSummary(summarizerOutput);
 
-    // Step 3: Gatekeeper (projecten + meta). Extractor is vervangen door
-    // RiskSpecialist — die draait hieronder als een aparte stap omdat hij
-    // de identified_projects van de Gatekeeper nodig heeft voor het
-    // mappen van project_id op z'n rij.
+    // Step 3: Gatekeeper (projecten + meta). Krijgt dezelfde participant-
+    // labels en entity-context als de initial run zodat titel + classificatie
+    // consistent blijven met de hoofdpipeline.
+    const rawParticipants = (meeting.participants as string[] | null) ?? [];
+    const knownPeople = await getAllKnownPeople();
+    const classifiedParticipants = classifyParticipantsWithCache(rawParticipants, knownPeople);
+
     const gatekeeperResult = await runGatekeeper(richSummary.slice(0, 3000), {
       title: context.title,
+      participants: classifiedParticipants,
+      date: (meeting.date as string) ?? undefined,
       entityContext: entityContext.contextString,
     });
     const identifiedProjects = gatekeeperResult.identified_projects;
@@ -109,6 +123,48 @@ export async function regenerateMeetingAction(
       await updateMeetingStructuralTitle(meetingId, gatekeeperResult.meeting_title);
     } catch (titleErr) {
       console.error("Structural title write failed during regeneration (non-blocking):", titleErr);
+    }
+
+    // Step 4c: Replay gatekeeper-derived classification (meeting_type,
+    // party_type, relevance_score, organization) so regenerate is a true
+    // gatekeeper-replay. Mirrors the logic in gatekeeper-pipeline.ts.
+    try {
+      const ruleBasedType = determineRuleBasedMeetingType(classifiedParticipants);
+      const finalMeetingType = ruleBasedType ?? gatekeeperResult.meeting_type;
+      const partyType = determinePartyType(classifiedParticipants, finalMeetingType);
+
+      const knownOrg = classifiedParticipants.find(
+        (p) => p.label === "external" && p.organizationName,
+      );
+      const orgNameToResolve = knownOrg?.organizationName ?? gatekeeperResult.organization_name;
+      const orgResult = await resolveOrganization(orgNameToResolve);
+
+      const existingRaw = (meeting.raw_fireflies as Record<string, unknown> | null) ?? {};
+      const existingPipeline = (existingRaw.pipeline as Record<string, unknown> | undefined) ?? {};
+      const mergedRaw: Record<string, unknown> = {
+        ...existingRaw,
+        pipeline: {
+          ...existingPipeline,
+          regenerated_at: new Date().toISOString(),
+          rule_based_meeting_type: ruleBasedType,
+          meeting_type_source: ruleBasedType ? "deterministic" : "gatekeeper",
+          party_type_source: knownOrg ? "deterministic" : "gatekeeper_fallback",
+        },
+      };
+
+      await updateMeetingClassification(meetingId, {
+        meeting_type: finalMeetingType,
+        party_type: partyType,
+        relevance_score: gatekeeperResult.relevance_score,
+        organization_id: orgResult.organization_id,
+        unmatched_organization_name: orgResult.matched ? null : orgNameToResolve,
+        raw_fireflies: mergedRaw,
+      });
+    } catch (classifyErr) {
+      console.error(
+        "Classification replay failed during regeneration (non-blocking):",
+        classifyErr,
+      );
     }
 
     // Step 5: RiskSpecialist — vervangt de legacy Extractor. Draait ook

@@ -10,7 +10,7 @@
 | Files scanned | 475 |
 | Exported functions/constants | 711 |
 | Exported types/interfaces | 176 |
-| Cross-package imports | 595 |
+| Cross-package imports | 598 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -1564,12 +1564,15 @@
 - `reprocessMeetingAction()`
 
 **Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingStructuralTitle, markMeetingEmbeddingStale
+- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingStructuralTitle, updateMeetingClassification, markMeetingEmbeddingStale
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
 - `@repo/ai/agents/gatekeeper` → runGatekeeper
+- `@repo/ai/pipeline/participant-classifier` → classifyParticipantsWithCache, determineRuleBasedMeetingType, determinePartyType
+- `@repo/ai/pipeline/entity-resolution` → resolveOrganization
+- `@repo/database/queries/people` → getAllKnownPeople
 - `@repo/ai/pipeline/tagger` → runTagger
 - `@repo/ai/pipeline/segment-builder` → buildSegments
 - `@repo/ai/embeddings` → embedBatch
@@ -3672,7 +3675,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 43 | - | - | - | - | 43 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 44 | 15 | 29 | - | - | 88 |
+| Cockpit Server Actions | 45 | 17 | 29 | - | - | 91 |
 | Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
 | Cockpit Components | 41 | 6 | - | 75 | - | 122 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -3817,7 +3820,7 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `insertMeeting()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts` |
 | `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
-| `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `updateMeetingClassification()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
 | `updateMeetingType()` | `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingPartyType()` | `apps/cockpit/src/actions/meetings.ts` |
@@ -4030,7 +4033,7 @@ Which queries are used where across the codebase.
 | `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
 | `getPersonById()` | `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx` |
 | `getStalePeople()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
-| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant-classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant-classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getPeopleForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `findPeopleByEmails()` | `packages/ai/src/pipeline/participant-helpers.ts` |
 | `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
