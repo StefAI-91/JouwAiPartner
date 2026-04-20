@@ -8,6 +8,7 @@ import {
   Mail,
   Users,
   Receipt,
+  Bot,
 } from "lucide-react";
 
 export interface NavItem {
@@ -37,7 +38,10 @@ export const secondaryNavItems: NavItem[] = [
  * Admin nav — alleen admins zien cockpit (gehandhaafd door middleware na DH-015),
  * dus geen extra role-check hier nodig. UI-170.
  */
-export const adminNavItems: NavItem[] = [{ href: "/admin/team", label: "Team", icon: Users }];
+export const adminNavItems: NavItem[] = [
+  { href: "/admin/team", label: "Team", icon: Users },
+  { href: "/agents", label: "Agents", icon: Bot },
+];
 
 /** Check if a nav item should be highlighted for the given pathname */
 export function isNavItemActive(href: string, pathname: string): boolean {

@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 483 |
-| Exported functions/constants | 733 |
-| Exported types/interfaces | 184 |
-| Cross-package imports | 605 |
+| Files scanned | 492 |
+| Exported functions/constants | 746 |
+| Exported types/interfaces | 189 |
+| Cross-package imports | 607 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -2122,6 +2122,23 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/organizations` → listOrganizationsByType
 
+### `apps/cockpit/src/app/(dashboard)/agents/_data.ts`
+
+**Exports:**
+- `agents`
+- `activityFeed`
+- `systemStats`
+
+**Types:** `Quadrant`, `AgentStatus`, `Agent`, `ActivityEvent`, `SystemStats`
+
+### `apps/cockpit/src/app/(dashboard)/agents/page.tsx`
+
+**Exports:**
+- `dynamic`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
 ### `apps/cockpit/src/app/(dashboard)/architectuur/_data/embeddings.ts`
 
 **Exports:**
@@ -2526,6 +2543,35 @@
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/organizations` → OrganizationListItem
+
+### `apps/cockpit/src/components/agents/activity-feed.tsx`
+
+**Exports:**
+- `ActivityFeed()`
+
+### `apps/cockpit/src/components/agents/agent-card-compact.tsx`
+
+**Exports:**
+- `AgentCardCompact()`
+- `AddAgentPlaceholder()`
+
+### `apps/cockpit/src/components/agents/agent-card-full.tsx`
+
+**Exports:**
+- `AgentCardFull()`
+
+### `apps/cockpit/src/components/agents/quadrant-styles.ts`
+
+**Exports:**
+- `quadrantHeader`
+- `quadrantBadge`
+- `quadrantDot`
+- `quadrantLabel`
+
+### `apps/cockpit/src/components/agents/system-overview.tsx`
+
+**Exports:**
+- `SystemOverview()`
 
 ### `apps/cockpit/src/components/architectuur/embeddings-card.tsx`
 
@@ -3774,7 +3820,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 39 | 3 | - | 72 | - | 114 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 82 | 7 | 2 | 25 | - | 116 |
+| Cockpit Pages | 82 | 7 | 2 | 27 | - | 118 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
