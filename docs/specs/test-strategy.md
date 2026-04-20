@@ -1,5 +1,8 @@
 # Test Strategy — Q3a Spike
 
+**Status:** Q3b executed 2026-04-20. Mock-grens beleid + Portal/UI infra +
+coverage-baseline live. Resterende cleanup-werk in T01-T07.
+
 **Datum:** 2026-04-20
 **Sprint:** Q3a (spike, geen productie-code)
 **Doel:** bron-van-waarheid voor wat we testen, hoe we mocken, waar env-setup

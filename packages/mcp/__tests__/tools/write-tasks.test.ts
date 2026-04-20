@@ -32,13 +32,18 @@ const completeHandler = handlers["complete_task"];
 const updateHandler = handlers["update_task"];
 const dismissHandler = handlers["dismiss_task"];
 
+// Tripwire (Q3b §1.3): één registry-assert ipv 4x toBeDefined-smoketests.
+describe("write-tasks registry", () => {
+  it("registreert exact de verwachte tool-namen", () => {
+    expect(Object.keys(handlers).sort()).toEqual(
+      ["create_task", "complete_task", "update_task", "dismiss_task"].sort(),
+    );
+  });
+});
+
 describe("create_task", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("registers the tool", () => {
-    expect(createHandler).toBeDefined();
   });
 
   it("creates a task from an extraction", async () => {
@@ -193,10 +198,6 @@ describe("complete_task", () => {
     vi.clearAllMocks();
   });
 
-  it("registers the tool", () => {
-    expect(completeHandler).toBeDefined();
-  });
-
   it("marks a task as done", async () => {
     vi.mocked(completeTask).mockResolvedValue({ success: true });
 
@@ -231,10 +232,6 @@ describe("complete_task", () => {
 describe("update_task", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("registers the tool", () => {
-    expect(updateHandler).toBeDefined();
   });
 
   it("performs a partial update", async () => {
@@ -333,10 +330,6 @@ describe("update_task", () => {
 describe("dismiss_task", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("registers the tool", () => {
-    expect(dismissHandler).toBeDefined();
   });
 
   it("marks a task as dismissed", async () => {

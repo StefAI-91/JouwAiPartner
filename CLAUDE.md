@@ -293,6 +293,17 @@ groen terwijl productie stiekem stukgaat. Daarom:
   - Tests die private velden inspecteren (`_registeredTools`,
     `_serverInfo`, elke underscore-prefix). Als de publieke API niet
     testbaar is, refactor voor testbaarheid — verzin geen achterdeur.
+    **Uitzondering MCP SDK:** `_registeredTools` + `_registeredPrompts`
+    op `McpServer` zijn private (SDK 1.28.0 biedt geen publieke
+    `listTools()`). Markeer met JSDoc `@private-field-access` en
+    verwijs naar `docs/specs/test-strategy.md §4`.
+- **Mock-grens beleid** (`docs/specs/test-strategy.md §3`): mock alleen
+  externe systemen — Supabase clients, AI providers (`@anthropic-ai/sdk`,
+  `@ai-sdk/anthropic`, `ai`, `cohere-ai`), AI-helper-wrappers
+  (`@repo/ai/embeddings`, `@repo/ai/fireflies`, `@repo/ai/gmail`,
+  `@repo/ai/agents/*`), Next runtime (`next/cache`, `next/navigation`,
+  `next/headers`), MCP SDK, filesystem. Eigen `queries/*`, `mutations/*`,
+  `pipeline/*`, `auth/*` zijn INTERN — niet mocken zonder refactor-ticket.
 
 Als je twijfelt of een testwijziging laundering is: het antwoord is ja.
 Escaleer naar de gebruiker in plaats van door te drukken.

@@ -20,7 +20,16 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "devDependencies": {
-    "typescript": "^5.8.0"
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "^19",
+    "@vitest/coverage-v8": "^4.1.2",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.4"
   }
 }

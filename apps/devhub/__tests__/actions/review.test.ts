@@ -11,6 +11,19 @@ const IDS = {
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createServerMock());
 
+// Mock de admin-grens: review.ts importeert `getAdminClient` op module-niveau
+// (voor isAuthBypassed-pad). Zonder mock crasht de module-load met
+// "supabaseUrl is required" omdat .env.local niet door vitest geladen wordt.
+vi.mock("@repo/database/supabase/admin", () => ({
+  getAdminClient: vi.fn(() => ({})),
+}));
+
+// Bypass project-access check (apart getest in auth-tests).
+vi.mock("@repo/auth/access", () => ({
+  assertProjectAccess: vi.fn(async () => undefined),
+  NotAuthorizedError: class NotAuthorizedError extends Error {},
+}));
+
 const mockListIssues = vi.fn();
 vi.mock("@repo/database/queries/issues", () => ({
   listIssues: (...args: unknown[]) => mockListIssues(...args),
@@ -90,10 +103,7 @@ describe("Review Actions", () => {
       return mod.generateProjectReview;
     }
 
-    // TODO: vitest laadt geen .env.local, dus tests die het echte action-pad
-    // raken falen met "supabaseUrl is required.". Fix in eigen sprint: voeg een
-    // setup-file toe die dotenv laadt of mock @repo/database/supabase/admin.
-    it.skip("generates review and returns { success, reviewId }", async () => {
+    it("generates review and returns { success, reviewId }", async () => {
       mockListIssues.mockResolvedValue([mockIssue]);
       mockGetProjectById.mockResolvedValue({ name: "Test Project" });
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
@@ -105,7 +115,7 @@ describe("Review Actions", () => {
       expect(result).toEqual({ success: true, reviewId: "review-1" });
     });
 
-    it.skip("passes correct data to saveProjectReview", async () => {
+    it("passes correct data to saveProjectReview", async () => {
       mockListIssues.mockResolvedValue([mockIssue]);
       mockGetProjectById.mockResolvedValue({ name: "P" });
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
@@ -126,7 +136,7 @@ describe("Review Actions", () => {
       );
     });
 
-    it.skip("computes metrics: status/priority/type counts", async () => {
+    it("computes metrics: status/priority/type counts", async () => {
       mockListIssues.mockResolvedValue([mockIssue]);
       mockGetProjectById.mockResolvedValue({ name: "P" });
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
@@ -145,7 +155,7 @@ describe("Review Actions", () => {
       );
     });
 
-    it.skip("returns error when no issues found", async () => {
+    it("returns error when no issues found", async () => {
       mockListIssues.mockResolvedValue([]);
 
       const action = await getAction();
@@ -154,7 +164,7 @@ describe("Review Actions", () => {
       expect(result).toEqual({ error: "Geen issues gevonden voor dit project" });
     });
 
-    it.skip("revalidates /review path", async () => {
+    it("revalidates /review path", async () => {
       mockListIssues.mockResolvedValue([mockIssue]);
       mockGetProjectById.mockResolvedValue({ name: "P" });
       mockRunIssueReviewer.mockResolvedValue(mockReviewResult);
@@ -176,7 +186,7 @@ describe("Review Actions", () => {
       expect(result).toEqual({ error: "Niet ingelogd" });
     });
 
-    it.skip("forwards AI/DB errors with message", async () => {
+    it("forwards AI/DB errors with message", async () => {
       mockListIssues.mockRejectedValue(new Error("DB connection failed"));
       mockGetProjectById.mockResolvedValue({ name: "P" });
 

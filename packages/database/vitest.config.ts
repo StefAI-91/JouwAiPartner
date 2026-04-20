@@ -6,5 +6,11 @@ export default defineConfig({
     include: ["__tests__/**/*.test.ts", "src/**/*.test.ts"],
     globalSetup: ["./__tests__/helpers/global-setup.ts"],
     testTimeout: 30000,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      include: ["src/**/*.ts"],
+      exclude: ["**/*.test.ts", "**/__tests__/**", "src/types/**"],
+    },
   },
 });
