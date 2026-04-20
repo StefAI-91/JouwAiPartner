@@ -54,6 +54,7 @@ export interface ReviewMeetingDetail {
     confidence: number | null;
     transcript_ref: string | null;
     metadata: Record<string, unknown>;
+    reasoning: string | null;
   }[];
 }
 
@@ -69,7 +70,7 @@ export async function getDraftMeetingById(
        organization_id, organization:organizations(name),
        meeting_participants(person:people(id, name)),
        meeting_projects(project:projects(id, name)),
-       extractions(id, type, content, confidence, transcript_ref, metadata)`,
+       extractions(id, type, content, confidence, transcript_ref, metadata, reasoning)`,
     )
     .eq("id", meetingId)
     .eq("verification_status", "draft")

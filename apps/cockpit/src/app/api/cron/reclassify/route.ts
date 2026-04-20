@@ -5,7 +5,10 @@ import { getAllKnownPeople } from "@repo/database/queries/people";
 import { listMeetingsForReclassify } from "@repo/database/queries/meetings";
 import { updateMeetingClassification } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "@repo/ai/pipeline/entity-resolution";
-import { classifyParticipantsWithCache, determinePartyType } from "@repo/ai/pipeline/participant-classifier";
+import {
+  classifyParticipantsWithCache,
+  determinePartyType,
+} from "@repo/ai/pipeline/participant-classifier";
 
 const RequestSchema = z.object({
   limit: z.number().min(1).max(100).optional().default(50),
@@ -25,7 +28,11 @@ async function reclassifyMeeting(
   const partyType = determinePartyType(classifiedParticipants);
   const partyTypeSource = classifiedParticipants.some(
     (p) => p.label === "external" && p.organizationType,
-  ) ? "deterministic" : partyType === "internal" ? "deterministic" : "fallback";
+  )
+    ? "deterministic"
+    : partyType === "internal"
+      ? "deterministic"
+      : "fallback";
 
   // Run Gatekeeper for meeting_type + relevance + org name
   const gkResult = await runGatekeeper(meeting.summary ?? "", {
@@ -35,16 +42,14 @@ async function reclassifyMeeting(
   });
 
   // Resolve organization
-  const knownOrg = classifiedParticipants.find(
-    (p) => p.label === "external" && p.organizationName,
-  );
+  const knownOrg = classifiedParticipants.find((p) => p.label === "external" && p.organizationName);
   const orgNameToResolve = knownOrg?.organizationName ?? gkResult.organization_name;
   const orgResult = await resolveOrganization(orgNameToResolve);
 
   // Build updated raw_fireflies pipeline metadata
   const rawFireflies = (meeting.raw_fireflies as Record<string, unknown>) ?? {};
   rawFireflies.pipeline = {
-    ...(rawFireflies.pipeline as Record<string, unknown> ?? {}),
+    ...((rawFireflies.pipeline as Record<string, unknown>) ?? {}),
     participant_classification: classifiedParticipants.map((p) => ({
       raw: p.raw,
       label: p.label,

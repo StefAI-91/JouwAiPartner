@@ -287,8 +287,7 @@ export const integrations: IntegrationFlow[] = [
       {
         name: "Zoekresultaten",
         sensitivity: "hoog",
-        description:
-          "Meeting-samenvattingen, besluiten, actiepunten, inzichten met bronvermelding",
+        description: "Meeting-samenvattingen, besluiten, actiepunten, inzichten met bronvermelding",
       },
       {
         name: "Organisatie- en projectdata",
@@ -305,8 +304,7 @@ export const integrations: IntegrationFlow[] = [
       {
         name: "OAuth requests",
         sensitivity: "midden",
-        description:
-          "Authorization requests met PKCE challenge, token requests met code_verifier",
+        description: "Authorization requests met PKCE challenge, token requests met code_verifier",
       },
       {
         name: "Client registration",

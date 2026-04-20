@@ -4,24 +4,28 @@ Master backlog for all upcoming work. Sprint numbering continues from 029 (sprin
 
 ## Backlog Overview
 
-| #      | Sprint                                                       | Area          | Status  |
-| ------ | ------------------------------------------------------------ | ------------- | ------- |
-| 029    | Project page rebuild (AI summaries, action items, decisions) | Cockpit UI    | Backlog |
-| 030    | Organization page + AI summary                               | Cockpit UI    | Backlog |
-| DH-008 | Status page (public, per-project, read-only)                 | DevHub fase 2 | Backlog |
-| DH-009 | Duplicate detection via embeddings                           | DevHub fase 2 | Backlog |
-| 031    | Shared packages cleanup (constants, validations, formatting) | Monorepo      | Backlog |
-| T01    | AI Pipeline kritieke tests (9 modules)                       | Testing       | Backlog |
-| T02    | Database mutations tests (10 modules)                        | Testing       | Backlog |
-| T03    | Database queries tests (18 modules)                          | Testing       | Backlog |
-| T04    | Cockpit actions tests — ontbrekende modules (6 actions)      | Testing       | Backlog |
-| T05    | DevHub actions tests (6 modules)                             | Testing       | Backlog |
-| T06    | MCP tools tests (12 modules)                                 | Testing       | Backlog |
-| T07    | API routes tests (13 routes)                                 | Testing       | Backlog |
-| R01    | Database + Rinkel API client                                 | VoIP pipeline | Backlog |
-| R02    | Call processing pipeline                                     | VoIP pipeline | Backlog |
-| R03    | UI updates for call data                                     | VoIP pipeline | Backlog |
-| R04    | Audio storage + playback                                     | VoIP pipeline | Backlog |
+| #        | Sprint                                                       | Area          | Status  |
+| -------- | ------------------------------------------------------------ | ------------- | ------- |
+| 029      | Project page rebuild (AI summaries, action items, decisions) | Cockpit UI    | Backlog |
+| 030      | Organization page + AI summary                               | Cockpit UI    | Backlog |
+| DH-008   | Status page (public, per-project, read-only)                 | DevHub fase 2 | Backlog |
+| DH-009   | Duplicate detection via embeddings                           | DevHub fase 2 | Backlog |
+| 031      | Shared packages cleanup (constants, validations, formatting) | Monorepo      | Backlog |
+| T01      | AI Pipeline kritieke tests (9 modules)                       | Testing       | Backlog |
+| T02      | Database mutations tests (10 modules)                        | Testing       | Backlog |
+| T03      | Database queries tests (18 modules)                          | Testing       | Backlog |
+| T04      | Cockpit actions tests — ontbrekende modules (6 actions)      | Testing       | Backlog |
+| T05      | DevHub actions tests (6 modules)                             | Testing       | Backlog |
+| T06      | MCP tools tests (12 modules)                                 | Testing       | Backlog |
+| T07      | API routes tests (13 routes)                                 | Testing       | Backlog |
+| R01      | Database + Rinkel API client                                 | VoIP pipeline | Backlog |
+| R02      | Call processing pipeline                                     | VoIP pipeline | Backlog |
+| R03      | UI updates for call data                                     | VoIP pipeline | Backlog |
+| R04      | Audio storage + playback                                     | VoIP pipeline | Backlog |
+| PW-QC-01 | Security + error handling op /dev/extractor actions          | Quality       | Backlog |
+| PW-QC-02 | Database discipline (queries, idempotency, migratie-safety)  | Quality       | Backlog |
+| PW-QC-03 | AI-pipeline hygiëne (prompt-sync, confidence, shared utils)  | Quality       | Backlog |
+| PW-QC-04 | File splits + anti-laundering tests                          | Quality       | Backlog |
 
 ## Completed Sprints Summary
 

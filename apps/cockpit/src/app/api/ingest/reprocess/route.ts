@@ -6,10 +6,8 @@ import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { runTranscribeStep } from "@repo/ai/pipeline/steps/transcribe";
 import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
-import { runExtractor } from "@repo/ai/agents/extractor";
-import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
+import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { embedMeetingWithExtractions } from "@repo/ai/pipeline/embed-pipeline";
-import { deleteExtractionsByMeetingId } from "@repo/database/mutations/extractions";
 import { markMeetingEmbeddingStale } from "@repo/database/mutations/meetings";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
@@ -179,38 +177,35 @@ export async function POST(req: NextRequest) {
   }
   results.segments = { saved: segmentsSaved };
 
-  // 6. Delete old extractions and re-run Extractor
-  const extractorSummary = summarizeResult.richSummary ?? transcript.summary?.notes ?? "";
-
+  // 6. RiskSpecialist — vervangt de legacy Extractor. Risks schrijven naar
+  // `extractions` (UI) + `experimental_risk_extractions` (audit). Per-type
+  // idempotent: action_items uit historische runs blijven staan.
   try {
-    console.info(`Reprocess: Deleting old extractions for ${meeting.id}...`);
-    await deleteExtractionsByMeetingId(meeting.id);
-
-    console.info(`Reprocess: Running Extractor (${transcriptSource})...`);
-    const extractorResult = await runExtractor(summarizerTranscript, {
-      title: meeting.title,
-      meeting_type: meeting.meeting_type ?? "unknown",
-      party_type: meeting.party_type ?? "other",
-      participants: meeting.participants ?? [],
-      summary: extractorSummary,
-      meeting_date: meeting.date ?? new Date().toISOString().split("T")[0],
-      identified_projects: identifiedProjects,
-    });
-
-    const saveResult = await saveExtractions(extractorResult, meeting.id, identifiedProjects);
-
-    results.extractor = {
-      success: true,
-      transcript_source: transcriptSource,
-      extractions_saved: saveResult.extractions_saved,
-      projects_linked: saveResult.projects_linked,
-      entities: extractorResult.entities,
-    };
-    console.info(`Reprocess: Extractor done — ${saveResult.extractions_saved} extractions`);
+    console.info(`Reprocess: Running RiskSpecialist (${transcriptSource})...`);
+    await runRiskSpecialistStep(
+      meeting.id,
+      summarizerTranscript,
+      {
+        title: meeting.title,
+        meeting_type: meeting.meeting_type ?? "unknown",
+        party_type: meeting.party_type ?? "other",
+        participants: meeting.participants ?? [],
+        speakerContext: null,
+        entityContext: "",
+        meeting_date: meeting.date ?? new Date().toISOString().split("T")[0],
+        identified_projects: identifiedProjects.map((p) => ({
+          project_name: p.project_name,
+          project_id: p.project_id,
+        })),
+      },
+      identifiedProjects,
+    );
+    results.risk_specialist = { success: true, transcript_source: transcriptSource };
+    console.info("Reprocess: RiskSpecialist done");
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
-    results.extractor = { success: false, error: errMsg };
-    console.error("Reprocess: Extractor failed:", errMsg);
+    results.risk_specialist = { success: false, error: errMsg };
+    console.error("Reprocess: RiskSpecialist failed:", errMsg);
   }
 
   // 6. Re-embed meeting + extractions

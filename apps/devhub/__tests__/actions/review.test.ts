@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mockAuthenticated, mockUnauthenticated, createServerMock } from "../helpers/mock-auth";
+import { createServerMock } from "../helpers/mock-auth";
 import { createNextCacheMock, resetNextMocks, getRevalidatePathCalls } from "../helpers/mock-next";
 
 // RFC 4122 compliant UUIDs for unit tests (Zod 4 validates variant bits)

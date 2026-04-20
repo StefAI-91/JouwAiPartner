@@ -66,10 +66,7 @@ export async function consumeAuthCode(code: string) {
 }
 
 // ── Client registration helpers ──────────────────────────────
-export function registerClient(data: {
-  redirectUris: string[];
-  name: string;
-}) {
+export function registerClient(data: { redirectUris: string[]; name: string }) {
   const clientId = crypto.randomUUID();
   REGISTERED_CLIENTS.set(clientId, {
     clientId,
@@ -109,9 +106,7 @@ export async function signAccessToken(payload: {
     .sign(getSigningKey());
 }
 
-export async function verifyAccessToken(
-  token: string,
-): Promise<McpTokenPayload | null> {
+export async function verifyAccessToken(token: string): Promise<McpTokenPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSigningKey(), {
       issuer: "jouwaipartner",
@@ -139,9 +134,6 @@ export async function verifyCodeChallenge(
 
 // ── Issuer URL ───────────────────────────────────────────────
 export function getIssuerUrl(): string {
-  const url =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.VERCEL_URL ??
-    "http://localhost:3000";
+  const url = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL ?? "http://localhost:3000";
   return url.startsWith("http") ? url : `https://${url}`;
 }

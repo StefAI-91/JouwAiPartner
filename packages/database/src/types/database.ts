@@ -343,6 +343,56 @@ export type Database = {
           },
         ];
       };
+      experimental_risk_extractions: {
+        Row: {
+          created_at: string;
+          error: string | null;
+          id: string;
+          input_tokens: number | null;
+          latency_ms: number | null;
+          meeting_id: string;
+          model: string;
+          output_tokens: number | null;
+          prompt_version: string;
+          reasoning_tokens: number | null;
+          risks: Json;
+        };
+        Insert: {
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          latency_ms?: number | null;
+          meeting_id: string;
+          model: string;
+          output_tokens?: number | null;
+          prompt_version: string;
+          reasoning_tokens?: number | null;
+          risks: Json;
+        };
+        Update: {
+          created_at?: string;
+          error?: string | null;
+          id?: string;
+          input_tokens?: number | null;
+          latency_ms?: number | null;
+          meeting_id?: string;
+          model?: string;
+          output_tokens?: number | null;
+          prompt_version?: string;
+          reasoning_tokens?: number | null;
+          risks?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "experimental_risk_extractions_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       extractions: {
         Row: {
           confidence: number | null;
@@ -352,11 +402,13 @@ export type Database = {
           created_at: string | null;
           embedding: string | null;
           embedding_stale: boolean | null;
+          follow_up_context: string | null;
           id: string;
           meeting_id: string;
           metadata: Json | null;
           organization_id: string | null;
           project_id: string | null;
+          reasoning: string | null;
           search_vector: unknown;
           transcript_ref: string | null;
           type: string;
@@ -372,11 +424,13 @@ export type Database = {
           created_at?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean | null;
+          follow_up_context?: string | null;
           id?: string;
           meeting_id: string;
           metadata?: Json | null;
           organization_id?: string | null;
           project_id?: string | null;
+          reasoning?: string | null;
           search_vector?: unknown;
           transcript_ref?: string | null;
           type: string;
@@ -392,11 +446,13 @@ export type Database = {
           created_at?: string | null;
           embedding?: string | null;
           embedding_stale?: boolean | null;
+          follow_up_context?: string | null;
           id?: string;
           meeting_id?: string;
           metadata?: Json | null;
           organization_id?: string | null;
           project_id?: string | null;
+          reasoning?: string | null;
           search_vector?: unknown;
           transcript_ref?: string | null;
           type?: string;

@@ -11,16 +11,22 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@repo/ui/dropdown-menu";
-import { regenerateMeetingAction, reprocessMeetingAction } from "@/actions/meeting-pipeline";
+import {
+  regenerateMeetingAction,
+  regenerateRisksAction,
+  reprocessMeetingAction,
+} from "@/actions/meeting-pipeline";
 import { regenerateMeetingTitleAction } from "@/actions/meetings";
 
 interface RegenerateMenuProps {
   meetingId: string;
 }
 
+type LoadingState = "regenerate" | "risks" | "reprocess" | "title" | null;
+
 export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState<"regenerate" | "reprocess" | "title" | null>(null);
+  const [loading, setLoading] = useState<LoadingState>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleRegenerate() {
@@ -28,6 +34,20 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
     setError(null);
 
     const result = await regenerateMeetingAction({ meetingId });
+    if ("error" in result) {
+      setError(result.error);
+      setLoading(null);
+      return;
+    }
+    router.refresh();
+    setLoading(null);
+  }
+
+  async function handleRegenerateRisks() {
+    setLoading("risks");
+    setError(null);
+
+    const result = await regenerateRisksAction({ meetingId });
     if ("error" in result) {
       setError(result.error);
       setLoading(null);
@@ -81,11 +101,13 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
               <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
               {loading === "regenerate"
                 ? "Regenereren..."
-                : loading === "reprocess"
-                  ? "Herverwerken..."
-                  : loading === "title"
-                    ? "Titel genereren..."
-                    : "Regenereer"}
+                : loading === "risks"
+                  ? "Risico's regenereren..."
+                  : loading === "reprocess"
+                    ? "Herverwerken..."
+                    : loading === "title"
+                      ? "Titel genereren..."
+                      : "Regenereer"}
             </Button>
           }
         />
@@ -105,7 +127,15 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
           <DropdownMenuItem onClick={handleRegenerate}>
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Regenereer</span>
-              <span className="text-xs text-muted-foreground">Summary + extracties opnieuw</span>
+              <span className="text-xs text-muted-foreground">Summary + risks opnieuw</span>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleRegenerateRisks}>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">Alleen risico&apos;s regenereren</span>
+              <span className="text-xs text-muted-foreground">
+                RiskSpecialist opnieuw; summary blijft
+              </span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

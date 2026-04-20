@@ -17,10 +17,7 @@ export async function GET(request: NextRequest) {
 
   // Validate required params
   if (responseType !== "code") {
-    return Response.json(
-      { error: "unsupported_response_type" },
-      { status: 400 },
-    );
+    return Response.json({ error: "unsupported_response_type" }, { status: 400 });
   }
 
   if (!clientId || !redirectUri || !codeChallenge) {
@@ -32,7 +29,10 @@ export async function GET(request: NextRequest) {
 
   if (codeChallengeMethod && codeChallengeMethod !== "S256") {
     return Response.json(
-      { error: "invalid_request", error_description: "Only S256 code challenge method is supported" },
+      {
+        error: "invalid_request",
+        error_description: "Only S256 code challenge method is supported",
+      },
       { status: 400 },
     );
   }
@@ -71,7 +71,10 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error("[OAuth authorize] Failed to create auth code:", err);
     return Response.json(
-      { error: "server_error", error_description: "Failed to create authorization code. Check OAUTH_SECRET env var." },
+      {
+        error: "server_error",
+        error_description: "Failed to create authorization code. Check OAUTH_SECRET env var.",
+      },
       { status: 500 },
     );
   }
