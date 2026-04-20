@@ -2,3 +2,8 @@ node_modules
 .next
 out
 build
+
+# LLM-prompts: whitespace en nested-list-structuur zijn semantisch
+# significant voor model-gedrag. Prettier's default markdown-formatting
+# collapst geneste lijsten tot run-on zinnen wat de prompt verandert.
+packages/ai/prompts/
