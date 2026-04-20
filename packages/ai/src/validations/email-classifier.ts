@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PartyTypeSchema } from "./communication";
 
 export const EmailClassifierSchema = z.object({
   relevance_score: z
@@ -38,11 +39,9 @@ export const EmailClassifierSchema = z.object({
       "other",
     ])
     .describe("The type/category of this email"),
-  party_type: z
-    .enum(["internal", "client", "accountant", "tax_advisor", "lawyer", "partner", "other"])
-    .describe(
-      "Role of the sender/main external party. Use known people DB to identify roles like accountant or tax_advisor. 'internal' if sender is a team member.",
-    ),
+  party_type: PartyTypeSchema.describe(
+    "Role of the sender/main external party. Use known people DB to identify roles like accountant or tax_advisor. 'internal' if sender is a team member. Use 'advisor' as fallback for an advisory org (accountant/tax/lawyer) when the specific subtype is unclear.",
+  ),
 });
 
 export type EmailClassifierOutput = z.infer<typeof EmailClassifierSchema>;
