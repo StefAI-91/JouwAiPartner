@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 498 |
-| Exported functions/constants | 746 |
-| Exported types/interfaces | 182 |
-| Cross-package imports | 633 |
+| Files scanned | 506 |
+| Exported functions/constants | 757 |
+| Exported types/interfaces | 188 |
+| Cross-package imports | 634 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -806,12 +806,7 @@
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → insertMeeting
-- `@repo/database/queries/people` → findPeopleByEmails, getAllKnownPeople
-- `@repo/database/mutations/meeting-participants` → linkMeetingParticipants
-- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries
-- `@repo/database/mutations/meeting-project-summaries` → updateSegmentEmbedding
-- `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
-- `@repo/database/mutations/meetings` → updateMeetingTitle
+- `@repo/database/queries/people` → getAllKnownPeople
 
 **Internal deps:**
 - `../agents/gatekeeper` → runGatekeeper
@@ -821,7 +816,6 @@
 - `../validations/gatekeeper` → PartyType, IdentifiedProject
 - `./entity-resolution` → resolveOrganization
 - `./context-injection` → buildEntityContext
-- `./embed-pipeline` → embedMeetingWithExtractions
 - `./participant-classifier` → classifyParticipantsWithCache, determinePartyType, determineRuleBasedMeetingType
 - `./build-raw-fireflies` → buildRawFireflies
 - `./steps/transcribe` → runTranscribeStep
@@ -829,12 +823,11 @@
 - `./steps/extract` → runExtractStep
 - `./steps/structure` → runStructureStep, isMeetingStructurerEnabled
 - `./steps/risk-specialist-experiment` → runRiskSpecialistExperiment
-- `./tagger` → runTagger
-- `./segment-builder` → buildSegments
-- `../embeddings` → embedBatch
+- `./steps/generate-title` → runGenerateTitleStep
+- `./steps/tag-and-segment` → runTagAndSegmentStep
+- `./steps/embed` → runEmbedStep
 - `./speaker-map` → extractSpeakerNames, buildSpeakerMap, formatSpeakerContext
-- `./speaker-map` → SpeakerMap
-- `./generate-title` → generateMeetingTitle
+- `./participant-helpers` → matchParticipants, mergeParticipantSources, type MeetingAttendee
 
 ### `packages/ai/src/pipeline/generate-title.ts`
 
@@ -879,6 +872,22 @@
 **Internal deps:**
 - `../agents/gatekeeper` → ParticipantInfo
 - `../validations/gatekeeper` → MeetingType, PartyType
+
+### `packages/ai/src/pipeline/participant-helpers.ts`
+
+**Exports:**
+- `collectParticipantEmails()`
+- `matchParticipants()`
+- `mergeParticipantSources()`
+
+**Types:** `MeetingAttendee`
+
+**Depends on:**
+- `@repo/database/queries/people` → findPeopleByEmails
+- `@repo/database/mutations/meeting-participants` → linkMeetingParticipants
+
+**Internal deps:**
+- `./speaker-map` → SpeakerMap
 
 ### `packages/ai/src/pipeline/re-embed-worker.ts`
 
@@ -946,6 +955,16 @@
 **Depends on:**
 - (type) `@repo/database/queries/people` → KnownPerson
 
+### `packages/ai/src/pipeline/steps/embed.ts`
+
+**Exports:**
+- `runEmbedStep()`
+
+**Types:** `EmbedStepResult`
+
+**Internal deps:**
+- `../embed-pipeline` → embedMeetingWithExtractions
+
 ### `packages/ai/src/pipeline/steps/extract.ts`
 
 **Exports:**
@@ -959,6 +978,20 @@
 **Internal deps:**
 - `../../agents/extractor` → runExtractor, ExtractorOutput
 - `../save-extractions` → saveExtractions
+- `../../validations/gatekeeper` → IdentifiedProject
+
+### `packages/ai/src/pipeline/steps/generate-title.ts`
+
+**Exports:**
+- `runGenerateTitleStep()`
+
+**Types:** `GenerateTitleStepInput`, `GenerateTitleStepResult`
+
+**Depends on:**
+- `@repo/database/mutations/meetings` → updateMeetingTitle
+
+**Internal deps:**
+- `../generate-title` → generateMeetingTitle
 - `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/risk-specialist-experiment.ts`
@@ -1002,6 +1035,23 @@
 
 **Internal deps:**
 - `../../agents/summarizer` → runSummarizer, formatSummary
+
+### `packages/ai/src/pipeline/steps/tag-and-segment.ts`
+
+**Exports:**
+- `runTagAndSegmentStep()`
+
+**Types:** `TagAndSegmentInput`, `TagAndSegmentResult`
+
+**Depends on:**
+- `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
+- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
+
+**Internal deps:**
+- `../tagger` → runTagger
+- `../segment-builder` → buildSegments
+- `../../embeddings` → embedBatch
+- `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/transcribe.ts`
 
@@ -2190,6 +2240,11 @@
 - `@repo/ai/extraction-types` → ALL_EXTRACTION_TYPES
 - (type) `@repo/ai/extraction-types` → ExtractionType
 
+### `apps/cockpit/src/app/(dashboard)/dev/extractor/copy-button.tsx`
+
+**Exports:**
+- `CopyButton()`
+
 ### `apps/cockpit/src/app/(dashboard)/dev/extractor/page.tsx`
 
 **Exports:**
@@ -2198,6 +2253,25 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/meetings` → listMeetingsWithTranscript
+
+### `apps/cockpit/src/app/(dashboard)/dev/extractor/panel.tsx`
+
+**Exports:**
+- `Panel()`
+- `summariseMetadata()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/extractor/specialist-result-panel.tsx`
+
+**Exports:**
+- `SpecialistResultPanel()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/extractor/structurer-result-panel.tsx`
+
+**Exports:**
+- `StructurerResultPanel()`
+
+**Depends on:**
+- (type) `@repo/ai/extraction-types` → ExtractionType
 
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
@@ -3881,7 +3955,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 45 | 4 | - | 89 | - | 138 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 82 | 7 | 2 | 25 | - | 116 |
+| Cockpit Pages | 82 | 8 | 2 | 25 | - | 117 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
@@ -3998,7 +4072,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `linkMeetingParticipants()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts` |
+| `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant-helpers.ts` |
 | `linkMeetingParticipant()` | `apps/cockpit/src/actions/meetings.ts` |
 | `unlinkMeetingParticipant()` | `apps/cockpit/src/actions/meetings.ts` |
 
@@ -4006,10 +4080,10 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `linkSegmentToProject()` | `apps/cockpit/src/actions/segments.ts` |
 | `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
-| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meetings.ts
 
@@ -4021,7 +4095,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
 | `updateMeetingType()` | `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingPartyType()` | `apps/cockpit/src/actions/meetings.ts` |
-| `updateMeetingTitle()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
@@ -4138,7 +4212,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getIgnoredEntityNames()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `getIgnoredEntityNames()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### queries/issue-activity.ts
 
@@ -4239,7 +4313,7 @@ Which queries are used where across the codebase.
 | `getStalePeople()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
 | `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant-classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getPeopleForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
-| `findPeopleByEmails()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts` |
+| `findPeopleByEmails()` | `packages/ai/src/pipeline/participant-helpers.ts` |
 | `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 
 ### queries/project-access.ts

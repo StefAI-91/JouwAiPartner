@@ -8,68 +8,16 @@ vi.mock("@repo/auth/access", () => ({
   requireAdminInAction: vi.fn(),
 }));
 
-// Shared chainable mock for the admin supabase client.
-// Call-order we need to support:
-//   1) from("meetings").select(...).eq("id", x).single()   → { data: meeting }
-//   2) from("extractions").select(...).eq(...).eq(...).order(...) → { data: [...] }
-const mockMeetingRow: {
-  id: string;
-  title: string | null;
-  date: string | null;
-  meeting_type: string | null;
-  party_type: string | null;
-  transcript: string | null;
-  transcript_elevenlabs: string | null;
-  participants: string[];
-} = {
-  id: "meeting-uuid-1",
-  title: "CAI sync",
-  date: "2026-04-18",
-  meeting_type: "status_update",
-  party_type: "client",
-  transcript: "Dit is het transcript. We moeten Joris nog mailen.",
-  transcript_elevenlabs: null,
-  participants: ["Stef", "Wouter"],
-};
-let mockMeetingFetch = { data: mockMeetingRow, error: null as null | { message: string } };
-let mockExtractionsFetch = {
-  data: [
-    {
-      id: "ex-1",
-      content: "Legacy risk item",
-      confidence: 0.8,
-      metadata: { severity: "medium" },
-      created_at: "2026-04-18T10:00:00Z",
-    },
-  ],
-};
-
-vi.mock("@repo/database/supabase/admin", () => ({
-  getAdminClient: () => ({
-    from: (table: string) => {
-      if (table === "meetings") {
-        return {
-          select: () => ({
-            eq: () => ({
-              single: () => Promise.resolve(mockMeetingFetch),
-            }),
-          }),
-        };
-      }
-      if (table === "extractions") {
-        return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({
-                order: () => Promise.resolve(mockExtractionsFetch),
-              }),
-            }),
-          }),
-        };
-      }
-      return {};
-    },
-  }),
+// Grens-mocks: de action leest via query-functies uit @repo/database/queries/*,
+// dus we vervangen alleen die boundary. Geen chainable DB-mocks meer
+// (PW-QC-04 QUAL-QC-030 / RULE-QC-031).
+const mockGetMeeting = vi.fn();
+const mockGetExtractions = vi.fn();
+vi.mock("@repo/database/queries/meetings", () => ({
+  getMeetingForDevExtractor: (...args: unknown[]) => mockGetMeeting(...args),
+}));
+vi.mock("@repo/database/queries/extractions", () => ({
+  getExtractionsForMeetingByType: (...args: unknown[]) => mockGetExtractions(...args),
 }));
 
 const mockRunStructurer = vi.fn();
@@ -78,7 +26,8 @@ vi.mock("@repo/ai/agents/meeting-structurer", () => ({
   MEETING_STRUCTURER_SYSTEM_PROMPT: "test prompt",
 }));
 
-// Write-path mutations: we mock them SO WE CAN ASSERT they are NEVER called.
+// Write-path mutations worden gemockt om te asserteren dat ze NOOIT
+// worden aangeroepen (dev-harness is strikt read-only).
 const mockInsertExtractions = vi.fn();
 const mockUpdateMeetingSummary = vi.fn();
 vi.mock("@repo/database/mutations/extractions", () => ({
@@ -98,23 +47,38 @@ import { requireAdminInAction } from "@repo/auth/access";
 
 const VALID_MEETING_ID = "00000000-0000-4000-8000-000000000001";
 
+const baseMeeting = {
+  id: VALID_MEETING_ID,
+  title: "CAI sync",
+  date: "2026-04-18",
+  meeting_type: "status_update",
+  party_type: "client",
+  transcript: "Dit is het transcript. We moeten Joris nog mailen.",
+  transcript_elevenlabs: null as string | null,
+  participants: ["Stef", "Wouter"],
+};
+
+const baseExtractionRows = [
+  {
+    id: "ex-1",
+    content: "Legacy risk item",
+    confidence: 0.8,
+    metadata: { severity: "medium" },
+    created_at: "2026-04-18T10:00:00Z",
+  },
+];
+
 beforeEach(() => {
   mockAuthenticated(TEST_IDS.userId);
   mockRunStructurer.mockReset();
   mockInsertExtractions.mockReset();
   mockUpdateMeetingSummary.mockReset();
-  mockMeetingFetch = { data: mockMeetingRow, error: null };
-  mockExtractionsFetch = {
-    data: [
-      {
-        id: "ex-1",
-        content: "Legacy risk item",
-        confidence: 0.8,
-        metadata: { severity: "medium" },
-        created_at: "2026-04-18T10:00:00Z",
-      },
-    ],
-  };
+  mockGetMeeting.mockReset();
+  mockGetExtractions.mockReset();
+
+  mockGetMeeting.mockResolvedValue(baseMeeting);
+  mockGetExtractions.mockResolvedValue(baseExtractionRows);
+
   (requireAdminInAction as ReturnType<typeof vi.fn>).mockResolvedValue({
     user: { id: TEST_IDS.userId, email: "admin@example.com" },
   });
@@ -133,6 +97,7 @@ describe("runDevExtractorAction", () => {
     if (result.success) return;
     expect(result.error).toBe("Geen toegang");
     expect(mockRunStructurer).not.toHaveBeenCalled();
+    expect(mockGetMeeting).not.toHaveBeenCalled();
   });
 
   // QUAL-QC-001: auth blokkeert vóór Zod-parse (defense-in-depth).
@@ -158,6 +123,7 @@ describe("runDevExtractorAction", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error).toBe("Ongeldige invoer");
+    expect(mockGetMeeting).not.toHaveBeenCalled();
   });
 
   it("rejects unknown extraction type", async () => {
@@ -171,8 +137,8 @@ describe("runDevExtractorAction", () => {
     expect(result.error).toBe("Ongeldige invoer");
   });
 
-  it("returns 'Meeting niet gevonden' when the meeting lookup fails", async () => {
-    mockMeetingFetch = { data: null as never, error: { message: "no rows" } };
+  it("returns 'Meeting niet gevonden' when the meeting lookup returns null", async () => {
+    mockGetMeeting.mockResolvedValue(null);
     const result = await runDevExtractorAction({ meetingId: VALID_MEETING_ID, type: "risk" });
     expect(result.success).toBe(false);
     if (result.success) return;
@@ -180,10 +146,11 @@ describe("runDevExtractorAction", () => {
   });
 
   it("returns 'Geen transcript beschikbaar' when both transcripts are null", async () => {
-    mockMeetingFetch = {
-      data: { ...mockMeetingRow, transcript: null, transcript_elevenlabs: null },
-      error: null,
-    };
+    mockGetMeeting.mockResolvedValue({
+      ...baseMeeting,
+      transcript: null,
+      transcript_elevenlabs: null,
+    });
     const result = await runDevExtractorAction({ meetingId: VALID_MEETING_ID, type: "risk" });
     expect(result.success).toBe(false);
     if (result.success) return;
