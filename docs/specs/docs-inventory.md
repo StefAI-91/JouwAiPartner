@@ -2,7 +2,8 @@
 
 **Datum:** 2026-04-20
 **Scope:** volledige `docs/`, `sprints/`, `packages/*/README*`, `.claude/`, `.husky/`, `package.json`, `CLAUDE.md`
-**Status:** spike — alleen observaties, geen wijzigingen. Basis voor Q4b (spec sync execution).
+**Status:** **EXECUTED (2026-04-20)** — alle 10 Q4b-taken uitgevoerd. Zie §10 voor wat er concreet is gewijzigd.
+**Oorspronkelijke doel:** spike — alleen observaties, basis voor Q4b (spec sync execution).
 **Afbakening Q4b:** alles wat in sectie 10 staat is concreet en vast-scoped. Nieuwe ideeën horen in een vervolg-spike, niet in Q4b.
 
 ---

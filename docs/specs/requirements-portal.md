@@ -3,6 +3,9 @@
 Gegenereerd uit `docs/specs/portal-mvp.md` op 2026-04-17.
 Totaal: 72 requirements.
 
+> **Last verified:** 2026-04-20 (Q4b, steekproef-strategie per Q4a-5).
+> **Bekende drift:** laag — CP-001..005 done, MVP-scope klopt. Portal-app nog niet gedeployed, launch is "Next" in vision-roadmap.
+
 ---
 
 ## Functionele eisen
