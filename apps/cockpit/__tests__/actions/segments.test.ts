@@ -34,59 +34,24 @@ vi.mock("@repo/database/mutations/ignored-entities", () => ({
   addIgnoredEntity: (...args: unknown[]) => mockAddIgnoredEntity(...args),
 }));
 
-// Mock getAdminClient to return a controlled Supabase-like object
-const mockAdminFrom = vi.fn();
-vi.mock("@repo/database/supabase/admin", () => ({
-  getAdminClient: () => ({
-    from: mockAdminFrom,
-  }),
+// Q2b-B: actions roepen nu helpers aan i.p.v. directe Supabase chains.
+// Mocks zitten nu op de helpergrens (queries/*) zoals CLAUDE.md voorschrijft
+// — de oude chainable .from(...) mocks zijn verwijderd omdat ze
+// implementatie-specifiek waren (forbidden bij nieuwe tests).
+const mockGetSegmentNameRaw = vi.fn();
+vi.mock("@repo/database/queries/meeting-project-summaries", () => ({
+  getSegmentNameRaw: (...args: unknown[]) => mockGetSegmentNameRaw(...args),
 }));
 
-function setupAdminMock(
-  segmentName: string | null,
-  aliases: string[] = [],
-  orgId: string | null = null,
-) {
-  mockAdminFrom.mockImplementation((table: string) => {
-    if (table === "meeting_project_summaries") {
-      return {
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: segmentName ? { project_name_raw: segmentName } : null,
-              error: null,
-            }),
-          }),
-        }),
-      };
-    }
-    if (table === "projects") {
-      return {
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { aliases },
-              error: null,
-            }),
-          }),
-        }),
-      };
-    }
-    if (table === "meetings") {
-      return {
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { organization_id: orgId },
-              error: null,
-            }),
-          }),
-        }),
-      };
-    }
-    return { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis() };
-  });
-}
+const mockGetMeetingOrganizationId = vi.fn();
+vi.mock("@repo/database/queries/meetings", () => ({
+  getMeetingOrganizationId: (...args: unknown[]) => mockGetMeetingOrganizationId(...args),
+}));
+
+const mockGetProjectAliases = vi.fn();
+vi.mock("@repo/database/queries/projects", () => ({
+  getProjectAliases: (...args: unknown[]) => mockGetProjectAliases(...args),
+}));
 
 describe("Segments Actions", () => {
   beforeEach(() => {
@@ -96,7 +61,9 @@ describe("Segments Actions", () => {
     mockRemoveSegmentTag.mockReset();
     mockUpdateProjectAliases.mockReset();
     mockAddIgnoredEntity.mockReset();
-    mockAdminFrom.mockReset();
+    mockGetSegmentNameRaw.mockReset();
+    mockGetMeetingOrganizationId.mockReset();
+    mockGetProjectAliases.mockReset();
   });
 
   describe("linkSegmentToProjectAction", () => {
@@ -106,7 +73,8 @@ describe("Segments Actions", () => {
     }
 
     it("links segment to project and auto-adds alias", async () => {
-      setupAdminMock("Custom Project Name", ["Existing Alias"]);
+      mockGetSegmentNameRaw.mockResolvedValue("Custom Project Name");
+      mockGetProjectAliases.mockResolvedValue(["Existing Alias"]);
       mockLinkSegmentToProject.mockResolvedValue({ success: true });
       mockUpdateProjectAliases.mockResolvedValue({ success: true });
 
@@ -126,7 +94,8 @@ describe("Segments Actions", () => {
     });
 
     it("does not add duplicate alias", async () => {
-      setupAdminMock("Existing Alias", ["Existing Alias"]);
+      mockGetSegmentNameRaw.mockResolvedValue("Existing Alias");
+      mockGetProjectAliases.mockResolvedValue(["Existing Alias"]);
       mockLinkSegmentToProject.mockResolvedValue({ success: true });
 
       const action = await getAction();
@@ -141,7 +110,7 @@ describe("Segments Actions", () => {
     });
 
     it("revalidates review and meeting paths", async () => {
-      setupAdminMock(null);
+      mockGetSegmentNameRaw.mockResolvedValue(null);
       mockLinkSegmentToProject.mockResolvedValue({ success: true });
 
       const action = await getAction();
@@ -187,7 +156,8 @@ describe("Segments Actions", () => {
     }
 
     it("removes tag and adds to ignored entities", async () => {
-      setupAdminMock("Ignored Name", [], IDS.organization);
+      mockGetSegmentNameRaw.mockResolvedValue("Ignored Name");
+      mockGetMeetingOrganizationId.mockResolvedValue(IDS.organization);
       mockRemoveSegmentTag.mockResolvedValue({ success: true });
       mockAddIgnoredEntity.mockResolvedValue({ success: true });
 

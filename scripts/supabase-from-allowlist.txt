@@ -12,10 +12,7 @@
 #     check-no-direct-supabase.sh verwijderd worden (geen verborgen uitzonde-
 #     ringen overhouden).
 
-# Q2b-B scope (meeting-domein, 13 calls)
-apps/cockpit/src/actions/meeting-pipeline.ts
-apps/cockpit/src/actions/meetings.ts
-apps/cockpit/src/actions/segments.ts
+# Q2b-B scope (meeting-domein, 13 calls) — gemigreerd in Q2b-B (2026-04-20).
 
 # Q2b-C scope (API routes + email + devhub issues, 8 calls)
 apps/cockpit/src/actions/email-filter.ts

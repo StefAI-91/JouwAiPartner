@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
 interface SegmentInsert {
@@ -175,6 +176,25 @@ export async function updateSegmentEmbedding(
       embedding_stale: false,
     })
     .eq("id", id);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
+ * Q2b-B: standalone delete-by-meeting-id voor de regenerate-flow. Apart van
+ * `insertMeetingProjectSummaries` (die de delete intern doet) zodat de
+ * regenerate-actie de segments kan opruimen voordat de tagger draait —
+ * idempotent: bij een crash herstelt de volgende run de segments alsnog.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function deleteSegmentsByMeetingId(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db.from("meeting_project_summaries").delete().eq("meeting_id", meetingId);
 
   if (error) return { error: error.message };
   return { success: true };

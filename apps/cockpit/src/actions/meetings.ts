@@ -17,7 +17,7 @@ import {
   linkMeetingParticipant,
   unlinkMeetingParticipant,
 } from "@repo/database/mutations/meeting-participants";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import { listMeetingProjectIds, listMeetingParticipantIds } from "@repo/database/queries/meetings";
 import {
   updateTitleSchema,
   updateSummarySchema,
@@ -224,10 +224,9 @@ export async function updateMeetingMetadataAction(
     parsed.data;
 
   // Fetch current links to diff
-  const supabase = getAdminClient();
-  const [{ data: currentProjects }, { data: currentParticipants }] = await Promise.all([
-    supabase.from("meeting_projects").select("project_id").eq("meeting_id", meetingId),
-    supabase.from("meeting_participants").select("person_id").eq("meeting_id", meetingId),
+  const [currentProjectIdList, currentParticipantIdList] = await Promise.all([
+    listMeetingProjectIds(meetingId),
+    listMeetingParticipantIds(meetingId),
   ]);
 
   // Scalar updates in parallel
@@ -243,13 +242,13 @@ export async function updateMeetingMetadataAction(
   }
 
   // Diff projects
-  const currentProjectIds = new Set((currentProjects ?? []).map((p) => p.project_id));
+  const currentProjectIds = new Set(currentProjectIdList);
   const desiredProjectIds = new Set(projectIds);
   const projectsToLink = projectIds.filter((id) => !currentProjectIds.has(id));
   const projectsToUnlink = [...currentProjectIds].filter((id) => !desiredProjectIds.has(id));
 
   // Diff participants
-  const currentParticipantIds = new Set((currentParticipants ?? []).map((p) => p.person_id));
+  const currentParticipantIds = new Set(currentParticipantIdList);
   const desiredParticipantIds = new Set(participantIds);
   const peopleToLink = participantIds.filter((id) => !currentParticipantIds.has(id));
   const peopleToUnlink = [...currentParticipantIds].filter((id) => !desiredParticipantIds.has(id));

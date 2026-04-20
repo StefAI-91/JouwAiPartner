@@ -322,6 +322,32 @@ export async function listFocusProjects(
   }));
 }
 
+/**
+ * Q2b-B: lichte single-column read voor de segment-link feedback flow die
+ * de huidige `aliases`-array nodig heeft om `project_name_raw` toe te voegen
+ * zonder duplicaten.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getProjectAliases(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<string[] | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("projects")
+    .select("aliases")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getProjectAliases]", error.message);
+    return null;
+  }
+  if (!data) return null;
+  return (data.aliases as string[] | null) ?? [];
+}
+
 export async function getProjectByNameIlike(name: string) {
   const { data } = await getAdminClient()
     .from("projects")
