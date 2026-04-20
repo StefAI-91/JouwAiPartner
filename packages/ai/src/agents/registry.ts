@@ -76,12 +76,12 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     name: "Meeting Structurer",
     role: "De architect",
     description:
-      "Merged Sonnet-agent die briefing, 14-type kernpunten, deelnemers en entities in één call produceert. Vervangt Summarizer+Extractor.",
+      "Experimentele merged-agent die briefing + 14-type kernpunten + deelnemers + entities in één call produceert. Alleen actief met `USE_MEETING_STRUCTURER=true` env-flag — staat nu uit.",
     mascot: "🧱",
     model: "claude-sonnet-4-6",
     modelLabel: "Sonnet 4.6",
     quadrant: "cockpit",
-    status: "live",
+    status: "building",
     promptFile: "meeting_structurer.md",
     entrypoint: "packages/ai/src/pipeline/steps/structure.ts",
   },
@@ -215,7 +215,7 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     name: "Risk Specialist",
     role: "De wachter",
     description:
-      "Extraheert risk-items uit transcripts. Enige risk-extractie-bron na verwijdering van Extractor.",
+      "Gespecialiseerde risk-extractor op Sonnet 4.6 met 'high' effort voor cross-turn patroon-detectie. Draait parallel aan de hoofdpipeline en schrijft zijn risks direct naar de extractions-tabel.",
     mascot: "🦉",
     model: "claude-sonnet-4-6",
     modelLabel: "Sonnet 4.6",
