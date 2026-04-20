@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 495 |
-| Exported functions/constants | 748 |
-| Exported types/interfaces | 194 |
-| Cross-package imports | 616 |
+| Files scanned | 494 |
+| Exported functions/constants | 751 |
+| Exported types/interfaces | 192 |
+| Cross-package imports | 615 |
 | Critical integration points (3+ packages) | 15 |
 
 ## Package Dependency Flow
@@ -412,6 +412,7 @@
 
 **Exports:**
 - `deleteExtractionsByMeetingId()`
+- `deleteExtractionsByMeetingAndType()`
 - `getExtractionForCorrection()`
 - `correctExtraction()`
 - `insertExtractions()`
@@ -570,15 +571,6 @@
 **Internal deps:**
 - `../validations/email-extractor` → EmailExtractorOutputSchema, EmailExtractorOutput
 
-### `packages/ai/src/agents/extractor.ts`
-
-**Exports:**
-- `runExtractor()`
-
-**Internal deps:**
-- `../validations/extractor` → ExtractorOutputSchema, ExtractorOutput
-- `./run-logger` → withAgentRun
-
 ### `packages/ai/src/agents/gatekeeper.ts`
 
 **Exports:**
@@ -696,13 +688,15 @@
 **Exports:**
 - `runRiskSpecialist()`
 - `RISK_SPECIALIST_PROMPT_VERSION`
+- `RISK_SPECIALIST_MODEL`
 - `RISK_SPECIALIST_SYSTEM_PROMPT`
 
 **Types:** `RiskSpecialistContext`, `RiskSpecialistRunMetrics`, `RiskSpecialistRunResult`
 
 **Internal deps:**
 - `../validations/risk-specialist` → RiskSpecialistRawOutputSchema, type RiskSpecialistItem, type RiskSpecialistOutput, type RawRiskSpecialistOutput
-- `../utils/normalise` → emptyToNull, normaliseForQuoteMatch, sentinelToNull
+- `../utils/normalise` → emptyToNull, sentinelToNull
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/run-logger.ts`
 
@@ -852,7 +846,6 @@
 **Internal deps:**
 - `../agents/gatekeeper` → runGatekeeper
 - `../agents/gatekeeper` → ParticipantInfo
-- `../agents/extractor` → ExtractorOutput
 - `../validations/gatekeeper` → GatekeeperOutput
 - `../validations/gatekeeper` → PartyType, IdentifiedProject
 - `./entity-resolution` → resolveOrganization
@@ -861,9 +854,8 @@
 - `./build-raw-fireflies` → buildRawFireflies
 - `./steps/transcribe` → runTranscribeStep
 - `./steps/summarize` → runSummarizeStep
-- `./steps/extract` → runExtractStep
 - `./steps/structure` → runStructureStep, isMeetingStructurerEnabled
-- `./steps/risk-specialist-experiment` → runRiskSpecialistExperiment
+- `./steps/risk-specialist` → runRiskSpecialistStep
 - `./steps/generate-title` → runGenerateTitleStep
 - `./steps/tag-and-segment` → runTagAndSegmentStep
 - `./steps/embed` → runEmbedStep
@@ -948,17 +940,28 @@
 ### `packages/ai/src/pipeline/save-extractions.ts`
 
 **Exports:**
-- `saveExtractions()`
 - `saveStructuredExtractions()`
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → linkAllMeetingProjects
-- `@repo/database/mutations/extractions` → insertExtractions, replaceMeetingExtractions
+- `@repo/database/mutations/extractions` → replaceMeetingExtractions
 
 **Internal deps:**
-- `../validations/extractor` → ExtractorOutput, ExtractionItem
 - `../validations/gatekeeper` → IdentifiedProject
 - `../validations/meeting-structurer` → validateKernpuntMetadata, type Kernpunt, type MeetingStructurerOutput
+
+### `packages/ai/src/pipeline/save-risk-extractions.ts`
+
+**Exports:**
+- `saveRiskExtractions()`
+
+**Depends on:**
+- `@repo/database/mutations/meetings` → linkAllMeetingProjects
+- `@repo/database/mutations/extractions` → deleteExtractionsByMeetingAndType, insertExtractions, type ExtractionInsertRow
+
+**Internal deps:**
+- `../validations/gatekeeper` → IdentifiedProject
+- `../validations/risk-specialist` → RiskSpecialistItem, RiskSpecialistOutput
 
 ### `packages/ai/src/pipeline/scan-needs.ts`
 
@@ -1006,21 +1009,6 @@
 **Internal deps:**
 - `../embed-pipeline` → embedMeetingWithExtractions
 
-### `packages/ai/src/pipeline/steps/extract.ts`
-
-**Exports:**
-- `runExtractStep()`
-
-**Types:** `ExtractResult`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingRawFireflies
-
-**Internal deps:**
-- `../../agents/extractor` → runExtractor, ExtractorOutput
-- `../save-extractions` → saveExtractions
-- `../../validations/gatekeeper` → IdentifiedProject
-
 ### `packages/ai/src/pipeline/steps/generate-title.ts`
 
 **Exports:**
@@ -1035,16 +1023,18 @@
 - `../generate-title` → generateMeetingTitle
 - `../../validations/gatekeeper` → IdentifiedProject
 
-### `packages/ai/src/pipeline/steps/risk-specialist-experiment.ts`
+### `packages/ai/src/pipeline/steps/risk-specialist.ts`
 
 **Exports:**
-- `runRiskSpecialistExperiment()`
+- `runRiskSpecialistStep()`
 
 **Depends on:**
 - `@repo/database/mutations/experimental-risk-extractions` → insertExperimentalRiskExtraction
 
 **Internal deps:**
-- `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
+- `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_MODEL, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
+- `../save-risk-extractions` → saveRiskExtractions
+- `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/structure.ts`
 
@@ -1250,14 +1240,6 @@
 - `EmailExtractorOutputSchema`
 
 **Types:** `EmailExtractionItem`, `EmailExtractorOutput`
-
-### `packages/ai/src/validations/extractor.ts`
-
-**Exports:**
-- `ExtractionItemSchema`
-- `ExtractorOutputSchema`
-
-**Types:** `ExtractionItem`, `ExtractorOutput`
 
 ### `packages/ai/src/validations/fireflies.ts`
 
@@ -1726,15 +1708,14 @@
 
 **Exports:**
 - `regenerateMeetingAction()`
+- `regenerateRisksAction()`
 - `reprocessMeetingAction()`
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale
-- `@repo/database/mutations/extractions` → deleteExtractionsByMeetingId
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
-- `@repo/ai/agents/extractor` → runExtractor
-- `@repo/ai/pipeline/save-extractions` → saveExtractions
+- `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
 - `@repo/ai/agents/gatekeeper` → runGatekeeper
 - `@repo/ai/pipeline/tagger` → runTagger
@@ -2040,10 +2021,8 @@
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/ai/pipeline/steps/transcribe` → runTranscribeStep
 - `@repo/ai/pipeline/steps/summarize` → runSummarizeStep
-- `@repo/ai/agents/extractor` → runExtractor
-- `@repo/ai/pipeline/save-extractions` → saveExtractions
+- `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/embed-pipeline` → embedMeetingWithExtractions
-- `@repo/database/mutations/extractions` → deleteExtractionsByMeetingId
 - `@repo/database/mutations/meetings` → markMeetingEmbeddingStale
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
@@ -3056,6 +3035,7 @@
 - `ExtractionTabsPanel()`
 
 **Depends on:**
+- `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
 - (type) `@repo/database/queries/people` → PersonForAssignment
 
 ### `apps/cockpit/src/components/meetings/meeting-detail.tsx`
@@ -3107,6 +3087,13 @@
 
 **Depends on:**
 - `@repo/ui/button` → Button
+
+### `apps/cockpit/src/components/meetings/risk-list.tsx`
+
+**Exports:**
+- `RiskList()`
+
+**Types:** `RiskItem`
 
 ### `apps/cockpit/src/components/organizations/org-briefing.tsx`
 
@@ -3247,6 +3234,7 @@
 - `ReviewDetail()`
 
 **Depends on:**
+- `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
 - (type) `@repo/database/queries/people` → PersonForAssignment
 - (type) `@repo/database/queries/meeting-project-summaries` → MeetingSegment
 
@@ -3284,6 +3272,9 @@
 - `EXTRACTION_TYPE_ICONS`
 - `EXTRACTION_TYPE_COLORS`
 - `CATEGORY_BADGES`
+- `RISK_SEVERITY_BADGES`
+- `RISK_CATEGORY_LABELS`
+- `RISK_IMPACT_AREA_LABELS`
 
 ### `apps/cockpit/src/components/shared/extraction-dots.tsx`
 
@@ -3870,11 +3861,11 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 47 | - | - | - | - | 47 |
+| AI Pipeline | 48 | - | - | - | - | 48 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 47 | 22 | 30 | - | - | 99 |
-| Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
-| Cockpit Components | 41 | 6 | - | 73 | - | 120 |
+| Cockpit Server Actions | 46 | 21 | 30 | - | - | 97 |
+| Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
+| Cockpit Components | 41 | 6 | - | 75 | - | 122 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 83 | 9 | 2 | 26 | - | 120 |
 | Database Queries | - | - | 3 | - | - | 3 |
@@ -3949,16 +3940,16 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist-experiment.ts` |
+| `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist.ts` |
 
 ### mutations/extractions.ts
 
 | Mutation | Called from |
 |----------|------------|
-| `deleteExtractionsByMeetingId()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `deleteExtractionsByMeetingAndType()` | `packages/ai/src/pipeline/save-risk-extractions.ts` |
 | `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
-| `insertExtractions()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
+| `insertExtractions()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
 | `replaceMeetingExtractions()` | `packages/ai/src/pipeline/save-extractions.ts` |
 | `createExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
 | `updateExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
@@ -4026,10 +4017,10 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
-| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/structure.ts`, `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
 | `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/actions/review.ts` |
-| `updateMeetingRawFireflies()` | `packages/ai/src/pipeline/steps/extract.ts`, `packages/ai/src/pipeline/steps/structure.ts` |
+| `updateMeetingRawFireflies()` | `packages/ai/src/pipeline/steps/structure.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `deleteMeeting()` | `apps/cockpit/src/actions/meetings.ts` |

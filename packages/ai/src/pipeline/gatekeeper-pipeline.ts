@@ -1,6 +1,5 @@
 import { runGatekeeper } from "../agents/gatekeeper";
 import type { ParticipantInfo } from "../agents/gatekeeper";
-import type { ExtractorOutput } from "../agents/extractor";
 import { GatekeeperOutput } from "../validations/gatekeeper";
 import type { PartyType, IdentifiedProject } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
@@ -15,9 +14,8 @@ import {
 import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
-import { runExtractStep } from "./steps/extract";
 import { runStructureStep, isMeetingStructurerEnabled } from "./steps/structure";
-import { runRiskSpecialistExperiment } from "./steps/risk-specialist-experiment";
+import { runRiskSpecialistStep } from "./steps/risk-specialist";
 import { runGenerateTitleStep } from "./steps/generate-title";
 import { runTagAndSegmentStep } from "./steps/tag-and-segment";
 import { runEmbedStep } from "./steps/embed";
@@ -48,7 +46,6 @@ interface PipelineResult {
   gatekeeper: GatekeeperOutput;
   partyType: PartyType;
   identifiedProjects: IdentifiedProject[];
-  extractor: ExtractorOutput | null;
   meetingId: string | null;
   extractions_saved: number;
   segments_saved: number;
@@ -67,11 +64,11 @@ interface PipelineResult {
  * 5. Build metadata + insert meeting
  * 6. Link participants
  * 7. ElevenLabs transcription (non-blocking)
- * 8. Summarize + extract (structurer or legacy pair)
+ * 8. Summarize (structurer of legacy summarizer) + RiskSpecialist (parallel,
+ *    risks naar `extractions`-tabel zodat ze zichtbaar zijn in de review-flow)
  * 9. AI title generation
  * 10. Tagger + segments
- * 11. Extractor (legacy path only)
- * 12. Embed meeting + extractions
+ * 11. Embed meeting + extractions
  */
 export async function processMeeting(input: MeetingInput): Promise<PipelineResult> {
   const errors: string[] = [];
@@ -174,7 +171,6 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       gatekeeper: gatekeeperResult,
       partyType,
       identifiedProjects,
-      extractor: null,
       meetingId: null,
       extractions_saved: 0,
       segments_saved: 0,
@@ -207,21 +203,27 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     entityContext: entityContext.contextString,
   };
 
-  // A/B-experiment: parallel aan de hoofdpipeline. Start nu, await aan het einde.
-  const riskSpecialistPromise = runRiskSpecialistExperiment(meetingId, bestTranscript, {
-    ...summarizeContext,
-    meeting_date: input.date,
-    identified_projects: identifiedProjects.map((p) => ({
-      project_name: p.project_name,
-      project_id: p.project_id,
-    })),
-  });
+  // RiskSpecialist draait parallel aan de hoofdpipeline en schrijft naar
+  // zowel `extractions` (UI) als `experimental_risk_extractions` (audit).
+  // Start nu, await aan het einde.
+  const riskSpecialistPromise = runRiskSpecialistStep(
+    meetingId,
+    bestTranscript,
+    {
+      ...summarizeContext,
+      meeting_date: input.date,
+      identified_projects: identifiedProjects.map((p) => ({
+        project_name: p.project_name,
+        project_id: p.project_id,
+      })),
+    },
+    identifiedProjects,
+  );
 
   let summarized = false;
   let richSummary: string | null = null;
   let kernpuntenForTagger: string[] = [];
   let vervolgstappenForTagger: string[] = [];
-  let extractorOutput: ExtractorOutput | null = null;
   let extractionsSaved = 0;
 
   const useStructurer = isMeetingStructurerEnabled();
@@ -243,16 +245,8 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       kernpuntenForTagger = structureResult.kernpunten;
       vervolgstappenForTagger = structureResult.vervolgstappen;
       extractionsSaved = structureResult.extractionsSaved;
-      // Shape-compat: downstream uses of extractorOutput only read
-      // `entities.clients`. Structurer entities match that shape.
-      extractorOutput = structureResult.structurerOutput
-        ? ({
-            extractions: [],
-            entities: { clients: structureResult.structurerOutput.entities.clients },
-          } as ExtractorOutput)
-        : null;
     } else {
-      errors.push(`MeetingStructurer: ${structureResult.error} — falling back to legacy`);
+      errors.push(`MeetingStructurer: ${structureResult.error} — falling back to Summarizer`);
     }
   }
 
@@ -298,24 +292,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   errors.push(...tagResult.errors);
   const segmentsSaved = tagResult.segmentsSaved;
 
-  // Step 11: Legacy Extractor — only when structurer did not persist.
-  if (!useStructurer || extractorOutput === null) {
-    const extractorSummary = richSummary ?? input.summary;
-    console.info(`Extractor using ${transcriptSource} transcript`);
-    const extractResult = await runExtractStep(
-      meetingId,
-      bestTranscript,
-      { ...summarizeContext, summary: extractorSummary, meeting_date: input.date },
-      rawFireflies,
-      transcriptSource,
-      identifiedProjects,
-    );
-    if (extractResult.error) errors.push(`Extractor: ${extractResult.error}`);
-    extractorOutput = extractResult.extractorOutput;
-    extractionsSaved = extractResult.extractionsSaved;
-  }
-
-  // Step 12: Embed meeting + extractions
+  // Step 11: Embed meeting + extractions
   const embedResult = await runEmbedStep(meetingId);
   if (embedResult.error) errors.push(`Embedding: ${embedResult.error}`);
 
@@ -328,7 +305,6 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     gatekeeper: gatekeeperResult,
     partyType,
     identifiedProjects,
-    extractor: extractorOutput,
     meetingId,
     extractions_saved: extractionsSaved,
     segments_saved: segmentsSaved,

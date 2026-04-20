@@ -72,20 +72,6 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     entrypoint: "packages/ai/src/pipeline/steps/summarize.ts",
   },
   {
-    id: "extractor",
-    name: "Extractor",
-    role: "De detective",
-    description:
-      "Haalt opvolgbare actiepunten uit transcripts — alleen items waarbij JAIP iemand kan e-mailen om op te volgen.",
-    mascot: "🕵️",
-    model: "claude-sonnet-4-5-20250929",
-    modelLabel: "Sonnet 4.5",
-    quadrant: "cockpit",
-    status: "live",
-    promptFile: "extractor.md",
-    entrypoint: "packages/ai/src/pipeline/steps/extract.ts",
-  },
-  {
     id: "meeting-structurer",
     name: "Meeting Structurer",
     role: "De architect",
@@ -229,14 +215,14 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     name: "Risk Specialist",
     role: "De wachter",
     description:
-      "Experimentele single-type specialist voor risk-extractie. Draait parallel aan Meeting Structurer voor A/B vergelijking.",
+      "Extraheert risk-items uit transcripts. Enige risk-extractie-bron na verwijdering van Extractor.",
     mascot: "🦉",
     model: "claude-sonnet-4-6",
     modelLabel: "Sonnet 4.6",
     quadrant: "cockpit",
-    status: "building",
+    status: "live",
     promptFile: "risk_specialist.md",
-    entrypoint: "packages/ai/src/pipeline/steps/risk-specialist-experiment.ts",
+    entrypoint: "packages/ai/src/pipeline/steps/risk-specialist.ts",
   },
 ];
 

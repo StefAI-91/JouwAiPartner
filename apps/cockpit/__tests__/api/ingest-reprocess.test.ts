@@ -16,20 +16,12 @@ vi.mock("@repo/ai/pipeline/steps/summarize", () => ({
   runSummarizeStep: vi.fn(),
 }));
 
-vi.mock("@repo/ai/agents/extractor", () => ({
-  runExtractor: vi.fn(),
-}));
-
-vi.mock("@repo/ai/pipeline/save-extractions", () => ({
-  saveExtractions: vi.fn(),
+vi.mock("@repo/ai/pipeline/steps/risk-specialist", () => ({
+  runRiskSpecialistStep: vi.fn(),
 }));
 
 vi.mock("@repo/ai/pipeline/embed-pipeline", () => ({
   embedMeetingWithExtractions: vi.fn(),
-}));
-
-vi.mock("@repo/database/mutations/extractions", () => ({
-  deleteExtractionsByMeetingId: vi.fn(),
 }));
 
 vi.mock("@repo/database/mutations/meetings", () => ({
@@ -68,9 +60,7 @@ vi.mock("@repo/database/queries/ignored-entities", () => ({
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { runTranscribeStep } from "@repo/ai/pipeline/steps/transcribe";
 import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
-import { runExtractor } from "@repo/ai/agents/extractor";
-import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
-import { deleteExtractionsByMeetingId } from "@repo/database/mutations/extractions";
+import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { POST } from "../../src/app/api/ingest/reprocess/route";
 import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
@@ -132,7 +122,7 @@ describe("POST /api/ingest/reprocess", () => {
     expect(res.status).toBe(404);
   });
 
-  it("deletes old extractions and re-runs pipeline", async () => {
+  it("draait summarizer + RiskSpecialist in de reprocess-flow (Extractor is verwijderd)", async () => {
     const mockMeeting = {
       id: "m1",
       title: "Test meeting",
@@ -171,29 +161,18 @@ describe("POST /api/ingest/reprocess", () => {
       kernpunten: ["point 1"],
       vervolgstappen: ["step 1"],
     } as never);
-    vi.mocked(deleteExtractionsByMeetingId).mockResolvedValue(undefined as never);
-    vi.mocked(runExtractor).mockResolvedValue({
-      decisions: [],
-      action_items: [],
-      insights: [],
-      needs: [],
-      entities: {},
-    } as never);
-    vi.mocked(saveExtractions).mockResolvedValue({
-      extractions_saved: 5,
-      projects_linked: 1,
-    } as never);
+    vi.mocked(runRiskSpecialistStep).mockResolvedValue(undefined);
 
     const req = makeRequest({ fireflies_id: "ff-1" });
     const res = await POST(req as never);
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(deleteExtractionsByMeetingId).toHaveBeenCalledWith("m1");
-    expect(runExtractor).toHaveBeenCalledTimes(1);
+    expect(runRiskSpecialistStep).toHaveBeenCalledTimes(1);
+    const args = vi.mocked(runRiskSpecialistStep).mock.calls[0];
+    expect(args[0]).toBe("m1");
     expect(data.meeting_id).toBe("m1");
-    expect(data.extractor.success).toBe(true);
-    expect(data.extractor.extractions_saved).toBe(5);
+    expect(data.risk_specialist.success).toBe(true);
   });
 
   it("returns 502 when Fireflies transcript fetch fails", async () => {

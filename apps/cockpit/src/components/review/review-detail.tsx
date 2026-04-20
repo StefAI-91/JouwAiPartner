@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { FollowUpChecklist } from "@/components/shared/follow-up-checklist";
+import { RiskList, type RiskItem } from "@/components/meetings/risk-list";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@repo/ui/tabs";
 import { ReviewActionBar } from "./review-action-bar";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { EditableTitle } from "@/components/meetings/editable-title";
@@ -15,7 +17,7 @@ import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
 import { updateMeetingSummaryAction } from "@/actions/meetings";
 import { RegenerateMenu } from "@/components/shared/regenerate-menu";
-import { Mail } from "lucide-react";
+import { AlertTriangle, Mail } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
 import { SegmentList } from "@/components/shared/segment-list";
@@ -27,6 +29,7 @@ interface Extraction {
   confidence: number | null;
   transcript_ref: string | null;
   metadata: Record<string, unknown>;
+  reasoning?: string | null;
 }
 
 interface ReviewDetailProps {
@@ -139,6 +142,8 @@ export function ReviewDetail({
   const actionItems = meeting.extractions.filter(
     (e) => e.type === "action_item" && !deletedIds.has(e.id),
   );
+  const risks = meeting.extractions.filter((e) => e.type === "risk" && !deletedIds.has(e.id));
+  const defaultTab = risks.length > 0 ? "risks" : "followups";
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
 
@@ -188,28 +193,54 @@ export function ReviewDetail({
           </div>
         )}
 
-        <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4 pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Mail className="size-4 text-amber-500" />
-              <h2 className="text-base font-semibold">Opvolgsuggesties</h2>
-              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                {actionItems.length}
-              </span>
+        <Tabs defaultValue={defaultTab}>
+          <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm px-6 pt-4 pb-3">
+            <div className="flex items-center justify-between gap-3">
+              <TabsList>
+                <TabsTrigger value="risks">
+                  <AlertTriangle className="mr-1.5 size-4 text-red-600" />
+                  Risico&apos;s
+                  <span className="ml-2 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                    {risks.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="followups">
+                  <Mail className="mr-1.5 size-4 text-amber-500" />
+                  Opvolgsuggesties
+                  <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                    {actionItems.length}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+              <RegenerateMenu meetingId={meeting.id} />
             </div>
-            <RegenerateMenu meetingId={meeting.id} />
           </div>
-        </div>
 
-        <div className="p-6 pb-24">
-          <FollowUpChecklist
-            items={actionItems}
-            promotedIds={promotedExtractionIds}
-            people={peopleForAssignment}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </div>
+          <TabsContent value="risks" className="p-6 pb-24">
+            <RiskList
+              items={risks.map((r) => ({
+                id: r.id,
+                content: r.content,
+                confidence: r.confidence,
+                transcript_ref: r.transcript_ref,
+                reasoning: r.reasoning ?? null,
+                metadata: (r.metadata ?? null) as RiskItem["metadata"],
+              }))}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+
+          <TabsContent value="followups" className="p-6 pb-24">
+            <FollowUpChecklist
+              items={actionItems}
+              promotedIds={promotedExtractionIds}
+              people={peopleForAssignment}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <ReviewActionBar

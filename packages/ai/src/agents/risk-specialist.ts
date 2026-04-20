@@ -9,7 +9,8 @@ import {
   type RiskSpecialistOutput,
   type RawRiskSpecialistOutput,
 } from "../validations/risk-specialist";
-import { emptyToNull, normaliseForQuoteMatch, sentinelToNull } from "../utils/normalise";
+import { emptyToNull, sentinelToNull } from "../utils/normalise";
+import { withAgentRun } from "./run-logger";
 
 /**
  * Experimental single-type specialist: runs parallel to MeetingStructurer
@@ -24,7 +25,15 @@ import { emptyToNull, normaliseForQuoteMatch, sentinelToNull } from "../utils/no
  */
 
 /** Bump when the prompt changes in a way that breaks comparison with earlier runs. */
-export const RISK_SPECIALIST_PROMPT_VERSION = "v5";
+export const RISK_SPECIALIST_PROMPT_VERSION = "v6";
+
+/**
+ * Model-id die aan Anthropic wordt gegeven én als audit-waarde naar
+ * `experimental_risk_extractions.model` gaat. Één bron-van-waarheid zodat
+ * de pipeline niet meer kan drift'en ten opzichte van wat er daadwerkelijk
+ * draait (zie eerdere bug: tracker logde Haiku terwijl agent op Sonnet liep).
+ */
+export const RISK_SPECIALIST_MODEL = "claude-sonnet-4-6";
 
 const SYSTEM_PROMPT = readFileSync(
   // packages/ai/src/agents/ → ../../prompts/ (binnen @repo/ai package)
@@ -94,53 +103,56 @@ export async function runRiskSpecialist(
     .filter(Boolean)
     .join("\n");
 
-  const { object, usage } = await generateObject({
-    model: anthropic("claude-sonnet-4-6"),
-    maxRetries: 3,
-    temperature: 0,
-    // maxOutputTokens telt als thinking + response samen. Met 4000/2000
-    // bleven er slechts 2000 tokens voor de response — bij v2-prompt met
-    // extra instructieblokken gebruikt Haiku vaak al >2000 thinking-tokens
-    // waardoor er geen output meer past en Anthropic 'no object generated'
-    // terug geeft. 8000 totaal + 3000 thinking = 5000 output, ruim voor
-    // 10 risks (~150-200 tokens per item, ~1500-2000 JSON-overhead).
-    maxOutputTokens: 8000,
-    schema: RiskSpecialistRawOutputSchema,
-    providerOptions: {
-      // Sonnet 4.6 accepteert de `effort`-parameter; "high" zet extended
-      // thinking aan op het hoogste niveau (SDK kiest het budget).
-      anthropic: { effort: "high" },
+  const { object, usage } = await withAgentRun(
+    {
+      agent_name: "risk-specialist",
+      model: RISK_SPECIALIST_MODEL,
+      prompt_version: RISK_SPECIALIST_PROMPT_VERSION,
     },
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
+    async () => {
+      const res = await generateObject({
+        model: anthropic(RISK_SPECIALIST_MODEL),
+        maxRetries: 3,
+        temperature: 0,
+        // maxOutputTokens telt als thinking + response samen. Met 4000/2000
+        // bleven er slechts 2000 tokens voor de response — bij v2-prompt met
+        // extra instructieblokken gebruikt Haiku vaak al >2000 thinking-tokens
+        // waardoor er geen output meer past en Anthropic 'no object generated'
+        // terug geeft. 8000 totaal + 3000 thinking = 5000 output, ruim voor
+        // 10 risks (~150-200 tokens per item, ~1500-2000 JSON-overhead).
+        maxOutputTokens: 8000,
+        schema: RiskSpecialistRawOutputSchema,
         providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+          // Sonnet 4.6 accepteert de `effort`-parameter; "high" zet extended
+          // thinking aan op het hoogste niveau (SDK kiest het budget).
+          anthropic: { effort: "high" },
         },
-      },
-      {
-        role: "user",
-        content: `${contextPrefix}${projectConstraint}\n\n--- TRANSCRIPT ---\n${transcript}`,
-      },
-    ],
-  });
+        messages: [
+          {
+            role: "system",
+            content: SYSTEM_PROMPT,
+            providerOptions: {
+              anthropic: { cacheControl: { type: "ephemeral" } },
+            },
+          },
+          {
+            role: "user",
+            content: `${contextPrefix}${projectConstraint}\n\n--- TRANSCRIPT ---\n${transcript}`,
+          },
+        ],
+      });
+      return { result: { object: res.object, usage: res.usage }, usage: res.usage };
+    },
+  );
 
-  // Defensive post-processing: clamp confidence + quote-verificatie.
-  // Cap-waarde 0.25 (niet 0.3) is bewust gekozen: v5 staat 0.3 toe als
-  // "bewuste twijfelclassificatie" door het model (sectie 3 / CONFIDENCE-
-  // DISCIPLINE). Een cap op 0.3 zou betekenen dat quote-mismatches niet
-  // meer te onderscheiden zijn van bewuste-twijfel-rijen in de DB.
-  // 0.25 is ondubbelzinnig "cap hit", geen geldige model-output.
-  const normalisedTranscript = normaliseForQuoteMatch(transcript);
+  // Clamp naar [0,1] — Anthropic's schema kent geen min/max dus we borgen
+  // de range hier. Bewust GEEN quote-mismatch-cap: de normaliser dekt
+  // punctuatie/diakrieten niet af, waardoor vrijwel elke Sonnet-quote ten
+  // onrechte op 0.25 gecapt werd. Downstream wil Sonnet's eigen confidence
+  // gebruiken voor severity-filtering; quote-verificatie wordt later als
+  // apart signaal toegevoegd (geen confidence-overschrijving).
   for (const r of object.risks) {
     r.confidence = Math.max(0, Math.min(1, r.confidence));
-    if (r.source_quote && r.source_quote !== "") {
-      const refNorm = normaliseForQuoteMatch(r.source_quote);
-      if (!normalisedTranscript.includes(refNorm)) {
-        r.confidence = Math.min(r.confidence, 0.25);
-      }
-    }
   }
 
   const latencyMs = Date.now() - startedAt;

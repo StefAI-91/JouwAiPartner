@@ -9,6 +9,26 @@ export async function deleteExtractionsByMeetingId(
   return { success: true };
 }
 
+/**
+ * Delete alle extractions van één meeting voor één specifiek type. Gebruikt
+ * door de RiskSpecialist-save-stap zodat een re-run idempotent is (alle
+ * risks worden vervangen) zonder action_items of andere types te raken.
+ * Full-replace via `reset_extractions_for_meeting` zou die types ook wissen.
+ */
+export async function deleteExtractionsByMeetingAndType(
+  meetingId: string,
+  type: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("extractions")
+    .delete()
+    .eq("meeting_id", meetingId)
+    .eq("type", type);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function getExtractionForCorrection(extractionId: string): Promise<{
   id: string;
   content: string;
