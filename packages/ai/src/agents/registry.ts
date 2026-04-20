@@ -71,10 +71,6 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     promptFile: "summarizer.md",
     entrypoint: "packages/ai/src/pipeline/steps/summarize.ts",
   },
-  // Meeting Structurer is bewust NIET opgenomen: de code leeft nog achter
-  // de `USE_MEETING_STRUCTURER` env-flag (default uit) maar draait niet in
-  // productie. Als de flag ooit weer aan gaat, hier een entry toevoegen
-  // met entrypoint `packages/ai/src/pipeline/steps/structure.ts`.
   {
     id: "title-generator",
     name: "Title Generator",

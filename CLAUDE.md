@@ -146,11 +146,14 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 **Built:**
 
-| Agent      | Model     | Quadrant | Purpose                                                                           |
-| ---------- | --------- | -------- | --------------------------------------------------------------------------------- |
-| Gatekeeper | Haiku 4.5 | Cockpit  | Classify meetings: meeting_type, party_type, relevance_score                      |
-| Extractor  | Sonnet    | Cockpit  | Extract decisions, action_items, needs, insights with confidence + transcript_ref |
-| Classifier | Haiku 4.5 | DevHub   | Classify issues: type, component, severity, repro steps                           |
+| Agent           | Model      | Quadrant | Purpose                                                                    |
+| --------------- | ---------- | -------- | -------------------------------------------------------------------------- |
+| Gatekeeper      | Haiku 4.5  | Cockpit  | Classify meetings: meeting_type, party_type, relevance_score               |
+| Summarizer      | Sonnet 4.5 | Cockpit  | Rich summary per meeting: briefing, kernpunten, deelnemers, vervolgstappen |
+| Risk Specialist | Sonnet 4.6 | Cockpit  | Gespecialiseerde risk-extractor (cross-turn patroon-detectie, high effort) |
+| Classifier      | Haiku 4.5  | DevHub   | Classify issues: type, component, severity, repro steps                    |
+
+Volledig register (12 actieve agents): `packages/ai/src/agents/registry.ts` — voedt de `/agents` observability pagina.
 
 **Planned (see vision doc for full agent roster):**
 
@@ -373,7 +376,6 @@ This uses Next.js 16 which has breaking changes from earlier versions. Read the 
 - `NEXT_PUBLIC_COCKPIT_URL` — Full URL naar de cockpit app (productie: `https://jouw-ai-partner.vercel.app`, dev fallback: `http://localhost:3000`). Gebruikt door (a) workspace-switcher in beide apps voor cross-app navigatie, (b) devhub `/auth/callback` om admins na magic-link login naar cockpit te redirecten, (c) cockpit middleware voor member-forbidden-redirect.
 - `NEXT_PUBLIC_DEVHUB_URL` — Full URL naar de devhub app (productie: `https://jouw-ai-partner-devhub.vercel.app`, dev fallback: `http://localhost:3001`). Gebruikt door cockpit callback + middleware om members naar devhub te redirecten + door de workspace-switcher.
 - `NEXT_PUBLIC_PORTAL_URL` — Full URL naar de portal app (nog niet gedeployed).
-- `USE_MEETING_STRUCTURER` — Feature flag (string `"true"` / default `"false"`). Server-side, server-only. `"true"` schakelt de pipeline (gatekeeper-pipeline.ts) over van de legacy Summarizer+Extractor pair naar de merged MeetingStructurer agent. Fout in de merged agent → automatische fallback naar legacy. Case-sensitive: alleen exact `"true"` telt als on.
 
 Beide apps (cockpit + devhub) hebben de 3 NEXT*PUBLIC*\* vars nodig zodat de workspace-switcher in de sidebar naar de andere quadranten kan linken.
 

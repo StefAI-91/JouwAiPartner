@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { RISK_SPECIALIST_SYSTEM_PROMPT } from "../../src/agents/risk-specialist";
-import { MEETING_STRUCTURER_SYSTEM_PROMPT } from "../../src/agents/meeting-structurer";
 
 /**
  * Prompt-sync test (PW-QC-03 AI-QC-006 / QUAL-QC-021).
@@ -32,31 +31,17 @@ describe("prompt sync (single source of truth)", () => {
     expect(md.length).toBeGreaterThan(100);
   });
 
-  it("meeting_structurer.md bestaat en is niet leeg", () => {
-    const md = readPrompt("meeting_structurer.md");
-    expect(md.length).toBeGreaterThan(100);
-  });
-
   it("RISK_SPECIALIST_SYSTEM_PROMPT matcht risk_specialist.md (trimEnd)", () => {
     expect(RISK_SPECIALIST_SYSTEM_PROMPT).toBe(readPrompt("risk_specialist.md"));
   });
 
-  it("MEETING_STRUCTURER_SYSTEM_PROMPT matcht meeting_structurer.md (trimEnd)", () => {
-    expect(MEETING_STRUCTURER_SYSTEM_PROMPT).toBe(readPrompt("meeting_structurer.md"));
-  });
-
-  it("geen inline `const SYSTEM_PROMPT = \\`…\\`` in agent-bestanden", () => {
+  it("geen inline `const SYSTEM_PROMPT = \\`…\\`` in risk-specialist agent", () => {
     // Regressie-guard: als iemand de runtime-load ongedaan maakt en een
     // inline template-literal terugzet, moet deze test rood gaan.
-    const agents = [
-      resolve(HERE, "../../src/agents/risk-specialist.ts"),
-      resolve(HERE, "../../src/agents/meeting-structurer.ts"),
-    ];
-    for (const path of agents) {
-      const src = readFileSync(path, "utf8");
-      expect(src, `${path} mag geen inline SYSTEM_PROMPT template-literal bevatten`).not.toMatch(
-        /const SYSTEM_PROMPT\s*=\s*`/,
-      );
-    }
+    const path = resolve(HERE, "../../src/agents/risk-specialist.ts");
+    const src = readFileSync(path, "utf8");
+    expect(src, `${path} mag geen inline SYSTEM_PROMPT template-literal bevatten`).not.toMatch(
+      /const SYSTEM_PROMPT\s*=\s*`/,
+    );
   });
 });

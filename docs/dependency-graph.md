@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 494 |
-| Exported functions/constants | 751 |
-| Exported types/interfaces | 192 |
-| Cross-package imports | 615 |
-| Critical integration points (3+ packages) | 15 |
+| Files scanned | 478 |
+| Exported functions/constants | 715 |
+| Exported types/interfaces | 180 |
+| Cross-package imports | 597 |
+| Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
 
@@ -416,7 +416,6 @@
 - `getExtractionForCorrection()`
 - `correctExtraction()`
 - `insertExtractions()`
-- `replaceMeetingExtractions()`
 - `createExtraction()`
 - `updateExtraction()`
 - `deleteExtraction()`
@@ -621,20 +620,6 @@
 - `../validations/management-insights` → ManagementInsightsOutputSchema, type ManagementInsightsOutput
 - `./run-logger` → withAgentRun
 
-### `packages/ai/src/agents/meeting-structurer.ts`
-
-**Exports:**
-- `runMeetingStructurer()`
-- `MEETING_STRUCTURER_SYSTEM_PROMPT`
-
-**Types:** `MeetingStructurerContext`
-
-**Internal deps:**
-- `../validations/meeting-structurer` → MeetingStructurerOutputSchema, type MeetingStructurerOutput, type RawMeetingStructurerOutput, type Kernpunt, type MeetingStructurerParticipant
-- `../extraction-types` → filterMetadataByType
-- `../utils/normalise` → emptyToNull, normaliseForQuoteMatch, sentinelToNull
-- `./run-logger` → withAgentRun
-
 ### `packages/ai/src/agents/needs-scanner.ts`
 
 **Exports:**
@@ -671,17 +656,6 @@
 - `AGENT_REGISTRY`
 
 **Types:** `AgentStatus`, `AgentQuadrant`, `AgentDefinition`
-
-### `packages/ai/src/agents/render-summary.ts`
-
-**Exports:**
-- `renderMeetingSummary()`
-- `buildLegacyKernpunten()`
-- `buildLegacyVervolgstappen()`
-
-**Internal deps:**
-- `../validations/meeting-structurer` → MeetingStructurerOutput, Kernpunt
-- `../extraction-types` → TYPE_MARKDOWN_LABEL
 
 ### `packages/ai/src/agents/risk-specialist.ts`
 
@@ -854,7 +828,6 @@
 - `./build-raw-fireflies` → buildRawFireflies
 - `./steps/transcribe` → runTranscribeStep
 - `./steps/summarize` → runSummarizeStep
-- `./steps/structure` → runStructureStep, isMeetingStructurerEnabled
 - `./steps/risk-specialist` → runRiskSpecialistStep
 - `./steps/generate-title` → runGenerateTitleStep
 - `./steps/tag-and-segment` → runTagAndSegmentStep
@@ -936,19 +909,6 @@
 **Internal deps:**
 - `../embeddings` → embedBatch
 - `./embed-text` → buildMeetingEmbedText
-
-### `packages/ai/src/pipeline/save-extractions.ts`
-
-**Exports:**
-- `saveStructuredExtractions()`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → linkAllMeetingProjects
-- `@repo/database/mutations/extractions` → replaceMeetingExtractions
-
-**Internal deps:**
-- `../validations/gatekeeper` → IdentifiedProject
-- `../validations/meeting-structurer` → validateKernpuntMetadata, type Kernpunt, type MeetingStructurerOutput
 
 ### `packages/ai/src/pipeline/save-risk-extractions.ts`
 
@@ -1034,24 +994,6 @@
 **Internal deps:**
 - `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_MODEL, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
 - `../save-risk-extractions` → saveRiskExtractions
-- `../../validations/gatekeeper` → IdentifiedProject
-
-### `packages/ai/src/pipeline/steps/structure.ts`
-
-**Exports:**
-- `runStructureStep()`
-- `isMeetingStructurerEnabled()`
-
-**Types:** `StructureResult`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingRawFireflies
-
-**Internal deps:**
-- `../../agents/meeting-structurer` → runMeetingStructurer
-- `../../validations/meeting-structurer` → MeetingStructurerOutput
-- `../../agents/render-summary` → renderMeetingSummary, buildLegacyKernpunten, buildLegacyVervolgstappen
-- `../save-extractions` → saveStructuredExtractions
 - `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/summarize.ts`
@@ -1146,22 +1088,6 @@
 **Exports:**
 - `embedText()`
 - `embedBatch()`
-
-### `packages/ai/src/extraction-types.ts`
-
-**Exports:**
-- `isTier1()`
-- `isTier2()`
-- `isExtractionType()`
-- `filterMetadataByType()`
-- `TIER_1_TYPES`
-- `TIER_2_TYPES`
-- `ALL_EXTRACTION_TYPES`
-- `METADATA_FIELDS_PER_TYPE`
-- `TYPE_MARKDOWN_LABEL`
-- `MARKDOWN_LABEL_TO_TYPE`
-
-**Types:** `Tier1Type`, `Tier2Type`, `ExtractionType`
 
 ### `packages/ai/src/fireflies.ts`
 
@@ -1294,21 +1220,6 @@
 - `ManagementInsightsOutputSchema`
 
 **Types:** `ManagementInsightsOutput`
-
-### `packages/ai/src/validations/meeting-structurer.ts`
-
-**Exports:**
-- `validateKernpuntMetadata()`
-- `MeetingStructurerParticipantSchema`
-- `TYPE_METADATA_SCHEMAS`
-- `KernpuntSchema`
-- `EntitiesSchema`
-- `MeetingStructurerOutputSchema`
-
-**Types:** `Kernpunt`, `MeetingStructurerParticipant`, `MeetingStructurerOutput`, `RawMeetingStructurerOutput`
-
-**Internal deps:**
-- `../extraction-types` → ALL_EXTRACTION_TYPES, type ExtractionType
 
 ### `packages/ai/src/validations/needs-scanner.ts`
 
@@ -1617,27 +1528,6 @@
 
 **Exports:**
 - `cleanInput()`
-
-### `apps/cockpit/src/actions/dev-extractor.ts`
-
-**Exports:**
-- `runDevExtractorAction()`
-- `getMeetingStructurerPromptAction()`
-- `runDevRiskSpecialistAction()`
-- `getRiskSpecialistPromptAction()`
-
-**Types:** `DevExtractorResult`, `ActionResult`, `DevRiskSpecialistResult`
-
-**Depends on:**
-- `@repo/auth/access` → requireAdminInAction
-- `@repo/database/queries/meetings` → getMeetingForDevExtractor
-- `@repo/database/queries/extractions` → getExtractionsForMeetingByType
-- `@repo/ai/agents/meeting-structurer` → runMeetingStructurer, MEETING_STRUCTURER_SYSTEM_PROMPT
-- `@repo/ai/agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_SYSTEM_PROMPT, RISK_SPECIALIST_PROMPT_VERSION
-- `@repo/ai/extraction-types` → ALL_EXTRACTION_TYPES
-- (type) `@repo/ai/validations/meeting-structurer` → Kernpunt
-- (type) `@repo/ai/validations/risk-specialist` → RiskSpecialistItem, RiskSpecialistOutput
-- (type) `@repo/ai/agents/risk-specialist` → RiskSpecialistRunMetrics
 
 ### `apps/cockpit/src/actions/email-filter.ts`
 
@@ -2260,48 +2150,6 @@
 - `@repo/database/queries/organizations` → listOrganizationsByType
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
-
-### `apps/cockpit/src/app/(dashboard)/dev/extractor/client.tsx`
-
-**Exports:**
-- `DevExtractorClient()`
-
-**Depends on:**
-- `@repo/ai/extraction-types` → ALL_EXTRACTION_TYPES
-- (type) `@repo/ai/extraction-types` → ExtractionType
-
-### `apps/cockpit/src/app/(dashboard)/dev/extractor/copy-button.tsx`
-
-**Exports:**
-- `CopyButton()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/extractor/page.tsx`
-
-**Exports:**
-- `dynamic`
-
-**Depends on:**
-- `@repo/database/supabase/server` → createClient
-- `@repo/database/queries/meetings` → listMeetingsWithTranscript
-
-### `apps/cockpit/src/app/(dashboard)/dev/extractor/panel.tsx`
-
-**Exports:**
-- `Panel()`
-- `summariseMetadata()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/extractor/specialist-result-panel.tsx`
-
-**Exports:**
-- `SpecialistResultPanel()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/extractor/structurer-result-panel.tsx`
-
-**Exports:**
-- `StructurerResultPanel()`
-
-**Depends on:**
-- (type) `@repo/ai/extraction-types` → ExtractionType
 
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
@@ -3861,13 +3709,13 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 48 | - | - | - | - | 48 |
+| AI Pipeline | 45 | - | - | - | - | 45 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 46 | 21 | 30 | - | - | 97 |
+| Cockpit Server Actions | 44 | 15 | 29 | - | - | 88 |
 | Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
 | Cockpit Components | 41 | 6 | - | 75 | - | 122 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 83 | 9 | 2 | 26 | - | 120 |
+| Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
 | DevHub API Routes | 3 | - | 1 | - | - | 4 |
@@ -3883,7 +3731,6 @@ parts of the codebase — changes here have the widest blast radius.
 
 | File | Packages | Count |
 |------|----------|-------|
-| `apps/cockpit/src/actions/dev-extractor.ts` | auth, database, ai | 3 |
 | `apps/cockpit/src/actions/email-filter.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/email-review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
@@ -3950,7 +3797,6 @@ Tracing the most important data flows from action → pipeline → database.
 | `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `insertExtractions()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
-| `replaceMeetingExtractions()` | `packages/ai/src/pipeline/save-extractions.ts` |
 | `createExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
 | `updateExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
 | `deleteExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
@@ -4017,10 +3863,9 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
-| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-extractions.ts`, `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
-| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/structure.ts`, `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
 | `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/actions/review.ts` |
-| `updateMeetingRawFireflies()` | `packages/ai/src/pipeline/steps/structure.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `deleteMeeting()` | `apps/cockpit/src/actions/meetings.ts` |
@@ -4122,12 +3967,6 @@ Which queries are used where across the codebase.
 | `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
-### queries/extractions.ts
-
-| Query | Used in |
-|-------|---------|
-| `getExtractionsForMeetingByType()` | `apps/cockpit/src/actions/dev-extractor.ts` |
-
 ### queries/ignored-entities.ts
 
 | Query | Used in |
@@ -4194,8 +4033,6 @@ Which queries are used where across the codebase.
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getMeetingByTitleAndDate()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
-| `listMeetingsWithTranscript()` | `apps/cockpit/src/app/(dashboard)/dev/extractor/page.tsx` |
-| `getMeetingForDevExtractor()` | `apps/cockpit/src/actions/dev-extractor.ts` |
 | `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts` |

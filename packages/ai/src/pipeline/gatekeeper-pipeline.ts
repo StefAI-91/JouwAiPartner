@@ -14,7 +14,6 @@ import {
 import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
-import { runStructureStep, isMeetingStructurerEnabled } from "./steps/structure";
 import { runRiskSpecialistStep } from "./steps/risk-specialist";
 import { runGenerateTitleStep } from "./steps/generate-title";
 import { runTagAndSegmentStep } from "./steps/tag-and-segment";
@@ -220,46 +219,14 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     identifiedProjects,
   );
 
-  let summarized = false;
-  let richSummary: string | null = null;
-  let kernpuntenForTagger: string[] = [];
-  let vervolgstappenForTagger: string[] = [];
-  let extractionsSaved = 0;
-
-  const useStructurer = isMeetingStructurerEnabled();
-
-  if (useStructurer) {
-    console.info(`MeetingStructurer (flag on) using ${transcriptSource} transcript`);
-    const structureResult = await runStructureStep(
-      meetingId,
-      bestTranscript,
-      { ...summarizeContext, meeting_date: input.date },
-      rawFireflies,
-      transcriptSource,
-      identifiedProjects,
-    );
-
-    if (structureResult.success) {
-      summarized = true;
-      richSummary = structureResult.richSummary;
-      kernpuntenForTagger = structureResult.kernpunten;
-      vervolgstappenForTagger = structureResult.vervolgstappen;
-      extractionsSaved = structureResult.extractionsSaved;
-    } else {
-      errors.push(`MeetingStructurer: ${structureResult.error} — falling back to Summarizer`);
-    }
-  }
-
-  // Legacy path: flag off OR structurer failed above.
-  if (!summarized) {
-    console.info(`Summarizer (legacy) using ${transcriptSource} transcript`);
-    const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
-    if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
-    summarized = summarizeResult.success;
-    richSummary = summarizeResult.richSummary;
-    kernpuntenForTagger = summarizeResult.kernpunten;
-    vervolgstappenForTagger = summarizeResult.vervolgstappen;
-  }
+  console.info(`Summarizer using ${transcriptSource} transcript`);
+  const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
+  if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
+  const summarized = summarizeResult.success;
+  const richSummary: string | null = summarizeResult.richSummary;
+  const kernpuntenForTagger: string[] = summarizeResult.kernpunten;
+  const vervolgstappenForTagger: string[] = summarizeResult.vervolgstappen;
+  const extractionsSaved = 0;
 
   // Step 9: AI title generation
   const titleResult = await runGenerateTitleStep({
