@@ -7,11 +7,9 @@ import {
   updateMeetingTitle,
   markMeetingEmbeddingStale,
 } from "@repo/database/mutations/meetings";
-import { deleteExtractionsByMeetingId } from "@repo/database/mutations/extractions";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
-import { runExtractor } from "@repo/ai/agents/extractor";
-import { saveExtractions } from "@repo/ai/pipeline/save-extractions";
+import { runRiskSpecialistExperiment } from "@repo/ai/pipeline/steps/risk-specialist-experiment";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
 import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
 import { runTagger } from "@repo/ai/pipeline/tagger";
@@ -85,20 +83,14 @@ export async function regenerateMeetingAction(
     });
     const richSummary = formatSummary(summarizerOutput);
 
-    // Step 3: Gatekeeper + Extractor in parallel
-    // Gatekeeper uses summary for project-identification
-    // Extractor starts without project constraint, we'll link after
-    const [gatekeeperResult, extractorOutput] = await Promise.all([
-      runGatekeeper(richSummary.slice(0, 3000), {
-        title: context.title,
-        entityContext: entityContext.contextString,
-      }),
-      runExtractor(transcript, {
-        ...context,
-        summary: richSummary,
-        meeting_date: (meeting.date as string) || new Date().toISOString().split("T")[0],
-      }),
-    ]);
+    // Step 3: Gatekeeper (projecten + meta). Extractor is vervangen door
+    // RiskSpecialist — die draait hieronder als een aparte stap omdat hij
+    // de identified_projects van de Gatekeeper nodig heeft voor het
+    // mappen van project_id op z'n rij.
+    const gatekeeperResult = await runGatekeeper(richSummary.slice(0, 3000), {
+      title: context.title,
+      entityContext: entityContext.contextString,
+    });
     const identifiedProjects = gatekeeperResult.identified_projects;
 
     // Step 4: Save summary (safe — overwrites existing, no data loss on failure)
@@ -131,16 +123,28 @@ export async function regenerateMeetingAction(
       console.error("Title generation failed during regeneration (non-blocking):", titleErr);
     }
 
-    // Step 5: Delete old extractions + save new ones (only after AI steps succeeded)
-    const deleteResult = await deleteExtractionsByMeetingId(meetingId);
-    if ("error" in deleteResult) {
-      return { error: `Oude extracties verwijderen mislukt: ${deleteResult.error}` };
-    }
-
-    const saveResult = await saveExtractions(extractorOutput, meetingId, identifiedProjects);
-    if (saveResult.extractions_saved === 0 && extractorOutput.extractions.length > 0) {
-      return { error: "Nieuwe extracties opslaan mislukt" };
-    }
+    // Step 5: RiskSpecialist — vervangt de legacy Extractor. Draait ook
+    // de audit-insert naar `experimental_risk_extractions` en is per meeting
+    // idempotent (alleen type='risk' rijen worden vervangen). Action_items
+    // uit historische runs blijven staan tot ze handmatig gewist worden.
+    await runRiskSpecialistExperiment(
+      meetingId,
+      transcript,
+      {
+        title: context.title,
+        meeting_type: context.meeting_type,
+        party_type: context.party_type,
+        participants: context.participants,
+        speakerContext: null,
+        entityContext: entityContext.contextString,
+        meeting_date: (meeting.date as string) || new Date().toISOString().split("T")[0],
+        identified_projects: identifiedProjects.map((p) => ({
+          project_name: p.project_name,
+          project_id: p.project_id,
+        })),
+      },
+      identifiedProjects,
+    );
 
     // Step 6: Tagger + segment-bouw (delete old segments first, then rebuild)
     const { data: meetingOrg } = await supabase
