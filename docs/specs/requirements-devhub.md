@@ -4,6 +4,9 @@ Gegenereerd uit `docs/specs/prd-devhub.md` op 2026-04-09.
 Scope: alleen Fase 1 (Bug Intake & Triage + Status Page).
 Totaal: 119 requirements.
 
+> **Last verified:** 2026-04-20 (Q4b, steekproef-strategie per Q4a-5).
+> **Bekende drift:** laag-middel. DH-001..007 done, DH-010..012 + DH-017..020 done. Access-control tranche (DH-013..016) staat in `docs/backlog/` en bevat requirements die nog niet in dit register staan.
+
 ---
 
 ## Datamodel eisen

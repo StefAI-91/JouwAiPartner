@@ -3,6 +3,9 @@
 Gegenereerd uit `docs/specs/meeting-processing-review.md` (v2) op 2026-03-29.
 Totaal: 90 requirements.
 
+> **Last verified:** 2026-04-20 (Q4b, steekproef-strategie per Q4a-5).
+> **Bekende drift:** register is v1 (maart 2026), daarna gepivotteerd naar v2/v3. Hoge drift verwacht op extractor-gerelateerde requirements (Extractor → RiskSpecialist 2026-04-18). Volledige herziening pas bij volgende product-major.
+
 ---
 
 ## Functionele eisen
