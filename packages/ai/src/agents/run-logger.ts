@@ -1,14 +1,25 @@
 import { insertAgentRun, type AgentRunInput } from "@repo/database/mutations/agent-runs";
 
 /**
- * Shape of the Vercel AI SDK `usage` object we care about. Intentionally
- * partial — we only need the four fields that map to cost/latency metrics.
+ * Shape of the Vercel AI SDK `usage` object we care about. De SDK heeft
+ * zowel een oude (deprecated) als nieuwe vorm voor reasoning- en cache-
+ * tokens — we lezen beide met fallback zodat een SDK-bump ze niet stilletjes
+ * op null zet. Nieuwe pad: outputTokenDetails / inputTokenDetails.
+ * Oude pad: top-level reasoningTokens / cachedInputTokens (deprecated).
  */
 export interface AgentUsage {
   inputTokens?: number | null;
   outputTokens?: number | null;
+  /** @deprecated Use outputTokenDetails.reasoningTokens. Kept for backwards-compat. */
   reasoningTokens?: number | null;
+  /** @deprecated Use inputTokenDetails.cacheReadTokens. Kept for backwards-compat. */
   cachedInputTokens?: number | null;
+  outputTokenDetails?: {
+    reasoningTokens?: number | null;
+  };
+  inputTokenDetails?: {
+    cacheReadTokens?: number | null;
+  };
 }
 
 export interface AgentRunLogContext {
@@ -55,8 +66,8 @@ export async function withAgentRun<T>(
       latency_ms: Date.now() - startedAt,
       input_tokens: usage?.inputTokens ?? null,
       output_tokens: usage?.outputTokens ?? null,
-      reasoning_tokens: usage?.reasoningTokens ?? null,
-      cached_tokens: usage?.cachedInputTokens ?? null,
+      reasoning_tokens: extractReasoningTokens(usage),
+      cached_tokens: extractCachedTokens(usage),
       prompt_version: ctx.prompt_version ?? null,
       metadata: ctx.metadata ?? {},
     });
@@ -75,6 +86,14 @@ export async function withAgentRun<T>(
 
     throw err;
   }
+}
+
+function extractReasoningTokens(usage: AgentUsage | undefined): number | null {
+  return usage?.outputTokenDetails?.reasoningTokens ?? usage?.reasoningTokens ?? null;
+}
+
+function extractCachedTokens(usage: AgentUsage | undefined): number | null {
+  return usage?.inputTokenDetails?.cacheReadTokens ?? usage?.cachedInputTokens ?? null;
 }
 
 async function logRun(input: AgentRunInput): Promise<void> {

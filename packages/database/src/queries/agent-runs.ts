@@ -44,12 +44,22 @@ interface AgentRunAggregateRow {
 }
 
 /**
+ * Hard cap op het aantal rijen dat we per 7-dagen venster in JS aggregeren.
+ * Boven deze grens raakt de metrics-berekening ongezond traag en krijgen
+ * we ook een warn-signal dat we naar een RPC-aggregaat moeten. Supabase's
+ * default row-cap is 1000 — wij zetten 'm expliciet op 50k zodat de query
+ * niet stilletjes afgekapt wordt op een drukke pipeline-week.
+ */
+const METRICS_7D_ROW_CAP = 50_000;
+
+/**
  * Aggregated metrics per agent over the last 7 days + today. Drives the
  * per-agent cards on the /agents page.
  *
- * Single query: pulls the last 7 days of runs for the given agent_names and
- * folds them in JS. Cheaper than 4 separate count queries per agent, and
- * the dataset is bounded (max a few thousand rows per week).
+ * Pulls the last 7 days of runs for the given agent_names en vouwt in JS.
+ * Goedkoper dan 4 count-queries per agent; dataset blijft bounded door de
+ * `.range()` cap — als we die raken is dat een signaal om naar een
+ * server-side SUM/COUNT RPC te migreren.
  */
 export async function getAgentMetrics(
   agentNames: string[],
@@ -70,9 +80,17 @@ export async function getAgentMetrics(
     )
     .in("agent_name", agentNames)
     .gte("created_at", sevenDaysAgo)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(0, METRICS_7D_ROW_CAP - 1);
 
   if (error) throw new Error(`agent_runs fetch failed: ${error.message}`);
+
+  if (data && data.length >= METRICS_7D_ROW_CAP) {
+    console.warn(
+      `[agent-runs] getAgentMetrics hit row cap (${METRICS_7D_ROW_CAP}). ` +
+        `Metrics zijn afgekapt — overweeg migratie naar een SUM/COUNT RPC.`,
+    );
+  }
 
   const byAgent = new Map<string, AgentRunAggregateRow[]>();
   for (const name of agentNames) byAgent.set(name, []);

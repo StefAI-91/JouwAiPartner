@@ -49,7 +49,10 @@ CREATE INDEX IF NOT EXISTS agent_runs_created_idx
 COMMENT ON TABLE agent_runs IS 'Centraal run-log voor alle AI-agents. Append-only. Voedt de /agents observability pagina met runs, kosten, latency en error-rate per agent.';
 
 -- RLS: authenticated mag lezen (admin-pagina). Insert via service role
--- client vanuit de pipeline. Geen fine-grained policies — admin-only UI.
+-- client vanuit de pipeline — service_role bypasst RLS automatisch.
+-- We voegen een expliciete deny toe voor authenticated INSERTs zodat
+-- per ongeluk via de anon/auth client loggen onmogelijk is in plaats van
+-- afhankelijk te zijn van "default deny" gedrag.
 ALTER TABLE agent_runs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY agent_runs_read
@@ -57,3 +60,9 @@ CREATE POLICY agent_runs_read
   FOR SELECT
   TO authenticated
   USING (true);
+
+CREATE POLICY agent_runs_deny_authenticated_insert
+  ON agent_runs
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (false);
