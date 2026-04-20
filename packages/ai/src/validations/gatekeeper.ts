@@ -34,6 +34,11 @@ export const GatekeeperSchema = z.object({
     ),
   reason: z.string().describe("Brief explanation of the scoring decision (one sentence)"),
   meeting_type: z.enum(MEETING_TYPES).describe("The type/format of this meeting"),
+  meeting_title: z
+    .string()
+    .describe(
+      "Consistent structural title: [Label] [Org] [External] ↔ [Internal]. See prompt section 4.",
+    ),
   organization_name: z
     .string()
     .nullable()
