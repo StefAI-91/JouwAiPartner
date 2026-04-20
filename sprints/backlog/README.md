@@ -32,9 +32,12 @@ Master backlog for all upcoming work. Sprint numbering continues from 029 (sprin
 | Q3b      | Test vangnet execution (na Q3a)                              | Quality       | Backlog |
 | Q4a      | Docs audit spike (sprint-telling, agents, READMEs)           | Quality       | Backlog |
 | Q4b      | Spec sync execution (na Q4a)                                 | Quality       | Backlog |
-| COMM-001 | Communications supertype + dual-write (non-breaking)         | Refactor      | Backlog |
-| COMM-002 | Queries, pipeline + RLS op communications                    | Refactor      | Backlog |
-| COMM-003 | UI consolideren + oude kolommen deprecaten                   | Refactor      | Backlog |
+
+## Refactor-ideas (niet in planning)
+
+Sprints die speculatief zijn en wachten op een concrete trigger staan in `docs/refactor-ideas/`. Niet inplannen tenzij de trigger in het bestand geraakt wordt.
+
+- **COMM-001/002/003** — Communications supertype refactor. Trigger: 3e kanaal toegevoegd (Slack/Rinkel/support-chat) of portal GA met aantoonbare drift-pijn.
 
 ## Completed Sprints Summary
 

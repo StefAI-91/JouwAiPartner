@@ -1,3 +1,13 @@
+> **Status: IDEA — niet inplannen tenzij COMM-001 + COMM-002 zijn uitgevoerd.**
+>
+> **Trigger:** sluitstuk van de communications-refactor. Alleen zinvol als COMM-001 en COMM-002 stabiel in productie draaien.
+>
+> **Afhankelijkheid:** COMM-001 + COMM-002.
+>
+> **Let op:** deze sprint bevat **onomkeerbare DROP-migraties** op `meetings`/`emails` — alleen uitvoeren na uitgebreide staging-test en met backup-plan.
+
+---
+
 # Sprint COMM-003: UI consolideren + oude kolommen deprecaten
 
 > **Scope-afbakening.** Derde en laatste sprint van de communications-refactor. Bouwt op COMM-001 (supertype + dual-write) en COMM-002 (queries + RLS + classifier). In deze sprint wordt `communications` de enige bron van waarheid voor gedeelde velden: UI leest eruit, dual-write triggers verdwijnen, en gedeelde kolommen op `meetings`/`emails` worden gedropt (Postgres `GENERATED ALWAYS AS` kent geen subquery — dus DROP + JOIN is de enige optie). Review queue wordt kanaaloverstijgend.

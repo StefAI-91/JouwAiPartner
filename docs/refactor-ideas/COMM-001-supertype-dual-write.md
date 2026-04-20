@@ -1,3 +1,13 @@
+> **Status: IDEA — niet inplannen tenzij trigger geraakt wordt.**
+>
+> **Trigger:** óf (a) een derde communicatie-kanaal wordt toegevoegd (Slack, Rinkel-transcripts, support-chat), óf (b) portal is GA met stabiele client-base en drift tussen meetings/emails levert aantoonbare pijn op die niet met lokale fixes op te lossen is.
+>
+> **Tot die tijd:** drift wordt puntsgewijs opgelost via kleine hotfix (shared TS-enum + verbreed CHECK op `meetings.party_type` + contract-test + portal-RLS op emails).
+>
+> **Waarom niet nu:** 3-sprint refactor op 39 bestaande sprints tijdens portal-rollout = hoog risico, speculatieve winst. Zie eindoverweging op branch `claude/classify-non-project-items-LhgVW`.
+
+---
+
 # Sprint COMM-001: Communications supertype + dual-write (non-breaking)
 
 > **Scope-afbakening.** Eerste van drie sprints die `meetings` en `emails` samenbrengen onder één `communications` supertype zodat party_type, organization_id, verification-flow en relevance_score nooit meer tussen kanalen kunnen driften. Deze sprint is puur additief: nieuwe tabel, backfill, dual-write triggers. Queries, pipeline en UI blijven werken op de bestaande kolommen — ongewijzigd gedrag.

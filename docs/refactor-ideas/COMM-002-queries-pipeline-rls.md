@@ -1,3 +1,13 @@
+> **Status: IDEA — niet inplannen tenzij COMM-001 getriggerd is.**
+>
+> **Trigger:** alleen nadat COMM-001 afgerond is. Individueel niet uitvoerbaar — raakt queries, pipeline en RLS tegelijk.
+>
+> **Afhankelijkheid:** COMM-001 (supertype + dual-write) moet eerst staan.
+>
+> **Let op:** security-gap op emails portal-RLS (onderdeel van deze sprint) is té belangrijk om op deze refactor te wachten — die wordt apart via hotfix gefixt.
+
+---
+
 # Sprint COMM-002: Queries, pipeline + RLS op communications
 
 > **Scope-afbakening.** Tweede van drie sprints. Bouwt verder op COMM-001 (communications tabel + dual-write). Deze sprint verschuift de **bron van waarheid** van `meetings`/`emails` naar `communications` voor de gedeelde velden: queries lezen er primair van, de AI-pipeline classificeert via één gedeelde **hybride** helper (rules voor de 95% + LLM alleen voor advisor-subtyping), en RLS-policies verhuizen. Portal-RLS opnieuw verifiëren is de hoogste-risicotaak; **deze sprint dicht ook een bestaande security-gap op `emails` (nu geen portal-RLS)**.
