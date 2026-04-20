@@ -32,6 +32,9 @@ Master backlog for all upcoming work. Sprint numbering continues from 029 (sprin
 | Q3b      | Test vangnet execution (na Q3a)                              | Quality       | Backlog |
 | Q4a      | Docs audit spike (sprint-telling, agents, READMEs)           | Quality       | Backlog |
 | Q4b      | Spec sync execution (na Q4a)                                 | Quality       | Backlog |
+| COMM-001 | Communications supertype + dual-write (non-breaking)         | Refactor      | Backlog |
+| COMM-002 | Queries, pipeline + RLS op communications                    | Refactor      | Backlog |
+| COMM-003 | UI consolideren + oude kolommen deprecaten                   | Refactor      | Backlog |
 
 ## Completed Sprints Summary
 
