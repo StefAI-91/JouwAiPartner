@@ -4,18 +4,14 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   transpilePackages: ["@repo/database", "@repo/ai", "@repo/mcp", "@repo/ui", "@repo/auth"],
   serverExternalPackages: ["cohere-ai"],
-  // @repo/ai laadt agent-prompts via readFileSync(import.meta.url,
-  // "../../prompts/*.md"). Vercel's NFT zou deze ref normaliter
-  // detecteren, maar we tracen ze expliciet zodat de .md-files
-  // gegarandeerd mee-deployen — ook bij transpilePackages waar
-  // import.meta.url anders kan resolven.
+  // @repo/ai laadt agent-prompts via readFileSync(import.meta.url, "../../prompts/*.md").
+  // Zonder deze trace crasht module-load van elke serverless functie die een agent
+  // importeert met ENOENT: /var/task/packages/ai/prompts/<naam>.md. De eerdere
+  // route-specifieke lijst (alleen /api/ingest, /api/cron, etc.) miste Server Actions
+  // en page-routes die ook AI-agents gebruiken (zoals /review met verifyMeeting die
+  // downstream de pipeline kan triggeren). Breder `/**/*` dekt alles.
   outputFileTracingIncludes: {
-    "/api/ingest/**": ["../../packages/ai/prompts/**/*.md"],
-    "/api/cron/**": ["../../packages/ai/prompts/**/*.md"],
-    "/api/email/**": ["../../packages/ai/prompts/**/*.md"],
-    "/api/management-insights/**": ["../../packages/ai/prompts/**/*.md"],
-    "/api/scan-needs/**": ["../../packages/ai/prompts/**/*.md"],
-    "/api/webhooks/**": ["../../packages/ai/prompts/**/*.md"],
+    "/**/*": ["../../packages/ai/prompts/**/*.md"],
   },
   experimental: {
     serverActions: {
