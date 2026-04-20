@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { WeeklySummaryOutputSchema, type WeeklySummaryOutput } from "../validations/weekly-summary";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-sonnet-4-5-20250929";
 
 export type { WeeklySummaryOutput };
 
@@ -86,20 +89,22 @@ export async function runWeeklySummarizer(
     `\n--- PROJECT DATA ---\n\n${projectsText}`,
   ].join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-5-20250929"),
-    schema: WeeklySummaryOutputSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "weekly-summarizer", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      schema: WeeklySummaryOutputSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      { role: "user", content: userContent },
-    ],
-  });
+        { role: "user", content: userContent },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }

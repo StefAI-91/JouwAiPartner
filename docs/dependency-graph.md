@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 492 |
-| Exported functions/constants | 746 |
-| Exported types/interfaces | 189 |
-| Cross-package imports | 607 |
+| Files scanned | 495 |
+| Exported functions/constants | 750 |
+| Exported types/interfaces | 194 |
+| Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -65,6 +65,14 @@
 - `listVerifiedActionItems()`
 
 **Types:** `ActionItemRow`
+
+### `queries/agent-runs.ts`
+
+**Exports:**
+- `getAgentMetrics()`
+- `listRecentAgentRuns()`
+
+**Types:** `AgentMetrics`, `AgentRunRow`
 
 ### `queries/content.ts`
 
@@ -354,6 +362,13 @@
 
 ## Database Mutations
 
+### `mutations/agent-runs.ts`
+
+**Exports:**
+- `insertAgentRun()`
+
+**Types:** `AgentRunInput`
+
 ### `mutations/decisions.ts`
 
 **Exports:**
@@ -545,6 +560,7 @@
 
 **Internal deps:**
 - `../validations/email-classifier` → EmailClassifierSchema, EmailClassifierOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/email-extractor.ts`
 
@@ -561,6 +577,7 @@
 
 **Internal deps:**
 - `../validations/extractor` → ExtractorOutputSchema, ExtractorOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/gatekeeper.ts`
 
@@ -571,6 +588,7 @@
 
 **Internal deps:**
 - `../validations/gatekeeper` → GatekeeperSchema, GatekeeperOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/issue-classifier.ts`
 
@@ -579,6 +597,7 @@
 
 **Internal deps:**
 - `../validations/issue-classification` → IssueClassifierSchema, type IssueClassifierOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/issue-executor.ts`
 
@@ -597,6 +616,7 @@
 
 **Internal deps:**
 - `../validations/issue-review` → IssueReviewSchema, type IssueReviewOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/management-insights.ts`
 
@@ -607,6 +627,7 @@
 
 **Internal deps:**
 - `../validations/management-insights` → ManagementInsightsOutputSchema, type ManagementInsightsOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/meeting-structurer.ts`
 
@@ -620,6 +641,7 @@
 - `../validations/meeting-structurer` → MeetingStructurerOutputSchema, type MeetingStructurerOutput, type RawMeetingStructurerOutput, type Kernpunt, type MeetingStructurerParticipant
 - `../extraction-types` → filterMetadataByType
 - `../utils/normalise` → emptyToNull, normaliseForQuoteMatch, sentinelToNull
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/needs-scanner.ts`
 
@@ -628,6 +650,7 @@
 
 **Internal deps:**
 - `../validations/needs-scanner` → NeedsScannerOutputSchema, NeedsScannerOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/project-summarizer.ts`
 
@@ -639,6 +662,7 @@
 
 **Internal deps:**
 - `../validations/project-summary` → ProjectSummaryOutputSchema, OrgSummaryOutputSchema, type ProjectSummaryOutput, type OrgSummaryOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/render-summary.ts`
 
@@ -664,6 +688,16 @@
 - `../validations/risk-specialist` → RiskSpecialistRawOutputSchema, type RiskSpecialistItem, type RiskSpecialistOutput, type RawRiskSpecialistOutput
 - `../utils/normalise` → emptyToNull, normaliseForQuoteMatch, sentinelToNull
 
+### `packages/ai/src/agents/run-logger.ts`
+
+**Exports:**
+- `withAgentRun()`
+
+**Types:** `AgentUsage`, `AgentRunLogContext`
+
+**Depends on:**
+- `@repo/database/mutations/agent-runs` → insertAgentRun, type AgentRunInput
+
 ### `packages/ai/src/agents/summarizer.ts`
 
 **Exports:**
@@ -672,6 +706,7 @@
 
 **Internal deps:**
 - `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/title-generator.ts`
 
@@ -679,6 +714,9 @@
 - `generateMeetingSubject()`
 
 **Types:** `TitleSubjectOutput`
+
+**Internal deps:**
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/weekly-summarizer.ts`
 
@@ -689,6 +727,7 @@
 
 **Internal deps:**
 - `../validations/weekly-summary` → WeeklySummaryOutputSchema, type WeeklySummaryOutput
+- `./run-logger` → withAgentRun
 
 ## AI Pipeline
 
@@ -3813,6 +3852,7 @@ Which layers depend on which packages:
 
 | Layer | database | ai | auth | ui | mcp | Total |
 |-------|---|---|---|---|---|-------|
+| AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 47 | - | - | - | - | 47 |
 | Auth | 4 | - | - | - | - | 4 |
@@ -3854,6 +3894,12 @@ parts of the codebase — changes here have the widest blast radius.
 ## Key Dependency Chains
 
 Tracing the most important data flows from action → pipeline → database.
+
+### mutations/agent-runs.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `insertAgentRun()` | `packages/ai/src/agents/run-logger.ts` |
 
 ### mutations/emails.ts
 

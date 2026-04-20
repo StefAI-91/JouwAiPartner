@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { NeedsScannerOutputSchema, NeedsScannerOutput } from "../validations/needs-scanner";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-haiku-4-5-20251001";
 
 export type { NeedsScannerOutput };
 
@@ -32,24 +35,26 @@ export async function runNeedsScanner(
     `Deelnemers: ${context.participants.join(", ")}`,
   ].join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    maxRetries: 3,
-    schema: NeedsScannerOutputSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "needs-scanner", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: NeedsScannerOutputSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: `${contextPrefix}\n\n--- SAMENVATTING ---\n${summary}`,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: `${contextPrefix}\n\n--- SAMENVATTING ---\n${summary}`,
+        },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }

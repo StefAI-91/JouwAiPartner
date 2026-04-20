@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { GatekeeperSchema, GatekeeperOutput } from "../validations/gatekeeper";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-haiku-4-5-20251001";
 
 export type { GatekeeperOutput };
 
@@ -60,24 +63,26 @@ export async function runGatekeeper(
 
   const entitySection = metadata.entityContext ? `\n\n${metadata.entityContext}` : "";
 
-  const { object } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    maxRetries: 3,
-    schema: GatekeeperSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "gatekeeper", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: GatekeeperSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: `${contextPrefix}${topicsSection}${entitySection}\n\nMeeting Notes:\n${notes}`,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: `${contextPrefix}${topicsSection}${entitySection}\n\nMeeting Notes:\n${notes}`,
+        },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }

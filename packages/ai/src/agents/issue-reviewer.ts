@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { IssueReviewSchema, type IssueReviewOutput } from "../validations/issue-review";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-sonnet-4-5-20250929";
 
 export type { IssueReviewOutput };
 
@@ -74,24 +77,26 @@ ${statsBlock}
 --- ALLE ISSUES ---
 ${issueLines}`;
 
-  const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-5-20250929"),
-    maxRetries: 3,
-    schema: IssueReviewSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "issue-reviewer", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: IssueReviewSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: userContent,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: userContent,
+        },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }

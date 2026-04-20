@@ -1,0 +1,110 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getAdminClient } from "../supabase/admin";
+
+export interface AgentMetrics {
+  agent_name: string;
+  runs_today: number;
+  runs_7d: number;
+  last_run_at: string | null;
+  last_run_status: "success" | "error" | null;
+  success_rate_7d: number | null;
+  total_input_tokens_today: number;
+  total_output_tokens_today: number;
+  avg_latency_ms_7d: number | null;
+}
+
+export interface AgentRunRow {
+  id: string;
+  created_at: string;
+  agent_name: string;
+  model: string;
+  status: "success" | "error";
+  latency_ms: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  reasoning_tokens: number | null;
+  cached_tokens: number | null;
+  prompt_version: string | null;
+  error_message: string | null;
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * Aggregated metrics per agent over the last 7 days + today. Drives the
+ * per-agent cards on the /agents page.
+ *
+ * Single query: pulls the last 7 days of runs for the given agent_names and
+ * folds them in JS. Cheaper than 4 separate count queries per agent, and
+ * the dataset is bounded (max a few thousand rows per week).
+ */
+export async function getAgentMetrics(
+  agentNames: string[],
+  client?: SupabaseClient,
+): Promise<AgentMetrics[]> {
+  if (agentNames.length === 0) return [];
+
+  const db = client ?? getAdminClient();
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const todayIso = startOfToday.toISOString();
+
+  const { data, error } = await db
+    .from("agent_runs")
+    .select("agent_name, created_at, status, latency_ms, input_tokens, output_tokens")
+    .in("agent_name", agentNames)
+    .gte("created_at", sevenDaysAgo)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(`agent_runs fetch failed: ${error.message}`);
+
+  const byAgent = new Map<string, AgentRunRow[]>();
+  for (const name of agentNames) byAgent.set(name, []);
+  for (const row of (data ?? []) as AgentRunRow[]) {
+    byAgent.get(row.agent_name)?.push(row);
+  }
+
+  return agentNames.map((name) => {
+    const rows = byAgent.get(name) ?? [];
+    const todayRows = rows.filter((r) => r.created_at >= todayIso);
+    const successCount = rows.filter((r) => r.status === "success").length;
+    const latencies = rows.map((r) => r.latency_ms).filter((v): v is number => v != null);
+    const lastRun = rows[0] ?? null;
+
+    return {
+      agent_name: name,
+      runs_today: todayRows.length,
+      runs_7d: rows.length,
+      last_run_at: lastRun?.created_at ?? null,
+      last_run_status: lastRun?.status ?? null,
+      success_rate_7d: rows.length > 0 ? Math.round((successCount / rows.length) * 100) : null,
+      total_input_tokens_today: todayRows.reduce((sum, r) => sum + (r.input_tokens ?? 0), 0),
+      total_output_tokens_today: todayRows.reduce((sum, r) => sum + (r.output_tokens ?? 0), 0),
+      avg_latency_ms_7d:
+        latencies.length > 0
+          ? Math.round(latencies.reduce((s, v) => s + v, 0) / latencies.length)
+          : null,
+    };
+  });
+}
+
+/**
+ * Recent activity feed across all agents. Drives the live-activity strook
+ * onderaan de /agents pagina.
+ */
+export async function listRecentAgentRuns(
+  limit: number = 20,
+  client?: SupabaseClient,
+): Promise<AgentRunRow[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("agent_runs")
+    .select(
+      "id, created_at, agent_name, model, status, latency_ms, input_tokens, output_tokens, reasoning_tokens, cached_tokens, prompt_version, error_message, metadata",
+    )
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(`agent_runs feed failed: ${error.message}`);
+  return (data ?? []) as AgentRunRow[];
+}

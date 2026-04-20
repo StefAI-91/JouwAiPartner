@@ -7,6 +7,9 @@ import {
   IssueClassifierSchema,
   type IssueClassifierOutput,
 } from "../validations/issue-classification";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-haiku-4-5-20251001";
 
 export type { IssueClassifierOutput };
 
@@ -29,24 +32,26 @@ export async function runIssueClassifier(issue: {
     .filter(Boolean)
     .join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    maxRetries: 3,
-    schema: IssueClassifierSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "issue-classifier", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: IssueClassifierSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: `${issueInfo}\n\n--- BESCHRIJVING ---\n${issue.description.slice(0, 4000)}`,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: `${issueInfo}\n\n--- BESCHRIJVING ---\n${issue.description.slice(0, 4000)}`,
+        },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }

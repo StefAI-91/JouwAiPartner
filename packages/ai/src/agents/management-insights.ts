@@ -7,6 +7,9 @@ import {
   ManagementInsightsOutputSchema,
   type ManagementInsightsOutput,
 } from "../validations/management-insights";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-sonnet-4-5-20250929";
 
 export type { ManagementInsightsOutput };
 
@@ -45,20 +48,22 @@ export async function runManagementInsightsAgent(
     `\n--- MEETING SAMENVATTINGEN ---\n\n${meetingsText}`,
   ].join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-5-20250929"),
-    schema: ManagementInsightsOutputSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "management-insights", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      schema: ManagementInsightsOutputSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      { role: "user", content: userContent },
-    ],
-  });
+        { role: "user", content: userContent },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }

@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-haiku-4-5-20251001";
 
 const TitleSubjectSchema = z.object({
   subject: z
@@ -19,24 +22,26 @@ const SYSTEM_PROMPT = readFileSync(
 ).trimEnd();
 
 export async function generateMeetingSubject(summary: string): Promise<string> {
-  const { object } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    maxRetries: 2,
-    schema: TitleSubjectSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "title-generator", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 2,
+      schema: TitleSubjectSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: `Genereer een kort onderwerp voor deze meeting:\n\n${summary.slice(0, 2000)}`,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: `Genereer een kort onderwerp voor deze meeting:\n\n${summary.slice(0, 2000)}`,
+        },
+      ],
+    });
 
-  return object.subject;
+    return { result: object.subject, usage };
+  });
 }

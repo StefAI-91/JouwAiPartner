@@ -12,6 +12,9 @@ import {
 } from "../validations/meeting-structurer";
 import { filterMetadataByType } from "../extraction-types";
 import { emptyToNull, normaliseForQuoteMatch, sentinelToNull } from "../utils/normalise";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-sonnet-4-6";
 
 export type { MeetingStructurerOutput };
 
@@ -88,62 +91,64 @@ export async function runMeetingStructurer(
     .filter(Boolean)
     .join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-6"),
-    maxRetries: 3,
-    // Deterministisch voor consistente extracties — cruciaal bij
-    // classificatie-taken waar je reproduceerbaarheid wilt (en waar
-    // de harness diffs tussen runs moet kunnen tonen).
-    temperature: 0,
-    // Ruim budget voor briefing + alle 14-type kernpunten op lange
-    // discovery-meetings (15-25 items). Bij effort "high" telt dit als
-    // thinking + output samen — thinking kan 15-25k tokens zijn op
-    // cross-turn reasoning, dus ruim boven de ~10k output-tokens die we
-    // voor 20-25 items nodig hebben.
-    maxOutputTokens: 32000,
-    schema: MeetingStructurerOutputSchema,
-    providerOptions: {
-      // Effort "high" nodig voor cross-turn patroon-detectie: strategische
-      // en team-risks komen uit opstapeling over meerdere turns, niet uit
-      // één sterke quote. Op medium miste het model ze systematisch op
-      // de 6 referentie-meetings. Kosten-impact: ~$0.15-0.25 extra per
-      // meeting (vooral door extra thinking-tokens).
-      anthropic: { effort: "high" },
-    },
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "meeting-structurer", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      // Deterministisch voor consistente extracties — cruciaal bij
+      // classificatie-taken waar je reproduceerbaarheid wilt (en waar
+      // de harness diffs tussen runs moet kunnen tonen).
+      temperature: 0,
+      // Ruim budget voor briefing + alle 14-type kernpunten op lange
+      // discovery-meetings (15-25 items). Bij effort "high" telt dit als
+      // thinking + output samen — thinking kan 15-25k tokens zijn op
+      // cross-turn reasoning, dus ruim boven de ~10k output-tokens die we
+      // voor 20-25 items nodig hebben.
+      maxOutputTokens: 32000,
+      schema: MeetingStructurerOutputSchema,
+      providerOptions: {
+        // Effort "high" nodig voor cross-turn patroon-detectie: strategische
+        // en team-risks komen uit opstapeling over meerdere turns, niet uit
+        // één sterke quote. Op medium miste het model ze systematisch op
+        // de 6 referentie-meetings. Kosten-impact: ~$0.15-0.25 extra per
+        // meeting (vooral door extra thinking-tokens).
+        anthropic: { effort: "high" },
+      },
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: `${contextPrefix}${projectConstraint}\n\n--- TRANSCRIPT ---\n${transcript}`,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: `${contextPrefix}${projectConstraint}\n\n--- TRANSCRIPT ---\n${transcript}`,
+        },
+      ],
+    });
 
-  // Defensive post-processing: clamp confidence en verifieer quote-aanwezigheid.
-  // Quote-vergelijking is tolerant voor smart/straight quotes, dashes en
-  // whitespace — het model paraphraseert punctuatie regelmatig zonder dat
-  // de inhoud mis is. Mismatch cap't confidence op 0.25 (niet 0.3), zodat
-  // het item wel surfaced in de UI maar duidelijk "niet verifieerbaar" is.
-  // 0.25 is bewust ≠ 0.3 omdat 0.3 een geldige model-output is onder de
-  // v5-RiskSpecialist-CONFIDENCE-DISCIPLINE (bewuste twijfelclassificatie).
-  const normalisedTranscript = normaliseForQuoteMatch(transcript);
-  for (const k of object.kernpunten) {
-    k.confidence = Math.max(0, Math.min(1, k.confidence));
-    if (k.source_quote && k.source_quote !== "") {
-      const refNorm = normaliseForQuoteMatch(k.source_quote);
-      if (!normalisedTranscript.includes(refNorm)) {
-        k.confidence = Math.min(k.confidence, 0.25);
+    // Defensive post-processing: clamp confidence en verifieer quote-aanwezigheid.
+    // Quote-vergelijking is tolerant voor smart/straight quotes, dashes en
+    // whitespace — het model paraphraseert punctuatie regelmatig zonder dat
+    // de inhoud mis is. Mismatch cap't confidence op 0.25 (niet 0.3), zodat
+    // het item wel surfaced in de UI maar duidelijk "niet verifieerbaar" is.
+    // 0.25 is bewust ≠ 0.3 omdat 0.3 een geldige model-output is onder de
+    // v5-RiskSpecialist-CONFIDENCE-DISCIPLINE (bewuste twijfelclassificatie).
+    const normalisedTranscript = normaliseForQuoteMatch(transcript);
+    for (const k of object.kernpunten) {
+      k.confidence = Math.max(0, Math.min(1, k.confidence));
+      if (k.source_quote && k.source_quote !== "") {
+        const refNorm = normaliseForQuoteMatch(k.source_quote);
+        if (!normalisedTranscript.includes(refNorm)) {
+          k.confidence = Math.min(k.confidence, 0.25);
+        }
       }
     }
-  }
 
-  return normaliseStructurerOutput(object);
+    return { result: normaliseStructurerOutput(object), usage };
+  });
 }
 
 /**

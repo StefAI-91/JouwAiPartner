@@ -9,6 +9,9 @@ import {
   type ProjectSummaryOutput,
   type OrgSummaryOutput,
 } from "../validations/project-summary";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-haiku-4-5-20251001";
 
 export type { ProjectSummaryOutput, OrgSummaryOutput };
 
@@ -110,23 +113,25 @@ export async function runProjectSummarizer(
     emailsText ? `\n--- EMAIL COMMUNICATIE ---\n${emailsText}` : "",
   ].join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    maxRetries: 3,
-    schema: ProjectSummaryOutputSchema,
-    messages: [
-      {
-        role: "system",
-        content: PROJECT_SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "project-summarizer", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: ProjectSummaryOutputSchema,
+      messages: [
+        {
+          role: "system",
+          content: PROJECT_SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      { role: "user", content: userContent },
-    ],
-  });
+        { role: "user", content: userContent },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }
 
 export async function runOrgSummarizer(
@@ -151,21 +156,23 @@ export async function runOrgSummarizer(
     .filter(Boolean)
     .join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    maxRetries: 3,
-    schema: OrgSummaryOutputSchema,
-    messages: [
-      {
-        role: "system",
-        content: ORG_SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "org-summarizer", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: OrgSummaryOutputSchema,
+      messages: [
+        {
+          role: "system",
+          content: ORG_SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      { role: "user", content: userContent },
-    ],
-  });
+        { role: "user", content: userContent },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }

@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { ExtractorOutputSchema, ExtractorOutput } from "../validations/extractor";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-sonnet-4-5-20250929";
 
 export type { ExtractorOutput };
 
@@ -86,39 +89,41 @@ export async function runExtractor(
     .filter(Boolean)
     .join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-5-20250929"),
-    maxRetries: 3,
-    schema: ExtractorOutputSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "extractor", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: ExtractorOutputSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: `${contextPrefix}${projectConstraint}\n\n--- TRANSCRIPT ---\n${transcript}`,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: `${contextPrefix}${projectConstraint}\n\n--- TRANSCRIPT ---\n${transcript}`,
+        },
+      ],
+    });
 
-  // Post-process: validate transcript_ref + clamp confidence
-  for (const extraction of object.extractions) {
-    // Clamp confidence to 0.0–1.0 (Anthropic API doesn't support min/max in schema)
-    extraction.confidence = Math.max(0, Math.min(1, extraction.confidence));
+    // Post-process: validate transcript_ref + clamp confidence
+    for (const extraction of object.extractions) {
+      // Clamp confidence to 0.0–1.0 (Anthropic API doesn't support min/max in schema)
+      extraction.confidence = Math.max(0, Math.min(1, extraction.confidence));
 
-    if (extraction.transcript_ref) {
-      const refLower = extraction.transcript_ref.toLowerCase();
-      const transcriptLower = transcript.toLowerCase();
-      if (!transcriptLower.includes(refLower)) {
-        // Transcript ref not found — set confidence to 0.0
-        extraction.confidence = 0.0;
+      if (extraction.transcript_ref) {
+        const refLower = extraction.transcript_ref.toLowerCase();
+        const transcriptLower = transcript.toLowerCase();
+        if (!transcriptLower.includes(refLower)) {
+          // Transcript ref not found — set confidence to 0.0
+          extraction.confidence = 0.0;
+        }
       }
     }
-  }
 
-  return object;
+    return { result: object, usage };
+  });
 }

@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { EmailClassifierSchema, EmailClassifierOutput } from "../validations/email-classifier";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-haiku-4-5-20251001";
 
 export type { EmailClassifierOutput };
 
@@ -41,24 +44,26 @@ export async function runEmailClassifier(
 
   const entitySection = context.entityContext ? `\n\n${context.entityContext}` : "";
 
-  const { object } = await generateObject({
-    model: anthropic("claude-haiku-4-5-20251001"),
-    maxRetries: 3,
-    schema: EmailClassifierSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "email-classifier", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: EmailClassifierSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: `${emailInfo}${entitySection}\n\n--- EMAIL BODY ---\n${body}`,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: `${emailInfo}${entitySection}\n\n--- EMAIL BODY ---\n${body}`,
+        },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }

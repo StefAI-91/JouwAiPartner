@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { SummarizerOutputSchema, SummarizerOutput } from "../validations/summarizer";
+import { withAgentRun } from "./run-logger";
+
+const MODEL = "claude-sonnet-4-5-20250929";
 
 export type { SummarizerOutput };
 
@@ -102,26 +105,28 @@ export async function runSummarizer(
     .filter(Boolean)
     .join("\n");
 
-  const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-5-20250929"),
-    maxRetries: 3,
-    schema: SummarizerOutputSchema,
-    messages: [
-      {
-        role: "system",
-        content: SYSTEM_PROMPT,
-        providerOptions: {
-          anthropic: { cacheControl: { type: "ephemeral" } },
+  return withAgentRun({ agent_name: "summarizer", model: MODEL }, async () => {
+    const { object, usage } = await generateObject({
+      model: anthropic(MODEL),
+      maxRetries: 3,
+      schema: SummarizerOutputSchema,
+      messages: [
+        {
+          role: "system",
+          content: SYSTEM_PROMPT,
+          providerOptions: {
+            anthropic: { cacheControl: { type: "ephemeral" } },
+          },
         },
-      },
-      {
-        role: "user",
-        content: `${contextPrefix}\n\n--- TRANSCRIPT ---\n${transcript}`,
-      },
-    ],
-  });
+        {
+          role: "user",
+          content: `${contextPrefix}\n\n--- TRANSCRIPT ---\n${transcript}`,
+        },
+      ],
+    });
 
-  return object;
+    return { result: object, usage };
+  });
 }
 
 /**
