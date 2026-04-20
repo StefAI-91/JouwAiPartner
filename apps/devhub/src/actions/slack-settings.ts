@@ -2,10 +2,10 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { getAdminClient } from "@repo/database/supabase/admin";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 import { SLACK_NOTIFY_EVENTS } from "@repo/database/integrations/slack";
+import { upsertSlackConfig, deleteSlackConfig } from "@repo/database/mutations/slack-config";
 
 const updateSlackConfigSchema = z.object({
   projectId: z.string().uuid(),
@@ -32,33 +32,22 @@ export async function updateSlackConfigAction(
     return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
   }
 
-  const db = getAdminClient();
-
   if (parsed.data.webhookUrl) {
     // Upsert: insert or update config
-    const { error } = await db.from("project_slack_config").upsert(
-      {
-        project_id: parsed.data.projectId,
-        webhook_url: parsed.data.webhookUrl,
-        notify_events: parsed.data.notifyEvents,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "project_id" },
-    );
-
-    if (error) {
-      console.error("[updateSlackConfigAction]", error.message);
+    const result = await upsertSlackConfig({
+      projectId: parsed.data.projectId,
+      webhookUrl: parsed.data.webhookUrl,
+      notifyEvents: parsed.data.notifyEvents,
+    });
+    if ("error" in result) {
+      console.error("[updateSlackConfigAction]", result.error);
       return { error: "Opslaan mislukt" };
     }
   } else {
     // Empty URL = disable notifications, delete the config row
-    const { error } = await db
-      .from("project_slack_config")
-      .delete()
-      .eq("project_id", parsed.data.projectId);
-
-    if (error) {
-      console.error("[updateSlackConfigAction]", error.message);
+    const result = await deleteSlackConfig(parsed.data.projectId);
+    if ("error" in result) {
+      console.error("[updateSlackConfigAction]", result.error);
       return { error: "Opslaan mislukt" };
     }
   }
