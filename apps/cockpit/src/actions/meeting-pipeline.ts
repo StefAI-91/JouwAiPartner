@@ -366,6 +366,101 @@ export async function regenerateRisksAction(
   return { success: true };
 }
 
+// ── Gatekeeper-only replay (cheap: 1 Haiku call, no summarizer/risks/segments) ──
+
+/**
+ * Draait uitsluitend de Gatekeeper op de bestaande samenvatting en werkt
+ * meeting_title + classificatie (meeting_type, party_type, relevance_score,
+ * organization) bij. Ideaal voor iteratie op de gatekeeper-prompt zonder
+ * dat de dure Summarizer/RiskSpecialist opnieuw draaien.
+ */
+export async function regenerateGatekeeperOnlyAction(
+  input: z.infer<typeof regenerateSchema>,
+): Promise<{ success: true } | { error: string }> {
+  const user = await getAuthenticatedUser();
+  if (!user) return { error: "Niet ingelogd" };
+  if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
+
+  const parsed = regenerateSchema.safeParse(input);
+  if (!parsed.success) return { error: "Ongeldige invoer" };
+
+  const { meetingId } = parsed.data;
+
+  const supabase = getAdminClient();
+  const { data: meeting, error: fetchError } = await supabase
+    .from("meetings")
+    .select(
+      `id, title, date, summary, participants, raw_fireflies,
+       meeting_participants(person:people(name))`,
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (fetchError || !meeting) return { error: "Meeting niet gevonden" };
+
+  const summary = (meeting.summary as string | null) ?? "";
+  if (!summary) return { error: "Geen samenvatting beschikbaar voor gatekeeper-replay" };
+
+  try {
+    const rawParticipants = (meeting.participants as string[] | null) ?? [];
+    const knownPeople = await getAllKnownPeople();
+    const classifiedParticipants = classifyParticipantsWithCache(rawParticipants, knownPeople);
+    const entityContext = await buildEntityContext();
+
+    const gatekeeperResult = await runGatekeeper(summary.slice(0, 3000), {
+      title: (meeting.title as string) || "Onbekend",
+      participants: classifiedParticipants,
+      date: (meeting.date as string) ?? undefined,
+      entityContext: entityContext.contextString,
+    });
+
+    await updateMeetingStructuralTitle(meetingId, gatekeeperResult.meeting_title);
+
+    const ruleBasedType = determineRuleBasedMeetingType(classifiedParticipants);
+    const finalMeetingType = ruleBasedType ?? gatekeeperResult.meeting_type;
+    const partyType = determinePartyType(classifiedParticipants, finalMeetingType);
+
+    const knownOrg = classifiedParticipants.find(
+      (p) => p.label === "external" && p.organizationName,
+    );
+    const orgNameToResolve = knownOrg?.organizationName ?? gatekeeperResult.organization_name;
+    const orgResult = await resolveOrganization(orgNameToResolve);
+
+    const existingRaw = (meeting.raw_fireflies as Record<string, unknown> | null) ?? {};
+    const existingPipeline = (existingRaw.pipeline as Record<string, unknown> | undefined) ?? {};
+    const mergedRaw: Record<string, unknown> = {
+      ...existingRaw,
+      pipeline: {
+        ...existingPipeline,
+        gatekeeper_replayed_at: new Date().toISOString(),
+        rule_based_meeting_type: ruleBasedType,
+        meeting_type_source: ruleBasedType ? "deterministic" : "gatekeeper",
+        party_type_source: knownOrg ? "deterministic" : "gatekeeper_fallback",
+      },
+    };
+
+    const classifyResult = await updateMeetingClassification(meetingId, {
+      meeting_type: finalMeetingType,
+      party_type: partyType,
+      relevance_score: gatekeeperResult.relevance_score,
+      organization_id: orgResult.organization_id,
+      unmatched_organization_name: orgResult.matched ? null : orgNameToResolve,
+      raw_fireflies: mergedRaw,
+    });
+    if ("error" in classifyResult) return classifyResult;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { error: `Gatekeeper-replay mislukt: ${msg}` };
+  }
+
+  revalidatePath(`/meetings/${meetingId}`);
+  revalidatePath(`/review/${meetingId}`);
+  revalidatePath("/meetings");
+  revalidatePath("/review");
+  revalidatePath("/");
+  return { success: true };
+}
+
 // ── Full Reprocess (re-fetch from Fireflies + full pipeline) ──
 
 export async function reprocessMeetingAction(

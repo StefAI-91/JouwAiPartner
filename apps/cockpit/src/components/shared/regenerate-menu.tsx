@@ -14,6 +14,7 @@ import {
 import {
   regenerateMeetingAction,
   regenerateRisksAction,
+  regenerateGatekeeperOnlyAction,
   reprocessMeetingAction,
 } from "@/actions/meeting-pipeline";
 
@@ -21,7 +22,7 @@ interface RegenerateMenuProps {
   meetingId: string;
 }
 
-type LoadingState = "regenerate" | "risks" | "reprocess" | null;
+type LoadingState = "regenerate" | "risks" | "gatekeeper" | "reprocess" | null;
 
 export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
   const router = useRouter();
@@ -47,6 +48,20 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
     setError(null);
 
     const result = await regenerateRisksAction({ meetingId });
+    if ("error" in result) {
+      setError(result.error);
+      setLoading(null);
+      return;
+    }
+    router.refresh();
+    setLoading(null);
+  }
+
+  async function handleGatekeeperOnly() {
+    setLoading("gatekeeper");
+    setError(null);
+
+    const result = await regenerateGatekeeperOnlyAction({ meetingId });
     if ("error" in result) {
       setError(result.error);
       setLoading(null);
@@ -88,9 +103,11 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
                 ? "Regenereren..."
                 : loading === "risks"
                   ? "Risico's regenereren..."
-                  : loading === "reprocess"
-                    ? "Herverwerken..."
-                    : "Regenereer"}
+                  : loading === "gatekeeper"
+                    ? "Gatekeeper draait..."
+                    : loading === "reprocess"
+                      ? "Herverwerken..."
+                      : "Regenereer"}
             </Button>
           }
         />
@@ -98,6 +115,15 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
           align="end"
           className="w-56 border border-border bg-background shadow-lg dark:bg-card"
         >
+          <DropdownMenuItem onClick={handleGatekeeperOnly}>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">Alleen gatekeeper (titel + type)</span>
+              <span className="text-xs text-muted-foreground">
+                1 Haiku-call, samenvatting blijft
+              </span>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleRegenerate}>
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Regenereer</span>

@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 475 |
-| Exported functions/constants | 711 |
+| Exported functions/constants | 712 |
 | Exported types/interfaces | 176 |
 | Cross-package imports | 598 |
 | Critical integration points (3+ packages) | 14 |
@@ -1561,6 +1561,7 @@
 **Exports:**
 - `regenerateMeetingAction()`
 - `regenerateRisksAction()`
+- `regenerateGatekeeperOnlyAction()`
 - `reprocessMeetingAction()`
 
 **Depends on:**
