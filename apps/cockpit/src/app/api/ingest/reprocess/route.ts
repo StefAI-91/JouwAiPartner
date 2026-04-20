@@ -6,7 +6,7 @@ import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { runTranscribeStep } from "@repo/ai/pipeline/steps/transcribe";
 import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
-import { runRiskSpecialistExperiment } from "@repo/ai/pipeline/steps/risk-specialist-experiment";
+import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { embedMeetingWithExtractions } from "@repo/ai/pipeline/embed-pipeline";
 import { markMeetingEmbeddingStale } from "@repo/database/mutations/meetings";
 import { getAdminClient } from "@repo/database/supabase/admin";
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
   // idempotent: action_items uit historische runs blijven staan.
   try {
     console.info(`Reprocess: Running RiskSpecialist (${transcriptSource})...`);
-    await runRiskSpecialistExperiment(
+    await runRiskSpecialistStep(
       meeting.id,
       summarizerTranscript,
       {

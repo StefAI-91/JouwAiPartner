@@ -800,7 +800,7 @@
 - `./steps/transcribe` → runTranscribeStep
 - `./steps/summarize` → runSummarizeStep
 - `./steps/structure` → runStructureStep, isMeetingStructurerEnabled
-- `./steps/risk-specialist-experiment` → runRiskSpecialistExperiment
+- `./steps/risk-specialist` → runRiskSpecialistStep
 - `./steps/generate-title` → runGenerateTitleStep
 - `./steps/tag-and-segment` → runTagAndSegmentStep
 - `./steps/embed` → runEmbedStep
@@ -968,10 +968,10 @@
 - `../generate-title` → generateMeetingTitle
 - `../../validations/gatekeeper` → IdentifiedProject
 
-### `packages/ai/src/pipeline/steps/risk-specialist-experiment.ts`
+### `packages/ai/src/pipeline/steps/risk-specialist.ts`
 
 **Exports:**
-- `runRiskSpecialistExperiment()`
+- `runRiskSpecialistStep()`
 
 **Depends on:**
 - `@repo/database/mutations/experimental-risk-extractions` → insertExperimentalRiskExtraction
@@ -1659,7 +1659,7 @@
 - `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
-- `@repo/ai/pipeline/steps/risk-specialist-experiment` → runRiskSpecialistExperiment
+- `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
 - `@repo/ai/agents/gatekeeper` → runGatekeeper
 - `@repo/ai/pipeline/tagger` → runTagger
@@ -1965,7 +1965,7 @@
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/ai/pipeline/steps/transcribe` → runTranscribeStep
 - `@repo/ai/pipeline/steps/summarize` → runSummarizeStep
-- `@repo/ai/pipeline/steps/risk-specialist-experiment` → runRiskSpecialistExperiment
+- `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/embed-pipeline` → embedMeetingWithExtractions
 - `@repo/database/mutations/meetings` → markMeetingEmbeddingStale
 - `@repo/database/supabase/admin` → getAdminClient
@@ -3830,7 +3830,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist-experiment.ts` |
+| `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist.ts` |
 
 ### mutations/extractions.ts
 

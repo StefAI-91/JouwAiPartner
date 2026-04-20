@@ -14,12 +14,19 @@ export interface ExperimentalRiskExtractionInput {
 }
 
 /**
- * Persist één RiskSpecialist-run naast de MeetingStructurer-output. Eén
- * rij per (meeting, prompt_version, timestamp) — re-runs bij prompt-change
- * worden naast elkaar bewaard zodat A/B-diffs mogelijk blijven.
+ * Append-only run-telemetrie voor de RiskSpecialist: latency, token-counts,
+ * model, prompt_version, eventuele error. Ooit bedoeld als A/B-tabel naast
+ * de MeetingStructurer; sinds de RiskSpecialist productie is (zie
+ * `runRiskSpecialistStep`) dient het als audit-laag voor cost-analyse,
+ * prompt-drift en failure-tracking. Tabelnaam is bewust niet herdoopt —
+ * migratie zou overhead zijn zonder functioneel winstpunt.
+ *
+ * Eén rij per (meeting, prompt_version, timestamp). Re-runs bij prompt-
+ * change worden naast elkaar bewaard zodat diffs tussen versies mogelijk
+ * blijven.
  *
  * Non-blocking qua pipeline: caller wrapt in try-catch zodat een
- * experiment-save-fout de hoofdpipeline niet afbreekt.
+ * telemetry-save-fout de productie-save niet afbreekt.
  */
 export async function insertExperimentalRiskExtraction(
   input: ExperimentalRiskExtractionInput,

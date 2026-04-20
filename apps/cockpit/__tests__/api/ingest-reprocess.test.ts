@@ -16,8 +16,8 @@ vi.mock("@repo/ai/pipeline/steps/summarize", () => ({
   runSummarizeStep: vi.fn(),
 }));
 
-vi.mock("@repo/ai/pipeline/steps/risk-specialist-experiment", () => ({
-  runRiskSpecialistExperiment: vi.fn(),
+vi.mock("@repo/ai/pipeline/steps/risk-specialist", () => ({
+  runRiskSpecialistStep: vi.fn(),
 }));
 
 vi.mock("@repo/ai/pipeline/embed-pipeline", () => ({
@@ -60,7 +60,7 @@ vi.mock("@repo/database/queries/ignored-entities", () => ({
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { runTranscribeStep } from "@repo/ai/pipeline/steps/transcribe";
 import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
-import { runRiskSpecialistExperiment } from "@repo/ai/pipeline/steps/risk-specialist-experiment";
+import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { POST } from "../../src/app/api/ingest/reprocess/route";
 import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
@@ -161,15 +161,15 @@ describe("POST /api/ingest/reprocess", () => {
       kernpunten: ["point 1"],
       vervolgstappen: ["step 1"],
     } as never);
-    vi.mocked(runRiskSpecialistExperiment).mockResolvedValue(undefined);
+    vi.mocked(runRiskSpecialistStep).mockResolvedValue(undefined);
 
     const req = makeRequest({ fireflies_id: "ff-1" });
     const res = await POST(req as never);
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(runRiskSpecialistExperiment).toHaveBeenCalledTimes(1);
-    const args = vi.mocked(runRiskSpecialistExperiment).mock.calls[0];
+    expect(runRiskSpecialistStep).toHaveBeenCalledTimes(1);
+    const args = vi.mocked(runRiskSpecialistStep).mock.calls[0];
     expect(args[0]).toBe("m1");
     expect(data.meeting_id).toBe("m1");
     expect(data.risk_specialist.success).toBe(true);

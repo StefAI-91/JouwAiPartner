@@ -15,7 +15,7 @@ import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
 import { runStructureStep, isMeetingStructurerEnabled } from "./steps/structure";
-import { runRiskSpecialistExperiment } from "./steps/risk-specialist-experiment";
+import { runRiskSpecialistStep } from "./steps/risk-specialist";
 import { runGenerateTitleStep } from "./steps/generate-title";
 import { runTagAndSegmentStep } from "./steps/tag-and-segment";
 import { runEmbedStep } from "./steps/embed";
@@ -206,7 +206,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   // RiskSpecialist draait parallel aan de hoofdpipeline en schrijft naar
   // zowel `extractions` (UI) als `experimental_risk_extractions` (audit).
   // Start nu, await aan het einde.
-  const riskSpecialistPromise = runRiskSpecialistExperiment(
+  const riskSpecialistPromise = runRiskSpecialistStep(
     meetingId,
     bestTranscript,
     {

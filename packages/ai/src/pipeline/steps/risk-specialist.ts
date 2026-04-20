@@ -9,21 +9,25 @@ import { saveRiskExtractions } from "../save-risk-extractions";
 import type { IdentifiedProject } from "../../validations/gatekeeper";
 
 /**
- * Run the RiskSpecialist parallel to the summarizer/extractor and persist
- * de output op TWEE plekken:
+ * Productie-step voor de RiskSpecialist. Persisteert de output op twee
+ * plekken, elk met een eigen verantwoordelijkheid:
  *
- *  1. `extractions` (type='risk') — zichtbaar in de review-flow + meeting-
- *     detail UI via `saveRiskExtractions()`.
- *  2. `experimental_risk_extractions` — audit-telemetrie (model, prompt-
- *     versie, latency, tokens) voor kostprijs-analyse en A/B-vergelijking
- *     tussen prompt-versies.
+ *  1. `extractions` (type='risk') — de risico's zoals de UI/review-flow ze
+ *     ziet. Idempotent per meeting via `saveRiskExtractions` (replace op
+ *     type='risk' — action_items en andere types blijven staan).
  *
- * Never throws — alle fouten worden gevangen en (indien mogelijk) als
- * error-rij opgeslagen zodat een specialist-crash de hoofdpipeline nooit
- * afbreekt. Elk van de 2 persist-stappen faalt onafhankelijk: de ene
- * hoeft niet te slagen voor de andere.
+ *  2. `experimental_risk_extractions` — append-only run-telemetrie: model,
+ *     prompt_version, latency, token-counts, error. Ooit gebouwd als A/B-
+ *     tabel; nu gebruikt als audit-laag voor cost-analyse, prompt-drift en
+ *     failure-tracking zonder de productie-rijen te vervuilen. Tabelnaam
+ *     is bewust niet herdoopt — dat zou een migratie kosten zonder
+ *     functioneel winstpunt.
+ *
+ * Never throws: iedere persist-stap faalt onafhankelijk en wordt opgelogd.
+ * Bij een agent-crash wordt een error-rij geschreven naar de telemetrie-
+ * tabel zodat je "did it fail?" kunt onderscheiden van "did it not run?".
  */
-export async function runRiskSpecialistExperiment(
+export async function runRiskSpecialistStep(
   meetingId: string,
   transcript: string,
   context: RiskSpecialistContext,
@@ -35,7 +39,8 @@ export async function runRiskSpecialistExperiment(
   try {
     const { output, metrics } = await runRiskSpecialist(transcript, context);
 
-    // Audit-rij (telemetrie). Failure hier mag de extractions-save niet blokkeren.
+    // Run-telemetrie: latency / tokens / prompt-versie. Mag falen zonder
+    // de productie-save te blokkeren.
     try {
       await insertExperimentalRiskExtraction({
         meeting_id: meetingId,
@@ -48,15 +53,15 @@ export async function runRiskSpecialistExperiment(
         reasoning_tokens: metrics.reasoning_tokens,
         error: null,
       });
-    } catch (auditErr) {
+    } catch (telemetryErr) {
       console.error(
-        "RiskSpecialist audit-save failed (non-blocking):",
-        auditErr instanceof Error ? auditErr.message : String(auditErr),
+        "RiskSpecialist telemetry-save failed (non-blocking):",
+        telemetryErr instanceof Error ? telemetryErr.message : String(telemetryErr),
       );
     }
 
-    // Productie-pad: schrijf risks naar de gedeelde extractions-tabel zodat
-    // de UI/review-flow ze ziet. Idempotent per meeting (replace op type=risk).
+    // Productie-save: risks naar de gedeelde extractions-tabel zodat ze in
+    // de UI en review-flow verschijnen. Idempotent per type.
     try {
       const saveResult = await saveRiskExtractions(output, meetingId, identifiedProjects);
       console.info(
@@ -70,8 +75,9 @@ export async function runRiskSpecialistExperiment(
     }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
-    console.error("RiskSpecialist experiment failed (non-blocking):", errMsg);
-    // Save the failure so missing rows are never "did it not run?" vs "did it fail?".
+    console.error("RiskSpecialist agent failed (non-blocking):", errMsg);
+    // Schrijf een error-rij naar de telemetrie zodat "did it fail?"
+    // onderscheidbaar blijft van "did it not run?".
     try {
       await insertExperimentalRiskExtraction({
         meeting_id: meetingId,
@@ -81,7 +87,6 @@ export async function runRiskSpecialistExperiment(
         error: errMsg,
       });
     } catch (saveErr) {
-      // Double-fault: swallow. The pipeline must continue.
       console.error(
         "Failed to record RiskSpecialist failure row:",
         saveErr instanceof Error ? saveErr.message : String(saveErr),

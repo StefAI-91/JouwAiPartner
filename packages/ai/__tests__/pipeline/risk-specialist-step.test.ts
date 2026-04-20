@@ -16,7 +16,7 @@ vi.mock("../../src/pipeline/save-risk-extractions", () => ({
   saveRiskExtractions: vi.fn(),
 }));
 
-import { runRiskSpecialistExperiment } from "../../src/pipeline/steps/risk-specialist-experiment";
+import { runRiskSpecialistStep } from "../../src/pipeline/steps/risk-specialist";
 import {
   runRiskSpecialist,
   RISK_SPECIALIST_MODEL,
@@ -72,7 +72,7 @@ beforeEach(() => {
   mockSave.mockResolvedValue({ extractions_saved: 0, projects_linked: 0 });
 });
 
-describe("runRiskSpecialistExperiment", () => {
+describe("runRiskSpecialistStep", () => {
   it("schrijft bij success naar ZOWEL extractions-tabel (UI) ALS audit-tabel", async () => {
     mockRun.mockResolvedValue({
       output: makeOutput(3),
@@ -86,7 +86,7 @@ describe("runRiskSpecialistExperiment", () => {
     mockAuditInsert.mockResolvedValue({ success: true, id: "exp-1" });
     mockSave.mockResolvedValue({ extractions_saved: 3, projects_linked: 1 });
 
-    await runRiskSpecialistExperiment(MEETING_ID, "transcript", baseContext, identifiedProjects);
+    await runRiskSpecialistStep(MEETING_ID, "transcript", baseContext, identifiedProjects);
 
     // Audit-rij (telemetrie)
     expect(mockAuditInsert).toHaveBeenCalledTimes(1);
@@ -116,7 +116,7 @@ describe("runRiskSpecialistExperiment", () => {
     mockSave.mockRejectedValue(new Error("DB down"));
 
     await expect(
-      runRiskSpecialistExperiment(MEETING_ID, "transcript", baseContext, identifiedProjects),
+      runRiskSpecialistStep(MEETING_ID, "transcript", baseContext, identifiedProjects),
     ).resolves.toBeUndefined();
 
     expect(mockAuditInsert).toHaveBeenCalledTimes(1);
@@ -134,7 +134,7 @@ describe("runRiskSpecialistExperiment", () => {
     mockSave.mockResolvedValue({ extractions_saved: 1, projects_linked: 0 });
 
     await expect(
-      runRiskSpecialistExperiment(MEETING_ID, "transcript", baseContext, identifiedProjects),
+      runRiskSpecialistStep(MEETING_ID, "transcript", baseContext, identifiedProjects),
     ).resolves.toBeUndefined();
 
     expect(mockSave).toHaveBeenCalledTimes(1);
@@ -147,7 +147,7 @@ describe("runRiskSpecialistExperiment", () => {
     mockAuditInsert.mockResolvedValue({ success: true, id: "exp-err" });
 
     await expect(
-      runRiskSpecialistExperiment(MEETING_ID, "transcript", baseContext, identifiedProjects),
+      runRiskSpecialistStep(MEETING_ID, "transcript", baseContext, identifiedProjects),
     ).resolves.toBeUndefined();
 
     const payload = mockAuditInsert.mock.calls[0][0];
@@ -165,7 +165,7 @@ describe("runRiskSpecialistExperiment", () => {
     mockAuditInsert.mockRejectedValue(new Error("DB down"));
 
     await expect(
-      runRiskSpecialistExperiment(MEETING_ID, "transcript", baseContext, identifiedProjects),
+      runRiskSpecialistStep(MEETING_ID, "transcript", baseContext, identifiedProjects),
     ).resolves.toBeUndefined();
 
     consoleSpy.mockRestore();
@@ -179,7 +179,7 @@ describe("runRiskSpecialistExperiment", () => {
     mockAuditInsert.mockResolvedValue({ success: true, id: "exp-0" });
     mockSave.mockResolvedValue({ extractions_saved: 0, projects_linked: 0 });
 
-    await runRiskSpecialistExperiment(MEETING_ID, "transcript", baseContext, identifiedProjects);
+    await runRiskSpecialistStep(MEETING_ID, "transcript", baseContext, identifiedProjects);
 
     expect(mockAuditInsert.mock.calls[0][0].risks).toEqual([]);
     // Save wordt toch aangeroepen om de idempotency-delete te laten lopen

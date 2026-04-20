@@ -9,7 +9,7 @@ import {
 } from "@repo/database/mutations/meetings";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
-import { runRiskSpecialistExperiment } from "@repo/ai/pipeline/steps/risk-specialist-experiment";
+import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
 import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
 import { runTagger } from "@repo/ai/pipeline/tagger";
@@ -127,7 +127,7 @@ export async function regenerateMeetingAction(
     // de audit-insert naar `experimental_risk_extractions` en is per meeting
     // idempotent (alleen type='risk' rijen worden vervangen). Action_items
     // uit historische runs blijven staan tot ze handmatig gewist worden.
-    await runRiskSpecialistExperiment(
+    await runRiskSpecialistStep(
       meetingId,
       transcript,
       {
