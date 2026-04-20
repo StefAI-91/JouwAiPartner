@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 480 |
-| Exported functions/constants | 722 |
-| Exported types/interfaces | 185 |
-| Cross-package imports | 598 |
+| Exported functions/constants | 733 |
+| Exported types/interfaces | 188 |
+| Cross-package imports | 600 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -184,6 +184,7 @@
 - `getSegmentsByMeetingIds()`
 - `getSegmentCountsByMeetingIds()`
 - `getSegmentCountsByProjectIds()`
+- `getSegmentNameRaw()`
 - `getSegmentsByProjectId()`
 
 **Types:** `MeetingSegment`, `ProjectSegment`
@@ -207,8 +208,14 @@
 - `getMeetingExtractionsBatch()`
 - `getVerifiedMeetingsWithoutSegments()`
 - `getMeetingForTitleGeneration()`
+- `getMeetingForRegenerate()`
+- `getMeetingForRegenerateRisks()`
+- `getMeetingForReprocess()`
+- `getMeetingOrganizationId()`
+- `listMeetingProjectIds()`
+- `listMeetingParticipantIds()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`
 
 ### `queries/needs.ts`
 
@@ -300,6 +307,7 @@
 - `listProjects()`
 - `getProjectById()`
 - `listFocusProjects()`
+- `getProjectAliases()`
 - `getProjectByNameIlike()`
 - `getAllProjects()`
 - `getActiveProjectsForContext()`
@@ -473,6 +481,7 @@
 - `linkSegmentToProject()`
 - `removeSegmentTag()`
 - `updateSegmentEmbedding()`
+- `deleteSegmentsByMeetingId()`
 
 ### `mutations/meetings.ts`
 
@@ -493,6 +502,8 @@
 - `markMeetingEmbeddingStale()`
 - `unlinkMeetingProject()`
 - `deleteMeeting()`
+- `parkMeetingForReprocess()`
+- `restoreParkedMeeting()`
 
 ### `mutations/organizations.ts`
 
@@ -1621,8 +1632,8 @@
 - `reprocessMeetingAction()`
 
 **Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale, deleteMeeting, parkMeetingForReprocess, restoreParkedMeeting
+- `@repo/database/queries/meetings` → getMeetingForRegenerate, getMeetingForRegenerateRisks, getMeetingForReprocess, getMeetingOrganizationId
 - `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
@@ -1630,7 +1641,7 @@
 - `@repo/ai/pipeline/tagger` → runTagger
 - `@repo/ai/pipeline/segment-builder` → buildSegments
 - `@repo/ai/embeddings` → embedBatch
-- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
+- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding, deleteSegmentsByMeetingId
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
 - `@repo/database/validations/meetings` → regenerateSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
@@ -1655,7 +1666,7 @@
 **Depends on:**
 - `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject, deleteMeeting
 - `@repo/database/mutations/meeting-participants` → linkMeetingParticipant, unlinkMeetingParticipant
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → listMeetingProjectIds, listMeetingParticipantIds
 - `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema, regenerateSchema
 - `@repo/database/validations/entities` → deleteSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
@@ -1740,9 +1751,11 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
 - `@repo/database/mutations/meeting-project-summaries` → linkSegmentToProject, removeSegmentTag
+- `@repo/database/queries/meeting-project-summaries` → getSegmentNameRaw
+- `@repo/database/queries/meetings` → getMeetingOrganizationId
+- `@repo/database/queries/projects` → getProjectAliases
 - `@repo/database/mutations/projects` → updateProjectAliases
 - `@repo/database/mutations/ignored-entities` → addIgnoredEntity
-- `@repo/database/supabase/admin` → getAdminClient
 
 ### `apps/cockpit/src/actions/summaries.ts`
 
@@ -3731,7 +3744,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 45 | - | - | - | - | 45 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 45 | 15 | 29 | - | - | 89 |
+| Cockpit Server Actions | 47 | 15 | 29 | - | - | 91 |
 | Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
 | Cockpit Components | 41 | 6 | - | 75 | - | 122 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -3869,6 +3882,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `linkSegmentToProject()` | `apps/cockpit/src/actions/segments.ts` |
 | `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
 | `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `deleteSegmentsByMeetingId()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
 
 ### mutations/meetings.ts
 
@@ -3888,7 +3902,9 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/actions/review.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
-| `deleteMeeting()` | `apps/cockpit/src/actions/meetings.ts` |
+| `deleteMeeting()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `parkMeetingForReprocess()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `restoreParkedMeeting()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
 
 ### mutations/organizations.ts
 
@@ -4055,6 +4071,7 @@ Which queries are used where across the codebase.
 | `getSegmentsByMeetingIds()` | `packages/mcp/src/tools/meetings.ts` |
 | `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
 | `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
+| `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
 | `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/meetings.ts
@@ -4074,6 +4091,12 @@ Which queries are used where across the codebase.
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
 | `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `getMeetingForRegenerate()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `getMeetingForRegenerateRisks()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `getMeetingForReprocess()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `getMeetingOrganizationId()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/segments.ts` |
+| `listMeetingProjectIds()` | `apps/cockpit/src/actions/meetings.ts` |
+| `listMeetingParticipantIds()` | `apps/cockpit/src/actions/meetings.ts` |
 
 ### queries/needs.ts
 
@@ -4129,6 +4152,7 @@ Which queries are used where across the codebase.
 | `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
+| `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |

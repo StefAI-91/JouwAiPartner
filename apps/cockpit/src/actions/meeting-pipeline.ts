@@ -6,8 +6,16 @@ import {
   updateMeetingSummary,
   updateMeetingTitle,
   markMeetingEmbeddingStale,
+  deleteMeeting,
+  parkMeetingForReprocess,
+  restoreParkedMeeting,
 } from "@repo/database/mutations/meetings";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import {
+  getMeetingForRegenerate,
+  getMeetingForRegenerateRisks,
+  getMeetingForReprocess,
+  getMeetingOrganizationId,
+} from "@repo/database/queries/meetings";
 import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
@@ -18,6 +26,7 @@ import { embedBatch } from "@repo/ai/embeddings";
 import {
   insertMeetingProjectSummaries,
   updateSegmentEmbedding,
+  deleteSegmentsByMeetingId,
 } from "@repo/database/mutations/meeting-project-summaries";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import { regenerateSchema } from "@repo/database/validations/meetings";
@@ -39,33 +48,22 @@ export async function regenerateMeetingAction(
   const { meetingId } = parsed.data;
 
   // Fetch meeting with transcript and context
-  const supabase = getAdminClient();
-  const { data: meeting, error: fetchError } = await supabase
-    .from("meetings")
-    .select(
-      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
-       meeting_participants(person:people(name))`,
-    )
-    .eq("id", meetingId)
-    .single();
-
-  if (fetchError || !meeting) {
+  const meeting = await getMeetingForRegenerate(meetingId);
+  if (!meeting) {
     return { error: "Meeting niet gevonden" };
   }
 
-  const transcript = (meeting.transcript_elevenlabs || meeting.transcript) as string | null;
+  const transcript = meeting.transcript_elevenlabs || meeting.transcript;
   if (!transcript) {
     return { error: "Geen transcript beschikbaar voor deze meeting" };
   }
 
-  const participants = (
-    meeting.meeting_participants as unknown as { person: { name: string } }[]
-  ).map((mp) => mp.person.name);
+  const participants = meeting.meeting_participants.map((mp) => mp.person.name);
 
   const context = {
-    title: (meeting.title as string) || "Onbekend",
-    meeting_type: (meeting.meeting_type as string) || "other",
-    party_type: (meeting.party_type as string) || "other",
+    title: meeting.title || "Onbekend",
+    meeting_type: meeting.meeting_type || "other",
+    party_type: meeting.party_type || "other",
     participants,
   };
 
@@ -137,7 +135,7 @@ export async function regenerateMeetingAction(
         participants: context.participants,
         speakerContext: null,
         entityContext: entityContext.contextString,
-        meeting_date: (meeting.date as string) || new Date().toISOString().split("T")[0],
+        meeting_date: meeting.date || new Date().toISOString().split("T")[0],
         identified_projects: identifiedProjects.map((p) => ({
           project_name: p.project_name,
           project_id: p.project_id,
@@ -147,19 +145,15 @@ export async function regenerateMeetingAction(
     );
 
     // Step 6: Tagger + segment-bouw (delete old segments first, then rebuild)
-    const { data: meetingOrg } = await supabase
-      .from("meetings")
-      .select("organization_id")
-      .eq("id", meetingId)
-      .single();
+    const meetingOrganizationId = await getMeetingOrganizationId(meetingId);
 
     // Delete existing segments for this meeting
-    await supabase.from("meeting_project_summaries").delete().eq("meeting_id", meetingId);
+    await deleteSegmentsByMeetingId(meetingId);
 
     if (summarizerOutput.kernpunten.length > 0 || summarizerOutput.vervolgstappen.length > 0) {
       try {
-        const ignoredNames = meetingOrg?.organization_id
-          ? await getIgnoredEntityNames(meetingOrg.organization_id, "project")
+        const ignoredNames = meetingOrganizationId
+          ? await getIgnoredEntityNames(meetingOrganizationId, "project")
           : new Set<string>();
 
         const taggerOutput = runTagger({
@@ -247,28 +241,17 @@ export async function regenerateRisksAction(
 
   const { meetingId } = parsed.data;
 
-  const supabase = getAdminClient();
-  const { data: meeting, error: fetchError } = await supabase
-    .from("meetings")
-    .select(
-      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
-       raw_fireflies, meeting_participants(person:people(name))`,
-    )
-    .eq("id", meetingId)
-    .single();
-
-  if (fetchError || !meeting) {
+  const meeting = await getMeetingForRegenerateRisks(meetingId);
+  if (!meeting) {
     return { error: "Meeting niet gevonden" };
   }
 
-  const transcript = (meeting.transcript_elevenlabs || meeting.transcript) as string | null;
+  const transcript = meeting.transcript_elevenlabs || meeting.transcript;
   if (!transcript) {
     return { error: "Geen transcript beschikbaar voor deze meeting" };
   }
 
-  const participants = (
-    meeting.meeting_participants as unknown as { person: { name: string } }[]
-  ).map((mp) => mp.person.name);
+  const participants = meeting.meeting_participants.map((mp) => mp.person.name);
 
   // Haal identified_projects uit raw_fireflies zodat we exact dezelfde
   // project-mapping gebruiken als de originele pipeline. Bij legacy
@@ -297,13 +280,13 @@ export async function regenerateRisksAction(
       meetingId,
       transcript,
       {
-        title: (meeting.title as string) || "Onbekend",
-        meeting_type: (meeting.meeting_type as string) || "other",
-        party_type: (meeting.party_type as string) || "other",
+        title: meeting.title || "Onbekend",
+        meeting_type: meeting.meeting_type || "other",
+        party_type: meeting.party_type || "other",
         participants,
         speakerContext: null,
         entityContext: entityContext.contextString,
-        meeting_date: (meeting.date as string) || new Date().toISOString().split("T")[0],
+        meeting_date: meeting.date || new Date().toISOString().split("T")[0],
         identified_projects: identifiedProjects.map((p) => ({
           project_name: p.project_name,
           project_id: p.project_id,
@@ -337,14 +320,8 @@ export async function reprocessMeetingAction(
   const { meetingId } = parsed.data;
 
   // 1. Fetch meeting to get fireflies_id + title (title is needed for rollback)
-  const supabase = getAdminClient();
-  const { data: meeting, error: fetchError } = await supabase
-    .from("meetings")
-    .select("id, fireflies_id, title")
-    .eq("id", meetingId)
-    .single();
-
-  if (fetchError || !meeting) {
+  const meeting = await getMeetingForReprocess(meetingId);
+  if (!meeting) {
     return { error: "Meeting niet gevonden" };
   }
 
@@ -364,22 +341,15 @@ export async function reprocessMeetingAction(
   //    We clear fireflies_id and prefix the title with a reprocessing marker.
   //    The old meeting stays intact (and fully reversible) until the pipeline succeeds.
   const reprocessMarker = `__reprocessing_${Date.now()}__`;
-  const parkedTitle = `${reprocessMarker}:${meeting.title as string}`;
-  const { error: clearError } = await supabase
-    .from("meetings")
-    .update({ fireflies_id: null, title: parkedTitle })
-    .eq("id", meetingId);
-
-  if (clearError) {
-    return { error: `Voorbereiding mislukt: ${clearError.message}` };
+  const parkedTitle = `${reprocessMarker}:${meeting.title ?? ""}`;
+  const parkResult = await parkMeetingForReprocess(meetingId, parkedTitle);
+  if ("error" in parkResult) {
+    return { error: `Voorbereiding mislukt: ${parkResult.error}` };
   }
 
   // Helper: restore the old meeting exactly as it was.
   const restoreOldMeeting = async () => {
-    await supabase
-      .from("meetings")
-      .update({ fireflies_id: meeting.fireflies_id, title: meeting.title })
-      .eq("id", meetingId);
+    await restoreParkedMeeting(meetingId, meeting.fireflies_id, meeting.title);
   };
 
   // 4. Run full pipeline (gatekeeper → classify → speaker map → ElevenLabs → summarizer → extractor → embed)
@@ -421,7 +391,7 @@ export async function reprocessMeetingAction(
     }
 
     // 5. Pipeline succeeded — delete the old (parked) meeting (CASCADE cleans up related data)
-    await supabase.from("meetings").delete().eq("id", meetingId);
+    await deleteMeeting(meetingId);
 
     revalidatePath(`/meetings/${pipelineResult.meetingId}`);
     revalidatePath(`/review/${pipelineResult.meetingId}`);

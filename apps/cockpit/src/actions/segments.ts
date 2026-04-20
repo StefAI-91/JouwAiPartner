@@ -8,9 +8,11 @@ import {
   linkSegmentToProject,
   removeSegmentTag,
 } from "@repo/database/mutations/meeting-project-summaries";
+import { getSegmentNameRaw } from "@repo/database/queries/meeting-project-summaries";
+import { getMeetingOrganizationId } from "@repo/database/queries/meetings";
+import { getProjectAliases } from "@repo/database/queries/projects";
 import { updateProjectAliases } from "@repo/database/mutations/projects";
 import { addIgnoredEntity } from "@repo/database/mutations/ignored-entities";
-import { getAdminClient } from "@repo/database/supabase/admin";
 
 const linkSegmentSchema = z.object({
   segmentId: z.string().uuid(),
@@ -31,30 +33,6 @@ async function requireAuth() {
   if (!user) return null;
   if (!(await isAdmin(user.id))) return null;
   return user;
-}
-
-/**
- * Get segment's project_name_raw for feedback actions.
- */
-async function getSegmentNameRaw(segmentId: string): Promise<string | null> {
-  const { data } = await getAdminClient()
-    .from("meeting_project_summaries")
-    .select("project_name_raw")
-    .eq("id", segmentId)
-    .single();
-  return data?.project_name_raw ?? null;
-}
-
-/**
- * Get meeting's organization_id for ignored_entities.
- */
-async function getMeetingOrgId(meetingId: string): Promise<string | null> {
-  const { data } = await getAdminClient()
-    .from("meetings")
-    .select("organization_id")
-    .eq("id", meetingId)
-    .single();
-  return data?.organization_id ?? null;
 }
 
 export async function linkSegmentToProjectAction(
@@ -85,14 +63,8 @@ export async function linkSegmentToProjectAction(
 
   // FUNC-090: Auto-add project_name_raw as alias to the project
   if (nameRaw) {
-    const { data: project } = await getAdminClient()
-      .from("projects")
-      .select("aliases")
-      .eq("id", parsed.data.projectId)
-      .single();
-
-    if (project) {
-      const currentAliases: string[] = project.aliases ?? [];
+    const currentAliases = await getProjectAliases(parsed.data.projectId);
+    if (currentAliases !== null) {
       const alreadyExists = currentAliases.some((a) => a.toLowerCase() === nameRaw.toLowerCase());
       if (!alreadyExists) {
         await updateProjectAliases(parsed.data.projectId, [...currentAliases, nameRaw]);
@@ -116,7 +88,7 @@ export async function removeSegmentTagAction(
 
   // Get project_name_raw and meeting org_id before removing (for ignored_entity feedback)
   const nameRaw = await getSegmentNameRaw(parsed.data.segmentId);
-  const orgId = await getMeetingOrgId(parsed.data.meetingId);
+  const orgId = await getMeetingOrganizationId(parsed.data.meetingId);
 
   const result = await removeSegmentTag(parsed.data.segmentId, parsed.data.meetingId);
   if ("error" in result) return result;
