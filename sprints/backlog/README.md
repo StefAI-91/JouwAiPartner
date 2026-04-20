@@ -6,6 +6,7 @@ Master backlog for all upcoming work. Sprint numbering continues from 029 (sprin
 
 | #        | Sprint                                                       | Area          | Status  |
 | -------- | ------------------------------------------------------------ | ------------- | ------- |
+| HF-001   | Party-type drift fix + emails portal-RLS hotfix              | Security/Fix  | Backlog |
 | 029      | Project page rebuild (AI summaries, action items, decisions) | Cockpit UI    | Backlog |
 | 030      | Organization page + AI summary                               | Cockpit UI    | Backlog |
 | DH-008   | Status page (public, per-project, read-only)                 | DevHub fase 2 | Backlog |
