@@ -71,20 +71,10 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     promptFile: "summarizer.md",
     entrypoint: "packages/ai/src/pipeline/steps/summarize.ts",
   },
-  {
-    id: "meeting-structurer",
-    name: "Meeting Structurer",
-    role: "De architect",
-    description:
-      "Experimentele merged-agent die briefing + 14-type kernpunten + deelnemers + entities in één call produceert. Alleen actief met `USE_MEETING_STRUCTURER=true` env-flag — staat nu uit.",
-    mascot: "🧱",
-    model: "claude-sonnet-4-6",
-    modelLabel: "Sonnet 4.6",
-    quadrant: "cockpit",
-    status: "building",
-    promptFile: "meeting_structurer.md",
-    entrypoint: "packages/ai/src/pipeline/steps/structure.ts",
-  },
+  // Meeting Structurer is bewust NIET opgenomen: de code leeft nog achter
+  // de `USE_MEETING_STRUCTURER` env-flag (default uit) maar draait niet in
+  // productie. Als de flag ooit weer aan gaat, hier een entry toevoegen
+  // met entrypoint `packages/ai/src/pipeline/steps/structure.ts`.
   {
     id: "title-generator",
     name: "Title Generator",
