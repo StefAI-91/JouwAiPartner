@@ -15,7 +15,6 @@ import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
 import { runRiskSpecialistStep } from "./steps/risk-specialist";
-import { runGenerateTitleStep } from "./steps/generate-title";
 import { runTagAndSegmentStep } from "./steps/tag-and-segment";
 import { runEmbedStep } from "./steps/embed";
 import { extractSpeakerNames, buildSpeakerMap, formatSpeakerContext } from "./speaker-map";
@@ -149,6 +148,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     fireflies_id: input.fireflies_id,
     title: input.title,
     original_title: input.title,
+    meeting_title: gatekeeperResult.meeting_title,
     date: new Date(Number(input.date)).toISOString(),
     participants: input.participants,
     summary: input.summary,
@@ -223,25 +223,13 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
   if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
   const summarized = summarizeResult.success;
-  const richSummary: string | null = summarizeResult.richSummary;
   const kernpuntenForTagger: string[] = summarizeResult.kernpunten;
   const vervolgstappenForTagger: string[] = summarizeResult.vervolgstappen;
   const extractionsSaved = 0;
 
-  // Step 9: AI title generation
-  const titleResult = await runGenerateTitleStep({
-    meetingId,
-    richSummary,
-    fallbackSummary: input.summary,
-    meetingType: finalMeetingType,
-    partyType,
-    organizationName: orgResult.matched
-      ? (knownOrg?.organizationName ?? gatekeeperResult.organization_name)
-      : (gatekeeperResult.organization_name ?? null),
-    projects: entityContext.projects.map((p) => ({ id: p.id, name: p.name })),
-    identifiedProjects,
-  });
-  if (titleResult.error) errors.push(`Title generation: ${titleResult.error}`);
+  // Step 9: Title already written by Gatekeeper during insert (see meeting_title
+  // above). The legacy title-generator agent is removed — gatekeeper produces a
+  // structural title in one shot.
 
   // Step 10: Tagger + segments
   const tagResult = await runTagAndSegmentStep({

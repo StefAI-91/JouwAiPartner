@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import {
   updateMeetingSummary,
-  updateMeetingTitle,
+  updateMeetingStructuralTitle,
   markMeetingEmbeddingStale,
 } from "@repo/database/mutations/meetings";
 import { getAdminClient } from "@repo/database/supabase/admin";
@@ -103,24 +103,12 @@ export async function regenerateMeetingAction(
       return { error: `Summary opslaan mislukt: ${summaryResult.error}` };
     }
 
-    // Step 4b: Regenerate title based on new summary
+    // Step 4b: Persist the structural meeting_title from the gatekeeper run
+    // above. Non-blocking — a failing write shouldn't abort regeneration.
     try {
-      const { generateMeetingTitle } = await import("@repo/ai/pipeline/generate-title");
-      const { getMeetingForTitleGeneration } = await import("@repo/database/queries/meetings");
-      const meetingContext = await getMeetingForTitleGeneration(meetingId);
-
-      if (meetingContext) {
-        const generatedTitle = await generateMeetingTitle(richSummary, {
-          meetingType: meetingContext.meeting_type || "other",
-          partyType: meetingContext.party_type || "other",
-          organizationName: meetingContext.organization?.name ?? null,
-          projectName: meetingContext.meeting_projects?.[0]?.project?.name ?? null,
-        });
-        await updateMeetingTitle(meetingId, generatedTitle);
-      }
+      await updateMeetingStructuralTitle(meetingId, gatekeeperResult.meeting_title);
     } catch (titleErr) {
-      // Non-blocking: title generation failure should not stop regeneration
-      console.error("Title generation failed during regeneration (non-blocking):", titleErr);
+      console.error("Structural title write failed during regeneration (non-blocking):", titleErr);
     }
 
     // Step 5: RiskSpecialist — vervangt de legacy Extractor. Draait ook

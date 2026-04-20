@@ -13,6 +13,7 @@ export async function insertMeeting(meeting: {
   organization_id: string | null;
   unmatched_organization_name: string | null;
   original_title?: string | null;
+  meeting_title?: string | null;
   raw_fireflies?: Record<string, unknown> | null;
   embedding_stale: boolean;
   verification_status?: string;
@@ -139,6 +140,23 @@ export async function updateMeetingTitle(
     }
     return { error: error.message };
   }
+  return { success: true };
+}
+
+/**
+ * Update the structural meeting_title column (written by gatekeeper).
+ * Separate from updateMeetingTitle which targets the user-facing `title`.
+ */
+export async function updateMeetingStructuralTitle(
+  meetingId: string,
+  meetingTitle: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ meeting_title: meetingTitle })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
   return { success: true };
 }
 

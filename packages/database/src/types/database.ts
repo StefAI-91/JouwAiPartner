@@ -988,9 +988,11 @@ export type Database = {
           embedding_stale: boolean | null;
           fireflies_id: string | null;
           id: string;
+          meeting_title: string | null;
           meeting_type: string | null;
           organization_id: string | null;
           organizer_email: string | null;
+          original_title: string | null;
           participants: string[] | null;
           party_type: string | null;
           raw_elevenlabs: Json | null;
@@ -1016,9 +1018,11 @@ export type Database = {
           embedding_stale?: boolean | null;
           fireflies_id?: string | null;
           id?: string;
+          meeting_title?: string | null;
           meeting_type?: string | null;
           organization_id?: string | null;
           organizer_email?: string | null;
+          original_title?: string | null;
           participants?: string[] | null;
           party_type?: string | null;
           raw_elevenlabs?: Json | null;
@@ -1044,9 +1048,11 @@ export type Database = {
           embedding_stale?: boolean | null;
           fireflies_id?: string | null;
           id?: string;
+          meeting_title?: string | null;
           meeting_type?: string | null;
           organization_id?: string | null;
           organizer_email?: string | null;
+          original_title?: string | null;
           participants?: string[] | null;
           party_type?: string | null;
           raw_elevenlabs?: Json | null;

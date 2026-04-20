@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 478 |
-| Exported functions/constants | 715 |
-| Exported types/interfaces | 180 |
-| Cross-package imports | 597 |
+| Files scanned | 475 |
+| Exported functions/constants | 711 |
+| Exported types/interfaces | 176 |
+| Cross-package imports | 595 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -483,6 +483,7 @@
 - `updateMeetingType()`
 - `updateMeetingPartyType()`
 - `updateMeetingTitle()`
+- `updateMeetingStructuralTitle()`
 - `updateMeetingOrganization()`
 - `linkMeetingProject()`
 - `linkAllMeetingProjects()`
@@ -692,16 +693,6 @@
 - `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput
 - `./run-logger` → withAgentRun
 
-### `packages/ai/src/agents/title-generator.ts`
-
-**Exports:**
-- `generateMeetingSubject()`
-
-**Types:** `TitleSubjectOutput`
-
-**Internal deps:**
-- `./run-logger` → withAgentRun
-
 ### `packages/ai/src/agents/weekly-summarizer.ts`
 
 **Exports:**
@@ -829,25 +820,10 @@
 - `./steps/transcribe` → runTranscribeStep
 - `./steps/summarize` → runSummarizeStep
 - `./steps/risk-specialist` → runRiskSpecialistStep
-- `./steps/generate-title` → runGenerateTitleStep
 - `./steps/tag-and-segment` → runTagAndSegmentStep
 - `./steps/embed` → runEmbedStep
 - `./speaker-map` → extractSpeakerNames, buildSpeakerMap, formatSpeakerContext
 - `./participant-helpers` → matchParticipants, mergeParticipantSources, type MeetingAttendee
-
-### `packages/ai/src/pipeline/generate-title.ts`
-
-**Exports:**
-- `buildMeetingTitle()`
-- `generateMeetingTitle()`
-
-**Types:** `TitleContext`
-
-**Depends on:**
-- `@repo/database/constants/meetings` → MEETING_TYPE_PREFIX
-
-**Internal deps:**
-- `../agents/title-generator` → generateMeetingSubject
 
 ### `packages/ai/src/pipeline/management-insights-pipeline.ts`
 
@@ -968,20 +944,6 @@
 
 **Internal deps:**
 - `../embed-pipeline` → embedMeetingWithExtractions
-
-### `packages/ai/src/pipeline/steps/generate-title.ts`
-
-**Exports:**
-- `runGenerateTitleStep()`
-
-**Types:** `GenerateTitleStepInput`, `GenerateTitleStepResult`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingTitle
-
-**Internal deps:**
-- `../generate-title` → generateMeetingTitle
-- `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/risk-specialist.ts`
 
@@ -1602,7 +1564,7 @@
 - `reprocessMeetingAction()`
 
 **Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale
+- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingStructuralTitle, markMeetingEmbeddingStale
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
@@ -1630,14 +1592,13 @@
 - `linkMeetingParticipantAction()`
 - `unlinkMeetingParticipantAction()`
 - `updateMeetingMetadataAction()`
-- `regenerateMeetingTitleAction()`
 - `deleteMeetingAction()`
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject, deleteMeeting
 - `@repo/database/mutations/meeting-participants` → linkMeetingParticipant, unlinkMeetingParticipant
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema, regenerateSchema
+- `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema
 - `@repo/database/validations/entities` → deleteSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
@@ -3709,7 +3670,7 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 45 | - | - | - | - | 45 |
+| AI Pipeline | 43 | - | - | - | - | 43 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 44 | 15 | 29 | - | - | 88 |
 | Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
@@ -3860,7 +3821,8 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
 | `updateMeetingType()` | `apps/cockpit/src/actions/meetings.ts` |
 | `updateMeetingPartyType()` | `apps/cockpit/src/actions/meetings.ts` |
-| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `updateMeetingTitle()` | `apps/cockpit/src/actions/meetings.ts` |
+| `updateMeetingStructuralTitle()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
 | `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
