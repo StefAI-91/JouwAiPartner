@@ -207,15 +207,22 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     entityContext: entityContext.contextString,
   };
 
-  // A/B-experiment: parallel aan de hoofdpipeline. Start nu, await aan het einde.
-  const riskSpecialistPromise = runRiskSpecialistExperiment(meetingId, bestTranscript, {
-    ...summarizeContext,
-    meeting_date: input.date,
-    identified_projects: identifiedProjects.map((p) => ({
-      project_name: p.project_name,
-      project_id: p.project_id,
-    })),
-  });
+  // RiskSpecialist draait parallel aan de hoofdpipeline en schrijft naar
+  // zowel `extractions` (UI) als `experimental_risk_extractions` (audit).
+  // Start nu, await aan het einde.
+  const riskSpecialistPromise = runRiskSpecialistExperiment(
+    meetingId,
+    bestTranscript,
+    {
+      ...summarizeContext,
+      meeting_date: input.date,
+      identified_projects: identifiedProjects.map((p) => ({
+        project_name: p.project_name,
+        project_id: p.project_id,
+      })),
+    },
+    identifiedProjects,
+  );
 
   let summarized = false;
   let richSummary: string | null = null;
