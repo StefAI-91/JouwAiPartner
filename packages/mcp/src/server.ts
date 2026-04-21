@@ -12,6 +12,8 @@ import { registerCorrectExtractionTools } from "./tools/correct-extraction";
 import { registerDecisionTools } from "./tools/decisions";
 import { registerWriteTaskTools } from "./tools/write-tasks";
 import { registerWriteClientUpdateTools } from "./tools/write-client-updates";
+import { registerIssueTools } from "./tools/issues";
+import { registerProjectReportTools } from "./tools/project-report";
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -34,6 +36,8 @@ export function createMcpServer(): McpServer {
   registerDecisionTools(server);
   registerWriteTaskTools(server);
   registerWriteClientUpdateTools(server);
+  registerIssueTools(server);
+  registerProjectReportTools(server);
 
   // Register the system prompt as an MCP prompt
   server.prompt(
@@ -57,7 +61,9 @@ Bij het beantwoorden van vragen:
 - Verwijs altijd naar de bron: meeting titel, datum, en indien beschikbaar het transcript-citaat.
 - Meeting samenvattingen bevatten besluiten, behoeften, signalen en context als narratief. Gebruik get_meeting_summary of search_knowledge om deze informatie te vinden.
 - Bij actiepunten, vermeld altijd de eigenaar en deadline.
-- Als je meerdere relevante meetings vindt, geef de meest recente.`,
+- Als je meerdere relevante meetings vindt, geef de meest recente.
+
+Voor project-rapportages gebruik je get_project_context (meta + AI-samenvattingen) als eerste stap, daarna get_project_issues (lijst met filters), get_project_activity (status-wijzigingen) en get_issue_detail (verdieping per saillant issue). Standaard venster is 14 dagen tenzij de gebruiker iets anders vraagt. Interpreteer de data — som niet alle issues op, maar cluster en kies wat klant-relevant is.`,
           },
         },
       ],

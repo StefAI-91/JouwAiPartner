@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-20. Do not edit manually.
+> Auto-generated on 2026-04-21. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 478 |
-| Exported functions/constants | 715 |
-| Exported types/interfaces | 180 |
-| Cross-package imports | 597 |
+| Files scanned | 482 |
+| Exported functions/constants | 722 |
+| Exported types/interfaces | 186 |
+| Cross-package imports | 602 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -306,6 +306,16 @@
 - `matchProjectsByEmbedding()`
 
 **Types:** `ProjectListItem`, `ProjectDetail`, `FocusProject`, `ActiveProjectForContext`
+
+### `queries/reports.ts`
+
+**Exports:**
+- `getProjectIssuesForReport()`
+- `getIssueDetailForReport()`
+- `getProjectActivityForReport()`
+- `getProjectContextForReport()`
+
+**Types:** `IssueReportRow`, `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`, `ProjectActivityEvent`, `ProjectContextReport`
 
 ### `queries/review.ts`
 
@@ -1152,12 +1162,23 @@
 
 ## AI Validations
 
+### `packages/ai/src/validations/communication.ts`
+
+**Exports:**
+- `PARTY_TYPES`
+- `PartyTypeSchema`
+
+**Types:** `PartyType`
+
 ### `packages/ai/src/validations/email-classifier.ts`
 
 **Exports:**
 - `EmailClassifierSchema`
 
 **Types:** `EmailClassifierOutput`
+
+**Internal deps:**
+- `./communication` → PartyTypeSchema
 
 ### `packages/ai/src/validations/email-extractor.ts`
 
@@ -1177,11 +1198,13 @@
 
 **Exports:**
 - `MEETING_TYPES`
-- `PARTY_TYPES`
 - `IdentifiedProjectSchema`
 - `GatekeeperSchema`
 
-**Types:** `MeetingType`, `PartyType`, `IdentifiedProject`, `GatekeeperOutput`
+**Types:** `MeetingType`, `IdentifiedProject`, `GatekeeperOutput`
+
+**Internal deps:**
+- `./communication` → PARTY_TYPES, type PartyType
 
 ### `packages/ai/src/validations/issue-classification.ts`
 
@@ -1350,6 +1373,8 @@
 - `./tools/decisions` → registerDecisionTools
 - `./tools/write-tasks` → registerWriteTaskTools
 - `./tools/write-client-updates` → registerWriteClientUpdateTools
+- `./tools/issues` → registerIssueTools
+- `./tools/project-report` → registerProjectReportTools
 
 ### `packages/mcp/src/tools/actions.ts`
 
@@ -1401,6 +1426,19 @@
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike, sanitizeForContains, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds
 
+### `packages/mcp/src/tools/issues.ts`
+
+**Exports:**
+- `registerIssueTools()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/constants/issues` → ISSUE_PRIORITY_LABELS, ISSUE_STATUSES, ISSUE_STATUS_LABELS, ISSUE_TYPE_LABELS, ISSUE_TYPES, type IssueStatus, type IssueType
+- `@repo/database/queries/reports` → getIssueDetailForReport, getProjectIssuesForReport, type IssueActivityReport, type IssueReportRow
+
+**Internal deps:**
+- `./usage-tracking` → trackMcpQuery
+
 ### `packages/mcp/src/tools/list-meetings.ts`
 
 **Exports:**
@@ -1450,6 +1488,18 @@
 **Internal deps:**
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike
+
+### `packages/mcp/src/tools/project-report.ts`
+
+**Exports:**
+- `registerProjectReportTools()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/reports` → getProjectActivityForReport, getProjectContextForReport, type ProjectActivityEvent
+
+**Internal deps:**
+- `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/projects.ts`
 
@@ -3722,7 +3772,7 @@ Which layers depend on which packages:
 | DevHub Components | 15 | - | - | 22 | - | 37 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 17 | - | 13 | 9 | - | 39 |
-| MCP Server | 23 | 1 | - | - | - | 24 |
+| MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points
 
@@ -4050,7 +4100,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
 | `getAllOrganizations()` | `packages/ai/src/pipeline/context-injection.ts`, `packages/ai/src/pipeline/entity-resolution.ts` |
 | `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
@@ -4090,12 +4140,21 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |
+
+### queries/reports.ts
+
+| Query | Used in |
+|-------|---------|
+| `getProjectIssuesForReport()` | `packages/mcp/src/tools/issues.ts` |
+| `getIssueDetailForReport()` | `packages/mcp/src/tools/issues.ts` |
+| `getProjectActivityForReport()` | `packages/mcp/src/tools/project-report.ts` |
+| `getProjectContextForReport()` | `packages/mcp/src/tools/project-report.ts` |
 
 ### queries/review.ts
 
@@ -4123,7 +4182,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 

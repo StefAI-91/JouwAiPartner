@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: Portal Insights Dashboard + PDF Export</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "system-ui", "sans-serif"],
+            },
+            colors: {
+              primary: {
+                50: "#e6f3ec",
+                100: "#c4e2d1",
+                200: "#8ec5a4",
+                300: "#4fa476",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+              bg: "#fafafa",
+              border: "#e6e3de",
+              muted: "#efede8",
+              mutedfg: "#78756f",
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+        background: #fafafa;
+        font-family: "Inter", system-ui, sans-serif;
+        color: #171513;
+      }
+      .card {
+        background: #ffffff;
+        border: 1px solid #e6e3de;
+        border-radius: 0.5rem;
+      }
+      .btn-primary {
+        background: #006b3f;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #005a35;
+      }
+      .btn-ghost:hover {
+        background: #efede8;
+      }
+      .tab-active {
+        border-bottom-color: #006b3f;
+        color: #171513;
+      }
+      .mode-toggle[data-active="true"] {
+        background: white;
+        color: #171513;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+      .hidden-view {
+        display: none;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 9999px;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+      /* Visual cluster connectors on production view */
+      .cluster-item::before {
+        content: "";
+        position: absolute;
+        left: -10px;
+        top: 10px;
+        width: 6px;
+        height: 6px;
+        background: #006b3f;
+        border-radius: 9999px;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- ====== TOP BAR (workspace switcher) ====== -->
+    <div class="border-b border-border bg-white">
+      <div class="flex items-center justify-between px-6 py-2.5">
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <div
+              class="flex h-6 w-6 items-center justify-center rounded-md bg-primary-500 text-white text-xs font-bold"
+            >
+              J
+            </div>
+            Jouw AI Partner
+          </div>
+          <div class="flex items-center gap-1 ml-4">
+            <button class="btn-ghost px-3 py-1 rounded text-xs text-mutedfg">Cockpit</button>
+            <button class="btn-ghost px-3 py-1 rounded text-xs text-mutedfg">DevHub</button>
+            <button class="px-3 py-1 rounded text-xs bg-primary-50 text-primary-700 font-medium">
+              Portal
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 text-xs text-mutedfg">
+          <span>stef@jouwaipartner.nl</span>
+          <div
+            class="h-7 w-7 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-semibold"
+          >
+            SB
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex">
+      <!-- ====== SIDEBAR ====== -->
+      <aside class="w-56 border-r border-border bg-white min-h-[calc(100vh-28px-50px)] p-3">
+        <div class="text-[11px] uppercase tracking-wider text-mutedfg font-semibold px-2 mb-2">
+          Projecten
+        </div>
+        <nav class="flex flex-col gap-0.5 text-sm">
+          <a class="px-2 py-1.5 rounded-md bg-primary-50 text-primary-700 font-medium">
+            Loyalty App
+          </a>
+          <a class="px-2 py-1.5 rounded-md text-mutedfg hover:bg-muted">AI Chatbot Klantenservice</a>
+          <a class="px-2 py-1.5 rounded-md text-mutedfg hover:bg-muted">Dashboard Retail Insights</a>
+          <a class="px-2 py-1.5 rounded-md text-mutedfg hover:bg-muted">Order Management</a>
+        </nav>
+      </aside>
+
+      <!-- ====== MAIN ====== -->
+      <main class="flex-1 min-w-0">
+        <!-- Project header -->
+        <div class="border-b border-border bg-white px-6 pt-6">
+          <div class="flex flex-wrap items-start justify-between gap-3 pb-4">
+            <div class="min-w-0 space-y-0.5">
+              <h1 class="text-xl font-semibold leading-tight">Loyalty App</h1>
+              <p class="text-sm text-mutedfg">Acme Retail B.V.</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <!-- Mode toggle (admin-only, klant ziet deze niet) -->
+              <div
+                class="flex items-center gap-1 rounded-md bg-muted p-0.5 text-xs"
+                title="Alleen zichtbaar voor admins"
+              >
+                <button
+                  id="btn-iteration"
+                  class="mode-toggle px-3 py-1 rounded text-mutedfg font-medium transition"
+                  data-active="true"
+                  onclick="setMode('iteration')"
+                >
+                  Iteratie-modus
+                </button>
+                <button
+                  id="btn-production"
+                  class="mode-toggle px-3 py-1 rounded text-mutedfg font-medium transition"
+                  data-active="false"
+                  onclick="setMode('production')"
+                >
+                  Productie-modus
+                </button>
+              </div>
+              <span class="chip bg-primary-50 text-primary-700">In ontwikkeling</span>
+              <button
+                class="btn-primary flex items-center gap-2 px-3.5 py-2 rounded-md text-sm font-medium"
+                onclick="openPdfPreview()"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                Exporteer PDF
+              </button>
+            </div>
+          </div>
+          <!-- Subnav -->
+          <nav class="flex items-center gap-1 -mb-px">
+            <a class="border-b-2 tab-active px-4 py-2.5 text-sm font-medium">Dashboard</a>
+            <a class="border-b-2 border-transparent px-4 py-2.5 text-sm text-mutedfg hover:text-foreground">Issues</a>
+            <a class="border-b-2 border-transparent px-4 py-2.5 text-sm text-mutedfg hover:text-foreground">Feedback</a>
+            <a class="border-b-2 border-transparent px-4 py-2.5 text-sm text-mutedfg hover:text-foreground">Rapportage</a>
+          </nav>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- ITERATIE VIEW (kleine klanten, platte secties)             -->
+        <!-- ========================================================= -->
+        <section id="view-iteration" class="px-6 py-8 space-y-6">
+          <!-- Metrics strip -->
+          <div class="grid grid-cols-4 gap-4">
+            <div class="card p-4">
+              <div class="text-xs text-mutedfg font-medium">Ontvangen</div>
+              <div class="text-2xl font-semibold mt-1">3</div>
+            </div>
+            <div class="card p-4">
+              <div class="text-xs text-mutedfg font-medium">Ingepland</div>
+              <div class="text-2xl font-semibold mt-1">7</div>
+            </div>
+            <div class="card p-4">
+              <div class="text-xs text-mutedfg font-medium">In behandeling</div>
+              <div class="text-2xl font-semibold mt-1">4</div>
+            </div>
+            <div class="card p-4">
+              <div class="text-xs text-mutedfg font-medium">Afgerond</div>
+              <div class="text-2xl font-semibold mt-1">21</div>
+            </div>
+          </div>
+
+          <!-- 5 secties grid -->
+          <div class="grid grid-cols-2 gap-5">
+            <!-- SECTIE 1: Gevraagde features -->
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <div class="h-7 w-7 rounded-md bg-primary-50 text-primary-700 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                  </div>
+                  <h3 class="font-semibold">Gevraagde features</h3>
+                </div>
+                <span class="chip bg-muted text-mutedfg">8 open</span>
+              </div>
+              <ul class="space-y-2.5">
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="text-mutedfg text-xs mt-0.5 font-mono">#142</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Export klantenlijst naar Excel</div>
+                    <div class="text-xs text-mutedfg mt-0.5">Ingepland · 2 dagen geleden</div>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="text-mutedfg text-xs mt-0.5 font-mono">#138</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Integratie met Mailchimp voor campagnes</div>
+                    <div class="text-xs text-mutedfg mt-0.5">In behandeling · 4 dagen geleden</div>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="text-mutedfg text-xs mt-0.5 font-mono">#131</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Dashboard widget voor top-10 producten</div>
+                    <div class="text-xs text-mutedfg mt-0.5">Ontvangen · 5 dagen geleden</div>
+                  </div>
+                </li>
+              </ul>
+              <a class="text-xs text-primary-700 font-medium mt-4 inline-flex items-center gap-1 hover:underline">
+                Bekijk alle 8 features
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+
+            <!-- SECTIE 2: To do's -->
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <div class="h-7 w-7 rounded-md bg-primary-50 text-primary-700 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>
+                  </div>
+                  <h3 class="font-semibold">Openstaande to-do's</h3>
+                </div>
+                <span class="chip bg-muted text-mutedfg">11 open</span>
+              </div>
+              <ul class="space-y-2.5">
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="chip bg-orange-100 text-orange-800 text-[10px] px-1.5">Bug</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Login mislukt met Apple sign-in op iOS 17</div>
+                    <div class="text-xs text-mutedfg mt-0.5">In behandeling</div>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="chip bg-primary-50 text-primary-700 text-[10px] px-1.5">Feature</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Pushmeldingen bij nieuwe beloning</div>
+                    <div class="text-xs text-mutedfg mt-0.5">Ingepland</div>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="chip bg-orange-100 text-orange-800 text-[10px] px-1.5">Bug</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Punten tellen verkeerd op terugkerende aankopen</div>
+                    <div class="text-xs text-mutedfg mt-0.5">Ingepland · urgent</div>
+                  </div>
+                </li>
+              </ul>
+              <a class="text-xs text-primary-700 font-medium mt-4 inline-flex items-center gap-1 hover:underline">
+                Bekijk alle 11 to-do's
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+
+            <!-- SECTIE 3: Recent opgelost -->
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <div class="h-7 w-7 rounded-md bg-primary-50 text-primary-700 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <h3 class="font-semibold">Recent opgelost</h3>
+                </div>
+                <span class="chip bg-muted text-mutedfg">Laatste 30 dagen</span>
+              </div>
+              <ul class="space-y-2.5">
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="text-primary-600 mt-0.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Onboarding flow opnieuw ontworpen</div>
+                    <div class="text-xs text-mutedfg mt-0.5">Afgerond · 3 dagen geleden</div>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="text-primary-600 mt-0.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Profielfoto upload werkt niet op Android</div>
+                    <div class="text-xs text-mutedfg mt-0.5">Afgerond · 5 dagen geleden</div>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3 text-sm">
+                  <span class="text-primary-600 mt-0.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <div class="truncate">Verjaardagsbeloning automatiseren</div>
+                    <div class="text-xs text-mutedfg mt-0.5">Afgerond · 6 dagen geleden</div>
+                  </div>
+                </li>
+              </ul>
+              <a class="text-xs text-primary-700 font-medium mt-4 inline-flex items-center gap-1 hover:underline">
+                Bekijk alle 21 afgeronde issues
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+
+            <!-- SECTIE 5: Veelgestelde vragen (raw variant) -->
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <div class="h-7 w-7 rounded-md bg-primary-50 text-primary-700 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  </div>
+                  <h3 class="font-semibold">Vragen van gebruikers</h3>
+                </div>
+                <span class="chip bg-muted text-mutedfg">5 open</span>
+              </div>
+              <ul class="space-y-2.5">
+                <li class="text-sm">
+                  <div class="truncate">Kan ik punten overhevelen naar een familielid?</div>
+                  <div class="text-xs text-mutedfg mt-0.5">Wouter · 2 dagen geleden</div>
+                </li>
+                <li class="text-sm">
+                  <div class="truncate">Waarom zijn mijn punten van januari verdwenen?</div>
+                  <div class="text-xs text-mutedfg mt-0.5">Lisa · 3 dagen geleden</div>
+                </li>
+                <li class="text-sm">
+                  <div class="truncate">Hoe verwijder ik mijn account definitief?</div>
+                  <div class="text-xs text-mutedfg mt-0.5">Bram · 4 dagen geleden</div>
+                </li>
+              </ul>
+              <a class="text-xs text-primary-700 font-medium mt-4 inline-flex items-center gap-1 hover:underline">
+                Bekijk alle 5 vragen
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- SECTIE 4: AI-inzichten (volle breedte) -->
+          <div class="card p-5 border-l-4 border-l-primary-500">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <div class="h-7 w-7 rounded-md bg-primary-500 text-white flex items-center justify-center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                </div>
+                <h3 class="font-semibold">Inzichten — huidige stand van zaken</h3>
+                <span class="chip bg-primary-50 text-primary-700">AI</span>
+              </div>
+              <span class="text-xs text-mutedfg">Bijgewerkt: vandaag 09:14</span>
+            </div>
+            <div class="text-sm leading-relaxed text-foreground/90 space-y-2">
+              <p>
+                <strong>De drie grootste aandachtspunten deze sprint zijn login-betrouwbaarheid, puntentelling, en een consistente onboarding.</strong>
+                Twee van de drie urgente bugs raken de authenticatie-flow op iOS 17 — hier is het team op dit moment actief mee bezig. Punten die verkeerd getelt worden bij terugkerende aankopen levert het meeste supportverkeer op en staat hoog op de planning voor volgende week.
+              </p>
+              <p>
+                Aan de feature-kant zien we dat <strong>integratie-verzoeken</strong> (Mailchimp, Excel-export) domineren — dit wijst op de wens om de Loyalty-data in bestaande marketingtooling te krijgen. Er ligt nog geen strategische keuze of we deze integraties zelf bouwen of via Zapier/Make faciliteren.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PRODUCTIE VIEW (grote klanten, aggregaat)                  -->
+        <!-- ========================================================= -->
+        <section id="view-production" class="hidden-view px-6 py-8 space-y-6">
+          <!-- Banner -->
+          <div class="flex items-start gap-3 rounded-md border border-primary-200 bg-primary-50 p-4 text-sm">
+            <svg class="text-primary-600 mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div class="text-primary-900">
+              <strong>Productie-modus actief.</strong> Dit project heeft meer dan 50 issues van eindgebruikers. Het dashboard toont geclusterde thema's in plaats van individuele tickets.
+            </div>
+          </div>
+
+          <!-- Metrics strip + trend -->
+          <div class="grid grid-cols-4 gap-4">
+            <div class="card p-4">
+              <div class="text-xs text-mutedfg font-medium">Issues deze week</div>
+              <div class="flex items-baseline gap-2 mt-1">
+                <div class="text-2xl font-semibold">47</div>
+                <div class="text-xs text-orange-600 font-medium">↑ 12%</div>
+              </div>
+            </div>
+            <div class="card p-4">
+              <div class="text-xs text-mutedfg font-medium">Open</div>
+              <div class="flex items-baseline gap-2 mt-1">
+                <div class="text-2xl font-semibold">128</div>
+                <div class="text-xs text-mutedfg font-medium">84 bugs, 32 features, 12 vragen</div>
+              </div>
+            </div>
+            <div class="card p-4">
+              <div class="text-xs text-mutedfg font-medium">Gem. oplostijd</div>
+              <div class="flex items-baseline gap-2 mt-1">
+                <div class="text-2xl font-semibold">3.2 d</div>
+                <div class="text-xs text-primary-600 font-medium">↓ 0.4d</div>
+              </div>
+            </div>
+            <div class="card p-4">
+              <div class="text-xs text-mutedfg font-medium">Afgerond 30d</div>
+              <div class="flex items-baseline gap-2 mt-1">
+                <div class="text-2xl font-semibold">156</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Executive summary -->
+          <div class="card p-5 border-l-4 border-l-primary-500">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="h-7 w-7 rounded-md bg-primary-500 text-white flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+              </div>
+              <h3 class="font-semibold">Executive summary</h3>
+              <span class="chip bg-primary-50 text-primary-700">AI</span>
+              <span class="text-xs text-mutedfg ml-auto">Bijgewerkt: vandaag 09:14</span>
+            </div>
+            <div class="text-sm leading-relaxed text-foreground/90 space-y-2">
+              <p>
+                <strong>De Loyalty App loopt stabiel in productie</strong>, maar het aantal nieuwe bug-meldingen is deze week met 12% gestegen — vooral door een piek in login-gerelateerde problemen na de iOS 17.4 update. De gemiddelde oplostijd is verder gedaald naar 3.2 dagen (↓ 0.4d), wat duidt op een goed werkende triage-flow. Drie thema's hebben deze maand de meeste aandacht nodig: <strong>authenticatie-stabiliteit</strong>, <strong>puntentelling bij terugkerende aankopen</strong> en <strong>wens voor export- en integratie-functionaliteit</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-5">
+            <!-- Top thema's in bugs -->
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <div class="h-7 w-7 rounded-md bg-orange-100 text-orange-700 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  </div>
+                  <h3 class="font-semibold">Top 5 bug-thema's</h3>
+                </div>
+                <span class="chip bg-muted text-mutedfg">84 open</span>
+              </div>
+              <div class="space-y-3">
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Login & authenticatie</div>
+                    <div class="text-xs text-mutedfg">23 issues</div>
+                  </div>
+                  <div class="h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+                    <div class="h-full bg-primary-500" style="width: 75%"></div>
+                  </div>
+                  <p class="text-xs text-mutedfg mt-1.5">iOS 17.4 Apple Sign-In + sessie-uitval</p>
+                </div>
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Puntentelling</div>
+                    <div class="text-xs text-mutedfg">18 issues</div>
+                  </div>
+                  <div class="h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+                    <div class="h-full bg-primary-500" style="width: 60%"></div>
+                  </div>
+                  <p class="text-xs text-mutedfg mt-1.5">Vooral bij retourneringen & cadeaukaarten</p>
+                </div>
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Pushnotificaties</div>
+                    <div class="text-xs text-mutedfg">14 issues</div>
+                  </div>
+                  <div class="h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+                    <div class="h-full bg-primary-500" style="width: 45%"></div>
+                  </div>
+                  <p class="text-xs text-mutedfg mt-1.5">Worden niet geleverd op Android 14</p>
+                </div>
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Profielfoto upload</div>
+                    <div class="text-xs text-mutedfg">11 issues</div>
+                  </div>
+                  <div class="h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+                    <div class="h-full bg-primary-500" style="width: 35%"></div>
+                  </div>
+                </div>
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Transactie-historie traag</div>
+                    <div class="text-xs text-mutedfg">8 issues</div>
+                  </div>
+                  <div class="h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+                    <div class="h-full bg-primary-500" style="width: 25%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top feature requests -->
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <div class="h-7 w-7 rounded-md bg-primary-50 text-primary-700 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+                  </div>
+                  <h3 class="font-semibold">Top feature-wensen</h3>
+                </div>
+                <span class="chip bg-muted text-mutedfg">32 open</span>
+              </div>
+              <div class="space-y-3">
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Marketing-integraties</div>
+                    <div class="text-xs text-mutedfg">9 wensen</div>
+                  </div>
+                  <p class="text-xs text-mutedfg mt-1">Mailchimp, HubSpot, Klaviyo</p>
+                </div>
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Data-export & rapportage</div>
+                    <div class="text-xs text-mutedfg">7 wensen</div>
+                  </div>
+                  <p class="text-xs text-mutedfg mt-1">Excel, PDF, CSV per segment</p>
+                </div>
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Personalisatie</div>
+                    <div class="text-xs text-mutedfg">6 wensen</div>
+                  </div>
+                  <p class="text-xs text-mutedfg mt-1">Beloning op basis van winkelgedrag</p>
+                </div>
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Familie-accounts</div>
+                    <div class="text-xs text-mutedfg">5 wensen</div>
+                  </div>
+                </div>
+                <div class="cluster-item relative pl-3">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium text-sm">Social sharing</div>
+                    <div class="text-xs text-mutedfg">3 wensen</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FAQ clusters -->
+            <div class="card p-5 col-span-2">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <div class="h-7 w-7 rounded-md bg-primary-50 text-primary-700 flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  </div>
+                  <h3 class="font-semibold">Veelgestelde vragen — geclusterd</h3>
+                </div>
+                <span class="chip bg-muted text-mutedfg">12 open · 4 thema's</span>
+              </div>
+              <div class="grid grid-cols-2 gap-5">
+                <div class="border-l-2 border-primary-200 pl-4">
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="font-medium text-sm">Punten & beloningen</div>
+                    <span class="text-xs text-mutedfg">5 vragen</span>
+                  </div>
+                  <p class="text-xs text-mutedfg mb-2">Overhevelen, vervaldatum, herstel na verlies</p>
+                  <details class="text-xs">
+                    <summary class="cursor-pointer text-primary-700 hover:underline">Bekijk voorbeelden</summary>
+                    <ul class="mt-2 space-y-1 text-mutedfg">
+                      <li>— Kan ik punten overhevelen naar een familielid?</li>
+                      <li>— Waarom zijn mijn punten van januari verdwenen?</li>
+                      <li>— Hoe krijg ik mijn punten terug na een retour?</li>
+                    </ul>
+                  </details>
+                </div>
+                <div class="border-l-2 border-primary-200 pl-4">
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="font-medium text-sm">Account-beheer</div>
+                    <span class="text-xs text-mutedfg">4 vragen</span>
+                  </div>
+                  <p class="text-xs text-mutedfg mb-2">Verwijderen, wachtwoord-reset, e-mail wijzigen</p>
+                </div>
+                <div class="border-l-2 border-primary-200 pl-4">
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="font-medium text-sm">Betalen & facturatie</div>
+                    <span class="text-xs text-mutedfg">2 vragen</span>
+                  </div>
+                  <p class="text-xs text-mutedfg mb-2">Fouten met cadeaukaarten</p>
+                </div>
+                <div class="border-l-2 border-primary-200 pl-4">
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="font-medium text-sm">Privacy & AVG</div>
+                    <span class="text-xs text-mutedfg">1 vraag</span>
+                  </div>
+                  <p class="text-xs text-mutedfg mb-2">Data-exportverzoek</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ====== PDF PREVIEW MODAL ====== -->
+    <div
+      id="pdf-modal"
+      class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 p-6"
+      onclick="if(event.target === this) closePdfPreview()"
+    >
+      <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-border">
+          <div class="flex items-center gap-2 text-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="font-semibold">Loyalty App — Statusrapport april 2026</span>
+            <span class="chip bg-muted text-mutedfg ml-2">Preview</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="btn-primary flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download PDF
+            </button>
+            <button class="btn-ghost px-2 py-1.5 rounded-md" onclick="closePdfPreview()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="overflow-y-auto bg-gray-100 p-8">
+          <!-- Simulated PDF pages -->
+          <div class="bg-white shadow-md mx-auto max-w-[680px] p-10 space-y-6 text-sm" style="aspect-ratio: 210/297;">
+            <!-- Cover -->
+            <div class="border-b border-border pb-4">
+              <div class="flex items-center gap-2 text-xs text-mutedfg mb-8">
+                <div class="h-5 w-5 rounded bg-primary-500 text-white flex items-center justify-center text-[10px] font-bold">J</div>
+                Jouw AI Partner
+              </div>
+              <div class="text-xs text-primary-700 font-semibold uppercase tracking-wider mb-1">Statusrapport</div>
+              <h1 class="text-2xl font-bold tracking-tight mb-1">Loyalty App</h1>
+              <p class="text-sm text-mutedfg">Acme Retail B.V. · April 2026</p>
+            </div>
+
+            <div>
+              <h2 class="text-base font-semibold mb-2">Samenvatting</h2>
+              <p class="text-[13px] leading-relaxed text-foreground/80">
+                De drie grootste aandachtspunten deze sprint zijn login-betrouwbaarheid, puntentelling en consistente onboarding. Twee van de drie urgente bugs raken de authenticatie-flow op iOS 17. Aan de feature-kant zien we vooral vragen om integratie met marketing-tooling.
+              </p>
+            </div>
+
+            <div>
+              <h2 class="text-base font-semibold mb-2">Gevraagde features <span class="text-xs text-mutedfg font-normal">(8)</span></h2>
+              <ul class="text-[13px] space-y-1 text-foreground/80">
+                <li>• Export klantenlijst naar Excel — <span class="text-mutedfg">ingepland</span></li>
+                <li>• Integratie met Mailchimp — <span class="text-mutedfg">in behandeling</span></li>
+                <li>• Top-10 producten widget — <span class="text-mutedfg">ontvangen</span></li>
+              </ul>
+            </div>
+
+            <div>
+              <h2 class="text-base font-semibold mb-2">Openstaande to-do's <span class="text-xs text-mutedfg font-normal">(11)</span></h2>
+              <ul class="text-[13px] space-y-1 text-foreground/80">
+                <li>• [Bug] Login mislukt met Apple sign-in op iOS 17 — <span class="text-mutedfg">in behandeling</span></li>
+                <li>• [Bug] Punten verkeerd bij terugkerende aankopen — <span class="text-mutedfg">urgent</span></li>
+                <li>• [Feature] Pushmeldingen bij nieuwe beloning — <span class="text-mutedfg">ingepland</span></li>
+              </ul>
+            </div>
+
+            <div>
+              <h2 class="text-base font-semibold mb-2">Recent opgelost <span class="text-xs text-mutedfg font-normal">(21 · 30 dagen)</span></h2>
+              <ul class="text-[13px] space-y-1 text-foreground/80">
+                <li>✓ Onboarding flow opnieuw ontworpen</li>
+                <li>✓ Profielfoto upload werkt niet op Android</li>
+                <li>✓ Verjaardagsbeloning automatiseren</li>
+              </ul>
+            </div>
+
+            <div class="pt-4 text-[10px] text-mutedfg border-t border-border">
+              Gegenereerd op 21 april 2026, 14:32 · jouw-ai-partner.nl/portal
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function setMode(mode) {
+        const iter = document.getElementById("view-iteration");
+        const prod = document.getElementById("view-production");
+        const btnI = document.getElementById("btn-iteration");
+        const btnP = document.getElementById("btn-production");
+        if (mode === "iteration") {
+          iter.classList.remove("hidden-view");
+          prod.classList.add("hidden-view");
+          btnI.dataset.active = "true";
+          btnP.dataset.active = "false";
+        } else {
+          prod.classList.remove("hidden-view");
+          iter.classList.add("hidden-view");
+          btnI.dataset.active = "false";
+          btnP.dataset.active = "true";
+        }
+      }
+      function openPdfPreview() {
+        const m = document.getElementById("pdf-modal");
+        m.classList.remove("hidden");
+        m.classList.add("flex");
+      }
+      function closePdfPreview() {
+        const m = document.getElementById("pdf-modal");
+        m.classList.add("hidden");
+        m.classList.remove("flex");
+      }
+    </script>
+  </body>
+</html>
