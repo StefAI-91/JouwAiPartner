@@ -241,6 +241,8 @@ describe("get_projects", () => {
     expect(text).toContain("KP");
     expect(text).toContain("JouwAI");
     expect(text).toContain("Segments: 5");
+    // UUID moet zichtbaar zijn zodat Claude hem kan doorgeven aan vervolg-tools
+    expect(text).toContain("ID: p1");
   });
 
   it("filters by organization", async () => {

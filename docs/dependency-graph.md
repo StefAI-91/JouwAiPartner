@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 482 |
 | Exported functions/constants | 722 |
-| Exported types/interfaces | 186 |
+| Exported types/interfaces | 187 |
 | Cross-package imports | 602 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -315,7 +315,7 @@
 - `getProjectActivityForReport()`
 - `getProjectContextForReport()`
 
-**Types:** `IssueReportRow`, `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`, `ProjectActivityEvent`, `ProjectContextReport`
+**Types:** `IssueReportRow`, `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`, `ProjectActivityEvent`, `PaginatedResult`, `ProjectContextReport`
 
 ### `queries/review.ts`
 

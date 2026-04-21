@@ -34,6 +34,13 @@ Roep deze MCP-tools in deze volgorde aan:
 3. `get_project_activity(project_id, days_back)` — voor wat er is bewogen in het venster (status-wijzigingen, afrondingen)
 4. `get_issue_detail(issue_id)` — **alleen** voor 3-5 issues die saillant zijn (urgent, hoge impact, of veel beweging). Niet voor alle issues — dat overschrijdt context.
 
+**Pagineren (issues + activity).** Bij drukke projecten geven `get_project_issues` en `get_project_activity` hun data in pagina's terug (default 25 issues resp. 150 events per call). De response bevat bovenaan een regel _"Pagina: X-Y van Z"_ en onderaan een regel die begint met `NEXT_PAGE:` of `EINDE:`.
+
+- Zie je **`NEXT_PAGE: … offset: N`**: roep dezelfde tool nog eens aan met `offset: N` (en dezelfde `project_id`, `days_back` en filters). Blijf dit herhalen tot je `EINDE:` tegenkomt.
+- Zie je **`EINDE:`**: alle data is binnen. Ga door naar de volgende stap.
+
+Pagineer altijd volledig voordat je begint met schrijven. Een rapport op basis van pagina 1 van 4 mist context.
+
 ### Stap 4 — Rapport schrijven
 
 Schrijf een Nederlandstalig rapport met deze structuur:
@@ -95,11 +102,14 @@ Lever de PDF als bijlage in de chat.
 
 **Jij (intern, niet tonen):**
 
-1. `get_projects(search: "Loyalty App")` → project_id gevonden
+1. `get_projects(search: "Loyalty App")` → project_id gevonden uit `ID:`-regel
 2. `get_project_context(project_id)` → context, organisatie
-3. `get_project_issues(project_id, days_back: 14)` → 23 issues
-4. `get_project_activity(project_id, days_back: 14)` → 47 events
-5. `get_issue_detail` voor 4 saillante issues
-6. Schrijf rapport (6 secties, warm-persoonlijk)
-7. Roep PDF-skill aan met titel/body/footer
-8. Lever PDF in chat + korte samenvatting van wat er in zit
+3. `get_project_issues(project_id, days_back: 14)` → pagina 1 (25 van 87 issues, NEXT_PAGE offset: 25)
+4. `get_project_issues(project_id, days_back: 14, offset: 25)` → pagina 2 (25 issues, NEXT_PAGE offset: 50)
+5. Blijven pagineren tot EINDE — alle 87 issues binnen
+6. `get_project_activity(project_id, days_back: 14)` → pagina 1 (150 van 200 events, NEXT_PAGE offset: 150)
+7. `get_project_activity(project_id, days_back: 14, offset: 150)` → pagina 2 (50 events, EINDE)
+8. `get_issue_detail` voor 4 saillante issues
+9. Schrijf rapport (6 secties, warm-persoonlijk)
+10. Roep PDF-skill aan met titel/body/footer
+11. Lever PDF in chat + korte samenvatting van wat er in zit

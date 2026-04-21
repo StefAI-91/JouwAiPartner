@@ -111,13 +111,13 @@ describe("get_project_issues", () => {
   });
 
   it("retourneert expliciete 'geen issues gevonden' tekst bij leeg resultaat", async () => {
-    vi.mocked(getProjectIssuesForReport).mockResolvedValue([]);
+    vi.mocked(getProjectIssuesForReport).mockResolvedValue({ rows: [], totalCount: 0 });
 
     const result = await handler({
       project_id: PROJECT_ID,
       days_back: 14,
       include_description: true,
-      limit: 100,
+      limit: 25,
       offset: 0,
     });
     const text = getText(result);
@@ -127,27 +127,30 @@ describe("get_project_issues", () => {
   });
 
   it("groepeert issues per status en toont totalen", async () => {
-    vi.mocked(getProjectIssuesForReport).mockResolvedValue([
-      makeIssue({ issue_number: 142, title: "Login bug iOS", status: "in_progress" }),
-      makeIssue({
-        issue_number: 139,
-        title: "Upload bug",
-        status: "done",
-        closed_at: "2026-04-18T10:00:00Z",
-      }),
-      makeIssue({ issue_number: 141, title: "Push notif", status: "todo" }),
-    ]);
+    vi.mocked(getProjectIssuesForReport).mockResolvedValue({
+      rows: [
+        makeIssue({ issue_number: 142, title: "Login bug iOS", status: "in_progress" }),
+        makeIssue({
+          issue_number: 139,
+          title: "Upload bug",
+          status: "done",
+          closed_at: "2026-04-18T10:00:00Z",
+        }),
+        makeIssue({ issue_number: 141, title: "Push notif", status: "todo" }),
+      ],
+      totalCount: 3,
+    });
 
     const result = await handler({
       project_id: PROJECT_ID,
       days_back: 14,
       include_description: true,
-      limit: 100,
+      limit: 25,
       offset: 0,
     });
     const text = getText(result);
 
-    expect(text).toContain("Totaal: 3 issues");
+    expect(text).toMatch(/issues 1-3 van 3/);
     expect(text).toMatch(/2 actief/);
     expect(text).toMatch(/1 afgerond/);
     expect(text).toContain("## Te doen (1)");
@@ -156,18 +159,41 @@ describe("get_project_issues", () => {
     expect(text).toContain("#142: Login bug iOS");
     expect(text).toContain("#139: Upload bug");
     expect(text).toContain("#141: Push notif");
+    expect(text).toContain("EINDE");
   });
 
-  it("toont 'Niemand' voor niet-toegewezen issues (nooit UUIDs)", async () => {
-    vi.mocked(getProjectIssuesForReport).mockResolvedValue([
-      makeIssue({ issue_number: 10, assigned_to_id: null, assigned_to_name: null }),
-    ]);
+  it("toont NEXT_PAGE hint als er meer issues zijn dan de pagina toont", async () => {
+    vi.mocked(getProjectIssuesForReport).mockResolvedValue({
+      rows: [makeIssue({ issue_number: 1 }), makeIssue({ issue_number: 2 })],
+      totalCount: 10,
+    });
 
     const result = await handler({
       project_id: PROJECT_ID,
       days_back: 14,
       include_description: true,
-      limit: 100,
+      limit: 2,
+      offset: 0,
+    });
+    const text = getText(result);
+
+    expect(text).toMatch(/issues 1-2 van 10/);
+    expect(text).toContain("NEXT_PAGE");
+    expect(text).toMatch(/offset: 2/);
+    expect(text).not.toContain("EINDE");
+  });
+
+  it("toont 'Niemand' voor niet-toegewezen issues (nooit UUIDs)", async () => {
+    vi.mocked(getProjectIssuesForReport).mockResolvedValue({
+      rows: [makeIssue({ issue_number: 10, assigned_to_id: null, assigned_to_name: null })],
+      totalCount: 1,
+    });
+
+    const result = await handler({
+      project_id: PROJECT_ID,
+      days_back: 14,
+      include_description: true,
+      limit: 25,
       offset: 0,
     });
     const text = getText(result);
@@ -178,19 +204,22 @@ describe("get_project_issues", () => {
   });
 
   it("toont volledige naam van de assigned persoon", async () => {
-    vi.mocked(getProjectIssuesForReport).mockResolvedValue([
-      makeIssue({
-        issue_number: 10,
-        assigned_to_id: "uuid-1",
-        assigned_to_name: "Wouter Banninga",
-      }),
-    ]);
+    vi.mocked(getProjectIssuesForReport).mockResolvedValue({
+      rows: [
+        makeIssue({
+          issue_number: 10,
+          assigned_to_id: "uuid-1",
+          assigned_to_name: "Wouter Banninga",
+        }),
+      ],
+      totalCount: 1,
+    });
 
     const result = await handler({
       project_id: PROJECT_ID,
       days_back: 14,
       include_description: true,
-      limit: 100,
+      limit: 25,
       offset: 0,
     });
     const text = getText(result);
@@ -200,18 +229,21 @@ describe("get_project_issues", () => {
   });
 
   it("laat descriptions weg als include_description=false", async () => {
-    vi.mocked(getProjectIssuesForReport).mockResolvedValue([
-      makeIssue({
-        issue_number: 10,
-        description: "Geheime implementatiedetails",
-      }),
-    ]);
+    vi.mocked(getProjectIssuesForReport).mockResolvedValue({
+      rows: [
+        makeIssue({
+          issue_number: 10,
+          description: "Geheime implementatiedetails",
+        }),
+      ],
+      totalCount: 1,
+    });
 
     const result = await handler({
       project_id: PROJECT_ID,
       days_back: 14,
       include_description: false,
-      limit: 100,
+      limit: 25,
       offset: 0,
     });
     const text = getText(result);
@@ -221,18 +253,21 @@ describe("get_project_issues", () => {
   });
 
   it("geeft descriptions terug als include_description=true", async () => {
-    vi.mocked(getProjectIssuesForReport).mockResolvedValue([
-      makeIssue({
-        issue_number: 10,
-        description: "Gebruiker kan niet inloggen op iOS 17.4",
-      }),
-    ]);
+    vi.mocked(getProjectIssuesForReport).mockResolvedValue({
+      rows: [
+        makeIssue({
+          issue_number: 10,
+          description: "Gebruiker kan niet inloggen op iOS 17.4",
+        }),
+      ],
+      totalCount: 1,
+    });
 
     const result = await handler({
       project_id: PROJECT_ID,
       days_back: 14,
       include_description: true,
-      limit: 100,
+      limit: 25,
       offset: 0,
     });
     const text = getText(result);
@@ -346,9 +381,14 @@ describe("get_project_activity", () => {
   });
 
   it("retourneert expliciete tekst bij geen events", async () => {
-    vi.mocked(getProjectActivityForReport).mockResolvedValue([]);
+    vi.mocked(getProjectActivityForReport).mockResolvedValue({ rows: [], totalCount: 0 });
 
-    const result = await handler({ project_id: PROJECT_ID, days_back: 14 });
+    const result = await handler({
+      project_id: PROJECT_ID,
+      days_back: 14,
+      limit: 150,
+      offset: 0,
+    });
     const text = getText(result);
 
     expect(text).toMatch(/geen activity/i);
@@ -379,9 +419,17 @@ describe("get_project_activity", () => {
         created_at: "2026-04-18T09:00:00Z",
       },
     ];
-    vi.mocked(getProjectActivityForReport).mockResolvedValue(events);
+    vi.mocked(getProjectActivityForReport).mockResolvedValue({
+      rows: events,
+      totalCount: events.length,
+    });
 
-    const result = await handler({ project_id: PROJECT_ID, days_back: 14 });
+    const result = await handler({
+      project_id: PROJECT_ID,
+      days_back: 14,
+      limit: 150,
+      offset: 0,
+    });
     const text = getText(result);
 
     // Beide dagen als headers
@@ -395,24 +443,64 @@ describe("get_project_activity", () => {
     expect(text).toContain('#139 "Upload bug"');
     // Status-wijziging formatting
     expect(text).toMatch(/triage → in_progress/);
+    expect(text).toContain("EINDE");
+  });
+
+  it("toont NEXT_PAGE hint als er meer events zijn dan de pagina toont", async () => {
+    vi.mocked(getProjectActivityForReport).mockResolvedValue({
+      rows: [
+        {
+          issue_id: "i1",
+          issue_number: 1,
+          issue_title: "X",
+          actor_name: "A",
+          action: "classified",
+          field: null,
+          old_value: null,
+          new_value: null,
+          created_at: "2026-04-19T14:33:00Z",
+        },
+      ],
+      totalCount: 200,
+    });
+
+    const result = await handler({
+      project_id: PROJECT_ID,
+      days_back: 14,
+      limit: 1,
+      offset: 0,
+    });
+    const text = getText(result);
+
+    expect(text).toMatch(/events 1-1 van 200/);
+    expect(text).toContain("NEXT_PAGE");
+    expect(text).toMatch(/offset: 1/);
   });
 
   it("gebruikt 'Systeem' als er geen actor is (ipv UUID of null)", async () => {
-    vi.mocked(getProjectActivityForReport).mockResolvedValue([
-      {
-        issue_id: "i1",
-        issue_number: 10,
-        issue_title: "Test",
-        actor_name: null,
-        action: "classified",
-        field: null,
-        old_value: null,
-        new_value: null,
-        created_at: "2026-04-19T14:33:00Z",
-      },
-    ]);
+    vi.mocked(getProjectActivityForReport).mockResolvedValue({
+      rows: [
+        {
+          issue_id: "i1",
+          issue_number: 10,
+          issue_title: "Test",
+          actor_name: null,
+          action: "classified",
+          field: null,
+          old_value: null,
+          new_value: null,
+          created_at: "2026-04-19T14:33:00Z",
+        },
+      ],
+      totalCount: 1,
+    });
 
-    const result = await handler({ project_id: PROJECT_ID, days_back: 14 });
+    const result = await handler({
+      project_id: PROJECT_ID,
+      days_back: 14,
+      limit: 150,
+      offset: 0,
+    });
     const text = getText(result);
 
     expect(text).not.toContain("null");

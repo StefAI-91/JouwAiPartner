@@ -150,7 +150,7 @@ function formatIssueBlock(issue: IssueReportRow, includeDescription: boolean): s
 export function registerIssueTools(server: McpServer) {
   server.tool(
     "get_project_issues",
-    "Haal issues op voor een project binnen een tijdvenster (default 14 dagen). Gebruikt OR-logica op created_at/updated_at/closed_at zodat recent afgeronde issues ook in beeld komen. Output is markdown, gegroepeerd per status. Filter optioneel op status of type. Primaire bron voor project-rapportages.",
+    "Haal issues op voor een project binnen een tijdvenster (default 14 dagen). Gebruikt OR-logica op created_at/updated_at/closed_at zodat recent afgeronde issues ook in beeld komen. Output is markdown, gegroepeerd per status. Retourneert standaard 25 issues per call — bij drukke projecten paginaar je door met `offset` (bv. 0, 25, 50…). De response eindigt met een `NEXT_PAGE:`-regel zolang er meer issues zijn. Filter optioneel op status of type.",
     {
       project_id: z.string().uuid().describe("UUID van het project"),
       days_back: z
@@ -176,8 +176,25 @@ export function registerIssueTools(server: McpServer) {
         .describe(
           "Descriptions meenemen in output. Zet op false bij brede queries om tokens te besparen.",
         ),
-      limit: z.number().int().min(1).max(200).optional().default(100),
-      offset: z.number().int().min(0).optional().default(0),
+      limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(200)
+        .optional()
+        .default(25)
+        .describe(
+          "Aantal issues per pagina. Default 25 — verhoog alleen als je zeker weet dat het binnen het token-budget past.",
+        ),
+      offset: z
+        .number()
+        .int()
+        .min(0)
+        .optional()
+        .default(0)
+        .describe(
+          "Startpositie voor paginering. Call opnieuw met offset = vorige_offset + limit tot er geen NEXT_PAGE meer is.",
+        ),
     },
     async ({ project_id, days_back, status, type, include_description, limit, offset }) => {
       const supabase = getAdminClient();
@@ -186,12 +203,14 @@ export function registerIssueTools(server: McpServer) {
         `days=${days_back}`,
         status ? `status=${status}` : null,
         type ? `type=${type}` : null,
+        `offset=${offset}`,
+        `limit=${limit}`,
       ]
         .filter(Boolean)
         .join(" ");
       await trackMcpQuery(supabase, "get_project_issues", trackQuery);
 
-      const issues = await getProjectIssuesForReport(
+      const { rows: issues, totalCount } = await getProjectIssuesForReport(
         project_id,
         days_back,
         { status, type, limit, offset },
@@ -213,7 +232,7 @@ export function registerIssueTools(server: McpServer) {
       }
 
       const grouped = groupIssuesByStatus(issues);
-      const totalCount = issues.length;
+      const pageCount = issues.length;
       const activeCount = issues.filter(
         (i) => i.status !== "done" && i.status !== "cancelled",
       ).length;
@@ -222,8 +241,11 @@ export function registerIssueTools(server: McpServer) {
 
       const sections: string[] = [];
       sections.push(`# Issues voor project (laatste ${days_back} dagen)`);
+
+      const rangeStart = offset + 1;
+      const rangeEnd = offset + pageCount;
       sections.push(
-        `Totaal: ${totalCount} issues — ${activeCount} actief, ${doneCount} afgerond, ${cancelledCount} geannuleerd`,
+        `Pagina: issues ${rangeStart}-${rangeEnd} van ${totalCount} — ${activeCount} actief, ${doneCount} afgerond, ${cancelledCount} geannuleerd (op deze pagina)`,
       );
 
       for (const status of STATUS_DISPLAY_ORDER) {
@@ -234,6 +256,15 @@ export function registerIssueTools(server: McpServer) {
         for (const issue of bucket) {
           sections.push(formatIssueBlock(issue, include_description));
         }
+      }
+
+      const nextOffset = offset + pageCount;
+      if (nextOffset < totalCount) {
+        sections.push(
+          `---\nNEXT_PAGE: er zijn nog ${totalCount - nextOffset} issues. Roep \`get_project_issues\` opnieuw aan met \`offset: ${nextOffset}\` (zelfde project_id, days_back en filters) om door te bladeren.`,
+        );
+      } else {
+        sections.push(`---\nEINDE: alle ${totalCount} issues zijn opgehaald.`);
       }
 
       return {

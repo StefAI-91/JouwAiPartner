@@ -69,6 +69,11 @@ export interface ProjectActivityEvent {
   created_at: string;
 }
 
+export interface PaginatedResult<T> {
+  rows: T[];
+  totalCount: number;
+}
+
 export interface ProjectContextReport {
   id: string;
   name: string;
@@ -172,15 +177,15 @@ export async function getProjectIssuesForReport(
     offset?: number;
   },
   client?: SupabaseClient,
-): Promise<IssueReportRow[]> {
+): Promise<PaginatedResult<IssueReportRow>> {
   const db = client ?? getAdminClient();
   const cutoff = cutoffIsoFromDaysBack(daysBack);
-  const limit = Math.min(filters?.limit ?? 100, 200);
+  const limit = Math.min(filters?.limit ?? 25, 200);
   const offset = Math.max(filters?.offset ?? 0, 0);
 
   let query = db
     .from("issues")
-    .select(REPORT_ISSUE_SELECT)
+    .select(REPORT_ISSUE_SELECT, { count: "exact" })
     .eq("project_id", projectId)
     .or(`created_at.gte.${cutoff},updated_at.gte.${cutoff},closed_at.gte.${cutoff}`)
     .order("updated_at", { ascending: false })
@@ -193,14 +198,15 @@ export async function getProjectIssuesForReport(
     query = query.eq("type", filters.type);
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
 
   if (error) {
     console.error("[getProjectIssuesForReport] Database error:", error.message);
-    return [];
+    return { rows: [], totalCount: 0 };
   }
 
-  return ((data ?? []) as unknown as RawIssueWithAssigned[]).map(mapIssueRow);
+  const rows = ((data ?? []) as unknown as RawIssueWithAssigned[]).map(mapIssueRow);
+  return { rows, totalCount: count ?? rows.length };
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -325,10 +331,24 @@ export async function getIssueDetailForReport(
 export async function getProjectActivityForReport(
   projectId: string,
   daysBack: number,
-  client?: SupabaseClient,
-): Promise<ProjectActivityEvent[]> {
+  filtersOrClient?:
+    | SupabaseClient
+    | {
+        limit?: number;
+        offset?: number;
+      },
+  maybeClient?: SupabaseClient,
+): Promise<PaginatedResult<ProjectActivityEvent>> {
+  const isClient = (v: unknown): v is SupabaseClient =>
+    !!v && typeof v === "object" && "from" in (v as object);
+
+  const filters = isClient(filtersOrClient) ? undefined : filtersOrClient;
+  const client = isClient(filtersOrClient) ? filtersOrClient : maybeClient;
+
   const db = client ?? getAdminClient();
   const cutoff = cutoffIsoFromDaysBack(daysBack);
+  const limit = Math.min(filters?.limit ?? 150, 500);
+  const offset = Math.max(filters?.offset ?? 0, 0);
 
   const { data: issueRows, error: issuesError } = await db
     .from("issues")
@@ -337,9 +357,9 @@ export async function getProjectActivityForReport(
 
   if (issuesError) {
     console.error("[getProjectActivityForReport] issues error:", issuesError.message);
-    return [];
+    return { rows: [], totalCount: 0 };
   }
-  if (!issueRows || issueRows.length === 0) return [];
+  if (!issueRows || issueRows.length === 0) return { rows: [], totalCount: 0 };
 
   const issueMap = new Map<string, { issue_number: number; title: string }>();
   for (const row of issueRows as { id: string; issue_number: number; title: string }[]) {
@@ -347,18 +367,24 @@ export async function getProjectActivityForReport(
   }
   const issueIds = [...issueMap.keys()];
 
-  const { data: activityRows, error: activityError } = await db
+  const {
+    data: activityRows,
+    error: activityError,
+    count,
+  } = await db
     .from("issue_activity")
     .select(
       "issue_id, action, field, old_value, new_value, created_at, actor:actor_id (id, full_name)",
+      { count: "exact" },
     )
     .in("issue_id", issueIds)
     .gte("created_at", cutoff)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (activityError) {
     console.error("[getProjectActivityForReport] activity error:", activityError.message);
-    return [];
+    return { rows: [], totalCount: 0 };
   }
 
   const rows = (activityRows ?? []) as unknown as Array<{
@@ -371,7 +397,7 @@ export async function getProjectActivityForReport(
     actor: { id: string; full_name: string | null } | null;
   }>;
 
-  return rows.flatMap((row) => {
+  const mapped = rows.flatMap((row): ProjectActivityEvent[] => {
     const issueMeta = issueMap.get(row.issue_id);
     if (!issueMeta) return [];
     return [
@@ -388,6 +414,8 @@ export async function getProjectActivityForReport(
       },
     ];
   });
+
+  return { rows: mapped, totalCount: count ?? mapped.length };
 }
 
 // ────────────────────────────────────────────────────────────────────────────

@@ -86,7 +86,7 @@ function groupEventsByDay(events: ProjectActivityEvent[]): Map<string, ProjectAc
 export function registerProjectReportTools(server: McpServer) {
   server.tool(
     "get_project_activity",
-    "Haal alle activity-events op voor een project binnen een tijdvenster (default 14 dagen): status-wijzigingen, afrondingen, toewijzingen. Output is chronologisch gegroepeerd per dag (nieuwste dag bovenaan). Gebruik deze tool om het 'wat is er gebeurd' verhaal voor een rapport te construeren.",
+    "Haal activity-events op voor een project binnen een tijdvenster (default 14 dagen): status-wijzigingen, afrondingen, toewijzingen. Output is chronologisch gegroepeerd per dag (nieuwste dag bovenaan). Retourneert standaard 150 events per call — paginaar door met `offset` tot er geen NEXT_PAGE meer is.",
     {
       project_id: z.string().uuid().describe("UUID van het project"),
       days_back: z
@@ -97,12 +97,38 @@ export function registerProjectReportTools(server: McpServer) {
         .optional()
         .default(14)
         .describe("Aantal dagen terug vanaf nu. Default 14."),
+      limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(500)
+        .optional()
+        .default(150)
+        .describe("Aantal events per pagina. Default 150."),
+      offset: z
+        .number()
+        .int()
+        .min(0)
+        .optional()
+        .default(0)
+        .describe(
+          "Startpositie voor paginering. Call opnieuw met offset = vorige_offset + limit tot er geen NEXT_PAGE meer is.",
+        ),
     },
-    async ({ project_id, days_back }) => {
+    async ({ project_id, days_back, limit, offset }) => {
       const supabase = getAdminClient();
-      await trackMcpQuery(supabase, "get_project_activity", `${project_id} days=${days_back}`);
+      await trackMcpQuery(
+        supabase,
+        "get_project_activity",
+        `${project_id} days=${days_back} offset=${offset} limit=${limit}`,
+      );
 
-      const events = await getProjectActivityForReport(project_id, days_back, supabase);
+      const { rows: events, totalCount } = await getProjectActivityForReport(
+        project_id,
+        days_back,
+        { limit, offset },
+        supabase,
+      );
 
       if (events.length === 0) {
         return {
@@ -120,7 +146,12 @@ export function registerProjectReportTools(server: McpServer) {
 
       const sections: string[] = [];
       sections.push(`# Activity voor project (laatste ${days_back} dagen)`);
-      sections.push(`Totaal: ${events.length} events over ${sortedDays.length} dagen`);
+
+      const rangeStart = offset + 1;
+      const rangeEnd = offset + events.length;
+      sections.push(
+        `Pagina: events ${rangeStart}-${rangeEnd} van ${totalCount} — ${events.length} events over ${sortedDays.length} dagen (op deze pagina)`,
+      );
 
       for (const day of sortedDays) {
         const dayEvents = grouped.get(day) ?? [];
@@ -130,6 +161,15 @@ export function registerProjectReportTools(server: McpServer) {
           return `${formatEventLine(event)} _(${time})_`;
         });
         sections.push(lines.join("\n"));
+      }
+
+      const nextOffset = offset + events.length;
+      if (nextOffset < totalCount) {
+        sections.push(
+          `---\nNEXT_PAGE: er zijn nog ${totalCount - nextOffset} events. Roep \`get_project_activity\` opnieuw aan met \`offset: ${nextOffset}\` (zelfde project_id en days_back) om door te bladeren.`,
+        );
+      } else {
+        sections.push(`---\nEINDE: alle ${totalCount} events zijn opgehaald.`);
       }
 
       return {

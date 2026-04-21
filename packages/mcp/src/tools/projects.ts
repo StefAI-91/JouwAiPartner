@@ -109,7 +109,7 @@ export function registerProjectTools(server: McpServer) {
         const orgName = p.organization?.name || "geen organisatie";
         const segCount = segmentCounts.get(p.id) ?? 0;
         const segInfo = segCount > 0 ? ` | Segments: ${segCount} meetings with segments` : "";
-        return `${i + 1}. **${p.name}**${aliases}\n   Organisatie: ${orgName} | Status: ${p.status}${segInfo}`;
+        return `${i + 1}. **${p.name}**${aliases}\n   ID: ${p.id}\n   Organisatie: ${orgName} | Status: ${p.status}${segInfo}`;
       });
 
       return {
