@@ -923,3 +923,57 @@ substantieel genoeg zijn:
 
 Deze blijven NIET als seed-themes bewaard — de ThemeTagger zal ze
 als emerging voorstellen zodra het patroon helder genoeg wordt.
+
+---
+
+## 12. Handmatig triggeren vanuit meeting-detail
+
+### 12.1 Uitbreiding bestaande regenerate-knop
+
+`/meetings/[id]` heeft al een regenerate-knop voor de bestaande
+pipeline-stappen (summarizer, extractors). Daar wordt een optie bij
+geplaatst: **"Thema's opnieuw taggen"**. Dat spaart ons een aparte UI
+en blijft consistent met hoe meetings al worden bijgewerkt.
+
+### 12.2 Waarom dit belangrijk is voor de tuning-loop
+
+Zonder handmatige trigger moet je wachten op nieuwe meetings voordat
+je ziet of een aanpassing werkt. Concrete use-cases:
+
+- **Guide bijgewerkt** — je verscherpt de `matching_guide` van een
+  thema en wil meteen op 2–3 meetings testen of de ThemeTagger nu
+  anders beslist.
+- **Nieuw thema goedgekeurd** — een emerging thema is net verified.
+  Retroactief taggen van meetings die al door de pipeline waren zou
+  anders pas bij volgende nieuwe meetings gebeuren.
+- **Match voelt verkeerd** — een meeting is aan een thema gehangen dat
+  er niet bij hoort. Rejection (§10.4) haalt één match weg, maar soms
+  wil je alles opnieuw laten taggen voor die meeting.
+- **Debug-reflex** — als je twijfelt over de output op één meeting,
+  gewoon opnieuw draaien.
+
+### 12.3 Gedrag
+
+Klik op _"Thema's opnieuw taggen"_ → Server Action
+`regenerateMeetingThemes(meetingId)`:
+
+1. Verwijder alle bestaande rows in `meeting_themes` voor deze
+   meeting.
+2. Draai de ThemeTagger opnieuw met de huidige verified-themes set
+   en actuele `matching_guide` + `negative_examples`.
+3. Schrijf nieuwe `meeting_themes`-rijen en eventuele nieuwe
+   `emerging` proposals weg.
+4. Werk `mention_count` en `last_mentioned_at` bij op alle
+   betrokken themes.
+
+**Bewust geen rejections opruimen.** Als je eerder een match voor
+deze meeting hebt afgewezen met een reden, blijft die rejection
+staan in `theme_match_rejections` — anders verlies je de feedback.
+De ThemeTagger leest die rejections bij de re-run weer als
+`negative_examples` en wordt dus scherper.
+
+### 12.4 Rechten
+
+Alleen zichtbaar voor Stef + Wouter (zelfde whitelist als
+approve/edit, §9.7). Verborgen voor Ege — re-tagging muteert data
+en hoort bij de beheerslaag.
