@@ -36,9 +36,11 @@ export default async function ReviewPage() {
       </div>
 
       {/* TH-006 — emerging themes bovenaan de queue. Suspense houdt de rest
-          van de queue bruikbaar als de admin-check even duurt. */}
+          van de queue bruikbaar als de admin-check even duurt. TH-007: data
+          wordt als prop doorgegeven zodat we `listEmergingThemes` niet
+          tweemaal fetchen (page + Suspense-child). */}
       <Suspense fallback={null}>
-        <EmergingThemesSection />
+        <EmergingThemesSection emerging={emerging} />
       </Suspense>
 
       {meetingItems > 0 && <ReviewQueue meetings={meetings} emails={emails} />}

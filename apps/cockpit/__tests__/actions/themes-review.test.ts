@@ -28,7 +28,7 @@ vi.mock("@repo/database/mutations/themes", () => ({
   archiveTheme: (...args: [string]) => mockArchiveTheme(...args),
 }));
 vi.mock("@repo/database/mutations/meeting-themes", () => ({
-  rejectThemeMatch: (...args: [Record<string, unknown>]) => mockRejectMatch(...args),
+  rejectThemeMatchAsAdmin: (...args: [Record<string, unknown>]) => mockRejectMatch(...args),
   recalculateThemeStats: (...args: [string[]]) => mockRecalc(...args),
 }));
 vi.mock("@repo/database/queries/themes", () => ({

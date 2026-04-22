@@ -8,7 +8,7 @@ import {
   archiveTheme as archiveThemeMutation,
 } from "@repo/database/mutations/themes";
 import {
-  rejectThemeMatch as rejectThemeMatchMutation,
+  rejectThemeMatchAsAdmin,
   recalculateThemeStats,
 } from "@repo/database/mutations/meeting-themes";
 import { getThemeBySlug } from "@repo/database/queries/themes";
@@ -202,7 +202,7 @@ export async function rejectThemeMatchAction(
   const guard = await requireThemeApprover();
   if (!guard.ok) return { error: guard.error };
 
-  const result = await rejectThemeMatchMutation({
+  const result = await rejectThemeMatchAsAdmin({
     meetingId: parsed.data.meetingId,
     themeId: parsed.data.themeId,
     reason: parsed.data.reason,

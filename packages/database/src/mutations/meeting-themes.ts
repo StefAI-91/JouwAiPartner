@@ -91,9 +91,9 @@ export async function createEmergingTheme(
 
 /**
  * Herbereken `mention_count` en `last_mentioned_at` op de gegeven themes uit
- * de junction-tabel. Eén UPDATE met correlated subqueries — snel en atomisch
- * zelfs voor 6 theme_ids per call. Zonder deze sync raken pills en donut
- * out of sync met de werkelijkheid.
+ * de junction-tabel. Eén RPC-call naar `recalculate_theme_stats(uuid[])` —
+ * constant aantal round-trips ongeacht N. Zonder deze sync raken pills en
+ * donut out of sync met de werkelijkheid.
  */
 export async function recalculateThemeStats(
   themeIds: string[],
@@ -102,37 +102,8 @@ export async function recalculateThemeStats(
   if (themeIds.length === 0) return { success: true };
   const db = client ?? getAdminClient();
 
-  // Losse updates per thema: composable, geen RPC nodig, en N is klein
-  // (≤6 per pipeline-run). Aggregates komen uit meeting_themes.
-  for (const themeId of themeIds) {
-    const { count: matchCount, error: countErr } = await db
-      .from("meeting_themes")
-      .select("meeting_id", { count: "exact", head: true })
-      .eq("theme_id", themeId);
-
-    if (countErr) return { error: countErr.message };
-
-    const { data: latest, error: latestErr } = await db
-      .from("meeting_themes")
-      .select("created_at")
-      .eq("theme_id", themeId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (latestErr) return { error: latestErr.message };
-
-    const { error: updateErr } = await db
-      .from("themes")
-      .update({
-        mention_count: matchCount ?? 0,
-        last_mentioned_at: latest?.created_at ?? null,
-      })
-      .eq("id", themeId);
-
-    if (updateErr) return { error: updateErr.message };
-  }
-
+  const { error } = await db.rpc("recalculate_theme_stats", { theme_ids: themeIds });
+  if (error) return { error: error.message };
   return { success: true };
 }
 
@@ -155,8 +126,17 @@ export async function deleteMatchesForMeeting(
  * id. Idempotent (EDGE-211): als de match al weg is retourneren we success
  * zonder rejection-insert te schrijven, anders zou dubbel-klikken twee rows
  * opleveren.
+ *
+ * @security TH-007 — de caller MOET `requireAdminInAction()` of
+ *           `isAdmin(userId)` hebben uitgevoerd vóór deze functie wordt
+ *           aangeroepen. De mutation zelf doet géén auth-check; `userId`
+ *           wordt blind weggeschreven naar `theme_match_rejections.rejected_by`.
+ *           Aanroepen vanuit niet-gegarde code-paden is een security-bug
+ *           (spoofing van reviewer-identiteit). De naam `…AsAdmin` maakt
+ *           deze verantwoordelijkheid expliciet zichtbaar bij iedere
+ *           call-site; PR-reviewers moeten hierop letten.
  */
-export async function rejectThemeMatch(
+export async function rejectThemeMatchAsAdmin(
   input: {
     meetingId: string;
     themeId: string;

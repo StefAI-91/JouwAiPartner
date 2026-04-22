@@ -39,14 +39,17 @@ export function EmojiPickerPopover({
   });
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // Reset focus naar de huidige selectie wanneer de popover opent — zo land
-  // je altijd bij je current choice i.p.v. bij emoji 0.
-  useEffect(() => {
-    if (open) {
+  // Reset focus naar de huidige selectie wanneer de popover opent (event-driven
+  // i.p.v. useEffect — voorkomt cascading renders, zie react-hooks/set-state-in-effect).
+  // Value-wijziging-tijdens-open komt niet voor: klikken op een emoji sluit de popover
+  // in dezelfde handler (onClick hieronder).
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (next) {
       const i = ALL_EMOJIS.findIndex((e) => e === value);
       setFocusIndex(i >= 0 ? i : 0);
     }
-  }, [open, value]);
+  }
 
   // Move native focus naar de nieuwe cell zodra focusIndex wijzigt.
   useEffect(() => {
@@ -95,7 +98,7 @@ export function EmojiPickerPopover({
   }
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    <Popover.Root open={open} onOpenChange={handleOpenChange}>
       <Popover.Trigger
         type="button"
         disabled={disabled}

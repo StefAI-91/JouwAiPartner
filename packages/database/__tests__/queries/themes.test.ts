@@ -13,7 +13,7 @@ import {
   getThemeDecisions,
   listEmergingThemes,
 } from "../../src/queries/themes";
-import { rejectThemeMatch } from "../../src/mutations/meeting-themes";
+import { rejectThemeMatchAsAdmin, recalculateThemeStats } from "../../src/mutations/meeting-themes";
 
 let db: ReturnType<typeof getTestClient>;
 
@@ -262,7 +262,7 @@ describeWithDb("queries/themes", () => {
     });
   });
 
-  describe("rejectThemeMatch mutation (TH-006)", () => {
+  describe("rejectThemeMatchAsAdmin mutation (TH-006, renamed TH-007)", () => {
     // Seed een placeholder auth.user die we als rejected_by kunnen gebruiken.
     // auth.users is shared across tests dus we gebruiken een bestaande admin
     // seed; zo niet aanwezig skippen we de insert in de EDGE-test.
@@ -272,7 +272,7 @@ describeWithDb("queries/themes", () => {
       const recent = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
       await seedMatch(MEETING_IDS.m1, THEME_IDS.hiring, recent);
 
-      const result = await rejectThemeMatch(
+      const result = await rejectThemeMatchAsAdmin(
         {
           meetingId: MEETING_IDS.m1,
           themeId: THEME_IDS.hiring,
@@ -309,7 +309,7 @@ describeWithDb("queries/themes", () => {
     });
 
     it("is idempotent wanneer de match al weg is (EDGE-211)", async () => {
-      const result = await rejectThemeMatch(
+      const result = await rejectThemeMatchAsAdmin(
         {
           meetingId: MEETING_IDS.m1,
           themeId: THEME_IDS.hiring,
@@ -328,6 +328,45 @@ describeWithDb("queries/themes", () => {
         .eq("meeting_id", MEETING_IDS.m1);
       // Geen nieuwe rejection-row want er was niks om af te wijzen.
       expect(rejections ?? []).toEqual([]);
+    });
+  });
+
+  describe("recalculateThemeStats RPC (TH-007)", () => {
+    it("zet mention_count + last_mentioned_at op basis van aggregatie", async () => {
+      const recent = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
+      const older = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+
+      // hiring: 2 matches (recent = latest), werkdruk: 1 match (older).
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.hiring, recent);
+      await seedMatch(MEETING_IDS.m2, THEME_IDS.hiring, older);
+      await seedMatch(MEETING_IDS.m3, THEME_IDS.werkdruk, older);
+
+      const result = await recalculateThemeStats(
+        [THEME_IDS.hiring, THEME_IDS.werkdruk, THEME_IDS.strategy],
+        db,
+      );
+      expect("success" in result && result.success).toBe(true);
+
+      const { data: rows } = await db
+        .from("themes")
+        .select("id, mention_count, last_mentioned_at")
+        .in("id", [THEME_IDS.hiring, THEME_IDS.werkdruk, THEME_IDS.strategy])
+        .order("mention_count", { ascending: false });
+
+      const byId = new Map(rows?.map((r) => [r.id, r]) ?? []);
+      expect(byId.get(THEME_IDS.hiring)?.mention_count).toBe(2);
+      expect(byId.get(THEME_IDS.hiring)?.last_mentioned_at).toBe(recent);
+      expect(byId.get(THEME_IDS.werkdruk)?.mention_count).toBe(1);
+      expect(byId.get(THEME_IDS.werkdruk)?.last_mentioned_at).toBe(older);
+
+      // strategy heeft geen matches → reset naar 0 / null.
+      expect(byId.get(THEME_IDS.strategy)?.mention_count).toBe(0);
+      expect(byId.get(THEME_IDS.strategy)?.last_mentioned_at).toBeNull();
+    });
+
+    it("is no-op bij lege theme_ids", async () => {
+      const result = await recalculateThemeStats([], db);
+      expect("success" in result && result.success).toBe(true);
     });
   });
 

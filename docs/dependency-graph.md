@@ -524,7 +524,7 @@
 - `createEmergingTheme()`
 - `recalculateThemeStats()`
 - `deleteMatchesForMeeting()`
-- `rejectThemeMatch()`
+- `rejectThemeMatchAsAdmin()`
 
 **Types:** `MeetingThemeMatch`, `EmergingThemeProposal`
 
@@ -1962,7 +1962,7 @@
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 - `@repo/database/mutations/themes` → updateTheme, archiveTheme
-- `@repo/database/mutations/meeting-themes` → rejectThemeMatch, recalculateThemeStats
+- `@repo/database/mutations/meeting-themes` → rejectThemeMatchAsAdmin, recalculateThemeStats
 - `@repo/database/queries/themes` → getThemeBySlug
 - `@repo/ai/pipeline/steps/tag-themes` → runTagThemesStep
 - `@repo/database/queries/meetings` → getVerifiedMeetingById
@@ -3566,7 +3566,7 @@
 - `EmergingThemesSection()`
 
 **Depends on:**
-- `@repo/database/queries/themes` → listEmergingThemes
+- (type) `@repo/database/queries/themes` → EmergingThemeRow
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -4311,7 +4311,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `clearMeetingThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `createEmergingTheme()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/tag-themes.ts`, `apps/cockpit/src/actions/themes.ts` |
-| `rejectThemeMatch()` | `apps/cockpit/src/actions/themes.ts` |
+| `rejectThemeMatchAsAdmin()` | `apps/cockpit/src/actions/themes.ts` |
 
 ### mutations/meetings.ts
 
@@ -4658,7 +4658,7 @@ Which queries are used where across the codebase.
 | `getThemeRecentActivity()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 | `getThemeMeetings()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 | `getThemeDecisions()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
-| `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx`, `apps/cockpit/src/components/themes/emerging-themes-section.tsx` |
+| `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getThemeParticipants()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/userback-issues.ts

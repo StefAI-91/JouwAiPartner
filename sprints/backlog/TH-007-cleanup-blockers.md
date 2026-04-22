@@ -1,4 +1,4 @@
-# Micro Sprint TH-7: Cleanup blockers (CI, security, perf)
+# Micro Sprint TH-007: Cleanup blockers (CI, security, perf)
 
 ## Doel
 
@@ -51,13 +51,12 @@ Verwijder de eerste `useEffect` (lijnen 44-49). De tweede effect (focus-sync naa
 const { error } = await db.rpc("recalculate_theme_stats", { theme_ids: themeIds });
 ```
 
-Plus migration `supabase/migrations/YYYYMMDDHHMMSS_theme_stats_rpc.sql`:
+Plus migration `supabase/migrations/20260422110000_theme_stats_rpc.sql`:
 
 ```sql
 CREATE OR REPLACE FUNCTION recalculate_theme_stats(theme_ids uuid[])
 RETURNS void
 LANGUAGE sql
-SECURITY DEFINER
 AS $$
   UPDATE themes t
   SET
@@ -81,8 +80,11 @@ AS $$
     AND NOT EXISTS (SELECT 1 FROM meeting_themes mt WHERE mt.theme_id = t.id);
 $$;
 
-GRANT EXECUTE ON FUNCTION recalculate_theme_stats(uuid[]) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION recalculate_theme_stats(uuid[]) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION recalculate_theme_stats(uuid[]) TO service_role;
 ```
+
+**Security-scope (review-aanpassing):** géén `SECURITY DEFINER`, géén `GRANT TO authenticated`. Beide callers (`tag-themes.ts` pipeline + `rejectThemeMatchAction`) draaien via `getAdminClient()` (service-role). Dit volgt het patroon van `reset_extractions_for_meeting` (migratie 20260419110000). Zo kan een ingelogde user niet via `rpc()` willekeurige theme-counts forceren.
 
 Test de return van `.rpc(...)` op error zoals alle andere RPC-calls in de codebase.
 
@@ -132,12 +134,14 @@ Hernoem de export én update `apps/cockpit/src/actions/themes.ts` om de nieuwe n
 ## Deliverables
 
 - [ ] `apps/cockpit/src/components/themes/emoji-picker-popover.tsx` — `useEffect` vervangen door `onOpenChange`-handler. Lint-fout weg.
-- [ ] `supabase/migrations/YYYYMMDDHHMMSS_theme_stats_rpc.sql` — `recalculate_theme_stats(uuid[])` functie
+- [ ] `supabase/migrations/20260422110000_theme_stats_rpc.sql` — `recalculate_theme_stats(uuid[])` functie (service_role-only)
 - [ ] `packages/database/src/mutations/meeting-themes.ts` — `recalculateThemeStats` gebruikt `.rpc()`
 - [ ] `apps/cockpit/src/app/(dashboard)/review/page.tsx` — pass `emerging` als prop
 - [ ] `apps/cockpit/src/components/themes/emerging-themes-section.tsx` — accepteert `emerging` prop i.p.v. zelf te fetchen
 - [ ] `packages/database/src/mutations/meeting-themes.ts` — `rejectThemeMatch` → `rejectThemeMatchAsAdmin` + JSDoc @security
-- [ ] `apps/cockpit/src/actions/themes.ts` — import bijgewerkt
+- [ ] `apps/cockpit/src/actions/themes.ts` — import bijgewerkt naar nieuwe naam
+- [ ] `packages/database/__tests__/queries/themes.test.ts` — import + callsites (2×) bijgewerkt naar `rejectThemeMatchAsAdmin`
+- [ ] `apps/cockpit/__tests__/actions/themes-review.test.ts` — mock-key `rejectThemeMatch` → `rejectThemeMatchAsAdmin`
 - [ ] Bestaande tests blijven groen; een nieuwe DB-test voor `recalculate_theme_stats` RPC (mention_count + last_mentioned_at klopt na batch-update, inclusief theme zonder matches → reset naar 0/null)
 
 ## Acceptance criteria
