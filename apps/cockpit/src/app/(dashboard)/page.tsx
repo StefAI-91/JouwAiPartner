@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { Suspense } from "react";
 import { createClient } from "@repo/database/supabase/server";
 import {
   listRecentVerifiedMeetings,
@@ -15,6 +16,10 @@ import { MeetingCarousel } from "@/components/dashboard/meeting-carousel";
 import { ManagementInsightsStrip } from "@/components/dashboard/management-insights-strip";
 import { RecentVerifiedMeetings } from "@/components/dashboard/recent-verified-meetings";
 import { TasksCard } from "@/components/dashboard/tasks-card";
+import { ThemePillsStrip } from "@/components/themes/theme-pills-strip";
+import { ThemePillsSkeleton } from "@/components/themes/theme-pills-skeleton";
+import { TimeSpentDonutSection } from "@/components/themes/time-spent-donut-section";
+import { TimeSpentDonutSkeleton } from "@/components/themes/time-spent-donut-skeleton";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -56,12 +61,23 @@ export default async function DashboardPage() {
       {/* Management insights one-liner */}
       {managementInsights && <ManagementInsightsStrip insights={managementInsights} />}
 
-      {/* Meeting briefing carousel */}
-      <MeetingCarousel
-        meetings={briefingMeetings}
-        extractionCounts={extractionCounts}
-        dayLabel={dayLabel}
-      />
+      {/* Themes: floating pills (A1) bovenaan, time-spent donut (B8) in de
+          rechter kolom naast de meeting-carousel. Suspense zodat elk onderdeel
+          zelfstandig laadt zonder de hele dashboard op te houden. */}
+      <Suspense fallback={<ThemePillsSkeleton />}>
+        <ThemePillsStrip />
+      </Suspense>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+        <MeetingCarousel
+          meetings={briefingMeetings}
+          extractionCounts={extractionCounts}
+          dayLabel={dayLabel}
+        />
+        <Suspense fallback={<TimeSpentDonutSkeleton />}>
+          <TimeSpentDonutSection />
+        </Suspense>
+      </div>
 
       {/* Two-column bottom: recent meetings + tasks */}
       <div className="grid gap-6 md:grid-cols-2">

@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 499 |
-| Exported functions/constants | 780 |
-| Exported types/interfaces | 220 |
-| Cross-package imports | 611 |
+| Files scanned | 511 |
+| Exported functions/constants | 792 |
+| Exported types/interfaces | 226 |
+| Cross-package imports | 616 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -375,8 +375,10 @@
 - `listVerifiedThemes()`
 - `listVerifiedThemes()`
 - `getThemeBySlug()`
+- `listTopActiveThemes()`
+- `getThemeShareDistribution()`
 
-**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`
+**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`, `TopActiveTheme`, `ThemeShareSlice`, `ThemeShareDistribution`
 
 ### `queries/userback-issues.ts`
 
@@ -2583,6 +2585,14 @@
 **Exports:**
 - `SectionD()`
 
+### `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx`
+
+**Exports:**
+- `dynamic`
+
+**Depends on:**
+- `@repo/database/queries/themes` → getThemeBySlug
+
 ### `apps/cockpit/src/app/auth/callback/route.ts`
 
 **Exports:**
@@ -3443,6 +3453,65 @@
 **Depends on:**
 - `@repo/ui/format` → formatDateLong
 
+### `apps/cockpit/src/components/themes/donut-palette.ts`
+
+**Exports:**
+- `paletteColor()`
+- `DONUT_PALETTE`
+
+### `apps/cockpit/src/components/themes/donut-segments.ts`
+
+**Exports:**
+- `buildSegments()`
+
+**Types:** `DonutSegment`
+
+**Depends on:**
+- (type) `@repo/database/queries/themes` → ThemeShareSlice
+
+### `apps/cockpit/src/components/themes/theme-pill.tsx`
+
+**Exports:**
+- `ThemePill()`
+
+**Types:** `ThemePillData`
+
+### `apps/cockpit/src/components/themes/theme-pills-skeleton.tsx`
+
+**Exports:**
+- `ThemePillsSkeleton()`
+
+### `apps/cockpit/src/components/themes/theme-pills-strip.tsx`
+
+**Exports:**
+- `ThemePillsStrip()`
+
+**Depends on:**
+- `@repo/database/queries/themes` → listTopActiveThemes, type TopActiveTheme
+
+### `apps/cockpit/src/components/themes/time-spent-donut-section.tsx`
+
+**Exports:**
+- `TimeSpentDonutSection()`
+
+**Depends on:**
+- `@repo/database/queries/themes` → getThemeShareDistribution
+
+### `apps/cockpit/src/components/themes/time-spent-donut-skeleton.tsx`
+
+**Exports:**
+- `TimeSpentDonutSkeleton()`
+
+### `apps/cockpit/src/components/themes/time-spent-donut.tsx`
+
+**Exports:**
+- `TimeSpentDonut()`
+
+**Types:** `TimeSpentDonutProps`
+
+**Depends on:**
+- (type) `@repo/database/queries/themes` → ThemeShareSlice
+
 ### `apps/cockpit/src/components/weekly/generate-weekly-button.tsx`
 
 **Exports:**
@@ -3932,9 +4001,9 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 47 | 15 | 29 | - | - | 91 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 41 | 6 | - | 75 | - | 122 |
+| Cockpit Components | 45 | 6 | - | 75 | - | 126 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
+| Cockpit Pages | 82 | 6 | 1 | 26 | - | 115 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4411,6 +4480,9 @@ Which queries are used where across the codebase.
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `getThemeBySlug()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `listTopActiveThemes()` | `apps/cockpit/src/components/themes/theme-pills-strip.tsx` |
+| `getThemeShareDistribution()` | `apps/cockpit/src/components/themes/time-spent-donut-section.tsx` |
 
 ### queries/userback-issues.ts
 
