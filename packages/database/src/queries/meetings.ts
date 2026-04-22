@@ -456,3 +456,238 @@ export async function getMeetingForTitleGeneration(
   if (error || !data) return null;
   return data as unknown as MeetingForTitleGeneration;
 }
+
+// ── Q2b-B: helpers voor regenerate / reprocess flows in meeting-pipeline.ts ──
+
+export interface MeetingForRegenerate {
+  id: string;
+  title: string | null;
+  date: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  transcript: string | null;
+  transcript_elevenlabs: string | null;
+  meeting_participants: { person: { name: string } }[];
+}
+
+/**
+ * Fetch meeting + transcript-varianten + participant-namen voor de
+ * `regenerateMeetingAction` flow. Selecteert alleen wat de pipeline gebruikt
+ * — geen `raw_fireflies` of `summary` (die zijn niet nodig voor regenerate
+ * van segments + risks).
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getMeetingForRegenerate(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<MeetingForRegenerate | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
+       meeting_participants(person:people(name))`,
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data as unknown as MeetingForRegenerate;
+}
+
+export interface MeetingForRegenerateRisks extends MeetingForRegenerate {
+  raw_fireflies: Record<string, unknown> | null;
+}
+
+/**
+ * Variant van `getMeetingForRegenerate` voor de `regenerateRisksAction` flow:
+ * voegt `raw_fireflies` toe zodat de actie de eerder-geïdentificeerde
+ * `identified_projects` kan herbruiken zonder extra Gatekeeper-call.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getMeetingForRegenerateRisks(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<MeetingForRegenerateRisks | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
+       raw_fireflies, meeting_participants(person:people(name))`,
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data as unknown as MeetingForRegenerateRisks;
+}
+
+export interface MeetingForReprocess {
+  id: string;
+  fireflies_id: string | null;
+  title: string | null;
+}
+
+/**
+ * Slank meeting-record voor de `reprocessMeetingAction` flow: alleen het
+ * minimale dat nodig is voor het park/restore-patroon (`id`, `fireflies_id`,
+ * `title`).
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getMeetingForReprocess(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<MeetingForReprocess | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select("id, fireflies_id, title")
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data as MeetingForReprocess;
+}
+
+/**
+ * Mini-query: 1 kolom (`organization_id`) van een meeting. Gebruikt door de
+ * tagger-stap en door segment-feedback acties die de organisatie nodig
+ * hebben voor `ignored_entities`-records.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getMeetingOrganizationId(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select("organization_id")
+    .eq("id", meetingId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getMeetingOrganizationId]", error.message);
+    return null;
+  }
+  return (data?.organization_id as string | null) ?? null;
+}
+
+/**
+ * List the linked `project_id`s of a meeting (uit `meeting_projects`). Apart
+ * van `getMeetingForTitleGeneration` omdat dat de project-namen ook ophaalt;
+ * deze helper geeft alleen de IDs voor diff-logica in
+ * `updateMeetingMetadataAction`.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listMeetingProjectIds(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meeting_projects")
+    .select("project_id")
+    .eq("meeting_id", meetingId);
+
+  if (error) {
+    console.error("[listMeetingProjectIds]", error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => r.project_id as string);
+}
+
+/**
+ * List the linked `person_id`s van een meeting (uit `meeting_participants`).
+ * Tegengaaster van `listMeetingProjectIds`: alleen IDs, voor diff-logica.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listMeetingParticipantIds(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meeting_participants")
+    .select("person_id")
+    .eq("meeting_id", meetingId);
+
+  if (error) {
+    console.error("[listMeetingParticipantIds]", error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => r.person_id as string);
+}
+
+// ── Q2b-C: helpers voor backfill + reprocess API routes ──
+
+export interface MeetingForBackfill {
+  id: string;
+  fireflies_id: string | null;
+  raw_fireflies: Record<string, unknown> | null;
+}
+
+/**
+ * Slanke read voor de sentences-backfill route: `id`, `fireflies_id` en het
+ * huidige `raw_fireflies`-object (zodat de caller de sentences-array kan
+ * mergen zonder overige velden te overschrijven).
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getMeetingForBackfill(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<MeetingForBackfill | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select("id, fireflies_id, raw_fireflies")
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return null;
+  return data as MeetingForBackfill;
+}
+
+export interface MeetingByFirefliesIdForReprocess {
+  id: string;
+  title: string | null;
+  date: string | null;
+  meeting_type: string | null;
+  party_type: string | null;
+  participants: string[] | null;
+  organization_id: string | null;
+  raw_fireflies: Record<string, unknown> | null;
+}
+
+/**
+ * Variant van `getMeetingByFirefliesId` die de extra velden ophaalt die de
+ * reprocess-route nodig heeft voor de hele pipeline (summarize → tagger →
+ * risk-specialist). Apart gehouden zodat `getMeetingByFirefliesId` compact
+ * blijft voor callers die alleen een id nodig hebben.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getMeetingByFirefliesIdForReprocess(
+  firefliesId: string,
+  client?: SupabaseClient,
+): Promise<MeetingByFirefliesIdForReprocess | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      "id, title, date, meeting_type, party_type, participants, organization_id, raw_fireflies",
+    )
+    .eq("fireflies_id", firefliesId)
+    .single();
+
+  if (error || !data) return null;
+  return data as MeetingByFirefliesIdForReprocess;
+}

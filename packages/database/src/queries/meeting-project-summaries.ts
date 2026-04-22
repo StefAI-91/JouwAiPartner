@@ -146,6 +146,31 @@ export async function getSegmentCountsByProjectIds(
   return counts;
 }
 
+/**
+ * Q2b-B: lichte single-column read voor segment-feedback acties (link/unlink)
+ * die `project_name_raw` nodig hebben voor alias- en
+ * `ignored_entities`-feedback.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getSegmentNameRaw(
+  segmentId: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meeting_project_summaries")
+    .select("project_name_raw")
+    .eq("id", segmentId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getSegmentNameRaw]", error.message);
+    return null;
+  }
+  return (data?.project_name_raw as string | null) ?? null;
+}
+
 export interface ProjectSegment {
   id: string;
   meeting_id: string;

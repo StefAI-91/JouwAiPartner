@@ -15,8 +15,10 @@
     "format": "prettier --write .",
     "test": "turbo test",
     "test:watch": "vitest --watch",
+    "test:coverage": "turbo test -- --coverage",
     "format:check": "prettier --check .",
     "dep-graph": "node scripts/generate-dep-graph.js",
+    "check:queries": "bash scripts/check-no-direct-supabase.sh",
     "prepare": "husky"
   },
   "devDependencies": {

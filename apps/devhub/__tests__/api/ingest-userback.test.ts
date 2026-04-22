@@ -8,6 +8,10 @@ vi.mock("@repo/database/supabase/admin", () => ({
   getAdminClient: vi.fn(),
 }));
 
+vi.mock("@repo/database/queries/projects", () => ({
+  getProjectByUserbackProjectId: vi.fn(),
+}));
+
 vi.mock("@repo/database/integrations/userback-sync", () => ({
   executeSyncPipeline: vi.fn(),
 }));
@@ -22,26 +26,22 @@ vi.mock("@/actions/classify", () => ({
 
 import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
+import { getProjectByUserbackProjectId } from "@repo/database/queries/projects";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
 import { isAdmin } from "@repo/auth/access";
 import { GET, POST } from "../../src/app/api/ingest/userback/route";
 
 const CRON_SECRET = "test-cron-secret";
 
-function createChainMock(resolveWith: { data: unknown; error: unknown }) {
-  const chain: Record<string, unknown> = {};
-  const methods = ["select", "eq", "single", "from"];
-  for (const method of methods) {
-    chain[method] = vi.fn(() => chain);
-  }
-  chain.then = (resolve: (v: unknown) => void) => resolve(resolveWith);
-  return chain;
-}
-
 describe("GET /api/ingest/userback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.CRON_SECRET = CRON_SECRET;
+    // Route-handler doet `getAdminClient()` om een admin-scoped client aan
+    // `getProjectByUserbackProjectId` + `executeSyncPipeline` door te geven.
+    // De helpers zelf zijn gemockt, dus we hoeven alleen een stub terug te
+    // geven.
+    vi.mocked(getAdminClient).mockReturnValue({} as never);
   });
 
   it("returns 401 without valid auth", async () => {
@@ -53,8 +53,7 @@ describe("GET /api/ingest/userback", () => {
   });
 
   it("returns 404 when no project with userback_project_id", async () => {
-    const mockAdmin = createChainMock({ data: null, error: null });
-    vi.mocked(getAdminClient).mockReturnValue(mockAdmin as never);
+    vi.mocked(getProjectByUserbackProjectId).mockResolvedValue(null);
 
     const req = new Request("http://localhost/api/ingest/userback", {
       method: "GET",
@@ -65,11 +64,7 @@ describe("GET /api/ingest/userback", () => {
   });
 
   it("returns sync results on success", async () => {
-    const mockAdmin = createChainMock({
-      data: { id: "project-1" },
-      error: null,
-    });
-    vi.mocked(getAdminClient).mockReturnValue(mockAdmin as never);
+    vi.mocked(getProjectByUserbackProjectId).mockResolvedValue({ id: "project-1" });
     vi.mocked(executeSyncPipeline).mockResolvedValue({
       importedIds: [],
       imported: 5,
@@ -88,6 +83,7 @@ describe("GET /api/ingest/userback", () => {
     const res = await GET(req as never);
     const data = await res.json();
 
+    expect(getProjectByUserbackProjectId).toHaveBeenCalledWith("127499", expect.anything());
     expect(executeSyncPipeline).toHaveBeenCalledWith(
       expect.objectContaining({
         projectId: "project-1",
@@ -101,11 +97,7 @@ describe("GET /api/ingest/userback", () => {
   });
 
   it("returns 500 on sync failure", async () => {
-    const mockAdmin = createChainMock({
-      data: { id: "project-1" },
-      error: null,
-    });
-    vi.mocked(getAdminClient).mockReturnValue(mockAdmin as never);
+    vi.mocked(getProjectByUserbackProjectId).mockResolvedValue({ id: "project-1" });
     vi.mocked(executeSyncPipeline).mockRejectedValue(new Error("Userback API down"));
 
     const req = new Request("http://localhost/api/ingest/userback", {

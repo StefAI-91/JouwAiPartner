@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
 export type TeamRole = "admin" | "member";
+export type ProfileRole = "admin" | "member" | "client";
 
 export interface TeamMember {
   id: string;
@@ -90,4 +91,24 @@ export async function countAdmins(client?: SupabaseClient): Promise<number> {
     return 0;
   }
   return count ?? 0;
+}
+
+/**
+ * Fetch the role of a single profile. Returns `null` when the profile does not
+ * exist. Used as a cheap lookup after a role-update to determine the effective
+ * role for downstream side-effects.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getProfileRole(
+  userId: string,
+  client?: SupabaseClient,
+): Promise<ProfileRole | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db.from("profiles").select("role").eq("id", userId).maybeSingle();
+  if (error) {
+    console.error("[getProfileRole] error:", error.message);
+    return null;
+  }
+  return (data?.role as ProfileRole | undefined) ?? null;
 }

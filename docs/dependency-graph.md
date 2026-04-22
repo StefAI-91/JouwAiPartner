@@ -1,15 +1,15 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-21. Do not edit manually.
+> Auto-generated on 2026-04-22. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 482 |
-| Exported functions/constants | 722 |
-| Exported types/interfaces | 187 |
+| Files scanned | 487 |
+| Exported functions/constants | 753 |
+| Exported types/interfaces | 194 |
 | Cross-package imports | 602 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -118,9 +118,11 @@
 - `listDraftEmails()`
 - `getDraftEmailById()`
 - `countUnprocessedEmails()`
+- `getEmailForPipelineInput()`
+- `listEmailsForReclassify()`
 - `getUnprocessedEmails()`
 
-**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`
+**Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`, `EmailForPipelineInput`
 
 ### `queries/extractions.ts`
 
@@ -184,6 +186,7 @@
 - `getSegmentsByMeetingIds()`
 - `getSegmentCountsByMeetingIds()`
 - `getSegmentCountsByProjectIds()`
+- `getSegmentNameRaw()`
 - `getSegmentsByProjectId()`
 
 **Types:** `MeetingSegment`, `ProjectSegment`
@@ -207,8 +210,16 @@
 - `getMeetingExtractionsBatch()`
 - `getVerifiedMeetingsWithoutSegments()`
 - `getMeetingForTitleGeneration()`
+- `getMeetingForRegenerate()`
+- `getMeetingForRegenerateRisks()`
+- `getMeetingForReprocess()`
+- `getMeetingOrganizationId()`
+- `listMeetingProjectIds()`
+- `listMeetingParticipantIds()`
+- `getMeetingForBackfill()`
+- `getMeetingByFirefliesIdForReprocess()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
 
 ### `queries/needs.ts`
 
@@ -300,22 +311,15 @@
 - `listProjects()`
 - `getProjectById()`
 - `listFocusProjects()`
+- `getProjectAliases()`
 - `getProjectByNameIlike()`
 - `getAllProjects()`
 - `getActiveProjectsForContext()`
+- `getProjectName()`
+- `getProjectByUserbackProjectId()`
 - `matchProjectsByEmbedding()`
 
 **Types:** `ProjectListItem`, `ProjectDetail`, `FocusProject`, `ActiveProjectForContext`
-
-### `queries/reports.ts`
-
-**Exports:**
-- `getProjectIssuesForReport()`
-- `getIssueDetailForReport()`
-- `getProjectActivityForReport()`
-- `getProjectContextForReport()`
-
-**Types:** `IssueReportRow`, `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`, `ProjectActivityEvent`, `PaginatedResult`, `ProjectContextReport`
 
 ### `queries/review.ts`
 
@@ -350,8 +354,9 @@
 - `listTeamMembers()`
 - `getUserWithAccess()`
 - `countAdmins()`
+- `getProfileRole()`
 
-**Types:** `TeamRole`, `TeamMember`, `TeamMemberWithAccess`
+**Types:** `TeamRole`, `ProfileRole`, `TeamMember`, `TeamMemberWithAccess`
 
 ### `queries/userback-issues.ts`
 
@@ -482,6 +487,7 @@
 - `linkSegmentToProject()`
 - `removeSegmentTag()`
 - `updateSegmentEmbedding()`
+- `deleteSegmentsByMeetingId()`
 
 ### `mutations/meetings.ts`
 
@@ -502,6 +508,8 @@
 - `markMeetingEmbeddingStale()`
 - `unlinkMeetingProject()`
 - `deleteMeeting()`
+- `parkMeetingForReprocess()`
+- `restoreParkedMeeting()`
 
 ### `mutations/organizations.ts`
 
@@ -548,6 +556,14 @@
 - `verifyMeetingWithEdits()`
 - `rejectMeeting()`
 
+### `mutations/slack-config.ts`
+
+**Exports:**
+- `upsertSlackConfig()`
+- `deleteSlackConfig()`
+
+**Types:** `UpsertSlackConfigInput`
+
 ### `mutations/summaries.ts`
 
 **Exports:**
@@ -560,6 +576,16 @@
 - `updateTask()`
 - `completeTask()`
 - `dismissTask()`
+
+### `mutations/team.ts`
+
+**Exports:**
+- `upsertProfile()`
+- `updateProfileRole()`
+- `clearProjectAccess()`
+- `insertProjectAccess()`
+
+**Types:** `ProfileRole`, `UpsertProfileInput`, `ProjectAccessRow`
 
 ## AI Agents
 
@@ -1162,23 +1188,12 @@
 
 ## AI Validations
 
-### `packages/ai/src/validations/communication.ts`
-
-**Exports:**
-- `PARTY_TYPES`
-- `PartyTypeSchema`
-
-**Types:** `PartyType`
-
 ### `packages/ai/src/validations/email-classifier.ts`
 
 **Exports:**
 - `EmailClassifierSchema`
 
 **Types:** `EmailClassifierOutput`
-
-**Internal deps:**
-- `./communication` → PartyTypeSchema
 
 ### `packages/ai/src/validations/email-extractor.ts`
 
@@ -1198,13 +1213,11 @@
 
 **Exports:**
 - `MEETING_TYPES`
+- `PARTY_TYPES`
 - `IdentifiedProjectSchema`
 - `GatekeeperSchema`
 
-**Types:** `MeetingType`, `IdentifiedProject`, `GatekeeperOutput`
-
-**Internal deps:**
-- `./communication` → PARTY_TYPES, type PartyType
+**Types:** `MeetingType`, `PartyType`, `IdentifiedProject`, `GatekeeperOutput`
 
 ### `packages/ai/src/validations/issue-classification.ts`
 
@@ -1373,8 +1386,6 @@
 - `./tools/decisions` → registerDecisionTools
 - `./tools/write-tasks` → registerWriteTaskTools
 - `./tools/write-client-updates` → registerWriteClientUpdateTools
-- `./tools/issues` → registerIssueTools
-- `./tools/project-report` → registerProjectReportTools
 
 ### `packages/mcp/src/tools/actions.ts`
 
@@ -1426,19 +1437,6 @@
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike, sanitizeForContains, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds
 
-### `packages/mcp/src/tools/issues.ts`
-
-**Exports:**
-- `registerIssueTools()`
-
-**Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/constants/issues` → ISSUE_PRIORITY_LABELS, ISSUE_STATUSES, ISSUE_STATUS_LABELS, ISSUE_TYPE_LABELS, ISSUE_TYPES, type IssueStatus, type IssueType
-- `@repo/database/queries/reports` → getIssueDetailForReport, getProjectIssuesForReport, type IssueActivityReport, type IssueReportRow
-
-**Internal deps:**
-- `./usage-tracking` → trackMcpQuery
-
 ### `packages/mcp/src/tools/list-meetings.ts`
 
 **Exports:**
@@ -1488,18 +1486,6 @@
 **Internal deps:**
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike
-
-### `packages/mcp/src/tools/project-report.ts`
-
-**Exports:**
-- `registerProjectReportTools()`
-
-**Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/reports` → getProjectActivityForReport, getProjectContextForReport, type ProjectActivityEvent
-
-**Internal deps:**
-- `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/projects.ts`
 
@@ -1586,7 +1572,7 @@
 
 **Depends on:**
 - `@repo/database/mutations/emails` → updateEmailFilterStatus
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/emails` → getEmailForPipelineInput
 - `@repo/ai/pipeline/email-pipeline` → processEmail
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
@@ -1652,8 +1638,8 @@
 - `reprocessMeetingAction()`
 
 **Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale, deleteMeeting, parkMeetingForReprocess, restoreParkedMeeting
+- `@repo/database/queries/meetings` → getMeetingForRegenerate, getMeetingForRegenerateRisks, getMeetingForReprocess, getMeetingOrganizationId
 - `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
@@ -1661,7 +1647,7 @@
 - `@repo/ai/pipeline/tagger` → runTagger
 - `@repo/ai/pipeline/segment-builder` → buildSegments
 - `@repo/ai/embeddings` → embedBatch
-- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
+- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding, deleteSegmentsByMeetingId
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
 - `@repo/database/validations/meetings` → regenerateSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
@@ -1686,7 +1672,7 @@
 **Depends on:**
 - `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject, deleteMeeting
 - `@repo/database/mutations/meeting-participants` → linkMeetingParticipant, unlinkMeetingParticipant
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → listMeetingProjectIds, listMeetingParticipantIds
 - `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema, regenerateSchema
 - `@repo/database/validations/entities` → deleteSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
@@ -1771,9 +1757,11 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
 - `@repo/database/mutations/meeting-project-summaries` → linkSegmentToProject, removeSegmentTag
+- `@repo/database/queries/meeting-project-summaries` → getSegmentNameRaw
+- `@repo/database/queries/meetings` → getMeetingOrganizationId
+- `@repo/database/queries/projects` → getProjectAliases
 - `@repo/database/mutations/projects` → updateProjectAliases
 - `@repo/database/mutations/ignored-entities` → addIgnoredEntity
-- `@repo/database/supabase/admin` → getAdminClient
 
 ### `apps/cockpit/src/actions/summaries.ts`
 
@@ -1811,7 +1799,8 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/team` → countAdmins, getUserWithAccess
+- `@repo/database/queries/team` → countAdmins, getProfileRole, getUserWithAccess
+- `@repo/database/mutations/team` → upsertProfile, updateProfileRole, clearProjectAccess, insertProjectAccess
 - `@repo/database/validations/team` → inviteUserSchema, updateUserAccessSchema, deactivateUserSchema, type InviteUserInput, type UpdateUserAccessInput, type DeactivateUserInput
 
 ### `apps/cockpit/src/actions/weekly-summary.ts`
@@ -1907,7 +1896,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/emails` → listEmailsForReclassify
 - `@repo/ai/pipeline/email-pipeline` → processEmail
 - `@repo/database/mutations/emails` → updateEmailFilterStatus
 - `@repo/auth/access` → isAdmin
@@ -1933,7 +1922,8 @@
 
 **Depends on:**
 - `@repo/ai/fireflies` → fetchFirefliesTranscript
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → getMeetingForBackfill
+- `@repo/database/mutations/meetings` → updateMeetingRawFireflies
 
 ### `apps/cockpit/src/app/api/ingest/fireflies/route.ts`
 
@@ -1964,7 +1954,7 @@
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/embed-pipeline` → embedMeetingWithExtractions
 - `@repo/database/mutations/meetings` → markMeetingEmbeddingStale
-- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → getMeetingByFirefliesIdForReprocess
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
 - `@repo/ai/pipeline/tagger` → runTagger
 - `@repo/ai/pipeline/segment-builder` → buildSegments
@@ -2415,6 +2405,50 @@
 **Depends on:**
 - `@repo/ui/badge` → Badge
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/mock-data.ts`
+
+**Exports:**
+- `THEMES`
+- `PEOPLE`
+- `MEETINGS`
+- `QUOTES`
+- `CONTRADICTIONS`
+- `TIMELINE_EVENTS`
+- `OPEN_QUESTIONS`
+
+**Types:** `ThemeTemp`, `ThemeMock`, `MeetingMock`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/page.tsx`
+
+**Exports:**
+- `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/theme-lab.tsx`
+
+**Exports:**
+- `ThemeLab()`
+- `VariantCard()`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-a.tsx`
+
+**Exports:**
+- `SectionA()`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-b.tsx`
+
+**Exports:**
+- `SectionB()`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-c.tsx`
+
+**Exports:**
+- `SectionC()`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-d.tsx`
+
+**Exports:**
+- `SectionD()`
 
 ### `apps/cockpit/src/app/auth/callback/route.ts`
 
@@ -3388,10 +3422,10 @@
 - `testSlackWebhookAction()`
 
 **Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 - `@repo/database/integrations/slack` → SLACK_NOTIFY_EVENTS
+- `@repo/database/mutations/slack-config` → upsertSlackConfig, deleteSlackConfig
 
 ## DevHub API Routes
 
@@ -3405,6 +3439,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/projects` → getProjectByUserbackProjectId
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/auth/access` → isAdmin
 
@@ -3761,18 +3796,18 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 45 | - | - | - | - | 45 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 44 | 15 | 29 | - | - | 88 |
-| Cockpit API Routes | 26 | 36 | 2 | - | 1 | 65 |
+| Cockpit Server Actions | 47 | 15 | 29 | - | - | 91 |
+| Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 41 | 6 | - | 75 | - | 122 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
-| DevHub API Routes | 3 | - | 1 | - | - | 4 |
+| DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | 15 | - | - | 22 | - | 37 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 17 | - | 13 | 9 | - | 39 |
-| MCP Server | 28 | 1 | - | - | - | 29 |
+| MCP Server | 23 | 1 | - | - | - | 24 |
 
 ## Critical Integration Points
 
@@ -3899,6 +3934,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `linkSegmentToProject()` | `apps/cockpit/src/actions/segments.ts` |
 | `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
 | `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `deleteSegmentsByMeetingId()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
 
 ### mutations/meetings.ts
 
@@ -3916,9 +3952,12 @@ Tracing the most important data flows from action → pipeline → database.
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts` |
 | `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/actions/review.ts` |
+| `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings.ts` |
-| `deleteMeeting()` | `apps/cockpit/src/actions/meetings.ts` |
+| `deleteMeeting()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `parkMeetingForReprocess()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `restoreParkedMeeting()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
 
 ### mutations/organizations.ts
 
@@ -3959,6 +3998,13 @@ Tracing the most important data flows from action → pipeline → database.
 | `verifyMeetingWithEdits()` | `apps/cockpit/src/actions/review.ts` |
 | `rejectMeeting()` | `apps/cockpit/src/actions/review.ts` |
 
+### mutations/slack-config.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `upsertSlackConfig()` | `apps/devhub/src/actions/slack-settings.ts` |
+| `deleteSlackConfig()` | `apps/devhub/src/actions/slack-settings.ts` |
+
 ### mutations/summaries.ts
 
 | Mutation | Called from |
@@ -3973,6 +4019,15 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
 | `completeTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
 | `dismissTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
+
+### mutations/team.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
+| `updateProfileRole()` | `apps/cockpit/src/actions/team.ts` |
+| `clearProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
+| `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
 
 ## Query Usage Map
 
@@ -4015,6 +4070,8 @@ Which queries are used where across the codebase.
 | `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `getEmailForPipelineInput()` | `apps/cockpit/src/actions/email-filter.ts` |
+| `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
 ### queries/ignored-entities.ts
@@ -4069,6 +4126,7 @@ Which queries are used where across the codebase.
 | `getSegmentsByMeetingIds()` | `packages/mcp/src/tools/meetings.ts` |
 | `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
 | `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
+| `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
 | `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/meetings.ts
@@ -4088,6 +4146,14 @@ Which queries are used where across the codebase.
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
 | `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `getMeetingForRegenerate()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `getMeetingForRegenerateRisks()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `getMeetingForReprocess()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+| `getMeetingOrganizationId()` | `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/actions/segments.ts` |
+| `listMeetingProjectIds()` | `apps/cockpit/src/actions/meetings.ts` |
+| `listMeetingParticipantIds()` | `apps/cockpit/src/actions/meetings.ts` |
+| `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
+| `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### queries/needs.ts
 
@@ -4100,7 +4166,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
 | `getAllOrganizations()` | `packages/ai/src/pipeline/context-injection.ts`, `packages/ai/src/pipeline/entity-resolution.ts` |
 | `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
@@ -4140,21 +4206,14 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
+| `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
+| `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |
-
-### queries/reports.ts
-
-| Query | Used in |
-|-------|---------|
-| `getProjectIssuesForReport()` | `packages/mcp/src/tools/issues.ts` |
-| `getIssueDetailForReport()` | `packages/mcp/src/tools/issues.ts` |
-| `getProjectActivityForReport()` | `packages/mcp/src/tools/project-report.ts` |
-| `getProjectContextForReport()` | `packages/mcp/src/tools/project-report.ts` |
 
 ### queries/review.ts
 
@@ -4182,9 +4241,10 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
+| `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 
 ### queries/userback-issues.ts
 

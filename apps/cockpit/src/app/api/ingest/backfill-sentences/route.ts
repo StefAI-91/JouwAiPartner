@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
-import { getAdminClient } from "@repo/database/supabase/admin";
+import { getMeetingForBackfill } from "@repo/database/queries/meetings";
+import { updateMeetingRawFireflies } from "@repo/database/mutations/meetings";
 
 const backfillSchema = z.object({
   meetingId: z.string().uuid(),
@@ -28,16 +29,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const db = getAdminClient();
-
   // Get meeting with its fireflies_id and current raw_fireflies
-  const { data: meeting, error: fetchError } = await db
-    .from("meetings")
-    .select("id, fireflies_id, raw_fireflies")
-    .eq("id", parsed.data.meetingId)
-    .single();
-
-  if (fetchError || !meeting) {
+  const meeting = await getMeetingForBackfill(parsed.data.meetingId);
+  if (!meeting) {
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
   }
 
@@ -53,17 +47,13 @@ export async function POST(req: NextRequest) {
 
   // Merge sentences into existing raw_fireflies
   const updatedRawFireflies = {
-    ...((meeting.raw_fireflies as Record<string, unknown>) ?? {}),
+    ...(meeting.raw_fireflies ?? {}),
     sentences: transcript.sentences,
   };
 
-  const { error: updateError } = await db
-    .from("meetings")
-    .update({ raw_fireflies: updatedRawFireflies })
-    .eq("id", meeting.id);
-
-  if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  const updateResult = await updateMeetingRawFireflies(meeting.id, updatedRawFireflies);
+  if ("error" in updateResult) {
+    return NextResponse.json({ error: updateResult.error }, { status: 500 });
   }
 
   return NextResponse.json({

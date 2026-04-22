@@ -193,19 +193,14 @@ export async function updateIssueAction(
     });
 
     if (slackEvent) {
-      const { getAdminClient } = await import("@repo/database/supabase/admin");
-      const db = getAdminClient();
-      const { data: project } = await db
-        .from("projects")
-        .select("name")
-        .eq("id", current.project_id)
-        .single();
+      const { getProjectName } = await import("@repo/database/queries/projects");
+      const projectName = await getProjectName(current.project_id);
 
       const payload: SlackIssuePayload = {
         issueId: id,
         issueNumber: updated.issue_number,
         title: updated.title,
-        projectName: project?.name ?? "Onbekend project",
+        projectName: projectName ?? "Onbekend project",
         severity: updated.severity,
         priority: updated.priority,
         type: updated.type,

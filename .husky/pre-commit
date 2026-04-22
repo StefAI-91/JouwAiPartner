@@ -1,5 +1,9 @@
 npx lint-staged
 
+# Q2b: blokkeer directe Supabase .from()-calls in Server Actions + API routes.
+# Zie scripts/check-no-direct-supabase.sh voor scope en allowlist.
+bash scripts/check-no-direct-supabase.sh
+
 # Regenerate dependency graph if any source files changed
 STAGED_SRC=$(git diff --cached --name-only -- 'packages/' 'apps/' | grep -E '\.(ts|tsx)$' || true)
 if [ -n "$STAGED_SRC" ]; then

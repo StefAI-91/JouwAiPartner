@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { requireAdminInAction } from "@repo/auth/access";
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { countAdmins, getUserWithAccess } from "@repo/database/queries/team";
+import { countAdmins, getProfileRole, getUserWithAccess } from "@repo/database/queries/team";
+import {
+  upsertProfile,
+  updateProfileRole,
+  clearProjectAccess,
+  insertProjectAccess,
+} from "@repo/database/mutations/team";
 import {
   inviteUserSchema,
   updateUserAccessSchema,
@@ -83,28 +89,25 @@ export async function inviteUserAction(
 
   // Upsert profile met de gewenste role. handle_new_user-trigger heeft mogelijk
   // al een placeholder-row gemaakt met role='member' — wij overschrijven.
-  const { error: profileErr } = await admin
-    .from("profiles")
-    .upsert({ id: userId, email, role }, { onConflict: "id" });
-  if (profileErr) return { error: `Profile upsert mislukt: ${profileErr.message}` };
+  const profileResult = await upsertProfile({ id: userId, email, role });
+  if ("error" in profileResult) {
+    return { error: `Profile upsert mislukt: ${profileResult.error}` };
+  }
 
   // Sync project-access (members only; admins impliciet alles — RULE-161).
   if (role === "member") {
     // Vervang bestaande access rows door de nieuwe set (atomair-ish: delete+insert).
-    const { error: delErr } = await admin
-      .from("devhub_project_access")
-      .delete()
-      .eq("profile_id", userId);
-    if (delErr) return { error: `Access reset mislukt: ${delErr.message}` };
+    const delResult = await clearProjectAccess(userId);
+    if ("error" in delResult) return { error: `Access reset mislukt: ${delResult.error}` };
 
     if (projectIds.length > 0) {
       const rows = projectIds.map((pid) => ({ profile_id: userId, project_id: pid }));
-      const { error: insErr } = await admin.from("devhub_project_access").insert(rows);
-      if (insErr) return { error: `Access insert mislukt: ${insErr.message}` };
+      const insResult = await insertProjectAccess(rows);
+      if ("error" in insResult) return { error: `Access insert mislukt: ${insResult.error}` };
     }
   } else {
     // Role switched to admin → strip stale access rows (niet langer nodig).
-    await admin.from("devhub_project_access").delete().eq("profile_id", userId);
+    await clearProjectAccess(userId);
   }
 
   revalidatePath("/admin/team");
@@ -139,25 +142,24 @@ export async function updateUserAccessAction(input: UpdateUserAccessInput): Prom
   }
 
   if (role !== undefined) {
-    const { error } = await admin.from("profiles").update({ role }).eq("id", userId);
-    if (error) return { error: `Rol-update mislukt: ${error.message}` };
+    const result = await updateProfileRole(userId, role);
+    if ("error" in result) return { error: `Rol-update mislukt: ${result.error}` };
   }
 
   if (projectIds !== undefined) {
     // Bepaal de effectieve rol na de eventuele role-update hierboven.
-    const effectiveRole =
-      role ??
-      (await admin.from("profiles").select("role").eq("id", userId).maybeSingle()).data?.role;
+    const effectiveRole = role ?? (await getProfileRole(userId, admin));
 
     if (effectiveRole === "admin") {
       // Admins: geen access-rows nodig.
-      await admin.from("devhub_project_access").delete().eq("profile_id", userId);
+      await clearProjectAccess(userId);
     } else {
-      await admin.from("devhub_project_access").delete().eq("profile_id", userId);
+      const delResult = await clearProjectAccess(userId);
+      if ("error" in delResult) return { error: `Access reset mislukt: ${delResult.error}` };
       if (projectIds.length > 0) {
         const rows = projectIds.map((pid) => ({ profile_id: userId, project_id: pid }));
-        const { error } = await admin.from("devhub_project_access").insert(rows);
-        if (error) return { error: `Access insert mislukt: ${error.message}` };
+        const insResult = await insertProjectAccess(rows);
+        if ("error" in insResult) return { error: `Access insert mislukt: ${insResult.error}` };
       }
     }
   }
@@ -199,11 +201,10 @@ export async function deactivateUserAction(input: DeactivateUserInput): Promise<
   });
   if (banErr) return { error: `Ban mislukt: ${banErr.message}` };
 
-  const { error: accessErr } = await admin
-    .from("devhub_project_access")
-    .delete()
-    .eq("profile_id", userId);
-  if (accessErr) return { error: `Access cleanup mislukt: ${accessErr.message}` };
+  const accessResult = await clearProjectAccess(userId);
+  if ("error" in accessResult) {
+    return { error: `Access cleanup mislukt: ${accessResult.error}` };
+  }
 
   revalidatePath("/admin/team");
   return { success: true };

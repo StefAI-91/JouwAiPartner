@@ -8,6 +8,12 @@ export default defineConfig({
     // passWithNoTests: er zijn nog geen devhub-specifieke tests. Deze vlag
     // zorgt dat `turbo test` niet rood wordt op een lege suite.
     passWithNoTests: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["**/*.test.{ts,tsx}", "**/__tests__/**", "src/types/**"],
+    },
   },
   resolve: {
     alias: {

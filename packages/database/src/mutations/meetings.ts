@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
 export async function insertMeeting(meeting: {
@@ -268,6 +269,56 @@ export async function deleteMeeting(
 ): Promise<{ success: true } | { error: string }> {
   // CASCADE handles extractions, meeting_projects, meeting_participants
   const { error } = await getAdminClient().from("meetings").delete().eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+// ── Q2b-B: park/restore voor reprocessMeetingAction ──
+
+/**
+ * Park een meeting tijdens reprocess: clear `fireflies_id` en prefix de
+ * titel zodat beide unique-constraints (`fireflies_id` én
+ * `(lower(title), date::date)`) niet botsen wanneer de pipeline een nieuwe
+ * meeting probeert te inserten. De oude meeting blijft volledig hersteld
+ * baar via `restoreParkedMeeting` zolang de pipeline niet succesvol klaar is.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function parkMeetingForReprocess(
+  meetingId: string,
+  parkedTitle: string,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db
+    .from("meetings")
+    .update({ fireflies_id: null, title: parkedTitle })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
+ * Restore een geparkeerde meeting naar zijn originele staat. Wordt gebruikt
+ * als compensating action wanneer de reprocess-pipeline crasht of geen
+ * nieuwe meeting kan aanmaken — zo blijft er nooit een meeting in een
+ * "halfway"-state achter.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function restoreParkedMeeting(
+  meetingId: string,
+  firefliesId: string | null,
+  title: string | null,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db
+    .from("meetings")
+    .update({ fireflies_id: firefliesId, title })
+    .eq("id", meetingId);
 
   if (error) return { error: error.message };
   return { success: true };

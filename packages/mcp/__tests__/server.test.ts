@@ -81,11 +81,12 @@ const CRITICAL_TOOLS = [
 ] as const;
 
 /**
- * Helper: haal de geregistreerde tool-namen op uit de MCP SDK.
- * Ja — dit leest nog steeds private veld `_registeredTools`. Dat is een
- * bewuste concessie: de MCP SDK biedt geen publieke lijst-API. Maar omdat
- * we alleen controleren of een vaste *subset* aanwezig is (niet de hele
- * lijst tellen), is deze test nog steeds robuust tegen normale uitbreiding.
+ * @private-field-access — zie docs/specs/test-strategy.md §4.
+ *
+ * `_registeredTools` is een private veld op `McpServer` (SDK v1.28.0). Er is
+ * geen publieke `listTools()`-API; deze access is een bewuste uitzondering
+ * op de CLAUDE.md test-regels. Robust gehouden door te asserten op een
+ * subset (CRITICAL_TOOLS), niet op een exact getal.
  */
 function listRegisteredToolNames(server: ReturnType<typeof createMcpServer>): string[] {
   const registered = (server as Record<string, unknown>)._registeredTools as
@@ -116,6 +117,11 @@ describe("createMcpServer — initialization", () => {
 describe("kennisbasis-context prompt — honesty contract", () => {
   /**
    * Haal de tekst van de geregistreerde prompt op.
+   *
+   * @private-field-access — zie docs/specs/test-strategy.md §4. Zelfde reden
+   * als `_registeredTools` hierboven: SDK v1.28.0 biedt geen publieke
+   * lookup voor prompts.
+   *
    * We testen de prompt-*inhoud*, want dat is het enige gedragscontract dat
    * de MCP server aan consumers geeft: "hoe moet je mijn kennisbasis
    * gebruiken". Als deze tekst afzwakt, gaan klant-assistenten stiekem
