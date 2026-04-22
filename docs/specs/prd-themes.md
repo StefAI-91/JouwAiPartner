@@ -131,15 +131,22 @@ daarna een nieuw thema voor.
 
 Concreet flowbeeld per meeting:
 
-1. Transcript → embedding (Cohere embed-v4, 1024-dim) per semantische
-   chunk.
-2. Vector-lookup tegen `themes.embedding` → top-10 kandidaten.
-3. Retrieval-augmented LLM-call (Haiku): _"Match dit fragment aan één
-   van deze themes, of stel een nieuw thema voor als er echt geen
-   goede match is."_
-4. Match ≥ threshold → link via `meeting_themes` (status bestaand
-   thema blijft ongewijzigd).
-5. Geen match → nieuw thema met status `emerging` → review-queue.
+1. `SELECT id, name, description FROM themes WHERE status = 'verified'`
+   — alle bekende thema's (realistisch ~30–50 stuks).
+2. Eén Haiku-call met de complete themes-lijst + transcript als
+   context. Prompt vraagt: _"Welke bestaande thema's raakt deze
+   meeting? Of, als er echt geen passend thema is, stel één nieuw
+   thema voor met naam + emoji + korte beschrijving."_
+3. Match → link via `meeting_themes` (status bestaand thema blijft
+   ongewijzigd).
+4. Geen match → nieuw thema met status `emerging` → review-queue.
+
+**Bewust geen embeddings in v1.** Bij jullie realistische schaal
+(tientallen themes, geen honderden) past de complete lijst makkelijk in
+een Haiku-context en is een simpele `SELECT` + LLM-call goedkoper én
+minder bewegende delen dan een vector-lookup. Embedding-based matching
+wordt pas relevant bij ~100+ themes of als er een "find similar themes"
+feature bijkomt — uitgesteld naar v3. Zie §4.5 upgrade-trigger.
 
 ### 4.2 Verification-first, ook voor themes
 
@@ -169,3 +176,14 @@ Direct na deploy wordt er eenmalig een batch-run over alle bestaande
 verified meetings uitgevoerd. Zonder deze stap is de eerste 4–6 weken
 de themes-data te dun om iets zinnigs te tonen (dashboard blijft leeg).
 De batch draait via een one-off script in `packages/ai/src/pipeline/`.
+
+### 4.5 Wanneer wél embeddings (upgrade-trigger)
+
+Drie signalen die zeggen "tijd om embeddings toe te voegen":
+
+- Aantal `verified` themes > 100 → LLM-context wordt te vol / te duur.
+- Haiku-kwaliteit daalt merkbaar (vaker missed matches) → semantic
+  similarity helpt dan echt.
+- Feature-verzoek "themes zoals dit thema" of "similar themes" in UI.
+
+Tot dan: gewoon `SELECT`, Haiku en klaar. Niet prematuur optimaliseren.
