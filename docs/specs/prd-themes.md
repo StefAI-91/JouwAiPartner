@@ -296,6 +296,39 @@ Dit is bewust simpel gehouden: geen model-training, geen embeddings,
 gewoon recente tekst in de prompt. Schaalt prima tot honderden
 afwijzingen per thema.
 
+### 5.6 Wanneer wél een nieuw thema voorstellen
+
+Match-first-create-second werkt alleen als de AI strak weet wannéer
+hij mag creëren. Zonder expliciete criteria krijgt de review-queue
+elke week random proposals als "Vakantie" of "Koffie-bestellingen".
+Daarom gelden vier criteria die de ThemeTagger-prompt hard afdwingt:
+
+1. **Geen match** — Geen enkel bestaand thema haalt confidence
+   `medium` of hoger met dit onderwerp. Alleen een echte miss
+   rechtvaardigt een voorstel.
+2. **Substantie** — Het onderwerp heeft ≥2 extractions
+   (decisions/needs/insights/action_items) aan zich hangen in deze
+   meeting. Eén losse opmerking in het transcript is niet genoeg.
+3. **Granulariteit** — Niet te breed ("werk", "business") en niet
+   te smal ("deze ene bug", "de meeting van dinsdag"). Test in de
+   prompt: _"Kun je je voorstellen dat dit onderwerp 3× terugkomt
+   in de komende maanden?"_
+4. **Expliciete afbakening** — In het `reasoning`-veld moet de
+   LLM benoemen welk bestaand thema het het dichtst benaderde en
+   waarom het tóch niet past. Dwingt non-luie output af.
+
+Criteria 1 en 2 zijn mechanisch (prompt-instructie + join op
+extractions-count). Criteria 3 en 4 zijn oordeelskundig — de
+review-flow (§10.2) blijft het menselijke vangnet.
+
+**Vangnet als v1 in praktijk ruisig blijkt (v1.5):** proposals
+landen dan eerst in een `theme_candidates`-tabel, niet direct als
+`emerging`. Pas wanneer dezelfde kandidaat in een tweede meeting
+opduikt wordt hij gepromoot tot emerging. Dit filtert one-off
+ruis maar kost één extra meeting voordat Stef/Wouter een nieuw
+thema zien. Alleen invoeren als de pure v1-aanpak te veel review-
+ballast geeft.
+
 ---
 
 ## 6. Datamodel
