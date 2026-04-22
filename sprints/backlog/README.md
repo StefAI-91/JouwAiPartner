@@ -34,6 +34,9 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | R03      | UI updates for call data                                     | VoIP pipeline | `sprints/backlog/` | Backlog       |
 | R04      | Audio storage + playback                                     | VoIP pipeline | `sprints/backlog/` | Backlog       |
 | Q4b      | Spec sync execution (na Q4a)                                 | Quality       | `sprints/backlog/` | In uitvoering |
+| TH-7     | Cleanup blockers (CI lint, N+1, double-fetch, userId guard)  | Themes QA     | `sprints/backlog/` | Backlog       |
+| TH-8     | Cleanup majors (DRY, SRP, query-efficiency, file-splits)     | Themes QA     | `sprints/backlog/` | Backlog       |
+| TH-9     | Cleanup minors (conventies, tokens, hygiëne)                 | Themes QA     | `sprints/backlog/` | Backlog       |
 
 ## Completed Sprints Summary
 
