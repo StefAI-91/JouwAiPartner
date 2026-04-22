@@ -461,3 +461,76 @@ emoji mist, wordt die toegevoegd in een minor PR en geldt vanaf de
 volgende ThemeTagger-run. Bestaande themes blijven ongemoeid. Niet
 via UI of database muteerbaar — dat zou precies de drift uitlokken die
 we wilden voorkomen.
+
+---
+
+## 8. UI — dashboard (A1 + B8)
+
+### 8.1 Floating theme pills (A1)
+
+**Positie:** horizontale strip **bovenaan de dashboard-home**, net
+onder het header-blok, boven de meeting-carousel. Volle breedte.
+
+**Data per pill:**
+
+- Emoji (uit `themes.emoji`)
+- Naam (`themes.name`)
+- Mention-count als badge (mentions laatste 30 dagen, niet `mention_count`
+  totaal — dat wordt anders nooit kleiner)
+
+**Gedrag:**
+
+- Top 8 meest actieve `verified` themes, gesorteerd op mention-count
+  (tiebreak: meest recent besproken).
+- Flex-wrap bij smalle viewports — nooit horizontaal scrollen.
+- Klik op pill → `/themes/[slug]` (detail page C11).
+- Rechtsboven de strip: _"Alle {N} thema's →"_ link naar `/themes`
+  overview (out of scope v1, placeholder).
+- Hover: subtiele lift + border-accent, geen tooltip in v1 (voorkomt
+  flashiness).
+
+**Tunables (bijstelbaar zonder code-wijziging zodra in prod):**
+
+- Aantal pills (8 default, configurable via env of settings-table).
+- Sortering (mention-count vs recency).
+- Window voor mention-count (30d default).
+
+### 8.2 Time-spent donut (B8)
+
+**Positie:** in de linker-kolom van de dashboard-home, **onder** de
+pills-strip, naast of onder de AI-pulse-strip. Footprint: ~340px breed,
+~180px hoog.
+
+**Data:**
+
+- Per `verified` thema: aandeel van totaal mention-count laatste 30d.
+- Segment-kleuren uit een vaste 10-palette in `theme-lab` — bewust geen
+  tinten van primary; themes zijn onderscheidend bedoeld.
+- Center-label: _"30 dgn"_ + totaal-% verdeeld.
+- Legend: top 6 themes met kleurblokjes + percentage; rest als
+  _"+ N andere thema's"_.
+
+**Gedrag:**
+
+- Klik op segment of legend-item → `/themes/[slug]`.
+- Hover segment → opacity-highlight + percentage in tooltip (beperkte
+  tooltip oké, want één datapunt).
+
+### 8.3 Queries
+
+Twee nieuwe read-functies in `packages/database/src/queries/themes.ts`:
+
+- `listTopActiveThemes(client, { limit, windowDays })` → voor pills.
+- `getThemeShareDistribution(client, { windowDays })` → voor donut.
+
+Beide filteren op `status = 'verified'` en gebruiken de gedenormaliseerde
+`last_mentioned_at` + aggregatie over `meeting_themes` binnen window.
+
+### 8.4 Empty / loading / edge states
+
+- **Pre-seed (0 verified themes):** strip + donut tonen neutrale state
+  _"Nog geen thema's — loopt na eerste batch-run vanzelf vol."_
+- **<3 themes:** pills tonen wat er is, donut toont één grote cirkel +
+  melding _"Te weinig data voor verdeling"_.
+- **Loading:** skeleton-pills (grijze pilvormen) + skeleton-donut.
+- **Emerging-only:** verschijnt niet op dashboard, alleen in review.
