@@ -534,3 +534,76 @@ Beide filteren op `status = 'verified'` en gebruiken de gedenormaliseerde
   melding _"Te weinig data voor verdeling"_.
 - **Loading:** skeleton-pills (grijze pilvormen) + skeleton-donut.
 - **Emerging-only:** verschijnt niet op dashboard, alleen in review.
+
+---
+
+## 9. UI — theme detail page (C11)
+
+### 9.1 Route + header
+
+`/themes/[slug]` — server-component page in
+`apps/cockpit/src/app/(dashboard)/themes/[slug]/`. Vangt ook
+`/themes/` als index (lijst-overzicht, v1 = alfabetisch op naam).
+
+**Header-blok** (bovenaan de page):
+
+- Emoji (groot, 32px) + `name` (h1) + `description` (muted subline)
+- Rechts: badge met mention-count laatste 30d + laatste mention datum
+- Rechts-boven: edit-icon → edit-mode (zie §9.7), zichtbaar voor
+  Stef/Wouter (Ege read-only conform §3.1)
+
+### 9.2 Tab: Overzicht (default)
+
+Statsblok in drie kaartjes: `# meetings`, `# besluiten`,
+`# open vragen` (tellers tonen 0 in v1 voor open vragen tot v2). Plus
+daaronder de laatste 3 activities als mini-lijst (emojirondjes voor
+type). Bewust geen AI-narrative (C13) in v1.
+
+### 9.3 Tab: Meetings
+
+Lijst van alle meetings die aan dit theme hangen, gesorteerd op datum
+desc. Per rij: titel, datum, participants, confidence-badge
+(medium/high), evidence-quote uitklapbaar (`<details>`). Klik op rij
+→ `/meetings/[id]`.
+
+### 9.4 Tab: Besluiten
+
+Alle `extractions` met `type = 'decision'` uit de gelinkte meetings,
+gesorteerd op datum desc. Per rij: besluit-tekst, source-meeting,
+datum. Haakt aan op bestaande extractions-queries — geen nieuwe
+data-shape nodig.
+
+### 9.5 Tab: Open vragen (placeholder v2)
+
+Tab zichtbaar maar toont _"Open vragen komen in v2 — we gaan dan
+extractions van type `need` koppelen aan status `open`/`resolved`."_
+Bewust geen lege lijst: eerlijk zijn over status voorkomt verwarring.
+
+### 9.6 Tab: Mensen
+
+Alle unieke participants uit de gelinkte meetings, met per persoon hun
+aantal mentions in dit theme. Klik → `/people/[id]`. Geen quotes per
+persoon in v1 (C14 is v2).
+
+### 9.7 Edit mode
+
+Inline edit-formulier toont `name`, `description`, `matching_guide`
+en de emoji-picker (6×7 grid uit §7.3). Submit = Server Action
+`updateTheme()` met Zod-validatie. Alleen `verified` themes kunnen
+edit — `emerging` themes leven in de review-flow (§10).
+
+Archiveren gebeurt vanuit edit-mode via een aparte knop _"Archiveer
+thema"_ (zet `status = 'archived'` + `archived_at = now()`). Geen hard
+delete — we willen historische meeting-links behouden.
+
+### 9.8 Queries
+
+In `packages/database/src/queries/themes.ts`:
+
+- `getThemeBySlug(client, slug)` — header + matching_guide.
+- `getThemeMeetings(client, themeId)` — meetings-tab, join op junction.
+- `getThemeDecisions(client, themeId)` — besluiten-tab, join via meetings.
+- `getThemeParticipants(client, themeId)` — mensen-tab, distinct.
+
+Mutations in `packages/database/src/mutations/themes.ts`:
+`updateTheme()`, `archiveTheme()`.
