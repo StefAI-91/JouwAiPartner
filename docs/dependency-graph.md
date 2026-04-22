@@ -1,15 +1,15 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-20. Do not edit manually.
+> Auto-generated on 2026-04-22. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 480 |
-| Exported functions/constants | 739 |
-| Exported types/interfaces | 191 |
+| Files scanned | 487 |
+| Exported functions/constants | 753 |
+| Exported types/interfaces | 194 |
 | Cross-package imports | 602 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -2405,6 +2405,50 @@
 **Depends on:**
 - `@repo/ui/badge` → Badge
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/mock-data.ts`
+
+**Exports:**
+- `THEMES`
+- `PEOPLE`
+- `MEETINGS`
+- `QUOTES`
+- `CONTRADICTIONS`
+- `TIMELINE_EVENTS`
+- `OPEN_QUESTIONS`
+
+**Types:** `ThemeTemp`, `ThemeMock`, `MeetingMock`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/page.tsx`
+
+**Exports:**
+- `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/theme-lab.tsx`
+
+**Exports:**
+- `ThemeLab()`
+- `VariantCard()`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-a.tsx`
+
+**Exports:**
+- `SectionA()`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-b.tsx`
+
+**Exports:**
+- `SectionB()`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-c.tsx`
+
+**Exports:**
+- `SectionC()`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-d.tsx`
+
+**Exports:**
+- `SectionD()`
 
 ### `apps/cockpit/src/app/auth/callback/route.ts`
 
