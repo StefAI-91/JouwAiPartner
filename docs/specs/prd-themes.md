@@ -131,12 +131,13 @@ daarna een nieuw thema voor.
 
 Concreet flowbeeld per meeting:
 
-1. `SELECT id, name, description FROM themes WHERE status = 'verified'`
-   — alle bekende thema's (realistisch ~30–50 stuks).
-2. Eén Haiku-call met de complete themes-lijst + transcript als
-   context. Prompt vraagt: _"Welke bestaande thema's raakt deze
-   meeting? Of, als er echt geen passend thema is, stel één nieuw
-   thema voor met naam + emoji + korte beschrijving."_
+1. Ophalen van alle `verified` themes incl. `name`, `description`,
+   `matching_guide` en recente `negative_examples` (zie §5.2 voor de
+   volledige input).
+2. Eén Haiku-call met de complete themes-bundel + meeting-samenvatting
+   - extractions. Prompt vraagt: _"Welke thema's raakt deze meeting
+     substantieel? Gebruik de matching_guide als arbiter. Bij twijfel
+     niet matchen."_
 3. Match → link via `meeting_themes` (status bestaand thema blijft
    ongewijzigd).
 4. Geen match → nieuw thema met status `emerging` → review-queue.
@@ -209,13 +210,25 @@ hij op de `/agents` observability pagina verschijnt.
 
 ### 5.2 ThemeTagger — input en output
 
-**Input:**
+**Input (per theme de volledige context):**
 
 - Meeting-ID + samenvatting + extractions (decisions, action_items,
   insights, needs).
-- Volledige lijst `verified` themes uit de database (id, name,
-  description).
-- De gecureerde emoji-shortlist (zie §7) als enum.
+- Alle `verified` themes met per thema:
+  - `name` (kort label)
+  - `description` (1 zin, UI-display)
+  - `matching_guide` (2–4 zinnen: wat valt er wél onder, wat níet)
+  - Laatste 2–3 `negative_examples` uit de feedback-loop (zie §5.5)
+- De gecureerde emoji-shortlist (zie §7) als enum voor proposals.
+
+**Prompt-discipline (hard in de system prompt):**
+
+- _"Match alleen als het thema een substantieel onderwerp van de
+  meeting is — niet bij terloopse vermeldingen van één zin."_
+- _"Gebruik de matching_guide als arbiter. Bij twijfel niet matchen."_
+- _"Retourneer alleen matches met confidence `medium` of `high`.
+  `low` filter je zelf eruit."_
+- _"Max 4 matches per meeting. Als alles matcht is het over-tagging."_
 
 **Output** (Zod-gevalideerd, JSON schema):
 
@@ -253,3 +266,20 @@ dedupe, merge-voorstellen, archivering van stille themes. Niet nodig in
 v1 zolang het aantal themes klein is en jullie in de review-queue zelf
 kunt ingrijpen. Eerste Curator-taak: voorgestelde merges zichtbaar
 maken in review-UI (v2).
+
+### 5.5 Feedback-loop — leer van afwijzingen
+
+De matching wordt scherper door menselijke feedback terug te voeren in
+de prompt. In de review-UI kunnen Stef en Wouter een voorgestelde
+match wegklikken met één reden (_"niet substantieel"_ / _"ander
+thema"_ / _"te breed"_). Die afwijzing landt als row in
+`theme_match_rejections` met de quote die de LLM als bewijs gaf.
+
+Bij de volgende ThemeTagger-call krijgt het betreffende thema de 2–3
+meest recente afwijzingen mee als `negative_examples`. Na 6–8 weken
+heeft elk actief thema zo een eigen "wat valt er niet onder" paragraaf
+die is gegroeid uit jullie eigen beoordelingen.
+
+Dit is bewust simpel gehouden: geen model-training, geen embeddings,
+gewoon recente tekst in de prompt. Schaalt prima tot honderden
+afwijzingen per thema.
