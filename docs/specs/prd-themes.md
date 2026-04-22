@@ -189,6 +189,18 @@ Drie signalen die zeggen "tijd om embeddings toe te voegen":
 
 Tot dan: gewoon `SELECT`, Haiku en klaar. Niet prematuur optimaliseren.
 
+### 4.6 Scope — alle meetings, één globale set
+
+ThemeTagger draait op **elke meeting die Gatekeeper doorlaat**, ongeacht
+`meeting_type` of `party_type`. Er is één globale themes-tabel zonder
+scope-veld — intern en client-context delen dezelfde thema's.
+
+Gevolg: een thema als "Hiring" kan zowel een interne founders-sync
+raken als een client-meeting waarin over hun hiring gesproken wordt.
+Dat is bewust een simpele start. Als later blijkt dat contexts botsen
+(bv. Stef's hiring vs klant-hiring), voegen we `scope` toe aan themes
+(v2+).
+
 ---
 
 ## 5. Agent-architectuur
@@ -591,6 +603,21 @@ Inline edit-formulier toont `name`, `description`, `matching_guide`
 en de emoji-picker (6×7 grid uit §7.3). Submit = Server Action
 `updateTheme()` met Zod-validatie. Alleen `verified` themes kunnen
 edit — `emerging` themes leven in de review-flow (§10).
+
+**Bestaande matches blijven staan bij guide-wijziging.** Als jij de
+`matching_guide` aanpast worden oude `meeting_themes`-rijen niet
+opnieuw beoordeeld. Dat is consistent met hoe extractions werken (AI-
+output is immutable); oude tags zijn historisch correct met de toen-
+geldende definitie. Nieuwe meetings gebruiken de nieuwe guide vanaf
+dat moment. Geen nachtelijke re-tag.
+
+**Approve-rechten worden niet in RLS afgedwongen.** De edit- en
+approve-knoppen zijn verborgen voor niet-primaire gebruikers, en de
+Server Actions (`approveTheme`, `updateTheme`, `archiveTheme`) checken
+`currentUser.email` tegen een whitelist (`STEF_EMAIL`, `WOUTER_EMAIL`
+uit env). RLS blijft permissive — consistent met hoe de rest van het
+platform werkt. Fine-grained role-RLS is een v3-onderwerp
+(`docs/security/audit-report.md`).
 
 Archiveren gebeurt vanuit edit-mode via een aparte knop _"Archiveer
 thema"_ (zet `status = 'archived'` + `archived_at = now()`). Geen hard
