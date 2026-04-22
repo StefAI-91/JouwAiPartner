@@ -92,9 +92,11 @@ export async function getThemeRecentActivity(
  * `meetings` via Supabase relational select — meeting_themes is de source
  * of truth voor de match-metadata (confidence/quote/matched_at).
  *
- * TH-009: sortering verplaatst naar SQL via `referencedTable: "meetings"`.
- * Primair sorteert de DB op `meeting.date desc`; de JS-sort die hier eerder
- * stond dupliceerde die logica. Supabase-js ≥2.100 ondersteunt dit.
+ * TH-009 (herzien): we sorteren SQL-side op `meeting_themes.created_at` en
+ * daarna JS-side op meeting.date. De eerdere poging met
+ * `referencedTable: "meetings"` brak in productie omdat de select een alias
+ * (`meeting:meeting_id`) gebruikt en PostgREST de alias verwacht, niet de
+ * tabelnaam. Twee sorts is acceptabel voor de ~tientallen rows per thema.
  */
 export async function getThemeMeetings(
   themeId: string,
@@ -107,7 +109,6 @@ export async function getThemeMeetings(
       "confidence, evidence_quote, created_at, meeting:meeting_id (id, title, date, participants)",
     )
     .eq("theme_id", themeId)
-    .order("date", { ascending: false, referencedTable: "meetings", nullsFirst: false })
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`theme meetings failed: ${error.message}`);
@@ -134,7 +135,12 @@ export async function getThemeMeetings(
       confidence: row.confidence,
       evidence_quote: row.evidence_quote,
       matched_at: row.created_at,
-    }));
+    }))
+    .sort((a, b) => {
+      const aDate = a.date ?? a.matched_at;
+      const bDate = b.date ?? b.matched_at;
+      return bDate.localeCompare(aDate);
+    });
 }
 
 /**
