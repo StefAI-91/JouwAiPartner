@@ -16,7 +16,11 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
-import { getAdminClient } from "@repo/database/supabase/admin";
+import {
+  listVerifiedMeetingIdsOrderedByDate,
+  type VerifiedMeetingIdRow,
+} from "@repo/database/queries/meetings";
+import { listTaggedMeetingIds } from "@repo/database/queries/meeting-themes";
 import { runTagThemesStep } from "@repo/ai/pipeline/steps/tag-themes";
 
 const DEFAULT_CONCURRENCY = 5;
@@ -44,41 +48,20 @@ function parseArgs(argv: string[]): BatchArgs {
   return { force, limit, concurrency };
 }
 
-async function fetchTargetMeetings(
-  args: BatchArgs,
-): Promise<Array<{ id: string; title: string | null; summary: string | null }>> {
-  const db = getAdminClient();
-
+async function fetchTargetMeetings(args: BatchArgs): Promise<VerifiedMeetingIdRow[]> {
+  // TH-009: alle DB-reads via de queries-laag. Geen directe `.from()` meer in
+  // scripts — idempotente mode en force-mode verschillen alleen in filtering.
   if (args.force) {
-    const query = db
-      .from("meetings")
-      .select("id, title, summary")
-      .eq("verification_status", "verified")
-      .order("date", { ascending: false });
-    if (args.limit) query.limit(args.limit);
-    const { data, error } = await query;
-    if (error) throw new Error(`meetings fetch failed: ${error.message}`);
-    return data ?? [];
+    return listVerifiedMeetingIdsOrderedByDate({ limit: args.limit ?? undefined });
   }
 
   // Idempotent-modus: skip meetings die al meeting_themes-rijen hebben.
-  const { data: taggedRows, error: taggedErr } = await db
-    .from("meeting_themes")
-    .select("meeting_id");
-  if (taggedErr) throw new Error(`tagged-meetings fetch failed: ${taggedErr.message}`);
-
-  const taggedIds = new Set((taggedRows ?? []).map((r) => r.meeting_id));
-
-  const query = db
-    .from("meetings")
-    .select("id, title, summary")
-    .eq("verification_status", "verified")
-    .order("date", { ascending: false });
-  if (args.limit) query.limit(args.limit * 2); // overshoot zodat skips niet onder limit duwen
-  const { data, error } = await query;
-  if (error) throw new Error(`meetings fetch failed: ${error.message}`);
-
-  const remaining = (data ?? []).filter((m) => !taggedIds.has(m.id));
+  const taggedIds = await listTaggedMeetingIds();
+  // Overshoot zodat skips niet onder de gevraagde limit duwen.
+  const candidates = await listVerifiedMeetingIdsOrderedByDate({
+    limit: args.limit ? args.limit * 2 : undefined,
+  });
+  const remaining = candidates.filter((m) => !taggedIds.has(m.id));
   return args.limit ? remaining.slice(0, args.limit) : remaining;
 }
 

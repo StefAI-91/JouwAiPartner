@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@repo/ui/format";
+import { Badge } from "@repo/ui/badge";
 import type { ThemeMeetingEntry } from "@repo/database/queries/themes";
 import { MatchRejectPopover } from "@/components/themes/match-reject-popover";
 
@@ -62,7 +63,9 @@ export function MeetingsTab({ themeId, themeName, meetings, canRejectMatches }: 
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <ConfidenceBadge confidence={m.confidence} />
+                <Badge variant={m.confidence === "high" ? "default" : "secondary"}>
+                  {m.confidence}
+                </Badge>
                 {canRejectMatches && !isRejected && (
                   <MatchRejectPopover
                     meetingId={m.meeting_id}
@@ -92,19 +95,5 @@ export function MeetingsTab({ themeId, themeName, meetings, canRejectMatches }: 
         );
       })}
     </ul>
-  );
-}
-
-function ConfidenceBadge({ confidence }: { confidence: "medium" | "high" }) {
-  const styles =
-    confidence === "high"
-      ? "bg-primary/10 text-primary ring-primary/20"
-      : "bg-amber-100 text-amber-800 ring-amber-200";
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${styles}`}
-    >
-      {confidence}
-    </span>
   );
 }

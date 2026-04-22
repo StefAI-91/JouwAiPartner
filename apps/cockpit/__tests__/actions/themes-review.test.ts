@@ -64,7 +64,7 @@ const VALID_APPROVE = {
   themeId: THEME_ID,
   name: "Team capaciteit & hiring",
   description: "Rolverdeling en openstaande vacatures.",
-  matching_guide:
+  matchingGuide:
     "Valt onder als het over hiring gaat. Valt er niet onder als het over werkdruk gaat.",
   emoji: "👥" as const,
 };
@@ -110,7 +110,8 @@ describe("approveThemeAction", () => {
     expect(patch).toMatchObject({
       name: VALID_APPROVE.name,
       description: VALID_APPROVE.description,
-      matching_guide: VALID_APPROVE.matching_guide,
+      // Action mapt client-side camelCase → DB snake_case (TH-009).
+      matching_guide: VALID_APPROVE.matchingGuide,
       emoji: VALID_APPROVE.emoji,
       status: "verified",
       verified_by: USER_ID,
@@ -120,11 +121,12 @@ describe("approveThemeAction", () => {
     expect(mockRevalidate).toHaveBeenCalledWith("/");
   });
 
-  it("weigert bij Zod-fail (te korte matching_guide)", async () => {
+  it("weigert bij Zod-fail (te korte matchingGuide)", async () => {
     mockUser.value = { id: USER_ID };
     mockIsAdmin.mockResolvedValue(true);
-    const result = await approveThemeAction({ ...VALID_APPROVE, matching_guide: "kort" });
-    expect(result).toEqual({ error: "Invalid input" });
+    const result = await approveThemeAction({ ...VALID_APPROVE, matchingGuide: "kort" });
+    // TH-009: Zod fail geeft field-error i.p.v. generiek "Invalid input".
+    expect("error" in result && typeof result.error === "string").toBe(true);
     expect(mockUpdateTheme).not.toHaveBeenCalled();
   });
 });
@@ -209,7 +211,8 @@ describe("rejectThemeMatchAction", () => {
       // @ts-expect-error — bewust type-breaker voor de test
       reason: "onzin",
     });
-    expect(result).toEqual({ error: "Invalid input" });
+    // TH-009: Zod fail geeft field-error i.p.v. generiek "Invalid input".
+    expect("error" in result && typeof result.error === "string").toBe(true);
     expect(mockRejectMatch).not.toHaveBeenCalled();
   });
 });

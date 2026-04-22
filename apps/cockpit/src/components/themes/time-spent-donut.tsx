@@ -50,7 +50,14 @@ export function TimeSpentDonut({ slices, totalMentions, windowDays }: TimeSpentD
         className="flex flex-col items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-5"
       >
         <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden="true">
-          <circle cx="70" cy="70" r={CIRCLE_R} fill="none" stroke="#e5e7eb" strokeWidth="20" />
+          <circle
+            cx="70"
+            cy="70"
+            r={CIRCLE_R}
+            fill="none"
+            className="stroke-muted"
+            strokeWidth="20"
+          />
           <text
             x="70"
             y="68"
@@ -88,7 +95,14 @@ export function TimeSpentDonut({ slices, totalMentions, windowDays }: TimeSpentD
         role="img"
         aria-label={`Verdeling thema's over de laatste ${windowDays} dagen, ${totalMentions} matches totaal`}
       >
-        <circle cx="70" cy="70" r={CIRCLE_R} fill="none" stroke="#e5e7eb" strokeWidth="20" />
+        <circle
+          cx="70"
+          cy="70"
+          r={CIRCLE_R}
+          fill="none"
+          className="stroke-muted"
+          strokeWidth="20"
+        />
         {segments.map((s) => (
           <Link
             key={s.slice.theme.id}

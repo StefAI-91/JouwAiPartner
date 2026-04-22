@@ -110,6 +110,34 @@ export async function listVerifiedMeetings(
   return { data: meetings, total: count ?? meetings.length };
 }
 
+/**
+ * TH-009 — minimale projectie van verified meetings (id/title/summary) ordered
+ * by date desc, met optionele limit. Gebruikt door
+ * `scripts/batch-tag-themes.ts` om de ThemeTagger over bestaande meetings te
+ * draaien zonder directe `.from()`-call buiten de queries-laag.
+ */
+export interface VerifiedMeetingIdRow {
+  id: string;
+  title: string | null;
+  summary: string | null;
+}
+
+export async function listVerifiedMeetingIdsOrderedByDate(
+  options?: { limit?: number },
+  client?: SupabaseClient,
+): Promise<VerifiedMeetingIdRow[]> {
+  const db = client ?? getAdminClient();
+  const query = db
+    .from("meetings")
+    .select("id, title, summary")
+    .eq("verification_status", "verified")
+    .order("date", { ascending: false });
+  if (options?.limit) query.limit(options.limit);
+  const { data, error } = await query;
+  if (error) throw new Error(`listVerifiedMeetingIdsOrderedByDate failed: ${error.message}`);
+  return data ?? [];
+}
+
 export interface BoardMeetingListItem {
   id: string;
   title: string | null;

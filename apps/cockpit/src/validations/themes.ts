@@ -21,7 +21,7 @@ export const updateThemeSchema = z.object({
   themeId: z.string().uuid(),
   name: z.string().min(THEME_NAME_MIN).max(THEME_NAME_MAX),
   description: z.string().min(THEME_DESC_MIN).max(THEME_DESC_MAX),
-  matching_guide: z.string().min(THEME_GUIDE_MIN),
+  matchingGuide: z.string().min(THEME_GUIDE_MIN),
   emoji: z.enum(ALL_THEME_EMOJIS),
 });
 

@@ -64,7 +64,7 @@ export function ThemeApprovalCard({ theme }: ThemeApprovalCardProps) {
         themeId: theme.id,
         name: name.trim(),
         description: description.trim(),
-        matching_guide: matchingGuide.trim(),
+        matchingGuide: matchingGuide.trim(),
         emoji,
       });
       if ("error" in result) setError(result.error);

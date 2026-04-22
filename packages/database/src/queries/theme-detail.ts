@@ -46,6 +46,11 @@ export interface ThemeParticipantEntry {
  * match-tijd. Lastige stat omdat de gedenormaliseerde `last_mentioned_at` op
  * themes cumulatief is; we halen deze 30d-specifieke waarden dus uit de
  * junction-tabel zelf.
+ *
+ * TH-009: bewust 2 parallelle queries — `count` is window-filtered (30d),
+ * `lastMentionedAt` is ongefilterd (all-time). Een thema dat >30d geen match
+ * had moet nog steeds zijn laatste mention tonen. Eén query samenvoegen zou
+ * één van beide semantieken moeten opgeven.
  */
 export async function getThemeRecentActivity(
   themeId: string,
@@ -86,6 +91,10 @@ export async function getThemeRecentActivity(
  * Meetings-tab met evidence-quote per match (UI-272). Eén query met join op
  * `meetings` via Supabase relational select — meeting_themes is de source
  * of truth voor de match-metadata (confidence/quote/matched_at).
+ *
+ * TH-009: sortering verplaatst naar SQL via `referencedTable: "meetings"`.
+ * Primair sorteert de DB op `meeting.date desc`; de JS-sort die hier eerder
+ * stond dupliceerde die logica. Supabase-js ≥2.100 ondersteunt dit.
  */
 export async function getThemeMeetings(
   themeId: string,
@@ -98,6 +107,7 @@ export async function getThemeMeetings(
       "confidence, evidence_quote, created_at, meeting:meeting_id (id, title, date, participants)",
     )
     .eq("theme_id", themeId)
+    .order("date", { ascending: false, referencedTable: "meetings", nullsFirst: false })
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`theme meetings failed: ${error.message}`);
@@ -124,12 +134,7 @@ export async function getThemeMeetings(
       confidence: row.confidence,
       evidence_quote: row.evidence_quote,
       matched_at: row.created_at,
-    }))
-    .sort((a, b) => {
-      const aDate = a.date ?? a.matched_at;
-      const bDate = b.date ?? b.matched_at;
-      return bDate.localeCompare(aDate);
-    });
+    }));
 }
 
 /**

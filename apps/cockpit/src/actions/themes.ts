@@ -11,7 +11,6 @@ import {
   rejectThemeMatchAsAdmin,
   recalculateThemeStats,
 } from "@repo/database/mutations/meeting-themes";
-import { getThemeBySlug } from "@repo/database/queries/themes";
 import { runTagThemesStep } from "@repo/ai/pipeline/steps/tag-themes";
 import { getVerifiedMeetingById } from "@repo/database/queries/meetings";
 import {
@@ -39,16 +38,16 @@ export async function updateThemeAction(
   input: UpdateThemeInput,
 ): Promise<{ success: true } | { error: string }> {
   const parsed = updateThemeSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   const guard = await requireAdminInAction();
   if ("error" in guard) return { error: guard.error };
 
-  const { themeId, name, description, matching_guide, emoji } = parsed.data;
+  const { themeId, name, description, matchingGuide, emoji } = parsed.data;
   const result = await updateThemeMutation(themeId, {
     name,
     description,
-    matching_guide,
+    matching_guide: matchingGuide,
     emoji,
   });
   if ("error" in result) return { error: result.error };
@@ -72,7 +71,7 @@ export async function archiveThemeAction(
   input: ArchiveThemeInput,
 ): Promise<{ success: true } | { error: string }> {
   const parsed = archiveThemeSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   const guard = await requireAdminInAction();
   if ("error" in guard) return { error: guard.error };
@@ -95,13 +94,6 @@ export async function canEditThemesAction(): Promise<{ canEdit: boolean }> {
   return { canEdit: await isAdmin(user.id) };
 }
 
-/**
- * Helper zodat de page-component de slug→id resolve kan doen via query
- * zonder directe `.from()` buiten queries/* — hier alleen geëxporteerd als
- * re-export voor type-safety.
- */
-export { getThemeBySlug };
-
 // ──────────────────────────────────────────────────────────────────────────
 // TH-006 — Review-flow, match rejections, regenerate
 // ──────────────────────────────────────────────────────────────────────────
@@ -117,16 +109,16 @@ export async function approveThemeAction(
   input: ApproveThemeInput,
 ): Promise<{ success: true } | { error: string }> {
   const parsed = approveThemeSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   const guard = await requireAdminInAction();
   if ("error" in guard) return { error: guard.error };
 
-  const { themeId, name, description, matching_guide, emoji } = parsed.data;
+  const { themeId, name, description, matchingGuide, emoji } = parsed.data;
   const result = await updateThemeMutation(themeId, {
     name,
     description,
-    matching_guide,
+    matching_guide: matchingGuide,
     emoji,
     status: "verified",
     verified_at: new Date().toISOString(),
@@ -149,13 +141,15 @@ export async function rejectEmergingThemeAction(
   input: RejectEmergingThemeInput,
 ): Promise<{ success: true } | { error: string }> {
   const parsed = rejectEmergingThemeSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   const guard = await requireAdminInAction();
   if ("error" in guard) return { error: guard.error };
 
   if (parsed.data.note) {
-    console.info(
+    // TH-009: console.warn ipv info — CLAUDE.md staat alleen warn/error toe.
+    // Structured audit-log (theme_audit_log tabel) is v2-scope.
+    console.warn(
       `[rejectEmergingTheme] ${parsed.data.themeId} rejected by ${guard.user.id}: ${parsed.data.note}`,
     );
   }
@@ -177,7 +171,7 @@ export async function rejectThemeMatchAction(
   input: RejectThemeMatchInput,
 ): Promise<{ success: true; alreadyRemoved: boolean } | { error: string }> {
   const parsed = rejectThemeMatchSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   const guard = await requireAdminInAction();
   if ("error" in guard) return { error: guard.error };
@@ -215,7 +209,7 @@ export async function regenerateMeetingThemesAction(
   input: RegenerateMeetingThemesInput,
 ): Promise<{ success: true; matches: number; proposals: number } | { error: string }> {
   const parsed = regenerateMeetingThemesSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid input" };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
 
   const guard = await requireAdminInAction();
   if ("error" in guard) return { error: guard.error };

@@ -9,7 +9,7 @@ export default function ThemeNotFound() {
       </p>
       <Link
         href="/"
-        className="mt-6 inline-block rounded-full bg-[#006B3F] px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+        className="mt-6 inline-block rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
       >
         Terug naar dashboard
       </Link>

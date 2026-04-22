@@ -46,7 +46,7 @@ const VALID_INPUT = {
   themeId: THEME_ID,
   name: "Team capaciteit & hiring",
   description: "Over hiring + rolverdeling.",
-  matching_guide:
+  matchingGuide:
     "Valt onder als het over vacatures, hiring of rolverdeling gaat. Valt er niet onder als het persoonlijke werkdruk betreft.",
   emoji: "👥" as const,
 };
@@ -83,7 +83,8 @@ describe("updateThemeAction — whitelist", () => {
     expect(mockUpdateTheme).toHaveBeenCalledWith(THEME_ID, {
       name: VALID_INPUT.name,
       description: VALID_INPUT.description,
-      matching_guide: VALID_INPUT.matching_guide,
+      // Action mapt client-side camelCase → DB snake_case.
+      matching_guide: VALID_INPUT.matchingGuide,
       emoji: VALID_INPUT.emoji,
     });
     expect(mockRevalidate).toHaveBeenCalledWith("/");
@@ -98,13 +99,14 @@ describe("updateThemeAction — Zod validatie", () => {
 
   it("weigert een te korte name", async () => {
     const result = await updateThemeAction({ ...VALID_INPUT, name: "A" });
-    expect(result).toEqual({ error: "Invalid input" });
+    // TH-009: Zod-fails geven field-error message terug i.p.v. generiek "Invalid input".
+    expect("error" in result && typeof result.error === "string").toBe(true);
     expect(mockUpdateTheme).not.toHaveBeenCalled();
   });
 
-  it("weigert een matching_guide korter dan 20 chars", async () => {
-    const result = await updateThemeAction({ ...VALID_INPUT, matching_guide: "te kort" });
-    expect(result).toEqual({ error: "Invalid input" });
+  it("weigert een matchingGuide korter dan 20 chars", async () => {
+    const result = await updateThemeAction({ ...VALID_INPUT, matchingGuide: "te kort" });
+    expect("error" in result && typeof result.error === "string").toBe(true);
   });
 
   it("weigert een emoji buiten de THEME_EMOJIS shortlist", async () => {
@@ -113,7 +115,7 @@ describe("updateThemeAction — Zod validatie", () => {
       // @ts-expect-error — bewust type-breaker voor de test
       emoji: "😅",
     });
-    expect(result).toEqual({ error: "Invalid input" });
+    expect("error" in result && typeof result.error === "string").toBe(true);
   });
 
   it("geeft DB-error door als mutation faalt", async () => {
@@ -145,7 +147,7 @@ describe("archiveThemeAction", () => {
     mockUser.value = { id: "admin" };
     mockIsAdmin.mockResolvedValue(true);
     const result = await archiveThemeAction({ themeId: "not-a-uuid" });
-    expect(result).toEqual({ error: "Invalid input" });
+    expect("error" in result && typeof result.error === "string").toBe(true);
     expect(mockArchiveTheme).not.toHaveBeenCalled();
   });
 });

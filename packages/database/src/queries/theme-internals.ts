@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
-import type { ThemeRow } from "./themes";
 
 /**
  * TH-008 — gedeelde helpers voor alle theme-query-files. Kolom-lijst en
@@ -8,8 +7,19 @@ import type { ThemeRow } from "./themes";
  * dus hier geëxtraheerd om circulaire imports te vermijden.
  */
 
-export const THEME_COLUMNS =
+/**
+ * TH-009 — split van THEME_COLUMNS in BASIC/FULL. Pills + donut
+ * (`fetchWindowAggregation`) hebben alleen id/slug/name/emoji +
+ * mention_count + last_mentioned_at nodig. Over de wire scheelt dat ~60%
+ * bytes per row bij grote catalogs (Supabase encodeert tekst).
+ *
+ * `THEME_COLUMNS` is een re-export van FULL voor backwards-compat van
+ * bestaande call-sites (listVerifiedThemes / getThemeBySlug / listEmergingThemes).
+ */
+export const THEME_COLUMNS_BASIC = "id, slug, name, emoji, mention_count, last_mentioned_at";
+export const THEME_COLUMNS_FULL =
   "id, slug, name, emoji, description, matching_guide, status, created_by_agent, verified_at, verified_by, archived_at, last_mentioned_at, mention_count, created_at, updated_at";
+export const THEME_COLUMNS = THEME_COLUMNS_FULL;
 
 /** Max aantal recente rejections dat als negative_example in de ThemeTagger-prompt landt. */
 export const NEGATIVE_EXAMPLES_PER_THEME = 3;
@@ -23,13 +33,28 @@ export function windowStartIso(windowDays: number): string {
 }
 
 /**
+ * Subset van `ThemeRow` die door `fetchWindowAggregation` wordt opgehaald.
+ * TH-009: sinds de BASIC-kolomsplitsing bevat de DB-response voor pills +
+ * donut alleen deze velden. Een volledige `ThemeRow` casten zou liegen
+ * over welke kolommen er werkelijk in zitten.
+ */
+export interface ThemeBasicRow {
+  id: string;
+  slug: string;
+  name: string;
+  emoji: string;
+  mention_count: number;
+  last_mentioned_at: string | null;
+}
+
+/**
  * Samengestelde aggregatie: alle verified themes met ≥1 match-history +
  * per-theme counts en laatste-match-timestamps binnen het window. Shared
  * tussen dashboard pills en donut zodat beiden met één preload toekunnen
  * (TH-008 / FIX-TH-804).
  */
 export interface WindowAggregation {
-  themes: ThemeRow[];
+  themes: ThemeBasicRow[];
   counts: Map<string, number>;
   lastSeen: Map<string, string>;
   windowDays: number;
@@ -55,8 +80,10 @@ export async function fetchWindowAggregation(
   const db = client ?? getAdminClient();
   const since = windowStartIso(windowDays);
 
+  // TH-009: use THEME_COLUMNS_BASIC — pills + donut hebben alleen de 6
+  // displaybare velden nodig, geen description/matching_guide/audit-fields.
   const [themesRes, linksRes] = await Promise.all([
-    db.from("themes").select(THEME_COLUMNS).eq("status", "verified").gt("mention_count", 0),
+    db.from("themes").select(THEME_COLUMNS_BASIC).eq("status", "verified").gt("mention_count", 0),
     db.from("meeting_themes").select("theme_id, created_at").gte("created_at", since),
   ]);
 
@@ -64,7 +91,7 @@ export async function fetchWindowAggregation(
   if (linksRes.error)
     throw new Error(`meeting_themes aggregation failed: ${linksRes.error.message}`);
 
-  const themes = (themesRes.data ?? []) as ThemeRow[];
+  const themes = (themesRes.data ?? []) as ThemeBasicRow[];
   const counts = new Map<string, number>();
   const lastSeen = new Map<string, string>();
 

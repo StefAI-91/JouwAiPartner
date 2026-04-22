@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 528 |
-| Exported functions/constants | 825 |
-| Exported types/interfaces | 243 |
+| Files scanned | 529 |
+| Exported functions/constants | 829 |
+| Exported types/interfaces | 245 |
 | Cross-package imports | 653 |
 | Critical integration points (3+ packages) | 15 |
 
@@ -191,11 +191,17 @@
 
 **Types:** `MeetingSegment`, `ProjectSegment`
 
+### `queries/meeting-themes.ts`
+
+**Exports:**
+- `listTaggedMeetingIds()`
+
 ### `queries/meetings.ts`
 
 **Exports:**
 - `getVerifiedMeetingById()`
 - `listVerifiedMeetings()`
+- `listVerifiedMeetingIdsOrderedByDate()`
 - `listBoardMeetings()`
 - `getMeetingByFirefliesId()`
 - `getExistingFirefliesIds()`
@@ -219,7 +225,7 @@
 - `getMeetingForBackfill()`
 - `getMeetingByFirefliesIdForReprocess()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
 
 ### `queries/needs.ts`
 
@@ -391,11 +397,13 @@
 **Exports:**
 - `windowStartIso()`
 - `fetchWindowAggregation()`
+- `THEME_COLUMNS_BASIC`
+- `THEME_COLUMNS_FULL`
 - `THEME_COLUMNS`
 - `NEGATIVE_EXAMPLES_PER_THEME`
 - `DEFAULT_WINDOW_DAYS`
 
-**Types:** `WindowAggregation`
+**Types:** `ThemeBasicRow`, `WindowAggregation`
 
 ### `queries/theme-review.ts`
 
@@ -1993,7 +2001,6 @@
 - `@repo/auth/access` → isAdmin, requireAdminInAction
 - `@repo/database/mutations/themes` → updateTheme, archiveTheme
 - `@repo/database/mutations/meeting-themes` → rejectThemeMatchAsAdmin, recalculateThemeStats
-- `@repo/database/queries/themes` → getThemeBySlug
 - `@repo/ai/pipeline/steps/tag-themes` → runTagThemesStep
 - `@repo/database/queries/meetings` → getVerifiedMeetingById
 
@@ -2676,6 +2683,7 @@
 
 **Depends on:**
 - `@repo/ui/format` → formatDate
+- `@repo/ui/badge` → Badge
 - (type) `@repo/database/queries/themes` → ThemeMeetingEntry
 
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/overview-tab.tsx`
@@ -4189,11 +4197,11 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 49 | - | - | - | - | 49 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 51 | 16 | 31 | - | - | 98 |
+| Cockpit Server Actions | 50 | 16 | 31 | - | - | 97 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 49 | 7 | 2 | 84 | - | 142 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 89 | 6 | 3 | 30 | - | 128 |
+| Cockpit Pages | 89 | 6 | 3 | 31 | - | 129 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4708,7 +4716,7 @@ Which queries are used where across the codebase.
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
-| `getThemeBySlug()` | `apps/cockpit/src/actions/themes.ts`, `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeBySlug()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/userback-issues.ts
 

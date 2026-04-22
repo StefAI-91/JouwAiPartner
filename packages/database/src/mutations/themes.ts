@@ -63,14 +63,13 @@ export async function updateTheme(
   client?: SupabaseClient,
 ): Promise<{ success: true } | { error: string }> {
   const db = client ?? getAdminClient();
-  const payload: Record<string, unknown> = {};
-  if (updates.name !== undefined) payload.name = updates.name;
-  if (updates.emoji !== undefined) payload.emoji = updates.emoji;
-  if (updates.description !== undefined) payload.description = updates.description;
-  if (updates.matching_guide !== undefined) payload.matching_guide = updates.matching_guide;
-  if (updates.status !== undefined) payload.status = updates.status;
-  if (updates.verified_at !== undefined) payload.verified_at = updates.verified_at;
-  if (updates.verified_by !== undefined) payload.verified_by = updates.verified_by;
+
+  // TH-009: strip undefined-velden uit `updates`. Elk `UpdateThemeInput`-veld is
+  // optional, dus deze filter houdt de DB-update minimal (en voorkomt dat null
+  // per ongeluk opnames overschrijft).
+  const payload = Object.fromEntries(
+    Object.entries(updates).filter(([, value]) => value !== undefined),
+  );
 
   if (Object.keys(payload).length === 0) {
     return { success: true };

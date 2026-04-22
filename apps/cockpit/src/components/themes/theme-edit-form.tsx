@@ -66,7 +66,7 @@ export function ThemeEditForm({ theme, onDone, onCancel }: ThemeEditFormProps) {
         themeId: theme.id,
         name: name.trim(),
         description: description.trim(),
-        matching_guide: matchingGuide.trim(),
+        matchingGuide: matchingGuide.trim(),
         emoji,
       });
       if ("error" in result) {

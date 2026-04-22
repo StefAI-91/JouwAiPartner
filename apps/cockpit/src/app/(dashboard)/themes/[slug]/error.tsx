@@ -9,7 +9,7 @@ export default function ThemeDetailError({ reset }: { reset: () => void }) {
       </p>
       <button
         onClick={reset}
-        className="mt-6 rounded-full bg-[#006B3F] px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+        className="mt-6 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
       >
         Opnieuw proberen
       </button>

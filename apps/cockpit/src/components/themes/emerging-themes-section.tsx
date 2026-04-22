@@ -27,8 +27,8 @@ export async function EmergingThemesSection({ emerging }: { emerging: EmergingTh
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           De ThemeTagger stelde {emerging.length} nieuw{emerging.length === 1 ? "" : "e"} thema
-          {emerging.length === 1 ? "" : "&apos;s"} voor. Bevestig of wijs af voordat ze op het
-          dashboard verschijnen.
+          {emerging.length === 1 ? "" : "’s"} voor. Bevestig of wijs af voordat ze op het dashboard
+          verschijnen.
         </p>
       </div>
       <div className="space-y-3">
