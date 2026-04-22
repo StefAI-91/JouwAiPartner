@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 511 |
-| Exported functions/constants | 792 |
-| Exported types/interfaces | 226 |
-| Cross-package imports | 616 |
-| Critical integration points (3+ packages) | 14 |
+| Files scanned | 521 |
+| Exported functions/constants | 808 |
+| Exported types/interfaces | 238 |
+| Cross-package imports | 639 |
+| Critical integration points (3+ packages) | 15 |
 
 ## Package Dependency Flow
 
@@ -377,8 +377,12 @@
 - `getThemeBySlug()`
 - `listTopActiveThemes()`
 - `getThemeShareDistribution()`
+- `getThemeRecentActivity()`
+- `getThemeMeetings()`
+- `getThemeDecisions()`
+- `getThemeParticipants()`
 
-**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`, `TopActiveTheme`, `ThemeShareSlice`, `ThemeShareDistribution`
+**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`, `TopActiveTheme`, `ThemeShareSlice`, `ThemeShareDistribution`, `ThemeRecentActivity`, `ThemeMeetingEntry`, `ThemeDecisionEntry`, `ThemeParticipantEntry`
 
 ### `queries/userback-issues.ts`
 
@@ -1938,6 +1942,19 @@
 - `@repo/database/mutations/team` → upsertProfile, updateProfileRole, clearProjectAccess, insertProjectAccess
 - `@repo/database/validations/team` → inviteUserSchema, updateUserAccessSchema, deactivateUserSchema, type InviteUserInput, type UpdateUserAccessInput, type DeactivateUserInput
 
+### `apps/cockpit/src/actions/themes.ts`
+
+**Exports:**
+- `updateThemeAction()`
+- `archiveThemeAction()`
+- `canEditThemesAction()`
+
+**Depends on:**
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+- `@repo/database/mutations/themes` → updateTheme, archiveTheme
+- `@repo/database/queries/themes` → getThemeBySlug
+
 ### `apps/cockpit/src/actions/weekly-summary.ts`
 
 **Exports:**
@@ -2591,7 +2608,68 @@
 - `dynamic`
 
 **Depends on:**
-- `@repo/database/queries/themes` → getThemeBySlug
+- `@repo/database/queries/themes` → getThemeBySlug, getThemeRecentActivity, getThemeMeetings, getThemeDecisions, getThemeParticipants
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+
+### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/decisions-tab.tsx`
+
+**Exports:**
+- `DecisionsTab()`
+
+**Types:** `DecisionsTabProps`
+
+**Depends on:**
+- `@repo/ui/format` → formatDate
+- (type) `@repo/database/queries/themes` → ThemeDecisionEntry
+
+### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/meetings-tab.tsx`
+
+**Exports:**
+- `MeetingsTab()`
+
+**Types:** `MeetingsTabProps`
+
+**Depends on:**
+- `@repo/ui/format` → formatDate
+- (type) `@repo/database/queries/themes` → ThemeMeetingEntry
+
+### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/overview-tab.tsx`
+
+**Exports:**
+- `OverviewTab()`
+
+**Types:** `OverviewTabProps`
+
+**Depends on:**
+- `@repo/ui/format` → formatDate
+- (type) `@repo/database/queries/themes` → ThemeMeetingEntry, ThemeDecisionEntry
+
+### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/people-tab.tsx`
+
+**Exports:**
+- `PeopleTab()`
+
+**Types:** `PeopleTabProps`
+
+**Depends on:**
+- (type) `@repo/database/queries/themes` → ThemeParticipantEntry
+
+### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/questions-tab.tsx`
+
+**Exports:**
+- `QuestionsTab()`
+
+### `apps/cockpit/src/app/(dashboard)/themes/[slug]/theme-detail-view.tsx`
+
+**Exports:**
+- `ThemeDetailView()`
+
+**Types:** `ThemeDetailViewProps`
+
+**Depends on:**
+- (type) `@repo/database/queries/themes` → ThemeRow
+- `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
 
 ### `apps/cockpit/src/app/auth/callback/route.ts`
 
@@ -3469,6 +3547,41 @@
 **Depends on:**
 - (type) `@repo/database/queries/themes` → ThemeShareSlice
 
+### `apps/cockpit/src/components/themes/emoji-picker-popover.tsx`
+
+**Exports:**
+- `EmojiPickerPopover()`
+
+**Types:** `EmojiPickerPopoverProps`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
+- `@repo/ai/agents/theme-emojis` → THEME_EMOJIS, THEME_EMOJI_FALLBACK, type ThemeEmoji
+
+### `apps/cockpit/src/components/themes/theme-edit-form.tsx`
+
+**Exports:**
+- `ThemeEditForm()`
+
+**Types:** `ThemeEditFormProps`
+
+**Depends on:**
+- (type) `@repo/database/queries/themes` → ThemeRow
+- (type) `@repo/ai/agents/theme-emojis` → ThemeEmoji
+- `@repo/ui/button` → Button
+- `@repo/ui/utils` → cn
+
+### `apps/cockpit/src/components/themes/theme-header.tsx`
+
+**Exports:**
+- `ThemeHeader()`
+
+**Types:** `ThemeHeaderProps`
+
+**Depends on:**
+- `@repo/ui/format` → timeAgoDays
+- (type) `@repo/database/queries/themes` → ThemeRow
+
 ### `apps/cockpit/src/components/themes/theme-pill.tsx`
 
 **Exports:**
@@ -3999,11 +4112,11 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 48 | - | - | - | - | 48 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 47 | 15 | 29 | - | - | 91 |
+| Cockpit Server Actions | 49 | 15 | 31 | - | - | 95 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 45 | 6 | - | 75 | - | 126 |
+| Cockpit Components | 47 | 8 | - | 79 | - | 134 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 82 | 6 | 1 | 26 | - | 115 |
+| Cockpit Pages | 87 | 6 | 3 | 30 | - | 126 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4031,6 +4144,7 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
+| `apps/cockpit/src/components/themes/theme-edit-form.tsx` | database, ai, ui | 3 |
 | `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
@@ -4246,6 +4360,13 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 | `clearProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
+
+### mutations/themes.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `updateTheme()` | `apps/cockpit/src/actions/themes.ts` |
+| `archiveTheme()` | `apps/cockpit/src/actions/themes.ts` |
 
 ## Query Usage Map
 
@@ -4480,9 +4601,13 @@ Which queries are used where across the codebase.
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
-| `getThemeBySlug()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeBySlug()` | `apps/cockpit/src/actions/themes.ts`, `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 | `listTopActiveThemes()` | `apps/cockpit/src/components/themes/theme-pills-strip.tsx` |
 | `getThemeShareDistribution()` | `apps/cockpit/src/components/themes/time-spent-donut-section.tsx` |
+| `getThemeRecentActivity()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeMeetings()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeDecisions()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeParticipants()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/userback-issues.ts
 

@@ -8,6 +8,9 @@ import {
   listTopActiveThemes,
   getThemeShareDistribution,
   getThemeBySlug,
+  getThemeRecentActivity,
+  getThemeMeetings,
+  getThemeDecisions,
 } from "../../src/queries/themes";
 
 let db: ReturnType<typeof getTestClient>;
@@ -157,6 +160,83 @@ describeWithDb("queries/themes", () => {
       await seedMatch(MEETING_IDS.m1, THEME_IDS.strategy, recent);
       const top = await listTopActiveThemes({ limit: 2 }, db);
       expect(top).toHaveLength(2);
+    });
+  });
+
+  describe("getThemeRecentActivity (TH-005)", () => {
+    it("telt alleen matches binnen het window en geeft laatste match-tijd ongeacht window", async () => {
+      const recent = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
+      const long = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.hiring, recent);
+      await seedMatch(MEETING_IDS.m2, THEME_IDS.hiring, long);
+
+      const activity = await getThemeRecentActivity(THEME_IDS.hiring, { windowDays: 30 }, db);
+      expect(activity.mentions).toBe(1);
+      expect(activity.lastMentionedAt).toBe(recent);
+    });
+
+    it("mentions=0 als er geen matches zijn", async () => {
+      const activity = await getThemeRecentActivity(THEME_IDS.hiring, {}, db);
+      expect(activity.mentions).toBe(0);
+      expect(activity.lastMentionedAt).toBeNull();
+    });
+  });
+
+  describe("getThemeMeetings (TH-005)", () => {
+    it("retourneert matches desc met evidence_quote + confidence", async () => {
+      const t1 = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+      const t2 = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.hiring, t1, "high");
+      await seedMatch(MEETING_IDS.m2, THEME_IDS.hiring, t2, "medium");
+
+      const rows = await getThemeMeetings(THEME_IDS.hiring, db);
+      expect(rows).toHaveLength(2);
+      expect(rows[0].meeting_id).toBe(MEETING_IDS.m1);
+      expect(rows[0].confidence).toBe("high");
+      expect(rows[0].evidence_quote).toBe("quote");
+    });
+  });
+
+  describe("getThemeDecisions (TH-005)", () => {
+    it("haalt alleen extractions op met type='decision'", async () => {
+      const recent = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.hiring, recent);
+
+      // Seed één decision + één need; alleen de decision moet terugkomen.
+      const decisionId = "30000000-0000-4000-8000-000000000001";
+      const needId = "30000000-0000-4000-8000-000000000002";
+      const supabase = getTestClient();
+      await supabase.from("extractions").upsert(
+        [
+          {
+            id: decisionId,
+            meeting_id: MEETING_IDS.m1,
+            type: "decision",
+            content: "We nemen twee junior devs aan.",
+            confidence: 0.9,
+          },
+          {
+            id: needId,
+            meeting_id: MEETING_IDS.m1,
+            type: "need",
+            content: "Senior dev nodig",
+            confidence: 0.8,
+          },
+        ],
+        { onConflict: "id" },
+      );
+
+      const decisions = await getThemeDecisions(THEME_IDS.hiring, db);
+      const ids = decisions.map((d) => d.extraction_id);
+      expect(ids).toContain(decisionId);
+      expect(ids).not.toContain(needId);
+
+      await supabase.from("extractions").delete().in("id", [decisionId, needId]);
+    });
+
+    it("retourneert lege array als het thema geen gekoppelde meetings heeft", async () => {
+      const decisions = await getThemeDecisions(THEME_IDS.hiring, db);
+      expect(decisions).toEqual([]);
     });
   });
 
