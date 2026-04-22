@@ -13,6 +13,17 @@
 -- dashboard-pills en donut moeten snel renderen zonder join-aggregaties.
 -- De ThemeTagger updatet deze velden bij elke match (TH-003).
 
+-- `set_updated_at()` bestaat al sinds 20260409100005_devhub_quality_fixes.sql,
+-- maar we herdefiniëren hem idempotent zodat dit migration-bestand ook op een
+-- schone DB (remote staging bijvoorbeeld) zelfstandig draait.
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- =============================================================================
 -- themes
 -- =============================================================================
