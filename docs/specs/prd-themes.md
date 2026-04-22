@@ -283,3 +283,84 @@ die is gegroeid uit jullie eigen beoordelingen.
 Dit is bewust simpel gehouden: geen model-training, geen embeddings,
 gewoon recente tekst in de prompt. Schaalt prima tot honderden
 afwijzingen per thema.
+
+---
+
+## 6. Datamodel
+
+### 6.1 Tabel: `themes`
+
+```sql
+CREATE TABLE themes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug text UNIQUE NOT NULL,
+  name text NOT NULL,
+  emoji text NOT NULL DEFAULT '🏷️',     -- uit shortlist §7
+  description text NOT NULL,             -- 1 zin, UI-display
+  matching_guide text NOT NULL,          -- 2-4 zinnen, LLM-arbiter
+  status text NOT NULL DEFAULT 'emerging'
+    CHECK (status IN ('emerging', 'verified', 'archived')),
+  created_by_agent text,                 -- 'theme_tagger' of NULL (seed)
+  verified_at timestamptz,
+  verified_by uuid REFERENCES auth.users(id),
+  archived_at timestamptz,
+  last_mentioned_at timestamptz,         -- gedenormaliseerd, voor pills
+  mention_count int NOT NULL DEFAULT 0,  -- gedenormaliseerd, voor donut
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+```
+
+### 6.2 Tabel: `meeting_themes` (junction)
+
+```sql
+CREATE TABLE meeting_themes (
+  meeting_id uuid NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
+  theme_id uuid NOT NULL REFERENCES themes(id) ON DELETE CASCADE,
+  confidence text NOT NULL
+    CHECK (confidence IN ('medium', 'high')),  -- 'low' slaan we niet op
+  evidence_quote text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (meeting_id, theme_id)
+);
+```
+
+### 6.3 Tabel: `theme_match_rejections` (feedback-loop)
+
+```sql
+CREATE TABLE theme_match_rejections (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  theme_id uuid NOT NULL REFERENCES themes(id) ON DELETE CASCADE,
+  meeting_id uuid NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
+  evidence_quote text NOT NULL,          -- de quote die de LLM gaf
+  reason text NOT NULL
+    CHECK (reason IN ('niet_substantieel', 'ander_thema', 'te_breed')),
+  rejected_by uuid NOT NULL REFERENCES auth.users(id),
+  rejected_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_rejections_theme_recent
+  ON theme_match_rejections (theme_id, rejected_at DESC);
+```
+
+### 6.4 Indexes
+
+- `themes_status_idx` op `status` — pills + donut filteren op `verified`
+- `themes_last_mentioned_idx` op `last_mentioned_at DESC` — top-N pills
+- `meeting_themes_theme_idx` op `theme_id` — detail-page meetings-tab
+- `meeting_themes_meeting_idx` op `meeting_id` — chips op meeting-card
+
+### 6.5 RLS policies (permissive v1)
+
+Zelfde lijn als `tasks` en andere core tabellen: RLS enabled, lees- en
+schrijfrecht voor alle authenticated users. Fine-grained per-rol RLS
+wordt uitgesteld tot v3 (portal), consistent met de bestaande security
+audit (`docs/security/audit-report.md`).
+
+### 6.6 Types regenereren
+
+Na de migratie draaien: `supabase gen types typescript --local`
+→ update `packages/database/src/types/database.ts`. Daarna nieuwe
+queries in `packages/database/src/queries/themes.ts` en mutations in
+`packages/database/src/mutations/themes.ts` (geen directe `.from()`
+buiten deze folders, CLAUDE.md §Database & Queries).
