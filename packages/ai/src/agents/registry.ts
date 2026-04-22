@@ -210,6 +210,20 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     promptFile: "risk_specialist.md",
     entrypoint: "packages/ai/src/pipeline/steps/risk-specialist.ts",
   },
+  {
+    id: "theme-tagger",
+    name: "Theme Tagger",
+    role: "De thema-kartograaf",
+    description:
+      "Tagt meetings met cross-meeting thema's uit een gecureerde catalogus en stelt zeer selectief een nieuw thema voor als dat écht ontbreekt. Match-first-create-second discipline, gebruikt matching_guide + negative_examples als arbiter.",
+    mascot: "🧭",
+    model: "claude-haiku-4-5-20251001",
+    modelLabel: "Haiku 4.5",
+    quadrant: "cockpit",
+    status: "building",
+    promptFile: "theme-tagger.md",
+    entrypoint: "packages/ai/src/agents/theme-tagger.ts",
+  },
 ];
 
 /**

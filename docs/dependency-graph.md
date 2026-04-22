@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 494 |
-| Exported functions/constants | 766 |
-| Exported types/interfaces | 204 |
+| Files scanned | 497 |
+| Exported functions/constants | 773 |
+| Exported types/interfaces | 213 |
 | Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -760,6 +760,27 @@
 - `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput
 - `./run-logger` → withAgentRun
 
+### `packages/ai/src/agents/theme-emojis.ts`
+
+**Exports:**
+- `THEME_EMOJIS`
+- `THEME_EMOJI_FALLBACK`
+- `ALL_THEME_EMOJIS`
+
+**Types:** `ThemeEmoji`
+
+### `packages/ai/src/agents/theme-tagger.ts`
+
+**Exports:**
+- `tagMeetingThemes()`
+
+**Types:** `ThemeContext`, `NegativeExample`, `ExtractionContext`, `MeetingContext`, `TagMeetingThemesInput`
+
+**Internal deps:**
+- `../validations/theme-tagger` → ThemeTaggerOutputSchema, type ThemeTaggerOutput
+- `./theme-emojis` → THEME_EMOJIS, THEME_EMOJI_FALLBACK
+- `./run-logger` → withAgentRun
+
 ### `packages/ai/src/agents/title-generator.ts`
 
 **Exports:**
@@ -1336,6 +1357,18 @@
 - `SummarizerOutputSchema`
 
 **Types:** `SummarizerOutput`, `ParticipantProfile`
+
+### `packages/ai/src/validations/theme-tagger.ts`
+
+**Exports:**
+- `ThemeMatchSchema`
+- `ThemeProposalSchema`
+- `ThemeTaggerOutputSchema`
+
+**Types:** `ThemeMatch`, `ThemeProposal`, `ThemeTaggerOutput`
+
+**Internal deps:**
+- `../agents/theme-emojis` → ALL_THEME_EMOJIS
 
 ### `packages/ai/src/validations/weekly-summary.ts`
 
