@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
-import { isAdmin } from "@repo/auth/access";
+import { isAdmin, requireAdminInAction } from "@repo/auth/access";
 import {
   updateTheme as updateThemeMutation,
   archiveTheme as archiveThemeMutation,
@@ -30,26 +30,6 @@ import {
 } from "@/validations/themes";
 
 /**
- * Whitelist-helper voor theme-approve/edit-acties (PRD §9.7, sprint TH-005).
- *
- * SEC-200: de sprint-tekst noemt een env-based whitelist
- * (`STEF_EMAIL` / `WOUTER_EMAIL`), maar de codebase heeft sinds DH-013 al
- * een DB-backed admin-rol op `profiles.role`. Stef en Wouter zijn de
- * gese seedde admins (AUTH-153). We gebruiken daarom `isAdmin()` als
- * enige source of truth — zo vermijden we env-drift en hoeven we geen
- * extra secrets te managen. Nieuwe admins (bijv. voor vakantie-coverage)
- * kunnen dan via de bestaande admin-team UI worden toegevoegd.
- */
-async function requireThemeApprover(): Promise<
-  { ok: true; userId: string } | { ok: false; error: "forbidden" }
-> {
-  const user = await getAuthenticatedUser();
-  if (!user?.id) return { ok: false, error: "forbidden" };
-  if (!(await isAdmin(user.id))) return { ok: false, error: "forbidden" };
-  return { ok: true, userId: user.id };
-}
-
-/**
  * FUNC-235 — Update-action voor de theme detail page. Valideert via Zod,
  * guard via isAdmin, schrijft via `updateTheme` mutation en revalidateert
  * zowel de detail-page als het dashboard (pills tonen de nieuwe
@@ -61,8 +41,8 @@ export async function updateThemeAction(
   const parsed = updateThemeSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const guard = await requireThemeApprover();
-  if (!guard.ok) return { error: guard.error };
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
 
   const { themeId, name, description, matching_guide, emoji } = parsed.data;
   const result = await updateThemeMutation(themeId, {
@@ -94,8 +74,8 @@ export async function archiveThemeAction(
   const parsed = archiveThemeSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const guard = await requireThemeApprover();
-  if (!guard.ok) return { error: guard.error };
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
 
   const result = await archiveThemeMutation(parsed.data.themeId);
   if ("error" in result) return { error: result.error };
@@ -139,8 +119,8 @@ export async function approveThemeAction(
   const parsed = approveThemeSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const guard = await requireThemeApprover();
-  if (!guard.ok) return { error: guard.error };
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
 
   const { themeId, name, description, matching_guide, emoji } = parsed.data;
   const result = await updateThemeMutation(themeId, {
@@ -150,7 +130,7 @@ export async function approveThemeAction(
     emoji,
     status: "verified",
     verified_at: new Date().toISOString(),
-    verified_by: guard.userId,
+    verified_by: guard.user.id,
   });
   if ("error" in result) return { error: result.error };
 
@@ -171,12 +151,12 @@ export async function rejectEmergingThemeAction(
   const parsed = rejectEmergingThemeSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const guard = await requireThemeApprover();
-  if (!guard.ok) return { error: guard.error };
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
 
   if (parsed.data.note) {
     console.info(
-      `[rejectEmergingTheme] ${parsed.data.themeId} rejected by ${guard.userId}: ${parsed.data.note}`,
+      `[rejectEmergingTheme] ${parsed.data.themeId} rejected by ${guard.user.id}: ${parsed.data.note}`,
     );
   }
 
@@ -199,14 +179,14 @@ export async function rejectThemeMatchAction(
   const parsed = rejectThemeMatchSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const guard = await requireThemeApprover();
-  if (!guard.ok) return { error: guard.error };
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
 
   const result = await rejectThemeMatchAsAdmin({
     meetingId: parsed.data.meetingId,
     themeId: parsed.data.themeId,
     reason: parsed.data.reason,
-    userId: guard.userId,
+    userId: guard.user.id,
   });
   if ("error" in result) return { error: result.error };
 
@@ -237,8 +217,8 @@ export async function regenerateMeetingThemesAction(
   const parsed = regenerateMeetingThemesSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid input" };
 
-  const guard = await requireThemeApprover();
-  if (!guard.ok) return { error: guard.error };
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
 
   // Meeting ophalen om title + summary aan de step te geven. Gebruikt de
   // bestaande verified-by-id helper zodat we dezelfde route-guarding volgen.

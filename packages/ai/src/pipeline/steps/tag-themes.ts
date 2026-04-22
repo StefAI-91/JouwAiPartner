@@ -3,10 +3,10 @@ import { getMeetingExtractions } from "@repo/database/queries/meetings";
 import { listVerifiedThemes } from "@repo/database/queries/themes";
 import {
   linkMeetingToThemes,
-  createEmergingTheme,
   recalculateThemeStats,
   clearMeetingThemes,
 } from "@repo/database/mutations/meeting-themes";
+import { createEmergingTheme } from "@repo/database/mutations/themes";
 
 export interface TagThemesResult {
   success: boolean;

@@ -1,23 +1,33 @@
 import { ChevronRight } from "lucide-react";
-import { listTopActiveThemes, type TopActiveTheme } from "@repo/database/queries/themes";
+import {
+  listTopActiveThemes,
+  type TopActiveTheme,
+  type WindowAggregation,
+} from "@repo/database/queries/themes";
 import { ThemePill } from "./theme-pill";
 
 /**
  * Server component — A1 uit PRD §8: horizontale strip met top-N meest
  * actieve thema's (default 8) over de laatste 30 dagen.
  *
- * Empty-state: neutrale melding die duidelijk maakt dat het gevuld raakt na
- * de eerste batch-run (TH-003). Geen scary error, geen spinner — je ziet
- * dat er nog geen data is en waarom.
+ * TH-008: accepteert optioneel `preloadedAggregation`. Het dashboard roept
+ * `fetchWindowAggregation(30)` één keer aan en deelt het resultaat tussen
+ * pills + donut (FIX-TH-804). Fallback blijft werken voor losse callers.
  */
 export async function ThemePillsStrip({
   limit = 8,
   windowDays = 30,
+  preloadedAggregation,
 }: {
   limit?: number;
   windowDays?: number;
+  preloadedAggregation?: WindowAggregation;
 } = {}) {
-  const themes: TopActiveTheme[] = await listTopActiveThemes({ limit, windowDays });
+  const themes: TopActiveTheme[] = await listTopActiveThemes({
+    limit,
+    windowDays,
+    preloaded: preloadedAggregation,
+  });
 
   if (themes.length === 0) {
     return (

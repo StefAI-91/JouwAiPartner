@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 524 |
-| Exported functions/constants | 820 |
-| Exported types/interfaces | 242 |
+| Files scanned | 528 |
+| Exported functions/constants | 825 |
+| Exported types/interfaces | 243 |
 | Cross-package imports | 653 |
-| Critical integration points (3+ packages) | 17 |
+| Critical integration points (3+ packages) | 15 |
 
 ## Package Dependency Flow
 
@@ -368,6 +368,42 @@
 
 **Types:** `TeamRole`, `ProfileRole`, `TeamMember`, `TeamMemberWithAccess`
 
+### `queries/theme-dashboard.ts`
+
+**Exports:**
+- `listTopActiveThemes()`
+- `getThemeShareDistribution()`
+
+**Types:** `TopActiveTheme`, `ThemeShareSlice`, `ThemeShareDistribution`
+
+### `queries/theme-detail.ts`
+
+**Exports:**
+- `getThemeRecentActivity()`
+- `getThemeMeetings()`
+- `getThemeDecisions()`
+- `getThemeParticipants()`
+
+**Types:** `ThemeRecentActivity`, `ThemeMeetingEntry`, `ThemeDecisionEntry`, `ThemeParticipantEntry`
+
+### `queries/theme-internals.ts`
+
+**Exports:**
+- `windowStartIso()`
+- `fetchWindowAggregation()`
+- `THEME_COLUMNS`
+- `NEGATIVE_EXAMPLES_PER_THEME`
+- `DEFAULT_WINDOW_DAYS`
+
+**Types:** `WindowAggregation`
+
+### `queries/theme-review.ts`
+
+**Exports:**
+- `listEmergingThemes()`
+
+**Types:** `EmergingThemeProposalMeeting`, `EmergingThemeRow`
+
 ### `queries/themes.ts`
 
 **Exports:**
@@ -375,15 +411,8 @@
 - `listVerifiedThemes()`
 - `listVerifiedThemes()`
 - `getThemeBySlug()`
-- `listTopActiveThemes()`
-- `getThemeShareDistribution()`
-- `getThemeRecentActivity()`
-- `getThemeMeetings()`
-- `getThemeDecisions()`
-- `listEmergingThemes()`
-- `getThemeParticipants()`
 
-**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`, `TopActiveTheme`, `ThemeShareSlice`, `ThemeShareDistribution`, `ThemeRecentActivity`, `ThemeMeetingEntry`, `ThemeDecisionEntry`, `ThemeParticipantEntry`, `EmergingThemeProposalMeeting`, `EmergingThemeRow`
+**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`
 
 ### `queries/userback-issues.ts`
 
@@ -521,12 +550,11 @@
 **Exports:**
 - `linkMeetingToThemes()`
 - `clearMeetingThemes()`
-- `createEmergingTheme()`
 - `recalculateThemeStats()`
 - `deleteMatchesForMeeting()`
 - `rejectThemeMatchAsAdmin()`
 
-**Types:** `MeetingThemeMatch`, `EmergingThemeProposal`
+**Types:** `MeetingThemeMatch`
 
 ### `mutations/meetings.ts`
 
@@ -636,9 +664,10 @@
 **Exports:**
 - `insertTheme()`
 - `updateTheme()`
+- `createEmergingTheme()`
 - `archiveTheme()`
 
-**Types:** `InsertThemeInput`, `UpdateThemeInput`
+**Types:** `InsertThemeInput`, `UpdateThemeInput`, `EmergingThemeProposal`
 
 ## AI Agents
 
@@ -1147,7 +1176,8 @@
 **Depends on:**
 - `@repo/database/queries/meetings` → getMeetingExtractions
 - `@repo/database/queries/themes` → listVerifiedThemes
-- `@repo/database/mutations/meeting-themes` → linkMeetingToThemes, createEmergingTheme, recalculateThemeStats, clearMeetingThemes
+- `@repo/database/mutations/meeting-themes` → linkMeetingToThemes, recalculateThemeStats, clearMeetingThemes
+- `@repo/database/mutations/themes` → createEmergingTheme
 
 **Internal deps:**
 - `../../agents/theme-tagger` → tagMeetingThemes, type TagMeetingThemesInput
@@ -1960,7 +1990,7 @@
 
 **Depends on:**
 - `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
+- `@repo/auth/access` → isAdmin, requireAdminInAction
 - `@repo/database/mutations/themes` → updateTheme, archiveTheme
 - `@repo/database/mutations/meeting-themes` → rejectThemeMatchAsAdmin, recalculateThemeStats
 - `@repo/database/queries/themes` → getThemeBySlug
@@ -2479,6 +2509,7 @@
 - `@repo/database/queries/tasks` → listAllTasks
 - `@repo/database/queries/people` → listPeopleForAssignment
 - `@repo/database/queries/management-insights` → getManagementInsights
+- `@repo/database/queries/themes` → fetchWindowAggregation
 - `@repo/ai/validations/management-insights` → ManagementInsightsOutputSchema
 
 ### `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`
@@ -3604,7 +3635,6 @@
 - `@repo/ui/utils` → cn
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/themes` → EmergingThemeRow, EmergingThemeProposalMeeting
-- (type) `@repo/ai/agents/theme-emojis` → ThemeEmoji
 
 ### `apps/cockpit/src/components/themes/theme-edit-form.tsx`
 
@@ -3615,7 +3645,6 @@
 
 **Depends on:**
 - (type) `@repo/database/queries/themes` → ThemeRow
-- (type) `@repo/ai/agents/theme-emojis` → ThemeEmoji
 - `@repo/ui/button` → Button
 - `@repo/ui/utils` → cn
 
@@ -3648,7 +3677,7 @@
 - `ThemePillsStrip()`
 
 **Depends on:**
-- `@repo/database/queries/themes` → listTopActiveThemes, type TopActiveTheme
+- `@repo/database/queries/themes` → listTopActiveThemes, type TopActiveTheme, type WindowAggregation
 
 ### `apps/cockpit/src/components/themes/time-spent-donut-section.tsx`
 
@@ -3656,7 +3685,7 @@
 - `TimeSpentDonutSection()`
 
 **Depends on:**
-- `@repo/database/queries/themes` → getThemeShareDistribution
+- `@repo/database/queries/themes` → getThemeShareDistribution, type WindowAggregation
 
 ### `apps/cockpit/src/components/themes/time-spent-donut-skeleton.tsx`
 
@@ -4158,13 +4187,13 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 48 | - | - | - | - | 48 |
+| AI Pipeline | 49 | - | - | - | - | 49 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 51 | 16 | 31 | - | - | 98 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 49 | 9 | 2 | 84 | - | 144 |
+| Cockpit Components | 49 | 7 | 2 | 84 | - | 142 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 88 | 6 | 3 | 30 | - | 127 |
+| Cockpit Pages | 89 | 6 | 3 | 30 | - | 128 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4193,8 +4222,6 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
-| `apps/cockpit/src/components/themes/theme-approval-card.tsx` | ui, database, ai | 3 |
-| `apps/cockpit/src/components/themes/theme-edit-form.tsx` | database, ai, ui | 3 |
 | `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
@@ -4309,7 +4336,6 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `linkMeetingToThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `clearMeetingThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
-| `createEmergingTheme()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/tag-themes.ts`, `apps/cockpit/src/actions/themes.ts` |
 | `rejectThemeMatchAsAdmin()` | `apps/cockpit/src/actions/themes.ts` |
 
@@ -4417,6 +4443,7 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `updateTheme()` | `apps/cockpit/src/actions/themes.ts` |
+| `createEmergingTheme()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `archiveTheme()` | `apps/cockpit/src/actions/themes.ts` |
 
 ## Query Usage Map
@@ -4645,6 +4672,35 @@ Which queries are used where across the codebase.
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 
+### queries/theme-dashboard.ts
+
+| Query | Used in |
+|-------|---------|
+| `listTopActiveThemes()` | `apps/cockpit/src/components/themes/theme-pills-strip.tsx` |
+| `getThemeShareDistribution()` | `apps/cockpit/src/components/themes/time-spent-donut-section.tsx` |
+
+### queries/theme-detail.ts
+
+| Query | Used in |
+|-------|---------|
+| `getThemeRecentActivity()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeMeetings()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeDecisions()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeParticipants()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+
+### queries/theme-internals.ts
+
+| Query | Used in |
+|-------|---------|
+| `windowStartIso()` | `packages/database/src/queries/theme-detail.ts` |
+| `fetchWindowAggregation()` | `packages/database/src/queries/theme-dashboard.ts`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
+
+### queries/theme-review.ts
+
+| Query | Used in |
+|-------|---------|
+| `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
+
 ### queries/themes.ts
 
 | Query | Used in |
@@ -4653,13 +4709,6 @@ Which queries are used where across the codebase.
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `getThemeBySlug()` | `apps/cockpit/src/actions/themes.ts`, `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
-| `listTopActiveThemes()` | `apps/cockpit/src/components/themes/theme-pills-strip.tsx` |
-| `getThemeShareDistribution()` | `apps/cockpit/src/components/themes/time-spent-donut-section.tsx` |
-| `getThemeRecentActivity()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
-| `getThemeMeetings()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
-| `getThemeDecisions()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
-| `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
-| `getThemeParticipants()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/userback-issues.ts
 

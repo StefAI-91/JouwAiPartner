@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
+import { slugify } from "../lib/slugify";
 
 export interface InsertThemeInput {
   slug: string;
@@ -78,6 +79,48 @@ export async function updateTheme(
   const { error } = await db.from("themes").update(payload).eq("id", themeId);
   if (error) return { error: error.message };
   return { success: true };
+}
+
+export interface EmergingThemeProposal {
+  name: string;
+  description: string;
+  matching_guide: string;
+  emoji: string;
+  created_by_agent?: string;
+}
+
+/**
+ * Maak een nieuw `emerging` thema aan. De slug wordt afgeleid van `name`
+ * (kebab-case); bij UNIQUE-collision geeft PG een duidelijke fout terug die
+ * de caller logt. Niet silent renamen — emerging themes horen menselijk
+ * beoordeeld te worden in de review-flow (TH-006).
+ *
+ * TH-008: verhuisd vanuit `mutations/meeting-themes.ts` — deze mutation
+ * raakt alleen de `themes` tabel, hoort dus hier thuis (SRP).
+ */
+export async function createEmergingTheme(
+  proposal: EmergingThemeProposal,
+  client?: SupabaseClient,
+): Promise<{ success: true; id: string; slug: string } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const slug = slugify(proposal.name);
+
+  const { data, error } = await db
+    .from("themes")
+    .insert({
+      slug,
+      name: proposal.name,
+      description: proposal.description,
+      matching_guide: proposal.matching_guide,
+      emoji: proposal.emoji,
+      status: "emerging",
+      created_by_agent: proposal.created_by_agent ?? "theme_tagger",
+    })
+    .select("id, slug")
+    .single();
+
+  if (error) return { error: error.message };
+  return { success: true, id: data.id, slug: data.slug };
 }
 
 /**

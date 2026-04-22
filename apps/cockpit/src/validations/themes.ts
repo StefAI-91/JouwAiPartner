@@ -2,14 +2,26 @@ import { z } from "zod";
 import { ALL_THEME_EMOJIS } from "@repo/ai/agents/theme-emojis";
 
 /**
+ * TH-008 — één bron van waarheid voor de minimum-lengtes op theme-velden.
+ * Zowel de Zod-schemas hieronder als `useThemeFormState` (client-side
+ * canSubmit-check) gebruiken deze constanten zodat edit-form en
+ * approval-card identiek valideren.
+ */
+export const THEME_NAME_MIN = 2;
+export const THEME_NAME_MAX = 80;
+export const THEME_DESC_MIN = 5;
+export const THEME_DESC_MAX = 200;
+export const THEME_GUIDE_MIN = 20;
+
+/**
  * Zod-schema voor de edit-form op de theme detail page (TH-005).
  * Gedeeld met de updateThemeAction + review-approve flow (TH-006).
  */
 export const updateThemeSchema = z.object({
   themeId: z.string().uuid(),
-  name: z.string().min(2).max(80),
-  description: z.string().min(5).max(200),
-  matching_guide: z.string().min(20),
+  name: z.string().min(THEME_NAME_MIN).max(THEME_NAME_MAX),
+  description: z.string().min(THEME_DESC_MIN).max(THEME_DESC_MAX),
+  matching_guide: z.string().min(THEME_GUIDE_MIN),
   emoji: z.enum(ALL_THEME_EMOJIS),
 });
 

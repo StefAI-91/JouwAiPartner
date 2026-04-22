@@ -7,14 +7,6 @@ export interface MeetingThemeMatch {
   evidenceQuote: string;
 }
 
-export interface EmergingThemeProposal {
-  name: string;
-  description: string;
-  matching_guide: string;
-  emoji: string;
-  created_by_agent?: string;
-}
-
 /**
  * Insert meeting-theme matches. Upsert op composite PK (meeting_id, theme_id):
  * re-tag van dezelfde meeting overschrijft de eerdere matches voor hetzelfde
@@ -56,37 +48,6 @@ export async function clearMeetingThemes(
   const { error } = await db.from("meeting_themes").delete().eq("meeting_id", meetingId);
   if (error) return { error: error.message };
   return { success: true };
-}
-
-/**
- * Maak een nieuw `emerging` thema aan. De slug wordt afgeleid van `name`
- * (kebab-case); bij UNIQUE-collision geeft PG een duidelijke fout terug die
- * de caller logt. Niet silent renamen — emerging themes horen menselijk
- * beoordeeld te worden in de review-flow (TH-006).
- */
-export async function createEmergingTheme(
-  proposal: EmergingThemeProposal,
-  client?: SupabaseClient,
-): Promise<{ success: true; id: string; slug: string } | { error: string }> {
-  const db = client ?? getAdminClient();
-  const slug = slugify(proposal.name);
-
-  const { data, error } = await db
-    .from("themes")
-    .insert({
-      slug,
-      name: proposal.name,
-      description: proposal.description,
-      matching_guide: proposal.matching_guide,
-      emoji: proposal.emoji,
-      status: "emerging",
-      created_by_agent: proposal.created_by_agent ?? "theme_tagger",
-    })
-    .select("id, slug")
-    .single();
-
-  if (error) return { error: error.message };
-  return { success: true, id: data.id, slug: data.slug };
 }
 
 /**
@@ -179,14 +140,4 @@ export async function rejectThemeMatchAsAdmin(
   if (insErr) return { error: insErr.message };
 
   return { success: true, alreadyRemoved: false };
-}
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/\p{M}/gu, "") // strip combining diacritics via Unicode mark property
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-");
 }

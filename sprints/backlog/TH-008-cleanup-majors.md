@@ -1,4 +1,4 @@
-# Micro Sprint TH-8: Cleanup majors (DRY, SRP, query-efficiency)
+# Micro Sprint TH-008: Cleanup majors (DRY, SRP, query-efficiency)
 
 ## Doel
 
@@ -6,17 +6,17 @@ Acht major findings uit de quality-review oplossen die op korte termijn werken m
 
 ## Requirements
 
-| ID         | Beschrijving                                                                                                                |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------- |
-| FIX-TH-801 | `requireThemeApprover` verwijderd; `requireAdminInAction()` uit `@repo/auth/access` gebruikt in alle 4 theme Server Actions |
-| FIX-TH-802 | `createEmergingTheme` + `slugify` verhuisd van `mutations/meeting-themes.ts` naar `mutations/themes.ts` (SRP)               |
-| FIX-TH-803 | `slugify` als gedeelde helper in `packages/database/src/lib/slugify.ts` (herbruikbaar voor toekomstige entities)            |
-| FIX-TH-804 | Dashboard-fetch consolidatie: 1× `fetchWindowAggregation` voor pills + donut i.p.v. 2× parallel                             |
-| FIX-TH-805 | `listTopActiveThemes` + `getThemeShareDistribution` gebruiken denormalized `mention_count` via DB-filter + order + limit    |
-| FIX-TH-806 | `getThemeDecisions` + `getThemeParticipants` gemergde of nested-relational fetch i.p.v. 2 roundtrips                        |
-| FIX-TH-807 | `useThemeFormState` hook in `apps/cockpit/src/hooks/` — hergebruikt door `theme-edit-form` + `theme-approval-card`          |
-| FIX-TH-808 | `queries/themes.ts` gesplitst in 4 files (base / dashboard / detail / review) elk onder 200 regels                          |
-| FIX-TH-809 | Index `meeting_themes_created_at_idx` op `(created_at DESC)` toegevoegd via migration                                       |
+| ID         | Beschrijving                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| FIX-TH-801 | `requireThemeApprover` verwijderd; `requireAdminInAction()` uit `@repo/auth/access` gebruikt in alle 6 theme Server Actions          |
+| FIX-TH-802 | `createEmergingTheme` + `slugify` verhuisd van `mutations/meeting-themes.ts` naar `mutations/themes.ts` (SRP)                        |
+| FIX-TH-803 | `slugify` als gedeelde helper in `packages/database/src/lib/slugify.ts` (herbruikbaar voor toekomstige entities)                     |
+| FIX-TH-804 | Dashboard-fetch consolidatie: 1× `fetchWindowAggregation(30)` in page, doorgegeven als `preloaded` aan pills + donut (4→2 DB-calls)  |
+| FIX-TH-805 | `fetchWindowAggregation` gebruikt denormalized `mention_count > 0` pre-filter om archived/zero-mention themes efficiënter te skippen |
+| FIX-TH-806 | `getThemeDecisions` + `getThemeParticipants` gemergde of nested-relational fetch i.p.v. 2 roundtrips                                 |
+| FIX-TH-807 | `useThemeFormState` hook in `apps/cockpit/src/hooks/` — hergebruikt door `theme-edit-form` + `theme-approval-card`                   |
+| FIX-TH-808 | `queries/themes.ts` gesplitst in 4 files (base / dashboard / detail / review) elk onder 200 regels                                   |
+| FIX-TH-809 | Index `meeting_themes_created_at_idx` op `(created_at DESC)` toegevoegd via migration                                                |
 
 ## Bronverwijzingen
 
@@ -30,14 +30,18 @@ Acht major findings uit de quality-review oplossen die op korte termijn werken m
 
 Nu zit `requireThemeApprover()` in `apps/cockpit/src/actions/themes.ts:43-50`. Dat dupliceert functioneel wat `requireAdminInAction()` uit `@repo/auth/access` al doet. Risico: bij toekomstige role-tweaks (bv. een "theme-editor" rol) loopt één van de twee paden achter.
 
+**Signatuur-aanpassing:** `requireAdminInAction()` retourneert `{ user: { id, email } } | { error }`. Mijn codepaden gebruiken nu `guard.userId` — na migratie wordt dat `guard.user.id`.
+
 ```ts
-// apps/cockpit/src/actions/themes.ts — voor elk van de 4 actions:
+// apps/cockpit/src/actions/themes.ts — voor elk van de 6 actions:
 const guard = await requireAdminInAction();
 if ("error" in guard) return { error: guard.error };
 // guard.user.id beschikbaar voor verified_by / rejected_by / etc.
 ```
 
-Vervolgens: verwijder `requireThemeApprover`, strip de import.
+**Precedent:** `apps/cockpit/src/actions/team.ts` gebruikt al `requireAdminInAction` uit `@repo/auth/access` (3× patroon); exact datzelfde toepassen.
+
+Zes call-sites aanpassen: `updateThemeAction`, `archiveThemeAction`, `approveThemeAction`, `rejectEmergingThemeAction`, `rejectThemeMatchAction`, `regenerateMeetingThemesAction`. Vervolgens: verwijder `requireThemeApprover` helper + strip de imports (`getAuthenticatedUser`, `isAdmin`) die er voor waren.
 
 ### FIX-TH-802 / FIX-TH-803 — SRP + shared slugify
 
@@ -55,98 +59,83 @@ packages/database/src/
 
 Updaten: `packages/ai/src/pipeline/steps/tag-themes.ts` import-path van `createEmergingTheme`.
 
-### FIX-TH-804 + FIX-TH-805 — dashboard-efficiency
+### FIX-TH-804 + FIX-TH-805 — dashboard-efficiency (shared aggregation)
 
 Nu roept `apps/cockpit/src/app/(dashboard)/page.tsx` de volgende server-components via `<Suspense>`:
 
 - `ThemePillsStrip` → `listTopActiveThemes()` → `fetchWindowAggregation(30)` → 2 DB-calls
 - `TimeSpentDonutSection` → `getThemeShareDistribution()` → `fetchWindowAggregation(30)` → nog eens 2 DB-calls
 
-**Twee-koppen fix:**
+**Keuze (review-vastgesteld):** de 30d-semantiek blijft intact — UI-copy zegt expliciet "laatste 30 dagen" op 4 plekken (theme-pills-strip kop, theme-pill badge, donut aria-label, donut "30 dgn" badge) en dat verliezen is duur en verliest informatie. Een `mention_count_30d` kolom + nightly job is te veel werk voor cleanup. Daarom: **shared aggregation**.
 
-**a) Use denormalisatie (FIX-TH-805)** — `themes` heeft al `mention_count` en `last_mentioned_at` die door `recalculate_theme_stats` worden bijgehouden. De pills-query kan simpeler:
+**Implementatie:**
 
-```ts
-export async function listTopActiveThemes(
-  options?: { limit?: number },
-  client?: SupabaseClient,
-): Promise<TopActiveTheme[]> {
-  const limit = options?.limit ?? 8;
-  const db = client ?? getAdminClient();
-  const { data, error } = await db
-    .from("themes")
-    .select("id, slug, name, emoji, mention_count, last_mentioned_at")
-    .eq("status", "verified")
-    .gt("mention_count", 0)
-    .order("mention_count", { ascending: false })
-    .order("last_mentioned_at", { ascending: false, nullsFirst: false })
-    .limit(limit);
-  if (error) throw new Error(`top active themes failed: ${error.message}`);
-  return (data ?? []).map((t) => ({
-    id: t.id,
-    slug: t.slug,
-    name: t.name,
-    emoji: t.emoji,
-    mentions30d: t.mention_count, // denormalisatie: hele-tijd-count; 30d via aparte query als nodig
-    lastMentionedAt: t.last_mentioned_at,
-  }));
-}
-```
+1. **`fetchWindowAggregation` wordt public export** (nu privé in `queries/themes.ts:158`). Na file-split (FIX-TH-808) landt hij in `queries/theme-dashboard.ts`.
 
-Caveat: `mention_count` is all-time, niet 30d-window. Voor v1 accepteer je dat (UI-copy aanpassen naar "laatste mentions" zonder de 30d-belofte), of voeg een `mention_count_30d` kolom toe die nightly wordt geupdate. Keuze documenteren in de sprint-execution. Simpelste pad: drop de 30d-belofte in UI, gebruik de denormalisatie.
+2. **Beide dashboard-queries accepteren een `preloaded`-parameter:**
 
-**b) Share-distribution als aggregate view (FIX-TH-804)** — `getThemeShareDistribution` blijft wél per-window (anders verschuift de UI-semantiek), maar:
+   ```ts
+   export async function listTopActiveThemes(
+     options?: { limit?: number; windowDays?: number; preloaded?: WindowAggregation },
+     client?: SupabaseClient,
+   ): Promise<TopActiveTheme[]> {
+     const agg =
+       options?.preloaded ?? (await fetchWindowAggregation(options?.windowDays ?? 30, client));
+     // rest ongewijzigd: in-JS aggregeren uit `agg.themes` + `agg.junctionRows`
+   }
 
-```ts
-// Nieuwe signatuur accepteert al-opgehaalde aggregation of haalt zelf op
-export async function getThemeShareDistribution(
-  options?: { windowDays?: number; preloaded?: WindowAggregation },
-  client?: SupabaseClient,
-): Promise<ThemeShareDistribution> {
-  const agg = options?.preloaded ?? await fetchWindowAggregation(...);
-  // ... rest
-}
-```
+   export async function getThemeShareDistribution(
+     options?: { windowDays?: number; preloaded?: WindowAggregation },
+     client?: SupabaseClient,
+   ): Promise<ThemeShareDistribution> {
+     const agg =
+       options?.preloaded ?? (await fetchWindowAggregation(options?.windowDays ?? 30, client));
+     // rest ongewijzigd
+   }
+   ```
 
-Dashboard page-component haalt 1× op en geeft mee:
+3. **Dashboard page-component haalt 1× op en geeft mee:**
 
-```tsx
-// page.tsx
-const aggregation = await fetchWindowAggregation(30);  // 1× DB
-<ThemePillsStrip preloadedAggregation={aggregation} />
-<TimeSpentDonutSection preloadedAggregation={aggregation} />
-```
+   ```tsx
+   // page.tsx
+   const aggregation = await fetchWindowAggregation(30);
+   // ... in de JSX:
+   <Suspense fallback={<ThemePillsSkeleton />}>
+     <ThemePillsStrip preloadedAggregation={aggregation} />
+   </Suspense>
+   <Suspense fallback={<TimeSpentDonutSkeleton />}>
+     <TimeSpentDonutSection preloadedAggregation={aggregation} />
+   </Suspense>
+   ```
 
-`fetchWindowAggregation` wordt hiervoor public export (niet meer privé).
+4. **`WindowAggregation` type exporteren** uit `theme-dashboard.ts` zodat page + components dezelfde shape kennen.
+
+**FIX-TH-805 — denormalisatie als pre-filter:** binnen `fetchWindowAggregation` de themes-select nu ongefilterd (`.eq("status","verified")`). Toevoeging: `.gt("mention_count", 0)` — themes die nooit een match hadden komen dan helemaal niet uit de DB. Verified themes met zero matches zijn een no-op voor pills én donut (`counts.get(t.id) ?? 0 = 0` wordt al weggefilterd), maar skippen op DB-niveau scheelt bytes en sorteerwerk als de catalog groeit.
+
+**Netto:** dashboard-aggregatie gaat van 4 DB-calls → 2 DB-calls. UI-copy en field-naam `mentions30d` blijven intact.
 
 ### FIX-TH-806 — detail-page tabs 2-roundtrips
 
-`getThemeDecisions` + `getThemeParticipants` doen allebei:
+`getThemeDecisions` (regels 394-434) en `getThemeParticipants` (regels 508-558) doen allebei:
 
 1. Fetch `meeting_themes` → meeting_ids
 2. Fetch `extractions` / `meeting_participants` met `.in("meeting_id", meetingIds)`
 
-**Fix**: gebruik Supabase relational select, fetch in één roundtrip:
+Beide query-functies zijn intern sequentieel. Omdat de tweede query afhangt van `meeting_ids` uit de eerste, kunnen die **binnen** de functie niet parallel. Maar de detail-page (`theme-detail/page.tsx`) roept beide functies sequentieel aan — dáár zit de winst.
 
-```ts
-// getThemeDecisions — één query, geen in-memory filter
-const { data } = await db
-  .from("meeting_themes")
-  .select(
-    `
-    meeting:meeting_id (
-      id, title, date,
-      extractions!inner (id, content, created_at)
-    )
-  `,
-  )
-  .eq("theme_id", themeId)
-  .eq("meeting.extractions.type", "decision");
+**Fix (pragmatisch, review-vastgesteld):** behoud de 2 roundtrips binnen elke functie (relational select met `!inner` is fragiel en kan meetings zonder decisions/participants stil droppen). Maak wel **de aanroep in de detail-page parallel** via `Promise.all`. Dat scheelt één queue-positie tijd op elke page-load.
+
+```tsx
+// apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx
+const [activity, meetings, decisions, participants] = await Promise.all([
+  getThemeRecentActivity(theme.id, { windowDays: 30 }),
+  getThemeMeetings(theme.id),
+  getThemeDecisions(theme.id),
+  getThemeParticipants(theme.id),
+]);
 ```
 
-Idem voor participants (`meeting_participants!inner (person_id, person:person_id (id, name))`). Test dat de inner-join geen meetings zonder decisions dropt per ongeluk — of split in één list-meeting-ids + één batched fetch die nog steeds 2 roundtrips is maar dan parallel.
-
-Pragmatische fallback als relational inner joins te fragiel zijn: behoud de 2 roundtrips maar draai ze **parallel** via `Promise.all`, dat scheelt de helft van de latency.
+Controleer eerst of `page.tsx` ze al in `Promise.all` staan (agent 2 suggereert dat dit gedeeltelijk al zo is) — pas aan wat nog sequentieel is. Relational-select blijft out-of-scope voor deze sprint; die optimalisatie kan in TH-9 terug als nodig.
 
 ### FIX-TH-807 — form-state hook
 
@@ -199,7 +188,20 @@ export function useThemeFormState(
 }
 ```
 
-(Constanten `THEME_NAME_MIN` etc. komen uit TH-9, of je neemt ze in TH-8 mee in het validations-file.)
+**Constanten-besluit (review-vastgesteld):** de magic numbers (`2/5/20`) staan nu hardcoded in `apps/cockpit/src/validations/themes.ts` binnen de Zod-schemas. In TH-008 introduceren we de constanten direct in datzelfde bestand — geen aparte `constants/`-folder nodig, en Zod-schemas gebruiken ze ook zodat er maar één bron van waarheid is.
+
+```ts
+// apps/cockpit/src/validations/themes.ts
+export const THEME_NAME_MIN = 2;
+export const THEME_DESC_MIN = 5;
+export const THEME_GUIDE_MIN = 20;
+
+// dan in de schemas:
+name: z.string().min(THEME_NAME_MIN).max(50),
+// ...
+```
+
+**Hooks-folder:** `apps/cockpit/src/hooks/` bestaat nog niet — maak aan met de nieuwe hook als eerste bestand.
 
 ### FIX-TH-808 — file-split `queries/themes.ts`
 
@@ -220,10 +222,12 @@ Gedeelde types (`ThemeRow`, `THEME_COLUMNS`, `windowStartIso`) verhuizen naar `q
 `fetchWindowAggregation` doet `.gte("created_at", since)` op `meeting_themes`. Er is geen index op die kolom. Bij 10k+ matches wordt dit merkbaar.
 
 ```sql
--- supabase/migrations/YYYYMMDDHHMMSS_meeting_themes_created_at_idx.sql
+-- supabase/migrations/20260422120000_meeting_themes_created_at_idx.sql
 CREATE INDEX IF NOT EXISTS meeting_themes_created_at_idx
   ON meeting_themes (created_at DESC);
 ```
+
+**Eerstvolgende timestamp:** `20260422120000` (na TH-007 `20260422110000_theme_stats_rpc.sql`).
 
 ## Deliverables
 
@@ -238,7 +242,11 @@ CREATE INDEX IF NOT EXISTS meeting_themes_created_at_idx
 - [ ] `getThemeDecisions` + `getThemeParticipants` — relational select OF parallelle `Promise.all`
 - [ ] `apps/cockpit/src/hooks/use-theme-form-state.ts` — nieuwe hook
 - [ ] `theme-edit-form.tsx` + `theme-approval-card.tsx` — hook geadopteerd
-- [ ] `supabase/migrations/YYYYMMDDHHMMSS_meeting_themes_created_at_idx.sql`
+- [ ] `supabase/migrations/20260422120000_meeting_themes_created_at_idx.sql`
+- [ ] `apps/cockpit/src/validations/themes.ts` — `THEME_NAME_MIN`/`_DESC_MIN`/`_GUIDE_MIN` constanten geëxporteerd + Zod-schemas gebruiken ze
+- [ ] `packages/ai/src/pipeline/steps/tag-themes.ts` — import `createEmergingTheme` uit `mutations/themes` i.p.v. `mutations/meeting-themes`
+- [ ] `packages/ai/__tests__/pipeline/tag-themes.test.ts` — mock-path bijgewerkt naar nieuwe locatie
+- [ ] Tests in `packages/database/__tests__/queries/themes.test.ts` en cockpit `time-spent-donut-section.test.ts` / pills-strip tests — check dat de `preloaded`-prop signatuur doorloopt
 - [ ] Tests blijven groen; nieuwe unit-test op `useThemeFormState` (dirty-check + validatie-transities)
 
 ## Acceptance criteria

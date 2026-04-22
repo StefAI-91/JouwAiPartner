@@ -1,15 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Check, X, Info } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { cn } from "@repo/ui/utils";
 import { formatDate } from "@repo/ui/format";
 import type { EmergingThemeRow, EmergingThemeProposalMeeting } from "@repo/database/queries/themes";
-import type { ThemeEmoji } from "@repo/ai/agents/theme-emojis";
 import { EmojiPickerPopover } from "./emoji-picker-popover";
 import { approveThemeAction, rejectEmergingThemeAction } from "@/actions/themes";
+import { useThemeFormState } from "@/hooks/use-theme-form-state";
+import {
+  THEME_NAME_MIN,
+  THEME_NAME_MAX,
+  THEME_DESC_MIN,
+  THEME_DESC_MAX,
+  THEME_GUIDE_MIN,
+} from "@/validations/themes";
 
 export interface ThemeApprovalCardProps {
   theme: EmergingThemeRow;
@@ -27,16 +34,27 @@ export interface ThemeApprovalCardProps {
  *  - Afwijzen — `rejectEmergingThemeAction` → status='archived'
  */
 export function ThemeApprovalCard({ theme }: ThemeApprovalCardProps) {
-  const [name, setName] = useState(theme.name);
-  const [description, setDescription] = useState(theme.description);
-  const [matchingGuide, setMatchingGuide] = useState(theme.matching_guide);
-  const [emoji, setEmoji] = useState<ThemeEmoji>(theme.emoji as ThemeEmoji);
-  const [error, setError] = useState<string | null>(null);
+  const form = useThemeFormState({
+    name: theme.name,
+    description: theme.description,
+    matching_guide: theme.matching_guide,
+    emoji: theme.emoji,
+  });
+  const {
+    name,
+    setName,
+    description,
+    setDescription,
+    matchingGuide,
+    setMatchingGuide,
+    emoji,
+    setEmoji,
+    error,
+    setError,
+    canSubmit,
+  } = form;
   const [isApproving, startApprove] = useTransition();
   const [isRejecting, startReject] = useTransition();
-
-  const canSubmit =
-    name.trim().length >= 2 && description.trim().length >= 5 && matchingGuide.trim().length >= 20;
 
   function handleApprove() {
     if (!canSubmit) return;
@@ -74,8 +92,8 @@ export function ThemeApprovalCard({ theme }: ThemeApprovalCardProps) {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              minLength={2}
-              maxLength={80}
+              minLength={THEME_NAME_MIN}
+              maxLength={THEME_NAME_MAX}
               aria-label="Thema-naam"
               className="flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-[15px] font-semibold text-foreground hover:border-border focus-visible:border-primary/60 focus-visible:outline-none"
             />
@@ -86,8 +104,8 @@ export function ThemeApprovalCard({ theme }: ThemeApprovalCardProps) {
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            minLength={5}
-            maxLength={200}
+            minLength={THEME_DESC_MIN}
+            maxLength={THEME_DESC_MAX}
             aria-label="Beschrijving"
             className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-[13px] text-muted-foreground hover:border-border focus-visible:border-primary/60 focus-visible:outline-none"
           />
@@ -105,7 +123,7 @@ export function ThemeApprovalCard({ theme }: ThemeApprovalCardProps) {
           id={`matching-guide-${theme.id}`}
           value={matchingGuide}
           onChange={(e) => setMatchingGuide(e.target.value)}
-          minLength={20}
+          minLength={THEME_GUIDE_MIN}
           rows={3}
           className="w-full rounded-md border border-border/60 bg-muted/10 px-3 py-2 font-mono text-[12px] leading-relaxed text-foreground focus-visible:border-primary/60 focus-visible:outline-none"
         />

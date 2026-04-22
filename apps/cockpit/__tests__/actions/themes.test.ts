@@ -17,6 +17,11 @@ vi.mock("@repo/auth/helpers", () => ({
 }));
 vi.mock("@repo/auth/access", () => ({
   isAdmin: (...args: [string]) => mockIsAdmin(...args),
+  requireAdminInAction: async () => {
+    if (!mockUser.value?.id) return { error: "Niet ingelogd" };
+    if (!(await mockIsAdmin(mockUser.value.id))) return { error: "Geen toegang" };
+    return { user: { id: mockUser.value.id, email: mockUser.value.email ?? "" } };
+  },
 }));
 vi.mock("@repo/database/mutations/themes", () => ({
   updateTheme: (...args: [string, Record<string, unknown>]) => mockUpdateTheme(...args),
@@ -55,18 +60,18 @@ beforeEach(() => {
 });
 
 describe("updateThemeAction — whitelist", () => {
-  it("returnt forbidden wanneer er geen ingelogde gebruiker is", async () => {
+  it("returnt 'Niet ingelogd' wanneer er geen ingelogde gebruiker is", async () => {
     mockUser.value = null;
     const result = await updateThemeAction(VALID_INPUT);
-    expect(result).toEqual({ error: "forbidden" });
+    expect(result).toEqual({ error: "Niet ingelogd" });
     expect(mockUpdateTheme).not.toHaveBeenCalled();
   });
 
-  it("returnt forbidden voor een non-admin gebruiker", async () => {
+  it("returnt 'Geen toegang' voor een non-admin gebruiker", async () => {
     mockUser.value = { id: "u-1", email: "ege@example.com" };
     mockIsAdmin.mockResolvedValue(false);
     const result = await updateThemeAction(VALID_INPUT);
-    expect(result).toEqual({ error: "forbidden" });
+    expect(result).toEqual({ error: "Geen toegang" });
     expect(mockUpdateTheme).not.toHaveBeenCalled();
   });
 
@@ -123,7 +128,7 @@ describe("archiveThemeAction", () => {
     mockUser.value = { id: "u-1" };
     mockIsAdmin.mockResolvedValue(false);
     const result = await archiveThemeAction({ themeId: THEME_ID });
-    expect(result).toEqual({ error: "forbidden" });
+    expect(result).toEqual({ error: "Geen toegang" });
     expect(mockArchiveTheme).not.toHaveBeenCalled();
   });
 

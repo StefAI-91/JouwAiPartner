@@ -22,6 +22,11 @@ vi.mock("@repo/auth/helpers", () => ({
 }));
 vi.mock("@repo/auth/access", () => ({
   isAdmin: (...args: [string]) => mockIsAdmin(...args),
+  requireAdminInAction: async () => {
+    if (!mockUser.value?.id) return { error: "Niet ingelogd" };
+    if (!(await mockIsAdmin(mockUser.value.id))) return { error: "Geen toegang" };
+    return { user: { id: mockUser.value.id, email: mockUser.value.email ?? "" } };
+  },
 }));
 vi.mock("@repo/database/mutations/themes", () => ({
   updateTheme: (...args: [string, Record<string, unknown>]) => mockUpdateTheme(...args),
@@ -91,7 +96,7 @@ describe("approveThemeAction", () => {
     mockUser.value = { id: USER_ID };
     mockIsAdmin.mockResolvedValue(false);
     const result = await approveThemeAction(VALID_APPROVE);
-    expect(result).toEqual({ error: "forbidden" });
+    expect(result).toEqual({ error: "Geen toegang" });
     expect(mockUpdateTheme).not.toHaveBeenCalled();
   });
 
@@ -133,7 +138,7 @@ describe("rejectEmergingThemeAction", () => {
     mockUser.value = { id: USER_ID };
     mockIsAdmin.mockResolvedValue(false);
     const result = await rejectEmergingThemeAction({ themeId: THEME_ID });
-    expect(result).toEqual({ error: "forbidden" });
+    expect(result).toEqual({ error: "Geen toegang" });
     expect(mockArchiveTheme).not.toHaveBeenCalled();
   });
 
@@ -159,7 +164,7 @@ describe("rejectThemeMatchAction", () => {
       themeId: THEME_ID,
       reason: "ander_thema",
     });
-    expect(result).toEqual({ error: "forbidden" });
+    expect(result).toEqual({ error: "Geen toegang" });
     expect(mockRejectMatch).not.toHaveBeenCalled();
   });
 
@@ -218,7 +223,7 @@ describe("regenerateMeetingThemesAction", () => {
     mockUser.value = { id: USER_ID };
     mockIsAdmin.mockResolvedValue(false);
     const result = await regenerateMeetingThemesAction({ meetingId: MEETING_ID });
-    expect(result).toEqual({ error: "forbidden" });
+    expect(result).toEqual({ error: "Geen toegang" });
     expect(mockRunTagThemes).not.toHaveBeenCalled();
   });
 

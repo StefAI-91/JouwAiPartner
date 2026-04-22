@@ -17,9 +17,11 @@ vi.mock("@repo/database/queries/themes", () => ({
 }));
 vi.mock("@repo/database/mutations/meeting-themes", () => ({
   linkMeetingToThemes: vi.fn(),
-  createEmergingTheme: vi.fn(),
   recalculateThemeStats: vi.fn(),
   clearMeetingThemes: vi.fn(),
+}));
+vi.mock("@repo/database/mutations/themes", () => ({
+  createEmergingTheme: vi.fn(),
 }));
 vi.mock("../../src/agents/theme-tagger", () => ({
   tagMeetingThemes: vi.fn(),
@@ -29,10 +31,10 @@ import { getMeetingExtractions } from "@repo/database/queries/meetings";
 import { listVerifiedThemes } from "@repo/database/queries/themes";
 import {
   linkMeetingToThemes,
-  createEmergingTheme,
   recalculateThemeStats,
   clearMeetingThemes,
 } from "@repo/database/mutations/meeting-themes";
+import { createEmergingTheme } from "@repo/database/mutations/themes";
 import { tagMeetingThemes } from "../../src/agents/theme-tagger";
 import { runTagThemesStep } from "../../src/pipeline/steps/tag-themes";
 

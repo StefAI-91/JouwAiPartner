@@ -10,6 +10,7 @@ import {
 import { listAllTasks } from "@repo/database/queries/tasks";
 import { listPeopleForAssignment } from "@repo/database/queries/people";
 import { getManagementInsights } from "@repo/database/queries/management-insights";
+import { fetchWindowAggregation } from "@repo/database/queries/themes";
 import { ManagementInsightsOutputSchema } from "@repo/ai/validations/management-insights";
 import { Greeting } from "@/components/dashboard/greeting";
 import { MeetingCarousel } from "@/components/dashboard/meeting-carousel";
@@ -33,14 +34,17 @@ export default async function DashboardPage() {
     : null;
   const userName = profileResult?.data?.full_name ?? null;
 
-  // Fetch all dashboard data in parallel
-  const [briefingResult, verifiedMeetings, tasks, people, insightsRow] = await Promise.all([
-    listTodaysBriefingMeetings(supabase),
-    listRecentVerifiedMeetings(5, supabase),
-    listAllTasks(50, supabase),
-    listPeopleForAssignment(supabase),
-    getManagementInsights(supabase),
-  ]);
+  // Fetch all dashboard data in parallel. TH-008 FIX-TH-804: themes-aggregation
+  // wordt één keer opgehaald en gedeeld tussen pills + donut (voorheen 4× DB).
+  const [briefingResult, verifiedMeetings, tasks, people, insightsRow, themesAggregation] =
+    await Promise.all([
+      listTodaysBriefingMeetings(supabase),
+      listRecentVerifiedMeetings(5, supabase),
+      listAllTasks(50, supabase),
+      listPeopleForAssignment(supabase),
+      getManagementInsights(supabase),
+      fetchWindowAggregation(30, supabase),
+    ]);
 
   const parsedInsights = insightsRow?.structured_content
     ? ManagementInsightsOutputSchema.safeParse(insightsRow.structured_content)
@@ -65,7 +69,7 @@ export default async function DashboardPage() {
           rechter kolom naast de meeting-carousel. Suspense zodat elk onderdeel
           zelfstandig laadt zonder de hele dashboard op te houden. */}
       <Suspense fallback={<ThemePillsSkeleton />}>
-        <ThemePillsStrip />
+        <ThemePillsStrip preloadedAggregation={themesAggregation} />
       </Suspense>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
@@ -75,7 +79,7 @@ export default async function DashboardPage() {
           dayLabel={dayLabel}
         />
         <Suspense fallback={<TimeSpentDonutSkeleton />}>
-          <TimeSpentDonutSection />
+          <TimeSpentDonutSection preloadedAggregation={themesAggregation} />
         </Suspense>
       </div>
 
