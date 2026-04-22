@@ -703,3 +703,190 @@ In `apps/cockpit/src/actions/themes.ts`:
 
 In `packages/database/src/queries/themes.ts`:
 `listEmergingThemes(client)` — voor de review-queue sectie.
+
+---
+
+## 11. Seed-themes v1
+
+### 11.1 Hoe ze tot stand kwamen
+
+Niet verzonnen, maar **gediscoverd** op basis van alle verified meetings
+van de afgelopen 6 maanden. De ontdekkings-prompt (§11.2) is via een
+Claude-sessie met MCP-toegang tot de meetings-database uitgevoerd. De
+output: 10 thema's die ≥5× zijn teruggekomen en scherp genoeg
+begrensd zijn om matching_guide-conflicten te vermijden.
+
+Bij eerste deploy worden deze als `status = 'verified'` geplaatst via
+`supabase/seed/themes.sql`. Daarna moet de ThemeTagger matchen tegen
+deze 10 — of met goede reden een nieuw `emerging` thema voorstellen.
+
+### 11.2 Discovery-prompt (reproduceerbaar)
+
+Deze prompt kan opnieuw worden gedraaid als de themes-set moet worden
+herijkt (bv. na 6 maanden groei):
+
+```
+ROL
+Je bent theme-discovery analist voor Jouw AI Partner's kennisplatform.
+Je hebt via MCP toegang tot alle verified meetings, hun samenvattingen
+en extractions (decisions, action_items, needs, insights).
+
+DOEL
+Stel 10-15 seed-thema's voor die we als eerste willen opnemen in de
+themes-tabel — gebaseerd op wat er daadwerkelijk terugkomt in onze
+meetings van de afgelopen 6 maanden.
+
+DEFINITIE VAN EEN THEMA
+- Cross-meeting onderwerp dat over tijd terugkomt (≥3 meetings).
+- Heeft een eigen doorlopend verhaal: meerdere besluiten, open needs,
+  of verschillende perspectieven tussen deelnemers.
+- Orthogonaal aan projects. "Hiring" is een thema dat in meerdere
+  projecten kan spelen; "CAi Studio" is een project, geen thema.
+- Groot genoeg voor een eigen verhaal, klein genoeg om scherp te
+  blijven. Niet "werk" of "business" — ook niet één feature.
+
+ZOEKSTRATEGIE
+1. Scan alle verified meetings van de laatste 6 maanden.
+2. Cluster semantisch gerelateerde mentions onder één thema.
+3. Splits thema's die twee verschillende dingen behandelen.
+4. Sluit thema's uit die alleen binnen één project spelen.
+5. Sluit thema's uit met <3 meetings.
+
+OUTPUT (JSON array, 10-15 objecten, gesorteerd op frequency desc):
+{
+  "name": "...", "description": "...",
+  "matching_guide": "'Valt onder als ...' + 'Valt er niet onder als
+    ... (→ naburig thema)'",
+  "emoji_suggestion": "één emoji uit de THEME_EMOJIS shortlist",
+  "evidence": [{"meeting_id","date","quote"}, ...],  // 2-3 voorbeelden
+  "estimated_frequency": 7
+}
+
+KWALITEITSREGELS
+- Geen dubbele/bijna-dubbele thema's.
+- Emoji's moeten uniek zijn.
+- Matching_guide moet grens met aangrenzende thema's trekken.
+
+TWEEDE OUTPUT
+Rapporteer 3-5 onderwerpen die WEL vaak terugkwamen maar die je bewust
+NIET als seed-thema hebt voorgesteld, met één zin waarom niet.
+```
+
+### 11.3 De 10 seed-themes
+
+Samenvattend overzicht, gesorteerd op frequentie:
+
+| #   | Emoji | Naam                                | Description                                                                                        | Freq |
+| --- | ----- | ----------------------------------- | -------------------------------------------------------------------------------------------------- | ---- |
+| 1   | 🧭    | AI-native strategie & positionering | JAIP's eigen verhaal als langetermijn-transformatiepartner (niet bureau, niet SaaS)                | 9    |
+| 2   | 🤖    | Interne platform & kennisbank       | JAIP's eigen AI-native stack: kennisbank, DevHub, MCP-server, transcriptie-pipeline                | 8    |
+| 3   | 🙋    | Discovery & MVP-kickoffs            | Eerste gesprekken: behoeftes uitvragen, scope afbakenen, wel/niet instappen                        | 8    |
+| 4   | 🫂    | Werkdruk & founder-capaciteit       | Stef's overbelasting, overnemen Wouter's rol tijdens verlof, capaciteit op founder-niveau          | 7    |
+| 5   | 🗣️    | Founder-ritme & samenwerking        | Wekelijkse sync, 1-op-1's, rolverdeling Stef (tech-ops) vs Wouter (commercieel-strategisch)        | 7    |
+| 6   | 🚀    | Klant AI-transformatie trajecten    | Klanten die hun héle bedrijf AI-native willen maken — operatiemodel, niet één feature              | 6    |
+| 7   | 🧱    | Stabiliteit vs. feature-snelheid    | Terugkerende spanning tussen klantdruk om door te bouwen en technische schuld die zich opstapelt   | 5    |
+| 8   | 💬    | Klantcommunicatie & verwachtingen   | Hoe JAIP voortgang, bugs en tegenslagen communiceert en wat er misgaat als dat niet loopt          | 5    |
+| 9   | 🤝    | Partners & sparring-netwerk         | Externe adviseurs (Arjen, Dion, Tibor, Joep) en hoe hun rol in JAIP's ecosysteem wordt vormgegeven | 5    |
+| 10  | 👥    | Team capaciteit & hiring            | Behoefte aan senior developer, rolverdeling Ege/Kenji/Myrrh, dedicated developers per klant        | 5    |
+
+### 11.4 Matching_guides (volledig, voor seed migration)
+
+Hieronder de matching_guide per thema zoals ze 1-op-1 naar
+`supabase/seed/themes.sql` gaan. Formaat: "valt onder als X / valt er
+niet onder als Y (→ naburig thema)".
+
+**1. AI-native strategie & positionering** (🧭)
+Valt onder dit thema als het gaat over JAIP's eigen verhaal naar
+buiten: wat we zijn (partner, niet bureau), voor wie (MKB in
+transitie), hoe we ons onderscheiden, en het grotere narratief 'je
+bedrijf is over 5 jaar niet meer hetzelfde'. Valt er niet onder als
+het gaat over hoe we intern onze tools bouwen (→ Interne platform &
+kennisbank) of over hoe we een specifieke klant transformeren
+(→ Klant AI-transformatie trajecten).
+
+**2. Interne platform & kennisbank** (🤖)
+Valt onder dit thema als het gaat over de kennisbank, de DevHub,
+Gatekeeper AI, ElevenLabs/Fireflies transcriptie-keuzes, de
+MCP-server, of de reviewflow van extractions. Valt er niet onder als
+het gaat over een vergelijkbaar platform dat we bij een klant bouwen
+(→ Klant AI-transformatie trajecten) of over de strategische
+positionering erachter (→ AI-native strategie & positionering).
+
+**3. Discovery & MVP-kickoffs** (🙋)
+Valt onder dit thema als het gaat over kennismakingscalls,
+discovery-sessies, scope bepalen, go/no-go met een nieuwe klant, of
+het afwegen of iemand 'past'. Valt er niet onder als de klant al in
+productie zit (→ Klantcommunicatie & verwachtingen) of als het over
+lopende MVP-development gaat (→ project-specifiek).
+
+**4. Werkdruk & founder-capaciteit** (🫂)
+Valt onder dit thema als het gaat over persoonlijke werkdruk, slaap,
+stress, verantwoordelijkheidsgevoel van Stef/Wouter, rolverdeling
+tussen founders, of Wouters vaderschapsverlof dat Stef's bord raakt.
+Valt er niet onder als de druk komt door een te klein team op
+developer-niveau (→ Team capaciteit & hiring) of door financiële druk
+van een klant (→ project-context).
+
+**5. Founder-ritme & samenwerking** (🗣️)
+Valt onder dit thema als het gaat over de 1-op-1 tussen Stef en
+Wouter, daily standups, strategische sync, of hoe zij elkaar
+aanvullen. Valt er niet onder als het gaat over persoonlijke
+werkdruk zonder samenwerkings-aspect (→ Werkdruk &
+founder-capaciteit) of over teammeetings met de bredere JAIP-crew
+(→ Team capaciteit & hiring).
+
+**6. Klant AI-transformatie trajecten** (🚀)
+Valt onder dit thema als de klant zelf ambieert 'AI-native te
+worden', het hele bedrijf te transformeren, of een microservices-
+per-bedrijfsonderdeel aanpak kiest (Yasemin, Adstra, Brik, SureSync,
+Looping). Valt er niet onder als het een afgebakende MVP of feature
+is (→ Discovery & MVP-kickoffs), of over onze eigen positionering
+(→ AI-native strategie & positionering).
+
+**7. Stabiliteit vs. feature-snelheid** (🧱)
+Valt onder dit thema als het gaat over refactoring uitstellen,
+technical debt, platform-crashes, bugfix-prioriteit vs. nieuwe
+features, of de les 'te snel doorgebouwd zonder fundament'. Valt er
+niet onder als het specifiek over één klant-incident gaat
+(→ project-context), of over development-proces en PRD's
+(→ werkwijze-thema wat later emerging kan worden). Dit thema gaat
+over de afweging zelf.
+
+**8. Klantcommunicatie & verwachtingen** (💬)
+Valt onder dit thema als het gaat over weekly updates,
+Slack-kanalen met klanten, ticketsystemen, verkeerde
+product-lanceringen, roadmap-verschuivingen die gecommuniceerd
+moeten worden, of klanten die 'te hard pushen' in Slack. Valt er
+niet onder als het gaat over de inhoud van de roadmap zelf
+(→ project-specifiek) of over interne JAIP-communicatie
+(→ Founder-ritme of Team capaciteit).
+
+**9. Partners & sparring-netwerk** (🤝)
+Valt onder dit thema als het gaat over de rol van Tibor
+(sales/netwerk), Arjen (advies), Dion (mentor/sparringpartner),
+Joep (CAI-samenwerking) of ADSTRA-partnerschap vormgeving. Valt er
+niet onder als het puur over een klantproject met die persoon gaat
+(→ project), of over hiring van interne medewerkers (→ Team
+capaciteit & hiring).
+
+**10. Team capaciteit & hiring** (👥)
+Valt onder dit thema als het gaat over openstaande vacatures,
+senior developer tekort, rolverdeling Ege/Kenji/Myrrh, dedicated
+developers per klant, of team-upskilling. Valt er niet onder als
+het specifiek over Stef's persoonlijke werkdruk gaat (→ Werkdruk &
+founder-capaciteit) of over klant-team capaciteit (→ project-context).
+
+### 11.5 Wat bewust géén seed werd
+
+Drie onderwerpen die kunnen opduiken als emerging zodra ze
+substantieel genoeg zijn:
+
+- **Finance & runway** — kwam niet vaak genoeg terug als eigen
+  spanningsveld de afgelopen 6 maanden.
+- **Sales pipeline (lopende deals)** — Discovery-kickoffs dekken de
+  voorkant; als lopende deal-gesprekken toenemen komt dit als
+  emerging naar boven.
+- **Onboarding proces** — nog te impliciet onder Team capaciteit.
+
+Deze blijven NIET als seed-themes bewaard — de ThemeTagger zal ze
+als emerging voorstellen zodra het patroon helder genoeg wordt.
