@@ -1,24 +1,30 @@
 export const dynamic = "force-dynamic";
 
+import { Suspense } from "react";
 import { createClient } from "@repo/database/supabase/server";
 import { listDraftMeetings, getReviewStats } from "@repo/database/queries/review";
 import { listDraftEmails } from "@repo/database/queries/emails";
+import { listEmergingThemes } from "@repo/database/queries/themes";
 import { ReviewQueue } from "@/components/review/review-queue";
 import { ReviewEmptyState } from "@/components/review/empty-state";
+import { EmergingThemesSection } from "@/components/themes/emerging-themes-section";
 
 export default async function ReviewPage() {
   const supabase = await createClient();
-  const [meetings, emails, stats] = await Promise.all([
+  const [meetings, emails, stats, emerging] = await Promise.all([
     listDraftMeetings(supabase),
     listDraftEmails(supabase),
     getReviewStats(supabase),
+    listEmergingThemes(),
   ]);
 
-  const totalItems = meetings.length + emails.length;
+  const totalItems = meetings.length + emails.length + emerging.length;
 
   if (totalItems === 0) {
     return <ReviewEmptyState stats={stats} />;
   }
+
+  const meetingItems = meetings.length + emails.length;
 
   return (
     <div className="space-y-6 px-4 py-8 lg:px-10">
@@ -29,7 +35,13 @@ export default async function ReviewPage() {
         </p>
       </div>
 
-      <ReviewQueue meetings={meetings} emails={emails} />
+      {/* TH-006 — emerging themes bovenaan de queue. Suspense houdt de rest
+          van de queue bruikbaar als de admin-check even duurt. */}
+      <Suspense fallback={null}>
+        <EmergingThemesSection />
+      </Suspense>
+
+      {meetingItems > 0 && <ReviewQueue meetings={meetings} emails={emails} />}
     </div>
   );
 }

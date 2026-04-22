@@ -115,6 +115,11 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
     // ook naar een fresh emerging theme had willen linken (niet v1-flow, maar
     // defensief) — de theme_id bestaat. In v1 linkt de agent alleen naar
     // bestaande themes.
+    const proposalMatches: Array<{
+      themeId: string;
+      confidence: "medium" | "high";
+      evidenceQuote: string;
+    }> = [];
     let proposalsSaved = 0;
     for (const proposal of output.proposals) {
       const createRes = await createEmergingTheme({
@@ -128,16 +133,27 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
         continue;
       }
       proposalsSaved += 1;
+      // Link de origin meeting aan het nieuwe emerging theme zodat (a) de
+      // review-card in TH-006 "gevonden in:" kan tonen zonder extra kolom,
+      // en (b) mention_count vanaf het eerste moment klopt. Confidence is
+      // medium — we hebben geen high-confidence signal voor een net-
+      // voorgesteld thema.
+      proposalMatches.push({
+        themeId: createRes.id,
+        confidence: "medium",
+        evidenceQuote: proposal.evidenceQuote,
+      });
     }
 
-    const linkRes = await linkMeetingToThemes(
-      input.meetingId,
-      output.matches.map((m) => ({
+    const allMatches = [
+      ...output.matches.map((m) => ({
         themeId: m.themeId,
         confidence: m.confidence,
         evidenceQuote: m.evidenceQuote,
       })),
-    );
+      ...proposalMatches,
+    ];
+    const linkRes = await linkMeetingToThemes(input.meetingId, allMatches);
     if ("error" in linkRes) {
       return {
         success: false,
@@ -148,7 +164,7 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
       };
     }
 
-    const affectedThemeIds = output.matches.map((m) => m.themeId);
+    const affectedThemeIds = allMatches.map((m) => m.themeId);
     if (affectedThemeIds.length > 0) {
       const statsRes = await recalculateThemeStats(affectedThemeIds);
       if ("error" in statsRes) {

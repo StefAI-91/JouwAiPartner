@@ -11,7 +11,9 @@ import {
   getThemeRecentActivity,
   getThemeMeetings,
   getThemeDecisions,
+  listEmergingThemes,
 } from "../../src/queries/themes";
+import { rejectThemeMatch } from "../../src/mutations/meeting-themes";
 
 let db: ReturnType<typeof getTestClient>;
 
@@ -237,6 +239,95 @@ describeWithDb("queries/themes", () => {
     it("retourneert lege array als het thema geen gekoppelde meetings heeft", async () => {
       const decisions = await getThemeDecisions(THEME_IDS.hiring, db);
       expect(decisions).toEqual([]);
+    });
+  });
+
+  describe("listEmergingThemes (TH-006)", () => {
+    it("retourneert alleen status=emerging met gekoppelde proposal-meetings", async () => {
+      // Link de emerging theme aan meeting m1 als proposal-origin.
+      const recent = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.old, recent, "medium");
+
+      const emerging = await listEmergingThemes(db);
+      expect(emerging).toHaveLength(1);
+      expect(emerging[0].id).toBe(THEME_IDS.old);
+      expect(emerging[0].proposal_meetings).toHaveLength(1);
+      expect(emerging[0].proposal_meetings[0].meeting_id).toBe(MEETING_IDS.m1);
+    });
+
+    it("retourneert emerging themes zonder proposal-meetings als proposal_meetings=[]", async () => {
+      const emerging = await listEmergingThemes(db);
+      expect(emerging).toHaveLength(1);
+      expect(emerging[0].proposal_meetings).toEqual([]);
+    });
+  });
+
+  describe("rejectThemeMatch mutation (TH-006)", () => {
+    // Seed een placeholder auth.user die we als rejected_by kunnen gebruiken.
+    // auth.users is shared across tests dus we gebruiken een bestaande admin
+    // seed; zo niet aanwezig skippen we de insert in de EDGE-test.
+    const REVIEWER_ID = "00000000-0000-0000-0000-000000000099";
+
+    it("verwijdert de match en logt een rejection", async () => {
+      const recent = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.hiring, recent);
+
+      const result = await rejectThemeMatch(
+        {
+          meetingId: MEETING_IDS.m1,
+          themeId: THEME_IDS.hiring,
+          reason: "ander_thema",
+          userId: REVIEWER_ID,
+        },
+        db,
+      );
+      expect("success" in result && result.success).toBe(true);
+      expect("success" in result && result.alreadyRemoved).toBe(false);
+
+      // Match weg?
+      const { data: matches } = await db
+        .from("meeting_themes")
+        .select("meeting_id")
+        .eq("theme_id", THEME_IDS.hiring)
+        .eq("meeting_id", MEETING_IDS.m1);
+      expect(matches).toEqual([]);
+
+      // Rejection gelogd?
+      const { data: rejections } = await db
+        .from("theme_match_rejections")
+        .select("reason, evidence_quote")
+        .eq("theme_id", THEME_IDS.hiring)
+        .eq("meeting_id", MEETING_IDS.m1);
+      expect(rejections?.[0]).toMatchObject({ reason: "ander_thema", evidence_quote: "quote" });
+
+      // Cleanup rejection-row zodat de volgende test niet trippt
+      await db
+        .from("theme_match_rejections")
+        .delete()
+        .eq("theme_id", THEME_IDS.hiring)
+        .eq("meeting_id", MEETING_IDS.m1);
+    });
+
+    it("is idempotent wanneer de match al weg is (EDGE-211)", async () => {
+      const result = await rejectThemeMatch(
+        {
+          meetingId: MEETING_IDS.m1,
+          themeId: THEME_IDS.hiring,
+          reason: "te_breed",
+          userId: REVIEWER_ID,
+        },
+        db,
+      );
+      expect("success" in result && result.success).toBe(true);
+      expect("success" in result && result.alreadyRemoved).toBe(true);
+
+      const { data: rejections } = await db
+        .from("theme_match_rejections")
+        .select("id")
+        .eq("theme_id", THEME_IDS.hiring)
+        .eq("meeting_id", MEETING_IDS.m1);
+      // Geen nieuwe rejection-row want er was niks om af te wijzen.
+      expect(rejections ?? []).toEqual([]);
     });
   });
 

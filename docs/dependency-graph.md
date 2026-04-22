@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 521 |
-| Exported functions/constants | 808 |
-| Exported types/interfaces | 238 |
-| Cross-package imports | 639 |
-| Critical integration points (3+ packages) | 15 |
+| Files scanned | 524 |
+| Exported functions/constants | 818 |
+| Exported types/interfaces | 242 |
+| Cross-package imports | 653 |
+| Critical integration points (3+ packages) | 17 |
 
 ## Package Dependency Flow
 
@@ -380,9 +380,10 @@
 - `getThemeRecentActivity()`
 - `getThemeMeetings()`
 - `getThemeDecisions()`
+- `listEmergingThemes()`
 - `getThemeParticipants()`
 
-**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`, `TopActiveTheme`, `ThemeShareSlice`, `ThemeShareDistribution`, `ThemeRecentActivity`, `ThemeMeetingEntry`, `ThemeDecisionEntry`, `ThemeParticipantEntry`
+**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`, `TopActiveTheme`, `ThemeShareSlice`, `ThemeShareDistribution`, `ThemeRecentActivity`, `ThemeMeetingEntry`, `ThemeDecisionEntry`, `ThemeParticipantEntry`, `EmergingThemeProposalMeeting`, `EmergingThemeRow`
 
 ### `queries/userback-issues.ts`
 
@@ -522,6 +523,8 @@
 - `clearMeetingThemes()`
 - `createEmergingTheme()`
 - `recalculateThemeStats()`
+- `deleteMatchesForMeeting()`
+- `rejectThemeMatch()`
 
 **Types:** `MeetingThemeMatch`, `EmergingThemeProposal`
 
@@ -1948,12 +1951,19 @@
 - `updateThemeAction()`
 - `archiveThemeAction()`
 - `canEditThemesAction()`
+- `approveThemeAction()`
+- `rejectEmergingThemeAction()`
+- `rejectThemeMatchAction()`
+- `regenerateMeetingThemesAction()`
 
 **Depends on:**
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 - `@repo/database/mutations/themes` → updateTheme, archiveTheme
+- `@repo/database/mutations/meeting-themes` → rejectThemeMatch, recalculateThemeStats
 - `@repo/database/queries/themes` → getThemeBySlug
+- `@repo/ai/pipeline/steps/tag-themes` → runTagThemesStep
+- `@repo/database/queries/meetings` → getVerifiedMeetingById
 
 ### `apps/cockpit/src/actions/weekly-summary.ts`
 
@@ -2548,6 +2558,7 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/review` → listDraftMeetings, getReviewStats
 - `@repo/database/queries/emails` → listDraftEmails
+- `@repo/database/queries/themes` → listEmergingThemes
 
 ### `apps/cockpit/src/app/(dashboard)/shift/page.tsx`
 
@@ -3547,6 +3558,16 @@
 **Depends on:**
 - (type) `@repo/database/queries/themes` → ThemeShareSlice
 
+### `apps/cockpit/src/components/themes/emerging-themes-section.tsx`
+
+**Exports:**
+- `EmergingThemesSection()`
+
+**Depends on:**
+- `@repo/database/queries/themes` → listEmergingThemes
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+
 ### `apps/cockpit/src/components/themes/emoji-picker-popover.tsx`
 
 **Exports:**
@@ -3557,6 +3578,31 @@
 **Depends on:**
 - `@repo/ui/utils` → cn
 - `@repo/ai/agents/theme-emojis` → THEME_EMOJIS, THEME_EMOJI_FALLBACK, type ThemeEmoji
+
+### `apps/cockpit/src/components/themes/match-reject-popover.tsx`
+
+**Exports:**
+- `MatchRejectPopover()`
+
+**Types:** `MatchRejectPopoverProps`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+- `@repo/ui/utils` → cn
+
+### `apps/cockpit/src/components/themes/theme-approval-card.tsx`
+
+**Exports:**
+- `ThemeApprovalCard()`
+
+**Types:** `ThemeApprovalCardProps`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+- `@repo/ui/utils` → cn
+- `@repo/ui/format` → formatDate
+- (type) `@repo/database/queries/themes` → EmergingThemeRow, EmergingThemeProposalMeeting
+- (type) `@repo/ai/agents/theme-emojis` → ThemeEmoji
 
 ### `apps/cockpit/src/components/themes/theme-edit-form.tsx`
 
@@ -4112,11 +4158,11 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 48 | - | - | - | - | 48 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 49 | 15 | 31 | - | - | 95 |
+| Cockpit Server Actions | 51 | 16 | 31 | - | - | 98 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 47 | 8 | - | 79 | - | 134 |
+| Cockpit Components | 49 | 9 | 2 | 84 | - | 144 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 87 | 6 | 3 | 30 | - | 126 |
+| Cockpit Pages | 88 | 6 | 3 | 30 | - | 127 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4138,12 +4184,14 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/actions/meeting-pipeline.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
+| `apps/cockpit/src/actions/themes.ts` | auth, database, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` | database, ui, ai | 3 |
 | `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` | database, ui, ai | 3 |
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
+| `apps/cockpit/src/components/themes/theme-approval-card.tsx` | ui, database, ai | 3 |
 | `apps/cockpit/src/components/themes/theme-edit-form.tsx` | database, ai, ui | 3 |
 | `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
@@ -4260,7 +4308,8 @@ Tracing the most important data flows from action → pipeline → database.
 | `linkMeetingToThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `clearMeetingThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `createEmergingTheme()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
-| `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/tag-themes.ts`, `apps/cockpit/src/actions/themes.ts` |
+| `rejectThemeMatch()` | `apps/cockpit/src/actions/themes.ts` |
 
 ### mutations/meetings.ts
 
@@ -4472,7 +4521,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getVerifiedMeetingById()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
+| `getVerifiedMeetingById()` | `apps/cockpit/src/actions/themes.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
 | `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
 | `listBoardMeetings()` | `packages/ai/src/pipeline/management-insights-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
 | `getMeetingByFirefliesId()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
@@ -4607,6 +4656,7 @@ Which queries are used where across the codebase.
 | `getThemeRecentActivity()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 | `getThemeMeetings()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 | `getThemeDecisions()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx`, `apps/cockpit/src/components/themes/emerging-themes-section.tsx` |
 | `getThemeParticipants()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/userback-issues.ts

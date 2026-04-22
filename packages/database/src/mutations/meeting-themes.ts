@@ -136,6 +136,71 @@ export async function recalculateThemeStats(
   return { success: true };
 }
 
+/**
+ * Alias van `clearMeetingThemes` met TH-006-semantiek: expliciet naamgegeven
+ * zodat de regenerate-flow in `regenerateMeetingThemesAction` leesbaar blijft.
+ * Bewaart `theme_match_rejections` (die horen bij feedback-loop, niet bij de
+ * matches) en alleen `meeting_themes` wordt geleegd.
+ */
+export async function deleteMatchesForMeeting(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  return clearMeetingThemes(meetingId, client);
+}
+
+/**
+ * TH-006 — reject één theme-match vanuit de review-UI. Atomisch: verwijder
+ * `meeting_themes` row + insert `theme_match_rejections` met reden + reviewer
+ * id. Idempotent (EDGE-211): als de match al weg is retourneren we success
+ * zonder rejection-insert te schrijven, anders zou dubbel-klikken twee rows
+ * opleveren.
+ */
+export async function rejectThemeMatch(
+  input: {
+    meetingId: string;
+    themeId: string;
+    reason: "niet_substantieel" | "ander_thema" | "te_breed";
+    userId: string;
+  },
+  client?: SupabaseClient,
+): Promise<{ success: true; alreadyRemoved: boolean } | { error: string }> {
+  const db = client ?? getAdminClient();
+
+  // Lees de huidige match — we hebben de evidence_quote nodig voor de
+  // rejection-row (die voedt negative_examples in de volgende prompt).
+  const { data: match, error: readErr } = await db
+    .from("meeting_themes")
+    .select("evidence_quote")
+    .eq("meeting_id", input.meetingId)
+    .eq("theme_id", input.themeId)
+    .maybeSingle();
+
+  if (readErr) return { error: readErr.message };
+
+  // EDGE-211: match bestaat niet meer (dubbel-klik, race). Succes zonder
+  // nieuwe rejection — die zou geen bewijs meer hebben en kan dupliceren.
+  if (!match) return { success: true, alreadyRemoved: true };
+
+  const { error: delErr } = await db
+    .from("meeting_themes")
+    .delete()
+    .eq("meeting_id", input.meetingId)
+    .eq("theme_id", input.themeId);
+  if (delErr) return { error: delErr.message };
+
+  const { error: insErr } = await db.from("theme_match_rejections").insert({
+    theme_id: input.themeId,
+    meeting_id: input.meetingId,
+    evidence_quote: match.evidence_quote,
+    reason: input.reason,
+    rejected_by: input.userId,
+  });
+  if (insErr) return { error: insErr.message };
+
+  return { success: true, alreadyRemoved: false };
+}
+
 function slugify(name: string): string {
   return name
     .toLowerCase()

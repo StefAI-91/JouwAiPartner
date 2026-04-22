@@ -52,7 +52,14 @@ export default async function ThemeDetailPage({ params }: { params: Promise<{ sl
           recentDecisions={decisions}
         />
       }
-      meetings={<MeetingsTab meetings={meetings} />}
+      meetings={
+        <MeetingsTab
+          themeId={theme.id}
+          themeName={theme.name}
+          meetings={meetings}
+          canRejectMatches={canEdit}
+        />
+      }
       decisions={<DecisionsTab decisions={decisions} />}
       questions={<QuestionsTab />}
       people={<PeopleTab participants={participants} />}

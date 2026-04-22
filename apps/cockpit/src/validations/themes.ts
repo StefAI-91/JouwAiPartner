@@ -20,3 +20,35 @@ export const archiveThemeSchema = z.object({
 });
 
 export type ArchiveThemeInput = z.infer<typeof archiveThemeSchema>;
+
+/**
+ * TH-006 — Approve emerging theme met optionele edits. Dezelfde velden als
+ * update, maar `themeId` wijst naar een `status='emerging'` row en de actie
+ * zet status naar `verified`.
+ */
+export const approveThemeSchema = updateThemeSchema;
+export type ApproveThemeInput = z.infer<typeof approveThemeSchema>;
+
+export const REJECTION_REASONS = ["niet_substantieel", "ander_thema", "te_breed"] as const;
+export type RejectionReason = (typeof REJECTION_REASONS)[number];
+
+/** TH-006 — emerging theme afwijzen (status='archived' + optioneel notitie). */
+export const rejectEmergingThemeSchema = z.object({
+  themeId: z.string().uuid(),
+  note: z.string().max(200).optional(),
+});
+export type RejectEmergingThemeInput = z.infer<typeof rejectEmergingThemeSchema>;
+
+/** TH-006 — Match afwijzen via ⊘ op meeting-link. */
+export const rejectThemeMatchSchema = z.object({
+  meetingId: z.string().uuid(),
+  themeId: z.string().uuid(),
+  reason: z.enum(REJECTION_REASONS),
+});
+export type RejectThemeMatchInput = z.infer<typeof rejectThemeMatchSchema>;
+
+/** TH-006 — Regenerate thema-tags voor één meeting. */
+export const regenerateMeetingThemesSchema = z.object({
+  meetingId: z.string().uuid(),
+});
+export type RegenerateMeetingThemesInput = z.infer<typeof regenerateMeetingThemesSchema>;
