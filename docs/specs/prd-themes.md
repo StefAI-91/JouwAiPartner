@@ -607,3 +607,72 @@ In `packages/database/src/queries/themes.ts`:
 
 Mutations in `packages/database/src/mutations/themes.ts`:
 `updateTheme()`, `archiveTheme()`.
+
+---
+
+## 10. Review-flow
+
+### 10.1 Uitbreiding van bestaande review
+
+Themes krijgen geen aparte review-pagina. Ze haken aan op de bestaande
+review-flow in `apps/cockpit/src/app/(dashboard)/review/`. Twee plekken:
+
+- **Review-queue index (`/review`)** — nieuwe sectie _"Thema's om te
+  bevestigen"_ boven de meetings-queue, met 1 kaart per `emerging`
+  thema. Zichtbaar zodra er iets te reviewen valt.
+- **Meeting-review detail (`/review/[id]`)** — per theme-link een
+  kleine _"afwijzen"_-knop (§10.4).
+
+### 10.2 Theme approval-kaart (emerging → verified)
+
+Per `emerging` thema één kaart met:
+
+- Grote emoji + voorgestelde naam + description (editable inline)
+- `matching_guide` (textarea, editable — default wat de AI voorstelde)
+- Onderaan: _"Gevonden in:"_ lijst met 2-3 meetings waar het voor het
+  eerst opkwam, met de evidence-quote per meeting
+- Drie knoppen:
+  - **"Goedkeuren"** (primary) → `status = 'verified'` + `verified_at`
+    - `verified_by = currentUser.id`
+  - **"Samenvoegen met…"** (secondary) → modal met bestaande
+    verified themes; target-theme kiezen → meetings mappen op target,
+    huidige thema wordt `archived` (v2 feature, in v1 placeholder met
+    _"Komt in v2"_ tooltip)
+  - **"Afwijzen"** → `status = 'archived'` + logged reason
+
+### 10.3 Emoji-picker
+
+Binnen de approval-kaart (en ook in theme edit-mode, §9.7) staat
+rechtsboven een emoji-picker. Gedrag:
+
+- 6×7 grid met de 42 emoji's uit `THEME_EMOJIS` (§7.3), gegroepeerd per
+  cluster met subtiele scheidslijnen.
+- Huidige selectie geaccentueerd met primary-ring.
+- Keyboard-navigable (pijltjes + enter).
+- Popover pattern (shadcn `Popover`) i.p.v. modal — lichter voor zo'n
+  kleine keuze.
+
+### 10.4 Match rejection (feedback-loop)
+
+In `/review/[id]` en op de theme-detail-page §9.3 (meetings-tab) krijgt
+elke theme-link een kleine ⊘-icon. Klik → popover met drie radio-
+buttons (`niet_substantieel` / `ander_thema` / `te_breed`) + bevestig.
+
+Effect:
+
+- Rij verwijderd uit `meeting_themes` (match ongedaan).
+- Rij toegevoegd aan `theme_match_rejections` met `reason`,
+  `rejected_by`, `evidence_quote`.
+- `mention_count` en `last_mentioned_at` worden bijgewerkt op het thema.
+
+### 10.5 Server Actions + queries
+
+In `apps/cockpit/src/actions/themes.ts`:
+
+- `approveTheme(themeId, patch)` — Zod-gevalideerd, zet verified + patch
+- `archiveTheme(themeId, reason)` — soft-archive
+- `rejectThemeMatch(meetingId, themeId, reason)` — split naar mutation
+  - verwijdert match, logt rejection, herberekent counts
+
+In `packages/database/src/queries/themes.ts`:
+`listEmergingThemes(client)` — voor de review-queue sectie.
