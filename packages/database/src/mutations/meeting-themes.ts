@@ -1,0 +1,147 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getAdminClient } from "../supabase/admin";
+
+export interface MeetingThemeMatch {
+  themeId: string;
+  confidence: "medium" | "high";
+  evidenceQuote: string;
+}
+
+export interface EmergingThemeProposal {
+  name: string;
+  description: string;
+  matching_guide: string;
+  emoji: string;
+  created_by_agent?: string;
+}
+
+/**
+ * Insert meeting-theme matches. Upsert op composite PK (meeting_id, theme_id):
+ * re-tag van dezelfde meeting overschrijft de eerdere matches voor hetzelfde
+ * thema zonder duplicate-error. Returns geïnserteerde/geüpdate count.
+ */
+export async function linkMeetingToThemes(
+  meetingId: string,
+  matches: MeetingThemeMatch[],
+  client?: SupabaseClient,
+): Promise<{ success: true; count: number } | { error: string }> {
+  if (matches.length === 0) return { success: true, count: 0 };
+  const db = client ?? getAdminClient();
+
+  const rows = matches.map((m) => ({
+    meeting_id: meetingId,
+    theme_id: m.themeId,
+    confidence: m.confidence,
+    evidence_quote: m.evidenceQuote,
+  }));
+
+  const { error, count } = await db
+    .from("meeting_themes")
+    .upsert(rows, { onConflict: "meeting_id,theme_id", count: "exact" });
+
+  if (error) return { error: error.message };
+  return { success: true, count: count ?? rows.length };
+}
+
+/**
+ * Verwijder alle theme-matches voor een meeting. Nodig voor re-tag via
+ * TH-006 regenerate-knop en voor batch --force. Matching_guide-wijzigingen
+ * triggeren geen auto-retag (zou cascading cost geven).
+ */
+export async function clearMeetingThemes(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db.from("meeting_themes").delete().eq("meeting_id", meetingId);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
+ * Maak een nieuw `emerging` thema aan. De slug wordt afgeleid van `name`
+ * (kebab-case); bij UNIQUE-collision geeft PG een duidelijke fout terug die
+ * de caller logt. Niet silent renamen — emerging themes horen menselijk
+ * beoordeeld te worden in de review-flow (TH-006).
+ */
+export async function createEmergingTheme(
+  proposal: EmergingThemeProposal,
+  client?: SupabaseClient,
+): Promise<{ success: true; id: string; slug: string } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const slug = slugify(proposal.name);
+
+  const { data, error } = await db
+    .from("themes")
+    .insert({
+      slug,
+      name: proposal.name,
+      description: proposal.description,
+      matching_guide: proposal.matching_guide,
+      emoji: proposal.emoji,
+      status: "emerging",
+      created_by_agent: proposal.created_by_agent ?? "theme_tagger",
+    })
+    .select("id, slug")
+    .single();
+
+  if (error) return { error: error.message };
+  return { success: true, id: data.id, slug: data.slug };
+}
+
+/**
+ * Herbereken `mention_count` en `last_mentioned_at` op de gegeven themes uit
+ * de junction-tabel. Eén UPDATE met correlated subqueries — snel en atomisch
+ * zelfs voor 6 theme_ids per call. Zonder deze sync raken pills en donut
+ * out of sync met de werkelijkheid.
+ */
+export async function recalculateThemeStats(
+  themeIds: string[],
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  if (themeIds.length === 0) return { success: true };
+  const db = client ?? getAdminClient();
+
+  // Losse updates per thema: composable, geen RPC nodig, en N is klein
+  // (≤6 per pipeline-run). Aggregates komen uit meeting_themes.
+  for (const themeId of themeIds) {
+    const { count: matchCount, error: countErr } = await db
+      .from("meeting_themes")
+      .select("meeting_id", { count: "exact", head: true })
+      .eq("theme_id", themeId);
+
+    if (countErr) return { error: countErr.message };
+
+    const { data: latest, error: latestErr } = await db
+      .from("meeting_themes")
+      .select("created_at")
+      .eq("theme_id", themeId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestErr) return { error: latestErr.message };
+
+    const { error: updateErr } = await db
+      .from("themes")
+      .update({
+        mention_count: matchCount ?? 0,
+        last_mentioned_at: latest?.created_at ?? null,
+      })
+      .eq("id", themeId);
+
+    if (updateErr) return { error: updateErr.message };
+  }
+
+  return { success: true };
+}
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "") // strip combining diacritics via Unicode mark property
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}

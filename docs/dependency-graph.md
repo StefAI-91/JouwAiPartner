@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 497 |
-| Exported functions/constants | 773 |
-| Exported types/interfaces | 213 |
-| Cross-package imports | 608 |
+| Files scanned | 499 |
+| Exported functions/constants | 780 |
+| Exported types/interfaces | 220 |
+| Cross-package imports | 611 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -372,9 +372,11 @@
 
 **Exports:**
 - `listVerifiedThemes()`
+- `listVerifiedThemes()`
+- `listVerifiedThemes()`
 - `getThemeBySlug()`
 
-**Types:** `ThemeRow`
+**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`
 
 ### `queries/userback-issues.ts`
 
@@ -506,6 +508,16 @@
 - `removeSegmentTag()`
 - `updateSegmentEmbedding()`
 - `deleteSegmentsByMeetingId()`
+
+### `mutations/meeting-themes.ts`
+
+**Exports:**
+- `linkMeetingToThemes()`
+- `clearMeetingThemes()`
+- `createEmergingTheme()`
+- `recalculateThemeStats()`
+
+**Types:** `MeetingThemeMatch`, `EmergingThemeProposal`
 
 ### `mutations/meetings.ts`
 
@@ -921,6 +933,7 @@
 - `./steps/generate-title` → runGenerateTitleStep
 - `./steps/tag-and-segment` → runTagAndSegmentStep
 - `./steps/embed` → runEmbedStep
+- `./steps/tag-themes` → runTagThemesStep
 - `./speaker-map` → extractSpeakerNames, buildSpeakerMap, formatSpeakerContext
 - `./participant-helpers` → matchParticipants, mergeParticipantSources, type MeetingAttendee
 
@@ -1114,6 +1127,21 @@
 - `../segment-builder` → buildSegments
 - `../../embeddings` → embedBatch
 - `../../validations/gatekeeper` → IdentifiedProject
+
+### `packages/ai/src/pipeline/steps/tag-themes.ts`
+
+**Exports:**
+- `runTagThemesStep()`
+
+**Types:** `TagThemesResult`, `TagThemesStepInput`
+
+**Depends on:**
+- `@repo/database/queries/meetings` → getMeetingExtractions
+- `@repo/database/queries/themes` → listVerifiedThemes
+- `@repo/database/mutations/meeting-themes` → linkMeetingToThemes, createEmergingTheme, recalculateThemeStats, clearMeetingThemes
+
+**Internal deps:**
+- `../../agents/theme-tagger` → tagMeetingThemes, type TagMeetingThemesInput
 
 ### `packages/ai/src/pipeline/steps/transcribe.ts`
 
@@ -3900,7 +3928,7 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 45 | - | - | - | - | 45 |
+| AI Pipeline | 48 | - | - | - | - | 48 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 47 | 15 | 29 | - | - | 91 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
@@ -4041,6 +4069,15 @@ Tracing the most important data flows from action → pipeline → database.
 | `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
 | `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `deleteSegmentsByMeetingId()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
+
+### mutations/meeting-themes.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `linkMeetingToThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `clearMeetingThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `createEmergingTheme()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 
 ### mutations/meetings.ts
 
@@ -4255,7 +4292,7 @@ Which queries are used where across the codebase.
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
-| `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
+| `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts`, `packages/ai/src/pipeline/steps/tag-themes.ts` |
 | `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
 | `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `getMeetingForRegenerate()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
@@ -4366,6 +4403,14 @@ Which queries are used where across the codebase.
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
+
+### queries/themes.ts
+
+| Query | Used in |
+|-------|---------|
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 
 ### queries/userback-issues.ts
 

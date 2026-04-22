@@ -18,6 +18,7 @@ import { runRiskSpecialistStep } from "./steps/risk-specialist";
 import { runGenerateTitleStep } from "./steps/generate-title";
 import { runTagAndSegmentStep } from "./steps/tag-and-segment";
 import { runEmbedStep } from "./steps/embed";
+import { runTagThemesStep } from "./steps/tag-themes";
 import { extractSpeakerNames, buildSpeakerMap, formatSpeakerContext } from "./speaker-map";
 import {
   matchParticipants,
@@ -51,8 +52,17 @@ interface PipelineResult {
   embedded: boolean;
   elevenlabs_transcribed: boolean;
   summarized: boolean;
+  themes_tagged: number;
+  themes_proposals: number;
   errors: string[];
 }
+
+/**
+ * ThemeTagger skip-drempel: meetings met een `relevance_score` onder deze
+ * waarde worden niet door de ThemeTagger gehaald (FUNC-211, PRD §5.1). Zelfde
+ * drempel als de email-filter-gatekeeper gebruikt voor ruis-emails.
+ */
+const THEME_TAGGER_MIN_RELEVANCE = 0.4;
 
 /**
  * Full meeting processing pipeline:
@@ -176,6 +186,8 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
       embedded: false,
       elevenlabs_transcribed: false,
       summarized: false,
+      themes_tagged: 0,
+      themes_proposals: 0,
       errors: [`Meeting insert: ${insertResult.error}`],
     };
   }
@@ -259,14 +271,36 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   errors.push(...tagResult.errors);
   const segmentsSaved = tagResult.segmentsSaved;
 
-  // Step 11: Embed meeting + extractions
+  // Step 11a: await risk-specialist zodat alle extractions zijn weggeschreven
+  // voordat ThemeTagger ze ophaalt. Zonder deze await zou de tagger risk-
+  // extractions missen die parallel nog aan het saven zijn.
+  await riskSpecialistPromise;
+
+  // Step 11b: ThemeTagger draait parallel aan embed-save. Skip bij lage
+  // relevance_score (FUNC-211) zodat we geen tokens verspillen aan meetings
+  // die jullie sowieso rejecten in de review. Never-throws step.
+  const shouldTagThemes = gatekeeperResult.relevance_score >= THEME_TAGGER_MIN_RELEVANCE;
+  const tagThemesPromise = shouldTagThemes
+    ? runTagThemesStep({
+        meetingId,
+        meetingTitle: input.title,
+        summary: richSummary ?? input.summary,
+      })
+    : Promise.resolve({
+        success: true,
+        matches_saved: 0,
+        proposals_saved: 0,
+        themes_considered: 0,
+        error: null,
+        skipped: "low_relevance",
+      } as const);
+
+  // Step 11c: Embed meeting + extractions — parallel met tag-themes
   const embedResult = await runEmbedStep(meetingId);
   if (embedResult.error) errors.push(`Embedding: ${embedResult.error}`);
 
-  // Await de parallel-gestarte RiskSpecialist voor return — Vercel sluit
-  // de function anders af voor de save klaar is. Errors zijn binnen de
-  // step al behandeld en gelogd.
-  await riskSpecialistPromise;
+  const tagThemesResult = await tagThemesPromise;
+  if (tagThemesResult.error) errors.push(`ThemeTagger: ${tagThemesResult.error}`);
 
   return {
     gatekeeper: gatekeeperResult,
@@ -278,6 +312,8 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     embedded: embedResult.success,
     elevenlabs_transcribed: transcribeResult.success,
     summarized,
+    themes_tagged: tagThemesResult.matches_saved,
+    themes_proposals: tagThemesResult.proposals_saved,
     errors,
   };
 }

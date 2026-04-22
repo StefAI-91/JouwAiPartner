@@ -220,9 +220,9 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     model: "claude-haiku-4-5-20251001",
     modelLabel: "Haiku 4.5",
     quadrant: "cockpit",
-    status: "building",
+    status: "live",
     promptFile: "theme-tagger.md",
-    entrypoint: "packages/ai/src/agents/theme-tagger.ts",
+    entrypoint: "packages/ai/src/pipeline/steps/tag-themes.ts",
   },
 ];
 
