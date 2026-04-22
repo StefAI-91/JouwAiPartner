@@ -978,6 +978,45 @@ export type Database = {
           },
         ];
       };
+      meeting_themes: {
+        Row: {
+          confidence: string;
+          created_at: string;
+          evidence_quote: string;
+          meeting_id: string;
+          theme_id: string;
+        };
+        Insert: {
+          confidence: string;
+          created_at?: string;
+          evidence_quote: string;
+          meeting_id: string;
+          theme_id: string;
+        };
+        Update: {
+          confidence?: string;
+          created_at?: string;
+          evidence_quote?: string;
+          meeting_id?: string;
+          theme_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "meeting_themes_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "meeting_themes_theme_id_fkey";
+            columns: ["theme_id"];
+            isOneToOne: false;
+            referencedRelation: "themes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       meetings: {
         Row: {
           ai_briefing: string | null;
@@ -1454,6 +1493,105 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      theme_match_rejections: {
+        Row: {
+          evidence_quote: string;
+          id: string;
+          meeting_id: string;
+          reason: string;
+          rejected_at: string;
+          rejected_by: string;
+          theme_id: string;
+        };
+        Insert: {
+          evidence_quote: string;
+          id?: string;
+          meeting_id: string;
+          reason: string;
+          rejected_at?: string;
+          rejected_by: string;
+          theme_id: string;
+        };
+        Update: {
+          evidence_quote?: string;
+          id?: string;
+          meeting_id?: string;
+          reason?: string;
+          rejected_at?: string;
+          rejected_by?: string;
+          theme_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "theme_match_rejections_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "theme_match_rejections_theme_id_fkey";
+            columns: ["theme_id"];
+            isOneToOne: false;
+            referencedRelation: "themes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      themes: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          created_by_agent: string | null;
+          description: string;
+          emoji: string;
+          id: string;
+          last_mentioned_at: string | null;
+          matching_guide: string;
+          mention_count: number;
+          name: string;
+          slug: string;
+          status: string;
+          updated_at: string;
+          verified_at: string | null;
+          verified_by: string | null;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by_agent?: string | null;
+          description: string;
+          emoji?: string;
+          id?: string;
+          last_mentioned_at?: string | null;
+          matching_guide: string;
+          mention_count?: number;
+          name: string;
+          slug: string;
+          status?: string;
+          updated_at?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by_agent?: string | null;
+          description?: string;
+          emoji?: string;
+          id?: string;
+          last_mentioned_at?: string | null;
+          matching_guide?: string;
+          mention_count?: number;
+          name?: string;
+          slug?: string;
+          status?: string;
+          updated_at?: string;
+          verified_at?: string | null;
+          verified_by?: string | null;
+        };
+        Relationships: [];
       };
       update_suggestions: {
         Row: {
