@@ -205,6 +205,53 @@ Organizations, projects, people, and extractions are manually editable via inlin
 
 ## Regels
 
+### Vóór je code schrijft
+
+Claude schrijft vaak te snel en te veel. Deze sectie bestaat om dat te
+remmen — in ruil voor wat aanlooptijd win je minder unnecessary diffs,
+minder rewrites, en minder verrassingen in productie.
+
+- **Benoem aannames expliciet.** Als een verzoek op twee manieren te
+  interpreteren is, presenteer beide — kies niet stil. "Je zegt X, ik
+  lees dat als A, maar het kan ook B betekenen. Welke bedoel je?"
+- **Geef tegenwicht wanneer iets simpeler kan.** Voordat je 200 regels
+  schrijft: "Dit kan ook in 20 regels zonder nieuwe abstractie — wil
+  je dat?" Push back is hier gewenst, niet onbeleefd.
+- **Formuleer meetbare succes-criteria voor multi-step werk.** Vóór je
+  begint, schets 2-5 stappen mét verificatie per stap:
+  ```
+  1. [actie] → verifieer: [hoe we zien dat het klopt]
+  2. [actie] → verifieer: [hoe we zien dat het klopt]
+  ```
+  Zonder criteria valt Claude stil bij de eerste twijfel of dendert
+  door zonder check. Sterke criteria laten hem zelfstandig itereren.
+- **Experimentele wijzigingen die niet lokaal testbaar zijn: kies
+  altijd de conservatieve variant.** Externe API-gedrag (Supabase
+  query-syntax, PostgREST embed-aliases), productie-DB, deploy-
+  specifieke quirks — als je het niet kunt reproduceren in de test-
+  omgeving, ga niet experimenteren. TH-914 is de cautionary tale:
+  een `referencedTable`-micro-optimalisatie brak de theme detail page
+  in productie omdat we het lokaal niet konden verifiëren.
+
+### Blast radius discipline
+
+Elke gewijzigde regel moet herleidbaar zijn tot de taak of sprint-scope.
+Test: als je een line-diff ziet en niet kunt uitleggen "dit was nodig
+voor [doel]", haal hem weg.
+
+- **Geen drive-by-fixes tijdens feature-werk.** Spelling, formatting,
+  naamgeving van code die je tegenkomt maar niet raakt → laat staan.
+  Noem het in de PR-beschrijving als observatie voor een volgende
+  cleanup.
+- **Orphans opruimen mag wél.** Imports, variabelen of helpers die
+  door jouw wijziging unused worden, verwijder je direct. Pre-existing
+  dead code die er al stond: niet tenzij gevraagd.
+- **Match bestaande stijl.** Ook als je iets anders zou doen. Stijl-
+  consistentie binnen een file is belangrijker dan jouw voorkeur.
+- **Uitzondering:** expliciete cleanup-sprints (zoals TH-007/8/9)
+  mogen adjacent code wél aanraken, mits de wijziging binnen de
+  sprint-scope valt.
+
 ### Architectuur
 
 - **Bouwvolgorde:** database → query → validatie → action → component → page.
@@ -213,6 +260,7 @@ Organizations, projects, people, and extractions are manually editable via inlin
 - **Data ophalen in Server Components.** Geen `useEffect` voor data fetching.
 - **Data muteren via Server Actions.** Geen directe Supabase calls in components.
 - **Splits bij ~150 regels.** Component te groot? Splits het.
+- **Als je een file/functie >2× zo lang maakt als nodig lijkt voor het doel, stop en herschrijf korter.** 200 regels voor iets dat in 50 kan = signaal dat er abstractie-drift zit. Vraag jezelf: "Zou een senior engineer zeggen dat dit overgeëngineerd is?" Als ja, vereenvoudig.
 
 ### Database & Queries
 
