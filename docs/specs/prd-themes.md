@@ -364,3 +364,100 @@ Na de migratie draaien: `supabase gen types typescript --local`
 queries in `packages/database/src/queries/themes.ts` en mutations in
 `packages/database/src/mutations/themes.ts` (geen directe `.from()`
 buiten deze folders, CLAUDE.md §Database & Queries).
+
+---
+
+## 7. Emoji shortlist
+
+### 7.1 Principe
+
+De ThemeTagger mag **alleen** uit een gecureerde shortlist kiezen.
+Daarmee voorkomen we dat twee lijkende thema's verschillende emoji
+krijgen (drift), dat rare emoji's opduiken (😅 als thema-icoon), of
+dat een LLM-run willekeurig een andere kiest bij dezelfde prompt.
+De shortlist is klein genoeg om visueel consistent te blijven, groot
+genoeg om alle interne thema's te dekken. 42 emoji's, gegroepeerd in
+6 clusters — clusters dienen puur voor het brein bij uitbreiden, zijn
+niet functioneel in code.
+
+### 7.2 De 42 emoji's
+
+| Cluster            | Emoji's                 |
+| ------------------ | ----------------------- |
+| **Mensen & team**  | 👥 🫂 👩‍💻 🧑‍💼 🙋 🎯 🏆    |
+| **Werk & proces**  | 🗂️ 📋 📊 🧭 🗺️ ⚙️ 🔁    |
+| **Product & tech** | 💻 🤖 🧱 🚀 🛠️ 🐛 🎨 📱 |
+| **Business**       | 💶 📈 📉 💼 🤝 💡 🏢    |
+| **Klant & markt**  | 💬 📢 ❤️ 🗣️ 🌍 🧾       |
+| **Operationeel**   | 🏠 🧳 📚 ⏱️ 🔐 📦 🛡️    |
+
+Plus fallback `🏷️` — default bij nieuwe themes waar de tagger geen
+keuze maakt, en visueel herkenbaar voor de reviewer als "nog kiezen".
+
+### 7.3 Code-locatie + shape
+
+Eén bestand: `packages/ai/src/agents/theme-emojis.ts`.
+
+```ts
+export const THEME_EMOJIS = [
+  "👥",
+  "🫂",
+  "👩‍💻",
+  "🧑‍💼",
+  "🙋",
+  "🎯",
+  "🏆",
+  "🗂️",
+  "📋",
+  "📊",
+  "🧭",
+  "🗺️",
+  "⚙️",
+  "🔁",
+  "💻",
+  "🤖",
+  "🧱",
+  "🚀",
+  "🛠️",
+  "🐛",
+  "🎨",
+  "📱",
+  "💶",
+  "📈",
+  "📉",
+  "💼",
+  "🤝",
+  "💡",
+  "🏢",
+  "💬",
+  "📢",
+  "❤️",
+  "🗣️",
+  "🌍",
+  "🧾",
+  "🏠",
+  "🧳",
+  "📚",
+  "⏱️",
+  "🔐",
+  "📦",
+  "🛡️",
+] as const;
+
+export const THEME_EMOJI_FALLBACK = "🏷️" as const;
+export type ThemeEmoji = (typeof THEME_EMOJIS)[number] | typeof THEME_EMOJI_FALLBACK;
+```
+
+Beide apps importeren via `@repo/ai/agents/theme-emojis`:
+
+- **ThemeTagger-prompt** geeft deze array als _"kies exact één uit deze
+  lijst"_-enum mee; Zod valideert de output tegen `ThemeEmoji`.
+- **Review-UI emoji-picker** (§9) rendert deze array als 6×7 grid.
+
+### 7.4 Uitbreiden
+
+Shortlist aanpassen = codewijziging + PR, bewust. Als jij/Wouter een
+emoji mist, wordt die toegevoegd in een minor PR en geldt vanaf de
+volgende ThemeTagger-run. Bestaande themes blijven ongemoeid. Niet
+via UI of database muteerbaar — dat zou precies de drift uitlokken die
+we wilden voorkomen.
