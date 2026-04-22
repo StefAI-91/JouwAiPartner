@@ -187,3 +187,69 @@ Drie signalen die zeggen "tijd om embeddings toe te voegen":
 - Feature-verzoek "themes zoals dit thema" of "similar themes" in UI.
 
 Tot dan: gewoon `SELECT`, Haiku en klaar. Niet prematuur optimaliseren.
+
+---
+
+## 5. Agent-architectuur
+
+### 5.1 ThemeTagger — positie in de pipeline
+
+Nieuwe agent (Haiku 4.5), draait **na** de extractors en parallel aan
+het embed-en-save stuk. Waarom die positie:
+
+- Loopt **na** Gatekeeper zodat je geen tokens verspilt aan meetings
+  die we sowieso weggooien (relevance_score laag).
+- Loopt **na** Summarizer/Extractor zodat ThemeTagger het rijkere
+  signaal kan gebruiken (samenvatting + extractions), niet alleen de
+  ruwe transcript. Dat geeft betere matches met minder ruis.
+- Is **geen onderdeel van Gatekeeper** zelf (zie §5.3).
+
+Registreren in `packages/ai/src/agents/registry.ts` als 13e agent zodat
+hij op de `/agents` observability pagina verschijnt.
+
+### 5.2 ThemeTagger — input en output
+
+**Input:**
+
+- Meeting-ID + samenvatting + extractions (decisions, action_items,
+  insights, needs).
+- Volledige lijst `verified` themes uit de database (id, name,
+  description).
+- De gecureerde emoji-shortlist (zie §7) als enum.
+
+**Output** (Zod-gevalideerd, JSON schema):
+
+```ts
+{
+  matches: [
+    { themeId: string, confidence: "low"|"medium"|"high", evidenceQuote: string }
+  ],  // 0–4 stuks; meer dan 4 duidt op over-tagging
+  proposals: [
+    { name: string, description: string, emoji: Emoji, evidenceQuote: string, reasoning: string }
+  ],  // 0–2 stuks; proposals spammen we nooit
+  meta: { themesConsidered: number, skipped?: string }
+}
+```
+
+- Per match gaat één rij naar `meeting_themes` met de `evidenceQuote`
+  als argument voor waarom. Die quote is goud voor de detail-UI (C11).
+- Elk `proposal` wordt een nieuwe theme-row met status `emerging` en
+  landt in de review-queue met de `reasoning` als toelichting.
+- `confidence` is bewust **categorisch**, niet numeriek — LLM's zijn
+  slecht gekalibreerd op 0–1 scores, drie buckets zijn scherp genoeg.
+
+### 5.3 Waarom niet in Gatekeeper
+
+Gatekeeper beantwoordt één vraag (_doorlaten ja/nee_) en moet snel en
+goedkoop blijven. ThemeTagger is een verrijkingsstap die pas zin heeft
+nadat we weten dat de meeting erin blijft — en hij heeft de extracties
+nodig die Gatekeeper nog niet heeft. Single responsibility blijft
+gehandhaafd (CLAUDE.md: _"elk bestand doet één ding"_).
+
+### 5.4 Curator — uitgesteld naar v2/v3
+
+Nachtelijke agent (Sonnet) die het groeiende veld gezond houdt:
+dedupe, merge-voorstellen, archivering van stille themes. Niet nodig in
+v1 zolang het aantal themes klein is en jullie in de review-queue zelf
+kunt ingrijpen. Eerste Curator-taak: voorgestelde merges zichtbaar
+maken in review-UI (v2).
