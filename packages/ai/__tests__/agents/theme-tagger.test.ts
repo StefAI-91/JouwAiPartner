@@ -25,8 +25,9 @@ import { THEME_EMOJI_FALLBACK } from "../../src/agents/theme-emojis";
 
 const mockGenerateObject = generateObject as unknown as ReturnType<typeof vi.fn>;
 
-const HIRING_THEME_ID = "11111111-1111-1111-1111-111111111111";
-const WERKDRUK_THEME_ID = "22222222-2222-2222-2222-222222222222";
+// Must be valid v4 UUIDs (zod v4 validates RFC format strictly).
+const HIRING_THEME_ID = "11111111-1111-4111-8111-111111111111";
+const WERKDRUK_THEME_ID = "22222222-2222-4222-8222-222222222222";
 
 function meetingContext(
   overrides: Partial<Parameters<typeof tagMeetingThemes>[0]["meeting"]> = {},
@@ -322,19 +323,72 @@ describe("ThemeTagger — Zod-validatie (AI-214)", () => {
     expect(parse).toThrow();
   });
 
-  it("werpt als matches meer dan 4 items bevat (over-tagging cap)", () => {
+  it("Zod accepteert >4 matches (cap wordt post-validatie toegepast in de agent)", () => {
+    // Cap zit niet meer in Zod omdat Anthropic's structured-output schema
+    // geen `maxItems` accepteert. Het schema laat elke array-grootte toe.
     const match = {
       themeId: HIRING_THEME_ID,
       confidence: "medium" as const,
       evidenceQuote: "quote",
     };
-    const parse = () =>
-      ThemeTaggerOutputSchema.parse({
-        matches: [match, match, match, match, match],
-        proposals: [],
-        meta: { themesConsidered: 2 },
-      });
+    const parsed = ThemeTaggerOutputSchema.parse({
+      matches: [match, match, match, match, match],
+      proposals: [],
+      meta: { themesConsidered: 2 },
+    });
+    expect(parsed.matches).toHaveLength(5);
+  });
+});
 
-    expect(parse).toThrow();
+describe("ThemeTagger — post-validatie hard-cap (Anthropic schema compat)", () => {
+  it("slice matches tot max 4 ook als de LLM er meer teruggeeft", async () => {
+    const FIVE_IDS = [
+      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+    ];
+    const extraMatch = (i: number) => ({
+      themeId: FIVE_IDS[i - 1],
+      confidence: "medium" as const,
+      evidenceQuote: `quote ${i}`,
+    });
+    mockResponse({
+      matches: [extraMatch(1), extraMatch(2), extraMatch(3), extraMatch(4), extraMatch(5)],
+      proposals: [],
+      meta: { themesConsidered: 2 },
+    });
+
+    const out = await tagMeetingThemes({
+      meeting: meetingContext(),
+      themes: THEMES,
+      negativeExamples: [],
+    });
+
+    expect(out.matches).toHaveLength(4);
+  });
+
+  it("slice proposals tot max 2", async () => {
+    const makeProposal = (i: number) => ({
+      name: `Thema ${i}`,
+      description: "desc",
+      emoji: "📋" as const,
+      evidenceQuote: "quote",
+      reasoning: "reasoning",
+    });
+    mockResponse({
+      matches: [],
+      proposals: [makeProposal(1), makeProposal(2), makeProposal(3)],
+      meta: { themesConsidered: 2 },
+    });
+
+    const out = await tagMeetingThemes({
+      meeting: meetingContext(),
+      themes: THEMES,
+      negativeExamples: [],
+    });
+
+    expect(out.proposals).toHaveLength(2);
   });
 });

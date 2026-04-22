@@ -3,7 +3,12 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { ThemeTaggerOutputSchema, type ThemeTaggerOutput } from "../validations/theme-tagger";
+import {
+  ThemeTaggerOutputSchema,
+  MATCHES_HARD_CAP,
+  PROPOSALS_HARD_CAP,
+  type ThemeTaggerOutput,
+} from "../validations/theme-tagger";
 import { THEME_EMOJIS, THEME_EMOJI_FALLBACK } from "./theme-emojis";
 import { withAgentRun } from "./run-logger";
 
@@ -88,7 +93,17 @@ export async function tagMeetingThemes(input: TagMeetingThemesInput): Promise<Th
         ],
       });
 
-      return { result: object, usage };
+      // Defensieve cap post-validatie. Anthropic's structured-output schema
+      // accepteert geen `maxItems` op arrays, dus we kunnen het niet in Zod
+      // vastleggen zonder API-errors. De prompt instrueert 4 / 2 maxima; we
+      // enforcen dat hier hard voor het geval de LLM er toch overheen gaat.
+      const capped: ThemeTaggerOutput = {
+        ...object,
+        matches: object.matches.slice(0, MATCHES_HARD_CAP),
+        proposals: object.proposals.slice(0, PROPOSALS_HARD_CAP),
+      };
+
+      return { result: capped, usage };
     },
   );
 }

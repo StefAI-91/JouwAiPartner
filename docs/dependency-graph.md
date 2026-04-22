@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 524 |
-| Exported functions/constants | 818 |
+| Exported functions/constants | 820 |
 | Exported types/interfaces | 242 |
 | Cross-package imports | 653 |
 | Critical integration points (3+ packages) | 17 |
@@ -798,7 +798,7 @@
 **Types:** `ThemeContext`, `NegativeExample`, `ExtractionContext`, `MeetingContext`, `TagMeetingThemesInput`
 
 **Internal deps:**
-- `../validations/theme-tagger` → ThemeTaggerOutputSchema, type ThemeTaggerOutput
+- `../validations/theme-tagger` → ThemeTaggerOutputSchema, MATCHES_HARD_CAP, PROPOSALS_HARD_CAP, type ThemeTaggerOutput
 - `./theme-emojis` → THEME_EMOJIS, THEME_EMOJI_FALLBACK
 - `./run-logger` → withAgentRun
 
@@ -1398,6 +1398,8 @@
 ### `packages/ai/src/validations/theme-tagger.ts`
 
 **Exports:**
+- `MATCHES_HARD_CAP`
+- `PROPOSALS_HARD_CAP`
 - `ThemeMatchSchema`
 - `ThemeProposalSchema`
 - `ThemeTaggerOutputSchema`

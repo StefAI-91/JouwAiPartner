@@ -13,9 +13,15 @@ import { ALL_THEME_EMOJIS } from "../agents/theme-emojis";
  * kiezen (42 shortlist + fallback `🏷️`). LLM-vrij kiezen = drift.
  *
  * Max 4 matches en max 2 proposals per meeting — "als alles matcht is het
- * over-tagging" (PRD §5.2). Hard in Zod zodat een ontsporende LLM ook niet
- * via lax post-processing doorkomt.
+ * over-tagging" (PRD §5.2). Cap wordt NIET in Zod gedaan: Anthropic's
+ * structured-output-schema weigert `maxItems` op arrays. De prompt zegt de
+ * regel expliciet, en `tagMeetingThemes()` doet een defensieve `.slice()`
+ * na validatie. Zo blijft de hard-cap gegarandeerd zonder dat de API-call
+ * faalt op schema-incompatibiliteit.
  */
+
+export const MATCHES_HARD_CAP = 4;
+export const PROPOSALS_HARD_CAP = 2;
 
 export const ThemeMatchSchema = z.object({
   themeId: z.string().uuid().describe("UUID van het bestaande verified/emerging thema dat matcht."),
@@ -46,12 +52,14 @@ export const ThemeProposalSchema = z.object({
 export const ThemeTaggerOutputSchema = z.object({
   matches: z
     .array(ThemeMatchSchema)
-    .max(4)
-    .describe("Max 4 matches per meeting — meer duidt op over-tagging."),
+    .describe(
+      "Max 4 matches per meeting — meer duidt op over-tagging. Cap wordt post-validatie toegepast.",
+    ),
   proposals: z
     .array(ThemeProposalSchema)
-    .max(2)
-    .describe("Max 2 proposals per meeting — proposals spammen we nooit."),
+    .describe(
+      "Max 2 proposals per meeting — proposals spammen we nooit. Cap wordt post-validatie toegepast.",
+    ),
   meta: z.object({
     themesConsidered: z.number().int().nonnegative(),
     skipped: z.string().optional(),
