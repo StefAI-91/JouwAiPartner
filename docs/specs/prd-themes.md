@@ -116,3 +116,56 @@ overleg tussen Stef en Wouter** — niet projecten, niet klanten.
 - Weekly digest email (D16) → v3
 - Hiërarchische themes (parent/child) → later, niet in v1
 - Cross-app themes (DevHub/Portal) → v2+
+
+---
+
+## 4. Aanpak in hoofdlijnen
+
+### 4.1 Match-first, create-second
+
+Het grootste risico bij emergent themes is **drift**: zonder discipline
+krijg je binnen een maand "hiring", "hiring junior", "junior devs",
+"werving" als vier aparte thema's. Daarom geldt één hoofdregel: de AI
+**probeert eerst te matchen** tegen bestaande themes, en stelt pas
+daarna een nieuw thema voor.
+
+Concreet flowbeeld per meeting:
+
+1. Transcript → embedding (Cohere embed-v4, 1024-dim) per semantische
+   chunk.
+2. Vector-lookup tegen `themes.embedding` → top-10 kandidaten.
+3. Retrieval-augmented LLM-call (Haiku): _"Match dit fragment aan één
+   van deze themes, of stel een nieuw thema voor als er echt geen
+   goede match is."_
+4. Match ≥ threshold → link via `meeting_themes` (status bestaand
+   thema blijft ongewijzigd).
+5. Geen match → nieuw thema met status `emerging` → review-queue.
+
+### 4.2 Verification-first, ook voor themes
+
+Nieuwe themes worden niet direct "waar". Een `emerging` thema:
+
+- Verschijnt **niet** in de dashboard pills (A1) of donut (B8).
+- Verschijnt **wel** in de review-queue met emoji-picker.
+- Wordt pas `verified` na approve door Stef of Wouter.
+- Blijft anders na 14 dagen automatisch op `emerging` → Curator kan
+  voorstellen tot archiveren.
+
+Dit sluit aan op het bestaande verification-model van extractions en
+meetings ("verification before truth", CLAUDE.md §Key Design Principles).
+
+### 4.3 Seed vooraf, niet vanuit nul
+
+Bij de eerste deploy wordt een seed van 10–15 bekende thema's geplaatst
+(hiring, sales pipeline, productstrategie, etc.). Dit voorkomt dat de
+eerste 20 meetings allemaal nieuwe emerging-themes genereren en geeft
+de ThemeTagger meteen iets om tegen te matchen. Seed-themes krijgen
+direct status `verified` en worden per supabase migration geplaatst
+(`supabase/seed/themes.sql`).
+
+### 4.4 Retroactieve batch-run bij launch
+
+Direct na deploy wordt er eenmalig een batch-run over alle bestaande
+verified meetings uitgevoerd. Zonder deze stap is de eerste 4–6 weken
+de themes-data te dun om iets zinnigs te tonen (dashboard blijft leeg).
+De batch draait via een one-off script in `packages/ai/src/pipeline/`.
