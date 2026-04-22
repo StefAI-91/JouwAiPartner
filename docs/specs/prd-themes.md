@@ -134,10 +134,10 @@ Concreet flowbeeld per meeting:
 1. Ophalen van alle `verified` themes incl. `name`, `description`,
    `matching_guide` en recente `negative_examples` (zie §5.2 voor de
    volledige input).
-2. Eén Haiku-call met de complete themes-bundel + meeting-samenvatting
-   - extractions. Prompt vraagt: _"Welke thema's raakt deze meeting
-     substantieel? Gebruik de matching_guide als arbiter. Bij twijfel
-     niet matchen."_
+2. Eén Haiku-call met de complete themes-bundel, de meeting-samenvatting
+   en de extractions. Prompt vraagt: _"Welke thema's raakt deze meeting
+   substantieel? Gebruik de matching_guide als arbiter. Bij twijfel
+   niet matchen."_
 3. Match → link via `meeting_themes` (status bestaand thema blijft
    ongewijzigd).
 4. Geen match → nieuw thema met status `emerging` → review-queue.
