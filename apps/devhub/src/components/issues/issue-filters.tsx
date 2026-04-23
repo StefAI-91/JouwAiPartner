@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUpDown, ChevronDown, Download, X } from "lucide-react";
+import { ArrowUpDown, ChevronDown, X } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import {
   ISSUE_STATUSES,
@@ -402,29 +402,9 @@ export function IssueFilters({ people }: IssueFiltersProps) {
         </button>
       )}
 
-      <div className="ml-auto flex flex-shrink-0 items-center gap-2">
-        <ExportButton />
+      <div className="ml-auto flex-shrink-0">
         <SortDropdown value={sortValue} onChange={changeSort} />
       </div>
     </div>
-  );
-}
-
-function ExportButton() {
-  const searchParams = useSearchParams();
-  const projectId = searchParams.get("project");
-  if (!projectId) return null;
-
-  const href = `/api/issues/export?${searchParams.toString()}`;
-  return (
-    <a
-      href={href}
-      download
-      aria-label="Exporteer als CSV"
-      className="flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
-    >
-      <Download className="size-3.5" />
-      Export
-    </a>
   );
 }

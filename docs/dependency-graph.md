@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 495 |
-| Exported functions/constants | 768 |
+| Files scanned | 494 |
+| Exported functions/constants | 767 |
 | Exported types/interfaces | 202 |
-| Cross-package imports | 624 |
+| Cross-package imports | 617 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -3511,20 +3511,6 @@
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/auth/access` → isAdmin
 
-### `apps/devhub/src/app/api/issues/export/route.ts`
-
-**Exports:**
-- `GET()`
-
-**Depends on:**
-- `@repo/database/supabase/server` → createClient
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
-- `@repo/database/queries/issues` → listIssues, parseSearchQuery, ISSUE_SORTS
-- `@repo/database/queries/projects` → getProjectName
-- `@repo/database/validations/issues` → issueListFilterSchema
-- `@repo/database/constants/issues` → ISSUE_STATUS_LABELS, ISSUE_PRIORITY_LABELS, ISSUE_TYPE_LABELS, ISSUE_COMPONENT_LABELS, ISSUE_SEVERITY_LABELS, type IssueStatus, type IssuePriority, type IssueType, type IssueComponent, type IssueSeverity
-
 ## DevHub Pages
 
 ### `apps/devhub/src/app/(app)/settings/import/sync-card.tsx`
@@ -3898,7 +3884,7 @@ Which layers depend on which packages:
 | Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 30 | 2 | 14 | - | - | 46 |
-| DevHub API Routes | 9 | - | 3 | - | - | 12 |
+| DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | 16 | - | - | 22 | - | 38 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 19 | - | 13 | 9 | - | 41 |
@@ -4202,8 +4188,8 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/api/issues/export/route.ts` |
-| `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/api/issues/export/route.ts` |
+| `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
@@ -4310,7 +4296,6 @@ Which queries are used where across the codebase.
 | `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
-| `getProjectName()` | `apps/devhub/src/app/api/issues/export/route.ts` |
 | `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 
