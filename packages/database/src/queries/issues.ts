@@ -56,6 +56,14 @@ export const ISSUE_SELECT = `
  * - "newest": pure chronological, newest first
  * - "oldest": pure chronological, oldest first
  */
+/**
+ * Sentinel value for `assignedTo` meaning "no one is assigned". Kept as an
+ * explicit string so URL params / UI state can round-trip through the same
+ * pipe as regular uuid values. Callers translate this to `.is("assigned_to",
+ * null)` before hitting the DB.
+ */
+export const UNASSIGNED_SENTINEL = "unassigned";
+
 export async function listIssues(
   params: {
     projectId?: string;
@@ -64,8 +72,9 @@ export async function listIssues(
     priority?: string[];
     type?: string[];
     component?: string[];
-    assignedTo?: string;
+    assignedTo?: string[];
     search?: string;
+    issueNumber?: number;
     sort?: IssueSort;
     limit?: number;
     offset?: number;
@@ -100,8 +109,21 @@ export async function listIssues(
   if (params.component && params.component.length > 0) {
     query = query.in("component", params.component);
   }
-  if (params.assignedTo) {
-    query = query.eq("assigned_to", params.assignedTo);
+  if (params.assignedTo && params.assignedTo.length > 0) {
+    const uuids = params.assignedTo.filter((v) => v !== UNASSIGNED_SENTINEL);
+    const wantsUnassigned = params.assignedTo.includes(UNASSIGNED_SENTINEL);
+    if (wantsUnassigned && uuids.length > 0) {
+      // Mix of "unassigned" + specific people: OR them together.
+      const inList = uuids.map((u) => `"${u}"`).join(",");
+      query = query.or(`assigned_to.is.null,assigned_to.in.(${inList})`);
+    } else if (wantsUnassigned) {
+      query = query.is("assigned_to", null);
+    } else {
+      query = query.in("assigned_to", uuids);
+    }
+  }
+  if (params.issueNumber !== undefined) {
+    query = query.eq("issue_number", params.issueNumber);
   }
   if (params.search) {
     // Sanitize: escape PostgREST special characters to prevent filter injection
@@ -155,8 +177,9 @@ export async function countFilteredIssues(
     priority?: string[];
     type?: string[];
     component?: string[];
-    assignedTo?: string;
+    assignedTo?: string[];
     search?: string;
+    issueNumber?: number;
   },
   client?: SupabaseClient,
 ): Promise<number> {
@@ -185,8 +208,20 @@ export async function countFilteredIssues(
   if (params.component && params.component.length > 0) {
     query = query.in("component", params.component);
   }
-  if (params.assignedTo) {
-    query = query.eq("assigned_to", params.assignedTo);
+  if (params.assignedTo && params.assignedTo.length > 0) {
+    const uuids = params.assignedTo.filter((v) => v !== UNASSIGNED_SENTINEL);
+    const wantsUnassigned = params.assignedTo.includes(UNASSIGNED_SENTINEL);
+    if (wantsUnassigned && uuids.length > 0) {
+      const inList = uuids.map((u) => `"${u}"`).join(",");
+      query = query.or(`assigned_to.is.null,assigned_to.in.(${inList})`);
+    } else if (wantsUnassigned) {
+      query = query.is("assigned_to", null);
+    } else {
+      query = query.in("assigned_to", uuids);
+    }
+  }
+  if (params.issueNumber !== undefined) {
+    query = query.eq("issue_number", params.issueNumber);
   }
   if (params.search) {
     const sanitized = params.search.replace(/[%_\\,().]/g, (ch) => `\\${ch}`);

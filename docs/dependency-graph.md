@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 491 |
-| Exported functions/constants | 762 |
-| Exported types/interfaces | 201 |
-| Cross-package imports | 609 |
+| Files scanned | 495 |
+| Exported functions/constants | 767 |
+| Exported types/interfaces | 202 |
+| Cross-package imports | 621 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -170,6 +170,7 @@
 - `countCriticalUnassigned()`
 - `ISSUE_SORTS`
 - `ISSUE_SELECT`
+- `UNASSIGNED_SENTINEL`
 
 **Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`
 
@@ -3388,6 +3389,17 @@
 
 ## DevHub Server Actions
 
+### `apps/devhub/src/actions/attachments.ts`
+
+**Exports:**
+- `recordIssueAttachmentAction()`
+
+**Depends on:**
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/database/queries/issues` → getIssueById
+- `@repo/database/mutations/issue-attachments` → insertAttachment
+
 ### `apps/devhub/src/actions/classify.ts`
 
 **Exports:**
@@ -3496,6 +3508,19 @@
 - `@repo/database/queries/projects` → getProjectByUserbackProjectId
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/auth/access` → isAdmin
+
+### `apps/devhub/src/app/api/issues/export/route.ts`
+
+**Exports:**
+- `GET()`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/database/queries/issues` → listIssues, ISSUE_SORTS
+- `@repo/database/queries/projects` → getProjectName
+- `@repo/database/constants/issues` → ISSUE_STATUS_LABELS, ISSUE_PRIORITY_LABELS, ISSUE_TYPE_LABELS, ISSUE_COMPONENT_LABELS, ISSUE_SEVERITY_LABELS, type IssueStatus, type IssuePriority, type IssueType, type IssueComponent, type IssueSeverity
 
 ## DevHub Pages
 
@@ -3612,6 +3637,13 @@
 **Depends on:**
 - `@repo/ui/utils` → cn
 
+### `apps/devhub/src/components/issues/image-upload.tsx`
+
+**Exports:**
+- `ImageUpload()`
+
+**Types:** `PendingImage`
+
 ### `apps/devhub/src/components/issues/issue-attachments.tsx`
 
 **Exports:**
@@ -3646,6 +3678,7 @@
 - `IssueForm()`
 
 **Depends on:**
+- `@repo/database/supabase/client` → createClient
 - `@repo/ui/button` → Button
 - `@repo/database/constants/issues` → ISSUE_TYPES, ISSUE_TYPE_LABELS, ISSUE_PRIORITIES, ISSUE_PRIORITY_LABELS, ISSUE_COMPONENTS, ISSUE_COMPONENT_LABELS, ISSUE_SEVERITIES, ISSUE_SEVERITY_LABELS
 
@@ -3757,6 +3790,11 @@
 **Depends on:**
 - `@repo/ui/utils` → cn
 
+### `apps/devhub/src/components/layout/search-input.tsx`
+
+**Exports:**
+- `SearchInput()`
+
 ### `apps/devhub/src/components/layout/sidebar-constants.ts`
 
 **Exports:**
@@ -3856,11 +3894,11 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 27 | 2 | 12 | - | - | 41 |
-| DevHub API Routes | 4 | - | 1 | - | - | 5 |
-| DevHub Components | 15 | - | - | 22 | - | 37 |
+| DevHub Server Actions | 29 | 2 | 14 | - | - | 45 |
+| DevHub API Routes | 8 | - | 3 | - | - | 11 |
+| DevHub Components | 16 | - | - | 22 | - | 38 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 17 | - | 13 | 9 | - | 39 |
+| DevHub Pages | 18 | - | 13 | 9 | - | 40 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points
@@ -3951,6 +3989,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
+| `insertAttachment()` | `apps/devhub/src/actions/attachments.ts` |
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
 ### mutations/issues.ts
@@ -4160,9 +4199,9 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/api/issues/export/route.ts` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
@@ -4267,6 +4306,7 @@ Which queries are used where across the codebase.
 | `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
+| `getProjectName()` | `apps/devhub/src/app/api/issues/export/route.ts` |
 | `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 
@@ -4305,7 +4345,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |

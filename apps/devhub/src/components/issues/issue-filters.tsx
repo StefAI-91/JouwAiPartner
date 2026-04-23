@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowUpDown, ChevronDown, X } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Download, X } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import {
   ISSUE_STATUSES,
@@ -274,9 +274,17 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
   );
 }
 
-export function IssueFilters() {
+interface IssueFiltersProps {
+  people: { id: string; name: string }[];
+}
+
+export function IssueFilters({ people }: IssueFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const ASSIGNEE_OPTIONS = [
+    { value: "unassigned", label: "Niet toegewezen" },
+    ...people.map((p) => ({ value: p.id, label: p.name })),
+  ];
 
   const getValues = useCallback(
     (key: string): string[] => {
@@ -334,7 +342,8 @@ export function IssueFilters() {
     searchParams.has("status") ||
     searchParams.has("priority") ||
     searchParams.has("type") ||
-    searchParams.has("component");
+    searchParams.has("component") ||
+    searchParams.has("assignee");
 
   const clearAll = useCallback(() => {
     const params = new URLSearchParams();
@@ -374,6 +383,13 @@ export function IssueFilters() {
         selected={getValues("component")}
         onToggle={toggleFilter}
       />
+      <FilterDropdown
+        label="Toegewezen"
+        paramKey="assignee"
+        options={ASSIGNEE_OPTIONS}
+        selected={getValues("assignee")}
+        onToggle={toggleFilter}
+      />
 
       {hasAnyFilter && (
         <button
@@ -385,9 +401,29 @@ export function IssueFilters() {
         </button>
       )}
 
-      <div className="ml-auto flex-shrink-0">
+      <div className="ml-auto flex flex-shrink-0 items-center gap-2">
+        <ExportButton />
         <SortDropdown value={sortValue} onChange={changeSort} />
       </div>
     </div>
+  );
+}
+
+function ExportButton() {
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("project");
+  if (!projectId) return null;
+
+  const href = `/api/issues/export?${searchParams.toString()}`;
+  return (
+    <a
+      href={href}
+      download
+      aria-label="Exporteer als CSV"
+      className="flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+    >
+      <Download className="size-3.5" />
+      Export
+    </a>
   );
 }

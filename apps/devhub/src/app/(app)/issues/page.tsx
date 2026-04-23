@@ -9,6 +9,7 @@ import {
   ISSUE_SORTS,
 } from "@repo/database/queries/issues";
 import { getIssueThumbnails } from "@repo/database/queries/issue-attachments";
+import { listTeamMembers } from "@repo/database/queries/team";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
 import { PaginationControls } from "@/components/issues/pagination-controls";
@@ -22,9 +23,29 @@ const issueSearchParamsSchema = z.object({
   priority: z.string().optional(),
   type: z.string().optional(),
   component: z.string().optional(),
+  assignee: z.string().optional(),
+  q: z.string().trim().max(200).optional(),
   sort: z.enum(ISSUE_SORTS).optional(),
   page: z.coerce.number().int().min(1).optional(),
 });
+
+/**
+ * Parse a search query into either an exact issue_number or a text search.
+ * Accepts "#464", "464", " 464 ", " #464 " as number lookups — anything with
+ * non-digit characters (besides the leading #) goes through ilike on
+ * title/description.
+ */
+function parseSearchQuery(raw: string | undefined): { issueNumber?: number; search?: string } {
+  if (!raw) return {};
+  const trimmed = raw.trim();
+  if (!trimmed) return {};
+  const numberMatch = trimmed.match(/^#?(\d+)$/);
+  if (numberMatch) {
+    const n = Number(numberMatch[1]);
+    if (Number.isSafeInteger(n) && n > 0) return { issueNumber: n };
+  }
+  return { search: trimmed };
+}
 
 export default async function IssuesPage({
   searchParams,
@@ -74,18 +95,24 @@ export default async function IssuesPage({
   const currentPage = params.page ?? 1;
   const offset = (currentPage - 1) * PAGE_SIZE;
 
+  const { issueNumber, search } = parseSearchQuery(params.q);
+
   const filterParams = {
     projectId,
     status: params.status?.split(","),
     priority: params.priority?.split(","),
     type: params.type?.split(","),
     component: params.component?.split(","),
+    assignedTo: params.assignee?.split(","),
+    issueNumber,
+    search,
   };
 
-  const [issues, totalCount, sidebarCounts] = await Promise.all([
+  const [issues, totalCount, sidebarCounts, members] = await Promise.all([
     listIssues({ ...filterParams, sort: params.sort, limit: PAGE_SIZE, offset }, supabase),
     countFilteredIssues(filterParams, supabase),
     getIssueCounts(projectId, supabase),
+    listTeamMembers(supabase),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -95,12 +122,17 @@ export default async function IssuesPage({
     supabase,
   );
 
+  const people = members.map((m) => ({
+    id: m.id,
+    name: m.full_name?.trim() || m.email,
+  }));
+
   return (
     <div className="flex flex-1 flex-col px-4 sm:px-6 lg:px-8">
       {/* Seed the sidebar badges from the server so they're correct on first
           paint — avoids the "numbers pop in a second later" lag. */}
       <CountSeeder projectId={projectId} counts={sidebarCounts} />
-      <IssueFilters />
+      <IssueFilters people={people} />
       <IssueList issues={issues} thumbnails={thumbnails} />
       <PaginationControls currentPage={currentPage} totalPages={totalPages} />
     </div>

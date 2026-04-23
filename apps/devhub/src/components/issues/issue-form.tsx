@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@repo/database/supabase/client";
 import { createIssueAction } from "@/actions/issues";
+import { recordIssueAttachmentAction } from "@/actions/attachments";
 import { Button } from "@repo/ui/button";
 import {
   ISSUE_TYPES,
@@ -16,6 +18,19 @@ import {
 } from "@repo/database/constants/issues";
 import { FormSelect } from "./sidebar-fields";
 import { LabelInput } from "./label-input";
+import { ImageUpload, type PendingImage } from "./image-upload";
+
+const ATTACHMENT_BUCKET = "issue-attachments";
+
+/**
+ * Sanitize a filename for use in a storage path — strip anything that isn't
+ * a safe URL/path character. Keeps a readable shape but avoids spaces,
+ * accents, and separators that Supabase storage dislikes.
+ */
+function sanitizeFileName(name: string): string {
+  const trimmed = name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g, "-");
+  return trimmed.length > 120 ? trimmed.slice(0, 120) : trimmed || "image";
+}
 
 const INPUT_CLASS =
   "w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20";
@@ -38,6 +53,47 @@ export function IssueForm({
   const [severity, setSeverity] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [labels, setLabels] = useState<string[]>([]);
+  const [images, setImages] = useState<PendingImage[]>([]);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  async function uploadImages(issueId: string) {
+    if (images.length === 0) return;
+    const supabase = createClient();
+
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      setUploadStatus(`Afbeelding ${i + 1}/${images.length} uploaden…`);
+
+      const extFromType = img.file.type.split("/")[1] ?? "bin";
+      const safeName = sanitizeFileName(img.file.name || `image.${extFromType}`);
+      const storagePath = `issues/${issueId}/${Date.now()}-${i}-${safeName}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from(ATTACHMENT_BUCKET)
+        .upload(storagePath, img.file, {
+          contentType: img.file.type,
+          upsert: false,
+        });
+      if (uploadErr) {
+        throw new Error(`Upload mislukt (${img.file.name}): ${uploadErr.message}`);
+      }
+
+      const recordResult = await recordIssueAttachmentAction({
+        issue_id: issueId,
+        type: "screenshot",
+        storage_path: storagePath,
+        file_name: safeName,
+        mime_type: img.file.type || null,
+        file_size: img.file.size,
+        width: img.width ?? null,
+        height: img.height ?? null,
+      });
+      if ("error" in recordResult) {
+        throw new Error(`Bijlage registreren mislukt: ${recordResult.error}`);
+      }
+    }
+    setUploadStatus(null);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,8 +111,21 @@ export function IssueForm({
         assigned_to: assignedTo || null,
         labels,
       });
-      if ("error" in result) setError(result.error);
-      else router.push(`/issues/${result.id}?project=${projectId}`);
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
+      try {
+        await uploadImages(result.id);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload mislukt");
+        setUploadStatus(null);
+        // Issue exists — still navigate so the user can retry uploads on the
+        // detail page rather than losing everything they just typed.
+        router.push(`/issues/${result.id}?project=${projectId}`);
+        return;
+      }
+      router.push(`/issues/${result.id}?project=${projectId}`);
     });
   }
 
@@ -141,6 +210,8 @@ export function IssueForm({
         onAdd={(label) => setLabels((prev) => [...prev, label])}
         onRemove={(label) => setLabels((prev) => prev.filter((l) => l !== label))}
       />
+      <ImageUpload images={images} onChange={setImages} disabled={isPending} />
+      {uploadStatus && <p className="text-xs text-muted-foreground">{uploadStatus}</p>}
       <div className="flex items-center gap-3 pt-2">
         <Button type="submit" disabled={isPending || !projectId}>
           {isPending ? "Aanmaken..." : "Issue aanmaken"}
