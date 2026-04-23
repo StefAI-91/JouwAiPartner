@@ -40,3 +40,21 @@ Eerste tastbare resultaat: je opent `/themes/eges-leertraject`, ziet een meeting
 | EDGE-243 | `meeting_themes.summary` bevat markdown met edge-case content (HTML-entities, ongebalanceerde backticks): de markdown-renderer in `meetings-tab.tsx` moet XSS-veilig renderen (react-markdown default, of expliciete sanitize). Geen raw `dangerouslySetInnerHTML`.                                                                                                                                                                                                                                                                                                                                    |
 | EDGE-244 | Backfill-compat: bestaande `meeting_themes.summary` waarden van vóór TH-013 zijn 1-2 zins plain text (Theme-Detector-output). De markdown-renderer moet die correct renderen als alinea (markdown is een superset van plain text). Geen migratie nodig; oude rijen blijven eruitzien zoals ze waren tot `--force` backfill ze vervangt.                                                                                                                                                                                                                                                                |
 | SEC-240  | Geen nieuwe auth-grenzen. De pipeline-wijzigingen raken alleen de schrijf-kant; lees-kant op `/themes/[slug]` blijft de bestaande RLS + admin-check (TH-005) respecteren.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+
+## Bronverwijzingen
+
+- Spec: `docs/specs/prd-themes.md` — §2 (themes als cross-meeting lens, verwachte UX-kwaliteit per thema) + §5 (review-gate op thema-content)
+- Vision: `docs/specs/vision-ai-native-architecture.md` — Cockpit-quadrant, Theme-as-a-lens patroon, "verification before truth" op thema-niveau
+- Sprint-precedent: `sprints/done/TH-010-extraction-themes-fundering.md` — introduceerde `meeting_themes.summary` kolom, hier wordt alleen de vulling verrijkt (geen schema-wijziging)
+- Sprint-precedent: `sprints/done/TH-011-theme-detector-extract-time-scoping.md` — Theme-Detector contract + prompt + fallback-strategie (AI-231, hallucination-strip patroon MB-3 + AI-233)
+- Code: `packages/ai/src/agents/summarizer.ts` — uitbreidingspunt voor `theme_summaries`-output + nieuwe `formatThemeSummary()` renderer naast bestaande `formatSummary()` (regel 164-185)
+- Code: `packages/ai/src/validations/summarizer.ts` — `SummarizerOutputSchema` krijgt extra veld `theme_summaries`
+- Code: `packages/ai/prompts/summarizer.md` — nieuwe sectie "Per-thema samenvattingen" onder bestaande kernpunten-instructie
+- Code: `packages/ai/src/agents/theme-detector.ts` — prompt-notitie dat `theme_summary` nu fallback is (FUNC-293); agent-gedrag ongewijzigd
+- Code: `packages/ai/src/pipeline/steps/summarize.ts:4-10` — `SummarizeResult` interface krijgt `themeSummaries: Map<string, string>`
+- Code: `packages/ai/src/pipeline/steps/link-themes.ts:186-193` — `meetingThemesToWrite[i].summary` fallback-ketting: Summarizer-map → Detector `theme_summary` → `null`
+- Code: `packages/ai/src/pipeline/gatekeeper-pipeline.ts:279-351` — Summarizer-resultaat doorgeven aan `runLinkThemesStep`
+- Code: `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/meetings-tab.tsx:113` — `<p>{m.summary}</p>` vervangen door markdown-renderer
+- Code-pattern: `apps/cockpit/src/app/(dashboard)/meetings/[id]` — bestaande markdown-rendering van de hoofd-summary (`meetings.summary`) als styling-referentie voor UI-340
+- Script: `scripts/batch-detect-themes.ts` — bestaande `--force` backfill-flow draait automatisch de nieuwe Summarizer + link-themes, geen wijziging nodig (EDGE-244 backfill-compat via bestaande regenerate-keten)
+- Referentie: research-thread (deze sessie) — bleed-analyse op Ege's leertraject, extraction-centric afgewogen en bewust niet gekozen
