@@ -83,6 +83,7 @@ export function MeetingsTab({ themeId, themeName, meetings, canRejectMatches }: 
                 )}
               </div>
             </div>
+            {m.summary && <p className="mt-2 text-[13px] leading-snug">{m.summary}</p>}
             <details className="mt-2 cursor-pointer text-[12.5px]">
               <summary className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground">
                 Evidence

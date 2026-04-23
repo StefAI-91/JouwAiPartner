@@ -183,6 +183,7 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
         themeId: m.themeId,
         confidence: m.confidence,
         evidenceQuote: m.evidenceQuote,
+        summary: m.themeSummary,
       })),
       ...proposalMatches,
     ];

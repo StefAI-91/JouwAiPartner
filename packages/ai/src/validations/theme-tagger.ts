@@ -46,6 +46,11 @@ export const ThemeMatchSchema = z.object({
   evidenceQuote: z
     .string()
     .describe("Letterlijke quote uit summary/extractions waaruit de match blijkt."),
+  themeSummary: z
+    .string()
+    .describe(
+      "1-2 zinnen (NL): wat ging DEZE meeting specifiek over dit thema? Narratief, niet copy-paste van de quote. Grond je alleen op summary + extractions; verzin geen context.",
+    ),
   extractionIds: z
     .array(z.string())
     .describe(

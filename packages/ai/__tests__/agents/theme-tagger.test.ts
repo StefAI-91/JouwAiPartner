@@ -347,6 +347,7 @@ describe("ThemeTagger — Zod-validatie (AI-214)", () => {
       themeId: HIRING_THEME_ID,
       confidence: "medium" as const,
       evidenceQuote: "quote",
+      themeSummary: "summary",
       extractionIds: [],
     };
     const parsed = ThemeTaggerOutputSchema.parse({
@@ -364,6 +365,7 @@ describe("ThemeTagger — Zod-validatie (AI-214)", () => {
           themeId: HIRING_THEME_ID,
           confidence: "high",
           evidenceQuote: "quote",
+          themeSummary: "summary",
           extractionIds: [],
         },
       ],

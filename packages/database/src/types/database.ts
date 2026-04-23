@@ -1020,6 +1020,7 @@ export type Database = {
           created_at: string;
           evidence_quote: string;
           meeting_id: string;
+          summary: string | null;
           theme_id: string;
         };
         Insert: {
@@ -1027,6 +1028,7 @@ export type Database = {
           created_at?: string;
           evidence_quote: string;
           meeting_id: string;
+          summary?: string | null;
           theme_id: string;
         };
         Update: {
@@ -1034,6 +1036,7 @@ export type Database = {
           created_at?: string;
           evidence_quote?: string;
           meeting_id?: string;
+          summary?: string | null;
           theme_id?: string;
         };
         Relationships: [

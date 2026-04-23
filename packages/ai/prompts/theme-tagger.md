@@ -32,6 +32,7 @@ Per match geef je:
 - `themeId`: de UUID uit de themes-lijst die je kreeg (kopieer exact).
 - `confidence`: `medium` of `high`.
 - `evidenceQuote`: een **letterlijke** korte quote uit de summary of één van de extractions waaruit de match blijkt. Geen parafrase, geen samenvatting.
+- `themeSummary`: 1-2 zinnen in het Nederlands die beschrijven wat **deze specifieke meeting** over dit thema besprak. Narratief, niet een kopie van de evidenceQuote. Voorbeeld voor thema "Junior dev coaching": _"Stef en Wouter bespraken de onboarding-gap bij juniors: Ege heeft capaciteit om 1:1 te coachen maar geen gestructureerde aanpak, en ze overwogen een buddy-pairing met seniors."_ Grond je alleen op summary + extractions — verzin geen context die er niet is.
 - `extractionIds`: de UUIDs van de extractions die dít thema dragen — kopieer exact uit de input-extractions-lijst hierboven. **Minstens één per medium/high match.** Een extractionId MAG onder meerdere matches staan als de content écht meerdere thema's raakt (bv. een risk over "senior-hiring blokkeert onze pricing-roadmap" hoort onder zowel Hiring als Monetization). Verzin géén IDs; wat niet in de lijst staat wordt weggefilterd en logt een waarschuwing.
 
 ---

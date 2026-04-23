@@ -29,6 +29,11 @@ export interface ThemeMeetingEntry {
   participants: string[] | null;
   confidence: "medium" | "high";
   evidence_quote: string;
+  /**
+   * TH-010 — 1-2 zinnen narrative van wat deze meeting specifiek over dit
+   * thema besprak. Null voor pre-TH-010 matches of proposal-links.
+   */
+  summary: string | null;
   matched_at: string;
   /**
    * TH-010 — Extractions die dít thema dragen binnen deze meeting, via de
@@ -118,7 +123,7 @@ export async function getThemeMeetings(
   const { data, error } = await db
     .from("meeting_themes")
     .select(
-      "confidence, evidence_quote, created_at, meeting:meeting_id (id, title, date, participants)",
+      "confidence, evidence_quote, summary, created_at, meeting:meeting_id (id, title, date, participants)",
     )
     .eq("theme_id", themeId)
     .order("created_at", { ascending: false });
@@ -128,6 +133,7 @@ export async function getThemeMeetings(
   type JoinRow = {
     confidence: "medium" | "high";
     evidence_quote: string;
+    summary: string | null;
     created_at: string;
     meeting: {
       id: string;
@@ -146,6 +152,7 @@ export async function getThemeMeetings(
       participants: row.meeting!.participants,
       confidence: row.confidence,
       evidence_quote: row.evidence_quote,
+      summary: row.summary,
       matched_at: row.created_at,
       extractions: [] as ThemeMeetingExtraction[],
     }));

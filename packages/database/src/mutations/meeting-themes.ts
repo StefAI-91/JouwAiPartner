@@ -6,6 +6,12 @@ export interface MeetingThemeMatch {
   themeId: string;
   confidence: "medium" | "high";
   evidenceQuote: string;
+  /**
+   * TH-010 — Optionele 1-2 zinnen samenvatting van wat deze meeting specifiek
+   * over dit thema besprak. Gevuld door de ThemeTagger; null voor proposal-
+   * links (die krijgen geen summary) of pre-TH-010 backfill.
+   */
+  summary?: string | null;
 }
 
 /**
@@ -26,6 +32,7 @@ export async function linkMeetingToThemes(
     theme_id: m.themeId,
     confidence: m.confidence,
     evidence_quote: m.evidenceQuote,
+    summary: m.summary ?? null,
   }));
 
   const { error, count } = await db
