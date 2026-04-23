@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 541 |
-| Exported functions/constants | 854 |
-| Exported types/interfaces | 268 |
+| Exported functions/constants | 860 |
+| Exported types/interfaces | 269 |
 | Cross-package imports | 670 |
 | Critical integration points (3+ packages) | 16 |
 
@@ -833,11 +833,16 @@
 **Exports:**
 - `runSummarizer()`
 - `formatSummary()`
+- `formatThemeSummary()`
+- `SUMMARIZER_PROMPT_VERSION`
+- `THEME_SUMMARIES_HARD_CAP`
+- `KERNPUNTEN_PER_THEME_CAP`
+- `VERVOLGSTAPPEN_PER_THEME_CAP`
 
 **Types:** `SummarizerIdentifiedTheme`
 
 **Internal deps:**
-- `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput
+- `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput, type ThemeSummary
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/theme-detector.ts`
@@ -1200,7 +1205,7 @@
 - `@repo/database/mutations/meetings` → updateMeetingSummary
 
 **Internal deps:**
-- `../../agents/summarizer` → runSummarizer, formatSummary
+- `../../agents/summarizer` → runSummarizer, formatSummary, formatThemeSummary, type SummarizerIdentifiedTheme
 
 ### `packages/ai/src/pipeline/steps/tag-and-segment.ts`
 
@@ -1474,9 +1479,10 @@
 
 **Exports:**
 - `ParticipantProfileSchema`
+- `ThemeSummarySchema`
 - `SummarizerOutputSchema`
 
-**Types:** `SummarizerOutput`, `ParticipantProfile`
+**Types:** `SummarizerOutput`, `ParticipantProfile`, `ThemeSummary`
 
 ### `packages/ai/src/validations/theme-detector.ts`
 

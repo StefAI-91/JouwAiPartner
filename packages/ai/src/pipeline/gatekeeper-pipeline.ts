@@ -236,12 +236,18 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const detectorIdentifiedThemeIds = new Set(
     themeDetectorResult.output.identified_themes.map((t) => t.themeId),
   );
-  const identifiedThemesForAgents: { name: string; description: string }[] =
+  // TH-013 — Summarizer krijgt ook `themeId` (UUID) mee zodat hij die in
+  // `theme_summaries[i].themeId` kan terugteruggeven. RiskSpecialist heeft
+  // die niet nodig (werkt alleen met namen voor risk-annotaties).
+  const identifiedThemesForSummarizer: { themeId: string; name: string; description: string }[] =
     detectorIdentifiedThemeIds.size > 0
       ? themeDetectorResult.verifiedThemes
           .filter((t) => detectorIdentifiedThemeIds.has(t.id))
-          .map((t) => ({ name: t.name, description: t.description }))
+          .map((t) => ({ themeId: t.id, name: t.name, description: t.description }))
       : [];
+
+  const identifiedThemesForRisk: { name: string; description: string }[] =
+    identifiedThemesForSummarizer.map((t) => ({ name: t.name, description: t.description }));
 
   // Step 8: Summarize + extract — structurer of legacy pair
   const bestTranscript = transcribeResult.transcript ?? input.transcript;
@@ -254,7 +260,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     participants: input.participants,
     speakerContext,
     entityContext: entityContext.contextString,
-    identified_themes: identifiedThemesForAgents,
+    identified_themes: identifiedThemesForSummarizer,
   };
 
   // RiskSpecialist draait parallel aan de hoofdpipeline en schrijft naar
@@ -264,13 +270,18 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     meetingId,
     bestTranscript,
     {
-      ...summarizeContext,
+      title: input.title,
+      meeting_type: finalMeetingType,
+      party_type: partyType,
+      participants: input.participants,
+      speakerContext,
+      entityContext: entityContext.contextString,
       meeting_date: input.date,
       identified_projects: identifiedProjects.map((p) => ({
         project_name: p.project_name,
         project_id: p.project_id,
       })),
-      identified_themes: identifiedThemesForAgents,
+      identified_themes: identifiedThemesForRisk,
     },
     identifiedProjects,
   );
@@ -333,6 +344,10 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         vervolgstappen: vervolgstappenForTagger,
         // MB-1: verified-themes-lijst die de Detector al ophaalde.
         verifiedThemes: themeDetectorResult.verifiedThemes,
+        // TH-013 (FUNC-292): Summarizer's per-theme markdown wint boven
+        // Detector's 1-2 zins summary. Leeg bij Summarizer-failure → link-
+        // themes fallt automatisch terug op Detector-output.
+        summarizerThemeSummaries: summarizeResult.themeSummaries,
       })
     : Promise.resolve({
         success: true,

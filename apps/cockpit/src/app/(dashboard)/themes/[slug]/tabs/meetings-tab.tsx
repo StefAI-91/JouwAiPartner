@@ -3,10 +3,56 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { formatDate } from "@repo/ui/format";
 import { Badge } from "@repo/ui/badge";
 import type { ThemeMeetingEntry } from "@repo/database/queries/themes";
 import { MatchRejectPopover } from "@/components/themes/match-reject-popover";
+
+/**
+ * TH-013 (UI-340 + EDGE-243 + EDGE-244) — Collapsible markdown-renderer voor
+ * per-thema samenvatting. Sinds TH-013 bevat `meeting_themes.summary` een
+ * rijke markdown-string (## Briefing / ## Kernpunten / ## Vervolgstappen).
+ * Pre-TH-013 rijen bevatten 1-2 zins plain-text van de Theme-Detector —
+ * markdown is een superset van plain text, dus zelfde renderer werkt voor
+ * beide (EDGE-244). Collapsible bij > COLLAPSE_THRESHOLD via `<details>`.
+ * react-markdown rendert zonder `dangerouslySetInnerHTML` → XSS-veilig
+ * (EDGE-243).
+ */
+const COLLAPSE_THRESHOLD = 400;
+
+const MARKDOWN_PROSE_CLASSES = [
+  "prose prose-sm max-w-none text-foreground",
+  "[&_h2]:text-[12px] [&_h2]:font-semibold [&_h2]:uppercase [&_h2]:tracking-wider [&_h2]:text-muted-foreground [&_h2]:mt-3 [&_h2]:mb-1 first:[&_h2]:mt-0",
+  "[&_ul]:my-1 [&_ul]:pl-4 [&_ul]:space-y-0.5",
+  "[&_li]:text-[13px] [&_li]:leading-snug [&_li]:marker:text-muted-foreground/40",
+  "[&_p]:text-[13px] [&_p]:leading-snug [&_p]:my-1",
+  "[&_strong]:text-foreground",
+].join(" ");
+
+function ThemeSummaryBlock({ markdown }: { markdown: string }) {
+  const isLong = markdown.length > COLLAPSE_THRESHOLD;
+  const content = (
+    <div className={MARKDOWN_PROSE_CLASSES}>
+      <Markdown remarkPlugins={[remarkGfm]}>{markdown}</Markdown>
+    </div>
+  );
+
+  if (!isLong) {
+    return <div className="mt-2">{content}</div>;
+  }
+
+  return (
+    <details className="group mt-2 cursor-pointer">
+      <summary className="list-none text-[11px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground">
+        <span className="group-open:hidden">Toon samenvatting</span>
+        <span className="hidden group-open:inline">Verberg samenvatting</span>
+      </summary>
+      <div className="mt-2">{content}</div>
+    </details>
+  );
+}
 
 export interface MeetingsTabProps {
   themeId: string;
@@ -110,7 +156,7 @@ export function MeetingsTab({ themeId, themeName, meetings, canRejectMatches }: 
             )}
           </div>
         </div>
-        {m.summary && <p className="mt-2 text-[13px] leading-snug">{m.summary}</p>}
+        {m.summary && <ThemeSummaryBlock markdown={m.summary} />}
         <details className="mt-2 cursor-pointer text-[12.5px]">
           <summary className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground">
             Evidence

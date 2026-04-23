@@ -60,6 +60,15 @@ export interface LinkThemesStepInput {
    * cache).
    */
   verifiedThemes?: ThemeRow[] | ThemeWithNegativeExamples[];
+  /**
+   * TH-013 (FUNC-291) — Per-theme rijke markdown-summaries uit de
+   * Summarizer. Key = theme UUID, value = output van `formatThemeSummary()`.
+   * Wint boven Theme-Detector's 1-2 zins `theme_summary` bij het wegschrijven
+   * van `meeting_themes.summary`. Ontbrekende themeId → fallback op Detector-
+   * summary, dan null. Ontbrekende Map (undefined of leeg) → pre-TH-013 gedrag
+   * (Detector-summary overal).
+   */
+  summarizerThemeSummaries?: Map<string, string>;
 }
 
 export interface MeetingThemeToWrite {
@@ -182,12 +191,19 @@ export async function runLinkThemesStep(input: LinkThemesStepInput): Promise<Lin
         });
         continue;
       }
+      // TH-013 (FUNC-291) — Fallback-keten voor `meeting_themes.summary`:
+      //   1. Summarizer's rijke markdown (primair, sinds TH-013)
+      //   2. Theme-Detector's 1-2 zins `theme_summary` (fallback)
+      //   3. null (laatste redmiddel — zou nooit moeten gebeuren bij identified)
+      const summarizerSummary = input.summarizerThemeSummaries?.get(t.themeId);
+      const resolvedSummary = summarizerSummary ?? t.theme_summary ?? null;
+
       meetingThemesToWrite.push({
         themeId: t.themeId,
         themeName: catalogEntry.name,
         confidence: t.confidence,
         evidenceQuote: t.relevance_quote,
-        summary: t.theme_summary,
+        summary: resolvedSummary,
         source: "identified",
       });
     }

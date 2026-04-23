@@ -88,6 +88,29 @@ Je produceert:
 
    Dit is de ENIGE sectie voor acties. Maak GEEN aparte "Actiepunten" sectie aan.
 
+5. PER-THEMA SAMENVATTINGEN — Voor elke entry in GEÏDENTIFICEERDE THEMA'S lever je één rijke samenvatting die beschrijft wat dit specifieke thema in deze meeting raakte. Zelfde diepgang als de hoofd-briefing en kernpunten, maar gefilterd op wat dit thema aanging — niet de hele meeting-inhoud opnieuw.
+
+   ALS ER GEEN GEÏDENTIFICEERDE THEMA'S ZIJN: leeg array voor theme_summaries. Niets verzinnen.
+
+   PER THEMA GEEF JE:
+   - `themeId`: de exacte UUID uit de catalogus onder GEÏDENTIFICEERDE THEMA'S (copy-paste, verzinnen wordt gestript).
+   - `briefing`: 2-4 zinnen narratief over wat DEZE meeting specifiek over DIT thema besprak. Beschrijf de dynamiek, de positionering, het besluit — niet de onderwerp-context die toevallig het onderwerp was. Bij weinig raakpunten: kortere briefing is prima, maar nooit leeg.
+   - `kernpunten`: array van bullets die onder dit thema vallen. Categorie-labels mogen (**Besluit:**, **Signaal:**, etc.) maar GEEN project-prefix — die is in de meeting-wide kernpunten al gezet. Lege array is acceptabel als het thema in deze meeting geen discrete punten opleverde.
+   - `vervolgstappen`: array van thema-relevante acties. Formaat: "Actie — eigenaar, deadline" zonder project-prefix. Lege array als er geen zijn.
+
+   DISCIPLINE:
+   - Kopieer GEEN meeting-wide kernpunten 1-op-1 naar elk thema — dat vervuilt de theme-pages. Neem alleen wat over DIT thema gaat.
+   - Voor relationele thema's (coaching, leertraject, governance): beschrijf de dynamiek en aanpak, niet het onderwerp dat toevallig besproken werd.
+   - Bij twijfel of iets bij een thema hoort: weglaten. De meeting-wide kernpunten vangen het toch al op.
+
+   VOORBEELD (thema "Ege's leertraject" in een meeting die voornamelijk over een AI-confidence-systeem ging):
+
+   ```
+   briefing: "Stef coachte Ege in diagnostisch denken rond Fleur's confidence-systeem. De focus lag op het isoleren van symptomen (fine-tuning vs threshold) en het vasthouden van de scope zonder af te dwalen naar zijpaden."
+   kernpunten: ["**Signaal:** Stef stuurt Ege aan op gefocuste diagnose — eerst vaststellen of het een fine-tuning issue is.", "**Context:** Ege neigt naar architectuur-ideeën als eerste stap; Stef bewaakt de werkwijze door hem expliciet bij diagnose te houden."]
+   vervolgstappen: ["Ege experimenteert met voorbeeldgesprekken in system prompt vóór volgende 1:1 met Stef."]
+   ```
+
 REGELS:
 - De BRIEFING moet als een lopend verhaal lezen, NIET als bullet points.
 - Kernpunten zijn geordend op belang, niet op volgorde in het gesprek.
