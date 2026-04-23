@@ -2,6 +2,15 @@ import { z } from "zod";
 import { ALL_THEME_EMOJIS } from "../agents/theme-emojis";
 
 /**
+ * MB-3 — Snel UUID-format shape-check via `.refine()`. Anthropic's
+ * structured-output accepteert geen `format: uuid` of `pattern` in het
+ * schema, dus we valideren client-side na Zod-parse. Dit vangt `"theme-a"`
+ * of `"undefined"`-achtige strings vóór ze bij de hallucination-strip
+ * belanden — duidelijkere foutmelding + behoud dezelfde output shape.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
  * TH-011 (AI-231) — Zod-schema voor Theme-Detector output.
  *
  * De Theme-Detector draait serieel na de Gatekeeper en vóór Summarizer +
@@ -27,6 +36,7 @@ export const PROPOSALS_HARD_CAP = 3;
 export const IdentifiedThemeSchema = z.object({
   themeId: z
     .string()
+    .refine((v) => UUID_RE.test(v), { message: "themeId moet een UUID zijn" })
     .describe("UUID van een bestaand verified thema uit de meegestuurde catalogus."),
   confidence: z
     .enum(["medium", "high"])
@@ -58,6 +68,14 @@ export const IdentifiedThemeSchema = z.object({
         .describe(
           "Eén zin: waarom is dit substantieel genoeg? Bij twijfel: 'losse vermelding, geen match' en dan hoort het thema hier NIET.",
         ),
+    })
+    // MB-5: cross-field refinement. De prompt schrijft "minstens één van
+    // (a) extractionCount OF (b) wordCount moet aanwezig zijn". Zonder
+    // deze check kan een LLM beide weglaten en alleen `reason: "genoeg"`
+    // sturen, waardoor de substantialiteitsregel alleen op de prompt
+    // vertrouwt. Refine maakt de regel afdwingbaar op Zod-laag.
+    .refine((ev) => ev.extractionCount !== undefined || ev.wordCount !== undefined, {
+      message: "substantialityEvidence vereist minstens extractionCount of wordCount",
     })
     .describe(
       "Onderbouwing voor de substantialiteitsregel. Minstens één van (a) ≥2 kernpunten OF (b) ≥100 woorden moet gelden, anders geen match.",

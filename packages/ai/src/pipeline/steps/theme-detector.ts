@@ -4,7 +4,7 @@ import {
   type ThemeDetectorIdentifiedProject,
 } from "../../agents/theme-detector";
 import type { ThemeDetectorOutput } from "../../validations/theme-detector";
-import { listVerifiedThemes } from "@repo/database/queries/themes";
+import { listVerifiedThemes, type ThemeWithNegativeExamples } from "@repo/database/queries/themes";
 
 /**
  * TH-011 — Pipeline-step wrapper rond `runThemeDetector`. Haalt verified
@@ -24,6 +24,12 @@ export interface ThemeDetectorStepResult {
   success: boolean;
   output: ThemeDetectorOutput;
   themes_considered: number;
+  /**
+   * MB-1 — Cached verified-themes-lijst zodat orchestrator + `link-themes`
+   * 'm kunnen hergebruiken zonder tweede DB-call. Lege array wanneer de
+   * catalogus leeg was of de step faalde vóór de fetch.
+   */
+  verifiedThemes: ThemeWithNegativeExamples[];
   error: string | null;
 }
 
@@ -46,6 +52,7 @@ export async function runThemeDetectorStep(
         success: true,
         output: EMPTY_OUTPUT,
         themes_considered: 0,
+        verifiedThemes: [],
         error: null,
       };
     }
@@ -79,6 +86,7 @@ export async function runThemeDetectorStep(
       success: true,
       output,
       themes_considered: themes.length,
+      verifiedThemes: themes,
       error: null,
     };
   } catch (err) {
@@ -88,6 +96,7 @@ export async function runThemeDetectorStep(
       success: false,
       output: EMPTY_OUTPUT,
       themes_considered: 0,
+      verifiedThemes: [],
       error: msg,
     };
   }

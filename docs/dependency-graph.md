@@ -10,7 +10,7 @@
 | Files scanned | 541 |
 | Exported functions/constants | 854 |
 | Exported types/interfaces | 268 |
-| Cross-package imports | 671 |
+| Cross-package imports | 670 |
 | Critical integration points (3+ packages) | 16 |
 
 ## Package Dependency Flow
@@ -988,7 +988,6 @@
 **Depends on:**
 - `@repo/database/mutations/meetings` → insertMeeting
 - `@repo/database/queries/people` → getAllKnownPeople
-- `@repo/database/queries/themes` → listVerifiedThemes
 
 **Internal deps:**
 - `../agents/gatekeeper` → runGatekeeper
@@ -1167,7 +1166,7 @@
 
 **Depends on:**
 - `@repo/database/queries/meetings` → getMeetingExtractions
-- `@repo/database/queries/themes` → listVerifiedThemes, type ThemeRow
+- `@repo/database/queries/themes` → listVerifiedThemes, type ThemeRow, type ThemeWithNegativeExamples
 - `@repo/database/queries/theme-review` → listRejectedThemePairsForMeeting
 - `@repo/database/mutations/meeting-themes` → linkMeetingToThemes, clearMeetingThemes, recalculateThemeStats
 - `@repo/database/mutations/extraction-themes` → linkExtractionsToThemes, clearExtractionThemesForMeeting, type ExtractionThemeRow
@@ -1228,7 +1227,7 @@
 **Types:** `ThemeDetectorStepInput`, `ThemeDetectorStepResult`
 
 **Depends on:**
-- `@repo/database/queries/themes` → listVerifiedThemes
+- `@repo/database/queries/themes` → listVerifiedThemes, type ThemeWithNegativeExamples
 
 **Internal deps:**
 - `../../agents/theme-detector` → runThemeDetector, type ThemeDetectorMeetingContext, type ThemeDetectorIdentifiedProject
@@ -4314,7 +4313,7 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 53 | - | - | - | - | 53 |
+| AI Pipeline | 52 | - | - | - | - | 52 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 53 | 19 | 32 | - | - | 104 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
@@ -4850,9 +4849,9 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
 | `getThemeBySlug()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/userback-issues.ts

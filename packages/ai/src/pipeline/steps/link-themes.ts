@@ -1,5 +1,9 @@
 import { getMeetingExtractions } from "@repo/database/queries/meetings";
-import { listVerifiedThemes, type ThemeRow } from "@repo/database/queries/themes";
+import {
+  listVerifiedThemes,
+  type ThemeRow,
+  type ThemeWithNegativeExamples,
+} from "@repo/database/queries/themes";
 import { listRejectedThemePairsForMeeting } from "@repo/database/queries/theme-review";
 import {
   linkMeetingToThemes,
@@ -48,6 +52,14 @@ export interface LinkThemesStepInput {
    * dev-detector harness dry-run mode (FUNC-281).
    */
   persist?: boolean;
+  /**
+   * MB-1 — Optionele cached verified-themes-lijst van de Detector-step.
+   * Wanneer gevuld skipt link-themes de eigen `listVerifiedThemes()`-call
+   * en hergebruikt de caller's resultaat. Voorkomt N-duplicate queries
+   * in de hoofdpipeline (Detector + orchestrator + link = 3× zonder
+   * cache).
+   */
+  verifiedThemes?: ThemeRow[] | ThemeWithNegativeExamples[];
 }
 
 export interface MeetingThemeToWrite {
@@ -105,11 +117,15 @@ export async function runLinkThemesStep(input: LinkThemesStepInput): Promise<Lin
   const persist = input.persist ?? true;
 
   try {
-    const [verifiedThemes, extractionRows, rejectedThemeIds] = await Promise.all([
-      listVerifiedThemes(),
+    // MB-1: hergebruik caller's themes-lijst waar mogelijk. Alleen fetchen
+    // als de caller geen cache meegaf (bv. tijdens regenerate of de
+    // batch-script die niet via de main pipeline draait).
+    const [extractionRows, rejectedThemeIds, fetchedThemes] = await Promise.all([
       getMeetingExtractions(input.meetingId),
       listRejectedThemePairsForMeeting(input.meetingId),
+      input.verifiedThemes ? Promise.resolve(input.verifiedThemes) : listVerifiedThemes(),
     ]);
+    const verifiedThemes: ThemeRow[] = fetchedThemes;
 
     // Lege catalogus + geen detector-output → niks te doen. Consistent met
     // de oude `empty_themes_catalog` skip.
@@ -186,23 +202,38 @@ export async function runLinkThemesStep(input: LinkThemesStepInput): Promise<Lin
     });
     const knownRefs: ThemeRef[] = verifiedThemes.map((t) => ({ themeId: t.id, name: t.name }));
 
+    const identifiedThemeForConfidence = new Map<string, "medium" | "high">();
+    for (const t of input.detectorOutput.identified_themes) {
+      identifiedThemeForConfidence.set(t.themeId, t.confidence);
+    }
+
     const extractionThemesToWrite: ExtractionThemeRow[] = [];
     for (const ex of extractionRows) {
       const names = parseThemesAnnotation(ex.content);
-      const fallbackNames = names.length === 0 ? substringFallbackNames(ex.content, knownRefs) : [];
+      // MB-6: substring-fallback matcht ALLEEN tegen identified_themes,
+      // niet tegen de volle known-catalogus. Reden: de fallback heeft geen
+      // LLM-bevestiging, en de `extraction_themes.confidence`-kolom accepteert
+      // alleen 'medium'/'high'. Als we tegen arbitrary known themes zouden
+      // matchen en daar default-`medium` aan geven, zouden zwakke signalen
+      // dezelfde weight krijgen als echte LLM-matches. Door de fallback te
+      // beperken tot identified_themes leunt elke geschreven rij op een
+      // expliciete LLM-bevestiging op meeting-niveau, en bepaalt alleen de
+      // substring welke extractie deze draagt.
+      const fallbackNames =
+        names.length === 0 ? substringFallbackNames(ex.content, identifiedRefs) : [];
       const refs = resolveThemeRefs([...names, ...fallbackNames], identifiedRefs, knownRefs);
-      const identifiedThemeForConfidence = new Map<string, "medium" | "high">();
-      for (const t of input.detectorOutput.identified_themes) {
-        identifiedThemeForConfidence.set(t.themeId, t.confidence);
-      }
       for (const ref of refs) {
         // Skip als het paar gerejected is — extraction_themes volgen
         // dezelfde rejection-policy als meeting_themes.
         if (rejectedThemeIds.has(ref.themeId)) continue;
+        // Confidence komt altijd uit de detector-output; niet-identified
+        // themes krijgen geen extraction-link (MB-6).
+        const confidence = identifiedThemeForConfidence.get(ref.themeId);
+        if (!confidence) continue;
         extractionThemesToWrite.push({
           extractionId: ex.id,
           themeId: ref.themeId,
-          confidence: identifiedThemeForConfidence.get(ref.themeId) ?? "medium",
+          confidence,
         });
       }
     }

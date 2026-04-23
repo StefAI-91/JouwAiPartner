@@ -6,7 +6,6 @@ import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
 import { buildEntityContext } from "./context-injection";
 import { getAllKnownPeople } from "@repo/database/queries/people";
-import { listVerifiedThemes } from "@repo/database/queries/themes";
 import {
   classifyParticipantsWithCache,
   determinePartyType,
@@ -227,23 +226,20 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         success: true,
         output: { identified_themes: [], proposed_themes: [] },
         themes_considered: 0,
+        verifiedThemes: [],
         error: null,
       };
   if (themeDetectorResult.error) errors.push(`ThemeDetector: ${themeDetectorResult.error}`);
 
-  // identified_themes als context voor Summarizer + RiskSpecialist: we
-  // mappen naar {name, description} door de detector-output tegen de
-  // meegegeven catalogus te joinen. Verified catalog is hier al in-memory
-  // via de step, maar we hebben 'm niet expliciet terug — re-fetch is
-  // goedkoop (cached in memory) en houdt de orchestrator schoon. Bij 0
-  // identified_themes doen we niks extra.
-  const detectorIdentifiedNames = new Set(
+  // MB-1: hergebruik de verifiedThemes uit de detector-step zodat we
+  // geen tweede DB-call hoeven voor het name/description-mapping.
+  const detectorIdentifiedThemeIds = new Set(
     themeDetectorResult.output.identified_themes.map((t) => t.themeId),
   );
   const identifiedThemesForAgents: { name: string; description: string }[] =
-    detectorIdentifiedNames.size > 0
-      ? (await listVerifiedThemes())
-          .filter((t) => detectorIdentifiedNames.has(t.id))
+    detectorIdentifiedThemeIds.size > 0
+      ? themeDetectorResult.verifiedThemes
+          .filter((t) => detectorIdentifiedThemeIds.has(t.id))
           .map((t) => ({ name: t.name, description: t.description }))
       : [];
 
@@ -335,6 +331,8 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         detectorOutput: themeDetectorResult.output,
         kernpunten: kernpuntenForTagger,
         vervolgstappen: vervolgstappenForTagger,
+        // MB-1: verified-themes-lijst die de Detector al ophaalde.
+        verifiedThemes: themeDetectorResult.verifiedThemes,
       })
     : Promise.resolve({
         success: true,

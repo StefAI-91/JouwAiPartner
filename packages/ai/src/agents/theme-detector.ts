@@ -69,6 +69,13 @@ export interface RunThemeDetectorInput {
   meeting: ThemeDetectorMeetingContext;
   themes: ThemeCatalogEntry[];
   negativeExamples: ThemeDetectorNegativeExample[];
+  /**
+   * MB-2 — Extra velden die in `agent_runs.metadata` worden meegeschreven.
+   * Bijvoorbeeld `{ context: "dev-detector-harness", dry_run: true }` vanuit
+   * de harness zodat audits kunnen filteren op echte pipeline-runs vs.
+   * prompt-tuning sessions.
+   */
+  telemetryContext?: Record<string, unknown>;
 }
 
 export type { ThemeDetectorOutput };
@@ -96,6 +103,7 @@ export async function runThemeDetector(input: RunThemeDetectorInput): Promise<Th
       metadata: {
         meeting_id: input.meeting.meetingId,
         themes_considered: input.themes.length,
+        ...input.telemetryContext,
       },
     },
     async () => {

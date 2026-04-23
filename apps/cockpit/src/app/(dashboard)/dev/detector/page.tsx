@@ -23,8 +23,10 @@ export default async function DevDetectorPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Theme-Detector harness</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Dry-run: roep de Detector aan op een verified meeting en vergelijk de output met de
-          huidige DB-state. Schrijft niets. Voor prompt-tuning zonder redeploy-bleed.
+          Roept de Detector aan op een verified meeting en vergelijkt de output met de huidige
+          DB-state. <strong>Geen meeting_themes/extraction_themes writes</strong>, maar wél een
+          échte Anthropic-call (token-kosten) + een <code>agent_runs</code>-rij met{" "}
+          <code>dry_run: true</code> voor audit. Voor prompt-tuning zonder redeploy-bleed.
         </p>
       </header>
       <DevDetectorClient

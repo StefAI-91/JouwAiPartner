@@ -108,6 +108,11 @@ export async function runDevDetectorAction(
   // identified_projects leeg — de detector valt terug op de summary +
   // matching_guide als arbiter. Dezelfde beperking als
   // regenerateMeetingThemesAction (FUNC-283).
+  //
+  // MB-2: de harness schrijft géén meeting_themes / extraction_themes weg,
+  // maar logt WEL een `agent_runs`-rij + verstookt Anthropic-tokens (want
+  // de LLM wordt écht aangeroepen). We taggen de run zodat dashboards
+  // deze runs kunnen uitsluiten van productie-metrics.
   const detectorOutput = await runThemeDetector({
     meeting: {
       meetingId: parsed.data.meetingId,
@@ -120,6 +125,10 @@ export async function runDevDetectorAction(
     },
     themes: themesCatalog,
     negativeExamples,
+    telemetryContext: {
+      context: "dev-detector-harness",
+      dry_run: true,
+    },
   });
 
   return {
