@@ -14,7 +14,8 @@ const mockArchiveTheme = vi.fn<(id: string) => Promise<unknown>>();
 const mockRejectMatch = vi.fn<(input: Record<string, unknown>) => Promise<unknown>>();
 const mockRecalc = vi.fn<(ids: string[]) => Promise<unknown>>();
 const mockGetMeeting = vi.fn<(id: string) => Promise<unknown>>();
-const mockRunTagThemes = vi.fn<(input: Record<string, unknown>) => Promise<unknown>>();
+const mockRunDetector = vi.fn<(input: Record<string, unknown>) => Promise<unknown>>();
+const mockRunLinkThemes = vi.fn<(input: Record<string, unknown>) => Promise<unknown>>();
 const mockRevalidate = vi.fn();
 
 vi.mock("@repo/auth/helpers", () => ({
@@ -42,8 +43,11 @@ vi.mock("@repo/database/queries/themes", () => ({
 vi.mock("@repo/database/queries/meetings", () => ({
   getVerifiedMeetingById: (...args: [string]) => mockGetMeeting(...args),
 }));
-vi.mock("@repo/ai/pipeline/steps/tag-themes", () => ({
-  runTagThemesStep: (...args: [Record<string, unknown>]) => mockRunTagThemes(...args),
+vi.mock("@repo/ai/pipeline/steps/theme-detector", () => ({
+  runThemeDetectorStep: (...args: [Record<string, unknown>]) => mockRunDetector(...args),
+}));
+vi.mock("@repo/ai/pipeline/steps/link-themes", () => ({
+  runLinkThemesStep: (...args: [Record<string, unknown>]) => mockRunLinkThemes(...args),
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidate(...args),
@@ -77,11 +81,25 @@ beforeEach(() => {
   mockArchiveTheme.mockResolvedValue({ success: true });
   mockRejectMatch.mockResolvedValue({ success: true, alreadyRemoved: false });
   mockRecalc.mockResolvedValue({ success: true });
-  mockGetMeeting.mockResolvedValue({ id: MEETING_ID, title: "Test", summary: "Summary" });
-  mockRunTagThemes.mockResolvedValue({
+  mockGetMeeting.mockResolvedValue({
+    id: MEETING_ID,
+    title: "Test",
+    summary: "Summary",
+    meeting_type: "team_sync",
+    party_type: "internal",
+    meeting_participants: [{ person: { id: "p1", name: "Stef" } }],
+  });
+  mockRunDetector.mockResolvedValue({
+    success: true,
+    output: { identified_themes: [], proposed_themes: [] },
+    themes_considered: 5,
+    error: null,
+  });
+  mockRunLinkThemes.mockResolvedValue({
     success: true,
     matches_saved: 2,
     proposals_saved: 0,
+    extraction_matches_saved: 0,
     themes_considered: 5,
     error: null,
   });
@@ -221,27 +239,45 @@ describe("rejectThemeMatchAction", () => {
 // regenerateMeetingThemesAction
 // ──────────────────────────────────────────────────────────────────────────
 
-describe("regenerateMeetingThemesAction", () => {
+describe("regenerateMeetingThemesAction (TH-011 FUNC-283)", () => {
   it("weigert non-admin", async () => {
     mockUser.value = { id: USER_ID };
     mockIsAdmin.mockResolvedValue(false);
     const result = await regenerateMeetingThemesAction({ meetingId: MEETING_ID });
     expect(result).toEqual({ error: "Geen toegang" });
-    expect(mockRunTagThemes).not.toHaveBeenCalled();
+    expect(mockRunDetector).not.toHaveBeenCalled();
+    expect(mockRunLinkThemes).not.toHaveBeenCalled();
   });
 
-  it("roept runTagThemesStep aan met replace=true", async () => {
+  it("kettint Theme-Detector → link-themes met replace=true", async () => {
     mockUser.value = { id: USER_ID };
     mockIsAdmin.mockResolvedValue(true);
     const result = await regenerateMeetingThemesAction({ meetingId: MEETING_ID });
     expect(result).toMatchObject({ success: true, matches: 2, proposals: 0 });
-    expect(mockRunTagThemes).toHaveBeenCalledWith({
-      meetingId: MEETING_ID,
-      meetingTitle: "Test",
-      summary: "Summary",
-      replace: true,
-    });
+    expect(mockRunDetector).toHaveBeenCalledWith(
+      expect.objectContaining({
+        meeting: expect.objectContaining({
+          meetingId: MEETING_ID,
+          title: "Test",
+          summary: "Summary",
+          meeting_type: "team_sync",
+          party_type: "internal",
+          participants: ["Stef"],
+          identifiedProjects: [],
+        }),
+      }),
+    );
+    expect(mockRunLinkThemes).toHaveBeenCalledWith(
+      expect.objectContaining({
+        meetingId: MEETING_ID,
+        replace: true,
+      }),
+    );
+    // FUNC-280 revalidate — alle proposal-surfaces moeten mee.
     expect(mockRevalidate).toHaveBeenCalledWith(`/meetings/${MEETING_ID}`);
+    expect(mockRevalidate).toHaveBeenCalledWith(`/review/${MEETING_ID}`);
+    expect(mockRevalidate).toHaveBeenCalledWith("/review");
+    expect(mockRevalidate).toHaveBeenCalledWith("/themes");
   });
 
   it("fout wanneer meeting niet gevonden", async () => {
@@ -250,20 +286,36 @@ describe("regenerateMeetingThemesAction", () => {
     mockGetMeeting.mockResolvedValue(null);
     const result = await regenerateMeetingThemesAction({ meetingId: MEETING_ID });
     expect(result).toEqual({ error: "Meeting niet gevonden of niet verified" });
-    expect(mockRunTagThemes).not.toHaveBeenCalled();
+    expect(mockRunDetector).not.toHaveBeenCalled();
+    expect(mockRunLinkThemes).not.toHaveBeenCalled();
   });
 
-  it("geeft step-error door", async () => {
+  it("geeft detector-error door zonder link-themes te draaien", async () => {
     mockUser.value = { id: USER_ID };
     mockIsAdmin.mockResolvedValue(true);
-    mockRunTagThemes.mockResolvedValue({
+    mockRunDetector.mockResolvedValue({
       success: false,
-      matches_saved: 0,
-      proposals_saved: 0,
+      output: { identified_themes: [], proposed_themes: [] },
       themes_considered: 0,
       error: "agent crashed",
     });
     const result = await regenerateMeetingThemesAction({ meetingId: MEETING_ID });
-    expect(result).toEqual({ error: "agent crashed" });
+    expect(result).toEqual({ error: "ThemeDetector: agent crashed" });
+    expect(mockRunLinkThemes).not.toHaveBeenCalled();
+  });
+
+  it("geeft link-themes error door", async () => {
+    mockUser.value = { id: USER_ID };
+    mockIsAdmin.mockResolvedValue(true);
+    mockRunLinkThemes.mockResolvedValue({
+      success: false,
+      matches_saved: 0,
+      proposals_saved: 0,
+      extraction_matches_saved: 0,
+      themes_considered: 0,
+      error: "db boom",
+    });
+    const result = await regenerateMeetingThemesAction({ meetingId: MEETING_ID });
+    expect(result).toEqual({ error: "db boom" });
   });
 });

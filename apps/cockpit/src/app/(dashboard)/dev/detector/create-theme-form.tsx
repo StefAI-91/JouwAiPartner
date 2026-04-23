@@ -7,10 +7,10 @@ import { createVerifiedThemeAction } from "@/actions/themes";
 const EMOJI_CHOICES = ALL_THEME_EMOJIS;
 
 /**
- * TH-010 — Inline create-form voor een nieuw verified thema. Overslaat
- * de emerging → review-flow; bedoeld voor de admin-curator-pad vanuit
- * `/dev/tagger`. Bij succes reset de form en wordt `onCreated` aangeroepen
- * zodat de parent het resultaat-paneel kan verversen.
+ * TH-010/TH-011 — Inline create-form voor een nieuw verified thema.
+ * Overslaat de emerging → review-flow; bedoeld voor de admin-curator-pad
+ * vanuit `/dev/detector`. Bij succes reset de form en wordt `onCreated`
+ * aangeroepen zodat de parent het resultaat-paneel kan verversen.
  */
 export function CreateThemeForm({ onCreated }: { onCreated?: () => void }) {
   const [name, setName] = useState("");

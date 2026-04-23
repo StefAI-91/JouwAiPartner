@@ -19,6 +19,7 @@
     "format:check": "prettier --check .",
     "dep-graph": "node scripts/generate-dep-graph.js",
     "check:queries": "bash scripts/check-no-direct-supabase.sh",
+    "detect-themes-batch": "tsx scripts/batch-detect-themes.ts",
     "prepare": "husky"
   },
   "devDependencies": {

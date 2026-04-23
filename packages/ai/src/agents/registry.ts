@@ -211,18 +211,18 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     entrypoint: "packages/ai/src/pipeline/steps/risk-specialist.ts",
   },
   {
-    id: "theme-tagger",
-    name: "Theme Tagger",
+    id: "theme-detector",
+    name: "Theme Detector",
     role: "De thema-kartograaf",
     description:
-      "Tagt meetings met cross-meeting thema's uit een gecureerde catalogus en stelt zeer selectief een nieuw thema voor als dat écht ontbreekt. Match-first-create-second discipline, gebruikt matching_guide + negative_examples als arbiter.",
+      "Draait serieel na de Gatekeeper en vóór Summarizer + RiskSpecialist. Identificeert welke cross-meeting thema's substantieel spelen (substantialiteitsregel: ≥2 kernpunten of ≥100 woorden) en stelt zeer selectief nieuwe thema's voor als dat écht ontbreekt. Extract-time scoping: extractions worden per-theme gelinkt via [Themes:] annotaties van Summarizer + RiskSpecialist — niet post-hoc over de hele meeting.",
     mascot: "🧭",
     model: "claude-sonnet-4-6",
     modelLabel: "Sonnet 4.6",
     quadrant: "cockpit",
     status: "live",
-    promptFile: "theme-tagger.md",
-    entrypoint: "packages/ai/src/pipeline/steps/tag-themes.ts",
+    promptFile: "theme-detector.md",
+    entrypoint: "packages/ai/src/pipeline/steps/theme-detector.ts",
   },
 ];
 

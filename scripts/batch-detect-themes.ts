@@ -1,16 +1,21 @@
 /**
- * TH-003 — One-off batch: ThemeTagger over alle verified meetings.
+ * TH-011 (FUNC-278) — One-off batch: Theme-Detector + link-themes over alle
+ * verified meetings. Vervangt `scripts/batch-tag-themes.ts` (TH-003).
  *
- * Doel: bij launch van de themes-feature is de junction-tabel niet leeg zodat
- * dashboard-pills en de donut direct gevulde data tonen. Draait lokaal via:
+ * Doel: bij launch van de extract-time theme scoping zijn de meeting_themes-
+ * en extraction_themes-rijen direct gevuld. Draait lokaal via:
  *
- *     npx tsx scripts/batch-tag-themes.ts
- *     npx tsx scripts/batch-tag-themes.ts --limit=5
- *     npx tsx scripts/batch-tag-themes.ts --force --limit=20
+ *     npx tsx scripts/batch-detect-themes.ts
+ *     npx tsx scripts/batch-detect-themes.ts --limit=5
+ *     npx tsx scripts/batch-detect-themes.ts --force --limit=20
  *
  * Default-modus is idempotent: meetings met bestaande meeting_themes-rijen
- * worden overgeslagen. `--force` hertagt ook die, met `replace: true` in de
- * step zodat er geen stale matches blijven staan.
+ * worden overgeslagen. `--force` her-detect ook die, met `replace: true` in
+ * de link-themes step zodat er geen stale matches blijven staan.
+ *
+ * Pipeline per meeting: Theme-Detector → link-themes. Summarizer wordt NIET
+ * opnieuw gedraaid (consistent met de regenerate-action in FUNC-283): dat
+ * zou bestaande summary/extraction-edits van reviewers kunnen overschrijven.
  */
 
 import { config } from "dotenv";
@@ -18,10 +23,12 @@ config({ path: ".env.local" });
 
 import {
   listVerifiedMeetingIdsOrderedByDate,
+  getVerifiedMeetingById,
   type VerifiedMeetingIdRow,
 } from "@repo/database/queries/meetings";
 import { listTaggedMeetingIds } from "@repo/database/queries/meeting-themes";
-import { runTagThemesStep } from "@repo/ai/pipeline/steps/tag-themes";
+import { runThemeDetectorStep } from "@repo/ai/pipeline/steps/theme-detector";
+import { runLinkThemesStep } from "@repo/ai/pipeline/steps/link-themes";
 
 const DEFAULT_CONCURRENCY = 5;
 
@@ -42,22 +49,18 @@ function parseArgs(argv: string[]): BatchArgs {
     else if (arg.startsWith("--concurrency=")) {
       concurrency = Number(arg.slice("--concurrency=".length));
     } else {
-      console.warn(`[batch-tag-themes] unknown arg: ${arg}`);
+      console.warn(`[batch-detect-themes] unknown arg: ${arg}`);
     }
   }
   return { force, limit, concurrency };
 }
 
 async function fetchTargetMeetings(args: BatchArgs): Promise<VerifiedMeetingIdRow[]> {
-  // TH-009: alle DB-reads via de queries-laag. Geen directe `.from()` meer in
-  // scripts — idempotente mode en force-mode verschillen alleen in filtering.
   if (args.force) {
     return listVerifiedMeetingIdsOrderedByDate({ limit: args.limit ?? undefined });
   }
 
-  // Idempotent-modus: skip meetings die al meeting_themes-rijen hebben.
   const taggedIds = await listTaggedMeetingIds();
-  // Overshoot zodat skips niet onder de gevraagde limit duwen.
   const candidates = await listVerifiedMeetingIdsOrderedByDate({
     limit: args.limit ? args.limit * 2 : undefined,
   });
@@ -65,10 +68,6 @@ async function fetchTargetMeetings(args: BatchArgs): Promise<VerifiedMeetingIdRo
   return args.limit ? remaining.slice(0, args.limit) : remaining;
 }
 
-/**
- * Simpele concurrency-limiter zonder p-limit dependency. Start batches van
- * `concurrency` workers en wacht tot allemaal klaar zijn voor de volgende.
- */
 async function runWithConcurrency<T>(
   items: T[],
   concurrency: number,
@@ -83,15 +82,15 @@ async function runWithConcurrency<T>(
 async function main() {
   const args = parseArgs(process.argv);
   console.log(
-    `[batch-tag-themes] start — force=${args.force}, limit=${args.limit ?? "∞"}, concurrency=${args.concurrency}`,
+    `[batch-detect-themes] start — force=${args.force}, limit=${args.limit ?? "∞"}, concurrency=${args.concurrency}`,
   );
 
   const targets = await fetchTargetMeetings(args);
   if (targets.length === 0) {
-    console.log("[batch-tag-themes] 0 meetings to process — niks te doen.");
+    console.log("[batch-detect-themes] 0 meetings to process — niks te doen.");
     return;
   }
-  console.log(`[batch-tag-themes] ${targets.length} meetings te verwerken`);
+  console.log(`[batch-detect-themes] ${targets.length} meetings te verwerken`);
 
   const results = {
     success: 0,
@@ -104,10 +103,36 @@ async function main() {
   await runWithConcurrency(targets, args.concurrency, async (meeting, index) => {
     const label = `[${index + 1}/${targets.length}] ${meeting.id} — ${meeting.title ?? "(geen titel)"}`;
     try {
-      const result = await runTagThemesStep({
+      // Volledige meeting-context ophalen voor de Theme-Detector. Detector
+      // heeft meer context nodig dan alleen title + summary (meeting_type,
+      // party_type, participants).
+      const full = await getVerifiedMeetingById(meeting.id);
+      if (!full) {
+        results.skipped += 1;
+        console.log(`${label} → skipped (meeting niet gevonden)`);
+        return;
+      }
+
+      const detector = await runThemeDetectorStep({
+        meeting: {
+          meetingId: meeting.id,
+          title: full.title ?? "",
+          meeting_type: full.meeting_type ?? "team_sync",
+          party_type: full.party_type ?? "internal",
+          participants: full.meeting_participants.map((mp) => mp.person.name),
+          summary: full.summary ?? "",
+          identifiedProjects: [],
+        },
+      });
+      if (detector.error) {
+        results.failed += 1;
+        console.warn(`${label} → detector failed: ${detector.error}`);
+        return;
+      }
+
+      const result = await runLinkThemesStep({
         meetingId: meeting.id,
-        meetingTitle: meeting.title ?? "",
-        summary: meeting.summary ?? "",
+        detectorOutput: detector.output,
         replace: args.force,
       });
 
@@ -118,7 +143,7 @@ async function main() {
       }
       if (!result.success) {
         results.failed += 1;
-        console.warn(`${label} → failed: ${result.error}`);
+        console.warn(`${label} → link-themes failed: ${result.error}`);
         return;
       }
       results.success += 1;
@@ -133,7 +158,7 @@ async function main() {
     }
   });
 
-  console.log("\n[batch-tag-themes] klaar:");
+  console.log("\n[batch-detect-themes] klaar:");
   console.log(`  success:   ${results.success}`);
   console.log(`  skipped:   ${results.skipped}`);
   console.log(`  failed:    ${results.failed}`);
@@ -142,6 +167,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("[batch-tag-themes] fatal:", err);
+  console.error("[batch-detect-themes] fatal:", err);
   process.exit(1);
 });

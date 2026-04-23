@@ -65,16 +65,19 @@ export const regenerateMeetingThemesSchema = z.object({
 });
 export type RegenerateMeetingThemesInput = z.infer<typeof regenerateMeetingThemesSchema>;
 
-/** TH-010 — Dry-run Tagger vanuit `/dev/tagger` harness. */
-export const runDevTaggerSchema = z.object({
+/**
+ * TH-011 — Dry-run Theme-Detector vanuit `/dev/detector` harness.
+ * Detector-only modus; full-pipeline mode is fase 6b (UI-333/334/335).
+ */
+export const runDevDetectorSchema = z.object({
   meetingId: z.string().uuid(),
 });
-export type RunDevTaggerInput = z.infer<typeof runDevTaggerSchema>;
+export type RunDevDetectorInput = z.infer<typeof runDevDetectorSchema>;
 
 /**
- * TH-010 — Admin-create nieuw verified thema direct vanuit `/dev/tagger`.
+ * TH-010 — Admin-create nieuw verified thema direct vanuit `/dev/detector`.
  * Skipt de emerging → review-flow. Bedoeld voor de curator-pad waar Stef
- * handmatig themes seed't op basis van wat hij in de Tagger-diff ziet.
+ * handmatig themes seed't op basis van wat hij in de Detector-diff ziet.
  */
 export const createVerifiedThemeSchema = z.object({
   name: z.string().min(THEME_NAME_MIN).max(THEME_NAME_MAX),

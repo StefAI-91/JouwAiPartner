@@ -6,6 +6,7 @@ import { insertMeeting } from "@repo/database/mutations/meetings";
 import { resolveOrganization } from "./entity-resolution";
 import { buildEntityContext } from "./context-injection";
 import { getAllKnownPeople } from "@repo/database/queries/people";
+import { listVerifiedThemes } from "@repo/database/queries/themes";
 import {
   classifyParticipantsWithCache,
   determinePartyType,
@@ -18,7 +19,8 @@ import { runRiskSpecialistStep } from "./steps/risk-specialist";
 import { runGenerateTitleStep } from "./steps/generate-title";
 import { runTagAndSegmentStep } from "./steps/tag-and-segment";
 import { runEmbedStep } from "./steps/embed";
-import { runTagThemesStep } from "./steps/tag-themes";
+import { runThemeDetectorStep } from "./steps/theme-detector";
+import { runLinkThemesStep } from "./steps/link-themes";
 import { extractSpeakerNames, buildSpeakerMap, formatSpeakerContext } from "./speaker-map";
 import {
   matchParticipants,
@@ -58,11 +60,12 @@ interface PipelineResult {
 }
 
 /**
- * ThemeTagger skip-drempel: meetings met een `relevance_score` onder deze
- * waarde worden niet door de ThemeTagger gehaald (FUNC-211, PRD §5.1). Zelfde
- * drempel als de email-filter-gatekeeper gebruikt voor ruis-emails.
+ * Theme-Detector skip-drempel: meetings met een `relevance_score` onder deze
+ * waarde worden niet door de Theme-Detector + link-themes flow gehaald
+ * (TH-011 FUNC-276, was TH-003 FUNC-211). Zelfde drempel als de
+ * email-filter-gatekeeper gebruikt voor ruis-emails.
  */
-const THEME_TAGGER_MIN_RELEVANCE = 0.4;
+const THEME_DETECTOR_MIN_RELEVANCE = 0.4;
 
 /**
  * Full meeting processing pipeline:
@@ -201,6 +204,49 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const transcribeResult = await runTranscribeStep(meetingId, input.audio_url);
   if (transcribeResult.error) errors.push(`ElevenLabs: ${transcribeResult.error}`);
 
+  // Step 7.5 (TH-011): Theme-Detector — blocking, draait na Gatekeeper en
+  // vóór Summarizer + RiskSpecialist. Skip onder de relevance-drempel
+  // (zelfde drempel als de oude ThemeTagger).
+  const shouldDetectThemes = gatekeeperResult.relevance_score >= THEME_DETECTOR_MIN_RELEVANCE;
+  const themeDetectorResult = shouldDetectThemes
+    ? await runThemeDetectorStep({
+        meeting: {
+          meetingId,
+          title: input.title,
+          meeting_type: finalMeetingType,
+          party_type: partyType,
+          participants: input.participants,
+          summary: input.summary,
+          identifiedProjects: identifiedProjects.map((p) => ({
+            project_name: p.project_name,
+            project_id: p.project_id,
+          })),
+        },
+      })
+    : {
+        success: true,
+        output: { identified_themes: [], proposed_themes: [] },
+        themes_considered: 0,
+        error: null,
+      };
+  if (themeDetectorResult.error) errors.push(`ThemeDetector: ${themeDetectorResult.error}`);
+
+  // identified_themes als context voor Summarizer + RiskSpecialist: we
+  // mappen naar {name, description} door de detector-output tegen de
+  // meegegeven catalogus te joinen. Verified catalog is hier al in-memory
+  // via de step, maar we hebben 'm niet expliciet terug — re-fetch is
+  // goedkoop (cached in memory) en houdt de orchestrator schoon. Bij 0
+  // identified_themes doen we niks extra.
+  const detectorIdentifiedNames = new Set(
+    themeDetectorResult.output.identified_themes.map((t) => t.themeId),
+  );
+  const identifiedThemesForAgents: { name: string; description: string }[] =
+    detectorIdentifiedNames.size > 0
+      ? (await listVerifiedThemes())
+          .filter((t) => detectorIdentifiedNames.has(t.id))
+          .map((t) => ({ name: t.name, description: t.description }))
+      : [];
+
   // Step 8: Summarize + extract — structurer of legacy pair
   const bestTranscript = transcribeResult.transcript ?? input.transcript;
   const transcriptSource = transcribeResult.transcript ? "elevenlabs" : "fireflies";
@@ -212,6 +258,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     participants: input.participants,
     speakerContext,
     entityContext: entityContext.contextString,
+    identified_themes: identifiedThemesForAgents,
   };
 
   // RiskSpecialist draait parallel aan de hoofdpipeline en schrijft naar
@@ -227,6 +274,7 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         project_name: p.project_name,
         project_id: p.project_id,
       })),
+      identified_themes: identifiedThemesForAgents,
     },
     identifiedProjects,
   );
@@ -271,36 +319,39 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   errors.push(...tagResult.errors);
   const segmentsSaved = tagResult.segmentsSaved;
 
-  // Step 11a: await risk-specialist zodat alle extractions zijn weggeschreven
-  // voordat ThemeTagger ze ophaalt. Zonder deze await zou de tagger risk-
-  // extractions missen die parallel nog aan het saven zijn.
+  // Step 11a (TH-011 FUNC-284): await risk-specialist zodat alle extractions
+  // — inclusief risks — zijn weggeschreven voordat link-themes de
+  // extraction.content parset op [Themes:] annotaties. Zonder deze await
+  // zou link-themes risk-extractions missen die parallel nog aan het saven
+  // zijn.
   await riskSpecialistPromise;
 
-  // Step 11b: ThemeTagger draait parallel aan embed-save. Skip bij lage
-  // relevance_score (FUNC-211) zodat we geen tokens verspillen aan meetings
-  // die jullie sowieso rejecten in de review. Never-throws step.
-  const shouldTagThemes = gatekeeperResult.relevance_score >= THEME_TAGGER_MIN_RELEVANCE;
-  const tagThemesPromise = shouldTagThemes
-    ? runTagThemesStep({
+  // Step 11b: link-themes draait parallel aan embed-save. Skip bij lage
+  // relevance_score (FUNC-276) — detector is in step 7.5 ook al
+  // overgeslagen, dus output is leeg en link zou niks doen. Never-throws.
+  const linkThemesPromise = shouldDetectThemes
+    ? runLinkThemesStep({
         meetingId,
-        meetingTitle: input.title,
-        summary: richSummary ?? input.summary,
+        detectorOutput: themeDetectorResult.output,
+        kernpunten: kernpuntenForTagger,
+        vervolgstappen: vervolgstappenForTagger,
       })
     : Promise.resolve({
         success: true,
         matches_saved: 0,
         proposals_saved: 0,
+        extraction_matches_saved: 0,
         themes_considered: 0,
         error: null,
         skipped: "low_relevance",
       } as const);
 
-  // Step 11c: Embed meeting + extractions — parallel met tag-themes
+  // Step 11c: Embed meeting + extractions — parallel met link-themes
   const embedResult = await runEmbedStep(meetingId);
   if (embedResult.error) errors.push(`Embedding: ${embedResult.error}`);
 
-  const tagThemesResult = await tagThemesPromise;
-  if (tagThemesResult.error) errors.push(`ThemeTagger: ${tagThemesResult.error}`);
+  const linkThemesResult = await linkThemesPromise;
+  if (linkThemesResult.error) errors.push(`LinkThemes: ${linkThemesResult.error}`);
 
   return {
     gatekeeper: gatekeeperResult,
@@ -312,8 +363,8 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     embedded: embedResult.success,
     elevenlabs_transcribed: transcribeResult.success,
     summarized,
-    themes_tagged: tagThemesResult.matches_saved,
-    themes_proposals: tagThemesResult.proposals_saved,
+    themes_tagged: linkThemesResult.matches_saved,
+    themes_proposals: linkThemesResult.proposals_saved,
     errors,
   };
 }

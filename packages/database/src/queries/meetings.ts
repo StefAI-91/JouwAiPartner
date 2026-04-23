@@ -113,8 +113,9 @@ export async function listVerifiedMeetings(
 /**
  * TH-009 — minimale projectie van verified meetings (id/title/summary) ordered
  * by date desc, met optionele limit. Gebruikt door
- * `scripts/batch-tag-themes.ts` om de ThemeTagger over bestaande meetings te
- * draaien zonder directe `.from()`-call buiten de queries-laag.
+ * `scripts/batch-detect-themes.ts` (TH-011) om de Theme-Detector + link-themes
+ * over bestaande meetings te draaien zonder directe `.from()`-call buiten
+ * de queries-laag.
  */
 export interface VerifiedMeetingIdRow {
   id: string;
