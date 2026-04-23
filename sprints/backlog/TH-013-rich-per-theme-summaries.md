@@ -185,3 +185,17 @@ De huidige prompt (`packages/ai/prompts/summarizer.md`) heeft vier output-sectie
 **Waarom deze plek in de prompt.** De Summarizer bouwt de meeting-wide kernpunten eerst, met `[Themes:]` markers waar relevant. Het per-thema blok komt dáárna in de output-volgorde omdat het een herwerking is van die punten per thema-lens. Volgorde in de prompt matcht de volgorde in de output-JSON (Anthropic's structured-output respecteert schema-volgorde). Zet de instructie achteraan zodat de agent eerst de kernpunten hardgemaakt heeft voor hij per thema gaat filteren.
 
 **Geen wijziging aan BRIEFING / KERNPUNTEN / DEELNEMERS / VERVOLGSTAPPEN secties.** De bestaande `[Themes:]` marker-instructie blijft staan — die voedt `extraction_themes` (TH-011) en heeft een andere functie dan het nieuwe per-thema blok.
+
+### Backfill-strategie
+
+Twee paden, zelfde structuur als TH-011 maar aangepast op TH-013-scope:
+
+1. **Batch-backfill** (aanbevolen). `scripts/batch-detect-themes.ts --force` over alle verified meetings met bestaande theme-matches. Het script gebruikt de bestaande regenerate-keten (Theme-Detector → Summarizer → link-themes met `replace: true`) die via FUNC-290..292 nu automatisch de rijke `theme_summaries` schrijft. Geen scriptwijziging nodig — de backfill-winst komt uit het bijgewerkte Summarizer-contract. Draai serieel of met beperkte concurrency (Sonnet 4.5 is de Summarizer, iets cheaper dan Sonnet 4.6, maar output-tokens groeien met theme_summaries — 5-10 parallel max). Kost-schatting: ~$0,05-0,10 extra per meeting bovenop de normale regenerate-kost × aantal meetings met theme-matches. Exacte getallen bepalen we bij deploy.
+
+2. **Rolling regeneration.** Geen bulk; nieuwe meetings krijgen direct de rijke versie via de pipeline, oude meetings blijven hun 1-2 zins Detector-summary tonen tot een admin ze handmatig regenereert via `RegenerateMenu` op `/meetings/[id]` of `/review/[id]`. Mix-state tussen oude en nieuwe kwaliteit op theme detail pages tot alle meetings zijn doorgelopen. Voordeel: nul kosten bij deploy.
+
+Keuze bij deploy. **Pad 1 is de default** mits de Anthropic-budgetruimte het toelaat — het belang van consistentie op theme pages weegt zwaarder dan de incrementele kost. Pad 2 is het terugval-pad als de budget-check rood wordt.
+
+**Geen partial-backfill-pad.** Je kunt in principe `--force --limit=50` op de meest-bekeken themes runnen om de UX-pijn eerst daar weg te halen, maar dat vereist een theme-filter in het batch-script (nu alleen meeting-filter). Uit scope — niet de moeite waard voor de complexiteit, kies of pad 1 of pad 2.
+
+**Verificatie na backfill.** Query `SELECT count(*) FROM meeting_themes WHERE summary IS NOT NULL AND summary LIKE '## Briefing%';` geeft direct het aantal rijen dat de nieuwe markdown-vorm heeft. Vergelijk met totaal niet-null rijen om de voortgang te tracken. Oude 1-2 zins Detector-output begint niet met `## Briefing` — scheidt de twee groepen cleanly.
