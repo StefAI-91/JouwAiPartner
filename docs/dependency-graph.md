@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 495 |
-| Exported functions/constants | 766 |
+| Exported functions/constants | 767 |
 | Exported types/interfaces | 202 |
-| Cross-package imports | 623 |
+| Cross-package imports | 624 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -3391,11 +3391,13 @@
 ### `apps/devhub/src/actions/attachments.ts`
 
 **Exports:**
+- `createIssueAttachmentUploadUrlAction()`
 - `recordIssueAttachmentAction()`
 
 **Depends on:**
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/issues` → getIssueById
 - `@repo/database/mutations/issue-attachments` → insertAttachment
 
@@ -3894,7 +3896,7 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 29 | 2 | 14 | - | - | 45 |
+| DevHub Server Actions | 30 | 2 | 14 | - | - | 46 |
 | DevHub API Routes | 9 | - | 3 | - | - | 12 |
 | DevHub Components | 16 | - | - | 22 | - | 38 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
