@@ -494,6 +494,14 @@ export interface MeetingForRegenerate {
   date: string | null;
   meeting_type: string | null;
   party_type: string | null;
+  /**
+   * TH-013 — `summary` is toegevoegd omdat de nieuwe regenerate-flow
+   * Gatekeeper + Theme-Detector vóór de Summarizer draait en die agents
+   * de huidige summary als classificatie-input gebruiken. Kan null zijn
+   * voor meetings die nog geen summary hebben — beide agents handelen
+   * een lege string gracieus af.
+   */
+  summary: string | null;
   transcript: string | null;
   transcript_elevenlabs: string | null;
   meeting_participants: { person: { name: string } }[];
@@ -501,9 +509,9 @@ export interface MeetingForRegenerate {
 
 /**
  * Fetch meeting + transcript-varianten + participant-namen voor de
- * `regenerateMeetingAction` flow. Selecteert alleen wat de pipeline gebruikt
- * — geen `raw_fireflies` of `summary` (die zijn niet nodig voor regenerate
- * van segments + risks).
+ * `regenerateMeetingAction` flow. TH-013 voegt `summary` toe zodat
+ * Gatekeeper + Theme-Detector (die vóór de Summarizer draaien) hun
+ * classificatie-input hebben.
  *
  * @param client See `packages/database/README.md` for client-scope policy.
  */
@@ -515,7 +523,7 @@ export async function getMeetingForRegenerate(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
+      `id, title, date, meeting_type, party_type, summary, transcript, transcript_elevenlabs,
        meeting_participants(person:people(name))`,
     )
     .eq("id", meetingId)

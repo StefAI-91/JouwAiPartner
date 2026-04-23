@@ -16,13 +16,15 @@ import {
   getMeetingForReprocess,
   getMeetingOrganizationId,
 } from "@repo/database/queries/meetings";
-import { runSummarizer, formatSummary } from "@repo/ai/agents/summarizer";
+import { runSummarizer, formatSummary, formatThemeSummary } from "@repo/ai/agents/summarizer";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
 import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
 import { runTagger } from "@repo/ai/pipeline/tagger";
 import { buildSegments } from "@repo/ai/pipeline/segment-builder";
 import { embedBatch } from "@repo/ai/embeddings";
+import { runThemeDetectorStep } from "@repo/ai/pipeline/steps/theme-detector";
+import { runLinkThemesStep } from "@repo/ai/pipeline/steps/link-themes";
 import {
   insertMeetingProjectSummaries,
   updateSegmentEmbedding,
@@ -74,22 +76,58 @@ export async function regenerateMeetingAction(
     // meant Sonnet had no project list and fell back to Algemeen too often.
     const entityContext = await buildEntityContext();
 
-    // Step 2: Summarizer — now receives entityContext so prefixes match known projects.
-    const summarizerOutput = await runSummarizer(transcript, {
-      ...context,
-      entityContext: entityContext.contextString,
-    });
-    const richSummary = formatSummary(summarizerOutput);
-
-    // Step 3: Gatekeeper (projecten + meta). Extractor is vervangen door
-    // RiskSpecialist — die draait hieronder als een aparte stap omdat hij
-    // de identified_projects van de Gatekeeper nodig heeft voor het
-    // mappen van project_id op z'n rij.
-    const gatekeeperResult = await runGatekeeper(richSummary.slice(0, 3000), {
+    // Step 2: Gatekeeper VÓÓR Summarizer (TH-013 aanpassing). De originele
+    // volgorde was Summarizer → Gatekeeper op de verse summary. Voor TH-013
+    // moet de Summarizer identified_themes krijgen, wat vereist dat de
+    // Theme-Detector eerst draait — en die heeft identified_projects van
+    // Gatekeeper als context nodig. We draaien Gatekeeper daarom op de
+    // huidige (oude) meeting.summary. Projecten zijn invariant over
+    // summary-regeneratie: dezelfde meeting heeft dezelfde projecten.
+    const baselineSummaryForClassification = (meeting.summary ?? "").slice(0, 3000);
+    const gatekeeperResult = await runGatekeeper(baselineSummaryForClassification, {
       title: context.title,
       entityContext: entityContext.contextString,
     });
     const identifiedProjects = gatekeeperResult.identified_projects;
+
+    // Step 3: Theme-Detector (TH-013 aanpassing). Levert identified_themes
+    // voor de Summarizer én de verifiedThemes-cache die link-themes later
+    // hergebruikt (MB-1 patroon uit TH-011). Never-throws; bij falen een
+    // lege output + lege cache zodat downstream gewoon doordraait.
+    const themeDetectorResult = await runThemeDetectorStep({
+      meeting: {
+        meetingId,
+        title: context.title,
+        meeting_type: context.meeting_type,
+        party_type: context.party_type,
+        participants: context.participants,
+        summary: meeting.summary ?? "",
+        identifiedProjects: identifiedProjects.map((p) => ({
+          project_name: p.project_name,
+          project_id: p.project_id,
+        })),
+      },
+    });
+
+    const detectorIdentifiedThemeIds = new Set(
+      themeDetectorResult.output.identified_themes.map((t) => t.themeId),
+    );
+    const identifiedThemesForSummarizer =
+      detectorIdentifiedThemeIds.size > 0
+        ? themeDetectorResult.verifiedThemes
+            .filter((t) => detectorIdentifiedThemeIds.has(t.id))
+            .map((t) => ({ themeId: t.id, name: t.name, description: t.description }))
+        : [];
+
+    // Step 4: Summarizer — nu met entityContext én identified_themes zodat
+    // theme_summaries[] gevuld kan worden (TH-013 FUNC-290/292).
+    const summarizerOutput = await runSummarizer(transcript, {
+      ...context,
+      entityContext: entityContext.contextString,
+      identified_themes: identifiedThemesForSummarizer,
+      meetingId,
+    });
+    const richSummary = formatSummary(summarizerOutput);
 
     // Step 4: Save summary (safe — overwrites existing, no data loss on failure)
     const summaryResult = await updateMeetingSummary(
@@ -200,7 +238,31 @@ export async function regenerateMeetingAction(
       }
     }
 
-    // Step 7: Mark meeting embedding as stale for re-embedding
+    // Step 7 (TH-013): link-themes met replace=true + Summarizer's rich
+    // theme_summaries Map. Moet NÁ RiskSpecialist draaien — link-themes
+    // parset extraction.content voor [Themes:]-annotaties, en risk-
+    // extractions moeten al weggeschreven zijn (FUNC-284 patroon uit
+    // gatekeeper-pipeline.ts). Never-throws.
+    if (themeDetectorResult.success) {
+      const summarizerMap = new Map<string, string>();
+      for (const ts of summarizerOutput.theme_summaries) {
+        if (!ts.briefing.trim()) continue;
+        summarizerMap.set(ts.themeId, formatThemeSummary(ts));
+      }
+
+      const linkResult = await runLinkThemesStep({
+        meetingId,
+        detectorOutput: themeDetectorResult.output,
+        replace: true,
+        verifiedThemes: themeDetectorResult.verifiedThemes,
+        summarizerThemeSummaries: summarizerMap,
+      });
+      if (linkResult.error) {
+        console.error("link-themes failed during regeneration (non-blocking):", linkResult.error);
+      }
+    }
+
+    // Step 8: Mark meeting embedding as stale for re-embedding
     const staleResult = await markMeetingEmbeddingStale(meetingId);
     if ("error" in staleResult) {
       console.error("Failed to mark embedding stale:", staleResult.error);
@@ -213,6 +275,10 @@ export async function regenerateMeetingAction(
   revalidatePath(`/meetings/${meetingId}`);
   revalidatePath(`/review/${meetingId}`);
   revalidatePath("/review");
+  // TH-013 — theme detail pages tonen meeting_themes.summary; revalidaten
+  // zodat de rijke markdown direct zichtbaar is na regenerate.
+  revalidatePath("/themes");
+  revalidatePath("/themes/[slug]", "page");
   revalidatePath("/");
   return { success: true };
 }

@@ -10,7 +10,7 @@
 | Files scanned | 541 |
 | Exported functions/constants | 860 |
 | Exported types/interfaces | 269 |
-| Cross-package imports | 670 |
+| Cross-package imports | 672 |
 | Critical integration points (3+ packages) | 16 |
 
 ## Package Dependency Flow
@@ -1888,13 +1888,15 @@
 **Depends on:**
 - `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale, deleteMeeting, parkMeetingForReprocess, restoreParkedMeeting
 - `@repo/database/queries/meetings` → getMeetingForRegenerate, getMeetingForRegenerateRisks, getMeetingForReprocess, getMeetingOrganizationId
-- `@repo/ai/agents/summarizer` → runSummarizer, formatSummary
+- `@repo/ai/agents/summarizer` → runSummarizer, formatSummary, formatThemeSummary
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
 - `@repo/ai/agents/gatekeeper` → runGatekeeper
 - `@repo/ai/pipeline/tagger` → runTagger
 - `@repo/ai/pipeline/segment-builder` → buildSegments
 - `@repo/ai/embeddings` → embedBatch
+- `@repo/ai/pipeline/steps/theme-detector` → runThemeDetectorStep
+- `@repo/ai/pipeline/steps/link-themes` → runLinkThemesStep
 - `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding, deleteSegmentsByMeetingId
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
 - `@repo/database/validations/meetings` → regenerateSchema
@@ -4321,7 +4323,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 52 | - | - | - | - | 52 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 53 | 19 | 32 | - | - | 104 |
+| Cockpit Server Actions | 53 | 21 | 32 | - | - | 106 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 49 | 7 | 2 | 85 | - | 143 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
