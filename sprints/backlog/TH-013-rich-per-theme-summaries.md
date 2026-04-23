@@ -58,3 +58,20 @@ Eerste tastbare resultaat: je opent `/themes/eges-leertraject`, ziet een meeting
 - Code-pattern: `apps/cockpit/src/app/(dashboard)/meetings/[id]` — bestaande markdown-rendering van de hoofd-summary (`meetings.summary`) als styling-referentie voor UI-340
 - Script: `scripts/batch-detect-themes.ts` — bestaande `--force` backfill-flow draait automatisch de nieuwe Summarizer + link-themes, geen wijziging nodig (EDGE-244 backfill-compat via bestaande regenerate-keten)
 - Referentie: research-thread (deze sessie) — bleed-analyse op Ege's leertraject, extraction-centric afgewogen en bewust niet gekozen
+
+## Context
+
+### Waarom markdown in bestaande `text`-kolom i.p.v. gestructureerde kolommen
+
+Twee opties stonden op tafel voor hoe de rijke per-thema samenvatting opgeslagen wordt:
+
+- **A. Markdown in bestaande `meeting_themes.summary` text-kolom.** Summarizer produceert gestructureerde output (`briefing` + `kernpunten[]` + `vervolgstappen[]`), een renderer bouwt daar één markdown-string van (`## Briefing / ## Kernpunten / ## Vervolgstappen`), die string landt in de bestaande text-kolom. UI parseert bij render met een markdown-renderer.
+- **B. Gestructureerde kolommen.** Splits `meeting_themes.summary` in drie losse kolommen: `briefing text`, `kernpunten jsonb`, `vervolgstappen jsonb`. UI rendert elk veld apart, volledige controle over styling, query-baar per veld.
+
+**Gekozen: A.** Drie redenen:
+
+1. **Geen DB-migratie, geen breaking change.** Oude rijen (1-2 zins Detector-output) blijven geldig zonder backfill — markdown is een superset van plain text. Een migratie zou óf alle oude rijen op `null` moeten zetten óf een lossy split moeten maken; beide introduceren risico voor 0 UX-winst.
+2. **Consistentie met de meeting-wide `meetings.summary`.** Die kolom bevat ook markdown-gerenderde output van de Summarizer (via `formatSummary`). Zelfde patroon volgen voor per-thema is voorspelbaar voor wie later in de codebase rondloopt.
+3. **Flexibiliteit als we de structuur willen bijstellen.** Als we straks nog een sectie toevoegen (bv. "Open vragen" per thema), hoeft het schema niet te migreren; de renderer kent een nieuwe sectie-header en de UI-renderer pakt het op. Bij optie B zou elke sectie-uitbreiding een DATA-requirement zijn.
+
+Trade-off die we accepteren: **toekomstige AI-consumers kunnen niet per-veld queryen.** Een toekomstige Theme-AI die alleen de kernpunten wil, moet de markdown opnieuw parsen. Voor V1 is dat geen probleem — er zijn nog geen zulke consumers, en de string is kort genoeg om ongeparst te blijven tot het echt knelt. Migratie naar B is later een reversibele sprint als die behoefte ontstaat.
