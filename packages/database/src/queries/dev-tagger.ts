@@ -13,6 +13,7 @@ export interface DevTaggerMeetingThemeRow {
   theme_emoji: string;
   confidence: "medium" | "high";
   evidence_quote: string;
+  summary: string | null;
   created_at: string;
 }
 
@@ -31,7 +32,9 @@ export async function getMeetingThemesForDevTagger(
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("meeting_themes")
-    .select("theme_id, confidence, evidence_quote, created_at, theme:theme_id (name, emoji)")
+    .select(
+      "theme_id, confidence, evidence_quote, summary, created_at, theme:theme_id (name, emoji)",
+    )
     .eq("meeting_id", meetingId)
     .order("created_at", { ascending: false });
 
@@ -41,6 +44,7 @@ export async function getMeetingThemesForDevTagger(
     theme_id: string;
     confidence: "medium" | "high";
     evidence_quote: string;
+    summary: string | null;
     created_at: string;
     theme: { name: string; emoji: string } | null;
   };
@@ -51,6 +55,7 @@ export async function getMeetingThemesForDevTagger(
     theme_emoji: r.theme?.emoji ?? "🏷️",
     confidence: r.confidence,
     evidence_quote: r.evidence_quote,
+    summary: r.summary,
     created_at: r.created_at,
   }));
 }

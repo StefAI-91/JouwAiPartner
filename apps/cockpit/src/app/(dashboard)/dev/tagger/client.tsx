@@ -130,6 +130,11 @@ export function DevTaggerClient({ meetings }: Props) {
     );
   }, [result]);
 
+  const currentSummaryByThemeId = useMemo(() => {
+    if (!result) return new Map<string, string | null>();
+    return new Map(result.currentMeetingThemes.map((m) => [m.theme_id, m.summary]));
+  }, [result]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border/60 bg-card p-4">
@@ -300,6 +305,28 @@ export function DevTaggerClient({ meetings }: Props) {
                     <blockquote className="mt-2 border-l-2 border-primary/30 pl-3 italic text-muted-foreground">
                       &ldquo;{m.evidenceQuote}&rdquo;
                     </blockquote>
+                    <div className="mt-2 rounded-md bg-muted/30 p-2">
+                      <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                        themeSummary (fresh)
+                      </p>
+                      <p className="mt-0.5 text-[12px] leading-snug">
+                        {m.themeSummary || (
+                          <span className="italic text-muted-foreground">(leeg)</span>
+                        )}
+                      </p>
+                      {currentSummaryByThemeId.has(m.themeId) && (
+                        <>
+                          <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                            themeSummary (huidige DB)
+                          </p>
+                          <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
+                            {currentSummaryByThemeId.get(m.themeId) || (
+                              <span className="italic">(pre-TH-010, geen summary in DB)</span>
+                            )}
+                          </p>
+                        </>
+                      )}
+                    </div>
                     <p className="mt-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
                       extractionIds ({m.extractionIds.length})
                     </p>
