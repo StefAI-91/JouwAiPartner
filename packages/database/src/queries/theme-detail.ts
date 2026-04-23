@@ -8,6 +8,16 @@ import { DEFAULT_WINDOW_DAYS, windowStartIso } from "./theme-internals";
  * TH-008 (SRP + file-grootte).
  */
 
+/**
+ * TH-011 (UI-332) — party_type normaliseren naar de drie officiële waarden
+ * plus `null` voor meetings waar hij niet is gezet. Alles buiten deze set
+ * valt naar null zodat de UI-groepering voorspelbaar blijft.
+ */
+function normalizePartyType(raw: string | null): "internal" | "external" | "mixed" | null {
+  if (raw === "internal" || raw === "external" || raw === "mixed") return raw;
+  return null;
+}
+
 export interface ThemeRecentActivity {
   /** Aantal matches binnen het window. */
   mentions: number;
@@ -27,6 +37,8 @@ export interface ThemeMeetingEntry {
   title: string | null;
   date: string | null;
   participants: string[] | null;
+  /** TH-011 (UI-332) — party_type voor de drie-kolom split op theme detail. */
+  party_type: "internal" | "external" | "mixed" | null;
   confidence: "medium" | "high";
   evidence_quote: string;
   /**
@@ -123,7 +135,7 @@ export async function getThemeMeetings(
   const { data, error } = await db
     .from("meeting_themes")
     .select(
-      "confidence, evidence_quote, summary, created_at, meeting:meeting_id (id, title, date, participants)",
+      "confidence, evidence_quote, summary, created_at, meeting:meeting_id (id, title, date, participants, party_type)",
     )
     .eq("theme_id", themeId)
     .order("created_at", { ascending: false });
@@ -140,6 +152,7 @@ export async function getThemeMeetings(
       title: string | null;
       date: string | null;
       participants: string[] | null;
+      party_type: string | null;
     } | null;
   };
 
@@ -150,6 +163,7 @@ export async function getThemeMeetings(
       title: row.meeting!.title,
       date: row.meeting!.date,
       participants: row.meeting!.participants,
+      party_type: normalizePartyType(row.meeting!.party_type),
       confidence: row.confidence,
       evidence_quote: row.evidence_quote,
       summary: row.summary,
