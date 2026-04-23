@@ -91,6 +91,18 @@ export function MeetingsTab({ themeId, themeName, meetings, canRejectMatches }: 
                 &ldquo;{m.evidence_quote}&rdquo;
               </blockquote>
             </details>
+            {m.extractions.length > 0 && (
+              <ul className="mt-3 space-y-1 text-[12.5px] leading-snug">
+                {m.extractions.map((ex) => (
+                  <li key={ex.id} className="flex gap-2">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground shrink-0">
+                      {ex.type}:
+                    </span>
+                    <span className="text-foreground">{ex.content}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </li>
         );
       })}

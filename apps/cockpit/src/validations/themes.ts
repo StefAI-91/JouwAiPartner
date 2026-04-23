@@ -64,3 +64,9 @@ export const regenerateMeetingThemesSchema = z.object({
   meetingId: z.string().uuid(),
 });
 export type RegenerateMeetingThemesInput = z.infer<typeof regenerateMeetingThemesSchema>;
+
+/** TH-010 — Dry-run Tagger vanuit `/dev/tagger` harness. */
+export const runDevTaggerSchema = z.object({
+  meetingId: z.string().uuid(),
+});
+export type RunDevTaggerInput = z.infer<typeof runDevTaggerSchema>;

@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 532 |
-| Exported functions/constants | 832 |
-| Exported types/interfaces | 252 |
-| Cross-package imports | 653 |
-| Critical integration points (3+ packages) | 15 |
+| Files scanned | 537 |
+| Exported functions/constants | 843 |
+| Exported types/interfaces | 257 |
+| Cross-package imports | 664 |
+| Critical integration points (3+ packages) | 16 |
 
 ## Package Dependency Flow
 
@@ -101,6 +101,14 @@
 - `matchMeetings()`
 
 **Types:** `RecentDecision`
+
+### `queries/dev-tagger.ts`
+
+**Exports:**
+- `getMeetingThemesForDevTagger()`
+- `getExtractionThemesForDevTagger()`
+
+**Types:** `DevTaggerMeetingThemeRow`, `DevTaggerExtractionThemeRow`
 
 ### `queries/emails.ts`
 
@@ -390,7 +398,7 @@
 - `getThemeDecisions()`
 - `getThemeParticipants()`
 
-**Types:** `ThemeRecentActivity`, `ThemeMeetingEntry`, `ThemeDecisionEntry`, `ThemeParticipantEntry`
+**Types:** `ThemeRecentActivity`, `ThemeMeetingExtraction`, `ThemeMeetingEntry`, `ThemeDecisionEntry`, `ThemeParticipantEntry`
 
 ### `queries/theme-internals.ts`
 
@@ -486,6 +494,15 @@
 - `insertExperimentalRiskExtraction()`
 
 **Types:** `ExperimentalRiskExtractionInput`
+
+### `mutations/extraction-themes.ts`
+
+**Exports:**
+- `linkExtractionsToThemes()`
+- `clearExtractionThemesForMeeting()`
+- `clearExtractionThemesForThemeInMeeting()`
+
+**Types:** `ExtractionThemeRow`
 
 ### `mutations/extractions.ts`
 
@@ -831,11 +848,12 @@
 
 **Exports:**
 - `tagMeetingThemes()`
+- `THEME_TAGGER_SYSTEM_PROMPT`
 
 **Types:** `ThemeContext`, `NegativeExample`, `ExtractionContext`, `MeetingContext`, `TagMeetingThemesInput`
 
 **Internal deps:**
-- `../validations/theme-tagger` → ThemeTaggerOutputSchema, MATCHES_HARD_CAP, PROPOSALS_HARD_CAP, type ThemeTaggerOutput
+- `../validations/theme-tagger` → ThemeTaggerOutputSchema, MATCHES_HARD_CAP, PROPOSALS_HARD_CAP, EXTRACTION_IDS_PER_MATCH_CAP, type ThemeTaggerOutput
 - `./theme-emojis` → THEME_EMOJIS, THEME_EMOJI_FALLBACK
 - `./run-logger` → withAgentRun
 
@@ -1185,10 +1203,12 @@
 - `@repo/database/queries/meetings` → getMeetingExtractions
 - `@repo/database/queries/themes` → listVerifiedThemes
 - `@repo/database/mutations/meeting-themes` → linkMeetingToThemes, recalculateThemeStats, clearMeetingThemes
+- `@repo/database/mutations/extraction-themes` → linkExtractionsToThemes, clearExtractionThemesForMeeting, type ExtractionThemeRow
 - `@repo/database/mutations/themes` → createEmergingTheme
 
 **Internal deps:**
 - `../../agents/theme-tagger` → tagMeetingThemes, type TagMeetingThemesInput
+- `../../validations/theme-tagger` → TAGGER_EXTRACTION_TYPES
 
 ### `packages/ai/src/pipeline/steps/transcribe.ts`
 
@@ -1438,6 +1458,8 @@
 **Exports:**
 - `MATCHES_HARD_CAP`
 - `PROPOSALS_HARD_CAP`
+- `EXTRACTION_IDS_PER_MATCH_CAP`
+- `TAGGER_EXTRACTION_TYPES`
 - `ThemeMatchSchema`
 - `ThemeProposalSchema`
 - `ThemeTaggerOutputSchema`
@@ -1746,6 +1768,21 @@
 
 **Exports:**
 - `cleanInput()`
+
+### `apps/cockpit/src/actions/dev-tagger.ts`
+
+**Exports:**
+- `runDevTaggerAction()`
+
+**Types:** `DevTaggerResult`
+
+**Depends on:**
+- `@repo/ai/agents/theme-tagger` → tagMeetingThemes, THEME_TAGGER_SYSTEM_PROMPT, type TagMeetingThemesInput, type ThemeContext, type NegativeExample
+- `@repo/ai/validations/theme-tagger` → TAGGER_EXTRACTION_TYPES, type ThemeTaggerOutput
+- `@repo/auth/access` → requireAdminInAction
+- `@repo/database/queries/meetings` → getVerifiedMeetingById, getMeetingExtractions
+- `@repo/database/queries/themes` → listVerifiedThemes
+- `@repo/database/queries/dev-tagger` → getMeetingThemesForDevTagger, getExtractionThemesForDevTagger, type DevTaggerMeetingThemeRow, type DevTaggerExtractionThemeRow
 
 ### `apps/cockpit/src/actions/email-filter.ts`
 
@@ -2391,6 +2428,24 @@
 - `@repo/database/queries/organizations` → listOrganizationsByType
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/tagger/client.tsx`
+
+**Exports:**
+- `DevTaggerClient()`
+
+**Depends on:**
+- `@repo/ui/badge` → Badge
+- `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/tagger/page.tsx`
+
+**Exports:**
+- `metadata`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdmin
+- `@repo/database/queries/meetings` → listVerifiedMeetings
 
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
@@ -4212,13 +4267,13 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 49 | - | - | - | - | 49 |
+| AI Pipeline | 50 | - | - | - | - | 50 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 50 | 16 | 31 | - | - | 97 |
+| Cockpit Server Actions | 53 | 18 | 32 | - | - | 103 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 49 | 7 | 2 | 84 | - | 142 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 89 | 6 | 3 | 31 | - | 129 |
+| Cockpit Pages | 90 | 6 | 4 | 33 | - | 133 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4234,6 +4289,7 @@ parts of the codebase — changes here have the widest blast radius.
 
 | File | Packages | Count |
 |------|----------|-------|
+| `apps/cockpit/src/actions/dev-tagger.ts` | ai, auth, database | 3 |
 | `apps/cockpit/src/actions/email-filter.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/email-review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
@@ -4292,6 +4348,13 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist.ts` |
+
+### mutations/extraction-themes.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `linkExtractionsToThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `clearExtractionThemesForMeeting()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
 
 ### mutations/extractions.ts
 
@@ -4497,6 +4560,13 @@ Which queries are used where across the codebase.
 | `listTodaysBriefingMeetings()` | `apps/cockpit/src/app/(dashboard)/page.tsx` |
 | `getExtractionCountsByMeetingIds()` | `apps/cockpit/src/app/(dashboard)/page.tsx` |
 
+### queries/dev-tagger.ts
+
+| Query | Used in |
+|-------|---------|
+| `getMeetingThemesForDevTagger()` | `apps/cockpit/src/actions/dev-tagger.ts` |
+| `getExtractionThemesForDevTagger()` | `apps/cockpit/src/actions/dev-tagger.ts` |
+
 ### queries/emails.ts
 
 | Query | Used in |
@@ -4575,8 +4645,8 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getVerifiedMeetingById()` | `apps/cockpit/src/actions/themes.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
-| `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
+| `getVerifiedMeetingById()` | `apps/cockpit/src/actions/dev-tagger.ts`, `apps/cockpit/src/actions/themes.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
+| `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/dev/tagger/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
 | `listBoardMeetings()` | `packages/ai/src/pipeline/management-insights-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
 | `getMeetingByFirefliesId()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `getExistingFirefliesIds()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
@@ -4585,7 +4655,7 @@ Which queries are used where across the codebase.
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
-| `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts`, `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts`, `packages/ai/src/pipeline/steps/tag-themes.ts`, `apps/cockpit/src/actions/dev-tagger.ts` |
 | `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
 | `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `getMeetingForRegenerate()` | `apps/cockpit/src/actions/meeting-pipeline.ts` |
@@ -4730,9 +4800,9 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts`, `apps/cockpit/src/actions/dev-tagger.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts`, `apps/cockpit/src/actions/dev-tagger.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/tag-themes.ts`, `apps/cockpit/src/actions/dev-tagger.ts` |
 | `getThemeBySlug()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/userback-issues.ts

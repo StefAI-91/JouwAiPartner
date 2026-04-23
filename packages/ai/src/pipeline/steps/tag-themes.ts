@@ -1,4 +1,5 @@
 import { tagMeetingThemes, type TagMeetingThemesInput } from "../../agents/theme-tagger";
+import { TAGGER_EXTRACTION_TYPES } from "../../validations/theme-tagger";
 import { getMeetingExtractions } from "@repo/database/queries/meetings";
 import { listVerifiedThemes } from "@repo/database/queries/themes";
 import {
@@ -6,12 +7,20 @@ import {
   recalculateThemeStats,
   clearMeetingThemes,
 } from "@repo/database/mutations/meeting-themes";
+import {
+  linkExtractionsToThemes,
+  clearExtractionThemesForMeeting,
+  type ExtractionThemeRow,
+} from "@repo/database/mutations/extraction-themes";
 import { createEmergingTheme } from "@repo/database/mutations/themes";
+
+const TAGGER_TYPES: ReadonlySet<string> = new Set(TAGGER_EXTRACTION_TYPES);
 
 export interface TagThemesResult {
   success: boolean;
   matches_saved: number;
   proposals_saved: number;
+  extraction_matches_saved: number;
   themes_considered: number;
   error: string | null;
   /** True als step werd overgeslagen (geen extractions, lege themes catalog). */
@@ -47,16 +56,21 @@ export interface TagThemesStepInput {
  */
 export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagThemesResult> {
   try {
-    const [extractionRows, themes] = await Promise.all([
+    const [allExtractionRows, themes] = await Promise.all([
       getMeetingExtractions(input.meetingId),
       listVerifiedThemes({ includeNegativeExamples: true }),
     ]);
+
+    // AI-226: filter op starter-set types vóór Tagger-input. Progressief
+    // toevoegen = één regel in `TAGGER_EXTRACTION_TYPES` wijzigen.
+    const extractionRows = allExtractionRows.filter((e) => TAGGER_TYPES.has(e.type));
 
     if (extractionRows.length === 0) {
       return {
         success: true,
         matches_saved: 0,
         proposals_saved: 0,
+        extraction_matches_saved: 0,
         themes_considered: themes.length,
         error: null,
         skipped: "no_extractions",
@@ -68,6 +82,7 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
         success: true,
         matches_saved: 0,
         proposals_saved: 0,
+        extraction_matches_saved: 0,
         themes_considered: 0,
         error: null,
         skipped: "empty_themes_catalog",
@@ -79,7 +94,11 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
         meetingId: input.meetingId,
         title: input.meetingTitle,
         summary: input.summary,
-        extractions: extractionRows.map((e) => ({ type: e.type, content: e.content })),
+        extractions: extractionRows.map((e) => ({
+          id: e.id,
+          type: e.type,
+          content: e.content,
+        })),
       },
       themes: themes.map((t) => ({
         themeId: t.id,
@@ -105,8 +124,22 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
           success: false,
           matches_saved: 0,
           proposals_saved: 0,
+          extraction_matches_saved: 0,
           themes_considered: themes.length,
           error: `clear: ${clearRes.error}`,
+        };
+      }
+      // TH-010: cascade ook de extraction-junction zodat oude links niet
+      // blijven hangen na regenerate / batch --force.
+      const clearExtractionsRes = await clearExtractionThemesForMeeting(input.meetingId);
+      if ("error" in clearExtractionsRes) {
+        return {
+          success: false,
+          matches_saved: 0,
+          proposals_saved: 0,
+          extraction_matches_saved: 0,
+          themes_considered: themes.length,
+          error: `clear_extractions: ${clearExtractionsRes.error}`,
         };
       }
     }
@@ -159,9 +192,26 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
         success: false,
         matches_saved: 0,
         proposals_saved: proposalsSaved,
+        extraction_matches_saved: 0,
         themes_considered: themes.length,
         error: `link: ${linkRes.error}`,
       };
+    }
+
+    // TH-010: schrijf extraction-level links alleen voor matches tegen
+    // bestaande themes — proposals (AI-224) krijgen geen extractionIds mee.
+    const extractionLinkRows: ExtractionThemeRow[] = output.matches.flatMap((m) =>
+      m.extractionIds.map((extractionId) => ({
+        extractionId,
+        themeId: m.themeId,
+        confidence: m.confidence,
+      })),
+    );
+    const extractionLinkRes = await linkExtractionsToThemes(extractionLinkRows);
+    if ("error" in extractionLinkRes) {
+      // Non-blocking: de meeting_themes-rijen staan al, we loggen en gaan door
+      // zodat dashboard-pills en donut correct blijven (TH-004 verwachting).
+      console.warn(`[tag-themes] linkExtractionsToThemes failed: ${extractionLinkRes.error}`);
     }
 
     const affectedThemeIds = allMatches.map((m) => m.themeId);
@@ -176,6 +226,7 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
       success: true,
       matches_saved: linkRes.count,
       proposals_saved: proposalsSaved,
+      extraction_matches_saved: "count" in extractionLinkRes ? extractionLinkRes.count : 0,
       themes_considered: themes.length,
       error: null,
     };
@@ -186,6 +237,7 @@ export async function runTagThemesStep(input: TagThemesStepInput): Promise<TagTh
       success: false,
       matches_saved: 0,
       proposals_saved: 0,
+      extraction_matches_saved: 0,
       themes_considered: 0,
       error: msg,
     };

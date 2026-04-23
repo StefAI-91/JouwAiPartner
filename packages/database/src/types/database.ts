@@ -498,6 +498,42 @@ export type Database = {
           },
         ];
       };
+      extraction_themes: {
+        Row: {
+          confidence: string;
+          created_at: string;
+          extraction_id: string;
+          theme_id: string;
+        };
+        Insert: {
+          confidence: string;
+          created_at?: string;
+          extraction_id: string;
+          theme_id: string;
+        };
+        Update: {
+          confidence?: string;
+          created_at?: string;
+          extraction_id?: string;
+          theme_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "extraction_themes_extraction_id_fkey";
+            columns: ["extraction_id"];
+            isOneToOne: false;
+            referencedRelation: "extractions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "extraction_themes_theme_id_fkey";
+            columns: ["theme_id"];
+            isOneToOne: false;
+            referencedRelation: "themes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       google_accounts: {
         Row: {
           access_token: string;

@@ -151,6 +151,7 @@ export {
   getThemeParticipants,
   type ThemeRecentActivity,
   type ThemeMeetingEntry,
+  type ThemeMeetingExtraction,
   type ThemeDecisionEntry,
   type ThemeParticipantEntry,
 } from "./theme-detail";

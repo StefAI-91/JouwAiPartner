@@ -29,6 +29,9 @@ const mockGenerateObject = generateObject as unknown as ReturnType<typeof vi.fn>
 const HIRING_THEME_ID = "11111111-1111-4111-8111-111111111111";
 const WERKDRUK_THEME_ID = "22222222-2222-4222-8222-222222222222";
 
+const EXTRACTION_NEED_ID = "aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa";
+const EXTRACTION_INSIGHT_ID = "bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb";
+
 function meetingContext(
   overrides: Partial<Parameters<typeof tagMeetingThemes>[0]["meeting"]> = {},
 ) {
@@ -37,8 +40,12 @@ function meetingContext(
     title: "Founders sync — werkdruk en hiring",
     summary: "Stef en Wouter bespreken de workload en de noodzaak om twee devs aan te nemen.",
     extractions: [
-      { type: "need", content: "Twee junior devs werven dit kwartaal" },
-      { type: "insight", content: "Stef voelt zich kapot van de workload" },
+      { id: EXTRACTION_NEED_ID, type: "need", content: "Twee junior devs werven dit kwartaal" },
+      {
+        id: EXTRACTION_INSIGHT_ID,
+        type: "insight",
+        content: "Stef voelt zich kapot van de workload",
+      },
     ],
     ...overrides,
   };
@@ -78,6 +85,7 @@ describe("ThemeTagger — matches", () => {
           themeId: HIRING_THEME_ID,
           confidence: "high",
           evidenceQuote: "Twee junior devs werven dit kwartaal",
+          extractionIds: [EXTRACTION_NEED_ID],
         },
       ],
       proposals: [],
@@ -95,6 +103,7 @@ describe("ThemeTagger — matches", () => {
       themeId: HIRING_THEME_ID,
       confidence: "high",
       evidenceQuote: expect.stringContaining("Twee junior devs"),
+      extractionIds: [EXTRACTION_NEED_ID],
     });
   });
 
@@ -105,6 +114,7 @@ describe("ThemeTagger — matches", () => {
           themeId: WERKDRUK_THEME_ID,
           confidence: "medium",
           evidenceQuote: "Stef voelt zich kapot van de workload",
+          extractionIds: [EXTRACTION_INSIGHT_ID],
         },
       ],
       proposals: [],
@@ -172,7 +182,13 @@ describe("ThemeTagger — proposals", () => {
     // Substantie-regel (PRD §5.6 criterium 2): ≥2 extractions nodig. Bij
     // één losse opmerking laat een disciplined LLM proposals leeg.
     const oneExtractionMeeting = meetingContext({
-      extractions: [{ type: "insight", content: "Iemand noemde terloops vakantie-planning" }],
+      extractions: [
+        {
+          id: EXTRACTION_INSIGHT_ID,
+          type: "insight",
+          content: "Iemand noemde terloops vakantie-planning",
+        },
+      ],
     });
 
     mockResponse({
@@ -314,6 +330,7 @@ describe("ThemeTagger — Zod-validatie (AI-214)", () => {
             themeId: HIRING_THEME_ID,
             confidence: "low",
             evidenceQuote: "quote",
+            extractionIds: [],
           },
         ],
         proposals: [],
@@ -330,6 +347,7 @@ describe("ThemeTagger — Zod-validatie (AI-214)", () => {
       themeId: HIRING_THEME_ID,
       confidence: "medium" as const,
       evidenceQuote: "quote",
+      extractionIds: [],
     };
     const parsed = ThemeTaggerOutputSchema.parse({
       matches: [match, match, match, match, match],
@@ -337,6 +355,22 @@ describe("ThemeTagger — Zod-validatie (AI-214)", () => {
       meta: { themesConsidered: 2 },
     });
     expect(parsed.matches).toHaveLength(5);
+  });
+
+  it("accepteert extractionIds als lege array (EDGE-220)", () => {
+    const parsed = ThemeTaggerOutputSchema.parse({
+      matches: [
+        {
+          themeId: HIRING_THEME_ID,
+          confidence: "high",
+          evidenceQuote: "quote",
+          extractionIds: [],
+        },
+      ],
+      proposals: [],
+      meta: { themesConsidered: 1 },
+    });
+    expect(parsed.matches[0].extractionIds).toEqual([]);
   });
 });
 
@@ -353,6 +387,7 @@ describe("ThemeTagger — post-validatie hard-cap (Anthropic schema compat)", ()
       themeId: FIVE_IDS[i - 1],
       confidence: "medium" as const,
       evidenceQuote: `quote ${i}`,
+      extractionIds: [],
     });
     mockResponse({
       matches: [extraMatch(1), extraMatch(2), extraMatch(3), extraMatch(4), extraMatch(5)],
@@ -367,6 +402,109 @@ describe("ThemeTagger — post-validatie hard-cap (Anthropic schema compat)", ()
     });
 
     expect(out.matches).toHaveLength(4);
+  });
+
+  it("filtert non-UUID strings stilzwijgend weg uit extractionIds (AI-222)", async () => {
+    mockResponse({
+      matches: [
+        {
+          themeId: HIRING_THEME_ID,
+          confidence: "high",
+          evidenceQuote: "quote",
+          extractionIds: [EXTRACTION_NEED_ID, "not-a-uuid", "123"],
+        },
+      ],
+      proposals: [],
+      meta: { themesConsidered: 2 },
+    });
+
+    const out = await tagMeetingThemes({
+      meeting: meetingContext(),
+      themes: THEMES,
+      negativeExamples: [],
+    });
+
+    expect(out.matches[0].extractionIds).toEqual([EXTRACTION_NEED_ID]);
+  });
+
+  it("stript hallucinated UUIDs die niet in input-extractions zitten (AI-222)", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const HALLUCINATED_ID = "cccccccc-3333-4333-8333-cccccccccccc";
+
+    mockResponse({
+      matches: [
+        {
+          themeId: HIRING_THEME_ID,
+          confidence: "high",
+          evidenceQuote: "quote",
+          extractionIds: [EXTRACTION_NEED_ID, HALLUCINATED_ID],
+        },
+      ],
+      proposals: [],
+      meta: { themesConsidered: 2 },
+    });
+
+    const out = await tagMeetingThemes({
+      meeting: meetingContext(),
+      themes: THEMES,
+      negativeExamples: [],
+    });
+
+    expect(out.matches[0].extractionIds).toEqual([EXTRACTION_NEED_ID]);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining(HALLUCINATED_ID));
+    warnSpy.mockRestore();
+  });
+
+  it("caps extractionIds op EXTRACTION_IDS_PER_MATCH_CAP (AI-225)", async () => {
+    // Seed 10 valid extraction IDs in the meeting en verwacht dat max 8
+    // teruggegeven worden.
+    const TEN_IDS = Array.from(
+      { length: 10 },
+      (_, i) => `${(i + 1).toString().padStart(8, "d")}-dddd-4ddd-8ddd-dddddddddddd`,
+    );
+    mockResponse({
+      matches: [
+        {
+          themeId: HIRING_THEME_ID,
+          confidence: "high",
+          evidenceQuote: "quote",
+          extractionIds: TEN_IDS,
+        },
+      ],
+      proposals: [],
+      meta: { themesConsidered: 2 },
+    });
+
+    const out = await tagMeetingThemes({
+      meeting: meetingContext({
+        extractions: TEN_IDS.map((id, i) => ({
+          id,
+          type: "need",
+          content: `extraction ${i}`,
+        })),
+      }),
+      themes: THEMES,
+      negativeExamples: [],
+    });
+
+    expect(out.matches[0].extractionIds).toHaveLength(8);
+  });
+
+  it("geeft extraction-id mee in de user-prompt zodat de LLM ze kan kopiëren (AI-223)", async () => {
+    mockResponse({ matches: [], proposals: [], meta: { themesConsidered: 2 } });
+
+    await tagMeetingThemes({
+      meeting: meetingContext(),
+      themes: THEMES,
+      negativeExamples: [],
+    });
+
+    const call = mockGenerateObject.mock.calls[0][0] as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    const userMsg = call.messages.find((m) => m.role === "user")?.content ?? "";
+    expect(userMsg).toContain(`(id: ${EXTRACTION_NEED_ID})`);
+    expect(userMsg).toContain(`(id: ${EXTRACTION_INSIGHT_ID})`);
   });
 
   it("slice proposals tot max 2", async () => {

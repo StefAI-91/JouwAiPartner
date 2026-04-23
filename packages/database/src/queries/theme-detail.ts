@@ -16,6 +16,12 @@ export interface ThemeRecentActivity {
   windowDays: number;
 }
 
+export interface ThemeMeetingExtraction {
+  id: string;
+  type: string;
+  content: string;
+}
+
 export interface ThemeMeetingEntry {
   meeting_id: string;
   title: string | null;
@@ -24,6 +30,12 @@ export interface ThemeMeetingEntry {
   confidence: "medium" | "high";
   evidence_quote: string;
   matched_at: string;
+  /**
+   * TH-010 — Extractions die dít thema dragen binnen deze meeting, via de
+   * `extraction_themes`-junction. Lege array wanneer de match pre-TH-010 is
+   * of wanneer de Tagger geen extractionIds teruggaf (EDGE-220).
+   */
+  extractions: ThemeMeetingExtraction[];
 }
 
 export interface ThemeDecisionEntry {
@@ -125,7 +137,7 @@ export async function getThemeMeetings(
     } | null;
   };
 
-  return ((data ?? []) as unknown as JoinRow[])
+  const entries = ((data ?? []) as unknown as JoinRow[])
     .filter((row) => row.meeting !== null)
     .map((row) => ({
       meeting_id: row.meeting!.id,
@@ -135,12 +147,52 @@ export async function getThemeMeetings(
       confidence: row.confidence,
       evidence_quote: row.evidence_quote,
       matched_at: row.created_at,
-    }))
-    .sort((a, b) => {
-      const aDate = a.date ?? a.matched_at;
-      const bDate = b.date ?? b.matched_at;
-      return bDate.localeCompare(aDate);
-    });
+      extractions: [] as ThemeMeetingExtraction[],
+    }));
+
+  // TH-010 — laad gekoppelde extractions via extraction_themes en groepeer
+  // per meeting. Eén extra query, desc geen nested relational select want
+  // we hebben ook de join naar `extractions.meeting_id` nodig.
+  const meetingIds = entries.map((e) => e.meeting_id);
+  if (meetingIds.length > 0) {
+    const { data: linkRows, error: linkErr } = await db
+      .from("extraction_themes")
+      .select("extraction:extraction_id (id, type, content, meeting_id)")
+      .eq("theme_id", themeId);
+    if (linkErr) throw new Error(`theme extraction-links failed: ${linkErr.message}`);
+
+    type LinkRow = {
+      extraction: {
+        id: string;
+        type: string;
+        content: string;
+        meeting_id: string;
+      } | null;
+    };
+
+    const byMeeting = new Map<string, ThemeMeetingExtraction[]>();
+    for (const row of (linkRows ?? []) as unknown as LinkRow[]) {
+      if (!row.extraction) continue;
+      const list = byMeeting.get(row.extraction.meeting_id);
+      const item: ThemeMeetingExtraction = {
+        id: row.extraction.id,
+        type: row.extraction.type,
+        content: row.extraction.content,
+      };
+      if (list) list.push(item);
+      else byMeeting.set(row.extraction.meeting_id, [item]);
+    }
+
+    for (const entry of entries) {
+      entry.extractions = byMeeting.get(entry.meeting_id) ?? [];
+    }
+  }
+
+  return entries.sort((a, b) => {
+    const aDate = a.date ?? a.matched_at;
+    const bDate = b.date ?? b.matched_at;
+    return bDate.localeCompare(aDate);
+  });
 }
 
 /**

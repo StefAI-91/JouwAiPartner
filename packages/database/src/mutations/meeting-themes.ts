@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
+import { clearExtractionThemesForThemeInMeeting } from "./extraction-themes";
 
 export interface MeetingThemeMatch {
   themeId: string;
@@ -122,6 +123,11 @@ export async function rejectThemeMatchAsAdmin(
   // EDGE-211: match bestaat niet meer (dubbel-klik, race). Succes zonder
   // nieuwe rejection — die zou geen bewijs meer hebben en kan dupliceren.
   if (!match) return { success: true, alreadyRemoved: true };
+
+  // TH-010 (FUNC-255): cascade naar extraction_themes vóór meeting_themes
+  // weg is — de `meetings.id` → `extractions.meeting_id`-join werkt nog.
+  const cascade = await clearExtractionThemesForThemeInMeeting(input.meetingId, input.themeId, db);
+  if ("error" in cascade) return { error: cascade.error };
 
   const { error: delErr } = await db
     .from("meeting_themes")

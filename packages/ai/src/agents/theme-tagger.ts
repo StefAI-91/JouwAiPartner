@@ -7,6 +7,7 @@ import {
   ThemeTaggerOutputSchema,
   MATCHES_HARD_CAP,
   PROPOSALS_HARD_CAP,
+  EXTRACTION_IDS_PER_MATCH_CAP,
   type ThemeTaggerOutput,
 } from "../validations/theme-tagger";
 import { THEME_EMOJIS, THEME_EMOJI_FALLBACK } from "./theme-emojis";
@@ -17,10 +18,17 @@ const PROMPT_VERSION = "th-002-v1";
 
 export type { ThemeTaggerOutput };
 
-const SYSTEM_PROMPT = readFileSync(
+/**
+ * TH-010 — publiek zodat `/dev/tagger` de prompt kan tonen in zijn
+ * read-only viewer. Blijft één source-of-truth: dezelfde file-read die
+ * de agent gebruikt voor de LLM-call.
+ */
+export const THEME_TAGGER_SYSTEM_PROMPT = readFileSync(
   resolve(dirname(fileURLToPath(import.meta.url)), "../../prompts/theme-tagger.md"),
   "utf8",
 ).trimEnd();
+
+const SYSTEM_PROMPT = THEME_TAGGER_SYSTEM_PROMPT;
 
 /** Eén bestaand thema zoals de agent het nodig heeft. */
 export interface ThemeContext {
@@ -39,9 +47,12 @@ export interface NegativeExample {
 
 /** Eén extractie (decision/action_item/need/insight) die context geeft. */
 export interface ExtractionContext {
+  id: string;
   type: string;
   content: string;
 }
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Meeting-context die ThemeTagger gebruikt — rijker signaal dan alleen transcript. */
 export interface MeetingContext {
@@ -97,9 +108,26 @@ export async function tagMeetingThemes(input: TagMeetingThemesInput): Promise<Th
       // accepteert geen `maxItems` op arrays, dus we kunnen het niet in Zod
       // vastleggen zonder API-errors. De prompt instrueert 4 / 2 maxima; we
       // enforcen dat hier hard voor het geval de LLM er toch overheen gaat.
+      const validExtractionIds = new Set(input.meeting.extractions.map((e) => e.id));
+
+      const sanitizedMatches = object.matches.slice(0, MATCHES_HARD_CAP).map((m) => {
+        const uuidShaped = m.extractionIds.filter((id) => UUID_REGEX.test(id));
+        const known = uuidShaped.filter((id) => {
+          if (validExtractionIds.has(id)) return true;
+          console.warn(
+            `[theme-tagger] hallucinated extractionId "${id}" gestript — meeting=${input.meeting.meetingId} theme=${m.themeId}`,
+          );
+          return false;
+        });
+        return {
+          ...m,
+          extractionIds: known.slice(0, EXTRACTION_IDS_PER_MATCH_CAP),
+        };
+      });
+
       const capped: ThemeTaggerOutput = {
         ...object,
-        matches: object.matches.slice(0, MATCHES_HARD_CAP),
+        matches: sanitizedMatches,
         proposals: object.proposals.slice(0, PROPOSALS_HARD_CAP),
       };
 
@@ -130,7 +158,7 @@ function buildUserPrompt(input: TagMeetingThemesInput): string {
     .join("\n\n");
 
   const extractionsBlock = input.meeting.extractions.length
-    ? input.meeting.extractions.map((e) => `- [${e.type}] ${e.content}`).join("\n")
+    ? input.meeting.extractions.map((e) => `- [${e.type}] (id: ${e.id}) ${e.content}`).join("\n")
     : "(geen extractions)";
 
   const emojiShortlist = [...THEME_EMOJIS, THEME_EMOJI_FALLBACK].join(" ");

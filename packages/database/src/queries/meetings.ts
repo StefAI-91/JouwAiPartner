@@ -396,7 +396,7 @@ export async function getExtractionIdsAndContent(
 export async function getMeetingExtractions(meetingId: string) {
   const { data, error } = await getAdminClient()
     .from("extractions")
-    .select("type, content, confidence, transcript_ref")
+    .select("id, type, content, confidence, transcript_ref")
     .eq("meeting_id", meetingId);
 
   if (error || !data) return [];

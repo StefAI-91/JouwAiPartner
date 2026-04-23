@@ -197,6 +197,67 @@ describeWithDb("queries/themes", () => {
       expect(rows[0].confidence).toBe("high");
       expect(rows[0].evidence_quote).toBe("quote");
     });
+
+    it("attacht gekoppelde extractions per meeting via extraction_themes (TH-010)", async () => {
+      const t1 = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.hiring, t1, "high");
+      await seedMatch(MEETING_IDS.m2, THEME_IDS.hiring, t1, "medium");
+
+      const extractionLinkedId = "30000000-0000-4000-8000-000000001001";
+      const extractionOrphanId = "30000000-0000-4000-8000-000000001002";
+      const supabase = getTestClient();
+      await supabase.from("extractions").upsert(
+        [
+          {
+            id: extractionLinkedId,
+            meeting_id: MEETING_IDS.m1,
+            type: "decision",
+            content: "Decision met link",
+            confidence: 0.9,
+          },
+          {
+            id: extractionOrphanId,
+            meeting_id: MEETING_IDS.m1,
+            type: "need",
+            content: "Need zonder link",
+            confidence: 0.8,
+          },
+        ],
+        { onConflict: "id" },
+      );
+      await supabase.from("extraction_themes").upsert(
+        [
+          {
+            extraction_id: extractionLinkedId,
+            theme_id: THEME_IDS.hiring,
+            confidence: "high",
+          },
+        ],
+        { onConflict: "extraction_id,theme_id" },
+      );
+
+      const rows = await getThemeMeetings(THEME_IDS.hiring, db);
+      const m1Row = rows.find((r) => r.meeting_id === MEETING_IDS.m1);
+      const m2Row = rows.find((r) => r.meeting_id === MEETING_IDS.m2);
+
+      expect(m1Row?.extractions).toHaveLength(1);
+      expect(m1Row?.extractions[0]).toMatchObject({
+        id: extractionLinkedId,
+        type: "decision",
+        content: "Decision met link",
+      });
+      // m2 heeft geen extraction_themes-rij; lijst moet leeg zijn, géén null.
+      expect(m2Row?.extractions).toEqual([]);
+
+      await supabase
+        .from("extraction_themes")
+        .delete()
+        .in("extraction_id", [extractionLinkedId, extractionOrphanId]);
+      await supabase
+        .from("extractions")
+        .delete()
+        .in("id", [extractionLinkedId, extractionOrphanId]);
+    });
   });
 
   describe("getThemeDecisions (TH-005)", () => {
@@ -302,6 +363,85 @@ describeWithDb("queries/themes", () => {
 
       // Cleanup rejection-row zodat de volgende test niet trippt
       await db
+        .from("theme_match_rejections")
+        .delete()
+        .eq("theme_id", THEME_IDS.hiring)
+        .eq("meeting_id", MEETING_IDS.m1);
+    });
+
+    it("cascadet extraction_themes voor (meeting × theme) paar (TH-010 FUNC-255)", async () => {
+      const recent = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.hiring, recent);
+
+      const extractionId = "30000000-0000-4000-8000-000000002001";
+      const keepExtractionId = "30000000-0000-4000-8000-000000002002";
+      const supabase = getTestClient();
+      await supabase.from("extractions").upsert(
+        [
+          {
+            id: extractionId,
+            meeting_id: MEETING_IDS.m1,
+            type: "decision",
+            content: "x",
+            confidence: 0.9,
+          },
+          {
+            id: keepExtractionId,
+            meeting_id: MEETING_IDS.m1,
+            type: "need",
+            content: "y",
+            confidence: 0.8,
+          },
+        ],
+        { onConflict: "id" },
+      );
+      // Link de extractions aan twee verschillende themes; alleen hiring moet
+      // worden opgeruimd, werkdruk-link blijft staan.
+      await seedMatch(MEETING_IDS.m1, THEME_IDS.werkdruk, recent);
+      await supabase.from("extraction_themes").upsert(
+        [
+          {
+            extraction_id: extractionId,
+            theme_id: THEME_IDS.hiring,
+            confidence: "high",
+          },
+          {
+            extraction_id: keepExtractionId,
+            theme_id: THEME_IDS.werkdruk,
+            confidence: "medium",
+          },
+        ],
+        { onConflict: "extraction_id,theme_id" },
+      );
+
+      const result = await rejectThemeMatchAsAdmin(
+        {
+          meetingId: MEETING_IDS.m1,
+          themeId: THEME_IDS.hiring,
+          reason: "ander_thema",
+          userId: REVIEWER_ID,
+        },
+        db,
+      );
+      expect("success" in result && result.success).toBe(true);
+
+      const { data: remaining } = await supabase
+        .from("extraction_themes")
+        .select("extraction_id, theme_id")
+        .in("extraction_id", [extractionId, keepExtractionId]);
+      expect(remaining).toHaveLength(1);
+      expect(remaining?.[0]).toMatchObject({
+        extraction_id: keepExtractionId,
+        theme_id: THEME_IDS.werkdruk,
+      });
+
+      // Cleanup
+      await supabase
+        .from("extraction_themes")
+        .delete()
+        .in("extraction_id", [extractionId, keepExtractionId]);
+      await supabase.from("extractions").delete().in("id", [extractionId, keepExtractionId]);
+      await supabase
         .from("theme_match_rejections")
         .delete()
         .eq("theme_id", THEME_IDS.hiring)

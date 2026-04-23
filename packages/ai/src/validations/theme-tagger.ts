@@ -17,6 +17,15 @@ import { ALL_THEME_EMOJIS } from "../agents/theme-emojis";
 
 export const MATCHES_HARD_CAP = 4;
 export const PROPOSALS_HARD_CAP = 2;
+export const EXTRACTION_IDS_PER_MATCH_CAP = 8;
+
+/**
+ * TH-010 — Starter-set van extraction-types die de ThemeTagger überhaupt te
+ * zien krijgt. Andere types (bv. `risk`, `blocker`) worden op pipeline-niveau
+ * uit de input gefilterd — zodra we in de praktijk zien dat ze waarde
+ * toevoegen volstaat één regel uitbreiden hier.
+ */
+export const TAGGER_EXTRACTION_TYPES = ["decision", "action_item", "need", "insight"] as const;
 
 export const ThemeMatchSchema = z.object({
   themeId: z.string().describe("UUID van het bestaande verified/emerging thema dat matcht."),
@@ -26,6 +35,11 @@ export const ThemeMatchSchema = z.object({
   evidenceQuote: z
     .string()
     .describe("Letterlijke quote uit summary/extractions waaruit de match blijkt."),
+  extractionIds: z
+    .array(z.string())
+    .describe(
+      "UUIDs van de extractions die dít thema dragen — kopieer exact uit input. Minstens één per medium/high match; hallucinated IDs worden post-validatie weggefilterd.",
+    ),
 });
 
 export const ThemeProposalSchema = z.object({
