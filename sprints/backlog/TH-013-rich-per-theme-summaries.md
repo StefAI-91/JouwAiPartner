@@ -237,3 +237,21 @@ Keuze bij deploy. **Pad 1 is de default** mits de Anthropic-budgetruimte het toe
 - Backfill-query `SELECT count(*) FROM meeting_themes WHERE summary LIKE '## Briefing%';` geeft > 0 na eerste geregenereerde meeting, en groeit consistent bij `--force` runs.
 - Geen regressie: `meetings.summary` (meeting-wide hoofd-summary) identiek aan pre-TH-013 output voor dezelfde test-meeting. `deelnemers` + `vervolgstappen` arrays in Summarizer-output ongewijzigd (schema-breaking validation).
 - Kost-check: token-budget voor Summarizer-call op een meeting met 4 identified_themes blijft binnen 1,5× van pre-TH-013 (verwachte groei ~20-30% door extra output-tokens, niet meer).
+
+## Handmatige test-stappen
+
+1. Checkout de TH-013 branch. `npm install` + `npm run type-check` + `npm run lint` + `npm run test` → alles groen.
+2. Selecteer een verified meeting met ≥2 identified_themes (vorige pipeline-runs, bv. eentje waar zowel een project-thema als een cross-cutting thema aanhaakt). Noteer `meeting_id`.
+3. Run `npm run detect-themes-batch -- --force --limit=1` met een filter op die meeting (via env of edit). Log moet de Summarizer-stap tonen met nieuwe output-shape.
+4. Query `SELECT prompt_version FROM agent_runs WHERE agent_name='summarizer' AND metadata->>'meeting_id' = '...' ORDER BY created_at DESC LIMIT 1;` → `v2`.
+5. Query `SELECT theme_id, substring(summary, 1, 60) AS preview FROM meeting_themes WHERE meeting_id = '...';` → elke rij met identified-source toont `## Briefing` + eerste paar woorden van de briefing.
+6. Open `/themes/[slug]` voor een thema dat aan deze meeting gelinkt is. Meeting-kaart toont nu drie gestructureerde secties (Briefing / Kernpunten / Vervolgstappen) i.p.v. één paragraph. Lege secties (bv. geen vervolgstappen) onzichtbaar, geen placeholder-tekst.
+7. **Lang-content-test.** Pak een meeting met veel kernpunten per thema of induceer via een test-transcript. Summary >400 tekens → `<details>`-toggle verschijnt, standaard ingeklapt, uitklap toont volledige markdown.
+8. **Backfill-compat.** Open `/themes/[slug]` voor een thema dat ook pre-TH-013 matches heeft (meetings die nog niet geregenereerd zijn). Die meeting-kaarten tonen nog de 1-2 zins Detector-output als paragraph, zonder layout-breuk naast de nieuwe markdown-kaarten.
+9. **Regeneration.** Ga naar `/meetings/[id]` voor een oude meeting → klik `RegenerateMenu`. Wacht op completion. Refresh `/themes/[slug]` → die meeting-kaart toont nu de nieuwe rijke markdown-vorm.
+10. **Fallback-keten.** Via `/dev/detector` Preview Full Pipeline (TH-011 UI-333) op een test-meeting waar je bewust een invalide themeId in Summarizer-output forceert (test-fixture of mock): link-themes preview toont voor die thema de Detector's 1-2 zins fallback, voor andere thema's de Summarizer-markdown. Console warnt over de gestripte themeId.
+11. **XSS-veiligheid.** Insert handmatig in `meeting_themes.summary` een payload met `<script>alert(1)</script>` + `<img src=x onerror=alert(1)>` + `[link](javascript:alert(1))`. Open `/themes/[slug]` met dat thema → geen alert, script-tags renderen als tekst, onerror triggert niet, link is inert.
+12. **Backfill-voortgang.** Na een `--force`-run over N meetings: `SELECT count(*) FROM meeting_themes WHERE summary LIKE '## Briefing%';` monotoon groeien per run. Vergelijk met `SELECT count(*) FROM meeting_themes WHERE summary IS NOT NULL;` om mix-state te zien.
+13. **Regressie-check hoofd-summary.** Open `/meetings/[id]` voor de meeting uit stap 3 → briefing + kernpunten + deelnemers + vervolgstappen op de meeting-detail-page renderen identiek aan pre-TH-013 (screenshot ter vergelijking bewaren vóór upgrade). Zelfde markdown-structuur op `meetings.summary`, geen nieuwe secties doorgelekt.
+14. **Admin-gate check.** Log in als non-admin → `/themes/[slug]` blijft zichtbaar (geen RLS-wijziging, SEC-240). Regenerate-knop op `/meetings/[id]` blijft achter admin-gate zoals pre-TH-013.
+15. **Kost-signaal.** Na stap 3: query `SELECT input_tokens, output_tokens FROM agent_runs WHERE agent_name='summarizer' AND metadata->>'meeting_id' = '...' ORDER BY created_at DESC LIMIT 1;` en vergelijk met een pre-TH-013 run op dezelfde meeting (vóór de upgrade). Output-tokens mogen ~20-30% hoger liggen per identified-theme aanwezig; input-tokens ongewijzigd.
