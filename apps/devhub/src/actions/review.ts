@@ -7,6 +7,7 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 import { listIssues } from "@repo/database/queries/issues";
 import { getProjectById } from "@repo/database/queries/projects";
 import { saveProjectReview } from "@repo/database/mutations/project-reviews";
+import { ensureProfileExists } from "@repo/database/mutations/team";
 import { runIssueReviewer, type IssueForReview } from "@repo/ai/agents/issue-reviewer";
 import { getAuthenticatedUser, isAuthBypassed } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
@@ -41,16 +42,10 @@ export async function generateProjectReview(
 
     // project_reviews.generated_by FKs to profiles(id). The handle_new_user
     // trigger should keep profiles in sync with auth.users, but legacy or
-    // trigger-missed users may not have a row yet — self-heal via admin
-    // upsert (profiles has no INSERT policy for authenticated users).
-    // Dev-bypass user ID isn't in auth.users, so skip.
+    // trigger-missed users may not have a row yet — self-heal. Dev-bypass
+    // user ID isn't in auth.users, so skip.
     if (!isAuthBypassed() && user.email) {
-      await getAdminClient()
-        .from("profiles")
-        .upsert(
-          { id: user.id, email: user.email.toLowerCase() },
-          { onConflict: "id", ignoreDuplicates: true },
-        );
+      await ensureProfileExists({ id: user.id, email: user.email });
     }
     const generatedBy = isAuthBypassed() ? null : user.id;
 

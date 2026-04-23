@@ -112,3 +112,29 @@ export async function getProfileRole(
   }
   return (data?.role as ProfileRole | undefined) ?? null;
 }
+
+/**
+ * Resolve a profile id to a human-readable display name. Prefers `full_name`
+ * and falls back to `email` when the name is missing. Returns `null` when the
+ * profile does not exist — callers can decide whether to surface "Onbekend" or
+ * fall back to the raw id.
+ */
+export async function getProfileNameById(
+  userId: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) {
+    console.error("[getProfileNameById] error:", error.message);
+    return null;
+  }
+  if (!data) return null;
+  const name = (data.full_name as string | null)?.trim();
+  if (name) return name;
+  return (data.email as string | null) ?? null;
+}

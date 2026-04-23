@@ -14,6 +14,7 @@ import {
   ISSUE_TYPE_LABELS,
   ISSUE_COMPONENTS,
   ISSUE_COMPONENT_LABELS,
+  UNASSIGNED_SENTINEL,
 } from "@repo/database/constants/issues";
 
 const SORT_OPTIONS = [
@@ -274,9 +275,17 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
   );
 }
 
-export function IssueFilters() {
+interface IssueFiltersProps {
+  people: { id: string; name: string }[];
+}
+
+export function IssueFilters({ people }: IssueFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const ASSIGNEE_OPTIONS = [
+    { value: UNASSIGNED_SENTINEL, label: "Niet toegewezen" },
+    ...people.map((p) => ({ value: p.id, label: p.name })),
+  ];
 
   const getValues = useCallback(
     (key: string): string[] => {
@@ -334,7 +343,8 @@ export function IssueFilters() {
     searchParams.has("status") ||
     searchParams.has("priority") ||
     searchParams.has("type") ||
-    searchParams.has("component");
+    searchParams.has("component") ||
+    searchParams.has("assignee");
 
   const clearAll = useCallback(() => {
     const params = new URLSearchParams();
@@ -372,6 +382,13 @@ export function IssueFilters() {
         paramKey="component"
         options={COMPONENT_OPTIONS}
         selected={getValues("component")}
+        onToggle={toggleFilter}
+      />
+      <FilterDropdown
+        label="Toegewezen"
+        paramKey="assignee"
+        options={ASSIGNEE_OPTIONS}
+        selected={getValues("assignee")}
         onToggle={toggleFilter}
       />
 

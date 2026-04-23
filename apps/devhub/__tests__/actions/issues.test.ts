@@ -27,6 +27,11 @@ vi.mock("@repo/database/queries/issues", () => ({
   getIssueById: (...args: unknown[]) => mockGetIssueById(...args),
 }));
 
+const mockGetProfileNameById = vi.fn();
+vi.mock("@repo/database/queries/team", () => ({
+  getProfileNameById: (...args: unknown[]) => mockGetProfileNameById(...args),
+}));
+
 const mockClassifyIssueBackground = vi.fn();
 vi.mock("../../src/actions/classify", () => ({
   classifyIssueBackground: (...args: unknown[]) => mockClassifyIssueBackground(...args),
@@ -41,6 +46,7 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
     mockDeleteIssue.mockReset();
     mockInsertActivity.mockReset();
     mockGetIssueById.mockReset();
+    mockGetProfileNameById.mockReset();
     mockClassifyIssueBackground.mockReset();
   });
 
@@ -215,6 +221,58 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
           field: "priority",
           old_value: "medium",
           new_value: "high",
+        }),
+      );
+    });
+
+    it("logs 'assigned' activity with resolved display name, not uuid", async () => {
+      const newAssigneeId = "11111111-1111-1111-1111-111111111111";
+      mockGetIssueById.mockResolvedValue({
+        ...baseMockIssue,
+        assigned_to: null,
+        assigned_person: null,
+      });
+      mockUpdateIssue.mockResolvedValue({});
+      mockInsertActivity.mockResolvedValue(undefined);
+      mockGetProfileNameById.mockResolvedValue("Wouter Jansen");
+
+      const action = await getAction();
+      await action({ id: TEST_IDS.issue, assigned_to: newAssigneeId });
+
+      expect(mockInsertActivity).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "assigned",
+          field: "assigned_to",
+          new_value: "Wouter Jansen",
+          metadata: expect.objectContaining({ assigned_to_id: newAssigneeId }),
+        }),
+      );
+      const payload = mockInsertActivity.mock.calls.find(
+        ([arg]) => (arg as { action: string }).action === "assigned",
+      )?.[0] as { new_value?: string } | undefined;
+      expect(payload?.new_value).not.toBe(newAssigneeId);
+    });
+
+    it("logs 'assigned' activity with old name when re-assigning", async () => {
+      const oldId = "22222222-2222-2222-2222-222222222222";
+      const newId = "33333333-3333-3333-3333-333333333333";
+      mockGetIssueById.mockResolvedValue({
+        ...baseMockIssue,
+        assigned_to: oldId,
+        assigned_person: { id: oldId, full_name: "Stef Appel" },
+      });
+      mockUpdateIssue.mockResolvedValue({});
+      mockInsertActivity.mockResolvedValue(undefined);
+      mockGetProfileNameById.mockResolvedValue("Ege de Vries");
+
+      const action = await getAction();
+      await action({ id: TEST_IDS.issue, assigned_to: newId });
+
+      expect(mockInsertActivity).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: "assigned",
+          old_value: "Stef Appel",
+          new_value: "Ege de Vries",
         }),
       );
     });
