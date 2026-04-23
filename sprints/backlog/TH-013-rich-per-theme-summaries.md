@@ -199,3 +199,24 @@ Keuze bij deploy. **Pad 1 is de default** mits de Anthropic-budgetruimte het toe
 **Geen partial-backfill-pad.** Je kunt in principe `--force --limit=50` op de meest-bekeken themes runnen om de UX-pijn eerst daar weg te halen, maar dat vereist een theme-filter in het batch-script (nu alleen meeting-filter). Uit scope — niet de moeite waard voor de complexiteit, kies of pad 1 of pad 2.
 
 **Verificatie na backfill.** Query `SELECT count(*) FROM meeting_themes WHERE summary IS NOT NULL AND summary LIKE '## Briefing%';` geeft direct het aantal rijen dat de nieuwe markdown-vorm heeft. Vergelijk met totaal niet-null rijen om de voortgang te tracken. Oude 1-2 zins Detector-output begint niet met `## Briefing` — scheidt de twee groepen cleanly.
+
+## Bestanden om aan te raken
+
+- [ ] `packages/ai/src/validations/summarizer.ts` — `SummarizerOutputSchema` uitbreiden met `theme_summaries` veld + UUID-refine op `themeId` (AI-240)
+- [ ] `packages/ai/src/agents/summarizer.ts` — `formatThemeSummary()` renderer toevoegen (AI-242), caps in `runSummarizer()` post-validation (AI-243), `SUMMARIZER_PROMPT_VERSION` bump naar `"v2"` (AI-244), hallucination-strip voor onbekende themeIds (EDGE-240)
+- [ ] `packages/ai/prompts/summarizer.md` — nieuwe sectie #5 **PER-THEMA SAMENVATTINGEN** na VERVOLGSTAPPEN, met discipline-regels + voorbeeld (AI-241)
+- [ ] `packages/ai/prompts/theme-detector.md` — korte notitie dat `theme_summary` nu fallback is; agent-gedrag ongewijzigd (FUNC-293)
+- [ ] `packages/ai/src/pipeline/steps/summarize.ts` — `SummarizeResult` interface krijgt `themeSummaries: Map<string, string>`; populatie via `formatThemeSummary()` per output-entry (FUNC-290)
+- [ ] `packages/ai/src/pipeline/steps/link-themes.ts` — `LinkThemesStepInput` krijgt optionele `summarizerThemeSummaries?: Map<string, string>`; `meetingThemesToWrite[i].summary` past fallback-ketting toe (FUNC-291)
+- [ ] `packages/ai/src/pipeline/gatekeeper-pipeline.ts` — Summarizer-resultaat doorgeven aan `runLinkThemesStep({ ..., summarizerThemeSummaries })` (FUNC-292)
+- [ ] `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/meetings-tab.tsx` — `<p>{m.summary}</p>` (regel 113) vervangen door markdown-renderer, collapsible bij >400 tekens (UI-340); XSS-veilige rendering (EDGE-243)
+- [ ] Tests (nieuwe + updates):
+  - [ ] Update: `packages/ai/__tests__/agents/summarizer.test.ts` — `theme_summaries` output-shape, per-theme caps (AI-243), hallucination-strip onbekende themeId (EDGE-240), lege-secties-weggelaten in `formatThemeSummary()`, prompt-version v2 in telemetry
+  - [ ] Nieuw: `packages/ai/__tests__/pipeline/link-themes-theme-summary-fallback.test.ts` — Summarizer-map wint boven Detector (happy path), Detector wint bij lege map (EDGE-241), null bij beide leeg, multiple themes in één meeting krijgen juiste bron per thema
+  - [ ] Update: `packages/ai/__tests__/pipeline/gatekeeper-pipeline.test.ts` — `summarizerThemeSummaries` bereikt `runLinkThemesStep`, mapping is themeId → rendered markdown
+  - [ ] Update: `packages/ai/__tests__/pipeline/summarize.test.ts` (of equivalent) — `themeSummaries: Map` gevuld na successful run, leeg bij error-pad (non-null)
+  - [ ] Update: `apps/cockpit/__tests__/app/themes-detail.test.tsx` — markdown-rendering van een `## Briefing` / `## Kernpunten` payload, fallback-rendering van een pre-TH-013 plain-text summary (EDGE-244), collapsible-toggle bij lange content, XSS-veiligheid met crafted input (EDGE-243)
+- [ ] Documentatie:
+  - [ ] `docs/dependency-graph.md` — automatische regeneratie via pre-commit hook
+  - [ ] `sprints/done/TH-matrix.md` — TH-013 rij toevoegen na afronding
+  - [ ] Geen `CLAUDE.md`-wijziging nodig: Summarizer staat al in de agents-lijst, prompt-version bumps zijn geen registry-event
