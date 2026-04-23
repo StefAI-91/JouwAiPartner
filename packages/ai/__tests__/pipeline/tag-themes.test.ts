@@ -154,7 +154,7 @@ describe("runTagThemesStep — happy path", () => {
   it("filtert extractions op TAGGER_EXTRACTION_TYPES vóór de agent (AI-226)", async () => {
     mockGetExtractions.mockResolvedValue([
       { id: EXTRACTION_A, type: "need", content: "valid need" },
-      { id: "risk-id", type: "risk", content: "risk extraction — moet uitgefilterd" },
+      { id: "context-id", type: "context", content: "context extraction — moet uitgefilterd" },
       { id: EXTRACTION_B, type: "insight", content: "valid insight" },
     ]);
     mockListThemes.mockResolvedValue([theme(THEME_A)]);
@@ -173,7 +173,31 @@ describe("runTagThemesStep — happy path", () => {
     const taggerCall = mockTag.mock.calls[0][0];
     const extractionIds = taggerCall.meeting.extractions.map((e: { id: string }) => e.id);
     expect(extractionIds).toEqual([EXTRACTION_A, EXTRACTION_B]);
-    expect(extractionIds).not.toContain("risk-id");
+    expect(extractionIds).not.toContain("context-id");
+  });
+
+  it("risks passeren de starter-set filter en bereiken de Tagger (TH-010)", async () => {
+    const RISK_ID = "aaaaaaaa-risk-4aaa-8aaa-aaaaaaaaaaaa";
+    mockGetExtractions.mockResolvedValue([
+      { id: EXTRACTION_A, type: "decision", content: "decision" },
+      { id: RISK_ID, type: "risk", content: "we kunnen Q3 niet halen" },
+    ]);
+    mockListThemes.mockResolvedValue([theme(THEME_A)]);
+    mockTag.mockResolvedValue({
+      matches: [],
+      proposals: [],
+      meta: { themesConsidered: 1 },
+    });
+
+    await runTagThemesStep({
+      meetingId: MEETING_ID,
+      meetingTitle: "M",
+      summary: "s",
+    });
+
+    const taggerCall = mockTag.mock.calls[0][0];
+    const extractionIds = taggerCall.meeting.extractions.map((e: { id: string }) => e.id);
+    expect(extractionIds).toContain(RISK_ID);
   });
 
   it("slaat negative_examples per thema mee in de agent-input", async () => {
