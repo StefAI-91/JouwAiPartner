@@ -6,6 +6,7 @@ import {
   listIssues,
   countFilteredIssues,
   getIssueCounts,
+  parseSearchQuery,
   ISSUE_SORTS,
 } from "@repo/database/queries/issues";
 import { getIssueThumbnails } from "@repo/database/queries/issue-attachments";
@@ -24,24 +25,6 @@ const issueSearchParamsSchema = issueListFilterSchema.extend({
   sort: z.enum(ISSUE_SORTS).optional(),
   page: z.coerce.number().int().min(1).optional(),
 });
-
-/**
- * Parse a search query into either an exact issue_number or a text search.
- * Accepts "#464", "464", " 464 ", " #464 " as number lookups — anything with
- * non-digit characters (besides the leading #) goes through ilike on
- * title/description.
- */
-function parseSearchQuery(raw: string | undefined): { issueNumber?: number; search?: string } {
-  if (!raw) return {};
-  const trimmed = raw.trim();
-  if (!trimmed) return {};
-  const numberMatch = trimmed.match(/^#?(\d+)$/);
-  if (numberMatch) {
-    const n = Number(numberMatch[1]);
-    if (Number.isSafeInteger(n) && n > 0) return { issueNumber: n };
-  }
-  return { search: trimmed };
-}
 
 export default async function IssuesPage({
   searchParams,

@@ -64,6 +64,28 @@ export const ISSUE_SELECT = `
 // URL param can't break out of the quoted list and inject extra filters.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Parse a raw search query into either an exact `issue_number` lookup or a
+ * free-text search. `"#464"`, `"464"`, `" #464 "` all return an issue-number
+ * match; anything containing non-digit characters falls through to ilike on
+ * title/description. Used by the issues page and the CSV export route so
+ * both entry points handle `#<n>` identically.
+ */
+export function parseSearchQuery(raw: string | undefined | null): {
+  issueNumber?: number;
+  search?: string;
+} {
+  if (!raw) return {};
+  const trimmed = raw.trim();
+  if (!trimmed) return {};
+  const numberMatch = trimmed.match(/^#?(\d+)$/);
+  if (numberMatch) {
+    const n = Number(numberMatch[1]);
+    if (Number.isSafeInteger(n) && n > 0) return { issueNumber: n };
+  }
+  return { search: trimmed };
+}
+
 export async function listIssues(
   params: {
     projectId?: string;

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createClient } from "@repo/database/supabase/server";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
-import { listIssues, ISSUE_SORTS } from "@repo/database/queries/issues";
+import { listIssues, parseSearchQuery, ISSUE_SORTS } from "@repo/database/queries/issues";
 import { getProjectName } from "@repo/database/queries/projects";
 import { issueListFilterSchema } from "@repo/database/validations/issues";
 import {
@@ -26,18 +26,6 @@ const exportParamsSchema = issueListFilterSchema.extend({
   q: z.string().trim().max(200).optional(),
   sort: z.enum(ISSUE_SORTS).optional(),
 });
-
-function parseSearchQuery(raw: string | undefined): { issueNumber?: number; search?: string } {
-  if (!raw) return {};
-  const trimmed = raw.trim();
-  if (!trimmed) return {};
-  const numberMatch = trimmed.match(/^#?(\d+)$/);
-  if (numberMatch) {
-    const n = Number(numberMatch[1]);
-    if (Number.isSafeInteger(n) && n > 0) return { issueNumber: n };
-  }
-  return { search: trimmed };
-}
 
 /**
  * Escape a field for RFC 4180 CSV: wrap in quotes when the field contains a

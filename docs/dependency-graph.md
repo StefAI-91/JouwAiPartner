@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 495 |
-| Exported functions/constants | 767 |
+| Exported functions/constants | 768 |
 | Exported types/interfaces | 202 |
 | Cross-package imports | 624 |
 | Critical integration points (3+ packages) | 14 |
@@ -163,6 +163,7 @@
 ### `queries/issues.ts`
 
 **Exports:**
+- `parseSearchQuery()`
 - `listIssues()`
 - `countFilteredIssues()`
 - `getIssueById()`
@@ -3519,7 +3520,7 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
-- `@repo/database/queries/issues` → listIssues, ISSUE_SORTS
+- `@repo/database/queries/issues` → listIssues, parseSearchQuery, ISSUE_SORTS
 - `@repo/database/queries/projects` → getProjectName
 - `@repo/database/validations/issues` → issueListFilterSchema
 - `@repo/database/constants/issues` → ISSUE_STATUS_LABELS, ISSUE_PRIORITY_LABELS, ISSUE_TYPE_LABELS, ISSUE_COMPONENT_LABELS, ISSUE_SEVERITY_LABELS, type IssueStatus, type IssuePriority, type IssueType, type IssueComponent, type IssueSeverity
@@ -4201,6 +4202,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
+| `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/api/issues/export/route.ts` |
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/api/issues/export/route.ts` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
