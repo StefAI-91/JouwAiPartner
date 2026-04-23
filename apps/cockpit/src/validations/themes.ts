@@ -70,3 +70,16 @@ export const runDevTaggerSchema = z.object({
   meetingId: z.string().uuid(),
 });
 export type RunDevTaggerInput = z.infer<typeof runDevTaggerSchema>;
+
+/**
+ * TH-010 — Admin-create nieuw verified thema direct vanuit `/dev/tagger`.
+ * Skipt de emerging → review-flow. Bedoeld voor de curator-pad waar Stef
+ * handmatig themes seed't op basis van wat hij in de Tagger-diff ziet.
+ */
+export const createVerifiedThemeSchema = z.object({
+  name: z.string().min(THEME_NAME_MIN).max(THEME_NAME_MAX),
+  description: z.string().min(THEME_DESC_MIN).max(THEME_DESC_MAX),
+  matchingGuide: z.string().min(THEME_GUIDE_MIN),
+  emoji: z.enum(ALL_THEME_EMOJIS),
+});
+export type CreateVerifiedThemeInput = z.infer<typeof createVerifiedThemeSchema>;

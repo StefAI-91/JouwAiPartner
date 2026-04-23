@@ -23,9 +23,12 @@ vi.mock("@repo/auth/access", () => ({
     return { user: { id: mockUser.value.id, email: mockUser.value.email ?? "" } };
   },
 }));
+const mockCreateVerifiedTheme = vi.fn<(input: Record<string, unknown>) => Promise<unknown>>();
+
 vi.mock("@repo/database/mutations/themes", () => ({
   updateTheme: (...args: [string, Record<string, unknown>]) => mockUpdateTheme(...args),
   archiveTheme: (...args: [string]) => mockArchiveTheme(...args),
+  createVerifiedTheme: (...args: [Record<string, unknown>]) => mockCreateVerifiedTheme(...args),
 }));
 vi.mock("@repo/database/queries/themes", () => ({
   getThemeBySlug: vi.fn(),
@@ -38,6 +41,7 @@ import {
   updateThemeAction,
   archiveThemeAction,
   canEditThemesAction,
+  createVerifiedThemeAction,
 } from "../../src/actions/themes";
 
 // Must be a valid v4 UUID (zod v4 validates strict RFC format)
@@ -57,6 +61,11 @@ beforeEach(() => {
   mockIsAdmin.mockResolvedValue(false);
   mockUpdateTheme.mockResolvedValue({ success: true });
   mockArchiveTheme.mockResolvedValue({ success: true });
+  mockCreateVerifiedTheme.mockResolvedValue({
+    success: true,
+    id: "22222222-2222-4222-8222-222222222222",
+    slug: "team-capaciteit",
+  });
 });
 
 describe("updateThemeAction — whitelist", () => {
@@ -171,5 +180,64 @@ describe("canEditThemesAction", () => {
     mockIsAdmin.mockResolvedValue(true);
     const result = await canEditThemesAction();
     expect(result).toEqual({ canEdit: true });
+  });
+});
+
+describe("createVerifiedThemeAction (TH-010)", () => {
+  const VALID_CREATE = {
+    name: "Klantonboarding",
+    description: "Inwerken van nieuwe klanten na contract.",
+    matchingGuide:
+      "Valt onder als het gaat over onboarding-traject, kickoff-meetings of account-setup. Valt er niet onder als het alleen over sales-proces gaat.",
+    emoji: "📋" as const,
+  };
+
+  it("weigert non-admin met 'Geen toegang'", async () => {
+    mockUser.value = { id: "u-member" };
+    mockIsAdmin.mockResolvedValue(false);
+    const result = await createVerifiedThemeAction(VALID_CREATE);
+    expect(result).toEqual({ error: "Geen toegang" });
+    expect(mockCreateVerifiedTheme).not.toHaveBeenCalled();
+  });
+
+  it("weigert ongeldige input zonder DB-call", async () => {
+    mockUser.value = { id: "stef" };
+    mockIsAdmin.mockResolvedValue(true);
+    const result = await createVerifiedThemeAction({
+      ...VALID_CREATE,
+      matchingGuide: "te kort",
+    });
+    expect("error" in result).toBe(true);
+    expect(mockCreateVerifiedTheme).not.toHaveBeenCalled();
+  });
+
+  it("admin: mutation krijgt verifiedBy + revalidate gedraaid", async () => {
+    mockUser.value = { id: "stef-id", email: "stef@jaip" };
+    mockIsAdmin.mockResolvedValue(true);
+    const result = await createVerifiedThemeAction(VALID_CREATE);
+    expect("success" in result && result.success).toBe(true);
+    expect(mockCreateVerifiedTheme).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: VALID_CREATE.name,
+        description: VALID_CREATE.description,
+        matching_guide: VALID_CREATE.matchingGuide,
+        emoji: VALID_CREATE.emoji,
+        verifiedBy: "stef-id",
+      }),
+    );
+    expect(mockRevalidate).toHaveBeenCalledWith("/");
+    expect(mockRevalidate).toHaveBeenCalledWith("/review");
+  });
+
+  it("geeft mutation-error door (slug-collision etc.)", async () => {
+    mockUser.value = { id: "stef" };
+    mockIsAdmin.mockResolvedValue(true);
+    mockCreateVerifiedTheme.mockResolvedValue({
+      error: "duplicate key value violates unique constraint",
+    });
+    const result = await createVerifiedThemeAction(VALID_CREATE);
+    expect(result).toEqual({
+      error: "duplicate key value violates unique constraint",
+    });
   });
 });

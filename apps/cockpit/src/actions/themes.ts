@@ -6,6 +6,7 @@ import { isAdmin, requireAdminInAction } from "@repo/auth/access";
 import {
   updateTheme as updateThemeMutation,
   archiveTheme as archiveThemeMutation,
+  createVerifiedTheme as createVerifiedThemeMutation,
 } from "@repo/database/mutations/themes";
 import {
   rejectThemeMatchAsAdmin,
@@ -20,12 +21,14 @@ import {
   rejectEmergingThemeSchema,
   rejectThemeMatchSchema,
   regenerateMeetingThemesSchema,
+  createVerifiedThemeSchema,
   type UpdateThemeInput,
   type ArchiveThemeInput,
   type ApproveThemeInput,
   type RejectEmergingThemeInput,
   type RejectThemeMatchInput,
   type RegenerateMeetingThemesInput,
+  type CreateVerifiedThemeInput,
 } from "@/validations/themes";
 
 /**
@@ -235,4 +238,33 @@ export async function regenerateMeetingThemesAction(
     matches: result.matches_saved,
     proposals: result.proposals_saved,
   };
+}
+
+/**
+ * TH-010 — Admin-create een nieuw verified thema direct vanuit `/dev/tagger`.
+ * Overslaat de emerging → review-flow omdat de caller al admin is. Slug wordt
+ * in de mutation afgeleid van name. Revalidate dashboard + review zodat de
+ * pills/donut + queue meteen kloppen.
+ */
+export async function createVerifiedThemeAction(
+  input: CreateVerifiedThemeInput,
+): Promise<{ success: true; id: string; slug: string } | { error: string }> {
+  const parsed = createVerifiedThemeSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
+
+  const result = await createVerifiedThemeMutation({
+    name: parsed.data.name,
+    description: parsed.data.description,
+    matching_guide: parsed.data.matchingGuide,
+    emoji: parsed.data.emoji,
+    verifiedBy: guard.user.id,
+  });
+  if ("error" in result) return { error: result.error };
+
+  revalidatePath("/");
+  revalidatePath("/review");
+  return { success: true, id: result.id, slug: result.slug };
 }

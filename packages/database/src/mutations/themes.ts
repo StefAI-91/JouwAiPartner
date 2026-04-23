@@ -123,6 +123,48 @@ export async function createEmergingTheme(
 }
 
 /**
+ * TH-010 — Admin-create een nieuw `verified` thema in één stap. Overslaat
+ * de emerging → review-flow; bedoeld voor de curator-pad via `/dev/tagger`
+ * waar een admin handmatig een thema seed't. `verified_at` + `verified_by`
+ * worden gezet zodat pills/donut direct meetellen.
+ *
+ * Slug wordt deterministisch afgeleid via `slugify(name)`; UNIQUE-collision
+ * geeft een duidelijke PG-error door naar de caller (geen silent rename —
+ * dubbele namen horen expliciet fout te geven zodat admins bewust kiezen).
+ */
+export async function createVerifiedTheme(
+  input: {
+    name: string;
+    description: string;
+    matching_guide: string;
+    emoji: string;
+    verifiedBy: string;
+  },
+  client?: SupabaseClient,
+): Promise<{ success: true; id: string; slug: string } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const slug = slugify(input.name);
+
+  const { data, error } = await db
+    .from("themes")
+    .insert({
+      slug,
+      name: input.name,
+      description: input.description,
+      matching_guide: input.matching_guide,
+      emoji: input.emoji,
+      status: "verified",
+      verified_at: new Date().toISOString(),
+      verified_by: input.verifiedBy,
+    })
+    .select("id, slug")
+    .single();
+
+  if (error) return { error: error.message };
+  return { success: true, id: data.id, slug: data.slug };
+}
+
+/**
  * Soft-archive: status='archived' + archived_at=now. Bewaart matches en
  * history. Wordt niet meer door ThemeTagger gekozen.
  */

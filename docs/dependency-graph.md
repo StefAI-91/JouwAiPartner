@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 537 |
-| Exported functions/constants | 843 |
+| Files scanned | 538 |
+| Exported functions/constants | 846 |
 | Exported types/interfaces | 260 |
-| Cross-package imports | 664 |
+| Cross-package imports | 665 |
 | Critical integration points (3+ packages) | 16 |
 
 ## Package Dependency Flow
@@ -690,6 +690,7 @@
 - `insertTheme()`
 - `updateTheme()`
 - `createEmergingTheme()`
+- `createVerifiedTheme()`
 - `archiveTheme()`
 
 **Types:** `InsertThemeInput`, `UpdateThemeInput`, `EmergingThemeProposal`
@@ -2032,11 +2033,12 @@
 - `rejectEmergingThemeAction()`
 - `rejectThemeMatchAction()`
 - `regenerateMeetingThemesAction()`
+- `createVerifiedThemeAction()`
 
 **Depends on:**
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin, requireAdminInAction
-- `@repo/database/mutations/themes` → updateTheme, archiveTheme
+- `@repo/database/mutations/themes` → updateTheme, archiveTheme, createVerifiedTheme
 - `@repo/database/mutations/meeting-themes` → rejectThemeMatchAsAdmin, recalculateThemeStats
 - `@repo/ai/pipeline/steps/tag-themes` → runTagThemesStep
 - `@repo/database/queries/meetings` → getVerifiedMeetingById
@@ -2437,6 +2439,14 @@
 **Depends on:**
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/tagger/create-theme-form.tsx`
+
+**Exports:**
+- `CreateThemeForm()`
+
+**Depends on:**
+- `@repo/ai/agents/theme-emojis` → ALL_THEME_EMOJIS
 
 ### `apps/cockpit/src/app/(dashboard)/dev/tagger/page.tsx`
 
@@ -4273,7 +4283,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 49 | 7 | 2 | 84 | - | 142 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 90 | 6 | 4 | 33 | - | 133 |
+| Cockpit Pages | 90 | 7 | 4 | 33 | - | 134 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4532,6 +4542,7 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `updateTheme()` | `apps/cockpit/src/actions/themes.ts` |
 | `createEmergingTheme()` | `packages/ai/src/pipeline/steps/tag-themes.ts` |
+| `createVerifiedTheme()` | `apps/cockpit/src/actions/themes.ts` |
 | `archiveTheme()` | `apps/cockpit/src/actions/themes.ts` |
 
 ## Query Usage Map

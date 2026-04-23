@@ -5,6 +5,7 @@ import { Badge } from "@repo/ui/badge";
 import { formatDate } from "@repo/ui/format";
 import { runDevTaggerAction } from "@/actions/dev-tagger";
 import type { DevTaggerResult } from "@/actions/dev-tagger";
+import { CreateThemeForm } from "./create-theme-form";
 
 type MeetingOption = { id: string; title: string; date: string | null };
 
@@ -160,6 +161,8 @@ export function DevTaggerClient({ meetings }: Props) {
           {isPending ? "Taggen…" : "Run Tagger"}
         </button>
       </div>
+
+      <CreateThemeForm />
 
       {error && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
