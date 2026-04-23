@@ -139,3 +139,49 @@ Stef coachte Ege in diagnostisch denken rond Fleur's confidence-systeem. De focu
 **Waarom Detector's `theme_summary` in het schema blijft staan.** Niet voor "mooi-zo", maar voor drie harde redenen: (a) backfill-compat met alle pre-TH-013 rijen die nog die versie hebben, (b) graceful degradation bij Summarizer-failures zonder dat de theme-kaart kaal wordt, (c) regenerate-flow via `RegenerateMenu` moet nog steeds werken ook als de Summarizer een transient Anthropic-fout geeft — de Detector is cheaper en loopt vroeger in de pipeline, dus zijn output is bijna gratis "verzekering".
 
 **Geen telemetry-kolom voor welke bron werd gebruikt.** Zou een DATA-requirement toevoegen voor iets dat nu niet gebruikt wordt. Als we later willen weten hoe vaak de fallback triggert, komt dat via `agent_runs.metadata.theme_summaries_missing` (EDGE-241) — event-based i.p.v. state-based.
+
+### Prompt-aanpassingspunt in `summarizer.md`
+
+De huidige prompt (`packages/ai/prompts/summarizer.md`) heeft vier output-secties: BRIEFING, KERNPUNTEN, DEELNEMERS, VERVOLGSTAPPEN. Sectie 2 (KERNPUNTEN) verwijst al naar een context-blok `GEÏDENTIFICEERDE THEMA'S` (regel 22-27) voor de optionele `[Themes:]` marker per kernpunt. Die context komt al binnen sinds TH-011. Wat ontbreekt is een instructie om die thema-context óók te gebruiken als driver voor een apart per-thema output-blok.
+
+**Nieuwe sectie toevoegen als #5** (na VERVOLGSTAPPEN):
+
+```markdown
+5. PER-THEMA SAMENVATTINGEN — Voor elke entry in GEÏDENTIFICEERDE THEMA'S lever je één
+   rijke samenvatting die beschrijft wat dit specifieke thema in deze meeting raakte.
+   Zelfde diepgang als de hoofd-briefing en kernpunten, maar gefilterd op wat dit
+   thema aanging — niet de hele meeting-inhoud opnieuw.
+
+   PER THEMA GEEF JE:
+   - themeId: de exacte UUID uit de catalogus (copy-paste, verzinnen wordt gestript).
+   - briefing: 2-4 zinnen narratief over wat DEZE meeting specifiek over DIT thema besprak.
+     Beschrijf de dynamiek, de positionering, het besluit — niet de onderwerp-context
+     die toevallig het onderwerp was. Bij weinig raakpunten: kortere briefing is prima.
+   - kernpunten: array van bullets die onder dit thema vallen. Categorie-labels mogen
+     (**Besluit:**, **Signaal:**, etc.) maar GEEN project-prefix — die is in de
+     meeting-wide kernpunten al gezet. Lege array is acceptabel als het thema in deze
+     meeting geen discrete punten opleverde.
+   - vervolgstappen: array van thema-relevante acties. Lege array als er geen zijn.
+
+   DISCIPLINE:
+   - Kopieer geen meeting-wide kernpunten 1-op-1 naar elk thema — dat vervuilt de theme-
+     pages. Neem alleen wat over DIT thema gaat.
+   - Voor relationele thema's (coaching, leertraject, governance): beschrijf de dynamiek
+     en aanpak, niet het onderwerp dat toevallig besproken werd.
+   - Bij twijfel of iets bij een thema hoort: weglaten. De meeting-wide kernpunten
+     vangen het toch al op.
+
+   VOORBEELD (thema "Ege's leertraject" in een meeting die voornamelijk over een
+   AI-confidence-systeem ging):
+
+   briefing: "Stef coachte Ege in diagnostisch denken rond Fleur's confidence-systeem.
+   De focus lag op het isoleren van symptomen (fine-tuning vs threshold) en het
+   vasthouden van de scope zonder af te dwalen naar zijpaden."
+   kernpunten: ["Stef stuurt Ege aan op gefocuste diagnose.", "Ege neigt naar
+   architectuur-ideeën als eerste stap; Stef bewaakt de werkwijze."]
+   vervolgstappen: ["Ege experimenteert met voorbeeldgesprekken in system prompt."]
+```
+
+**Waarom deze plek in de prompt.** De Summarizer bouwt de meeting-wide kernpunten eerst, met `[Themes:]` markers waar relevant. Het per-thema blok komt dáárna in de output-volgorde omdat het een herwerking is van die punten per thema-lens. Volgorde in de prompt matcht de volgorde in de output-JSON (Anthropic's structured-output respecteert schema-volgorde). Zet de instructie achteraan zodat de agent eerst de kernpunten hardgemaakt heeft voor hij per thema gaat filteren.
+
+**Geen wijziging aan BRIEFING / KERNPUNTEN / DEELNEMERS / VERVOLGSTAPPEN secties.** De bestaande `[Themes:]` marker-instructie blijft staan — die voedt `extraction_themes` (TH-011) en heeft een andere functie dan het nieuwe per-thema blok.
