@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 538 |
-| Exported functions/constants | 847 |
-| Exported types/interfaces | 260 |
+| Files scanned | 540 |
+| Exported functions/constants | 856 |
+| Exported types/interfaces | 268 |
 | Cross-package imports | 665 |
 | Critical integration points (3+ packages) | 16 |
 
@@ -837,6 +837,21 @@
 - `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput
 - `./run-logger` → withAgentRun
 
+### `packages/ai/src/agents/theme-detector.ts`
+
+**Exports:**
+- `runThemeDetector()`
+- `THEME_DETECTOR_PROMPT_VERSION`
+- `THEME_DETECTOR_MODEL`
+- `THEME_DETECTOR_SYSTEM_PROMPT`
+
+**Types:** `ThemeCatalogEntry`, `ThemeDetectorNegativeExample`, `ThemeDetectorIdentifiedProject`, `ThemeDetectorMeetingContext`, `RunThemeDetectorInput`
+
+**Internal deps:**
+- `../validations/theme-detector` → ThemeDetectorOutputSchema, MATCHES_HARD_CAP, PROPOSALS_HARD_CAP, type ThemeDetectorOutput
+- `./theme-emojis` → THEME_EMOJIS, THEME_EMOJI_FALLBACK
+- `./run-logger` → withAgentRun
+
 ### `packages/ai/src/agents/theme-emojis.ts`
 
 **Exports:**
@@ -1454,6 +1469,20 @@
 - `SummarizerOutputSchema`
 
 **Types:** `SummarizerOutput`, `ParticipantProfile`
+
+### `packages/ai/src/validations/theme-detector.ts`
+
+**Exports:**
+- `MATCHES_HARD_CAP`
+- `PROPOSALS_HARD_CAP`
+- `IdentifiedThemeSchema`
+- `ProposedThemeSchema`
+- `ThemeDetectorOutputSchema`
+
+**Types:** `IdentifiedTheme`, `ProposedTheme`, `ThemeDetectorOutput`
+
+**Internal deps:**
+- `../agents/theme-emojis` → ALL_THEME_EMOJIS
 
 ### `packages/ai/src/validations/theme-tagger.ts`
 
