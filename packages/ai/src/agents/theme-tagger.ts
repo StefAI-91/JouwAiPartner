@@ -14,7 +14,7 @@ import { THEME_EMOJIS, THEME_EMOJI_FALLBACK } from "./theme-emojis";
 import { withAgentRun } from "./run-logger";
 
 const MODEL = "claude-sonnet-4-6";
-const PROMPT_VERSION = "th-010-sonnet-v3-summary";
+const PROMPT_VERSION = "th-010-sonnet-v4-no-risks";
 
 export type { ThemeTaggerOutput };
 

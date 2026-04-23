@@ -21,22 +21,12 @@ export const EXTRACTION_IDS_PER_MATCH_CAP = 8;
 
 /**
  * TH-010 — Starter-set van extraction-types die de ThemeTagger überhaupt te
- * zien krijgt. Andere types (bv. `blocker`, `commitment`) worden op pipeline-
- * niveau uit de input gefilterd — zodra we in de praktijk zien dat ze waarde
- * toevoegen volstaat één regel uitbreiden hier.
- *
- * TH-010 update: `risk` toegevoegd zodat de bestaande Risk Specialist output
- * via `extraction_themes` aan thema's wordt gehangen. Zonder deze toevoeging
- * zag de Tagger risks nooit en bleven `extractionIds` leeg op meetings die
- * vooral risk-signal bevatten.
+ * zien krijgt. Andere types (bv. `risk`, `commitment`, `context`) worden op
+ * pipeline-niveau uit de input gefilterd. Risks blijven bewust uit de
+ * starter-set: ze hangen aan projecten via project_id (Risk Specialist), niet
+ * aan thema's — themes zijn een fijnere lens dan project-scope risks vragen.
  */
-export const TAGGER_EXTRACTION_TYPES = [
-  "decision",
-  "action_item",
-  "need",
-  "insight",
-  "risk",
-] as const;
+export const TAGGER_EXTRACTION_TYPES = ["decision", "action_item", "need", "insight"] as const;
 
 export const ThemeMatchSchema = z.object({
   themeId: z.string().describe("UUID van het bestaande verified/emerging thema dat matcht."),

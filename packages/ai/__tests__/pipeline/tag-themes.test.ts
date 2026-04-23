@@ -176,7 +176,9 @@ describe("runTagThemesStep — happy path", () => {
     expect(extractionIds).not.toContain("context-id");
   });
 
-  it("risks passeren de starter-set filter en bereiken de Tagger (TH-010)", async () => {
+  it("risks worden uit de starter-set gefilterd en bereiken de Tagger NIET (TH-010)", async () => {
+    // Risks horen aan projecten via project_id, niet aan thema's. ThemeTagger
+    // ziet ze niet zodat de attribution-laag op project-niveau blijft schoon.
     const RISK_ID = "aaaaaaaa-risk-4aaa-8aaa-aaaaaaaaaaaa";
     mockGetExtractions.mockResolvedValue([
       { id: EXTRACTION_A, type: "decision", content: "decision" },
@@ -197,7 +199,8 @@ describe("runTagThemesStep — happy path", () => {
 
     const taggerCall = mockTag.mock.calls[0][0];
     const extractionIds = taggerCall.meeting.extractions.map((e: { id: string }) => e.id);
-    expect(extractionIds).toContain(RISK_ID);
+    expect(extractionIds).not.toContain(RISK_ID);
+    expect(extractionIds).toContain(EXTRACTION_A);
   });
 
   it("slaat negative_examples per thema mee in de agent-input", async () => {
