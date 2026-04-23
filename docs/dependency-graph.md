@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 541 |
 | Exported functions/constants | 860 |
-| Exported types/interfaces | 275 |
+| Exported types/interfaces | 276 |
 | Cross-package imports | 671 |
 | Critical integration points (3+ packages) | 16 |
 
@@ -833,6 +833,8 @@
 **Exports:**
 - `runSummarizer()`
 - `formatSummary()`
+
+**Types:** `SummarizerIdentifiedTheme`
 
 **Internal deps:**
 - `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput

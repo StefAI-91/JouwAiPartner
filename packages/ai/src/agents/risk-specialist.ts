@@ -50,6 +50,15 @@ export interface RiskSpecialistContext {
   speakerContext?: string | null;
   entityContext?: string;
   identified_projects?: { project_name: string; project_id: string | null }[];
+  /**
+   * TH-011 (AI-236) — Themes die de Theme-Detector als substantieel heeft
+   * aangemerkt. RiskSpecialist mag optioneel `[Themes: X]` markers in de
+   * risk-content toevoegen wanneer een risk los van het project ook bij het
+   * thema hoort (bv. "senior-hiring blokkeert ons MCP-roadmap" → thema
+   * "Hiring" én "MCP Capabilities"). Niet verplicht — extractor blijft
+   * theme-agnostisch, de annotatie is een hint voor link-themes.
+   */
+  identified_themes?: { name: string; description: string }[];
 }
 
 export interface RiskSpecialistRunMetrics {
@@ -88,6 +97,17 @@ export async function runRiskSpecialist(
       `Gebruik ALLEEN deze projectnamen voor theme_project en project. ` +
       `Voor items die niet bij een project horen: gebruik "Algemeen". ` +
       `Voeg GEEN nieuwe projectnamen toe.`;
+  }
+
+  let themesHint = "";
+  if (context.identified_themes && context.identified_themes.length > 0) {
+    const themeList = context.identified_themes
+      .map((t) => `- ${t.name}: ${t.description}`)
+      .join("\n");
+    themesHint =
+      `\n\n--- GEÏDENTIFICEERDE THEMA'S (optionele annotatie) ---\n` +
+      `${themeList}\n\n` +
+      `Als een risk los van het specifieke project óók relevant is voor een van deze thema's, mag je aan het einde van de \`content\` een \`[Themes: Naam1, Naam2]\` marker plaatsen (exacte namen, comma-separated). Alleen bij substantiële cross-cutting relevantie — niet forceren. Onbekende namen worden weggefilterd door de link-themes parser.`;
   }
 
   const contextPrefix = [
@@ -137,7 +157,7 @@ export async function runRiskSpecialist(
           },
           {
             role: "user",
-            content: `${contextPrefix}${projectConstraint}\n\n--- TRANSCRIPT ---\n${transcript}`,
+            content: `${contextPrefix}${projectConstraint}${themesHint}\n\n--- TRANSCRIPT ---\n${transcript}`,
           },
         ],
       });

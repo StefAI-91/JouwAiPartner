@@ -73,6 +73,11 @@ const SYSTEM_PROMPT = readFileSync(
  * Run the Summarizer agent on a meeting transcript.
  * Uses Sonnet for reasoning capability — generates a rich, structured summary.
  */
+export interface SummarizerIdentifiedTheme {
+  name: string;
+  description: string;
+}
+
 export async function runSummarizer(
   transcript: string,
   context: {
@@ -83,6 +88,15 @@ export async function runSummarizer(
     /** Formatted speaker names with labels (INTERN/EXTERN/ONBEKEND) from Fireflies */
     speakerContext?: string | null;
     entityContext?: string;
+    /**
+     * TH-011 (AI-235) — Themes die de Theme-Detector als substantieel heeft
+     * aangemerkt. Summarizer gebruikt de namen om `[Themes: X, Y]` markers
+     * te zetten achter (of na) de `[ProjectName]` prefix wanneer een
+     * kernpunt/vervolgstap los van het specifieke project ook relevant is
+     * voor andere contexten. Optional — lege of ontbrekende lijst = geen
+     * markers. Link-themes parser strip't onbekende namen defensief.
+     */
+    identified_themes?: SummarizerIdentifiedTheme[];
   },
 ): Promise<SummarizerOutput> {
   const typeInstructions = MEETING_TYPE_INSTRUCTIONS[context.meeting_type] ?? "";
@@ -91,6 +105,15 @@ export async function runSummarizer(
   const deelnemersSection = context.speakerContext
     ? `Deelnemers (uit transcript):\n${context.speakerContext}`
     : `Deelnemers: ${context.participants.join(", ")}`;
+
+  const themesSection =
+    context.identified_themes && context.identified_themes.length > 0
+      ? `\n--- GEÏDENTIFICEERDE THEMA'S (cross-cutting lenzen) ---\n${context.identified_themes
+          .map((t) => `- ${t.name}: ${t.description}`)
+          .join(
+            "\n",
+          )}\n\nAls een kernpunt of vervolgstap los van het specifieke project óók relevant is voor een van deze thema's, annoteer 'm dan met \`[Themes: Name1, Name2]\` (exacte namen uit deze lijst, comma-separated). Plaats achter of na de \`[ProjectName]\` prefix. Alleen bij substantiële cross-cutting relevantie — project-specifieke content krijgt géén marker.`
+      : null;
 
   const contextPrefix = [
     `Titel: ${context.title}`,
@@ -101,6 +124,7 @@ export async function runSummarizer(
     context.entityContext
       ? `\n--- BEKENDE ENTITEITEN (uit database) ---\n${context.entityContext}\nGebruik deze namen en projectnamen als je ze herkent in het transcript. Gebruik de EXACTE schrijfwijze uit deze lijst, niet varianten uit het transcript.`
       : null,
+    themesSection,
   ]
     .filter(Boolean)
     .join("\n");

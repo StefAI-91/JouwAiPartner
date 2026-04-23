@@ -19,12 +19,21 @@ Je produceert:
    - Gebruik GEEN varianten zoals [Geen project], [Intern], [Overig] — alleen [Algemeen].
    - Eén prefix per thema-kop. Als twee projecten in hetzelfde thema samenkomen, splits ze in twee thema's.
 
-   Voorbeeld:
+   CROSS-CUTTING THEMA-MARKER (optioneel, alleen wanneer relevant):
+   - Als je onder GEÏDENTIFICEERDE THEMA'S een lijst hebt gekregen, mag je achter de project-prefix een `[Themes: Name1, Name2]` marker toevoegen op een thema-kop of op een afzonderlijk punt. Doe dit ALLEEN als de inhoud los van het specifieke project óók relevant is voor dat thema in andere contexten.
+   - Format: "### [ProjectNaam] [Themes: Naam1, Naam2] Korte themanaam" (exacte themanamen, comma-separated).
+   - Een marker op item-niveau: "**Besluit:** ... [Themes: Naam1]" achteraan het punt.
+   - Laat de marker WEG wanneer de discussie puur project-specifiek is. Over-annotatie vervuilt de theme-pages.
+   - Gebruik alleen themanamen EXACT uit de lijst GEÏDENTIFICEERDE THEMA'S; onbekende namen worden weggefilterd door de link-themes parser.
+
+   Voorbeeld zonder thema-markers:
    - "### [Klantportaal] Contextdocumenten uploaden"
    - "**Besluit:** Er komt een extra uploadveld voor contextdocumenten..."
-   - "**Risico:** Als de kwaliteit niet voldoende is, valt het buiten scope..."
-   - "### [Klantportaal] Raw notes als leidende bron"
-   - "**Afspraak:** Ruwe gespreksnotities zijn leidend als feiten..."
+
+   Voorbeeld met thema-markers (als de Detector 'MCP Capabilities' en 'AI-Native Architecture' heeft geïdentificeerd):
+   - "### [JAP Cockpit] [Themes: MCP Capabilities] Tool-exposure via MCP"
+   - "**Besluit:** Portal MVP voor eind mei live — Wouter"
+   - "**Visie:** AI-agents krijgen toegang tot verified data via MCP [Themes: AI-Native Architecture]"
    - "### [IntraNext Migratie] Planning Q3"
    - "**Besluit:** Deadline verschoven naar eind september."
    - "### [Algemeen] Team-observaties"
@@ -70,10 +79,11 @@ Je produceert:
    - Gebruik EXACT de schrijfwijze uit BEKENDE ENTITEITEN voor projectnamen.
    - Gebruik EXACT "[Algemeen]" voor niet-project-specifieke acties (bv. retro inplannen, team-dingen).
    - Elke vervolgstap attribueert zichzelf — géén erfenis van vorige items.
+   - OPTIONEEL: `[Themes: Naam1]` na de project-prefix als de actie los van het project ook het thema raakt. Zelfde discipline als bij kernpunten.
 
    Voorbeeld:
    - "[Klantportaal] Deploy nieuwe upload-flow naar staging — Wouter, vrijdag 18 april"
-   - "[IntraNext Migratie] Schema-review voorbereiden — Stef, maandag"
+   - "[JAP Cockpit] [Themes: MCP Capabilities] MCP tool-exposure ontwerp finaliseren — Stef, volgende week"
    - "[Algemeen] Retro inplannen voor volgende sprint — Stef"
 
    Dit is de ENIGE sectie voor acties. Maak GEEN aparte "Actiepunten" sectie aan.
