@@ -177,10 +177,48 @@ export function DevTaggerClient({ meetings }: Props) {
               <Stat label="Themes" value={result.inputSummary.themesCount} />
               <Stat label="Negative examples" value={result.inputSummary.negativeExamplesCount} />
             </dl>
-            {result.inputSummary.extractionsAfterTypeFilter === 0 && (
+            {result.inputSummary.extractionTypeBreakdown.length > 0 && (
+              <div className="mt-3">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Extraction-types in meeting ({result.inputSummary.extractionsTotal} totaal)
+                </p>
+                <ul className="mt-1 flex flex-wrap gap-1.5 text-[11px]">
+                  {result.inputSummary.extractionTypeBreakdown.map((b) => (
+                    <li
+                      key={b.type}
+                      className={
+                        b.inStarterSet
+                          ? "rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-foreground"
+                          : "rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 text-muted-foreground line-through"
+                      }
+                      title={
+                        b.inStarterSet
+                          ? "In starter-set — Tagger ziet deze extractions"
+                          : "Uit starter-set gefilterd — Tagger ziet deze extractions NIET"
+                      }
+                    >
+                      {b.type} × {b.count}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {result.inputSummary.extractionsAfterTypeFilter === 0 &&
+              result.inputSummary.extractionsTotal > 0 && (
+                <p className="mt-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-foreground">
+                  <strong>Alle extractions zijn uit de starter-set gefilterd.</strong> De Tagger
+                  krijgt een lege extractions-lijst en moet daardoor alleen op de summary matchen —
+                  vandaar lege <code>extractionIds</code>. Fix: breid{" "}
+                  <code>TAGGER_EXTRACTION_TYPES</code> in{" "}
+                  <code>packages/ai/src/validations/theme-tagger.ts</code> uit met de relevante
+                  types hierboven, of promote de extractions naar <code>decision</code> /{" "}
+                  <code>action_item</code> / <code>need</code> / <code>insight</code>.
+                </p>
+              )}
+            {result.inputSummary.extractionsTotal === 0 && (
               <p className="mt-3 rounded-md border border-dashed border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
-                Geen extractions om te taggen (starter-set types: decision / action_item / need /
-                insight). De Tagger-step wordt in de pipeline geskipt.
+                Meeting heeft 0 extractions in de DB — geen structured signal voor de Tagger behalve
+                de summary.
               </p>
             )}
             {result.inputSummary.themesCount === 0 && (

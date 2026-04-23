@@ -38,6 +38,12 @@ export interface DevTaggerMeetingContext {
   transcript: string | null;
 }
 
+export interface DevTaggerExtractionTypeCount {
+  type: string;
+  count: number;
+  inStarterSet: boolean;
+}
+
 export interface DevTaggerResult {
   taggerOutput: ThemeTaggerOutput;
   inputSummary: {
@@ -47,6 +53,7 @@ export interface DevTaggerResult {
     extractionsAfterTypeFilter: number;
     themesCount: number;
     negativeExamplesCount: number;
+    extractionTypeBreakdown: DevTaggerExtractionTypeCount[];
   };
   meetingContext: DevTaggerMeetingContext;
   currentMeetingThemes: DevTaggerMeetingThemeRow[];
@@ -84,6 +91,18 @@ export async function runDevTaggerAction(
   );
 
   const filteredExtractions = allExtractions.filter((e) => TAGGER_TYPES.has(e.type));
+
+  const typeCounts = new Map<string, number>();
+  for (const e of allExtractions) {
+    typeCounts.set(e.type, (typeCounts.get(e.type) ?? 0) + 1);
+  }
+  const extractionTypeBreakdown = Array.from(typeCounts.entries())
+    .map(([type, count]) => ({
+      type,
+      count,
+      inStarterSet: TAGGER_TYPES.has(type),
+    }))
+    .sort((a, b) => b.count - a.count);
 
   const themesContext: ThemeContext[] = themes.map((t) => ({
     themeId: t.id,
@@ -126,6 +145,7 @@ export async function runDevTaggerAction(
       extractionsAfterTypeFilter: filteredExtractions.length,
       themesCount: themes.length,
       negativeExamplesCount: negativeExamples.length,
+      extractionTypeBreakdown,
     },
     currentMeetingThemes,
     currentExtractionThemes,
