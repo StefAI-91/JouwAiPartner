@@ -1,15 +1,15 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-22. Do not edit manually.
+> Auto-generated on 2026-04-23. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 529 |
-| Exported functions/constants | 829 |
-| Exported types/interfaces | 245 |
+| Files scanned | 532 |
+| Exported functions/constants | 832 |
+| Exported types/interfaces | 252 |
 | Cross-package imports | 653 |
 | Critical integration points (3+ packages) | 15 |
 
@@ -2626,6 +2626,23 @@
 
 **Exports:**
 - `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/storyline/page.tsx`
+
+**Exports:**
+- `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/storyline/storyline-data.ts`
+
+**Exports:**
+- `HIRING_STORY`
+
+**Types:** `ExtractionType`, `ThemeExtraction`, `Confidence`, `MeetingBlock`, `MomentKind`, `StoryMoment`, `ThemeStoryline`
+
+### `apps/cockpit/src/app/(dashboard)/theme-lab/storyline/storyline-page.tsx`
+
+**Exports:**
+- `StorylinePage()`
 
 ### `apps/cockpit/src/app/(dashboard)/theme-lab/theme-lab.tsx`
 
