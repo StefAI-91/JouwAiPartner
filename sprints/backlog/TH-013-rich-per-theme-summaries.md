@@ -116,3 +116,26 @@ Stef coachte Ege in diagnostisch denken rond Fleur's confidence-systeem. De focu
 **Briefing is nooit leeg.** Als een thema überhaupt in `identified_themes` staat is er iets over gezegd; een lege briefing betekent dat de Summarizer zijn werk niet heeft gedaan. De prompt (AI-241) instrueert: korte briefing bij weinig raakpunten is prima, maar iets ervan moet er zijn. Validatie: lege briefing-string → wordt gefilterd door `runSummarizer()` (niet opgenomen in de output-map), link-themes valt terug op Detector-summary (EDGE-241).
 
 **Geen project-prefix in theme-summaries.** De meeting-wide kernpunten krijgen `### [ProjectName]` prefixes (zie huidige summarizer.md), theme-summaries niet — ze staan al in de context van één specifiek thema op een theme detail page. Een project-prefix zou redundant zijn en conflicteert met de thema-scoped framing.
+
+### Fallback-ketting — welke bron wint wanneer
+
+`meeting_themes.summary` kan uit drie bronnen komen. Link-themes.ts past bij elke match deze volgorde toe:
+
+```
+1. Summarizer's theme_summaries.get(themeId) → rich markdown  ← PRIMAIR (TH-013)
+2. Theme-Detector's identified_themes[i].theme_summary        ← FALLBACK 1-2 zinnen
+3. null                                                       ← LAATSTE REDMIDDEL
+```
+
+| Scenario                                                             | Bron           | Wat de UI toont                                              |
+| -------------------------------------------------------------------- | -------------- | ------------------------------------------------------------ |
+| Happy path — nieuwe meeting, Summarizer heeft theme_summary geleverd | Summarizer     | Rijke markdown (briefing + kernpunten + vervolgstappen)      |
+| Summarizer gaf `theme_summaries: []` (EDGE-241)                      | Theme-Detector | 1-2 zins plain-text (zoals huidige productie)                |
+| Summarizer gaf entry met onbekende themeId (EDGE-240)                | Theme-Detector | 1-2 zins plain-text (de verkeerde entry is gestript)         |
+| Summarizer-call faalde volledig                                      | Theme-Detector | 1-2 zins plain-text                                          |
+| Pre-TH-013 meeting, nog niet geregenereerd                           | Theme-Detector | 1-2 zins plain-text (EDGE-244 backfill-compat)               |
+| Alle drie leeg (extreme edge — Detector gaf ook niks)                | `null`         | Meeting-kaart toont geen summary-blok, alleen evidence-quote |
+
+**Waarom Detector's `theme_summary` in het schema blijft staan.** Niet voor "mooi-zo", maar voor drie harde redenen: (a) backfill-compat met alle pre-TH-013 rijen die nog die versie hebben, (b) graceful degradation bij Summarizer-failures zonder dat de theme-kaart kaal wordt, (c) regenerate-flow via `RegenerateMenu` moet nog steeds werken ook als de Summarizer een transient Anthropic-fout geeft — de Detector is cheaper en loopt vroeger in de pipeline, dus zijn output is bijna gratis "verzekering".
+
+**Geen telemetry-kolom voor welke bron werd gebruikt.** Zou een DATA-requirement toevoegen voor iets dat nu niet gebruikt wordt. Als we later willen weten hoe vaak de fallback triggert, komt dat via `agent_runs.metadata.theme_summaries_missing` (EDGE-241) — event-based i.p.v. state-based.
