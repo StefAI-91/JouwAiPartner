@@ -161,6 +161,7 @@ export {
 export {
   listEmergingThemes,
   listProposedThemesForMeeting,
+  listRejectedThemePairsForMeeting,
   type EmergingThemeRow,
   type EmergingThemeProposalMeeting,
 } from "./theme-review";

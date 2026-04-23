@@ -86,6 +86,12 @@ export interface EmergingThemeProposal {
   matching_guide: string;
   emoji: string;
   created_by_agent?: string;
+  /**
+   * TH-011 (DATA-232) — meeting waarin de agent het thema voorstelde. Null
+   * toegestaan voor callers die geen meeting-context hebben (bv. latere
+   * bulk-import flows).
+   */
+  origin_meeting_id?: string | null;
 }
 
 /**
@@ -113,7 +119,8 @@ export async function createEmergingTheme(
       matching_guide: proposal.matching_guide,
       emoji: proposal.emoji,
       status: "emerging",
-      created_by_agent: proposal.created_by_agent ?? "theme_tagger",
+      created_by_agent: proposal.created_by_agent ?? "theme_detector",
+      origin_meeting_id: proposal.origin_meeting_id ?? null,
     })
     .select("id, slug")
     .single();

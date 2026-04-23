@@ -74,6 +74,27 @@ export async function listEmergingThemes(client?: SupabaseClient): Promise<Emerg
 }
 
 /**
+ * TH-011 (FUNC-274) — Set van `theme_id`-strings die voor deze `meetingId`
+ * gerejected zijn. `link-themes.ts` filtert matches op dit Set voordat hij
+ * meeting_themes insert, zodat admin-rejections niet door een fresh pipeline-
+ * run worden teruggezet. Geen nieuwe tabel of kolom — gewoon de bestaande
+ * `theme_match_rejections` gegroepeerd per meeting.
+ */
+export async function listRejectedThemePairsForMeeting(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<Set<string>> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("theme_match_rejections")
+    .select("theme_id")
+    .eq("meeting_id", meetingId);
+
+  if (error) throw new Error(`rejected theme pairs fetch failed: ${error.message}`);
+  return new Set((data ?? []).map((r) => r.theme_id));
+}
+
+/**
  * TH-011 (UI-330) — themes met `status='emerging'` waarvan de origin-meeting
  * `meetingId` is. Voedt het "Voorgestelde thema's" tabblad in de
  * meeting-review. Eerst via `origin_meeting_id` (TH-011+), dan een fallback
