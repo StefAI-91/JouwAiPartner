@@ -78,7 +78,7 @@ beforeEach(() => {
   mockGetExtractions.mockResolvedValue([
     { id: EXTRACTION_NEED, type: "need", content: "twee junior devs werven" },
     { id: EXTRACTION_INSIGHT, type: "insight", content: "Stef voelt zich kapot" },
-    { id: "risk-id", type: "risk", content: "risk moet uitgefilterd" },
+    { id: "context-id", type: "context", content: "context moet uitgefilterd" },
   ]);
   mockListThemes.mockResolvedValue([
     {
@@ -144,7 +144,7 @@ describe("runDevTaggerAction — dry-run", () => {
     const taggerCall = mockTag.mock.calls[0][0];
     const extractionIds = taggerCall.meeting.extractions.map((e: { id: string }) => e.id);
     expect(extractionIds).toEqual([EXTRACTION_NEED, EXTRACTION_INSIGHT]);
-    expect(extractionIds).not.toContain("risk-id");
+    expect(extractionIds).not.toContain("context-id");
   });
 
   it("retourneert taggerOutput + current-state + systemPrompt", async () => {
