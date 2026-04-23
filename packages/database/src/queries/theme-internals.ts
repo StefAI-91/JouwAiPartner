@@ -18,7 +18,7 @@ import { getAdminClient } from "../supabase/admin";
  */
 export const THEME_COLUMNS_BASIC = "id, slug, name, emoji, mention_count, last_mentioned_at";
 export const THEME_COLUMNS_FULL =
-  "id, slug, name, emoji, description, matching_guide, status, created_by_agent, verified_at, verified_by, archived_at, last_mentioned_at, mention_count, created_at, updated_at";
+  "id, slug, name, emoji, description, matching_guide, status, created_by_agent, verified_at, verified_by, archived_at, last_mentioned_at, mention_count, origin_meeting_id, created_at, updated_at";
 export const THEME_COLUMNS = THEME_COLUMNS_FULL;
 
 /** Max aantal recente rejections dat als negative_example in de ThemeTagger-prompt landt. */

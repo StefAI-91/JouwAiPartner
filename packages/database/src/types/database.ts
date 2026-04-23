@@ -1590,6 +1590,7 @@ export type Database = {
           matching_guide: string;
           mention_count: number;
           name: string;
+          origin_meeting_id: string | null;
           slug: string;
           status: string;
           updated_at: string;
@@ -1607,6 +1608,7 @@ export type Database = {
           matching_guide: string;
           mention_count?: number;
           name: string;
+          origin_meeting_id?: string | null;
           slug: string;
           status?: string;
           updated_at?: string;
@@ -1624,13 +1626,22 @@ export type Database = {
           matching_guide?: string;
           mention_count?: number;
           name?: string;
+          origin_meeting_id?: string | null;
           slug?: string;
           status?: string;
           updated_at?: string;
           verified_at?: string | null;
           verified_by?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "themes_origin_meeting_id_fkey";
+            columns: ["origin_meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       update_suggestions: {
         Row: {

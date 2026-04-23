@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 538 |
-| Exported functions/constants | 846 |
+| Exported functions/constants | 847 |
 | Exported types/interfaces | 260 |
 | Cross-package imports | 665 |
 | Critical integration points (3+ packages) | 16 |
@@ -417,6 +417,7 @@
 
 **Exports:**
 - `listEmergingThemes()`
+- `listProposedThemesForMeeting()`
 
 **Types:** `EmergingThemeProposalMeeting`, `EmergingThemeRow`
 

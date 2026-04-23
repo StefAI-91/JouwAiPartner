@@ -29,6 +29,8 @@ export interface ThemeRow {
   archived_at: string | null;
   last_mentioned_at: string | null;
   mention_count: number;
+  /** TH-011 (DATA-232) — meeting waarin de Theme-Detector dit thema voorstelde. Null voor seeds en pre-TH-011 emerging-themes. */
+  origin_meeting_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -158,6 +160,7 @@ export {
 
 export {
   listEmergingThemes,
+  listProposedThemesForMeeting,
   type EmergingThemeRow,
   type EmergingThemeProposalMeeting,
 } from "./theme-review";

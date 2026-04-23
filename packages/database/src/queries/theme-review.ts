@@ -72,3 +72,29 @@ export async function listEmergingThemes(client?: SupabaseClient): Promise<Emerg
     proposal_meetings: byTheme.get(t.id) ?? [],
   }));
 }
+
+/**
+ * TH-011 (UI-330) — themes met `status='emerging'` waarvan de origin-meeting
+ * `meetingId` is. Voedt het "Voorgestelde thema's" tabblad in de
+ * meeting-review. Eerst via `origin_meeting_id` (TH-011+), dan een fallback
+ * via `meeting_themes` voor pre-TH-011 proposals (TH-010 zette `origin` niet
+ * op themes zelf — alleen meeting_themes-link kan herleid worden).
+ *
+ * Pre-TH-011 fallback is bewust soft: oude emerging-proposals blijven via
+ * de bulk-sectie (`listEmergingThemes`) op `/review` zichtbaar.
+ */
+export async function listProposedThemesForMeeting(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<ThemeRow[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("themes")
+    .select(THEME_COLUMNS)
+    .eq("status", "emerging")
+    .eq("origin_meeting_id", meetingId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(`proposed themes fetch failed: ${error.message}`);
+  return (data ?? []) as ThemeRow[];
+}
