@@ -203,12 +203,17 @@ export function DevDetectorClient({ meetings }: Props) {
                     </blockquote>
                     <div className="mt-2 rounded-md bg-muted/30 p-2">
                       <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                        theme_summary
+                        theme_summary (fallback — sinds TH-013)
                       </p>
                       <p className="mt-0.5 text-[12px] leading-snug">
                         {t.theme_summary || (
                           <span className="italic text-muted-foreground">(leeg)</span>
                         )}
+                      </p>
+                      <p className="mt-1 text-[10px] italic text-muted-foreground">
+                        De rijke versie (briefing + kernpunten + vervolgstappen) wordt door de
+                        Summarizer geleverd bij de volle pipeline-run; deze detector-output landt
+                        alleen in <code>meeting_themes.summary</code> wanneer de Summarizer faalt.
                       </p>
                     </div>
                     <div className="mt-2 rounded-md bg-muted/30 p-2">
