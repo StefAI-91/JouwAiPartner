@@ -217,8 +217,8 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     description:
       "Tagt meetings met cross-meeting thema's uit een gecureerde catalogus en stelt zeer selectief een nieuw thema voor als dat écht ontbreekt. Match-first-create-second discipline, gebruikt matching_guide + negative_examples als arbiter.",
     mascot: "🧭",
-    model: "claude-haiku-4-5-20251001",
-    modelLabel: "Haiku 4.5",
+    model: "claude-sonnet-4-6",
+    modelLabel: "Sonnet 4.6",
     quadrant: "cockpit",
     status: "live",
     promptFile: "theme-tagger.md",
