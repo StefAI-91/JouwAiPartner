@@ -23,6 +23,8 @@ import {
   rejectThemeMatchSchema,
   regenerateMeetingThemesSchema,
   createVerifiedThemeSchema,
+  confirmThemeProposalSchema,
+  rejectThemeProposalSchema,
   type UpdateThemeInput,
   type ArchiveThemeInput,
   type ApproveThemeInput,
@@ -30,6 +32,8 @@ import {
   type RejectThemeMatchInput,
   type RegenerateMeetingThemesInput,
   type CreateVerifiedThemeInput,
+  type ConfirmThemeProposalInput,
+  type RejectThemeProposalInput,
 } from "@/validations/themes";
 
 /**
@@ -268,7 +272,79 @@ export async function regenerateMeetingThemesAction(
 }
 
 /**
- * TH-010 — Admin-create een nieuw verified thema direct vanuit `/dev/tagger`.
+ * TH-011 (FUNC-280) — Confirm een voorgesteld thema vanuit de meeting-review
+ * "Voorgestelde thema's" tab. Set `status='verified'` + `verified_at` +
+ * `verified_by`, behoud de `meeting_themes` link. Revalidate alle
+ * proposal-surfaces zodat bulk-sectie en per-meeting-tab synchroon blijven.
+ * Admin-only.
+ */
+export async function confirmThemeProposalAction(
+  input: ConfirmThemeProposalInput,
+): Promise<{ success: true } | { error: string }> {
+  const parsed = confirmThemeProposalSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
+
+  const result = await updateThemeMutation(parsed.data.themeId, {
+    status: "verified",
+    verified_at: new Date().toISOString(),
+    verified_by: guard.user.id,
+  });
+  if ("error" in result) return { error: result.error };
+
+  revalidatePath("/review");
+  revalidatePath(`/review/${parsed.data.meetingId}`);
+  revalidatePath("/themes");
+  revalidatePath("/");
+  return { success: true };
+}
+
+/**
+ * TH-011 (FUNC-280) — Reject een voorgesteld thema vanuit de in-meeting
+ * tab. Set `status='archived'` (soft) en verwijder de `meeting_themes` link
+ * zodat de proposal niet meer meetelt in pills/donut. Admin-only.
+ * `theme_match_rejections` wordt bewust NIET gevuld — die feedback-loop is
+ * voor eerdere Detector-matches tegen verified themes, niet voor afgewezen
+ * proposals die het emerging-stadium nooit verlieten.
+ */
+export async function rejectThemeProposalAction(
+  input: RejectThemeProposalInput,
+): Promise<{ success: true } | { error: string }> {
+  const parsed = rejectThemeProposalSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
+
+  const archiveRes = await archiveThemeMutation(parsed.data.themeId);
+  if ("error" in archiveRes) return { error: archiveRes.error };
+
+  // De meeting_themes-link verwijderen zodat de afgewezen proposal niet
+  // langer in pills/donut meetelt. clearMeetingThemes schrapt alle links
+  // voor de meeting, wat te ruim is; we doen een targeted delete via
+  // rejectThemeMatchAsAdmin — dat is dezelfde cascade die TH-006 gebruikt
+  // en zet ook de extraction_themes junction leeg voor (meeting, theme).
+  const matchRes = await rejectThemeMatchAsAdmin({
+    meetingId: parsed.data.meetingId,
+    themeId: parsed.data.themeId,
+    reason: "ander_thema",
+    userId: guard.user.id,
+  });
+  if ("error" in matchRes) return { error: matchRes.error };
+
+  await recalculateThemeStats([parsed.data.themeId]);
+
+  revalidatePath("/review");
+  revalidatePath(`/review/${parsed.data.meetingId}`);
+  revalidatePath("/themes");
+  revalidatePath("/");
+  return { success: true };
+}
+
+/**
+ * TH-010 — Admin-create een nieuw verified thema direct vanuit `/dev/detector`.
  * Overslaat de emerging → review-flow omdat de caller al admin is. Slug wordt
  * in de mutation afgeleid van name. Revalidate dashboard + review zodat de
  * pills/donut + queue meteen kloppen.

@@ -17,10 +17,11 @@ import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
 import { updateMeetingSummaryAction } from "@/actions/meetings";
 import { RegenerateMenu } from "@/components/shared/regenerate-menu";
-import { AlertTriangle, Mail } from "lucide-react";
+import { AlertTriangle, Mail, Tags } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
 import { SegmentList } from "@/components/shared/segment-list";
+import { ProposalsList, type ProposalItem } from "./proposals-list";
 
 interface Extraction {
   id: string;
@@ -60,6 +61,8 @@ interface ReviewDetailProps {
   promotedExtractionIds?: string[];
   peopleForAssignment?: PersonForAssignment[];
   segments?: MeetingSegment[];
+  /** TH-011 (UI-330) — emerging-theme-proposals waarvan origin_meeting_id = deze meeting. */
+  proposedThemes?: ProposalItem[];
 }
 
 export function ReviewDetail({
@@ -70,6 +73,7 @@ export function ReviewDetail({
   promotedExtractionIds,
   peopleForAssignment,
   segments,
+  proposedThemes,
 }: ReviewDetailProps) {
   const router = useRouter();
   const [edits, setEdits] = useState<Map<string, string>>(new Map());
@@ -143,6 +147,7 @@ export function ReviewDetail({
     (e) => e.type === "action_item" && !deletedIds.has(e.id),
   );
   const risks = meeting.extractions.filter((e) => e.type === "risk" && !deletedIds.has(e.id));
+  const proposals = proposedThemes ?? [];
   const defaultTab = risks.length > 0 ? "risks" : "followups";
   const linkedPeople = meeting.meeting_participants.map((mp) => mp.person);
   const linkedProjects = meeting.meeting_projects.map((mp) => mp.project);
@@ -211,6 +216,15 @@ export function ReviewDetail({
                     {actionItems.length}
                   </span>
                 </TabsTrigger>
+                {proposals.length > 0 && (
+                  <TabsTrigger value="proposals">
+                    <Tags className="mr-1.5 size-4 text-violet-500" />
+                    Voorgestelde thema&apos;s
+                    <span className="ml-2 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700">
+                      {proposals.length}
+                    </span>
+                  </TabsTrigger>
+                )}
               </TabsList>
               <RegenerateMenu meetingId={meeting.id} />
             </div>
@@ -240,6 +254,12 @@ export function ReviewDetail({
               onDelete={handleDelete}
             />
           </TabsContent>
+
+          {proposals.length > 0 && (
+            <TabsContent value="proposals" className="p-6 pb-24">
+              <ProposalsList meetingId={meeting.id} proposals={proposals} />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

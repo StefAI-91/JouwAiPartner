@@ -8,6 +8,7 @@ import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
 import { getPromotedExtractionIds } from "@repo/database/queries/tasks";
 import { getSegmentsByMeetingId } from "@repo/database/queries/meeting-project-summaries";
+import { listProposedThemesForMeeting } from "@repo/database/queries/themes";
 import { ReviewDetail } from "@/components/review/review-detail";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -16,7 +17,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
   const { id } = await params;
   const supabase = await createClient();
 
-  const [meeting, people, peopleForAssignment, organizations, projects, segments] =
+  const [meeting, people, peopleForAssignment, organizations, projects, segments, proposals] =
     await Promise.all([
       getDraftMeetingById(id, supabase),
       listPeopleWithOrg(supabase),
@@ -24,6 +25,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
       listOrganizations(supabase),
       listProjects(supabase),
       getSegmentsByMeetingId(id, supabase),
+      listProposedThemesForMeeting(id, supabase),
     ]);
 
   if (!meeting) notFound();
@@ -52,6 +54,14 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ i
         promotedExtractionIds={Array.from(promotedIds)}
         peopleForAssignment={peopleForAssignment}
         segments={segments}
+        proposedThemes={proposals.map((p) => ({
+          id: p.id,
+          name: p.name,
+          emoji: p.emoji,
+          description: p.description,
+          matching_guide: p.matching_guide,
+          status: p.status,
+        }))}
       />
     </div>
   );

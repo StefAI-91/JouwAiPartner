@@ -66,6 +66,31 @@ export const regenerateMeetingThemesSchema = z.object({
 export type RegenerateMeetingThemesInput = z.infer<typeof regenerateMeetingThemesSchema>;
 
 /**
+ * TH-011 (FUNC-280) — Quick-confirm van een proposal vanuit de in-meeting
+ * review-tab "Voorgestelde thema's". Minder velden dan approveThemeSchema
+ * omdat de edit-flow al bestaat via de bulk EmergingThemesSection — het
+ * per-meeting tabblad is bewust lichtgewicht.
+ */
+export const confirmThemeProposalSchema = z.object({
+  themeId: z.string().uuid(),
+  /** Origin-meeting om nauwkeurig te revalidaten — caller heeft 'm via de prop. */
+  meetingId: z.string().uuid(),
+});
+export type ConfirmThemeProposalInput = z.infer<typeof confirmThemeProposalSchema>;
+
+/**
+ * TH-011 (FUNC-280) — Reject van een proposal vanuit de in-meeting
+ * review-tab. Optional `note` blijft out-of-scope in V1: we archiveren en
+ * ruimen `meeting_themes` op. De bulk `rejectEmergingThemeSchema` kent wel
+ * een `note`-veld; de in-meeting-tab gebruikt 'm niet.
+ */
+export const rejectThemeProposalSchema = z.object({
+  themeId: z.string().uuid(),
+  meetingId: z.string().uuid(),
+});
+export type RejectThemeProposalInput = z.infer<typeof rejectThemeProposalSchema>;
+
+/**
  * TH-011 — Dry-run Theme-Detector vanuit `/dev/detector` harness.
  * Detector-only modus; full-pipeline mode is fase 6b (UI-333/334/335).
  */

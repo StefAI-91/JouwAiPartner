@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 540 |
-| Exported functions/constants | 851 |
-| Exported types/interfaces | 267 |
-| Cross-package imports | 669 |
+| Files scanned | 541 |
+| Exported functions/constants | 854 |
+| Exported types/interfaces | 268 |
+| Cross-package imports | 671 |
 | Critical integration points (3+ packages) | 16 |
 
 ## Package Dependency Flow
@@ -2056,6 +2056,8 @@
 - `rejectEmergingThemeAction()`
 - `rejectThemeMatchAction()`
 - `regenerateMeetingThemesAction()`
+- `confirmThemeProposalAction()`
+- `rejectThemeProposalAction()`
 - `createVerifiedThemeAction()`
 
 **Depends on:**
@@ -2665,6 +2667,7 @@
 - `@repo/database/queries/projects` → listProjects
 - `@repo/database/queries/tasks` → getPromotedExtractionIds
 - `@repo/database/queries/meeting-project-summaries` → getSegmentsByMeetingId
+- `@repo/database/queries/themes` → listProposedThemesForMeeting
 
 ### `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`
 
@@ -3526,6 +3529,16 @@
 **Exports:**
 - `ReviewEmptyState()`
 
+### `apps/cockpit/src/components/review/proposals-list.tsx`
+
+**Exports:**
+- `ProposalsList()`
+
+**Types:** `ProposalItem`
+
+**Depends on:**
+- `@repo/ui/badge` → Badge
+
 ### `apps/cockpit/src/components/review/review-action-bar.tsx`
 
 **Exports:**
@@ -4305,9 +4318,9 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 53 | 19 | 32 | - | - | 104 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 49 | 7 | 2 | 84 | - | 142 |
+| Cockpit Components | 49 | 7 | 2 | 85 | - | 143 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 90 | 7 | 4 | 33 | - | 134 |
+| Cockpit Pages | 91 | 7 | 4 | 33 | - | 135 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4831,6 +4844,7 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `listRejectedThemePairsForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `listProposedThemesForMeeting()` | `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 
 ### queries/themes.ts
 
