@@ -148,7 +148,6 @@ describe("POST /api/ingest/reprocess", () => {
       success: true,
       richSummary: "Rich summary",
       kernpunten: ["point 1"],
-      vervolgstappen: ["step 1"],
     } as never);
     vi.mocked(runRiskSpecialistStep).mockResolvedValue(undefined);
 

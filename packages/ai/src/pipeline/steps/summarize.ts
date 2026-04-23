@@ -5,13 +5,16 @@ export interface SummarizeResult {
   success: boolean;
   richSummary: string | null;
   kernpunten: string[];
-  vervolgstappen: string[];
   error: string | null;
 }
 
 /**
  * Run AI summarizer on best available transcript and persist to database.
  * Non-blocking: returns error info instead of throwing.
+ *
+ * De Summarizer produceert alleen briefing + kernpunten + deelnemers.
+ * Vervolgstappen/acties komen uit gespecialiseerde extractor-agents
+ * en zijn hier dus niet meer aanwezig.
  */
 export async function runSummarizeStep(
   meetingId: string,
@@ -42,25 +45,23 @@ export async function runSummarizeStep(
         success: false,
         richSummary,
         kernpunten: summarizerOutput.kernpunten,
-        vervolgstappen: summarizerOutput.vervolgstappen,
         error: updateResult.error,
       };
     }
 
     console.info(
       `Summarizer: ${summarizerOutput.kernpunten.length} kernpunten, ` +
-        `${summarizerOutput.deelnemers.length} deelnemers, ${summarizerOutput.vervolgstappen.length} vervolgstappen`,
+        `${summarizerOutput.deelnemers.length} deelnemers`,
     );
     return {
       success: true,
       richSummary,
       kernpunten: summarizerOutput.kernpunten,
-      vervolgstappen: summarizerOutput.vervolgstappen,
       error: null,
     };
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error("Summarizer failed (non-blocking):", errMsg);
-    return { success: false, richSummary: null, kernpunten: [], vervolgstappen: [], error: errMsg };
+    return { success: false, richSummary: null, kernpunten: [], error: errMsg };
   }
 }

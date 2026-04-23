@@ -225,7 +225,9 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const summarized = summarizeResult.success;
   const richSummary: string | null = summarizeResult.richSummary;
   const kernpuntenForTagger: string[] = summarizeResult.kernpunten;
-  const vervolgstappenForTagger: string[] = summarizeResult.vervolgstappen;
+  // Vervolgstappen komen niet meer uit de Summarizer; gespecialiseerde
+  // extractor-agents schrijven acties later direct naar `extractions`.
+  const vervolgstappenForTagger: string[] = [];
   const extractionsSaved = 0;
 
   // Step 9: AI title generation

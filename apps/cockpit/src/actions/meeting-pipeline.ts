@@ -69,9 +69,9 @@ export async function regenerateMeetingAction(
 
   try {
     // Step 1: Build entity context FIRST so the Summarizer can use known project
-    // names/aliases for its [ProjectNaam] prefix on thema-koppen and vervolgstappen
-    // (sprint 035: AI-062). Previously this ran parallel with runSummarizer, which
-    // meant Sonnet had no project list and fell back to Algemeen too often.
+    // names/aliases for its [ProjectNaam] prefix op thema-koppen (sprint 035:
+    // AI-062). Previously this ran parallel with runSummarizer, which meant
+    // Sonnet had no project list and fell back to Algemeen too often.
     const entityContext = await buildEntityContext();
 
     // Step 2: Summarizer — now receives entityContext so prefixes match known projects.
@@ -150,7 +150,7 @@ export async function regenerateMeetingAction(
     // Delete existing segments for this meeting
     await deleteSegmentsByMeetingId(meetingId);
 
-    if (summarizerOutput.kernpunten.length > 0 || summarizerOutput.vervolgstappen.length > 0) {
+    if (summarizerOutput.kernpunten.length > 0) {
       try {
         const ignoredNames = meetingOrganizationId
           ? await getIgnoredEntityNames(meetingOrganizationId, "project")
@@ -158,7 +158,9 @@ export async function regenerateMeetingAction(
 
         const taggerOutput = runTagger({
           kernpunten: summarizerOutput.kernpunten,
-          vervolgstappen: summarizerOutput.vervolgstappen,
+          // Vervolgstappen komen niet meer uit de Summarizer — gespecialiseerde
+          // extractor-agents schrijven acties apart naar `extractions`.
+          vervolgstappen: [],
           identified_projects: identifiedProjects,
           knownProjects: entityContext.projects.map((p) => ({
             id: p.id,

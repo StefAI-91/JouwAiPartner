@@ -62,7 +62,7 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     name: "Summarizer",
     role: "De verhalenverteller",
     description:
-      "Maakt rijke, uitputtende samenvattingen per meeting — briefing, kernpunten, deelnemers, vervolgstappen.",
+      "Maakt goed leesbare samenvattingen per meeting — briefing, kernpunten, deelnemers. Classificeert niet; besluit/risico/behoefte/actie komen uit aparte extractor-agents.",
     mascot: "📝",
     model: "claude-sonnet-4-5-20250929",
     modelLabel: "Sonnet 4.5",

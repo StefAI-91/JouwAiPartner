@@ -120,7 +120,9 @@ export async function POST(req: NextRequest) {
 
       const taggerOutput = runTagger({
         kernpunten: summarizeResult.kernpunten ?? [],
-        vervolgstappen: summarizeResult.vervolgstappen ?? [],
+        // Vervolgstappen komen niet meer uit de Summarizer — gespecialiseerde
+        // extractor-agents schrijven acties apart naar `extractions`.
+        vervolgstappen: [],
         identified_projects: identifiedProjects,
         knownProjects: entityContext.projects.map((p) => ({
           id: p.id,

@@ -1,13 +1,21 @@
 /**
- * Parser for kernpunten markdown produced by the summarizer.
+ * Parser for kernpunten markdown produced by the (legacy) summarizer.
  *
- * The summarizer writes `kernpunten: string[]` interleaved as:
+ * @deprecated Sinds de splitsing van extractie-paden produceert de
+ *   Summarizer geen `**Besluit:** / **Risico:** / ...` labels meer.
+ *   Nieuwe meetings hebben dus platte kernpunten-zinnen; parsing levert
+ *   een lege array op. Gespecialiseerde extractor-agents schrijven hun
+ *   output rechtstreeks naar de `extractions`-tabel.
+ *
+ *   Deze parser blijft alleen staan voor backcompat op historische
+ *   meetings die nog gelabelde kernpunten bevatten. Zodra die via een
+ *   batch-her-extractie zijn gemigreerd mag dit bestand weg. Zie
+ *   `docs/specs/extraction-paths.md`.
+ *
+ * Historisch formaat:
  *   - `### [ProjectNaam] Themanaam` — theme header
  *   - `**Risico:** ...` / `**Besluit:** ...` / etc. — categorised bullets
  *   - bare strings — uncategorised context
- *
- * This helper turns those strings into structured objects so panels can
- * filter by type without re-parsing markdown in every component.
  */
 
 export const PARSED_EXTRACTION_TYPES = [

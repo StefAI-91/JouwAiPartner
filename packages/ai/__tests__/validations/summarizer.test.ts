@@ -7,7 +7,6 @@ const validOutput = {
   deelnemers: [
     { name: "Stef", role: "Lead", organization: "JouwAiPartner", stance: "enthousiast" },
   ],
-  vervolgstappen: ["Setup Vitest", "Schrijf tests"],
 };
 
 describe("SummarizerOutputSchema", () => {
@@ -35,9 +34,16 @@ describe("SummarizerOutputSchema", () => {
     expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
   });
 
-  it("rejects missing vervolgstappen", () => {
-    const { vervolgstappen: _, ...rest } = validOutput;
-    expect(SummarizerOutputSchema.safeParse(rest).success).toBe(false);
+  // Extractie-paden zijn gesplitst: de Summarizer produceert geen
+  // vervolgstappen meer. Extra velden worden stilzwijgend afgewezen/
+  // gestript door Zod (strip mode default), dus ze mogen NIET het schema
+  // breken maar horen ook niet in de output.
+  it("does not require vervolgstappen (extractie-paden gesplitst)", () => {
+    const result = SummarizerOutputSchema.safeParse(validOutput);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect("vervolgstappen" in result.data).toBe(false);
+    }
   });
 });
 

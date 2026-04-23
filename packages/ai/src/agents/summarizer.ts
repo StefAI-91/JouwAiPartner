@@ -132,6 +132,10 @@ export async function runSummarizer(
 /**
  * Format a SummarizerOutput as readable text for the summary column.
  * Structured with clear hierarchy so it works in UI, embeddings, and MCP tools.
+ *
+ * Sinds de splitsing van extractie-paden produceert de Summarizer geen
+ * vervolgstappen of gecategoriseerde labels meer; die komen uit de
+ * gespecialiseerde extractor-agents (risk-specialist, …).
  */
 export function formatSummary(output: SummarizerOutput): string {
   const sections: string[] = [];
@@ -151,13 +155,6 @@ export function formatSummary(output: SummarizerOutput): string {
     return `- ${parts.join(" — ")}`;
   });
   sections.push("## Deelnemers\n" + deelnemerLines.join("\n"));
-
-  // Vervolgstappen
-  if (output.vervolgstappen.length > 0) {
-    sections.push(
-      "## Vervolgstappen\n" + output.vervolgstappen.map((v) => `- [ ] ${v}`).join("\n"),
-    );
-  }
 
   return sections.join("\n\n");
 }
