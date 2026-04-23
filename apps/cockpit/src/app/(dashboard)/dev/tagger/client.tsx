@@ -191,6 +191,48 @@ export function DevTaggerClient({ meetings }: Props) {
           </section>
 
           <section className="rounded-xl border border-border/60 bg-card p-4">
+            <h2 className="text-sm font-semibold">Meeting</h2>
+            <p className="mt-1 text-[13px] font-semibold">{result.meetingContext.title}</p>
+            {result.meetingContext.date && (
+              <p className="text-[11px] text-muted-foreground">
+                {formatDate(result.meetingContext.date)}
+              </p>
+            )}
+            <details className="mt-3" open>
+              <summary className="cursor-pointer text-xs font-semibold hover:underline">
+                Summary{" "}
+                <span className="font-normal text-muted-foreground">
+                  ({result.meetingContext.summary?.length ?? 0} chars)
+                </span>
+              </summary>
+              {result.meetingContext.summary ? (
+                <pre className="mt-2 max-h-[320px] overflow-auto rounded-md bg-muted/40 p-3 text-[11.5px] leading-relaxed whitespace-pre-wrap">
+                  {result.meetingContext.summary}
+                </pre>
+              ) : (
+                <p className="mt-2 text-[11.5px] text-muted-foreground">(geen summary)</p>
+              )}
+            </details>
+            <details className="mt-3">
+              <summary className="cursor-pointer text-xs font-semibold hover:underline">
+                Transcript{" "}
+                <span className="font-normal text-muted-foreground">
+                  ({result.meetingContext.transcript?.length ?? 0} chars)
+                </span>
+              </summary>
+              {result.meetingContext.transcript ? (
+                <pre className="mt-2 max-h-[480px] overflow-auto rounded-md bg-muted/40 p-3 text-[11.5px] leading-relaxed whitespace-pre-wrap">
+                  {result.meetingContext.transcript}
+                </pre>
+              ) : (
+                <p className="mt-2 text-[11.5px] text-muted-foreground">
+                  (geen transcript beschikbaar — Tagger ziet alleen de summary)
+                </p>
+              )}
+            </details>
+          </section>
+
+          <section className="rounded-xl border border-border/60 bg-card p-4">
             <h2 className="text-sm font-semibold">
               Output — Matches ({result.taggerOutput.matches.length})
             </h2>
@@ -339,15 +381,27 @@ export function DevTaggerClient({ meetings }: Props) {
         <section className="rounded-xl border border-border/60 bg-card p-4">
           <details>
             <summary className="cursor-pointer text-sm font-semibold hover:underline">
-              Themes catalog ({result.themesLookup.length}) — UUID → naam
+              Themes catalog ({result.themesLookup.length}) — naam + omschrijving + matching_guide
             </summary>
-            <ul className="mt-3 space-y-1 text-[11.5px]">
+            <ul className="mt-3 space-y-3 text-[12px]">
               {result.themesLookup.map((t) => (
-                <li key={t.themeId} className="flex items-center gap-2">
-                  <span className="w-64">
-                    {t.emoji} {t.name}
-                  </span>
-                  <code className="font-mono text-[10px] text-muted-foreground">{t.themeId}</code>
+                <li
+                  key={t.themeId}
+                  className="rounded-md border border-border/40 bg-background p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-semibold">
+                      {t.emoji} {t.name}
+                    </span>
+                    <code className="font-mono text-[10px] text-muted-foreground">{t.themeId}</code>
+                  </div>
+                  <p className="mt-1 text-[12px]">{t.description}</p>
+                  <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    matching_guide
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] whitespace-pre-wrap text-muted-foreground">
+                    {t.matchingGuide}
+                  </p>
                 </li>
               ))}
             </ul>

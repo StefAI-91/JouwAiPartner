@@ -26,7 +26,16 @@ export interface DevTaggerThemeLookup {
   name: string;
   emoji: string;
   slug: string;
+  description: string;
+  matchingGuide: string;
   status: "emerging" | "verified" | "archived";
+}
+
+export interface DevTaggerMeetingContext {
+  title: string;
+  date: string | null;
+  summary: string | null;
+  transcript: string | null;
 }
 
 export interface DevTaggerResult {
@@ -39,6 +48,7 @@ export interface DevTaggerResult {
     themesCount: number;
     negativeExamplesCount: number;
   };
+  meetingContext: DevTaggerMeetingContext;
   currentMeetingThemes: DevTaggerMeetingThemeRow[];
   currentExtractionThemes: DevTaggerExtractionThemeRow[];
   inputExtractions: { id: string; type: string; content: string }[];
@@ -129,8 +139,16 @@ export async function runDevTaggerAction(
       name: t.name,
       emoji: t.emoji,
       slug: t.slug,
+      description: t.description,
+      matchingGuide: t.matching_guide,
       status: t.status,
     })),
+    meetingContext: {
+      title: meeting.title ?? "",
+      date: meeting.date ?? null,
+      summary: meeting.summary ?? null,
+      transcript: meeting.transcript ?? meeting.transcript_elevenlabs ?? null,
+    },
     systemPrompt: THEME_TAGGER_SYSTEM_PROMPT,
   };
 }
