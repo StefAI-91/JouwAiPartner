@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 495 |
-| Exported functions/constants | 767 |
+| Exported functions/constants | 766 |
 | Exported types/interfaces | 202 |
-| Cross-package imports | 621 |
+| Cross-package imports | 623 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -170,7 +170,6 @@
 - `countCriticalUnassigned()`
 - `ISSUE_SORTS`
 - `ISSUE_SELECT`
-- `UNASSIGNED_SENTINEL`
 
 **Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`
 
@@ -3520,6 +3519,7 @@
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
 - `@repo/database/queries/issues` → listIssues, ISSUE_SORTS
 - `@repo/database/queries/projects` → getProjectName
+- `@repo/database/validations/issues` → issueListFilterSchema
 - `@repo/database/constants/issues` → ISSUE_STATUS_LABELS, ISSUE_PRIORITY_LABELS, ISSUE_TYPE_LABELS, ISSUE_COMPONENT_LABELS, ISSUE_SEVERITY_LABELS, type IssueStatus, type IssuePriority, type IssueType, type IssueComponent, type IssueSeverity
 
 ## DevHub Pages
@@ -3670,7 +3670,7 @@
 
 **Depends on:**
 - `@repo/ui/utils` → cn
-- `@repo/database/constants/issues` → ISSUE_STATUSES, ISSUE_STATUS_LABELS, ISSUE_PRIORITIES, ISSUE_PRIORITY_LABELS, ISSUE_TYPES, ISSUE_TYPE_LABELS, ISSUE_COMPONENTS, ISSUE_COMPONENT_LABELS
+- `@repo/database/constants/issues` → ISSUE_STATUSES, ISSUE_STATUS_LABELS, ISSUE_PRIORITIES, ISSUE_PRIORITY_LABELS, ISSUE_TYPES, ISSUE_TYPE_LABELS, ISSUE_COMPONENTS, ISSUE_COMPONENT_LABELS, UNASSIGNED_SENTINEL
 
 ### `apps/devhub/src/components/issues/issue-form.tsx`
 
@@ -3895,10 +3895,10 @@ Which layers depend on which packages:
 | Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 29 | 2 | 14 | - | - | 45 |
-| DevHub API Routes | 8 | - | 3 | - | - | 11 |
+| DevHub API Routes | 9 | - | 3 | - | - | 12 |
 | DevHub Components | 16 | - | - | 22 | - | 38 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 18 | - | 13 | 9 | - | 40 |
+| DevHub Pages | 19 | - | 13 | 9 | - | 41 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points

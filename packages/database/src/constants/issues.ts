@@ -1,5 +1,12 @@
 // ── Raw values (voor Zod schemas en database checks) ──
 
+/**
+ * Sentinel value voor `assignedTo`-filter dat "niet toegewezen" representeert.
+ * Leeft in constants (geen server-deps) zodat client components hem kunnen
+ * importeren zonder het hele queries-pad mee te bundelen.
+ */
+export const UNASSIGNED_SENTINEL = "unassigned";
+
 export const ISSUE_TYPES = ["bug", "feature_request", "question"] as const;
 export type IssueType = (typeof ISSUE_TYPES)[number];
 

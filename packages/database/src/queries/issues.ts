@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
-import { PRIORITY_ORDER } from "../constants/issues";
+import { PRIORITY_ORDER, UNASSIGNED_SENTINEL } from "../constants/issues";
+
+// Re-export so existing callers that import from queries/issues keep working.
+export { UNASSIGNED_SENTINEL };
 
 export const ISSUE_SORTS = ["priority", "newest", "oldest"] as const;
 export type IssueSort = (typeof ISSUE_SORTS)[number];
@@ -56,13 +59,10 @@ export const ISSUE_SELECT = `
  * - "newest": pure chronological, newest first
  * - "oldest": pure chronological, oldest first
  */
-/**
- * Sentinel value for `assignedTo` meaning "no one is assigned". Kept as an
- * explicit string so URL params / UI state can round-trip through the same
- * pipe as regular uuid values. Callers translate this to `.is("assigned_to",
- * null)` before hitting the DB.
- */
-export const UNASSIGNED_SENTINEL = "unassigned";
+// UUID v4/v1 shape — same regex as auth.users.id. Used as a last-line-of-
+// defence filter before uuids enter a raw `.or(...)` template so a crafted
+// URL param can't break out of the quoted list and inject extra filters.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function listIssues(
   params: {
@@ -110,16 +110,23 @@ export async function listIssues(
     query = query.in("component", params.component);
   }
   if (params.assignedTo && params.assignedTo.length > 0) {
-    const uuids = params.assignedTo.filter((v) => v !== UNASSIGNED_SENTINEL);
     const wantsUnassigned = params.assignedTo.includes(UNASSIGNED_SENTINEL);
+    const uuids = params.assignedTo.filter((v) => v !== UNASSIGNED_SENTINEL && UUID_RE.test(v));
     if (wantsUnassigned && uuids.length > 0) {
-      // Mix of "unassigned" + specific people: OR them together.
+      // Mix of "unassigned" + specific people: OR them together. Uuids are
+      // regex-validated above so the quoted list can't be escaped.
       const inList = uuids.map((u) => `"${u}"`).join(",");
       query = query.or(`assigned_to.is.null,assigned_to.in.(${inList})`);
     } else if (wantsUnassigned) {
       query = query.is("assigned_to", null);
-    } else {
+    } else if (uuids.length > 0) {
       query = query.in("assigned_to", uuids);
+    }
+    // Neither wantsUnassigned nor any valid uuid → no-op (all values were
+    // garbage). Returning without filter would silently widen the result set,
+    // so force an empty match instead.
+    if (!wantsUnassigned && uuids.length === 0) {
+      query = query.eq("assigned_to", "00000000-0000-0000-0000-000000000000");
     }
   }
   if (params.issueNumber !== undefined) {
@@ -146,7 +153,10 @@ export async function listIssues(
 
   if (error) {
     console.error("[listIssues] Database error:", error.message);
-    return [];
+    // Bubble up so callers (API routes, Server Components) can surface the
+    // failure to the user or their error boundary, instead of returning an
+    // empty result that looks indistinguishable from "no issues exist".
+    throw new Error(`listIssues failed: ${error.message}`);
   }
 
   if (!data) return [];
@@ -232,7 +242,7 @@ export async function countFilteredIssues(
 
   if (error) {
     console.error("[countFilteredIssues] Database error:", error.message);
-    return 0;
+    throw new Error(`countFilteredIssues failed: ${error.message}`);
   }
 
   return count ?? 0;

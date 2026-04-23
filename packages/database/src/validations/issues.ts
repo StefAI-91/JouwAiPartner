@@ -5,7 +5,53 @@ import {
   ISSUE_PRIORITIES,
   ISSUE_COMPONENTS,
   ISSUE_SEVERITIES,
+  UNASSIGNED_SENTINEL,
 } from "../constants/issues";
+
+/**
+ * Parse a comma-separated URL param into a validated array. Empty segments
+ * (e.g. from `"a,,b"`) are dropped and each remaining segment is validated by
+ * `itemSchema`. Invalid items are silently filtered so a crafted query
+ * reduces to a no-op rather than bleeding through to the database.
+ *
+ * Used by the issues list page and CSV export route to guard the raw URL
+ * params that feed into `listIssues` / `countFilteredIssues`.
+ */
+function csvListSchema<T extends z.ZodTypeAny>(itemSchema: T) {
+  return z
+    .string()
+    .optional()
+    .transform((raw): z.infer<T>[] | undefined => {
+      if (!raw) return undefined;
+      const items = raw
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+      const validated: z.infer<T>[] = [];
+      for (const item of items) {
+        const parsed = itemSchema.safeParse(item);
+        if (parsed.success) validated.push(parsed.data);
+      }
+      return validated.length > 0 ? validated : undefined;
+    });
+}
+
+const assigneeItemSchema = z.union([z.string().uuid(), z.literal(UNASSIGNED_SENTINEL)]);
+
+/**
+ * Shared schema for issue-list filter params coming from `?status=...` etc.
+ * Consumed by the issues page route and the CSV export route so both
+ * endpoints apply the same validation.
+ */
+export const issueListFilterSchema = z.object({
+  status: csvListSchema(z.enum(ISSUE_STATUSES)),
+  priority: csvListSchema(z.enum(ISSUE_PRIORITIES)),
+  type: csvListSchema(z.enum(ISSUE_TYPES)),
+  component: csvListSchema(z.enum(ISSUE_COMPONENTS)),
+  assignee: csvListSchema(assigneeItemSchema),
+});
+
+export type IssueListFilterParams = z.infer<typeof issueListFilterSchema>;
 
 export const createIssueSchema = z.object({
   project_id: z.string().uuid(),

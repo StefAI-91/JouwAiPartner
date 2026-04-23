@@ -89,6 +89,14 @@ export function IssueForm({
         height: img.height ?? null,
       });
       if ("error" in recordResult) {
+        // Record-insert failed after the blob landed in storage — delete the
+        // orphan so the bucket doesn't accumulate untracked files. Ignore the
+        // delete's own failure: logging is enough, the UI surfaces the
+        // original error regardless.
+        await supabase.storage
+          .from(ATTACHMENT_BUCKET)
+          .remove([storagePath])
+          .catch((e) => console.error("[issue-form] rollback remove failed:", e));
         throw new Error(`Bijlage registreren mislukt: ${recordResult.error}`);
       }
     }

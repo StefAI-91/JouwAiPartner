@@ -14,6 +14,7 @@ import {
   ISSUE_TYPE_LABELS,
   ISSUE_COMPONENTS,
   ISSUE_COMPONENT_LABELS,
+  UNASSIGNED_SENTINEL,
 } from "@repo/database/constants/issues";
 
 const SORT_OPTIONS = [
@@ -282,7 +283,7 @@ export function IssueFilters({ people }: IssueFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ASSIGNEE_OPTIONS = [
-    { value: "unassigned", label: "Niet toegewezen" },
+    { value: UNASSIGNED_SENTINEL, label: "Niet toegewezen" },
     ...people.map((p) => ({ value: p.id, label: p.name })),
   ];
 

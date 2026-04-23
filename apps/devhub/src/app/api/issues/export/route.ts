@@ -5,6 +5,7 @@ import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import { listIssues, ISSUE_SORTS } from "@repo/database/queries/issues";
 import { getProjectName } from "@repo/database/queries/projects";
+import { issueListFilterSchema } from "@repo/database/validations/issues";
 import {
   ISSUE_STATUS_LABELS,
   ISSUE_PRIORITY_LABELS,
@@ -20,13 +21,8 @@ import {
 
 const EXPORT_LIMIT = 5_000;
 
-const exportParamsSchema = z.object({
+const exportParamsSchema = issueListFilterSchema.extend({
   project: z.string().uuid(),
-  status: z.string().optional(),
-  priority: z.string().optional(),
-  type: z.string().optional(),
-  component: z.string().optional(),
-  assignee: z.string().optional(),
   q: z.string().trim().max(200).optional(),
   sort: z.enum(ISSUE_SORTS).optional(),
 });
@@ -98,22 +94,28 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { issueNumber, search } = parseSearchQuery(params.q);
 
-  const issues = await listIssues(
-    {
-      projectId: params.project,
-      status: params.status?.split(","),
-      priority: params.priority?.split(","),
-      type: params.type?.split(","),
-      component: params.component?.split(","),
-      assignedTo: params.assignee?.split(","),
-      issueNumber,
-      search,
-      sort: params.sort,
-      limit: EXPORT_LIMIT,
-      offset: 0,
-    },
-    supabase,
-  );
+  let issues;
+  try {
+    issues = await listIssues(
+      {
+        projectId: params.project,
+        status: params.status,
+        priority: params.priority,
+        type: params.type,
+        component: params.component,
+        assignedTo: params.assignee,
+        issueNumber,
+        search,
+        sort: params.sort,
+        limit: EXPORT_LIMIT,
+        offset: 0,
+      },
+      supabase,
+    );
+  } catch (err) {
+    console.error("[issues/export] listIssues failed:", err);
+    return NextResponse.json({ error: "Export mislukt" }, { status: 500 });
+  }
 
   const projectName = (await getProjectName(params.project)) ?? params.project;
   const today = new Date().toISOString().slice(0, 10);

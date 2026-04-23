@@ -10,6 +10,7 @@ import {
 } from "@repo/database/queries/issues";
 import { getIssueThumbnails } from "@repo/database/queries/issue-attachments";
 import { listTeamMembers } from "@repo/database/queries/team";
+import { issueListFilterSchema } from "@repo/database/validations/issues";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
 import { PaginationControls } from "@/components/issues/pagination-controls";
@@ -17,13 +18,8 @@ import { CountSeeder } from "@/components/layout/count-seeder";
 
 const PAGE_SIZE = 25;
 
-const issueSearchParamsSchema = z.object({
+const issueSearchParamsSchema = issueListFilterSchema.extend({
   project: z.string().uuid().optional(),
-  status: z.string().optional(),
-  priority: z.string().optional(),
-  type: z.string().optional(),
-  component: z.string().optional(),
-  assignee: z.string().optional(),
   q: z.string().trim().max(200).optional(),
   sort: z.enum(ISSUE_SORTS).optional(),
   page: z.coerce.number().int().min(1).optional(),
@@ -53,8 +49,12 @@ export default async function IssuesPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const raw = await searchParams;
+  // On parse failure, fall back to an empty-params shape by re-parsing `{}` —
+  // the schema is lenient (every field is optional/transform-driven), so this
+  // always succeeds and produces the same shape as a happy path with no
+  // filters. Keeps downstream typing simple.
   const parsed = issueSearchParamsSchema.safeParse(raw);
-  const params = parsed.success ? parsed.data : {};
+  const params = parsed.success ? parsed.data : issueSearchParamsSchema.parse({});
   const projectId = params.project;
 
   const [user, supabase] = await Promise.all([getAuthenticatedUser(), createPageClient()]);
@@ -99,11 +99,11 @@ export default async function IssuesPage({
 
   const filterParams = {
     projectId,
-    status: params.status?.split(","),
-    priority: params.priority?.split(","),
-    type: params.type?.split(","),
-    component: params.component?.split(","),
-    assignedTo: params.assignee?.split(","),
+    status: params.status,
+    priority: params.priority,
+    type: params.type,
+    component: params.component,
+    assignedTo: params.assignee,
     issueNumber,
     search,
   };
