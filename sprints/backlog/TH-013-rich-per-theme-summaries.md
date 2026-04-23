@@ -75,3 +75,44 @@ Twee opties stonden op tafel voor hoe de rijke per-thema samenvatting opgeslagen
 3. **Flexibiliteit als we de structuur willen bijstellen.** Als we straks nog een sectie toevoegen (bv. "Open vragen" per thema), hoeft het schema niet te migreren; de renderer kent een nieuwe sectie-header en de UI-renderer pakt het op. Bij optie B zou elke sectie-uitbreiding een DATA-requirement zijn.
 
 Trade-off die we accepteren: **toekomstige AI-consumers kunnen niet per-veld queryen.** Een toekomstige Theme-AI die alleen de kernpunten wil, moet de markdown opnieuw parsen. Voor V1 is dat geen probleem — er zijn nog geen zulke consumers, en de string is kort genoeg om ongeparst te blijven tot het echt knelt. Migratie naar B is later een reversibele sprint als die behoefte ontstaat.
+
+### Markdown-format — exact
+
+Wat Summarizer-output produceert per thema (schema-niveau):
+
+```json
+{
+  "themeId": "a1b2c3d4-...",
+  "briefing": "Stef coachte Ege in diagnostisch denken rond Fleur's confidence-systeem. De focus lag op het isoleren van symptomen (fine-tuning vs threshold) en het vasthouden van de scope zonder af te dwalen naar zijpaden.",
+  "kernpunten": [
+    "Stef stuurt Ege aan op gefocuste diagnose — eerst vaststellen of het een fine-tuning issue is, niet direct aan thresholds draaien.",
+    "Ege neigt naar architectuur-ideeën als eerste stap; Stef bewaakt de werkwijze door hem expliciet bij diagnose te houden."
+  ],
+  "vervolgstappen": [
+    "Ege experimenteert met voorbeeldgesprekken in system prompt vóór volgende 1:1 met Stef."
+  ]
+}
+```
+
+Wat `formatThemeSummary(ts)` daarvan bouwt en in `meeting_themes.summary` schrijft:
+
+```markdown
+## Briefing
+
+Stef coachte Ege in diagnostisch denken rond Fleur's confidence-systeem. De focus lag op het isoleren van symptomen (fine-tuning vs threshold) en het vasthouden van de scope zonder af te dwalen naar zijpaden.
+
+## Kernpunten
+
+- Stef stuurt Ege aan op gefocuste diagnose — eerst vaststellen of het een fine-tuning issue is, niet direct aan thresholds draaien.
+- Ege neigt naar architectuur-ideeën als eerste stap; Stef bewaakt de werkwijze door hem expliciet bij diagnose te houden.
+
+## Vervolgstappen
+
+- Ege experimenteert met voorbeeldgesprekken in system prompt vóór volgende 1:1 met Stef.
+```
+
+**Lege secties worden weggelaten.** Voor een thema dat geen concrete vervolgstappen opleverde: de hele `## Vervolgstappen` header + lijst verdwijnt uit de output. Niet-leeg maken met placeholder-tekst ("Geen vervolgstappen.") — dat leest storend en vervuilt de UI met niet-informatie.
+
+**Briefing is nooit leeg.** Als een thema überhaupt in `identified_themes` staat is er iets over gezegd; een lege briefing betekent dat de Summarizer zijn werk niet heeft gedaan. De prompt (AI-241) instrueert: korte briefing bij weinig raakpunten is prima, maar iets ervan moet er zijn. Validatie: lege briefing-string → wordt gefilterd door `runSummarizer()` (niet opgenomen in de output-map), link-themes valt terug op Detector-summary (EDGE-241).
+
+**Geen project-prefix in theme-summaries.** De meeting-wide kernpunten krijgen `### [ProjectName]` prefixes (zie huidige summarizer.md), theme-summaries niet — ze staan al in de context van één specifiek thema op een theme detail page. Een project-prefix zou redundant zijn en conflicteert met de thema-scoped framing.
