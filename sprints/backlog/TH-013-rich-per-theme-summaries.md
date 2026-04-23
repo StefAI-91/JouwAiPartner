@@ -220,3 +220,20 @@ Keuze bij deploy. **Pad 1 is de default** mits de Anthropic-budgetruimte het toe
   - [ ] `docs/dependency-graph.md` — automatische regeneratie via pre-commit hook
   - [ ] `sprints/done/TH-matrix.md` — TH-013 rij toevoegen na afronding
   - [ ] Geen `CLAUDE.md`-wijziging nodig: Summarizer staat al in de agents-lijst, prompt-version bumps zijn geen registry-event
+
+## Acceptance criteria
+
+- `npm run type-check` en `npm run lint` groen.
+- `npm run test` in `packages/ai` + `apps/cockpit` groen.
+- Geen DB-migration in deze sprint (`supabase db reset` ongewijzigd; DATA-240).
+- Pipeline-draai op een test-meeting met ≥2 identified_themes: Summarizer-output bevat `theme_summaries` array met één entry per identified_theme. `agent_runs` rij voor de Summarizer heeft `prompt_version='v2'`.
+- DB-check na pipeline: `SELECT summary FROM meeting_themes WHERE meeting_id = '...';` → alle rijen met identified-source bevatten markdown die begint met `## Briefing`, gevolgd door `## Kernpunten` (en optioneel `## Vervolgstappen` als de array niet leeg was).
+- Fallback-keten werkt: mock Summarizer die `theme_summaries: []` teruggeeft → `meeting_themes.summary` wordt gevuld met Detector's 1-2 zins `theme_summary` (EDGE-241). Mock Summarizer met onbekende themeId → entry gestript, console.warn gelogd (EDGE-240), fallback werkt per thema onafhankelijk.
+- Caps werken: synthetische meeting met 8 identified_themes → `theme_summaries.length === 6` na post-validatie (AI-243). Thema met 15 kernpunten → truncate naar 10. Console.warns loggen met `meeting_id` + `themeId`.
+- Theme detail page `/themes/[slug]`: meeting-kaarten met nieuwe markdown-`summary` renderen als gestructureerde secties (Briefing / Kernpunten / Vervolgstappen). Lange content (>400 tekens) inklapbaar via `<details>`.
+- Backfill-compat: meeting-kaart met pre-TH-013 plain-text `summary` (1-2 zinnen Detector-output) rendert correct als paragraph zonder layout-breuk (EDGE-244).
+- XSS-veiligheid: `meeting_themes.summary` met ingeslepen `<script>` / `<img onerror>` / `javascript:` in markdown-content wordt inert gerenderd (EDGE-243). Geen `dangerouslySetInnerHTML` in het renderpad.
+- Regeneration via `RegenerateMenu` op `/meetings/[id]`: bestaande `meeting_themes.summary` wordt vervangen door de nieuwe markdown-vorm zonder errors. Theme-match-rejections blijven respected (TH-011 FUNC-274).
+- Backfill-query `SELECT count(*) FROM meeting_themes WHERE summary LIKE '## Briefing%';` geeft > 0 na eerste geregenereerde meeting, en groeit consistent bij `--force` runs.
+- Geen regressie: `meetings.summary` (meeting-wide hoofd-summary) identiek aan pre-TH-013 output voor dezelfde test-meeting. `deelnemers` + `vervolgstappen` arrays in Summarizer-output ongewijzigd (schema-breaking validation).
+- Kost-check: token-budget voor Summarizer-call op een meeting met 4 identified_themes blijft binnen 1,5× van pre-TH-013 (verwachte groei ~20-30% door extra output-tokens, niet meer).
