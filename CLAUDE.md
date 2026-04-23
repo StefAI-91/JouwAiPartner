@@ -27,7 +27,7 @@ Data flows in a continuous loop: Knowledge In (cockpit) → Work Created → Wor
 
 AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes all company data, processes it through AI agents, and exposes it via MCP server, web dashboard, and client portal.
 
-**Current state (2026-04-20):** 72 sprints done (36 core + 5 CP-portal + 4 foundation + 14 DevHub + 6 testing + 7 quality). Zie `sprints/done/` voor de volledige lijst en `docs/specs/docs-inventory.md §1` voor de per-prefix breakdown. Cockpit fully built (meetings, review, dashboard, emails). DevHub fase 1 complete (DH-001..007, DH-010..012, DH-017..020). Portal MVP: CP-001..005 done (wireframed). Next: cockpit↔devhub bridge, then portal launch.
+**Current state (2026-04-23):** 73 sprints done (36 core + 5 CP-portal + 4 foundation + 14 DevHub + 6 testing + 7 quality + TH-011 Theme-Detector). Zie `sprints/done/` voor de volledige lijst en `docs/specs/docs-inventory.md §1` voor de per-prefix breakdown. Cockpit fully built (meetings, review, dashboard, emails). DevHub fase 1 complete (DH-001..007, DH-010..012, DH-017..020). Portal MVP: CP-001..005 done (wireframed). Next: cockpit↔devhub bridge, then portal launch.
 **Team:** 6 people, 3 internal reviewers (Stef, Wouter, Ege). Platform maintained by Stef (non-coder) via Claude Code.
 **Verification model:** All content must be human-verified before becoming queryable truth (review gate). This applies to all quadrants.
 **DevHub:** Internal tool — not a product for clients. Optimized for team workflow and AI agent execution.
@@ -146,12 +146,13 @@ Agents write to the database, not to each other. This ensures audit trail + repl
 
 **Built:**
 
-| Agent           | Model      | Quadrant | Purpose                                                                    |
-| --------------- | ---------- | -------- | -------------------------------------------------------------------------- |
-| Gatekeeper      | Haiku 4.5  | Cockpit  | Classify meetings: meeting_type, party_type, relevance_score               |
-| Summarizer      | Sonnet 4.5 | Cockpit  | Rich summary per meeting: briefing, kernpunten, deelnemers, vervolgstappen |
-| Risk Specialist | Sonnet 4.6 | Cockpit  | Gespecialiseerde risk-extractor (cross-turn patroon-detectie, high effort) |
-| Classifier      | Haiku 4.5  | DevHub   | Classify issues: type, component, severity, repro steps                    |
+| Agent           | Model      | Quadrant | Purpose                                                                                                                                            |
+| --------------- | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gatekeeper      | Haiku 4.5  | Cockpit  | Classify meetings: meeting_type, party_type, relevance_score                                                                                       |
+| Theme-Detector  | Sonnet 4.6 | Cockpit  | Extract-time theme scoping: identifies substantial cross-cutting themes vóór Summarizer draait, stelt nieuwe themes voor bij substantiële signalen |
+| Summarizer      | Sonnet 4.5 | Cockpit  | Rich summary per meeting: briefing, kernpunten, deelnemers, vervolgstappen                                                                         |
+| Risk Specialist | Sonnet 4.6 | Cockpit  | Gespecialiseerde risk-extractor (cross-turn patroon-detectie, high effort)                                                                         |
+| Classifier      | Haiku 4.5  | DevHub   | Classify issues: type, component, severity, repro steps                                                                                            |
 
 Volledig register (12 actieve agents): `packages/ai/src/agents/registry.ts` — voedt de `/agents` observability pagina.
 
