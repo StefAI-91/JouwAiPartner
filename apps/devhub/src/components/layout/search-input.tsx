@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 
 const DEBOUNCE_MS = 250;
@@ -9,40 +9,50 @@ const DEBOUNCE_MS = 250;
 /**
  * Global issue search — lives in the top bar and writes to `?q=`. Accepts
  * plain keywords (ilike on title/description) or an issue number like
- * `#464` / `464`. Only visible on the /issues list; on other pages the
- * input still renders but submitting redirects to /issues.
+ * `#464` / `464`.
+ *
+ * The tricky part is keeping the input and the URL in sync without the URL
+ * clobbering what the user is typing. A naive `useEffect(() => setValue(
+ * currentQ), [currentQ])` races against the user: the debounce pushes the
+ * URL, the URL change fires the effect, the effect overwrites the input
+ * with the (now stale) URL value while the user is already typing the next
+ * character. The `lastPushedRef` trick below tracks what *we* last wrote,
+ * so only changes from elsewhere (browser back/forward, sidebar nav) pull
+ * the input back in sync.
  */
 export function SearchInput() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
-  const projectId = searchParams.get("project");
   const currentQ = searchParams.get("q") ?? "";
   const [value, setValue] = useState(currentQ);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPushedRef = useRef(currentQ);
 
-  // Sync back when URL changes externally (browser back/forward, sidebar nav).
   useEffect(() => {
+    // Skip when this URL change came from our own push — the input is
+    // already ahead of it. Only mirror changes that originate elsewhere.
+    if (currentQ === lastPushedRef.current) return;
+    lastPushedRef.current = currentQ;
     setValue(currentQ);
   }, [currentQ]);
 
   function push(next: string) {
+    const trimmed = next.trim();
+    lastPushedRef.current = trimmed;
+
     const params = new URLSearchParams(searchParams.toString());
-    if (next.trim()) {
-      params.set("q", next.trim());
+    if (trimmed) {
+      params.set("q", trimmed);
     } else {
       params.delete("q");
     }
     params.delete("page");
-
-    // Preserve project scope when redirecting from non-issues routes.
-    const base = pathname === "/issues" ? "/issues" : "/issues";
-    if (projectId && !params.has("project")) params.set("project", projectId);
     const qs = params.toString();
+
     startTransition(() => {
-      router.push(qs ? `${base}?${qs}` : base);
+      router.push(qs ? `/issues?${qs}` : "/issues");
     });
   }
 
