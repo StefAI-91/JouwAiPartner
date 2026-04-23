@@ -111,6 +111,12 @@ export async function tagMeetingThemes(input: TagMeetingThemesInput): Promise<Th
       const validExtractionIds = new Set(input.meeting.extractions.map((e) => e.id));
 
       const sanitizedMatches = object.matches.slice(0, MATCHES_HARD_CAP).map((m) => {
+        const nonUuid = m.extractionIds.filter((id) => !UUID_REGEX.test(id));
+        if (nonUuid.length > 0) {
+          console.warn(
+            `[theme-tagger] non-UUID extractionIds gestript: ${JSON.stringify(nonUuid)} — meeting=${input.meeting.meetingId} theme=${m.themeId}`,
+          );
+        }
         const uuidShaped = m.extractionIds.filter((id) => UUID_REGEX.test(id));
         const known = uuidShaped.filter((id) => {
           if (validExtractionIds.has(id)) return true;

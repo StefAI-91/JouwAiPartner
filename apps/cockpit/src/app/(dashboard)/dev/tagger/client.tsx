@@ -40,7 +40,6 @@ export function DevTaggerClient({ meetings }: Props) {
   const [result, setResult] = useState<DevTaggerResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [showPrompt, setShowPrompt] = useState(false);
 
   const runTagger = () => {
     if (!selectedId) return;
@@ -108,10 +107,25 @@ export function DevTaggerClient({ meetings }: Props) {
     return diff;
   }, [result]);
 
-  const themeNameById = useMemo(() => {
+  const themeLabelById = useMemo(() => {
     if (!result) return new Map<string, string>();
+    const map = new Map<string, string>();
+    // Primaire bron: alle themes die aan de Tagger zijn meegegeven (verified
+    // catalogus). Valt terug op currentMeetingThemes voor archived matches
+    // die niet meer in listVerifiedThemes zitten.
+    for (const t of result.themesLookup) {
+      map.set(t.themeId, `${t.emoji} ${t.name}`);
+    }
+    for (const m of result.currentMeetingThemes) {
+      if (!map.has(m.theme_id)) map.set(m.theme_id, `${m.theme_emoji} ${m.theme_name}`);
+    }
+    return map;
+  }, [result]);
+
+  const extractionById = useMemo(() => {
+    if (!result) return new Map<string, { type: string; content: string }>();
     return new Map(
-      result.currentMeetingThemes.map((m) => [m.theme_id, `${m.theme_emoji} ${m.theme_name}`]),
+      result.inputExtractions.map((e) => [e.id, { type: e.type, content: e.content }]),
     );
   }, [result]);
 
@@ -193,7 +207,10 @@ export function DevTaggerClient({ meetings }: Props) {
                       <Badge variant={m.confidence === "high" ? "default" : "secondary"}>
                         {m.confidence}
                       </Badge>
-                      <code className="font-mono text-[11px] text-muted-foreground">
+                      <span className="text-[13px] font-semibold">
+                        {themeLabelById.get(m.themeId) ?? m.themeId}
+                      </span>
+                      <code className="font-mono text-[10px] text-muted-foreground">
                         {m.themeId}
                       </code>
                     </div>
@@ -203,13 +220,32 @@ export function DevTaggerClient({ meetings }: Props) {
                     <p className="mt-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
                       extractionIds ({m.extractionIds.length})
                     </p>
-                    <ul className="mt-1 ml-3 list-disc space-y-0.5 text-[11.5px]">
-                      {m.extractionIds.map((id) => (
-                        <li key={id}>
-                          <code className="text-[11px]">{id}</code>
-                        </li>
-                      ))}
-                    </ul>
+                    {m.extractionIds.length === 0 ? (
+                      <p className="mt-1 ml-3 text-[11.5px] text-muted-foreground">
+                        LLM gaf géén geldige extractionIds terug (of ze werden als
+                        non-UUID/hallucinatie gestript — check server-logs).
+                      </p>
+                    ) : (
+                      <ul className="mt-1 ml-3 list-disc space-y-0.5 text-[11.5px]">
+                        {m.extractionIds.map((id) => {
+                          const ex = extractionById.get(id);
+                          return (
+                            <li key={id}>
+                              {ex ? (
+                                <>
+                                  <span className="font-mono text-[10px] text-muted-foreground">
+                                    {ex.type}:
+                                  </span>{" "}
+                                  <span>{ex.content}</span>
+                                </>
+                              ) : (
+                                <code className="text-[11px]">{id}</code>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -261,7 +297,7 @@ export function DevTaggerClient({ meetings }: Props) {
                     </span>
                     <span className="flex-1">
                       <span className="font-medium">
-                        {themeNameById.get(d.themeId) ?? d.themeId}
+                        {themeLabelById.get(d.themeId) ?? d.themeId}
                       </span>{" "}
                       <span className="text-muted-foreground">({d.confidence})</span>
                     </span>
@@ -283,22 +319,40 @@ export function DevTaggerClient({ meetings }: Props) {
               )}
             </dl>
           </section>
-
-          <section className="rounded-xl border border-border/60 bg-card p-4">
-            <button
-              type="button"
-              onClick={() => setShowPrompt((v) => !v)}
-              className="text-sm font-semibold hover:underline"
-            >
-              {showPrompt ? "Verberg" : "Toon"} system prompt
-            </button>
-            {showPrompt && (
-              <pre className="mt-3 max-h-[480px] overflow-auto rounded-md bg-muted/50 p-3 text-[11.5px] leading-relaxed whitespace-pre-wrap">
-                {result.systemPrompt}
-              </pre>
-            )}
-          </section>
         </>
+      )}
+
+      {result && (
+        <section className="rounded-xl border border-border/60 bg-card p-4">
+          <details open>
+            <summary className="cursor-pointer text-sm font-semibold hover:underline">
+              System prompt ({result.systemPrompt.length} chars)
+            </summary>
+            <pre className="mt-3 max-h-[600px] overflow-auto rounded-md bg-muted/50 p-3 text-[11.5px] leading-relaxed whitespace-pre-wrap">
+              {result.systemPrompt}
+            </pre>
+          </details>
+        </section>
+      )}
+
+      {result && result.themesLookup.length > 0 && (
+        <section className="rounded-xl border border-border/60 bg-card p-4">
+          <details>
+            <summary className="cursor-pointer text-sm font-semibold hover:underline">
+              Themes catalog ({result.themesLookup.length}) — UUID → naam
+            </summary>
+            <ul className="mt-3 space-y-1 text-[11.5px]">
+              {result.themesLookup.map((t) => (
+                <li key={t.themeId} className="flex items-center gap-2">
+                  <span className="w-64">
+                    {t.emoji} {t.name}
+                  </span>
+                  <code className="font-mono text-[10px] text-muted-foreground">{t.themeId}</code>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </section>
       )}
     </div>
   );

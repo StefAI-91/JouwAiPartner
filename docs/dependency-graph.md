@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 537 |
 | Exported functions/constants | 843 |
-| Exported types/interfaces | 257 |
+| Exported types/interfaces | 258 |
 | Cross-package imports | 664 |
 | Critical integration points (3+ packages) | 16 |
 
@@ -1774,7 +1774,7 @@
 **Exports:**
 - `runDevTaggerAction()`
 
-**Types:** `DevTaggerResult`
+**Types:** `DevTaggerThemeLookup`, `DevTaggerResult`
 
 **Depends on:**
 - `@repo/ai/agents/theme-tagger` → tagMeetingThemes, THEME_TAGGER_SYSTEM_PROMPT, type TagMeetingThemesInput, type ThemeContext, type NegativeExample

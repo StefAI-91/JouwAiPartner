@@ -21,6 +21,14 @@ import { runDevTaggerSchema, type RunDevTaggerInput } from "@/validations/themes
 
 const TAGGER_TYPES: ReadonlySet<string> = new Set(TAGGER_EXTRACTION_TYPES);
 
+export interface DevTaggerThemeLookup {
+  themeId: string;
+  name: string;
+  emoji: string;
+  slug: string;
+  status: "emerging" | "verified" | "archived";
+}
+
 export interface DevTaggerResult {
   taggerOutput: ThemeTaggerOutput;
   inputSummary: {
@@ -34,6 +42,7 @@ export interface DevTaggerResult {
   currentMeetingThemes: DevTaggerMeetingThemeRow[];
   currentExtractionThemes: DevTaggerExtractionThemeRow[];
   inputExtractions: { id: string; type: string; content: string }[];
+  themesLookup: DevTaggerThemeLookup[];
   systemPrompt: string;
 }
 
@@ -114,6 +123,13 @@ export async function runDevTaggerAction(
       id: e.id,
       type: e.type,
       content: e.content,
+    })),
+    themesLookup: themes.map((t) => ({
+      themeId: t.id,
+      name: t.name,
+      emoji: t.emoji,
+      slug: t.slug,
+      status: t.status,
     })),
     systemPrompt: THEME_TAGGER_SYSTEM_PROMPT,
   };
