@@ -144,7 +144,9 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
           <DropdownMenuItem onClick={handleRegenerate}>
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Regenereer</span>
-              <span className="text-xs text-muted-foreground">Summary + risks opnieuw</span>
+              <span className="text-xs text-muted-foreground">
+                Summary + thema-samenvattingen + risks opnieuw
+              </span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleRegenerateRisks}>
