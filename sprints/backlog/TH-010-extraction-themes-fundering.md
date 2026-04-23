@@ -6,34 +6,35 @@ De bestaande meeting-level theme-koppeling rijker maken op het extraction-niveau
 
 **Bewust minimaal.** Geen visuele typografie per extraction-type, geen grouping, geen AI narrative, geen moments-timeline. Alleen de fundering: welke concrete extracties horen bij welk thema. Alles daarbovenop (V2-visuele laag, narrative, moments) is aparte sprint.
 
-Eerste tastbare resultaat: je opent `/themes/team-capaciteit-hiring`, klikt op de Meetings-tab, en ziet per meeting-kaart naast de evidence-quote een bullet-lijst met de 1-4 extracties die de ThemeTagger aan dít thema hing — met type als prefix-label ("Besluit:", "Vervolg:", "Need:", "Inzicht:").
+Eerste tastbare resultaat: je opent `/themes/team-capaciteit-hiring`, klikt op de Meetings-tab, en ziet per meeting-kaart naast de evidence-quote een bullet-lijst met de gekoppelde extracties die de ThemeTagger aan dít thema hing — elke bullet toont het raw type-veld als prefix en de content, zonder cosmetica per type. De database kent 14 extraction-types (zie migratie `20260418130000_extractions_14_types.sql`); V1 behandelt ze allemaal gelijkwaardig en laat elegante labels + categorisering aan een V2-visuele-laag over.
 
 ## Requirements
 
-| ID       | Beschrijving                                                                                                                                                                                                                                                                              |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DATA-220 | Tabel `extraction_themes(extraction_id uuid, theme_id uuid, confidence text, created_at timestamptz default now())` met composite PK `(extraction_id, theme_id)`                                                                                                                          |
-| DATA-221 | Foreign keys: `extraction_id → extractions(id) ON DELETE CASCADE`, `theme_id → themes(id) ON DELETE CASCADE`                                                                                                                                                                              |
-| DATA-222 | CHECK constraint `confidence IN ('medium', 'high')` — consistent met `meeting_themes`                                                                                                                                                                                                     |
-| DATA-223 | RLS enabled + permissive policy (zelfde patroon als `meeting_themes`, `tasks`): read/write voor alle authenticated users                                                                                                                                                                  |
-| DATA-224 | Indexes: `extraction_themes_theme_idx` op `theme_id`, `extraction_themes_extraction_idx` op `extraction_id`                                                                                                                                                                               |
-| DATA-225 | Types regenereren in `packages/database/src/types/database.ts`                                                                                                                                                                                                                            |
-| AI-220   | ThemeTagger Zod-schema (`ThemeTaggerOutputSchema`) krijgt per match `extractionIds: string[]` veld — verplicht aanwezig, mag leeg zijn                                                                                                                                                    |
-| AI-221   | Prompt instrueert: _"Per match benoem je de `extractionIds` die dít thema dragen — kopieer exact de IDs uit de input-extractions-lijst. Minstens één per high/medium match."_                                                                                                             |
-| AI-222   | Post-Zod validatie in `tagMeetingThemes()`: strip `extractionIds` die niet in de input voorkwamen (hallucinatie-guard). Niet crashen, alleen filteren + `console.warn`.                                                                                                                   |
-| AI-223   | Input naar ThemeTagger bevat voortaan ook `id` per extraction (nu alleen `type` + `content`). Vereist contract-update in `MeetingContext.extractions`.                                                                                                                                    |
-| AI-224   | Emerging-proposals krijgen géén extractionIds-veld terug — proposals leiden tot een nieuwe theme-row + meeting_themes-link met confidence `medium` (bestaand gedrag). V1 linkt proposal-emerging-themes nog niet op extraction-niveau.                                                    |
-| FUNC-250 | Mutation `linkExtractionsToThemes(rows: {extractionId, themeId, confidence}[])` in `packages/database/src/mutations/extraction-themes.ts` met upsert op composite PK                                                                                                                      |
-| FUNC-251 | Mutation `clearExtractionThemesForMeeting(meetingId)` — verwijdert alle `extraction_themes` rijen waar `extraction_id` hoort bij meeting (via join). Nodig voor regenerate + batch --force                                                                                                |
-| FUNC-252 | Pipeline-step `tag-themes.ts` schrijft `extraction_themes` weg nadat `meeting_themes` is gelinkt. Volgorde: proposals → clear (bij replace) → meeting_themes → extraction_themes → recalc stats                                                                                           |
-| FUNC-253 | Query `getThemeMeetings(themeId)` uitgebreid zodat per meeting-entry een `extractions: {id, type, content}[]` meekomt uit `extraction_themes`-junction (behalve `null` als geen match op extraction-niveau)                                                                               |
-| FUNC-254 | `regenerateMeetingThemesAction` cleart ook `extraction_themes` via `clearExtractionThemesForMeeting` — consistent met de bestaande `clearMeetingThemes`-cleanup                                                                                                                           |
-| FUNC-255 | `rejectThemeMatchAsAdmin` cascadet: bij verwijdering van `meeting_themes`-rij óók `extraction_themes` verwijderen voor (meeting_id, theme_id) paar. In dezelfde mutation, vóór het rejection-insert                                                                                       |
-| UI-310   | Theme detail page — Meetings-tab: onder de evidence-quote per meeting-card een platte `<ul>` met gekoppelde extractions. Elke bullet: `<span>Besluit:</span> {content}` (type-label muted, geen kleurvlak, geen icon)                                                                     |
-| UI-311   | Meeting-card zonder gekoppelde extractions toont géén extractions-sectie (niet een lege lijst, niet een placeholder). Alleen de evidence-quote blijft zichtbaar — dat is hoe oude `meeting_themes`-rijen (pre-backfill) eruit zien                                                        |
-| EDGE-220 | Match met 0 `extractionIds` in Tagger-output is valide — de `meeting_themes`-rij wordt wel ingeschoten, de `extraction_themes`-insert krijgt gewoon 0 rijen voor deze match                                                                                                               |
-| EDGE-221 | `linkExtractionsToThemes` met lege array: return `{ success: true, count: 0 }` zonder DB-call (consistent met bestaande `linkMeetingToThemes`)                                                                                                                                            |
-| FUNC-256 | Retroactieve backfill: `scripts/batch-tag-themes.ts --force` hergebruiken om bestaande meetings opnieuw te taggen zodat `extraction_themes` gevuld raakt. Geen code-werk nodig — script roept al `replace: true` op de pipeline-step aan, die nu via FUNC-252 óók de nieuwe junction vult |
+| ID       | Beschrijving                                                                                                                                                                                                                                                                                    |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DATA-220 | Tabel `extraction_themes(extraction_id uuid, theme_id uuid, confidence text, created_at timestamptz default now())` met composite PK `(extraction_id, theme_id)`                                                                                                                                |
+| DATA-221 | Foreign keys: `extraction_id → extractions(id) ON DELETE CASCADE`, `theme_id → themes(id) ON DELETE CASCADE`                                                                                                                                                                                    |
+| DATA-222 | CHECK constraint `confidence IN ('medium', 'high')` — consistent met `meeting_themes`                                                                                                                                                                                                           |
+| DATA-223 | RLS enabled + permissive policy (zelfde patroon als `meeting_themes`, `tasks`): read/write voor alle authenticated users                                                                                                                                                                        |
+| DATA-224 | Indexes: `extraction_themes_theme_idx` op `theme_id`, `extraction_themes_extraction_idx` op `extraction_id`                                                                                                                                                                                     |
+| DATA-225 | Types regenereren in `packages/database/src/types/database.ts`                                                                                                                                                                                                                                  |
+| AI-220   | ThemeTagger Zod-schema (`ThemeTaggerOutputSchema`) krijgt per match `extractionIds: string[]` veld — verplicht aanwezig, mag leeg zijn                                                                                                                                                          |
+| AI-221   | Prompt instrueert: _"Per match benoem je de `extractionIds` die dít thema dragen — kopieer exact de IDs uit de input-extractions-lijst. Minstens één per high/medium match."_                                                                                                                   |
+| AI-222   | Post-Zod validatie in `tagMeetingThemes()`: (a) filter eerst non-UUID-shaped strings (regex-check, stillzwijgend), (b) strip daarna `extractionIds` die niet in de input voorkwamen (hallucinatie-guard, `console.warn` met meeting_id + theme_id). Niet crashen.                               |
+| AI-225   | Post-Zod hard cap `EXTRACTION_IDS_PER_MATCH_CAP = 8` per match — consistent met `MATCHES_HARD_CAP = 4` patroon uit TH-002. Anthropic's structured-output schema accepteert geen `maxItems` op arrays; cap wordt in TS afgedwongen via `.slice(0, CAP)` na het filteren van AI-222.              |
+| AI-223   | Input naar ThemeTagger bevat voortaan ook `id` per extraction (nu alleen `type` + `content`). Vereist contract-update in `MeetingContext.extractions`.                                                                                                                                          |
+| AI-224   | Emerging-proposals krijgen géén extractionIds-veld terug — proposals leiden tot een nieuwe theme-row + meeting_themes-link met confidence `medium` (bestaand gedrag). V1 linkt proposal-emerging-themes nog niet op extraction-niveau.                                                          |
+| FUNC-250 | Mutation `linkExtractionsToThemes(rows: {extractionId, themeId, confidence}[])` in `packages/database/src/mutations/extraction-themes.ts` met upsert op composite PK                                                                                                                            |
+| FUNC-251 | Mutation `clearExtractionThemesForMeeting(meetingId)` — verwijdert alle `extraction_themes` rijen waar `extraction_id` hoort bij meeting (via join). Nodig voor regenerate + batch --force                                                                                                      |
+| FUNC-252 | Pipeline-step `tag-themes.ts` schrijft `extraction_themes` weg nadat `meeting_themes` is gelinkt. Volgorde: proposals → clear (bij replace) → meeting_themes → extraction_themes → recalc stats                                                                                                 |
+| FUNC-253 | Query `getThemeMeetings(themeId)` uitgebreid zodat per meeting-entry een `extractions: {id, type, content}[]` meekomt uit `extraction_themes`-junction (behalve `null` als geen match op extraction-niveau)                                                                                     |
+| FUNC-254 | `regenerateMeetingThemesAction` cleart ook `extraction_themes` via `clearExtractionThemesForMeeting` — consistent met de bestaande `clearMeetingThemes`-cleanup                                                                                                                                 |
+| FUNC-255 | `rejectThemeMatchAsAdmin` cascadet: bij verwijdering van `meeting_themes`-rij óók `extraction_themes` verwijderen voor (meeting_id, theme_id) paar. In dezelfde mutation, vóór het rejection-insert                                                                                             |
+| UI-310   | Theme detail page — Meetings-tab: onder de evidence-quote per meeting-card een platte `<ul>` met gekoppelde extractions. Elke bullet: `<span>{type}:</span> {content}` — **raw type-string** als prefix in muted-kleur, geen NL-mapping, geen kleurvlak, geen icon. Type-cosmetica volgt in V2. |
+| UI-311   | Meeting-card zonder gekoppelde extractions toont géén extractions-sectie (niet een lege lijst, niet een placeholder). Alleen de evidence-quote blijft zichtbaar — dat is hoe oude `meeting_themes`-rijen (pre-backfill) eruit zien                                                              |
+| EDGE-220 | Match met 0 `extractionIds` in Tagger-output is valide — de `meeting_themes`-rij wordt wel ingeschoten, de `extraction_themes`-insert krijgt gewoon 0 rijen voor deze match                                                                                                                     |
+| EDGE-221 | `linkExtractionsToThemes` met lege array: return `{ success: true, count: 0 }` zonder DB-call (consistent met bestaande `linkMeetingToThemes`)                                                                                                                                                  |
+| FUNC-256 | Retroactieve backfill: `scripts/batch-tag-themes.ts --force` hergebruiken om bestaande meetings opnieuw te taggen zodat `extraction_themes` gevuld raakt. Geen code-werk nodig — script roept al `replace: true` op de pipeline-step aan, die nu via FUNC-252 óók de nieuwe junction vult       |
 
 ## Bronverwijzingen
 
@@ -82,17 +83,27 @@ De pipeline-step in `tag-themes.ts:82` mapt `extractionRows` nu al — ID-veld g
 
 - In `getThemeMeetings` nieuwe `extractions` field per meeting-entry
 - Meetings-tab rendert die als `<ul>` onder de evidence-quote
-- Type als platte tekst-prefix (_"Besluit:"_ / _"Vervolg:"_ / _"Need:"_ / _"Inzicht:"_) in muted-kleur
-- Type-label mapping in één helper (kan naast de component wonen)
+- Raw `extractions.type` als platte tekst-prefix in muted-kleur (bv. `decision:`, `action_item:`, `risk:`, `need:` — exact de string uit de DB)
 
 **Niet in scope:**
 
+- NL-vertaling of anders vriendelijke labels per type — dat is een V2-helper
 - Kleurvlakken per type (emerald/sky/amber/violet badges uit de prototype)
 - Icon per type (Lucide icons zoals `CheckCircle2`, `Target`)
 - Grouping: eerst "Besluiten" blok dan "Overig besproken"
 - Collapse/expand per meeting-card
 - "Toon oudere meetings" footer
 - AI narrative / moments-rail / tab-herinrichting → allemaal latere sprints
+
+### Proposal → emerging theme backfill-pad
+
+AI-224 laat emerging-proposals bewust zonder `extractionIds` — ze krijgen alleen een `meeting_themes`-link vanuit hun origin-meeting. Als een proposal later via de review-flow `verified` wordt:
+
+- De `meeting_themes`-link uit de origin-meeting staat er al (geschreven tijdens tagging).
+- `extraction_themes` voor die theme bestaat nog **niet** (proposal kreeg geen IDs mee).
+- Fix in V1: reviewer draait **"Thema's opnieuw taggen"** op de origin-meeting ná approve. Het nu-verified theme staat in `listVerifiedThemes`, de Tagger matcht normaal, en `extraction_themes` wordt alsnog gevuld.
+
+Dit is handwerk in de review-flow. Automatiseren (approve-action triggert auto-regenerate op de origin-meetings) is een V2-verbetering, vraagt een extra veld op `themes` om origin-meetings te onthouden.
 
 ### Backfill-strategie
 
@@ -116,7 +127,13 @@ Kies bij deploy voor pad 1 tenzij Haiku-budget roet in het eten gooit.
 - [ ] `packages/database/src/mutations/meeting-themes.ts` — `rejectThemeMatchAsAdmin` cascadet naar `extraction_themes`
 - [ ] `apps/cockpit/src/actions/themes.ts` — `regenerateMeetingThemesAction` cleart `extraction_themes` mee
 - [ ] `apps/cockpit/src/app/(dashboard)/themes/[slug]/` — Meetings-tab toont extractions-lijst per meeting-card
-- [ ] Unit tests per laag conform bestaande TH-XX patronen (validaties, mutation-payload capture, pipeline-step, component snapshot)
+- [ ] Tests (nieuwe + updates):
+  - [ ] Nieuw: `packages/database/__tests__/mutations/extraction-themes.test.ts` — `linkExtractionsToThemes` upsert (lege array, duplicates, FK-errors), `clearExtractionThemesForMeeting` join-correctheid
+  - [ ] Update: `packages/ai/__tests__/agents/theme-tagger.test.ts` — `extractionIds` in schema, non-UUID-filter, hallucinatie-filter, `EXTRACTION_IDS_PER_MATCH_CAP`
+  - [ ] Update: `packages/ai/__tests__/pipeline/tag-themes.test.ts` — assert dat `extraction_themes`-rijen worden weggeschreven, replace-flow cleart junction, proposals schrijven nog steeds geen extraction-links
+  - [ ] Update: `packages/database/__tests__/queries/themes.test.ts` (of theme-detail suite) — `getThemeMeetings` nieuwe `extractions[]` shape, inclusief meeting zonder gekoppelde extractions
+  - [ ] Update: `apps/cockpit/__tests__/actions/themes.test.ts` — `regenerateMeetingThemesAction` cascadet naar `extraction_themes`, rejections blijven staan
+  - [ ] Update: `apps/cockpit/__tests__/actions/themes-review.test.ts` — `rejectThemeMatchAsAdmin` cascadet naar `extraction_themes` vóór rejection-insert
 
 ## Acceptance criteria
 
@@ -149,3 +166,5 @@ Kies bij deploy voor pad 1 tenzij Haiku-budget roet in het eten gooit.
 - **Open vragen / needs als aparte UI-categorie** op de theme-page — blijft plat in de extractions-lijst via type-prefix.
 - **Mention-count op extraction-niveau** — mention_count blijft meeting-gebaseerd (geen wijziging in `recalculate_theme_stats`).
 - **Retroactieve rejection-replay**: als een rejection bestaat maar de junction-fundering is nieuw, tellen oude rejections niet mee voor extraction-links tot een regenerate draait. Acceptabel.
+- **`email_extractions` (aparte tabel)**: wordt niet door ThemeTagger geraakt en blijft buiten deze junction. Emails krijgen pas theme-koppeling in een latere sprint; apart datamodel-ontwerp nodig (aparte `email_extraction_themes` tabel of een polymorphic link).
+- **`risk` + andere tier-2 types**: behandelen we als elke andere `extractions`-rij. De Tagger krijgt ze via de extractions-input en linkt ze net als decisions/action_items — geen speciale weging, geen filter.
