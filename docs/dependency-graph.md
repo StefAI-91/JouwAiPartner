@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-22. Do not edit manually.
+> Auto-generated on 2026-04-23. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 487 |
-| Exported functions/constants | 753 |
-| Exported types/interfaces | 194 |
-| Cross-package imports | 602 |
+| Files scanned | 491 |
+| Exported functions/constants | 762 |
+| Exported types/interfaces | 201 |
+| Cross-package imports | 609 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -321,6 +321,16 @@
 
 **Types:** `ProjectListItem`, `ProjectDetail`, `FocusProject`, `ActiveProjectForContext`
 
+### `queries/reports.ts`
+
+**Exports:**
+- `getProjectIssuesForReport()`
+- `getIssueDetailForReport()`
+- `getProjectActivityForReport()`
+- `getProjectContextForReport()`
+
+**Types:** `IssueReportRow`, `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`, `ProjectActivityEvent`, `PaginatedResult`, `ProjectContextReport`
+
 ### `queries/review.ts`
 
 **Exports:**
@@ -355,6 +365,7 @@
 - `getUserWithAccess()`
 - `countAdmins()`
 - `getProfileRole()`
+- `getProfileNameById()`
 
 **Types:** `TeamRole`, `ProfileRole`, `TeamMember`, `TeamMemberWithAccess`
 
@@ -581,6 +592,7 @@
 
 **Exports:**
 - `upsertProfile()`
+- `ensureProfileExists()`
 - `updateProfileRole()`
 - `clearProjectAccess()`
 - `insertProjectAccess()`
@@ -1188,12 +1200,23 @@
 
 ## AI Validations
 
+### `packages/ai/src/validations/communication.ts`
+
+**Exports:**
+- `PARTY_TYPES`
+- `PartyTypeSchema`
+
+**Types:** `PartyType`
+
 ### `packages/ai/src/validations/email-classifier.ts`
 
 **Exports:**
 - `EmailClassifierSchema`
 
 **Types:** `EmailClassifierOutput`
+
+**Internal deps:**
+- `./communication` → PartyTypeSchema
 
 ### `packages/ai/src/validations/email-extractor.ts`
 
@@ -1213,11 +1236,13 @@
 
 **Exports:**
 - `MEETING_TYPES`
-- `PARTY_TYPES`
 - `IdentifiedProjectSchema`
 - `GatekeeperSchema`
 
-**Types:** `MeetingType`, `PartyType`, `IdentifiedProject`, `GatekeeperOutput`
+**Types:** `MeetingType`, `IdentifiedProject`, `GatekeeperOutput`
+
+**Internal deps:**
+- `./communication` → PARTY_TYPES, type PartyType
 
 ### `packages/ai/src/validations/issue-classification.ts`
 
@@ -1386,6 +1411,8 @@
 - `./tools/decisions` → registerDecisionTools
 - `./tools/write-tasks` → registerWriteTaskTools
 - `./tools/write-client-updates` → registerWriteClientUpdateTools
+- `./tools/issues` → registerIssueTools
+- `./tools/project-report` → registerProjectReportTools
 
 ### `packages/mcp/src/tools/actions.ts`
 
@@ -1437,6 +1464,19 @@
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike, sanitizeForContains, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds
 
+### `packages/mcp/src/tools/issues.ts`
+
+**Exports:**
+- `registerIssueTools()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/constants/issues` → ISSUE_PRIORITY_LABELS, ISSUE_STATUSES, ISSUE_STATUS_LABELS, ISSUE_TYPE_LABELS, ISSUE_TYPES, type IssueStatus, type IssueType
+- `@repo/database/queries/reports` → getIssueDetailForReport, getProjectIssuesForReport, type IssueActivityReport, type IssueReportRow
+
+**Internal deps:**
+- `./usage-tracking` → trackMcpQuery
+
 ### `packages/mcp/src/tools/list-meetings.ts`
 
 **Exports:**
@@ -1486,6 +1526,18 @@
 **Internal deps:**
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike
+
+### `packages/mcp/src/tools/project-report.ts`
+
+**Exports:**
+- `registerProjectReportTools()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/reports` → getProjectActivityForReport, getProjectContextForReport, type ProjectActivityEvent
+
+**Internal deps:**
+- `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/projects.ts`
 
@@ -3394,6 +3446,7 @@
 **Depends on:**
 - `@repo/database/mutations/issues` → insertIssue, updateIssue, deleteIssue, insertActivity
 - `@repo/database/queries/issues` → getIssueById, getIssueCounts
+- `@repo/database/queries/team` → getProfileNameById
 - `@repo/database/constants/issues` → CLOSED_STATUSES, type IssueStatus
 - `@repo/database/validations/issues` → createIssueSchema, updateIssueSchema, deleteIssueSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
@@ -3411,6 +3464,7 @@
 - `@repo/database/queries/issues` → listIssues
 - `@repo/database/queries/projects` → getProjectById
 - `@repo/database/mutations/project-reviews` → saveProjectReview
+- `@repo/database/mutations/team` → ensureProfileExists
 - `@repo/ai/agents/issue-reviewer` → runIssueReviewer, type IssueForReview
 - `@repo/auth/helpers` → getAuthenticatedUser, isAuthBypassed
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
@@ -3802,12 +3856,12 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 81 | 6 | 1 | 26 | - | 114 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 25 | 2 | 12 | - | - | 39 |
+| DevHub Server Actions | 27 | 2 | 12 | - | - | 41 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | 15 | - | - | 22 | - | 37 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 17 | - | 13 | 9 | - | 39 |
-| MCP Server | 23 | 1 | - | - | - | 24 |
+| MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points
 
@@ -4025,6 +4079,7 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
+| `ensureProfileExists()` | `apps/devhub/src/actions/review.ts` |
 | `updateProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 | `clearProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
@@ -4215,6 +4270,15 @@ Which queries are used where across the codebase.
 | `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |
 
+### queries/reports.ts
+
+| Query | Used in |
+|-------|---------|
+| `getProjectIssuesForReport()` | `packages/mcp/src/tools/issues.ts` |
+| `getIssueDetailForReport()` | `packages/mcp/src/tools/issues.ts` |
+| `getProjectActivityForReport()` | `packages/mcp/src/tools/project-report.ts` |
+| `getProjectContextForReport()` | `packages/mcp/src/tools/project-report.ts` |
+
 ### queries/review.ts
 
 | Query | Used in |
@@ -4245,6 +4309,7 @@ Which queries are used where across the codebase.
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
+| `getProfileNameById()` | `apps/devhub/src/actions/issues.ts` |
 
 ### queries/userback-issues.ts
 

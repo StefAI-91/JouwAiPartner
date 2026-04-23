@@ -36,6 +36,32 @@ export async function upsertProfile(
 }
 
 /**
+ * Self-heal a profile row: insert `{id, email}` if it does not exist yet,
+ * leave it untouched if it does. Used when a foreign key (e.g.
+ * `project_reviews.generated_by`) requires a profiles row that the
+ * `handle_new_user` trigger may have missed for legacy or invited users.
+ *
+ * Does NOT touch `role` — callers that need to set the role should use
+ * `upsertProfile` instead.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function ensureProfileExists(
+  input: { id: string; email: string },
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db
+    .from("profiles")
+    .upsert(
+      { id: input.id, email: input.email.toLowerCase() },
+      { onConflict: "id", ignoreDuplicates: true },
+    );
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
  * Update the role of an existing profile. Returns `{ error }` on DB failure.
  * Caller is responsible for any last-admin guardrails — `countAdmins` +
  * `getUserWithAccess` are the recommended helpers for that check.
