@@ -224,6 +224,20 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     promptFile: "theme-detector.md",
     entrypoint: "packages/ai/src/pipeline/steps/theme-detector.ts",
   },
+  {
+    id: "theme-narrator",
+    name: "Theme Narrator",
+    role: "De thema-verteller",
+    description:
+      "Draait per thema nadat meeting_themes wordt bijgewerkt: synthetiseert alle per-meeting theme-summaries tot één lopende thema-pagina met zes secties (De kern, Wat we terug zien komen, Waar jullie samen staan, Waar het schuurt, Wat nog hangt, De blinde vlek) + een signaal-check. Effort 'high' voor cross-meeting patroon-detectie in de blind-spots-sectie. Guardrail: <2 meetings met summary → agent wordt niet gecalled, sentinel-rij geschreven voor de UI empty-state.",
+    mascot: "🗣️",
+    model: "claude-sonnet-4-6",
+    modelLabel: "Sonnet 4.6",
+    quadrant: "cockpit",
+    status: "live",
+    promptFile: "theme-narrator.md",
+    entrypoint: "packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts",
+  },
 ];
 
 /**

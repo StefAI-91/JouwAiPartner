@@ -172,6 +172,55 @@ export async function createVerifiedTheme(
 }
 
 /**
+ * TH-014 (FUNC-303) — upsert van de per-thema narrative (cross-meeting
+ * synthese). Een rij per thema (1-op-1 op themes.id). Schrijft zowel bij
+ * echte agent-output als bij de insufficient-sentinel (guardrail <2 meetings).
+ *
+ * `generated_at` wordt bij élke schrijf-actie bijgewerkt — dit IS het moment
+ * waarop de synthese gemaakt is, niet alleen de laatste modificatie.
+ * `updated_at` wordt door de trigger bijgewerkt; we laten hem uit de payload.
+ */
+export interface UpsertThemeNarrativeInput {
+  theme_id: string;
+  briefing: string;
+  patterns?: string | null;
+  alignment?: string | null;
+  friction?: string | null;
+  open_points?: string | null;
+  blind_spots?: string | null;
+  signal_strength: "sterk" | "matig" | "zwak" | "onvoldoende";
+  signal_notes?: string | null;
+  meetings_count_at_generation: number;
+}
+
+export async function upsertThemeNarrative(
+  input: UpsertThemeNarrativeInput,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+
+  const { error } = await db.from("theme_narratives").upsert(
+    {
+      theme_id: input.theme_id,
+      briefing: input.briefing,
+      patterns: input.patterns ?? null,
+      alignment: input.alignment ?? null,
+      friction: input.friction ?? null,
+      open_points: input.open_points ?? null,
+      blind_spots: input.blind_spots ?? null,
+      signal_strength: input.signal_strength,
+      signal_notes: input.signal_notes ?? null,
+      meetings_count_at_generation: input.meetings_count_at_generation,
+      generated_at: new Date().toISOString(),
+    },
+    { onConflict: "theme_id" },
+  );
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
  * Soft-archive: status='archived' + archived_at=now. Bewaart matches en
  * history. Wordt niet meer door ThemeTagger gekozen.
  */

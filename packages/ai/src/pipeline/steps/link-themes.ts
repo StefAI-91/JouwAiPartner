@@ -18,6 +18,7 @@ import {
 import { createEmergingTheme } from "@repo/database/mutations/themes";
 import type { ThemeDetectorOutput } from "../../validations/theme-detector";
 import { parseThemesAnnotation, resolveThemeRefs, type ThemeRef } from "../tagger";
+import { runThemeNarrativeSynthesis } from "./synthesize-theme-narrative";
 
 /**
  * TH-011 (FUNC-270..276, FUNC-281) — Pipeline-step die de Theme-Detector
@@ -386,6 +387,27 @@ export async function runLinkThemesStep(input: LinkThemesStepInput): Promise<Lin
       const statsRes = await recalculateThemeStats(affected);
       if ("error" in statsRes) {
         console.warn(`[link-themes] recalculateThemeStats failed: ${statsRes.error}`);
+      }
+    }
+
+    // 5e. TH-014 (FUNC-304) — Theme-Narrator triggeren voor alle aangeraakte
+    //     thema's. Fire-and-forget: errors in de synthese mogen link-themes
+    //     niet breken. `runThemeNarrativeSynthesis` is zelf never-throws; we
+    //     gebruiken allSettled voor extra safety bij onverwachte edge cases.
+    if (affected.length > 0) {
+      const narrativeResults = await Promise.allSettled(
+        affected.map((themeId) => runThemeNarrativeSynthesis(themeId)),
+      );
+      for (const [i, res] of narrativeResults.entries()) {
+        if (res.status === "rejected") {
+          console.warn(
+            `[link-themes] theme-narrator synthesis rejected for theme ${affected[i]}: ${String(res.reason)}`,
+          );
+        } else if (!res.value.success) {
+          console.warn(
+            `[link-themes] theme-narrator synthesis failed for theme ${affected[i]}: ${res.value.error ?? "unknown"}`,
+          );
+        }
       }
     }
 

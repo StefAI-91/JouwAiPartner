@@ -7,7 +7,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@repo/ui/tabs";
 import { ThemeHeader } from "@/features/themes/components/theme-header";
 import { ThemeEditForm } from "@/features/themes/components/theme-edit-form";
 
-const VALID_TABS = ["overview", "meetings", "decisions", "questions", "people"] as const;
+const VALID_TABS = [
+  "narrative",
+  "overview",
+  "meetings",
+  "decisions",
+  "questions",
+  "people",
+] as const;
 type TabValue = (typeof VALID_TABS)[number];
 
 export interface ThemeDetailViewProps {
@@ -15,6 +22,7 @@ export interface ThemeDetailViewProps {
   mentions30d: number;
   lastMentionedAt: string | null;
   canEdit: boolean;
+  narrative: ReactNode;
   overview: ReactNode;
   meetings: ReactNode;
   decisions: ReactNode;
@@ -37,6 +45,7 @@ export function ThemeDetailView({
   mentions30d,
   lastMentionedAt,
   canEdit,
+  narrative,
   overview,
   meetings,
   decisions,
@@ -50,12 +59,13 @@ export function ThemeDetailView({
   const tabFromUrl = searchParams.get("tab");
   const activeTab: TabValue = VALID_TABS.includes(tabFromUrl as TabValue)
     ? (tabFromUrl as TabValue)
-    : "overview";
+    : "narrative";
 
   function handleTabChange(next: unknown) {
     const value = String(next);
     const params = new URLSearchParams(searchParams.toString());
-    if (value === "overview") {
+    if (value === "narrative") {
+      // TH-014 UI-401 — "narrative" is de default tab; geen querystring nodig.
       params.delete("tab");
     } else {
       params.set("tab", value);
@@ -89,12 +99,14 @@ export function ThemeDetailView({
       ) : (
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList>
+            <TabsTrigger value="narrative">Verhaal</TabsTrigger>
             <TabsTrigger value="overview">Overzicht</TabsTrigger>
             <TabsTrigger value="meetings">Meetings</TabsTrigger>
             <TabsTrigger value="decisions">Besluiten</TabsTrigger>
             <TabsTrigger value="questions">Open vragen</TabsTrigger>
             <TabsTrigger value="people">Mensen</TabsTrigger>
           </TabsList>
+          <TabsContent value="narrative">{narrative}</TabsContent>
           <TabsContent value="overview">{overview}</TabsContent>
           <TabsContent value="meetings">{meetings}</TabsContent>
           <TabsContent value="decisions">{decisions}</TabsContent>

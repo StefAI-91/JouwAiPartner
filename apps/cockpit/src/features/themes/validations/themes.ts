@@ -111,3 +111,18 @@ export const createVerifiedThemeSchema = z.object({
   emoji: z.enum(ALL_THEME_EMOJIS),
 });
 export type CreateVerifiedThemeInput = z.infer<typeof createVerifiedThemeSchema>;
+
+/**
+ * TH-014 (FUNC-306) — Handmatige regenerate-knop op theme detail narrative tab.
+ *
+ * UUID wordt losjes gevalideerd (shape-check, geen RFC-strict `.uuid()`) omdat
+ * de seed-themes (`d0000000-…`) niet-conform zijn op de version/variant-bits.
+ * Zelfde patroon als `validations/theme-detector.ts` MB-3.
+ */
+const UUID_SHAPE_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const regenerateThemeNarrativeSchema = z.object({
+  themeId: z
+    .string()
+    .refine((v) => UUID_SHAPE_RE.test(v), { message: "themeId heeft geen UUID-vorm" }),
+});
+export type RegenerateThemeNarrativeInput = z.infer<typeof regenerateThemeNarrativeSchema>;

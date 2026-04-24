@@ -46,3 +46,12 @@ export {
   type EmergingThemeRow,
   type EmergingThemeProposalMeeting,
 } from "./review";
+
+export {
+  getThemeNarrative,
+  listThemeMeetingSummaries,
+  INSUFFICIENT_MEETINGS_SENTINEL,
+  type ThemeNarrativeRow,
+  type ThemeNarrativeWithStaleness,
+  type ThemeMeetingSummaryForNarrator,
+} from "./narrative";

@@ -30,20 +30,21 @@ barrel-file daar breekt Next.js' client/server-scheiding. Zie
 
 Import-pad: `@/features/themes/actions`
 
-| Actie                                  | Wat hij doet                                           |
-| -------------------------------------- | ------------------------------------------------------ |
-| `updateThemeAction(input)`             | naam/beschrijving/emoji/guide bijwerken                |
-| `archiveThemeAction(input)`            | thema archiveren                                       |
-| `canEditThemesAction()`                | check of huidige user bewerkrecht heeft                |
-| `createVerifiedThemeAction(input)`     | nieuw verified thema aanmaken (dev-pad)                |
-| `approveThemeAction(input)`            | emerging thema goedkeuren (met optionele inline edits) |
-| `rejectEmergingThemeAction(input)`     | emerging thema afwijzen                                |
-| `rejectThemeMatchAction(input)`        | match tussen meeting ↔ thema afwijzen                  |
-| `confirmThemeProposalAction(input)`    | theme-proposal bevestigen                              |
-| `rejectThemeProposalAction(input)`     | theme-proposal afwijzen                                |
-| `regenerateMeetingThemesAction(input)` | AI opnieuw thema-links laten bepalen voor een meeting  |
+| Actie                                   | Wat hij doet                                                   |
+| --------------------------------------- | -------------------------------------------------------------- |
+| `updateThemeAction(input)`              | naam/beschrijving/emoji/guide bijwerken                        |
+| `archiveThemeAction(input)`             | thema archiveren                                               |
+| `canEditThemesAction()`                 | check of huidige user bewerkrecht heeft                        |
+| `createVerifiedThemeAction(input)`      | nieuw verified thema aanmaken (dev-pad)                        |
+| `approveThemeAction(input)`             | emerging thema goedkeuren (met optionele inline edits)         |
+| `rejectEmergingThemeAction(input)`      | emerging thema afwijzen                                        |
+| `rejectThemeMatchAction(input)`         | match tussen meeting ↔ thema afwijzen                          |
+| `confirmThemeProposalAction(input)`     | theme-proposal bevestigen                                      |
+| `rejectThemeProposalAction(input)`      | theme-proposal afwijzen                                        |
+| `regenerateMeetingThemesAction(input)`  | AI opnieuw thema-links laten bepalen voor een meeting          |
+| `regenerateThemeNarrativeAction(input)` | TH-014 — theme-narrator opnieuw laten synthetiseren voor thema |
 
-Alle 10 acties: admin-guard → Zod-validatie → Supabase-mutation →
+Alle 11 acties: admin-guard → Zod-validatie → Supabase-mutation →
 revalidatePaths. Return `{ success: true }` of `{ error: string }`.
 
 ## Menu — hooks
@@ -69,6 +70,7 @@ Import-pad: `@/features/themes/validations`
 - `approveThemeSchema`, `rejectEmergingThemeSchema`, `rejectThemeMatchSchema`
 - `confirmThemeProposalSchema`, `rejectThemeProposalSchema`
 - `regenerateMeetingThemesSchema`, `runDevDetectorSchema`
+- `regenerateThemeNarrativeSchema` (TH-014)
 
 **TypeScript input-types** (1-op-1 met de actions):
 
@@ -98,20 +100,22 @@ Eén bron van waarheid: dezelfde constanten worden gebruikt door de hook
 import { ThemeEditForm } from "@/features/themes/components/theme-edit-form";
 ```
 
-| Component                | Props (interface)             | Doel                                 |
-| ------------------------ | ----------------------------- | ------------------------------------ |
-| `ThemeEditForm`          | `{ theme, onDone, onCancel }` | inline edit-form op detail page      |
-| `ThemeApprovalCard`      | `{ theme }`                   | emerging thema approve/reject kaart  |
-| `ThemeHeader`            | `{ theme, mentions30d }`      | header op detail page                |
-| `ThemePill`              | `{ theme }`                   | klikbare pill (emoji + naam + badge) |
-| `ThemePillsStrip`        | `{ themes }`                  | rij van pills op dashboard           |
-| `ThemePillsSkeleton`     | `—`                           | loading state                        |
-| `TimeSpentDonut`         | `{ slices }`                  | donut-grafiek per thema              |
-| `TimeSpentDonutSection`  | `{ distribution }`            | donut + legenda wrapper              |
-| `TimeSpentDonutSkeleton` | `—`                           | loading state                        |
-| `EmergingThemesSection`  | `{ themes }`                  | sectie op review-queue               |
-| `MatchRejectPopover`     | `{ meetingId, themeId }`      | popover om theme-match af te wijzen  |
-| `EmojiPickerPopover`     | `{ value, onChange }`         | emoji-kiezer voor thema's            |
+| Component                   | Props (interface)             | Doel                                     |
+| --------------------------- | ----------------------------- | ---------------------------------------- |
+| `ThemeEditForm`             | `{ theme, onDone, onCancel }` | inline edit-form op detail page          |
+| `ThemeApprovalCard`         | `{ theme }`                   | emerging thema approve/reject kaart      |
+| `ThemeHeader`               | `{ theme, mentions30d }`      | header op detail page                    |
+| `ThemePill`                 | `{ theme }`                   | klikbare pill (emoji + naam + badge)     |
+| `ThemePillsStrip`           | `{ themes }`                  | rij van pills op dashboard               |
+| `ThemePillsSkeleton`        | `—`                           | loading state                            |
+| `TimeSpentDonut`            | `{ slices }`                  | donut-grafiek per thema                  |
+| `TimeSpentDonutSection`     | `{ distribution }`            | donut + legenda wrapper                  |
+| `TimeSpentDonutSkeleton`    | `—`                           | loading state                            |
+| `EmergingThemesSection`     | `{ themes }`                  | sectie op review-queue                   |
+| `MatchRejectPopover`        | `{ meetingId, themeId }`      | popover om theme-match af te wijzen      |
+| `EmojiPickerPopover`        | `{ value, onChange }`         | emoji-kiezer voor thema's                |
+| `MeetingChip`               | `{ meetingId, date, title }`  | TH-014 — inline bron-chip in narrative   |
+| `NarrativeRegenerateButton` | `{ themeId }`                 | TH-014 — admin regen-knop op Verhaal-tab |
 
 Plus twee helpers voor de donut:
 
@@ -125,6 +129,7 @@ Actions leven in 3 bestanden (zie menu hierboven voor welke functies waar zitten
 - `crud.ts` — `updateThemeAction`, `archiveThemeAction`, `canEditThemesAction`, `createVerifiedThemeAction`
 - `review.ts` — `approveThemeAction`, `rejectEmergingThemeAction`, `rejectThemeMatchAction`, `confirmThemeProposalAction`, `rejectThemeProposalAction`
 - `regenerate.ts` — `regenerateMeetingThemesAction`
+- `narrative.ts` — `regenerateThemeNarrativeAction` (TH-014)
 
 De hook `useThemeFormState` leeft in `use-theme-form-state.ts`.
 
@@ -163,21 +168,24 @@ const { updateThemeAction } = mod;
 Deze code hoort NIET in deze feature — wordt gedeeld door cockpit + MCP +
 toekomstige apps:
 
-| Locatie                                       | Wat                                 |
-| --------------------------------------------- | ----------------------------------- |
-| `@repo/database/queries/themes`               | publieke deur — alle exports samen  |
-| `@repo/database/queries/themes/review`        | emerging + proposals (fine-grained) |
-| `@repo/database/queries/themes/detail`        | detail-page queries (fine-grained)  |
-| `@repo/database/queries/themes/dashboard`     | time-spent stats (fine-grained)     |
-| `@repo/database/queries/meetings/themes`      | cross-tabel junction                |
-| `@repo/database/mutations/themes`             | insert/update/archive               |
-| `@repo/database/mutations/meetings/themes`    | link/clear/recalc                   |
-| `@repo/database/mutations/extractions/themes` | link aan extractions                |
-| `@repo/ai/agents/theme-detector`              | runThemeDetector + prompt           |
-| `@repo/ai/agents/theme-emojis`                | emoji-catalogus                     |
-| `@repo/ai/pipeline/steps/theme-detector`      | pipeline-stap                       |
-| `@repo/ai/pipeline/steps/link-themes`         | pipeline-stap                       |
-| `@repo/ai/pipeline/tagger`                    | theme-annotatie parser              |
+| Locatie                                              | Wat                                               |
+| ---------------------------------------------------- | ------------------------------------------------- |
+| `@repo/database/queries/themes`                      | publieke deur — alle exports samen                |
+| `@repo/database/queries/themes/review`               | emerging + proposals (fine-grained)               |
+| `@repo/database/queries/themes/detail`               | detail-page queries (fine-grained)                |
+| `@repo/database/queries/themes/dashboard`            | time-spent stats (fine-grained)                   |
+| `@repo/database/queries/themes/narrative`            | TH-014 — narrative-lezen + staleness              |
+| `@repo/database/queries/meetings/themes`             | cross-tabel junction                              |
+| `@repo/database/mutations/themes`                    | insert/update/archive + narrative upsert (TH-014) |
+| `@repo/database/mutations/meetings/themes`           | link/clear/recalc                                 |
+| `@repo/database/mutations/extractions/themes`        | link aan extractions                              |
+| `@repo/ai/agents/theme-detector`                     | runThemeDetector + prompt                         |
+| `@repo/ai/agents/theme-narrator`                     | TH-014 — runThemeNarrator + prompt                |
+| `@repo/ai/agents/theme-emojis`                       | emoji-catalogus                                   |
+| `@repo/ai/pipeline/steps/theme-detector`             | pipeline-stap                                     |
+| `@repo/ai/pipeline/steps/link-themes`                | pipeline-stap                                     |
+| `@repo/ai/pipeline/steps/synthesize-theme-narrative` | TH-014 — narrative-synthese + guardrail           |
+| `@repo/ai/pipeline/tagger`                           | theme-annotatie parser                            |
 
 Als je een query/mutation toevoegt voor themes: plaats hem in packages/,
 niet hier.
@@ -185,9 +193,10 @@ niet hier.
 ## Database
 
 Schema: `themes`, `emerging_themes`, `meeting_themes`, `extraction_themes`,
-`theme_match_rejections`.
+`theme_match_rejections`, `theme_narratives` (TH-014, 1-op-1 op themes).
 
-Migraties: `supabase/migrations/202604221*.sql` en `202604231*.sql`.
+Migraties: `supabase/migrations/202604221*.sql`, `202604231*.sql`, en
+`20260425100000_theme_narratives.sql`.
 
 Seed: `supabase/seed/themes.sql`.
 
@@ -195,8 +204,9 @@ Seed: `supabase/seed/themes.sql`.
 
 ## Routes (blijven in app/, Next.js dicteert)
 
-- `/themes/[slug]` — detail page (consumeert `ThemeHeader`, `ThemeEditForm`,
-  tabs)
+- `/themes/[slug]` — detail page met 6 tabs; **Verhaal** is default sinds
+  TH-014 (consumeert `ThemeHeader`, `ThemeEditForm`, `NarrativeTab`,
+  `MeetingsTab`, etc.)
 - `/dashboard` — dashboard (consumeert `ThemePillsStrip`,
   `TimeSpentDonutSection`)
 - `/review` — review queue (consumeert `EmergingThemesSection`)
