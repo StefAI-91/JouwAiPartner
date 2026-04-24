@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createCommentAction } from "@/actions/comments";
+import { createCommentAction } from "../actions/comments";
 import { Button } from "@repo/ui/button";
 
 interface CommentFormProps {

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { deleteIssueAction } from "@/actions/issues";
+import { deleteIssueAction } from "../actions/issues";
 import { issueCountStore } from "@/components/layout/issue-count-store";
 
 interface SidebarDeleteProps {

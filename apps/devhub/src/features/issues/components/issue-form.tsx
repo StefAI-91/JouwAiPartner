@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createIssueAction } from "@/actions/issues";
+import { createIssueAction } from "../actions/issues";
 import { Button } from "@repo/ui/button";
 import {
   ISSUE_TYPES,

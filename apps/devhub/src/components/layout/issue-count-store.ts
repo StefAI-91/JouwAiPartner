@@ -17,7 +17,7 @@
  * This is deliberately tiny — no Zustand/Redux needed for a six-key map.
  */
 
-import { getIssueCountsAction } from "@/actions/issues";
+import { getIssueCountsAction } from "@/features/issues/actions/issues";
 
 export type StatusKey = "triage" | "backlog" | "todo" | "in_progress" | "done" | "cancelled";
 export type StatusCounts = Partial<Record<StatusKey, number>>;

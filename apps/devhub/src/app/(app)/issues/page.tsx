@@ -9,9 +9,9 @@ import {
   ISSUE_SORTS,
 } from "@repo/database/queries/issues";
 import { getIssueThumbnails } from "@repo/database/queries/issues/attachments";
-import { IssueList } from "@/components/issues/issue-list";
-import { IssueFilters } from "@/components/issues/issue-filters";
-import { PaginationControls } from "@/components/issues/pagination-controls";
+import { IssueList } from "@/features/issues/components/issue-list";
+import { IssueFilters } from "@/features/issues/components/issue-filters";
+import { PaginationControls } from "@/features/issues/components/pagination-controls";
 import { CountSeeder } from "@/components/layout/count-seeder";
 
 const PAGE_SIZE = 25;

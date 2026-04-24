@@ -5,7 +5,7 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 import { getProjectByUserbackProjectId } from "@repo/database/queries/projects";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
 import { isAdmin } from "@repo/auth/access";
-import { classifyIssueBackground } from "@/actions/classify";
+import { classifyIssueBackground } from "@/features/issues/actions/classify";
 
 export const maxDuration = 300;
 

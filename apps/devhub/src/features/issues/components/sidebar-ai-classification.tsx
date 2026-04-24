@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { classifyIssueAction } from "@/actions/classify";
+import { classifyIssueAction } from "../actions/classify";
 
 interface SidebarAiClassificationProps {
   issueId: string;

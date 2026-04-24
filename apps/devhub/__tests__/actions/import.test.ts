@@ -17,7 +17,7 @@ vi.mock("@repo/database/integrations/userback-sync", () => ({
 }));
 
 const mockClassifyIssueBackground = vi.fn();
-vi.mock("../../src/features/issues/actions/classify", () => ({
+vi.mock("@/features/issues/actions/classify", () => ({
   classifyIssueBackground: (...args: unknown[]) => mockClassifyIssueBackground(...args),
 }));
 
@@ -61,7 +61,7 @@ describeWithDb("Import Actions (integration)")("Import Actions (integration)", (
 
   describe("syncUserback", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/import");
+      const mod = await import("@/actions/import");
       return mod.syncUserback;
     }
 
@@ -149,7 +149,7 @@ describeWithDb("Import Actions (integration)")("Import Actions (integration)", (
 
   describe("getSyncStatus", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/import");
+      const mod = await import("@/actions/import");
       return mod.getSyncStatus;
     }
 
@@ -183,7 +183,7 @@ describeWithDb("Import Actions (integration)")("Import Actions (integration)", (
 
   describe("backfillMedia", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/import");
+      const mod = await import("@/actions/import");
       return mod.backfillMedia;
     }
 

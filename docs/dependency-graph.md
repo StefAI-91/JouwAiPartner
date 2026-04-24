@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 446 |
-| Exported functions/constants | 701 |
-| Exported types/interfaces | 254 |
-| Cross-package imports | 482 |
+| Files scanned | 447 |
+| Exported functions/constants | 702 |
+| Exported types/interfaces | 255 |
+| Cross-package imports | 484 |
 | Critical integration points (3+ packages) | 9 |
 
 ## Package Dependency Flow
@@ -2582,7 +2582,7 @@
 - `dynamic`
 
 **Depends on:**
-- `@repo/database/queries/themes` → getThemeBySlug, getThemeRecentActivity, getThemeMeetings, getThemeDecisions, getThemeParticipants
+- `@repo/database/queries/themes` → getThemeBySlug, getThemeRecentActivity, getThemeMeetings, getThemeDecisions, getThemeParticipants, getThemeNarrative
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -2608,6 +2608,17 @@
 - `@repo/ui/format` → formatDate
 - `@repo/ui/badge` → Badge
 - (type) `@repo/database/queries/themes` → ThemeMeetingEntry
+
+### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/narrative-tab.tsx`
+
+**Exports:**
+- `NarrativeTab()`
+
+**Types:** `NarrativeTabProps`
+
+**Depends on:**
+- (type) `@repo/database/queries/themes` → ThemeRow
+- (type) `@repo/database/queries/themes` → ThemeNarrativeWithStaleness
 
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/overview-tab.tsx`
 
@@ -3365,7 +3376,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 91 | 8 | 4 | 33 | - | 136 |
+| Cockpit Pages | 93 | 8 | 4 | 33 | - | 138 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 14 | 1 | 6 | - | - | 21 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -3818,6 +3829,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
+| `getThemeNarrative()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 | `listThemeMeetingSummaries()` | `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts` |
 
 ### queries/themes/review.ts

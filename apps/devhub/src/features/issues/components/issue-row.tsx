@@ -18,7 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@repo/ui/dropdown-menu";
-import { deleteIssueAction } from "@/actions/issues";
+import { deleteIssueAction } from "../actions/issues";
 import { issueCountStore } from "@/components/layout/issue-count-store";
 
 function IssueThumbnail({ storagePath }: { storagePath: string }) {

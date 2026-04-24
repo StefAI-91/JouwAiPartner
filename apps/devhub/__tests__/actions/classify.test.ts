@@ -57,7 +57,7 @@ describeWithDb("Classify Actions (integration)")("Classify Actions (integration)
 
   describe("classifyIssueAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/classify");
+      const mod = await import("@/features/issues/actions/classify");
       return mod.classifyIssueAction;
     }
 
@@ -146,7 +146,7 @@ describeWithDb("Classify Actions (integration)")("Classify Actions (integration)
 
   describe("classifyIssueBackground", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/classify");
+      const mod = await import("@/features/issues/actions/classify");
       return mod.classifyIssueBackground;
     }
 

@@ -5,14 +5,14 @@ import type { IssueRow } from "@repo/database/queries/issues";
 import type { IssueCommentRow } from "@repo/database/queries/issues/comments";
 import type { IssueActivityRow } from "@repo/database/queries/issues/activity";
 import type { IssueAttachmentRow } from "@repo/database/queries/issues/attachments";
-import { updateIssueAction } from "@/actions/issues";
+import { updateIssueAction } from "../actions/issues";
 import { issueCountStore } from "@/components/layout/issue-count-store";
 
 import { IssueHeader } from "./issue-header";
 import { IssueAttachments } from "./issue-attachments";
 import { IssueSidebar } from "./issue-sidebar";
 import { AiExecutionPanel } from "./ai-execution-panel";
-import { CommentSection, type CurrentUser } from "@/components/comments/comment-section";
+import { CommentSection, type CurrentUser } from "./comment-section";
 
 interface Person {
   id: string;

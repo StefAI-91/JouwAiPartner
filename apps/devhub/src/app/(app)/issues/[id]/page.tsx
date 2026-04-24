@@ -6,7 +6,7 @@ import { listIssueAttachments } from "@repo/database/queries/issues/attachments"
 import { listTeamMembers } from "@repo/database/queries/team";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
-import { IssueDetail } from "@/components/issues/issue-detail";
+import { IssueDetail } from "@/features/issues/components/issue-detail";
 
 export default async function IssueDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
