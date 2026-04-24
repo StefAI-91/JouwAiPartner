@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 443 |
-| Exported functions/constants | 694 |
-| Exported types/interfaces | 249 |
+| Files scanned | 444 |
+| Exported functions/constants | 696 |
+| Exported types/interfaces | 250 |
 | Cross-package imports | 479 |
 | Critical integration points (3+ packages) | 9 |
 
@@ -1508,6 +1508,14 @@
 
 **Internal deps:**
 - `../agents/theme-emojis` → ALL_THEME_EMOJIS
+
+### `packages/ai/src/validations/theme-narrator.ts`
+
+**Exports:**
+- `ThemeNarratorOutputSchema`
+- `NARRATIVE_TOTAL_CHAR_CAP`
+
+**Types:** `ThemeNarratorOutput`
 
 ### `packages/ai/src/validations/weekly-summary.ts`
 

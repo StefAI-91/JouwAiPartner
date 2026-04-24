@@ -5,8 +5,8 @@ import { createClient } from "@repo/database/supabase/server";
 import { listDraftMeetings, getReviewStats } from "@repo/database/queries/review";
 import { listDraftEmails } from "@repo/database/queries/emails";
 import { listEmergingThemes } from "@repo/database/queries/themes";
-import { ReviewQueue } from "@/components/review/review-queue";
-import { ReviewEmptyState } from "@/components/review/empty-state";
+import { ReviewQueue } from "@/features/review/components/review-queue";
+import { ReviewEmptyState } from "@/features/review/components/empty-state";
 import { EmergingThemesSection } from "@/features/themes/components/emerging-themes-section";
 
 export default async function ReviewPage() {

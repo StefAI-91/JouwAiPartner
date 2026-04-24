@@ -8,13 +8,13 @@ import {
   rejectMeeting,
 } from "@repo/database/mutations/review";
 import { updateMeetingSummaryOnly } from "@repo/database/mutations/meetings";
-import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary-pipeline";
+import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary/core";
 import { scanMeetingNeeds } from "@repo/ai/pipeline/scan-needs";
 import {
   verifyMeetingSchema,
   verifyMeetingWithEditsSchema,
   rejectMeetingSchema,
-} from "@/validations/review";
+} from "../validations/review";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 

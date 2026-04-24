@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExtractionCard } from "@/components/shared/extraction-card";
-import { ReviewActionBar } from "@/components/review/review-action-bar";
+import { ReviewActionBar } from "@/features/review/components/review-action-bar";
 import { Mail, Clock, Building2, FolderKanban, Paperclip } from "lucide-react";
 import { Badge } from "@repo/ui/badge";
 import { approveEmailWithEditsAction, rejectEmailAction } from "@/features/emails/actions";

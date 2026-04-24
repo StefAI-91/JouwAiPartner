@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { ExtractionDots } from "@/components/shared/extraction-dots";
-import { approveMeetingAction } from "@/actions/review";
+import { approveMeetingAction } from "../actions/review";
 import { useState } from "react";
 import { timeAgo } from "@repo/ui/format";
 

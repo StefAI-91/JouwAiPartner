@@ -9,7 +9,7 @@ import { listProjects } from "@repo/database/queries/projects";
 import { getPromotedExtractionIds } from "@repo/database/queries/tasks";
 import { getSegmentsByMeetingId } from "@repo/database/queries/meetings/project-summaries";
 import { listProposedThemesForMeeting } from "@repo/database/queries/themes";
-import { ReviewDetail } from "@/components/review/review-detail";
+import { ReviewDetail } from "@/features/review/components/review-detail";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
