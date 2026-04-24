@@ -8,7 +8,7 @@ import {
 } from "@repo/database/queries/meetings";
 import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
-import { runReEmbedWorker } from "@repo/ai/pipeline/re-embed-worker";
+import { runReEmbedWorker } from "@repo/ai/pipeline/embed/re-embed-worker";
 
 const ingestSchema = z.object({
   limit: z.number().int().min(1).max(100).default(20),

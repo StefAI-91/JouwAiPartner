@@ -15,14 +15,15 @@ import {
   regenerateMeetingAction,
   regenerateRisksAction,
   reprocessMeetingAction,
-} from "@/actions/meeting-pipeline";
-import { regenerateMeetingTitleAction } from "@/actions/meetings";
+  regenerateMeetingTitleAction,
+} from "@/features/meetings/actions";
+import { regenerateMeetingThemesAction } from "@/features/themes/actions";
 
 interface RegenerateMenuProps {
   meetingId: string;
 }
 
-type LoadingState = "regenerate" | "risks" | "reprocess" | "title" | null;
+type LoadingState = "regenerate" | "risks" | "reprocess" | "title" | "themes" | null;
 
 export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
   const router = useRouter();
@@ -71,6 +72,20 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
     setLoading(null);
   }
 
+  async function handleRegenerateThemes() {
+    setLoading("themes");
+    setError(null);
+
+    const result = await regenerateMeetingThemesAction({ meetingId });
+    if ("error" in result) {
+      setError(result.error);
+      setLoading(null);
+      return;
+    }
+    router.refresh();
+    setLoading(null);
+  }
+
   async function handleReprocess() {
     const confirmed = window.confirm(
       "Weet je zeker dat je deze meeting volledig wilt herverwerken?\n\n" +
@@ -107,7 +122,9 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
                     ? "Herverwerken..."
                     : loading === "title"
                       ? "Titel genereren..."
-                      : "Regenereer"}
+                      : loading === "themes"
+                        ? "Thema's taggen..."
+                        : "Regenereer"}
             </Button>
           }
         />
@@ -127,7 +144,9 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
           <DropdownMenuItem onClick={handleRegenerate}>
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Regenereer</span>
-              <span className="text-xs text-muted-foreground">Summary + risks opnieuw</span>
+              <span className="text-xs text-muted-foreground">
+                Summary + thema-samenvattingen + risks opnieuw
+              </span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleRegenerateRisks}>
@@ -135,6 +154,14 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
               <span className="font-medium">Alleen risico&apos;s regenereren</span>
               <span className="text-xs text-muted-foreground">
                 RiskSpecialist opnieuw; summary blijft
+              </span>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleRegenerateThemes}>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">Thema&apos;s opnieuw taggen</span>
+              <span className="text-xs text-muted-foreground">
+                ThemeTagger opnieuw; rejections als negatives
               </span>
             </div>
           </DropdownMenuItem>

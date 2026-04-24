@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@repo/database/supabase/server";
 import { listEmailsForReclassify } from "@repo/database/queries/emails";
-import { processEmail } from "@repo/ai/pipeline/email-pipeline";
+import { processEmail } from "@repo/ai/pipeline/email/core";
 import { updateEmailFilterStatus } from "@repo/database/mutations/emails";
 import { isAdmin } from "@repo/auth/access";
 

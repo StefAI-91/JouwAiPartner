@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@repo/database/supabase/server";
 import { getUnprocessedEmails } from "@repo/database/queries/emails";
-import { processEmailBatch } from "@repo/ai/pipeline/email-pipeline";
+import { processEmailBatch } from "@repo/ai/pipeline/email/core";
 import { isAdmin } from "@repo/auth/access";
 
 export const maxDuration = 300;

@@ -36,7 +36,7 @@ describeWithDb("Comment Actions (integration)")("Comment Actions (integration)",
 
   describe("createCommentAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/comments");
+      const mod = await import("@/features/issues/actions/comments");
       return mod.createCommentAction;
     }
 
@@ -102,7 +102,7 @@ describeWithDb("Comment Actions (integration)")("Comment Actions (integration)",
 
   describe("updateCommentAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/comments");
+      const mod = await import("@/features/issues/actions/comments");
       return mod.updateCommentAction;
     }
 
@@ -146,7 +146,7 @@ describeWithDb("Comment Actions (integration)")("Comment Actions (integration)",
 
   describe("deleteCommentAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/comments");
+      const mod = await import("@/features/issues/actions/comments");
       return mod.deleteCommentAction;
     }
 

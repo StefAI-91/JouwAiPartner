@@ -3,7 +3,7 @@ import {
   verifyMeetingSchema,
   verifyMeetingWithEditsSchema,
   rejectMeetingSchema,
-} from "../../src/validations/review";
+} from "@/features/review/validations/review";
 
 const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
 const VALID_UUID_2 = "660e8400-e29b-41d4-a716-446655440000";

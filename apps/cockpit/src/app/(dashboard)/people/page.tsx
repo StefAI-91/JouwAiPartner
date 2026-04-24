@@ -6,7 +6,7 @@ import { listOrganizations } from "@repo/database/queries/organizations";
 import { Badge } from "@repo/ui/badge";
 import { Users, Mail, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { AddPersonButton } from "@/components/people/add-person-button";
+import { AddPersonButton } from "@/features/directory/components/add-person-button";
 
 export default async function PeoplePage() {
   const supabase = await createClient();

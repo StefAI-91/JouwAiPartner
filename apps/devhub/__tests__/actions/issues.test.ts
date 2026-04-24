@@ -33,7 +33,7 @@ vi.mock("@repo/database/queries/team", () => ({
 }));
 
 const mockClassifyIssueBackground = vi.fn();
-vi.mock("../../src/actions/classify", () => ({
+vi.mock("@/features/issues/actions/classify", () => ({
   classifyIssueBackground: (...args: unknown[]) => mockClassifyIssueBackground(...args),
 }));
 
@@ -56,7 +56,7 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
 
   describe("createIssueAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/issues");
+      const mod = await import("@/features/issues/actions/issues");
       return mod.createIssueAction;
     }
 
@@ -133,7 +133,7 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
 
   describe("updateIssueAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/issues");
+      const mod = await import("@/features/issues/actions/issues");
       return mod.updateIssueAction;
     }
 
@@ -307,7 +307,7 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
 
   describe("deleteIssueAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/issues");
+      const mod = await import("@/features/issues/actions/issues");
       return mod.deleteIssueAction;
     }
 

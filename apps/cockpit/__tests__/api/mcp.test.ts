@@ -25,7 +25,7 @@ vi.mock("@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js", () => {
 import { createMcpServer } from "@repo/mcp/server";
 import { createClient } from "@repo/database/supabase/server";
 import { verifyAccessToken } from "@/lib/oauth";
-import { POST, GET, DELETE } from "../../src/app/api/mcp/route";
+import { POST, GET, DELETE } from "@/app/api/mcp/route";
 
 describe("MCP API Route", () => {
   beforeEach(() => {

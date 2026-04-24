@@ -38,7 +38,7 @@ describeWithDb("Task Server Actions (integration)")("Task Server Actions (integr
   describe("promoteToTaskAction", () => {
     // Dynamic import to ensure mocks are applied
     async function getAction() {
-      const mod = await import("../../src/actions/tasks");
+      const mod = await import("@/actions/tasks");
       return mod.promoteToTaskAction;
     }
 
@@ -141,7 +141,7 @@ describeWithDb("Task Server Actions (integration)")("Task Server Actions (integr
 
   describe("completeTaskAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/tasks");
+      const mod = await import("@/actions/tasks");
       return mod.completeTaskAction;
     }
 
@@ -172,7 +172,7 @@ describeWithDb("Task Server Actions (integration)")("Task Server Actions (integr
 
   describe("dismissTaskAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/tasks");
+      const mod = await import("@/actions/tasks");
       return mod.dismissTaskAction;
     }
 

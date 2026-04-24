@@ -35,7 +35,7 @@ vi.mock("@repo/database/queries/projects", () => ({
 }));
 
 const mockSaveProjectReview = vi.fn();
-vi.mock("@repo/database/mutations/project-reviews", () => ({
+vi.mock("@repo/database/mutations/projects/reviews", () => ({
   saveProjectReview: (...args: unknown[]) => mockSaveProjectReview(...args),
 }));
 
@@ -99,7 +99,7 @@ describe("Review Actions", () => {
 
   describe("generateProjectReview", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/review");
+      const mod = await import("@/actions/review");
       return mod.generateProjectReview;
     }
 

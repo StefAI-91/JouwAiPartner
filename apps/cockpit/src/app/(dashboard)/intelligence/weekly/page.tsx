@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { createClient } from "@repo/database/supabase/server";
-import { getLatestWeeklySummary } from "@repo/database/queries/weekly-summary";
+import { getLatestWeeklySummary } from "@repo/database/queries/summaries/weekly";
 import { WeeklySummaryView } from "@/components/weekly/weekly-summary-view";
 import { GenerateWeeklyButton } from "@/components/weekly/generate-weekly-button";
 import { CalendarDays } from "lucide-react";

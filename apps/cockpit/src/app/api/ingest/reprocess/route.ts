@@ -7,7 +7,7 @@ import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { runTranscribeStep } from "@repo/ai/pipeline/steps/transcribe";
 import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
-import { embedMeetingWithExtractions } from "@repo/ai/pipeline/embed-pipeline";
+import { embedMeetingWithExtractions } from "@repo/ai/pipeline/embed/pipeline";
 import { markMeetingEmbeddingStale } from "@repo/database/mutations/meetings";
 import { getMeetingByFirefliesIdForReprocess } from "@repo/database/queries/meetings";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
@@ -16,7 +16,7 @@ import { buildSegments } from "@repo/ai/pipeline/segment-builder";
 import {
   insertMeetingProjectSummaries,
   updateSegmentEmbedding,
-} from "@repo/database/mutations/meeting-project-summaries";
+} from "@repo/database/mutations/meetings/project-summaries";
 import { embedBatch } from "@repo/ai/embeddings";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import type { IdentifiedProject } from "@repo/ai/validations/gatekeeper";

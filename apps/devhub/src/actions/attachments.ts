@@ -6,7 +6,7 @@ import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { getIssueById } from "@repo/database/queries/issues";
-import { insertAttachment } from "@repo/database/mutations/issue-attachments";
+import { insertAttachment } from "@repo/database/mutations/issues/attachments";
 
 const BUCKET_ID = "issue-attachments";
 const ATTACHMENT_TYPE = z.enum(["screenshot", "video", "attachment"]);

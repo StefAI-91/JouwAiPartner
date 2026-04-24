@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architectuur: Deep vs Shallow Modules — toegepast op onze codebase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+            },
+            fontFamily: {
+              mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+      }
+      .cabinet {
+        background: linear-gradient(180deg, #d9c7a3 0%, #b89968 100%);
+        border: 3px solid #6b4a1f;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 0 20px rgba(0,0,0,0.1);
+      }
+      .drawer {
+        background: linear-gradient(180deg, #f5e6c8 0%, #d9bd8a 100%);
+        border: 2px solid #8a6a35;
+        border-radius: 6px;
+        position: relative;
+      }
+      .drawer::after {
+        content: "";
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #4a3418;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+      }
+      .drawer-big {
+        min-height: 90px;
+      }
+      .drawer-tiny {
+        min-height: 32px;
+      }
+      .drawer-label {
+        position: absolute;
+        top: 4px;
+        left: 8px;
+        font-size: 10px;
+        font-weight: 600;
+        color: #4a3418;
+        font-family: ui-monospace, monospace;
+      }
+      .drawer-label-big {
+        top: 8px;
+        left: 12px;
+        font-size: 13px;
+      }
+      .code-pill {
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        background: #1e293b;
+        color: #86efac;
+        padding: 3px 8px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+      .status-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .arrow-down {
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 10px solid #006B3F;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+
+    <!-- ============ HERO ============ -->
+    <section class="max-w-6xl mx-auto px-6 pt-12 pb-10">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Architectuur-principe · toegepast op onze codebase</p>
+      <h1 class="text-4xl font-bold text-gray-900 leading-tight mb-4">
+        Losse boxen of diepe lades?
+      </h1>
+      <p class="text-lg text-gray-600 max-w-3xl leading-relaxed">
+        Ouster's <em>Philosophy of Software Design</em> zegt: de beste codebases bestaan uit
+        <strong class="text-primary-700">weinig grote "lades"</strong> met veel
+        verborgen complexiteit — niet uit <strong class="text-red-700">veel kleine
+        losse boxen</strong>. Hieronder: het principe + waar wij nu staan.
+      </p>
+    </section>
+
+    <!-- ============ CABINET METAPHOR ============ -->
+    <section class="max-w-6xl mx-auto px-6 pb-16">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- SHALLOW CABINET -->
+        <div>
+          <div class="flex items-center mb-4">
+            <span class="status-dot bg-red-500"></span>
+            <h2 class="text-xl font-bold text-gray-900">Shallow: losse boxen</h2>
+          </div>
+          <p class="text-sm text-gray-600 mb-5 h-12">
+            Veel kleine laatjes. Elk met een eigen label. Om iets te doen moet je
+            weten welk laatje + hoe ze samenhangen.
+          </p>
+
+          <div class="cabinet">
+            <div class="grid grid-cols-4 gap-2">
+              <!-- 20 tiny drawers -->
+              <div class="drawer drawer-tiny"><span class="drawer-label">email-pipe</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">pre-class</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">filter-gate</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">summary</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">mgmt-ins</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">gate-pipe</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">weekly</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">segment</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">embed</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">context</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">scan-needs</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">speaker</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">tagger</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">title</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">theme-d</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">summarize</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">link-the</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">risk-sp</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">save-ext</span></div>
+              <div class="drawer drawer-tiny"><span class="drawer-label">re-embed</span></div>
+            </div>
+          </div>
+
+          <div class="mt-5 space-y-2 text-sm">
+            <div class="flex items-start gap-2">
+              <span class="text-red-600 mt-0.5">✗</span>
+              <span class="text-gray-700">AI moet door 20 losse files navigeren om iets te snappen</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-red-600 mt-0.5">✗</span>
+              <span class="text-gray-700">Iedere wijziging raakt meerdere "boxen" tegelijk</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-red-600 mt-0.5">✗</span>
+              <span class="text-gray-700">Geen duidelijke "ingang" — alles is ingang</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEEP CABINET -->
+        <div>
+          <div class="flex items-center mb-4">
+            <span class="status-dot bg-primary-500"></span>
+            <h2 class="text-xl font-bold text-gray-900">Deep: grote lades</h2>
+          </div>
+          <p class="text-sm text-gray-600 mb-5 h-12">
+            Weinig grote lades met een simpel label. Binnenin zit dezelfde
+            complexiteit, maar die hoef je niet te zien om hem te gebruiken.
+          </p>
+
+          <div class="cabinet">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="drawer drawer-big flex items-center justify-center">
+                <span class="drawer-label drawer-label-big">📧 Email</span>
+              </div>
+              <div class="drawer drawer-big flex items-center justify-center">
+                <span class="drawer-label drawer-label-big">📅 Meeting</span>
+              </div>
+              <div class="drawer drawer-big flex items-center justify-center">
+                <span class="drawer-label drawer-label-big">📊 Weekly Summary</span>
+              </div>
+              <div class="drawer drawer-big flex items-center justify-center">
+                <span class="drawer-label drawer-label-big">🧵 Themes</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 space-y-2 text-sm">
+            <div class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">✓</span>
+              <span class="text-gray-700">AI kent alleen de <strong>4 ingangen</strong> — de rest is verborgen</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">✓</span>
+              <span class="text-gray-700">Wijzigingen binnen een lade blijven binnen die lade</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">✓</span>
+              <span class="text-gray-700">Eén plek om te testen: de "deur"</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- KEY INSIGHT -->
+      <div class="mt-10 bg-primary-50 border-l-4 border-primary-500 p-5 rounded-r-lg">
+        <p class="text-sm text-gray-700 leading-relaxed">
+          <strong class="text-primary-800">Kern:</strong> dezelfde code zit in
+          beide kasten. Het verschil is de <em>buitenkant</em>. Een diepe module
+          heeft <strong>veel functionaliteit achter weinig toegangspunten</strong>.
+          Voor AI (en voor jou) betekent dat: minder te onthouden, minder fouten,
+          sneller begrip.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ ONZE CODEBASE ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Toegepast</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Hoe staat onze codebase ervoor?</h2>
+        <p class="text-gray-600 max-w-3xl mb-10">
+          Geen rewrite nodig — wel bewustzijn. We zijn op drie niveaus verschillend
+          goed bezig.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+          <!-- GROEN -->
+          <div class="bg-primary-50 border-2 border-primary-200 rounded-lg p-5">
+            <div class="flex items-center mb-3">
+              <span class="status-dot bg-primary-500"></span>
+              <h3 class="font-bold text-primary-900">Dit werkt al</h3>
+            </div>
+            <p class="text-sm text-gray-700 mb-4 leading-relaxed">
+              Op <strong>package-niveau</strong> zijn we al diep. De 4 lades van
+              onze monorepo verbergen complexiteit netjes:
+            </p>
+            <div class="space-y-2 text-xs font-mono">
+              <div class="bg-white border border-primary-200 rounded px-2 py-1.5">
+                <span class="text-primary-700 font-semibold">@repo/database</span>
+                <span class="text-gray-500"> → listMeetings()</span>
+              </div>
+              <div class="bg-white border border-primary-200 rounded px-2 py-1.5">
+                <span class="text-primary-700 font-semibold">@repo/ai</span>
+                <span class="text-gray-500"> → processMeeting()</span>
+              </div>
+              <div class="bg-white border border-primary-200 rounded px-2 py-1.5">
+                <span class="text-primary-700 font-semibold">@repo/mcp</span>
+                <span class="text-gray-500"> → createMcpServer()</span>
+              </div>
+              <div class="bg-white border border-primary-200 rounded px-2 py-1.5">
+                <span class="text-primary-700 font-semibold">@repo/ui</span>
+                <span class="text-gray-500"> → Button, Card, ...</span>
+              </div>
+            </div>
+            <p class="text-xs text-gray-600 mt-4 italic">
+              Een action in cockpit hoeft niet te weten <em>hoe</em> een meeting
+              opgehaald wordt. Klassiek deep-module gedrag.
+            </p>
+          </div>
+
+          <!-- AMBER -->
+          <div class="bg-amber-50 border-2 border-amber-200 rounded-lg p-5">
+            <div class="flex items-center mb-3">
+              <span class="status-dot bg-amber-500"></span>
+              <h3 class="font-bold text-amber-900">Dit groeit de goede kant op</h3>
+            </div>
+            <p class="text-sm text-gray-700 mb-4 leading-relaxed">
+              In <code class="text-xs bg-white px-1 py-0.5 rounded border border-amber-200">apps/cockpit/src/actions/</code>
+              verschijnen submappen — de eerste stap richting diep:
+            </p>
+            <div class="space-y-2 text-xs font-mono">
+              <div class="bg-white border border-amber-200 rounded px-2 py-1.5">
+                <span class="text-amber-700">actions/</span><span class="text-gray-500">themes/</span>
+                <div class="text-gray-400 pl-4">├─ crud.ts</div>
+                <div class="text-gray-400 pl-4">├─ review.ts</div>
+                <div class="text-gray-400 pl-4">└─ regenerate.ts</div>
+              </div>
+              <div class="bg-white border border-amber-200 rounded px-2 py-1.5">
+                <span class="text-amber-700">actions/</span><span class="text-gray-500">meeting-pipeline/</span>
+                <div class="text-gray-400 pl-4">├─ regenerate-meeting.ts</div>
+                <div class="text-gray-400 pl-4">├─ regenerate-risks.ts</div>
+                <div class="text-gray-400 pl-4">└─ reprocess-meeting.ts</div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-600 mt-4 italic">
+              Nog geen <code class="text-xs bg-white px-1 py-0.5 rounded">index.ts</code> als
+              deur — zonder die "deur" kan elke file van buiten geraakt worden.
+              Halverwege.
+            </p>
+          </div>
+
+          <!-- ROOD -->
+          <div class="bg-red-50 border-2 border-red-200 rounded-lg p-5">
+            <div class="flex items-center mb-3">
+              <span class="status-dot bg-red-500"></span>
+              <h3 class="font-bold text-red-900">Hier groeit shallow-drift</h3>
+            </div>
+            <p class="text-sm text-gray-700 mb-4 leading-relaxed">
+              <code class="text-xs bg-white px-1 py-0.5 rounded border border-red-200">packages/ai/src/</code>
+              heeft 2 mappen met veel platte files:
+            </p>
+            <div class="space-y-2 text-xs font-mono">
+              <div class="bg-white border border-red-200 rounded px-2 py-1.5">
+                <span class="text-red-700">pipeline/</span>
+                <span class="text-gray-500 ml-1">20+ files</span>
+                <div class="text-gray-400 pl-4 text-[10px] leading-relaxed">
+                  email-pipeline, email-pre-classifier,<br>
+                  email-filter-gatekeeper, summary-pipeline,<br>
+                  management-insights-pipeline, ...
+                </div>
+              </div>
+              <div class="bg-white border border-red-200 rounded px-2 py-1.5">
+                <span class="text-red-700">agents/</span>
+                <span class="text-gray-500 ml-1">15+ files</span>
+                <div class="text-gray-400 pl-4 text-[10px] leading-relaxed">
+                  gatekeeper, summarizer, classifier,<br>
+                  theme-detector, risk-specialist, ...
+                </div>
+              </div>
+            </div>
+            <p class="text-xs text-gray-600 mt-4 italic">
+              Geen facade. Consumer moet weten welke file precies. Elk nieuw
+              agent = nóg een losse box erbij.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HET VOORSTEL ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Het voorstel</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">
+        <code class="text-primary-700">index.ts</code> als "deur van de lade"
+      </h2>
+      <p class="text-gray-600 max-w-3xl mb-10">
+        Niet herstructureren als sprint. Wel deze regel toepassen zodra een
+        domein z'n 3e of 4e bestand krijgt: één <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded">index.ts</code>
+        die alleen exporteert wat van buiten nodig is. Alles anders = intern.
+      </p>
+
+      <!-- BEFORE / AFTER -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- BEFORE -->
+        <div>
+          <div class="flex items-center mb-3">
+            <span class="status-dot bg-red-500"></span>
+            <h3 class="font-semibold text-gray-900">Nu: <code class="text-sm">packages/ai/src/pipeline/</code></h3>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 shadow-lg">
+            <div class="text-red-400 mb-2">// Alles is van buiten bereikbaar</div>
+            <div>pipeline/</div>
+            <div class="pl-3">├─ email-pipeline.ts</div>
+            <div class="pl-3">├─ email-pre-classifier.ts</div>
+            <div class="pl-3">├─ email-filter-gatekeeper.ts</div>
+            <div class="pl-3">├─ summary-pipeline.ts</div>
+            <div class="pl-3">├─ management-insights-pipeline.ts</div>
+            <div class="pl-3">├─ gatekeeper-pipeline.ts</div>
+            <div class="pl-3">├─ weekly-summary-pipeline.ts</div>
+            <div class="pl-3">├─ segment-builder.ts</div>
+            <div class="pl-3">├─ embed-pipeline.ts</div>
+            <div class="pl-3 text-gray-500">└─ ... (11 meer)</div>
+            <div class="mt-4 pt-3 border-t border-gray-700 text-red-300">
+              <div>// Consumer moet de juiste file raden:</div>
+              <div class="text-yellow-200">import { x } from './pipeline/email-filter-gatekeeper'</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AFTER -->
+        <div>
+          <div class="flex items-center mb-3">
+            <span class="status-dot bg-primary-500"></span>
+            <h3 class="font-semibold text-gray-900">Straks: gegroepeerd achter een deur</h3>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 shadow-lg">
+            <div class="text-primary-300 mb-2">// Elke lade heeft 1 duidelijke ingang</div>
+            <div>pipeline/</div>
+            <div class="pl-3">├─ email/</div>
+            <div class="pl-6 text-primary-300">│  ├─ index.ts  ← de deur</div>
+            <div class="pl-6 text-gray-500">│  ├─ pre-classifier.ts</div>
+            <div class="pl-6 text-gray-500">│  ├─ filter-gatekeeper.ts</div>
+            <div class="pl-6 text-gray-500">│  └─ run.ts</div>
+            <div class="pl-3">├─ meeting/</div>
+            <div class="pl-6 text-primary-300">│  ├─ index.ts  ← de deur</div>
+            <div class="pl-6 text-gray-500">│  ├─ gatekeeper.ts</div>
+            <div class="pl-6 text-gray-500">│  └─ summarize.ts</div>
+            <div class="pl-3">├─ weekly/</div>
+            <div class="pl-6 text-primary-300">│  └─ index.ts  ← de deur</div>
+            <div class="pl-3">└─ themes/</div>
+            <div class="pl-6 text-primary-300">   └─ index.ts  ← de deur</div>
+            <div class="mt-4 pt-3 border-t border-gray-700 text-primary-200">
+              <div>// Consumer ziet alleen de deur:</div>
+              <div class="text-green-300">import { processEmail } from './pipeline/email'</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DE DEUR UITGELICHT -->
+      <div class="mt-10 bg-gradient-to-br from-primary-50 to-white border border-primary-200 rounded-xl p-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
+          <div class="md:col-span-2">
+            <div class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-2">Zoom in</div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">Wat doet <code class="text-primary-700">index.ts</code>?</h3>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              Het is de <strong>enige file</strong> in de map die de buitenwereld
+              mag importeren. Hij re-exporteert wat nodig is en <em>verbergt</em>
+              de rest. Zo weet AI (en jij) in één oogopslag: "Dit is wat email
+              kan doen — de rest gaat me niets aan."
+            </p>
+          </div>
+
+          <div class="md:col-span-3">
+            <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 shadow-lg">
+              <div class="text-gray-500">// packages/ai/src/pipeline/email/index.ts</div>
+              <div class="mt-2 text-primary-300">// ✓ Wat de buitenwereld mag zien:</div>
+              <div class="text-yellow-200">export { processEmail } from './run'</div>
+              <div class="text-yellow-200">export type { EmailResult } from './types'</div>
+              <div class="mt-3 text-gray-500">// ✗ Wat intern blijft:</div>
+              <div class="text-gray-600">// - pre-classifier.ts</div>
+              <div class="text-gray-600">// - filter-gatekeeper.ts</div>
+              <div class="text-gray-600">// - helpers.ts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DE REGEL ============ -->
+    <section class="bg-primary-700 text-white py-14">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <p class="text-xs uppercase tracking-widest text-primary-200 font-semibold mb-4">De regel</p>
+        <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-6">
+          "Zodra een domein z'n 3e of 4e file krijgt,<br>
+          verplaats naar een submap + schrijf <code class="font-mono">index.ts</code>."
+        </h2>
+        <p class="text-primary-100 text-lg max-w-2xl mx-auto leading-relaxed">
+          Eén kleine gewoonte. Geen Big Refactor. Met elke sprint wordt de
+          codebase vanzelf dieper — precies wat AI nodig heeft om goed werk te
+          leveren zonder dat jij alles in je hoofd moet houden.
+        </p>
+        <div class="mt-8 inline-flex items-center gap-3 bg-primary-600 border border-primary-400 rounded-full px-5 py-2.5 text-sm">
+          <span>🎯</span>
+          <span>Eerstvolgende kandidaat: <code class="font-mono bg-primary-800 px-2 py-0.5 rounded">packages/ai/src/pipeline/</code></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="max-w-6xl mx-auto px-6 py-8 text-center text-xs text-gray-400">
+      <p>Gebaseerd op John Ousterhout, <em>A Philosophy of Software Design</em>
+      + talk "Claude Code for real engineers".</p>
+    </footer>
+
+  </body>
+</html>

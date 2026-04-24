@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stap 1: Schoonmaak van actions/ — uitvoeringsplan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+            },
+            fontFamily: {
+              mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "📋 UITVOERINGSPLAN — stap 1 van de migratie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .step-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: #006B3F;
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .action-num {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        background: white;
+        border: 2px solid #006B3F;
+        color: #006B3F;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+      .arrow-down {
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 10px solid #9ca3af;
+        margin: 6px auto;
+      }
+      .diamond-wrap {
+        display: flex;
+        justify-content: center;
+      }
+      .diamond {
+        width: 280px;
+        height: 160px;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 3px solid #f59e0b;
+        transform: rotate(45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+      }
+      .diamond-inner {
+        transform: rotate(-45deg);
+        max-width: 200px;
+        text-align: center;
+      }
+      .check-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: white;
+        border: 1px solid #86efac;
+        color: #065f46;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .check-badge-manual {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fef9c3;
+        border: 1px solid #facc15;
+        color: #78350f;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+
+    <!-- ============ HERO ============ -->
+    <section class="max-w-6xl mx-auto px-6 pt-12 pb-8">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Uitvoeringsplan · migratie stap 1</p>
+      <h1 class="text-4xl font-bold text-gray-900 leading-tight mb-4">
+        Schoonmaak van <code class="text-primary-700">apps/cockpit/src/actions/</code>
+      </h1>
+      <p class="text-lg text-gray-600 max-w-3xl leading-relaxed">
+        Twee substappen. Eerst afmaken wat al half-gedaan is. Dan stoppen, evalueren, beslissen.
+      </p>
+    </section>
+
+    <!-- ============ SCOPE-BOX ============ -->
+    <section class="max-w-6xl mx-auto px-6 pb-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-primary-50 border-2 border-primary-300 rounded-xl p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xl">✓</span>
+            <h3 class="font-bold text-primary-900">Wél in scope nu</h3>
+          </div>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">→</span>
+              <span><code class="text-xs bg-white px-1.5 py-0.5 rounded">actions/meetings.ts</code> leegtrekken naar <code class="text-xs bg-white px-1.5 py-0.5 rounded">actions/meetings/</code></span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">→</span>
+              <span><code class="text-xs bg-white px-1.5 py-0.5 rounded">index.ts</code> toevoegen aan 3 bestaande submappen</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">→</span>
+              <span>Imports updaten waar nodig</span>
+            </li>
+          </ul>
+        </div>
+        <div class="bg-red-50 border-2 border-red-300 rounded-xl p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xl">✗</span>
+            <h3 class="font-bold text-red-900">Níét in scope nu</h3>
+          </div>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start gap-2">
+              <span class="text-red-500 mt-0.5">✗</span>
+              <span>Geen <code class="text-xs bg-white px-1.5 py-0.5 rounded">features/</code>-map aanmaken</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-red-500 mt-0.5">✗</span>
+              <span>Geen <code class="text-xs bg-white px-1.5 py-0.5 rounded">packages/ai/pipeline/</code> aanraken</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-red-500 mt-0.5">✗</span>
+              <span>Geen drive-by renames / cleanups</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-red-500 mt-0.5">✗</span>
+              <span>Geen andere actions (email/team/dev-detector) in submappen</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BESLISPUNT ============ -->
+    <section class="max-w-6xl mx-auto px-6 pb-16">
+      <div class="bg-white border-2 border-amber-300 rounded-xl p-6">
+        <div class="flex items-start gap-4">
+          <div class="text-3xl">🔀</div>
+          <div class="flex-1">
+            <p class="text-xs uppercase tracking-widest text-amber-700 font-semibold mb-2">Beslispunt — vóór we beginnen</p>
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">
+              <code class="text-amber-800">index.ts</code> per submap — ja of nee?
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div class="border-2 border-primary-300 bg-primary-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="font-bold text-primary-900">Optie A — Met <code class="text-sm">index.ts</code></span>
+                  <span class="tag bg-primary-200 text-primary-900">Advies</span>
+                </div>
+                <div class="bg-gray-900 rounded px-3 py-2 font-mono text-xs text-green-300 mb-3">
+                  import {'{ ... }'} from '@/actions/themes'
+                </div>
+                <ul class="text-sm text-gray-700 space-y-1">
+                  <li>✓ Duidelijke "deur" per feature</li>
+                  <li>✓ Dwingt publieke API af</li>
+                  <li>✓ Ousterhout "deep modules"</li>
+                  <li>△ Iets zwaardere bundel (Next.js 16 mitigeert)</li>
+                </ul>
+              </div>
+              <div class="border-2 border-gray-300 bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="font-bold text-gray-800">Optie B — Zonder <code class="text-sm">index.ts</code></span>
+                  <span class="tag bg-gray-200 text-gray-700">Alternatief</span>
+                </div>
+                <div class="bg-gray-900 rounded px-3 py-2 font-mono text-xs text-yellow-200 mb-3">
+                  import {'{ ... }'} from '@/actions/themes/crud'
+                </div>
+                <ul class="text-sm text-gray-700 space-y-1">
+                  <li>✓ Snellere dev-builds</li>
+                  <li>✓ Bulletproof React-stijl</li>
+                  <li>△ Elke file is impliciet "publiek"</li>
+                  <li>△ Consumer moet exact bestand weten</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-gray-700">
+              <strong class="text-amber-800">Claude's advies voor jullie context:</strong>
+              Optie A. Jij bent non-coder + AI-gedreven — "één duidelijke ingang per feature" is meer waard dan een paar ms build-snelheid.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STAP 1A ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="step-num">1a</div>
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900"><code class="text-primary-700">meetings.ts</code> ontmantelen</h2>
+            <p class="text-sm text-gray-600">De 335-regel-file verdelen over submap-files en verwijderen.</p>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="tag bg-red-200 text-red-900">Input — wat nu is</span>
+              <code class="font-mono text-sm text-gray-900">actions/meetings.ts</code>
+            </div>
+            <span class="text-xs text-gray-600">335 regels · 7 actions</span>
+          </div>
+          <div class="text-xs text-gray-600 mt-2 font-mono pl-3">
+            + actions/meetings/field-updates.ts (al aanwezig)<br>
+            + actions/meetings/lifecycle.ts (al aanwezig)
+          </div>
+        </div>
+
+        <div class="flex justify-center py-2"><div class="arrow-down"></div></div>
+
+        <!-- Acties -->
+        <div class="space-y-3">
+
+          <div class="bg-white border border-primary-200 rounded-lg p-4 flex items-start gap-4">
+            <div class="action-num">1</div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1">Claude leest & groepeert</div>
+              <div class="text-sm text-gray-600">Identificeer logische groepen: <code class="text-xs bg-gray-100 px-1 rounded">pipeline</code>, <code class="text-xs bg-gray-100 px-1 rounded">field-updates</code>, <code class="text-xs bg-gray-100 px-1 rounded">lifecycle</code>, <code class="text-xs bg-gray-100 px-1 rounded">crud</code>.</div>
+            </div>
+          </div>
+
+          <div class="bg-white border border-primary-200 rounded-lg p-4 flex items-start gap-4">
+            <div class="action-num">2</div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1">Verplaats naar submap</div>
+              <div class="text-sm text-gray-600">Per groep een file: bestaande files aanvullen (<code class="text-xs bg-gray-100 px-1 rounded">field-updates.ts</code>, <code class="text-xs bg-gray-100 px-1 rounded">lifecycle.ts</code>) of nieuw maken waar nodig.</div>
+            </div>
+          </div>
+
+          <div class="bg-white border border-primary-200 rounded-lg p-4 flex items-start gap-4">
+            <div class="action-num">3</div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1">Update consumer-imports</div>
+              <div class="text-sm text-gray-600">Alle files die <code class="text-xs bg-gray-100 px-1 rounded">from '@/actions/meetings'</code> gebruiken krijgen de juiste submap-path (of straks: via <code class="text-xs bg-gray-100 px-1 rounded">index.ts</code> bij stap 1b).</div>
+            </div>
+          </div>
+
+          <div class="bg-white border border-primary-200 rounded-lg p-4 flex items-start gap-4">
+            <div class="action-num">4</div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-1">Oude file verwijderen</div>
+              <div class="text-sm text-gray-600"><code class="text-xs bg-gray-100 px-1 rounded">rm actions/meetings.ts</code> — geen "voor de zekerheid laten staan".</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="flex justify-center py-3"><div class="arrow-down"></div></div>
+
+        <!-- Verificatie -->
+        <div class="bg-primary-50 border-2 border-primary-300 rounded-xl p-5">
+          <p class="text-xs uppercase tracking-widest text-primary-700 font-semibold mb-3">Verificatie — pas door naar 1b als al deze groen zijn</p>
+          <div class="flex flex-wrap gap-2">
+            <span class="check-badge">✓ <code>npm run type-check</code> passeert</span>
+            <span class="check-badge">✓ <code>npm run lint</code> passeert</span>
+            <span class="check-badge">✓ <code>npm run dev</code> start zonder errors</span>
+            <span class="check-badge-manual">👤 Stef: open meeting in browser, klik actie, werkt</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STAP 1B ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="step-num">1b</div>
+        <div>
+          <h2 class="text-2xl font-bold text-gray-900"><code class="text-primary-700">index.ts</code> als deur toevoegen</h2>
+          <p class="text-sm text-gray-600">Eén deur per submap. Consumer importeert alleen via de deur.</p>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div class="bg-amber-50 border-2 border-amber-200 rounded-lg p-4 mb-2">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="tag bg-amber-200 text-amber-900">Input — 3 submappen zonder deur</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-mono">
+          <div class="bg-white border border-amber-200 rounded px-2 py-1.5">actions/themes/ (3 files)</div>
+          <div class="bg-white border border-amber-200 rounded px-2 py-1.5">actions/meeting-pipeline/ (3 files)</div>
+          <div class="bg-white border border-amber-200 rounded px-2 py-1.5">actions/meetings/ (na 1a schoon)</div>
+        </div>
+      </div>
+
+      <div class="flex justify-center py-2"><div class="arrow-down"></div></div>
+
+      <!-- Acties -->
+      <div class="space-y-3">
+
+        <div class="bg-white border border-primary-200 rounded-lg p-4 flex items-start gap-4">
+          <div class="action-num">1</div>
+          <div class="flex-1">
+            <div class="font-semibold text-gray-900 mb-1">Maak <code class="text-sm">themes/index.ts</code></div>
+            <div class="bg-gray-900 rounded px-3 py-2 font-mono text-xs text-gray-200 mt-2">
+              <div class="text-gray-500">// apps/cockpit/src/actions/themes/index.ts</div>
+              <div class="text-primary-200">export * from './crud'</div>
+              <div class="text-primary-200">export * from './review'</div>
+              <div class="text-primary-200">export * from './regenerate'</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-primary-200 rounded-lg p-4 flex items-start gap-4">
+          <div class="action-num">2</div>
+          <div class="flex-1">
+            <div class="font-semibold text-gray-900 mb-1">Maak <code class="text-sm">meeting-pipeline/index.ts</code></div>
+            <div class="text-sm text-gray-600">Re-export van <code class="text-xs bg-gray-100 px-1 rounded">regenerate-meeting</code>, <code class="text-xs bg-gray-100 px-1 rounded">regenerate-risks</code>, <code class="text-xs bg-gray-100 px-1 rounded">reprocess-meeting</code>.</div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-primary-200 rounded-lg p-4 flex items-start gap-4">
+          <div class="action-num">3</div>
+          <div class="flex-1">
+            <div class="font-semibold text-gray-900 mb-1">Maak <code class="text-sm">meetings/index.ts</code></div>
+            <div class="text-sm text-gray-600">Re-export van alle files uit stap 1a (<code class="text-xs bg-gray-100 px-1 rounded">field-updates</code>, <code class="text-xs bg-gray-100 px-1 rounded">lifecycle</code>, nieuwe splits).</div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-primary-200 rounded-lg p-4 flex items-start gap-4">
+          <div class="action-num">4</div>
+          <div class="flex-1">
+            <div class="font-semibold text-gray-900 mb-1">Verander consumer-imports</div>
+            <div class="text-sm text-gray-600 mb-2">Van diepe paden → via de deur.</div>
+            <div class="bg-gray-900 rounded px-3 py-2 font-mono text-xs">
+              <div class="text-red-400">- import {'{ ... }'} from '@/actions/themes/crud'</div>
+              <div class="text-green-300">+ import {'{ ... }'} from '@/actions/themes'</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex justify-center py-3"><div class="arrow-down"></div></div>
+
+      <!-- Verificatie -->
+      <div class="bg-primary-50 border-2 border-primary-300 rounded-xl p-5">
+        <p class="text-xs uppercase tracking-widest text-primary-700 font-semibold mb-3">Verificatie — stap 1 is klaar als al deze groen zijn</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="check-badge">✓ <code>npm run type-check</code> passeert</span>
+          <span class="check-badge">✓ <code>npm run lint</code> passeert</span>
+          <span class="check-badge">✓ Grep op <code>@/actions/themes/crud</code> → 0 matches</span>
+          <span class="check-badge">✓ Grep op <code>@/actions/meeting-pipeline/regenerate-*</code> → 0 matches</span>
+          <span class="check-badge-manual">👤 Stef: dashboard laden, themes-pagina werkt</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VOOR/NA ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Resultaat</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-8">Voor en na stap 1</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- VOOR -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+              <h3 class="font-bold text-gray-900">Voor (nu)</h3>
+            </div>
+            <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 shadow-lg">
+              <div class="text-gray-400">actions/</div>
+              <div class="pl-3 text-yellow-200">├─ meetings.ts  <span class="text-red-400">← 335 regels!</span></div>
+              <div class="pl-3">├─ meetings/</div>
+              <div class="pl-6 text-gray-400">│  ├─ field-updates.ts</div>
+              <div class="pl-6 text-gray-400">│  └─ lifecycle.ts</div>
+              <div class="pl-3">├─ themes/</div>
+              <div class="pl-6 text-gray-400">│  ├─ crud.ts</div>
+              <div class="pl-6 text-gray-400">│  ├─ review.ts</div>
+              <div class="pl-6 text-gray-400">│  └─ regenerate.ts  <span class="text-red-400">← geen deur</span></div>
+              <div class="pl-3">├─ meeting-pipeline/</div>
+              <div class="pl-6 text-gray-400">│  ├─ regenerate-meeting.ts</div>
+              <div class="pl-6 text-gray-400">│  ├─ regenerate-risks.ts</div>
+              <div class="pl-6 text-gray-400">│  └─ reprocess-meeting.ts  <span class="text-red-400">← geen deur</span></div>
+              <div class="pl-3 text-gray-500">└─ ... (plat, blijft ongewijzigd)</div>
+            </div>
+          </div>
+
+          <!-- NA -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-3 h-3 rounded-full bg-primary-500 inline-block"></span>
+              <h3 class="font-bold text-gray-900">Na stap 1</h3>
+            </div>
+            <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 shadow-lg">
+              <div class="text-gray-400">actions/</div>
+              <div class="pl-3 text-gray-500">│ <span class="text-green-400">✓ meetings.ts — verwijderd</span></div>
+              <div class="pl-3">├─ meetings/</div>
+              <div class="pl-6 text-gray-400">│  ├─ field-updates.ts</div>
+              <div class="pl-6 text-gray-400">│  ├─ lifecycle.ts</div>
+              <div class="pl-6 text-gray-400">│  ├─ pipeline.ts  <span class="text-green-400">← uit 1a</span></div>
+              <div class="pl-6 text-gray-400">│  ├─ crud.ts  <span class="text-green-400">← uit 1a</span></div>
+              <div class="pl-6 text-primary-300">│  └─ index.ts  <span class="text-green-400">← de deur</span></div>
+              <div class="pl-3">├─ themes/</div>
+              <div class="pl-6 text-gray-400">│  ├─ crud.ts</div>
+              <div class="pl-6 text-gray-400">│  ├─ review.ts</div>
+              <div class="pl-6 text-gray-400">│  ├─ regenerate.ts</div>
+              <div class="pl-6 text-primary-300">│  └─ index.ts  <span class="text-green-400">← de deur</span></div>
+              <div class="pl-3">├─ meeting-pipeline/</div>
+              <div class="pl-6 text-gray-400">│  └─ ... + <span class="text-primary-300">index.ts</span></div>
+              <div class="pl-3 text-gray-500">└─ ... (plat, ongewijzigd)</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NA STAP 1 ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Daarna</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Wat gebeurt er als stap 1 klaar is?</h2>
+
+      <div class="relative">
+        <!-- Timeline -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+          <div class="bg-primary-700 text-white rounded-xl p-5 relative">
+            <div class="text-xs uppercase tracking-widest text-primary-200 mb-2">Nu</div>
+            <div class="font-bold mb-1">Stap 1</div>
+            <div class="text-sm text-primary-100">Schoonmaak actions/</div>
+          </div>
+
+          <div class="bg-amber-100 border-2 border-amber-300 rounded-xl p-5">
+            <div class="text-xs uppercase tracking-widest text-amber-700 mb-2">Dan</div>
+            <div class="font-bold text-amber-900 mb-1">⏸ Pauze</div>
+            <div class="text-sm text-amber-800">Evalueren: voelt dit goed? Werkt alles?</div>
+          </div>
+
+          <div class="bg-white border-2 border-gray-200 rounded-xl p-5 opacity-70">
+            <div class="text-xs uppercase tracking-widest text-gray-500 mb-2">Volgende sprint?</div>
+            <div class="font-bold text-gray-700 mb-1">Stap 2</div>
+            <div class="text-sm text-gray-600">Pilot: <code class="text-xs">features/themes/</code></div>
+          </div>
+
+          <div class="bg-white border-2 border-gray-200 rounded-xl p-5 opacity-70">
+            <div class="text-xs uppercase tracking-widest text-gray-500 mb-2">Daarna</div>
+            <div class="font-bold text-gray-700 mb-1">Stap 3+</div>
+            <div class="text-sm text-gray-600">Rest "onderweg" tijdens normale sprints</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="mt-8 bg-gradient-to-br from-primary-50 to-white border border-primary-200 rounded-xl p-6">
+        <div class="flex gap-4 items-start">
+          <div class="text-2xl">🎯</div>
+          <div>
+            <h3 class="font-bold text-primary-900 mb-1">Belangrijk: stoppen ná stap 1</h3>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              Geen doorstomen naar stap 2 "nu ik er toch ben". Elke stap is een
+              eigen beslissing. Als stap 1 goed voelt en werkt → tijd om stap 2
+              te plannen. Als er iets vreemds opdook → eerst oplossen vóór we
+              verder gaan.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLOT ============ -->
+    <section class="bg-primary-700 text-white py-14">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <p class="text-xs uppercase tracking-widest text-primary-200 font-semibold mb-4">Klaar om te starten?</p>
+        <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-6">
+          Twee groene vinkjes nodig:
+        </h2>
+        <div class="flex flex-wrap gap-4 justify-center mb-6">
+          <div class="bg-primary-600 border border-primary-400 rounded-xl px-5 py-3">
+            <div class="text-xs uppercase tracking-widest text-primary-200 mb-1">Beslissing 1</div>
+            <div class="text-sm"><code class="bg-primary-800 px-2 py-0.5 rounded">index.ts</code> — ja of nee?</div>
+          </div>
+          <div class="bg-primary-600 border border-primary-400 rounded-xl px-5 py-3">
+            <div class="text-xs uppercase tracking-widest text-primary-200 mb-1">Beslissing 2</div>
+            <div class="text-sm">Scope beperkt tot stap 1 — akkoord?</div>
+          </div>
+        </div>
+        <p class="text-primary-100 text-sm">
+          Beide ja → Claude begint met stap 1a, leest <code class="bg-primary-800 px-2 py-0.5 rounded">meetings.ts</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="max-w-6xl mx-auto px-6 py-8 text-center text-xs text-gray-400">
+      <p>Uitvoeringsplan · hoort bij het architectuur-drieluik in dezelfde map.</p>
+    </footer>
+
+  </body>
+</html>

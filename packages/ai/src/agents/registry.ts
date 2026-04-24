@@ -210,6 +210,34 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     promptFile: "risk_specialist.md",
     entrypoint: "packages/ai/src/pipeline/steps/risk-specialist.ts",
   },
+  {
+    id: "theme-detector",
+    name: "Theme Detector",
+    role: "De thema-kartograaf",
+    description:
+      "Draait serieel na de Gatekeeper en vóór Summarizer + RiskSpecialist. Identificeert welke cross-meeting thema's substantieel spelen (substantialiteitsregel: ≥2 kernpunten of ≥100 woorden) en stelt zeer selectief nieuwe thema's voor als dat écht ontbreekt. Extract-time scoping: extractions worden per-theme gelinkt via [Themes:] annotaties van Summarizer + RiskSpecialist — niet post-hoc over de hele meeting.",
+    mascot: "🧭",
+    model: "claude-sonnet-4-6",
+    modelLabel: "Sonnet 4.6",
+    quadrant: "cockpit",
+    status: "live",
+    promptFile: "theme-detector.md",
+    entrypoint: "packages/ai/src/pipeline/steps/theme-detector.ts",
+  },
+  {
+    id: "theme-narrator",
+    name: "Theme Narrator",
+    role: "De thema-verteller",
+    description:
+      "Draait per thema nadat meeting_themes wordt bijgewerkt: synthetiseert alle per-meeting theme-summaries tot één lopende thema-pagina met zes secties (De kern, Wat we terug zien komen, Waar jullie samen staan, Waar het schuurt, Wat nog hangt, De blinde vlek) + een signaal-check. Effort 'high' voor cross-meeting patroon-detectie in de blind-spots-sectie. Guardrail: <2 meetings met summary → agent wordt niet gecalled, sentinel-rij geschreven voor de UI empty-state.",
+    mascot: "🗣️",
+    model: "claude-sonnet-4-6",
+    modelLabel: "Sonnet 4.6",
+    quadrant: "cockpit",
+    status: "live",
+    promptFile: "theme-narrator.md",
+    entrypoint: "packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts",
+  },
 ];
 
 /**

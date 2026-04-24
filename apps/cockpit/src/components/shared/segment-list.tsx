@@ -12,7 +12,7 @@ import {
   Minus,
 } from "lucide-react";
 import { linkSegmentToProjectAction, removeSegmentTagAction } from "@/actions/segments";
-import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
+import type { MeetingSegment } from "@repo/database/queries/meetings/project-summaries";
 
 interface SegmentListProps {
   segments: MeetingSegment[];

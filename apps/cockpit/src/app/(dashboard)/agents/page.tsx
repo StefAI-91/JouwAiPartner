@@ -5,9 +5,9 @@ import {
   listRecentAgentRuns,
   type AgentMetrics,
 } from "@repo/database/queries/agent-runs";
-import { SystemOverview, type SystemStats } from "@/components/agents/system-overview";
-import { AgentCard } from "@/components/agents/agent-card";
-import { ActivityFeed } from "@/components/agents/activity-feed";
+import { SystemOverview, type SystemStats } from "@/features/agents/components/system-overview";
+import { AgentCard } from "@/features/agents/components/agent-card";
+import { ActivityFeed } from "@/features/agents/components/activity-feed";
 
 export const dynamic = "force-dynamic";
 

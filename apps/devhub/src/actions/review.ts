@@ -6,7 +6,7 @@ import { createClient } from "@repo/database/supabase/server";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { listIssues } from "@repo/database/queries/issues";
 import { getProjectById } from "@repo/database/queries/projects";
-import { saveProjectReview } from "@repo/database/mutations/project-reviews";
+import { saveProjectReview } from "@repo/database/mutations/projects/reviews";
 import { ensureProfileExists } from "@repo/database/mutations/team";
 import { runIssueReviewer, type IssueForReview } from "@repo/ai/agents/issue-reviewer";
 import { getAuthenticatedUser, isAuthBypassed } from "@repo/auth/helpers";

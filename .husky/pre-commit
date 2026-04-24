@@ -4,6 +4,10 @@ npx lint-staged
 # Zie scripts/check-no-direct-supabase.sh voor scope en allowlist.
 bash scripts/check-no-direct-supabase.sh
 
+# Feature-drift: blokkeer horizontale code voor domeinen die al een features/-folder hebben.
+# Zie CLAUDE.md § Feature-structuur en scripts/check-feature-drift.sh.
+bash scripts/check-feature-drift.sh
+
 # Regenerate dependency graph if any source files changed
 STAGED_SRC=$(git diff --cached --name-only -- 'packages/' 'apps/' | grep -E '\.(ts|tsx)$' || true)
 if [ -n "$STAGED_SRC" ]; then

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
-import { hasPortalProjectAccess } from "@repo/database/queries/portal-access";
+import { hasPortalProjectAccess } from "@repo/database/queries/portal/access";
 import { getPortalProjectDashboard } from "@repo/database/queries/portal";
 import { STATUS_LABELS } from "@repo/database/constants/projects";
 import { Badge } from "@repo/ui/badge";

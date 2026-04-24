@@ -8,7 +8,7 @@ import Link from "next/link";
 import { formatDate } from "@repo/ui/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import { ORG_TYPE_LABELS } from "@/components/shared/org-type-labels";
-import { AddOrganizationButton } from "@/components/clients/add-organization-button";
+import { AddOrganizationButton } from "@/features/directory/components/add-organization-button";
 
 // Commerciële relaties — administratie-organisaties (advisor, internal) leven op /administratie.
 const CLIENT_PAGE_TYPES = ["client", "partner", "supplier", "other"];

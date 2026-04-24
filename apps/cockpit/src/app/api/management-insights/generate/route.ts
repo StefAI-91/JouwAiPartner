@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateManagementInsights } from "@repo/ai/pipeline/management-insights-pipeline";
+import { generateManagementInsights } from "@repo/ai/pipeline/summary/management-insights";
 
 export const maxDuration = 120;
 

@@ -3,14 +3,15 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { createClient } from "@repo/database/supabase/server";
 import { getProjectById } from "@repo/database/queries/projects";
-import { getSegmentsByProjectId } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentsByProjectId } from "@repo/database/queries/meetings/project-summaries";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listPeople } from "@repo/database/queries/people";
 import { ExternalLink } from "lucide-react";
-import { ProjectSections } from "@/components/projects/project-sections";
-import { EditProject } from "@/components/projects/edit-project";
-import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
-import { ProjectTimeline } from "@/components/projects/project-timeline";
+import { ProjectSections } from "@/features/projects/components/project-sections";
+import { EditProject } from "@/features/projects/components/edit-project";
+import { ProjectSummaryCard } from "@/features/projects/components/project-summary-card";
+import { ProjectTimeline } from "@/features/projects/components/project-timeline";
+import { extractProjectTimeline } from "@repo/ai/validations/project-summary";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,19 +26,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   if (!project) notFound();
 
-  // Extract timeline from briefing structured_content
-  const structuredContent = project.briefing_summary?.structured_content;
-  const timeline =
-    structuredContent && Array.isArray((structuredContent as Record<string, unknown>).timeline)
-      ? ((structuredContent as Record<string, unknown>).timeline as {
-          date: string;
-          meeting_type: string;
-          title: string;
-          summary: string;
-          key_decisions: string[];
-          open_actions: string[];
-        }[])
-      : [];
+  // Gevalideerde timeline uit briefing.structured_content (lege array als corrupt).
+  // Schema-default vangt entries van vóór de email-uitbreiding op (source_type='meeting').
+  const timeline = extractProjectTimeline(project.briefing_summary?.structured_content);
 
   return (
     <div className="px-4 py-8 lg:px-10">
@@ -68,14 +59,28 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      {timeline.length > 0 && (
-        <div className="mb-6 space-y-4">
-          <ProjectTimeline timeline={timeline} />
-          <div className="flex justify-end">
-            <RegenerateSummaryButton entityType="project" entityId={project.id} />
-          </div>
-        </div>
-      )}
+      <div className="mb-6 space-y-6">
+        <ProjectSummaryCard
+          projectId={project.id}
+          startDate={project.start_date}
+          deadline={project.deadline}
+          context={project.context_summary}
+          briefing={
+            project.briefing_summary
+              ? {
+                  content: project.briefing_summary.content,
+                  version: project.briefing_summary.version,
+                  created_at: project.briefing_summary.created_at,
+                }
+              : null
+          }
+        />
+        <ProjectTimeline
+          timeline={timeline}
+          startDate={project.start_date}
+          deadline={project.deadline}
+        />
+      </div>
 
       {/* Tabs */}
       <ProjectSections

@@ -15,7 +15,7 @@ vi.mock("@repo/auth/access", () => ({
   getCurrentProfile: vi.fn(),
 }));
 
-vi.mock("@repo/database/queries/portal-access", () => ({
+vi.mock("@repo/database/queries/portal/access", () => ({
   hasPortalProjectAccess: vi.fn(),
 }));
 
@@ -25,7 +25,7 @@ vi.mock("@repo/database/mutations/issues", () => ({
 
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@repo/auth/access";
-import { hasPortalProjectAccess } from "@repo/database/queries/portal-access";
+import { hasPortalProjectAccess } from "@repo/database/queries/portal/access";
 import { insertIssue } from "@repo/database/mutations/issues";
 import { submitFeedback } from "../../src/actions/feedback";
 

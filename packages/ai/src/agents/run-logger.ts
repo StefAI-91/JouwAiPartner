@@ -52,12 +52,12 @@ export interface AgentRunLogContext {
  */
 export async function withAgentRun<T>(
   ctx: AgentRunLogContext,
-  fn: () => Promise<{ result: T; usage?: AgentUsage }>,
+  fn: () => Promise<{ result: T; usage?: AgentUsage; metadata?: Record<string, unknown> }>,
 ): Promise<T> {
   const startedAt = Date.now();
 
   try {
-    const { result, usage } = await fn();
+    const { result, usage, metadata: runMetadata } = await fn();
 
     void logRun({
       agent_name: ctx.agent_name,
@@ -69,7 +69,7 @@ export async function withAgentRun<T>(
       reasoning_tokens: extractReasoningTokens(usage),
       cached_tokens: extractCachedTokens(usage),
       prompt_version: ctx.prompt_version ?? null,
-      metadata: ctx.metadata ?? {},
+      metadata: { ...(ctx.metadata ?? {}), ...(runMetadata ?? {}) },
     });
 
     return result;

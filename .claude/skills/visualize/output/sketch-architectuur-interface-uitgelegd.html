@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interface uitgelegd — menu vs keuken</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+            },
+            fontFamily: {
+              mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+              serif: ['Georgia', 'Cambria', 'serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "🎓 UITLEG — wat betekent 'interface'?";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      /* Menu kaart */
+      .menu-card {
+        background: #fefce8;
+        background-image:
+          repeating-linear-gradient(0deg, transparent, transparent 28px, #fef08a 28px, #fef08a 29px);
+        border: 3px solid #854d0e;
+        border-radius: 6px;
+        position: relative;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      }
+      .menu-card::before {
+        content: "MENU";
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #854d0e;
+        color: #fef3c7;
+        padding: 4px 16px;
+        font-family: Georgia, serif;
+        font-size: 14px;
+        letter-spacing: 0.2em;
+        border-radius: 3px;
+      }
+      /* Keuken */
+      .kitchen-card {
+        background: linear-gradient(180deg, #4b5563 0%, #1f2937 100%);
+        border: 3px solid #111827;
+        border-radius: 6px;
+        position: relative;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      }
+      .kitchen-card::before {
+        content: "KEUKEN";
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #111827;
+        color: #fbbf24;
+        padding: 4px 16px;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        letter-spacing: 0.2em;
+        border-radius: 3px;
+        font-weight: bold;
+      }
+      .step-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: #006B3F;
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      /* Restaurant door */
+      .restaurant-door {
+        background: linear-gradient(180deg, #92400e 0%, #7c2d12 100%);
+        border: 4px solid #451a03;
+        border-radius: 8px 8px 0 0;
+        position: relative;
+        padding: 8px;
+      }
+      .door-sign {
+        background: #fef3c7;
+        border: 2px solid #854d0e;
+        padding: 8px 12px;
+        text-align: center;
+        font-family: Georgia, serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+
+    <!-- ============ HERO ============ -->
+    <section class="max-w-6xl mx-auto px-6 pt-12 pb-10">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Uitleg · zonder jargon</p>
+      <h1 class="text-4xl font-bold text-gray-900 leading-tight mb-4">
+        Wat is een <em>interface</em>?
+      </h1>
+      <p class="text-lg text-gray-600 max-w-3xl leading-relaxed mb-6">
+        Eerst even wat het <strong>niet</strong> is: een scherm, een knop, een UI.
+        Dat verwart de meeste mensen. In software-architectuur betekent
+        "interface" iets heel anders — en met één simpele metafoor wordt het
+        kristalhelder.
+      </p>
+
+      <div class="bg-white border-2 border-primary-200 rounded-xl p-5 inline-block">
+        <div class="flex items-center gap-4">
+          <div class="text-4xl">📋</div>
+          <div>
+            <div class="text-xs uppercase tracking-widest text-primary-700 font-semibold">In één zin</div>
+            <div class="text-gray-900 font-medium max-w-lg">
+              Een <strong>interface</strong> is het <em>menu</em> van een stuk
+              code — wat de buitenwereld kan bestellen, niet hoe het gekookt wordt.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RESTAURANT METAFOOR ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-14">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">De metafoor</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-8">Een restaurant bestaat uit twee werelden</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+          <!-- MENU -->
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <span class="tag bg-amber-200 text-amber-900">Wat de klant ziet</span>
+              <span class="text-sm text-gray-600">— de interface</span>
+            </div>
+
+            <div class="menu-card p-8 pt-10 font-serif min-h-[380px]">
+              <h3 class="text-2xl text-center text-amber-900 mb-4 italic">Bij De Chef</h3>
+              <div class="border-t-2 border-amber-800 pt-4 space-y-3 text-amber-900">
+                <div class="flex justify-between items-baseline">
+                  <div>
+                    <div class="font-bold">Burger Classic</div>
+                    <div class="text-xs italic opacity-70">runder-patty, kaas, bun</div>
+                  </div>
+                  <div class="font-bold">€12</div>
+                </div>
+                <div class="flex justify-between items-baseline">
+                  <div>
+                    <div class="font-bold">Risotto Tartufo</div>
+                    <div class="text-xs italic opacity-70">truffel, parmezaan</div>
+                  </div>
+                  <div class="font-bold">€18</div>
+                </div>
+                <div class="flex justify-between items-baseline">
+                  <div>
+                    <div class="font-bold">Sea Bass</div>
+                    <div class="text-xs italic opacity-70">geroosterd, citroen</div>
+                  </div>
+                  <div class="font-bold">€24</div>
+                </div>
+                <div class="flex justify-between items-baseline">
+                  <div>
+                    <div class="font-bold">Tiramisu</div>
+                    <div class="text-xs italic opacity-70">huisgemaakt</div>
+                  </div>
+                  <div class="font-bold">€8</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-5 space-y-2 text-sm text-gray-700">
+              <div class="flex items-start gap-2">
+                <span class="text-primary-600 mt-0.5">✓</span>
+                <span>Wat je kunt bestellen</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-primary-600 mt-0.5">✓</span>
+                <span>Wat erin zit (input/ingrediënten)</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-primary-600 mt-0.5">✓</span>
+                <span>Wat het kost (prijs)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- KEUKEN -->
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <span class="tag bg-gray-800 text-gray-100">Wat de klant NIET ziet</span>
+              <span class="text-sm text-gray-600">— de implementatie</span>
+            </div>
+
+            <div class="kitchen-card p-6 pt-10 min-h-[380px] text-gray-200">
+              <div class="text-center mb-4">
+                <div class="text-5xl mb-2">👨‍🍳</div>
+                <div class="text-xs uppercase tracking-widest text-yellow-400">Achter de klapdeuren</div>
+              </div>
+              <div class="space-y-2 text-sm font-mono">
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-400">▸</span>
+                  <span>Welk mes gebruiken we?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-400">▸</span>
+                  <span>Op welk vuur? Hoeveel graden?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-400">▸</span>
+                  <span>Welke volgorde?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-400">▸</span>
+                  <span>Wie staat er bij de grill?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-400">▸</span>
+                  <span>Welke pan, welke kookwijn?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-400">▸</span>
+                  <span>Hoe wordt het geplateerd?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-400">▸</span>
+                  <span>Zout voor of na het bakken?</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-yellow-400">▸</span>
+                  <span>...</span>
+                </div>
+              </div>
+              <div class="mt-6 pt-4 border-t border-gray-600 text-xs text-gray-400 italic">
+                Chaos, keuzes, details — de klant ziet er <strong>niks</strong> van.
+              </div>
+            </div>
+
+            <div class="mt-5 space-y-2 text-sm text-gray-700">
+              <div class="flex items-start gap-2">
+                <span class="text-gray-400 mt-0.5">✗</span>
+                <span>Verborgen voor de klant</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-gray-400 mt-0.5">✗</span>
+                <span>Mag chef vrij invullen</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-gray-400 mt-0.5">✗</span>
+                <span>Kan veranderen zonder impact</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Flow tussen -->
+        <div class="mt-10 bg-primary-50 border-l-4 border-primary-500 rounded-r-lg p-5">
+          <div class="flex gap-4 items-start">
+            <div class="text-2xl">🔄</div>
+            <div>
+              <h3 class="font-bold text-primary-900 mb-2">Hoe ze samenwerken</h3>
+              <div class="text-sm text-gray-700 space-y-1">
+                <div><strong>1.</strong> Klant leest het menu (interface) en bestelt "Burger Classic"</div>
+                <div><strong>2.</strong> De keuken (implementatie) bakt, kookt, plateert — op z'n eigen manier</div>
+                <div><strong>3.</strong> Klant krijgt een burger die aan het menu voldoet</div>
+                <div class="pt-2 text-primary-800 font-medium">De klant weet niks van de keuken. De keuken mag veranderen. Zolang de burger op het menu blijft, werkt het.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ IN CODE ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Zelfde verhaal in code</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Een functie heeft ook een menu en een keuken</h2>
+      <p class="text-gray-600 max-w-3xl mb-10">
+        Neem <code class="text-sm bg-gray-100 px-1 rounded">updateThemeAction</code> uit jullie themes-feature.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Interface (menu) -->
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="tag bg-amber-200 text-amber-900">📋 INTERFACE</span>
+            <span class="text-sm text-gray-600">— het "menu-item"</span>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-5 font-mono text-sm text-gray-200 shadow-lg">
+            <div class="text-gray-500 text-xs mb-3">// Wat consumers zien:</div>
+            <div class="text-primary-300">export async function</div>
+            <div class="text-yellow-200 pl-2">updateThemeAction(</div>
+            <div class="pl-4">
+              <span class="text-gray-300">input</span>:
+              <span class="text-blue-300"> UpdateThemeInput</span>
+            </div>
+            <div class="text-yellow-200">): <span class="text-blue-300">Promise&lt;ActionResult&gt;</span></div>
+          </div>
+          <div class="mt-3 text-sm text-gray-600 space-y-1">
+            <div>→ Naam: <code class="text-xs bg-gray-100 px-1 rounded">updateThemeAction</code></div>
+            <div>→ Input: <code class="text-xs bg-gray-100 px-1 rounded">UpdateThemeInput</code></div>
+            <div>→ Output: <code class="text-xs bg-gray-100 px-1 rounded">ActionResult</code></div>
+          </div>
+          <p class="mt-3 text-xs text-gray-500 italic">
+            Dit is alles wat een consumer moet weten om de functie aan te roepen.
+          </p>
+        </div>
+
+        <!-- Implementatie (keuken) -->
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="tag bg-gray-800 text-gray-100">👨‍🍳 IMPLEMENTATIE</span>
+            <span class="text-sm text-gray-600">— de "keuken"</span>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-5 font-mono text-xs text-gray-300 shadow-lg">
+            <div class="text-gray-500 text-xs mb-2">// De body — consumer ziet dit NOOIT:</div>
+            <div class="text-gray-400">{</div>
+            <div class="pl-3 text-gray-300">
+              <span class="text-yellow-200">// 1. Zod-validatie</span><br>
+              <span class="text-gray-400">const parsed = updateThemeSchema.safeParse(input);</span><br>
+              <span class="text-gray-400">if (!parsed.success) return {...};</span><br><br>
+              <span class="text-yellow-200">// 2. Admin-guard</span><br>
+              <span class="text-gray-400">const guard = await requireAdminInAction();</span><br>
+              <span class="text-gray-400">if ('error' in guard) return guard;</span><br><br>
+              <span class="text-yellow-200">// 3. Supabase mutation</span><br>
+              <span class="text-gray-400">const result = await updateThemeMutation(...);</span><br><br>
+              <span class="text-yellow-200">// 4. Revalidate paths</span><br>
+              <span class="text-gray-400">revalidatePath('/themes');</span><br>
+              <span class="text-gray-400">revalidatePath('/');</span><br><br>
+              <span class="text-yellow-200">// 5. Return</span><br>
+              <span class="text-gray-400">return { success: true };</span>
+            </div>
+            <div class="text-gray-400">}</div>
+          </div>
+          <p class="mt-3 text-xs text-gray-500 italic">
+            Deze 30 regels mogen ook 300 worden, of heel anders geschreven.
+            Zolang de functie met dezelfde input dezelfde output geeft, merkt
+            consumer er niks van.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ ECHT VOORBEELD THEMES ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Jullie codebase</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">De interface van <code class="text-primary-700">features/themes/actions/</code></h2>
+        <p class="text-gray-600 max-w-3xl mb-8">
+          De héle themes-actions-laag biedt dit menu aan de rest van cockpit:
+        </p>
+
+        <div class="menu-card p-8 pt-10 max-w-2xl mx-auto font-serif">
+          <h3 class="text-2xl text-center text-amber-900 mb-2 italic">Themes Actions</h3>
+          <p class="text-center text-xs text-amber-800 italic mb-4">Wat andere files kunnen doen met themes</p>
+          <div class="border-t-2 border-amber-800 pt-4 space-y-3 text-amber-900">
+
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">updateThemeAction</div>
+                <div class="text-xs italic opacity-70">naam + beschrijving + emoji + matching-guide bijwerken</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">archiveThemeAction</div>
+                <div class="text-xs italic opacity-70">thema archiveren</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">createVerifiedThemeAction</div>
+                <div class="text-xs italic opacity-70">nieuw verified thema aanmaken</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">canEditThemesAction</div>
+                <div class="text-xs italic opacity-70">check of huidige user mag bewerken</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">approveThemeAction</div>
+                <div class="text-xs italic opacity-70">emerging thema goedkeuren</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">rejectEmergingThemeAction</div>
+                <div class="text-xs italic opacity-70">emerging thema afwijzen</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">rejectThemeMatchAction</div>
+                <div class="text-xs italic opacity-70">match tussen meeting + thema afwijzen</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">confirmThemeProposalAction</div>
+                <div class="text-xs italic opacity-70">voorstel bevestigen</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">rejectThemeProposalAction</div>
+                <div class="text-xs italic opacity-70">voorstel afwijzen</div>
+              </div>
+            </div>
+            <div class="flex justify-between items-baseline">
+              <div>
+                <div class="font-bold font-mono text-sm">regenerateMeetingThemesAction</div>
+                <div class="text-xs italic opacity-70">AI opnieuw thema's laten detecteren</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-5">
+            <div class="text-xs uppercase tracking-widest text-amber-700 font-semibold mb-2">Menu (interface)</div>
+            <div class="text-lg font-bold text-amber-900">10 functies</div>
+            <p class="text-sm text-gray-600 mt-1">Dit is alles wat andere code hoeft te weten.</p>
+          </div>
+          <div class="bg-gray-100 border border-gray-300 rounded-lg p-5">
+            <div class="text-xs uppercase tracking-widest text-gray-600 font-semibold mb-2">Keuken (implementatie)</div>
+            <div class="text-lg font-bold text-gray-900">~500 regels code</div>
+            <p class="text-sm text-gray-600 mt-1">Zod, auth, mutations, revalidates, error handling. Verborgen.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AI WIN ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Waarom dit ertoe doet</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Jij = menu-ontwerper. AI = chef.</h2>
+      <p class="text-gray-600 max-w-3xl mb-10">
+        Dit is waarom een goede interface het verschil maakt tussen "AI werkt
+        voor je" en "AI maakt een zooitje".
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Jouw rol -->
+        <div class="bg-primary-50 border-2 border-primary-300 rounded-xl p-6">
+          <div class="text-4xl mb-3">🧠</div>
+          <h3 class="text-xl font-bold text-primary-900 mb-2">Jouw rol: menu-ontwerper</h3>
+          <p class="text-sm text-gray-700 mb-4">
+            Strategisch denkwerk. Wat moet deze feature kunnen? Welke functies,
+            welke input, welke output?
+          </p>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600">→</span>
+              <span>"Welke acties bestaan er op themes?"</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600">→</span>
+              <span>"Wat gaat erin (input-schema)?"</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600">→</span>
+              <span>"Wat komt eruit (return type)?"</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600">→</span>
+              <span>"Wie mag dit doen (auth)?"</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- AI rol -->
+        <div class="bg-gray-800 text-gray-100 border-2 border-gray-900 rounded-xl p-6">
+          <div class="text-4xl mb-3">👨‍🍳</div>
+          <h3 class="text-xl font-bold text-yellow-300 mb-2">AI's rol: chef in de keuken</h3>
+          <p class="text-sm text-gray-300 mb-4">
+            Tactisch werk. Vul de body van de functie in — zolang het aan het
+            menu voldoet.
+          </p>
+          <ul class="space-y-2 text-sm text-gray-200">
+            <li class="flex items-start gap-2">
+              <span class="text-yellow-400">→</span>
+              <span>Zod-validatie schrijven</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-yellow-400">→</span>
+              <span>Database-calls maken</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-yellow-400">→</span>
+              <span>Error-handling toevoegen</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-yellow-400">→</span>
+              <span>revalidatePath calls</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="mt-8 bg-primary-700 text-white rounded-xl p-6 text-center">
+        <div class="text-lg font-medium leading-relaxed max-w-3xl mx-auto">
+          "Design the interface, delegate the implementation."
+        </div>
+        <div class="mt-2 text-sm text-primary-200">
+          — Precies wat de talk bedoelde. Jij doet het belangrijke denkwerk.
+          AI vult de details.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TESTEN ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Gevolg voor testen</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-6">Proef het eten. Observeer niet de chef.</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <div class="bg-primary-50 border-2 border-primary-300 rounded-xl p-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-2xl">✓</span>
+              <h3 class="font-bold text-primary-900">Goede test</h3>
+            </div>
+            <div class="text-sm text-gray-700 space-y-2">
+              <p><strong>"Burger zonder kaas bestellen"</strong> → krijg ik een burger zonder kaas?</p>
+              <p class="text-xs italic text-gray-600 pt-2 border-t border-primary-200">
+                In code: gegeven deze input, is de output correct? Is er de
+                juiste DB-call gemaakt? Heeft revalidatePath gedraaid?
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-red-50 border-2 border-red-300 rounded-xl p-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-2xl">✗</span>
+              <h3 class="font-bold text-red-900">Slechte test (laundering)</h3>
+            </div>
+            <div class="text-sm text-gray-700 space-y-2">
+              <p><strong>"Heeft de chef drie keer geroerd?"</strong> — irrelevant, dat is keuken-detail.</p>
+              <p class="text-xs italic text-gray-600 pt-2 border-t border-red-200">
+                In code: heeft deze interne helper-functie 2× geroepen?
+                Verbreekt als je de body refactort, geeft geen extra zekerheid.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="mt-6 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-4 text-sm text-gray-700">
+          <strong class="text-amber-800">Dit is ook wat jullie CLAUDE.md al zegt:</strong>
+          "Schrijf gedragstests, geen implementatie-tests. Assert op input→output
+          of observable side-effects." Dat is precies het restaurant-principe: proef
+          het eten, niet de chef.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LINK MET DRIELUIK ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Link met het drieluik</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Herinner je de kamer met deur?</h2>
+      <p class="text-gray-600 max-w-3xl mb-10">
+        In deel 1 hadden we de kast-metafoor en de kamer-metafoor. Nu weet je
+        ook wat die technisch betekenen:
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <div class="bg-white border-2 border-gray-200 rounded-xl p-5 text-center">
+          <div class="text-4xl mb-3">🚪</div>
+          <div class="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-1">De deur + bordje</div>
+          <div class="text-lg font-bold text-gray-900">= Interface</div>
+          <p class="text-sm text-gray-600 mt-2">
+            Wat je van buiten ziet. Welke functies, welke input/output.
+          </p>
+        </div>
+
+        <div class="bg-white border-2 border-gray-200 rounded-xl p-5 text-center">
+          <div class="text-4xl mb-3">🏠</div>
+          <div class="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-1">De kamer erachter</div>
+          <div class="text-lg font-bold text-gray-900">= Implementatie</div>
+          <p class="text-sm text-gray-600 mt-2">
+            Alle spullen en chaos. Hoe het echt werkt vanbinnen.
+          </p>
+        </div>
+
+        <div class="bg-primary-50 border-2 border-primary-300 rounded-xl p-5 text-center">
+          <div class="text-4xl mb-3">🎯</div>
+          <div class="text-xs uppercase tracking-widest text-primary-700 font-semibold mb-1">Deep module</div>
+          <div class="text-lg font-bold text-primary-900">Kleine deur + grote kamer</div>
+          <p class="text-sm text-gray-700 mt-2">
+            Simpele interface, veel verborgen complexiteit. Ousterhout's ideaal.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="mt-8 bg-gradient-to-br from-primary-50 to-white border border-primary-200 rounded-xl p-6">
+        <h3 class="font-bold text-primary-900 mb-2">Het komt allemaal samen</h3>
+        <p class="text-sm text-gray-700 leading-relaxed">
+          Een <strong>feature</strong> (zoals <code class="text-xs bg-white px-1 rounded">features/themes/</code>)
+          is een collectie van <strong>deep modules</strong> (actions, hooks,
+          validations, components), elk met een simpele <strong>interface</strong>
+          (een paar exports) die grote <strong>implementaties</strong> verbergen.
+          Consumenten gebruiken alleen de interfaces. AI mag de implementaties
+          schrijven. Jij bent de architect.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ SLOT ============ -->
+    <section class="bg-primary-700 text-white py-14">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <p class="text-xs uppercase tracking-widest text-primary-200 font-semibold mb-4">De kern</p>
+        <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-6">
+          Een goede interface maakt een codebase<br>
+          <em>AI-vriendelijk.</em>
+        </h2>
+        <p class="text-primary-100 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
+          Jij denkt (interface ontwerpen). AI doet (implementatie schrijven).
+          Jij test (input-output). De keuken blijft verborgen.
+        </p>
+        <div class="inline-flex items-center gap-3 bg-primary-600 border border-primary-400 rounded-full px-5 py-2.5 text-sm">
+          <span>📋</span>
+          <span>Volgende keer je een feature ontwerpt: begin met het menu, niet met de keuken.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="max-w-6xl mx-auto px-6 py-8 text-center text-xs text-gray-400">
+      <p>Hoort bij het architectuur-drieluik + index.ts uitleg in dezelfde map.</p>
+    </footer>
+
+  </body>
+</html>

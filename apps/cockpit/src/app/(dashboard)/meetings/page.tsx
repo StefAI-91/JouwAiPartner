@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { Calendar } from "lucide-react";
 import { createClient } from "@repo/database/supabase/server";
 import { listVerifiedMeetings } from "@repo/database/queries/meetings";
-import { MeetingsList } from "@/components/meetings/meetings-list";
+import { MeetingsList } from "@/features/meetings/components/meetings-list";
 
 export default async function MeetingsPage() {
   const supabase = await createClient();

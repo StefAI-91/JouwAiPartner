@@ -8,7 +8,7 @@ import {
   updateGoogleAccountLastSync,
 } from "@repo/database/mutations/emails";
 import { fetchEmails } from "@repo/ai/gmail";
-import { processEmailBatch } from "@repo/ai/pipeline/email-pipeline";
+import { processEmailBatch } from "@repo/ai/pipeline/email/core";
 
 export const maxDuration = 300;
 

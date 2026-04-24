@@ -16,7 +16,7 @@ vi.mock("../../src/agents/risk-specialist", async () => {
     runRiskSpecialist: vi.fn(),
   };
 });
-vi.mock("@repo/database/mutations/experimental-risk-extractions", () => ({
+vi.mock("@repo/database/mutations/extractions/experimental-risks", () => ({
   insertExperimentalRiskExtraction: vi.fn(),
 }));
 vi.mock("@repo/database/mutations/extractions", () => ({
@@ -33,7 +33,7 @@ import {
   RISK_SPECIALIST_MODEL,
   RISK_SPECIALIST_PROMPT_VERSION,
 } from "../../src/agents/risk-specialist";
-import { insertExperimentalRiskExtraction } from "@repo/database/mutations/experimental-risk-extractions";
+import { insertExperimentalRiskExtraction } from "@repo/database/mutations/extractions/experimental-risks";
 import {
   deleteExtractionsByMeetingAndType,
   insertExtractions,

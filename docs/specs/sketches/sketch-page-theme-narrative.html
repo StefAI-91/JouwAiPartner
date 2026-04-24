@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: Thema-verhaal — Founder-ritme & samenwerking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+              paper: {
+                DEFAULT: "#faf9f5",
+                deep: "#f4f2ec",
+              },
+              ink: {
+                900: "#1c1a17",
+                700: "#3f3b34",
+                500: "#6b6558",
+                400: "#8f897c",
+                300: "#b5afa3",
+                200: "#d8d3c8",
+                100: "#ece8dd",
+              },
+            },
+            fontFamily: {
+              serif: ['"Instrument Serif"', "Georgia", "serif"],
+              sans: ['"Inter"', "system-ui", "sans-serif"],
+            },
+            letterSpacing: {
+              eyebrow: "0.18em",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+        font-family: "Inter", system-ui, sans-serif;
+      }
+      .lede {
+        font-family: "Instrument Serif", Georgia, serif;
+        font-weight: 400;
+        font-size: 1.65rem;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+        color: #1c1a17;
+      }
+      .section-eyebrow {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #8f897c;
+      }
+      .prose-body {
+        font-size: 1.0625rem;
+        line-height: 1.75;
+        color: #3f3b34;
+      }
+      .prose-body strong {
+        color: #1c1a17;
+        font-weight: 600;
+      }
+      .pull-quote {
+        font-family: "Instrument Serif", Georgia, serif;
+        font-style: italic;
+        font-size: 1.125rem;
+        line-height: 1.6;
+        color: #3f3b34;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.125rem 0.625rem;
+        background: #ece8dd;
+        color: #3f3b34;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: background 120ms ease, color 120ms ease;
+        cursor: pointer;
+        text-decoration: none;
+        vertical-align: baseline;
+      }
+      .chip:hover {
+        background: #d8d3c8;
+        color: #1c1a17;
+      }
+      .chip .dot {
+        width: 3px;
+        height: 3px;
+        background: #8f897c;
+        border-radius: 999px;
+        display: inline-block;
+      }
+      .blind-spot {
+        background: linear-gradient(180deg, #fef6e4 0%, #fdf0d2 100%);
+        border-left: 3px solid #d97706;
+      }
+    </style>
+  </head>
+  <body class="bg-paper text-ink-900 antialiased">
+    <!-- COMPONENT: Top breadcrumb + minimal app chrome -->
+    <div class="border-b border-ink-100 bg-paper">
+      <div class="mx-auto max-w-5xl px-6 py-3 flex items-center gap-2 text-sm text-ink-500">
+        <a href="#" class="hover:text-ink-900 transition-colors">Thema's</a>
+        <span class="text-ink-300">/</span>
+        <span class="text-ink-700">Founder-ritme &amp; samenwerking</span>
+      </div>
+    </div>
+
+    <!-- COMPONENT: ThemeHeader -->
+    <header class="mx-auto max-w-5xl px-6 pt-12 pb-8">
+      <div class="flex items-start gap-5">
+        <div class="text-5xl leading-none select-none">🗣️</div>
+        <div class="flex-1">
+          <h1 class="font-serif text-4xl leading-tight text-ink-900 mb-2">
+            Founder-ritme &amp; samenwerking
+          </h1>
+          <p class="text-sm text-ink-500">
+            Wekelijkse sync, 1-op-1's, rolverdeling Stef (tech-ops) vs Wouter (commercieel-strategisch)
+          </p>
+          <div class="mt-3 flex items-center gap-2 text-sm text-ink-500">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
+              4 meetings
+            </span>
+            <span class="text-ink-300">·</span>
+            <span>14–23 april 2026</span>
+            <span class="text-ink-300">·</span>
+            <span>laatst genoemd 2u geleden</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- COMPONENT: Tabs (Verhaal active) -->
+    <nav class="mx-auto max-w-5xl px-6 border-b border-ink-100">
+      <div class="flex gap-1 -mb-px overflow-x-auto">
+        <button
+          class="px-4 py-2.5 text-sm font-medium text-ink-900 border-b-2 border-ink-900 whitespace-nowrap"
+        >
+          Verhaal
+        </button>
+        <button
+          class="px-4 py-2.5 text-sm font-medium text-ink-500 hover:text-ink-900 border-b-2 border-transparent whitespace-nowrap transition-colors"
+        >
+          Overzicht
+        </button>
+        <button
+          class="px-4 py-2.5 text-sm font-medium text-ink-500 hover:text-ink-900 border-b-2 border-transparent whitespace-nowrap transition-colors"
+        >
+          Meetings
+          <span class="ml-1 text-xs text-ink-400">4</span>
+        </button>
+        <button
+          class="px-4 py-2.5 text-sm font-medium text-ink-500 hover:text-ink-900 border-b-2 border-transparent whitespace-nowrap transition-colors"
+        >
+          Besluiten
+        </button>
+        <button
+          class="px-4 py-2.5 text-sm font-medium text-ink-500 hover:text-ink-900 border-b-2 border-transparent whitespace-nowrap transition-colors"
+        >
+          Open vragen
+        </button>
+        <button
+          class="px-4 py-2.5 text-sm font-medium text-ink-500 hover:text-ink-900 border-b-2 border-transparent whitespace-nowrap transition-colors"
+        >
+          Mensen
+        </button>
+      </div>
+    </nav>
+
+    <!-- COMPONENT: NarrativeTab content -->
+    <article class="mx-auto max-w-5xl px-6 pt-10 pb-16">
+      <!-- Meta row: AI badge + regenerate -->
+      <div class="mx-auto max-w-[680px] flex items-center justify-between mb-10">
+        <div class="flex items-center gap-2 text-xs text-ink-500">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 1 1-8 0V6a4 4 0 0 1 4-4Z" />
+            <path d="M6 20v-2a6 6 0 1 1 12 0v2" />
+          </svg>
+          <span>Door AI gesynthetiseerd</span>
+          <span class="text-ink-300">·</span>
+          <span>2 uur geleden</span>
+        </div>
+        <button
+          class="text-xs text-ink-500 hover:text-ink-900 flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-ink-100 transition-colors"
+          title="Opnieuw genereren (admin)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 12a9 9 0 1 1-2.63-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
+          <span>Regenereer</span>
+        </button>
+      </div>
+
+      <!-- Lede (briefing) -->
+      <section class="mx-auto max-w-[680px] mb-14">
+        <p class="section-eyebrow mb-4">De kern</p>
+        <p class="lede">
+          Jullie rolverdeling is deze maand expliciet geworden: Wouter op commercie en strategie,
+          Stef op techniek &mdash; maar niet tot-in-de-uitvoering. De rode draad is dat jullie
+          elkaar actief aan het kalibreren zijn: wie pakt wat op, waar ligt de bar, en hoe
+          voorkomen jullie dat een van jullie (lees: Stef) vastloopt in werk dat eigenlijk niet op
+          zijn bordje hoort.
+        </p>
+      </section>
+
+      <!-- Section: Patronen -->
+      <section class="mx-auto max-w-[680px] mb-14">
+        <p class="section-eyebrow mb-4">Wat we terug zien komen</p>
+
+        <div class="prose-body space-y-6">
+          <p>
+            <strong>Het profiel wordt in drie stappen scherper.</strong> Op
+            <a href="#" class="chip"><span class="dot"></span>14 apr · Werkdruk &amp; senior hiring</a>
+            was het nog een losse reflectieafspraak. Op
+            <a href="#" class="chip"><span class="dot"></span>22 apr · Rolverdeling &amp; ownership</a>
+            lag er een duidelijk frame: Stef = CTO-rol, hoog-over, delegerend, niet uitvoerend. Op
+            <a href="#" class="chip"><span class="dot"></span>23 apr · Cai Studio klantportaal</a>
+            werd het operationeel getest: Wouter blijft middelman naar Cai, Stef bouwt. Binnen
+            negen dagen van reflectie &rarr; principe &rarr; toepassing.
+          </p>
+
+          <p>
+            <strong>Wouter verlaagt consequent Stefs bar.</strong> Dit komt drie keer terug:
+          </p>
+
+          <blockquote
+            class="pull-quote border-l-2 border-ink-300 pl-5 py-1 space-y-3 text-ink-700"
+          >
+            <p>
+              &ldquo;Je moet meer energie krijgen van je werk op een normale werkdag dan dat het
+              vraagt.&rdquo;
+              <span class="text-xs not-italic font-sans text-ink-400 ml-1">— 14 apr</span>
+            </p>
+            <p>
+              &ldquo;Jouw bar of entry ligt veel te hoog. Bedrijven die multimiljoenen draaien
+              hebben het ook niet voor elkaar.&rdquo;
+              <span class="text-xs not-italic font-sans text-ink-400 ml-1">— 22 apr</span>
+            </p>
+            <p>
+              &ldquo;Je gaat toch geen uitvoerend werk doen voor Cai.&rdquo;
+              <span class="text-xs not-italic font-sans text-ink-400 ml-1">— 23 apr</span>
+            </p>
+          </blockquote>
+
+          <p>
+            Wouter fungeert hier als tegenwicht tegen Stefs neiging om dieper te willen zitten dan
+            nodig is.
+          </p>
+
+          <p>
+            <strong>Jullie sync-ritme is informeel maar functioneel.</strong> Reflectie tijdens
+            wandelingen, ad-hoc na kandidaat-gesprekken, in lopende 1-op-1's. Geen vaste cadans
+            &mdash; de heidag in mei is het enige structurele moment.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section: Samen staan -->
+      <section class="mx-auto max-w-[680px] mb-14">
+        <p class="section-eyebrow mb-4">Waar jullie samen staan</p>
+        <ul class="prose-body space-y-2.5 list-disc pl-5 marker:text-ink-400">
+          <li>De rolverdeling zelf (commercie / tech) &mdash; geen discussie over.</li>
+          <li>
+            Wervingsfilosofie: <em class="text-ink-900 not-italic font-medium">"legends die energie geven"</em>, niet
+            desperate hiring.
+          </li>
+          <li>Transparantie over persoonlijke context (Wouter's mediation, gezondheid).</li>
+        </ul>
+      </section>
+
+      <!-- Section: Schuurt -->
+      <section class="mx-auto max-w-[680px] mb-14">
+        <p class="section-eyebrow mb-4">Waar het schuurt</p>
+
+        <div class="prose-body space-y-6">
+          <p>
+            <strong>Stef wil Wouters rol richting Cai op termijn overnemen, maar is er nog niet
+            klaar voor.</strong> Op
+            <a href="#" class="chip"><span class="dot"></span>23 apr · Cai Studio klantportaal</a>
+            zei Stef letterlijk:
+            <span class="pull-quote">&ldquo;Als jij volgende week er niet bent en hij stelt mij deze vraag, dan heb ik daar geen antwoord op.&rdquo;</span>
+            Dit botst lichtjes met de CTO-rol zoals op
+            <a href="#" class="chip"><span class="dot"></span>22 apr · Rolverdeling</a>
+            gedefinieerd &mdash; "niet tot in detail uitvoerend". De vraag die niet expliciet is
+            beantwoord: hoeveel klantcontext moet Stef hebben om technisch eigenaarschap waar te
+            maken, zonder terug te zakken in uitvoering?
+          </p>
+
+          <p>
+            <strong>Stefs behoefte aan een klankbord op zijn eigen niveau.</strong> Op
+            <a href="#" class="chip"><span class="dot"></span>21 apr · CTO-kandidaat Frank</a>
+            zocht Stef "een middenweg tussen een nerd en een ondernemer". Op 23 apr: "Gewoon met
+            iemand op hetzelfde niveau, met dezelfde belangen dit soort dingen bespreken." Dat is
+            wat Wouter nu deels is &mdash; maar de vraag is of jullie dit als structureel genoeg
+            ervaren, of dat er een derde stem nodig is (Daan? de heidag?).
+          </p>
+        </div>
+      </section>
+
+      <!-- Section: Wat nog hangt -->
+      <section class="mx-auto max-w-[680px] mb-14">
+        <p class="section-eyebrow mb-4">Wat nog hangt</p>
+        <ul class="prose-body space-y-3">
+          <li class="flex gap-3">
+            <span class="mt-2 w-1 h-1 bg-ink-400 rounded-full shrink-0"></span>
+            <span>
+              Reflectiesessie <em class="not-italic font-medium text-ink-900">"wat vinden we leuk"</em> &mdash; afgesproken
+              <a href="#" class="chip"><span class="dot"></span>14 apr</a>. Heeft die plaatsgevonden?
+            </span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 w-1 h-1 bg-ink-400 rounded-full shrink-0"></span>
+            <span>Heidag in mei &mdash; geen datum geprikt.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 w-1 h-1 bg-ink-400 rounded-full shrink-0"></span>
+            <span>Sessie met Daan halverwege mei &mdash; Wouter zou inplannen.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="mt-2 w-1 h-1 bg-ink-400 rounded-full shrink-0"></span>
+            <span>
+              Stef neemt technische rol over bij Cai-communicatie &mdash;
+              <em class="not-italic font-medium text-ink-900">"op termijn, na Kenji's vakantie"</em>. Geen harde trigger.
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Section: Blinde vlek (hero) -->
+      <section class="mx-auto max-w-[680px] mb-14">
+        <div class="blind-spot rounded-lg pl-6 pr-6 md:pl-8 md:pr-8 py-8">
+          <p class="section-eyebrow mb-3" style="color: #b45309;">De blinde vlek</p>
+          <div class="space-y-5" style="color: #3f2a10;">
+            <p class="font-serif text-xl leading-snug" style="color: #1f1407;">
+              De rolverdeling is op papier helder, maar het overgangsmechanisme is het niet.
+            </p>
+            <p class="text-[1.0625rem] leading-relaxed">
+              Jullie hebben twee keer afgesproken dat Stef iets <em class="not-italic font-medium">"op termijn"</em>
+              overneemt van Wouter. Maar er is geen concreet moment, criterium of trigger
+              afgesproken waarop die overdracht begint.
+            </p>
+            <p class="text-[1.0625rem] leading-relaxed">
+              <strong class="font-semibold" style="color: #1f1407;">Het risico:</strong> de status
+              quo (Wouter = middelman, Stef = bouwer) verhardt, en <em class="not-italic font-medium">"op termijn"</em>
+              wordt <em class="not-italic font-medium">"nooit"</em> &mdash; niet uit onwil, maar omdat het op elk
+              individueel moment makkelijker is om Wouter het gesprek te laten doen.
+            </p>
+            <p class="text-[1.0625rem] leading-relaxed">
+              <strong class="font-semibold" style="color: #1f1407;">Bijkomend signaal:</strong>
+              steeds als er druk op Stef komt, wordt een deel van zijn taken bij Wouter gelegd,
+              maar niet teruggelegd als de druk weg is. De heidag in mei is een goed moment om
+              hier expliciet naar te kijken.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Signaal-check (footer) -->
+      <footer class="mx-auto max-w-[680px] pt-8 border-t border-ink-100">
+        <p class="section-eyebrow mb-3">Signaal-check</p>
+        <dl class="text-[0.8125rem] leading-relaxed text-ink-500 space-y-2">
+          <div class="flex gap-3">
+            <dt class="w-40 shrink-0 font-medium text-ink-700">Signaal-sterkte</dt>
+            <dd>
+              <span class="inline-flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
+                Sterk
+              </span>
+              &middot; 4 meetings in 10 dagen, consistent thema, duidelijke evolutie
+            </dd>
+          </div>
+          <div class="flex gap-3">
+            <dt class="w-40 shrink-0 font-medium text-ink-700">Wat mist</dt>
+            <dd>
+              Geen zichtbaarheid op de heidag-agenda, geen notitie van de vrijdag-reflectiesessie
+              terug in het systeem
+            </dd>
+          </div>
+          <div class="flex gap-3">
+            <dt class="w-40 shrink-0 font-medium text-ink-700">Bron</dt>
+            <dd>
+              <code class="font-sans text-[0.75rem] text-ink-500"
+                >meeting_themes.summary</code
+              >
+              van 4 meetings &middot; laatst bijgewerkt 2u geleden
+            </dd>
+          </div>
+        </dl>
+      </footer>
+    </article>
+
+    <script>
+      // Minimal interactivity: chip hover preview placeholder + tab switch (cosmetic only)
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", (e) => {
+          e.preventDefault();
+        });
+      });
+    </script>
+  </body>
+</html>

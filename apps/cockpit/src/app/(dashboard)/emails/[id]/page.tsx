@@ -9,8 +9,8 @@ import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
 import { listPeople } from "@repo/database/queries/people";
 import { Badge } from "@repo/ui/badge";
-import { EmailLinkEditor } from "@/components/emails/email-link-editor";
-import { FilteredBanner } from "@/components/emails/filtered-banner";
+import { EmailLinkEditor } from "@/features/emails/components/email-link-editor";
+import { FilteredBanner } from "@/features/emails/components/filtered-banner";
 
 function formatExtractionType(type: string): string {
   const map: Record<string, string> = {

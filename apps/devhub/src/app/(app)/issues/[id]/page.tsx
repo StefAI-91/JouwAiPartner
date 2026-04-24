@@ -1,12 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { getIssueById } from "@repo/database/queries/issues";
-import { listIssueComments } from "@repo/database/queries/issue-comments";
-import { listIssueActivity } from "@repo/database/queries/issue-activity";
-import { listIssueAttachments } from "@repo/database/queries/issue-attachments";
+import { listIssueComments } from "@repo/database/queries/issues/comments";
+import { listIssueActivity } from "@repo/database/queries/issues/activity";
+import { listIssueAttachments } from "@repo/database/queries/issues/attachments";
 import { listTeamMembers } from "@repo/database/queries/team";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
-import { IssueDetail } from "@/components/issues/issue-detail";
+import { IssueDetail } from "@/features/issues/components/issue-detail";
 
 export default async function IssueDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

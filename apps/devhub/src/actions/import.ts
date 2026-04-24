@@ -10,11 +10,11 @@ import {
   countUserbackIssues,
   listUserbackIssuesForBackfill,
 } from "@repo/database/queries/userback-issues";
-import { getIssueIdsWithAttachments } from "@repo/database/queries/issue-attachments";
+import { getIssueIdsWithAttachments } from "@repo/database/queries/issues/attachments";
 import { extractMediaFromMetadata } from "@repo/database/integrations/userback";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
-import { storeIssueMedia } from "@repo/database/mutations/issue-attachments";
-import { classifyIssueBackground } from "./classify";
+import { storeIssueMedia } from "@repo/database/mutations/issues/attachments";
+import { classifyIssueBackground } from "@/features/issues/actions/classify";
 
 const AI_CLASSIFY_DELAY_MS = 100;
 

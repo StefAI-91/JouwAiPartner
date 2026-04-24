@@ -7,7 +7,7 @@ import {
   mapUserbackToIssue,
   extractMediaUrls,
 } from "./userback";
-import { storeIssueMedia } from "../mutations/issue-attachments";
+import { storeIssueMedia } from "../mutations/issues/attachments";
 
 export interface SyncPipelineParams {
   projectId: string;

@@ -1,5 +1,5 @@
 import { createPageClient } from "@repo/auth/helpers";
-import { listAccessibleProjects } from "@repo/database/queries/project-access";
+import { listAccessibleProjects } from "@repo/database/queries/projects/access";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 import { getAdminClient } from "@repo/database/supabase/admin";

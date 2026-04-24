@@ -6,7 +6,7 @@ import { listBoardMeetings } from "@repo/database/queries/meetings";
 import {
   getManagementInsights,
   getDismissedInsightKeys,
-} from "@repo/database/queries/management-insights";
+} from "@repo/database/queries/summaries/management-insights";
 import { ManagementInsightsOutputSchema } from "@repo/ai/validations/management-insights";
 import { BoardMeetingCard } from "@/components/intelligence/board-meeting-card";
 import { ManagementInsightsPanel } from "@/components/intelligence/management-insights-panel";

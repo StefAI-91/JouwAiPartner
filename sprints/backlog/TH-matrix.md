@@ -5,14 +5,15 @@ Sprints: `TH-001` tot en met `TH-006`. Samen dekken ze v1-scope zoals gedefiniee
 
 ## Requirements dekking per sprint
 
-| Sprint | Focus                                       | Requirement IDs                                         |
-| ------ | ------------------------------------------- | ------------------------------------------------------- |
-| TH-001 | Database & seed                             | DATA-200..209, FUNC-200, FUNC-201                       |
-| TH-002 | ThemeTagger agent + emoji shortlist         | AI-200..214                                             |
-| TH-003 | Pipeline-integratie + retroactieve batch    | FUNC-210..219, DATA-210, EDGE-200, EDGE-201             |
-| TH-004 | Dashboard UI: pills + donut                 | UI-250..265, FUNC-220..222                              |
-| TH-005 | Theme detail page + edit mode               | UI-266..280, FUNC-230..236, SEC-200, SEC-201            |
-| TH-006 | Review-flow + match rejections + regenerate | UI-290..301, FUNC-240..247, SEC-210, EDGE-210, EDGE-211 |
+| Sprint | Focus                                                            | Requirement IDs                                                                |
+| ------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| TH-001 | Database & seed                                                  | DATA-200..209, FUNC-200, FUNC-201                                              |
+| TH-002 | ThemeTagger agent + emoji shortlist                              | AI-200..214                                                                    |
+| TH-003 | Pipeline-integratie + retroactieve batch                         | FUNC-210..219, DATA-210, EDGE-200, EDGE-201                                    |
+| TH-004 | Dashboard UI: pills + donut                                      | UI-250..265, FUNC-220..222                                                     |
+| TH-005 | Theme detail page + edit mode                                    | UI-266..280, FUNC-230..236, SEC-200, SEC-201                                   |
+| TH-006 | Review-flow + match rejections + regenerate                      | UI-290..301, FUNC-240..247, SEC-210, EDGE-210, EDGE-211                        |
+| TH-011 | Theme-Detector (extract-time) + party-type split + proposals-tab | AI-230..236, DATA-230..232, FUNC-270..284, UI-330..335, SEC-230, EDGE-230..235 |
 
 ## PRD-sectie dekking
 

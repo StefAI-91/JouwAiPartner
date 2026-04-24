@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { createClient } from "@repo/database/supabase/server";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listPeople } from "@repo/database/queries/people";
-import { DirectoryTabs } from "@/components/directory/directory-tabs";
+import { DirectoryTabs } from "@/features/directory/components/directory-tabs";
 
 export default async function DirectoryPage() {
   const supabase = await createClient();

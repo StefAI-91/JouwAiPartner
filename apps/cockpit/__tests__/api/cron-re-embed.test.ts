@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("@repo/ai/pipeline/re-embed-worker", () => ({
+vi.mock("@repo/ai/pipeline/embed/re-embed-worker", () => ({
   runReEmbedWorker: vi.fn(),
 }));
 
-import { runReEmbedWorker } from "@repo/ai/pipeline/re-embed-worker";
-import { POST } from "../../src/app/api/cron/re-embed/route";
+import { runReEmbedWorker } from "@repo/ai/pipeline/embed/re-embed-worker";
+import { POST } from "@/app/api/cron/re-embed/route";
 
 const CRON_SECRET = "test-cron-secret";
 

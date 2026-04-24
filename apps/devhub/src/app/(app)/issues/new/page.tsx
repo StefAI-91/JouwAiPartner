@@ -1,6 +1,6 @@
 import { listTeamMembers } from "@repo/database/queries/team";
 import { createPageClient } from "@repo/auth/helpers";
-import { IssueForm } from "@/components/issues/issue-form";
+import { IssueForm } from "@/features/issues/components/issue-form";
 
 export default async function NewIssuePage({
   searchParams,

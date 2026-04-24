@@ -1,0 +1,266 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { Pencil, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Modal } from "@/components/shared/modal";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { updateProjectAction, deleteProjectAction } from "../actions/projects";
+import { PROJECT_STATUSES, STATUS_LABELS } from "@repo/database/constants/projects";
+
+interface EditProjectProps {
+  project: {
+    id: string;
+    name: string;
+    status: string;
+    description?: string | null;
+    github_url?: string | null;
+    start_date?: string | null;
+    deadline?: string | null;
+    owner?: { id: string; name: string } | null;
+    contact_person?: { id: string; name: string } | null;
+  };
+  organizationId: string | null;
+  organizations: { id: string; name: string }[];
+  people?: { id: string; name: string }[];
+}
+
+export function EditProject({
+  project,
+  organizationId,
+  organizations,
+  people = [],
+}: EditProjectProps) {
+  const router = useRouter();
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const [name, setName] = useState(project.name);
+  const [status, setStatus] = useState(project.status);
+  const [orgId, setOrgId] = useState(organizationId ?? "");
+  const [description, setDescription] = useState(project.description ?? "");
+  const [githubUrl, setGithubUrl] = useState(project.github_url ?? "");
+  const [ownerId, setOwnerId] = useState(project.owner?.id ?? "");
+  const [contactPersonId, setContactPersonId] = useState(project.contact_person?.id ?? "");
+  const [startDate, setStartDate] = useState(project.start_date ?? "");
+  const [deadline, setDeadline] = useState(project.deadline ?? "");
+
+  function handleSave() {
+    setError(null);
+    startTransition(async () => {
+      const result = await updateProjectAction({
+        id: project.id,
+        name: name.trim(),
+        status: status as (typeof PROJECT_STATUSES)[number],
+        organization_id: orgId || null,
+        description: description.trim() || null,
+        github_url: githubUrl.trim() || null,
+        owner_id: ownerId || null,
+        contact_person_id: contactPersonId || null,
+        start_date: startDate || null,
+        deadline: deadline || null,
+      });
+      if ("error" in result) {
+        setError(result.error);
+      } else {
+        setEditOpen(false);
+      }
+    });
+  }
+
+  function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteProjectAction({ id: project.id });
+      if ("error" in result) {
+        setError(result.error);
+        setDeleteOpen(false);
+      } else {
+        router.push("/projects");
+      }
+    });
+  }
+
+  return (
+    <>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setEditOpen(true)}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Bewerken"
+        >
+          <Pencil className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setDeleteOpen(true)}
+          className="rounded-md p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-500 transition-colors"
+          title="Verwijderen"
+        >
+          <Trash2 className="size-4" />
+        </button>
+      </div>
+
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Project bewerken">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSave();
+          }}
+          className="space-y-4"
+        >
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Naam</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Beschrijving</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+              placeholder="Projectbeschrijving..."
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">GitHub URL</label>
+            <input
+              type="url"
+              value={githubUrl}
+              onChange={(e) => setGithubUrl(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              placeholder="https://github.com/org/repo"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              {PROJECT_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_LABELS[s] ?? s}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Organisatie</label>
+            <select
+              value={orgId}
+              onChange={(e) => setOrgId(e.target.value)}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="">Geen organisatie</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Eigenaar</label>
+              <select
+                value={ownerId}
+                onChange={(e) => setOwnerId(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              >
+                <option value="">Geen eigenaar</option>
+                {people.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium">Contactpersoon</label>
+              <select
+                value={contactPersonId}
+                onChange={(e) => setContactPersonId(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              >
+                <option value="">Geen contactpersoon</option>
+                {people.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Startdatum</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium">Deadline</label>
+              <input
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setEditOpen(false)}
+              disabled={isPending}
+              className="rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+            >
+              Annuleren
+            </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {isPending ? "Opslaan..." : "Opslaan"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="Project verwijderen"
+        description={`Weet je zeker dat je "${project.name}" wilt verwijderen? Dit ontkoppelt alle meetings en extracties van dit project.`}
+        loading={isPending}
+      />
+    </>
+  );
+}

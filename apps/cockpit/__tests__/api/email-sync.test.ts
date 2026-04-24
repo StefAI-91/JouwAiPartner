@@ -20,7 +20,7 @@ vi.mock("@repo/ai/gmail", () => ({
   fetchEmails: vi.fn(),
 }));
 
-vi.mock("@repo/ai/pipeline/email-pipeline", () => ({
+vi.mock("@repo/ai/pipeline/email/core", () => ({
   processEmailBatch: vi.fn(),
 }));
 
@@ -36,8 +36,8 @@ import {
   updateGoogleAccountLastSync,
 } from "@repo/database/mutations/emails";
 import { fetchEmails } from "@repo/ai/gmail";
-import { processEmailBatch } from "@repo/ai/pipeline/email-pipeline";
-import { POST } from "../../src/app/api/email/sync/route";
+import { processEmailBatch } from "@repo/ai/pipeline/email/core";
+import { POST } from "@/app/api/email/sync/route";
 
 describe("POST /api/email/sync", () => {
   beforeEach(() => {

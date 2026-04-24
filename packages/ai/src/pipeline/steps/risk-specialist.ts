@@ -4,7 +4,7 @@ import {
   RISK_SPECIALIST_PROMPT_VERSION,
   type RiskSpecialistContext,
 } from "../../agents/risk-specialist";
-import { insertExperimentalRiskExtraction } from "@repo/database/mutations/experimental-risk-extractions";
+import { insertExperimentalRiskExtraction } from "@repo/database/mutations/extractions/experimental-risks";
 import { saveRiskExtractions } from "../save-risk-extractions";
 import type { IdentifiedProject } from "../../validations/gatekeeper";
 

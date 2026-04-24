@@ -12,12 +12,12 @@ import { notFound, redirect } from "next/navigation";
 
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import { ORG_TYPE_LABELS } from "@/components/shared/org-type-labels";
-import { EditOrganization } from "@/components/clients/edit-organization";
+import { EditOrganization } from "@/features/directory/components/edit-organization";
 import { AdministratieEmails } from "@/components/administratie/administratie-emails";
-import { OrgSummary } from "@/components/organizations/org-summary";
-import { OrgBriefing } from "@/components/organizations/org-briefing";
-import { OrgTimeline } from "@/components/organizations/org-timeline";
-import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
+import { OrgSummary } from "@/features/directory/components/org-summary";
+import { OrgBriefing } from "@/features/directory/components/org-briefing";
+import { OrgTimeline } from "@/features/directory/components/org-timeline";
+import { RegenerateSummaryButton } from "@/features/projects/components/regenerate-summary-button";
 import { extractOrgTimeline } from "@repo/ai/validations/project-summary";
 
 // Types die thuishoren onder /administratie. Andere types (client, partner)

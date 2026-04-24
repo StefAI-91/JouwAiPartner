@@ -1,25 +1,44 @@
 import { z } from "zod";
 
 export const TimelineEntrySchema = z.object({
-  date: z.string().describe("Datum van de meeting in YYYY-MM-DD formaat."),
+  date: z.string().describe("Datum in YYYY-MM-DD formaat."),
+  source_type: z
+    .enum(["meeting", "email"])
+    .default("meeting")
+    .describe(
+      "Of deze entry van een meeting of een email afkomstig is. " +
+        "Default 'meeting' voor backwards-compatibility met oudere timeline-data " +
+        "die nog géén source_type bevatte.",
+    ),
   meeting_type: z
     .string()
-    .describe("Type meeting, bijv. discovery, team_sync, status_update, sales, etc."),
-  title: z.string().describe("Titel van de meeting."),
+    .nullable()
+    .optional()
+    .describe(
+      "Type meeting (discovery, team_sync, status_update, sales, etc.) " +
+        "wanneer source_type='meeting'. Null/weglaten voor emails.",
+    ),
+  title: z.string().describe("Titel van de meeting of het email-onderwerp."),
   summary: z
     .string()
     .describe(
-      "Eén zin die beschrijft wat er besproken/besloten is in deze meeting. " +
-        "Focus op het belangrijkste resultaat of de belangrijkste uitkomst.",
+      "Eén zin die beschrijft WAT er gebeurde in deze meeting of email. " +
+        "Géén besluiten of acties herhalen — die staan in key_decisions / open_actions.",
     ),
   key_decisions: z
     .array(z.string())
-    .describe("Concrete besluiten genomen in deze meeting. Leeg als er geen besluiten waren."),
+    .describe(
+      "Concrete besluiten genomen in deze meeting/email. " +
+        "Niet herhalen wat al in summary of open_actions staat. " +
+        "Leeg als er geen besluiten waren.",
+    ),
   open_actions: z
     .array(z.string())
     .describe(
-      "Actiepunten die uit deze meeting voortkwamen en nog niet zijn afgerond. " +
-        "Leeg als er geen openstaande acties zijn.",
+      "Actiepunten die in deze meeting/email zijn benoemd. " +
+        "Pure extract uit de bron — geen oordeel of ze inmiddels zijn afgerond " +
+        "(die status leeft elders). Niet herhalen wat al in summary of key_decisions staat. " +
+        "Leeg als er geen acties werden benoemd.",
     ),
 });
 
@@ -43,10 +62,11 @@ export const ProjectSummaryOutputSchema = z.object({
   timeline: z
     .array(TimelineEntrySchema)
     .describe(
-      "Chronologisch overzicht van alle meetings, van oud naar nieuw. " +
-        "Per meeting: datum, type, titel, samenvatting in één zin, key decisions en open actions. " +
-        "Dit toont het projectverloop: hoe bouwt het project op, waar kantelde het, " +
-        "welke besluiten leidden tot veranderingen.",
+      "Chronologisch overzicht van alle meetings én relevante emails door elkaar, " +
+        "van oud naar nieuw. Per entry: datum, source_type (meeting of email), " +
+        "meeting_type (alleen voor meetings), titel, samenvatting in één zin, " +
+        "key_decisions en open_actions. Dit toont het projectverloop: hoe bouwt het " +
+        "project op, waar kantelde het, welke besluiten leidden tot veranderingen.",
     ),
 });
 
@@ -121,5 +141,23 @@ export function extractOrgTimeline(
   const raw = (structuredContent as { timeline?: unknown }).timeline;
   if (!Array.isArray(raw)) return [];
   const parsed = z.array(OrgTimelineEntrySchema).safeParse(raw);
+  return parsed.success ? parsed.data : [];
+}
+
+/**
+ * Veilig `TimelineEntry[]` extraheren uit een project-`structured_content`
+ * JSON-blob. Zelfde patroon als `extractOrgTimeline`.
+ *
+ * Bestaande timeline-data van vóór de email-uitbreiding bevat geen
+ * `source_type`-veld; de schema-default ('meeting') vangt dat op zodat
+ * de UI niet leeg blijft tot de eerstvolgende regeneratie.
+ */
+export function extractProjectTimeline(
+  structuredContent: Record<string, unknown> | null | undefined,
+): TimelineEntry[] {
+  if (!structuredContent || typeof structuredContent !== "object") return [];
+  const raw = (structuredContent as { timeline?: unknown }).timeline;
+  if (!Array.isArray(raw)) return [];
+  const parsed = z.array(TimelineEntrySchema).safeParse(raw);
   return parsed.success ? parsed.data : [];
 }

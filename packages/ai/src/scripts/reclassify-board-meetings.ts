@@ -17,7 +17,7 @@
 
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { getAllKnownPeople } from "@repo/database/queries/people";
-import { classifyParticipantsWithCache, isBoardMeeting } from "../pipeline/participant-classifier";
+import { classifyParticipantsWithCache, isBoardMeeting } from "../pipeline/participant/classifier";
 
 interface MeetingRow {
   id: string;

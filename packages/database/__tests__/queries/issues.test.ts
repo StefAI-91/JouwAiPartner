@@ -11,9 +11,9 @@ import {
 } from "../helpers/seed";
 import { cleanupTestData, cleanupTestProfile } from "../helpers/cleanup";
 import { listIssues, getIssueById, getIssueCounts } from "../../src/queries/issues";
-import { listIssueComments } from "../../src/queries/issue-comments";
-import { listIssueActivity } from "../../src/queries/issue-activity";
-import { getIssueThumbnails } from "../../src/queries/issue-attachments";
+import { listIssueComments } from "../../src/queries/issues/comments";
+import { listIssueActivity } from "../../src/queries/issues/activity";
+import { getIssueThumbnails } from "../../src/queries/issues/attachments";
 
 let db: ReturnType<typeof getTestClient>;
 let profileId: string;

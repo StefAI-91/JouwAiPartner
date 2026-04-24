@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildMeetingEmbedText } from "../../src/pipeline/embed-text";
+import { buildMeetingEmbedText } from "../../src/pipeline/embed/text";
 
 describe("buildMeetingEmbedText", () => {
   it("bevat meeting title, participants, summary in output", () => {

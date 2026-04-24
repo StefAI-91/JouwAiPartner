@@ -12,8 +12,8 @@
 
 import { getVerifiedMeetingsWithoutSegments } from "@repo/database/queries/meetings";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
-import { insertMeetingProjectSummaries } from "@repo/database/mutations/meeting-project-summaries";
-import { updateSegmentEmbedding } from "@repo/database/mutations/meeting-project-summaries";
+import { insertMeetingProjectSummaries } from "@repo/database/mutations/meetings/project-summaries";
+import { updateSegmentEmbedding } from "@repo/database/mutations/meetings/project-summaries";
 import { linkAllMeetingProjects } from "@repo/database/mutations/meetings";
 import { buildEntityContext } from "../pipeline/context-injection";
 import { runGatekeeper } from "../agents/gatekeeper";

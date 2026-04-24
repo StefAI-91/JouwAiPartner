@@ -1,4 +1,4 @@
-import { embedMeetingWithExtractions } from "../embed-pipeline";
+import { embedMeetingWithExtractions } from "../embed/pipeline";
 
 export interface EmbedStepResult {
   success: boolean;

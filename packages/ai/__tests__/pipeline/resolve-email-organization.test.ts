@@ -11,7 +11,7 @@ vi.mock("@repo/database/queries/organizations", () => ({
   findOrganizationIdByEmailDomain: vi.fn(),
 }));
 
-import { resolveEmailOrganization } from "../../src/pipeline/email-pipeline";
+import { resolveEmailOrganization } from "../../src/pipeline/email/core";
 import { resolveOrganization } from "../../src/pipeline/entity-resolution";
 import { findPersonOrgByEmail } from "@repo/database/queries/people";
 import { findOrganizationIdByEmailDomain } from "@repo/database/queries/organizations";

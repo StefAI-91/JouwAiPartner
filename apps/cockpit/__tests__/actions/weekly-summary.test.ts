@@ -10,7 +10,7 @@ vi.mock("@repo/auth/access", () => ({
 }));
 
 const mockGenerateWeeklySummary = vi.fn();
-vi.mock("@repo/ai/pipeline/weekly-summary-pipeline", () => ({
+vi.mock("@repo/ai/pipeline/summary/weekly", () => ({
   generateWeeklySummary: (...args: unknown[]) => mockGenerateWeeklySummary(...args),
 }));
 
@@ -23,7 +23,7 @@ describe("Weekly Summary Actions", () => {
 
   describe("generateWeeklySummaryAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/weekly-summary");
+      const mod = await import("@/actions/weekly-summary");
       return mod.generateWeeklySummaryAction;
     }
 

@@ -4,8 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
 import { isAdmin } from "@repo/auth/access";
-import { generateManagementInsights } from "@repo/ai/pipeline/management-insights-pipeline";
-import { dismissInsight } from "@repo/database/mutations/management-insights";
+import { generateManagementInsights } from "@repo/ai/pipeline/summary/management-insights";
+import { dismissInsight } from "@repo/database/mutations/summaries/management-insights";
 
 export async function generateManagementInsightsAction(): Promise<
   { success: true } | { error: string }

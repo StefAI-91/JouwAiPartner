@@ -8,8 +8,8 @@ import { getDraftEmailById } from "@repo/database/queries/emails";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
 import { listPeople } from "@repo/database/queries/people";
-import { EmailReviewDetail } from "@/components/review/email-review-detail";
-import { EmailLinkEditor } from "@/components/emails/email-link-editor";
+import { EmailReviewDetail } from "@/features/emails/components/email-review-detail";
+import { EmailLinkEditor } from "@/features/emails/components/email-link-editor";
 
 export default async function EmailReviewDetailPage({
   params,

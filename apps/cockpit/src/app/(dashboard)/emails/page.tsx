@@ -12,11 +12,11 @@ import {
   type EmailDirection,
   type EmailFilterStatus,
 } from "@repo/database/queries/emails";
-import { EmailList } from "@/components/emails/email-list";
-import { SyncButton } from "@/components/emails/sync-button";
-import { ReclassifyButton } from "@/components/emails/reclassify-button";
-import { ProcessPendingButton } from "@/components/emails/process-pending-button";
-import { GoogleAccountStatus } from "@/components/emails/google-account-status";
+import { EmailList } from "@/features/emails/components/email-list";
+import { SyncButton } from "@/features/emails/components/sync-button";
+import { ReclassifyButton } from "@/features/emails/components/reclassify-button";
+import { ProcessPendingButton } from "@/features/emails/components/process-pending-button";
+import { GoogleAccountStatus } from "@/features/emails/components/google-account-status";
 
 function parseDirection(value: string | string[] | undefined): EmailDirection {
   return value === "outgoing" ? "outgoing" : "incoming";

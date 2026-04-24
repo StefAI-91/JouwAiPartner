@@ -37,7 +37,7 @@ describeWithDb("Review Server Actions (integration)")("Review Server Actions (in
 
   describe("approveMeetingAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/review");
+      const mod = await import("@/features/review/actions/review");
       return mod.approveMeetingAction;
     }
 
@@ -70,7 +70,7 @@ describeWithDb("Review Server Actions (integration)")("Review Server Actions (in
 
   describe("rejectMeetingAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/review");
+      const mod = await import("@/features/review/actions/review");
       return mod.rejectMeetingAction;
     }
 
