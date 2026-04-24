@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Mail, Video } from "lucide-react";
 import { ReviewCard } from "./review-card";
-import { EmailReviewCard } from "./email-review-card";
+import { EmailReviewCard } from "@/features/emails/components/email-review-card";
 
 type Filter = "meetings" | "emails";
 

@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 517 |
-| Exported functions/constants | 808 |
+| Files scanned | 503 |
+| Exported functions/constants | 794 |
 | Exported types/interfaces | 251 |
-| Cross-package imports | 648 |
+| Cross-package imports | 634 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -3054,100 +3054,6 @@
 - `@repo/ui/badge` → Badge
 - (type) `@repo/database/queries/people` → PersonListItem
 
-### `apps/cockpit/src/components/emails/email-link-editor.tsx`
-
-**Exports:**
-- `EmailLinkEditor()`
-
-### `apps/cockpit/src/components/emails/email-list.tsx`
-
-**Exports:**
-- `EmailList()`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
-- (type) `@repo/database/queries/emails` → EmailListItem, EmailDirection
-
-### `apps/cockpit/src/components/emails/email-type-selector.tsx`
-
-**Exports:**
-- `EmailTypeSelector()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/filtered-banner.tsx`
-
-**Exports:**
-- `FilteredBanner()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/google-account-status.tsx`
-
-**Exports:**
-- `GoogleAccountStatus()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/organization-selector.tsx`
-
-**Exports:**
-- `OrganizationSelector()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/party-type-selector.tsx`
-
-**Exports:**
-- `PartyTypeSelector()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/process-pending-button.tsx`
-
-**Exports:**
-- `ProcessPendingButton()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/project-linker.tsx`
-
-**Exports:**
-- `ProjectLinker()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/reclassify-button.tsx`
-
-**Exports:**
-- `ReclassifyButton()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/sender-person-selector.tsx`
-
-**Exports:**
-- `SenderPersonSelector()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/emails/sync-button.tsx`
-
-**Exports:**
-- `SyncButton()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
 ### `apps/cockpit/src/components/intelligence/board-meeting-card.tsx`
 
 **Exports:**
@@ -3423,22 +3329,6 @@
 
 **Depends on:**
 - `@repo/database/constants/projects` → ALL_STEPS, OTHER_STEPS, STATUS_LABELS, getPhaseSteps
-
-### `apps/cockpit/src/components/review/email-review-card.tsx`
-
-**Exports:**
-- `EmailReviewCard()`
-
-**Depends on:**
-- `@repo/ui/format` → timeAgo
-
-### `apps/cockpit/src/components/review/email-review-detail.tsx`
-
-**Exports:**
-- `EmailReviewDetail()`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
 
 ### `apps/cockpit/src/components/review/empty-state.tsx`
 
@@ -4107,7 +3997,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 53 | 19 | 30 | - | - | 102 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 41 | 6 | - | 76 | - | 123 |
+| Cockpit Components | 40 | 6 | - | 63 | - | 109 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 91 | 7 | 4 | 33 | - | 135 |
 | Database Queries | - | - | 3 | - | - | 3 |

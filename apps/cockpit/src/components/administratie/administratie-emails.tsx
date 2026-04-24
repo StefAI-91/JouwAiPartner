@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card";
 import { Mail } from "lucide-react";
 import type { EmailListItem } from "@repo/database/queries/emails";
-import { EmailList } from "@/components/emails/email-list";
+import { EmailList } from "@/features/emails/components/email-list";
 
 /**
  * E-mails-sectie op de administratie-detailpagina. Toont alle mails die
