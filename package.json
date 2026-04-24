@@ -19,6 +19,8 @@
     "format:check": "prettier --check .",
     "dep-graph": "node scripts/generate-dep-graph.js",
     "check:queries": "bash scripts/check-no-direct-supabase.sh",
+    "check:features": "bash scripts/check-feature-drift.sh",
+    "check:readmes": "bash scripts/check-readme-freshness.sh",
     "detect-themes-batch": "tsx scripts/batch-detect-themes.ts",
     "prepare": "husky"
   },
