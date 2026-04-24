@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { computeCanSubmit, computeIsDirty } from "../../src/hooks/use-theme-form-state";
+import {
+  computeCanSubmit,
+  computeIsDirty,
+} from "../../src/features/themes/hooks/use-theme-form-state";
 
 /**
  * TH-008 — pure validator- en dirty-check uit `useThemeFormState`. Hook zelf

@@ -15,7 +15,7 @@ import {
   type UpdateThemeInput,
   type ArchiveThemeInput,
   type CreateVerifiedThemeInput,
-} from "@/validations/themes";
+} from "@/features/themes/validations";
 
 /**
  * FUNC-235 — Update-action voor de theme detail page. Valideert via Zod,

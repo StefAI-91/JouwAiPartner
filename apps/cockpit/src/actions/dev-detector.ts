@@ -18,7 +18,7 @@ import {
   type DevDetectorMeetingThemeRow,
   type DevDetectorExtractionThemeRow,
 } from "@repo/database/queries/dev-detector";
-import { runDevDetectorSchema, type RunDevDetectorInput } from "@/validations/themes";
+import { runDevDetectorSchema, type RunDevDetectorInput } from "@/features/themes/validations";
 
 export interface DevDetectorThemeLookup {
   themeId: string;

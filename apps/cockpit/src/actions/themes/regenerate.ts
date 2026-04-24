@@ -8,7 +8,7 @@ import { getVerifiedMeetingById } from "@repo/database/queries/meetings";
 import {
   regenerateMeetingThemesSchema,
   type RegenerateMeetingThemesInput,
-} from "@/validations/themes";
+} from "@/features/themes/validations";
 
 /**
  * TH-011 (FUNC-283) — Regenerate thema-links voor één meeting.

@@ -9,14 +9,14 @@ import { formatDate } from "@repo/ui/format";
 import type { EmergingThemeRow, EmergingThemeProposalMeeting } from "@repo/database/queries/themes";
 import { EmojiPickerPopover } from "./emoji-picker-popover";
 import { approveThemeAction, rejectEmergingThemeAction } from "@/actions/themes";
-import { useThemeFormState } from "@/hooks/use-theme-form-state";
+import { useThemeFormState } from "@/features/themes/hooks";
 import {
   THEME_NAME_MIN,
   THEME_NAME_MAX,
   THEME_DESC_MIN,
   THEME_DESC_MAX,
   THEME_GUIDE_MIN,
-} from "@/validations/themes";
+} from "@/features/themes/validations";
 
 export interface ThemeApprovalCardProps {
   theme: EmergingThemeRow;

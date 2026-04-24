@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ThemeEmoji } from "@repo/ai/agents/theme-emojis";
-import { THEME_NAME_MIN, THEME_DESC_MIN, THEME_GUIDE_MIN } from "@/validations/themes";
+import { THEME_NAME_MIN, THEME_DESC_MIN, THEME_GUIDE_MIN } from "../validations";
 
 export interface UseThemeFormStateInitial {
   name: string;

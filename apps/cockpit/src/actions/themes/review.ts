@@ -21,7 +21,7 @@ import {
   type RejectThemeMatchInput,
   type ConfirmThemeProposalInput,
   type RejectThemeProposalInput,
-} from "@/validations/themes";
+} from "@/features/themes/validations";
 
 /**
  * FUNC-241 — Approve een emerging theme (met optionele inline edits op name /
