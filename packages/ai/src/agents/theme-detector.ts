@@ -113,7 +113,7 @@ export async function runThemeDetector(input: RunThemeDetectorInput): Promise<Th
         temperature: 0,
         schema: ThemeDetectorOutputSchema,
         providerOptions: {
-          anthropic: { effort: "medium" },
+          anthropic: { effort: "high" },
         },
         messages: [
           {
