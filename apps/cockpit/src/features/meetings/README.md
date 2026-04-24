@@ -149,23 +149,23 @@ const { updateMeetingTitleAction } = mod;
 Deze code hoort NIET in deze feature — wordt gedeeld door cockpit + MCP +
 toekomstige apps:
 
-| Locatie                                              | Wat                                           |
-| ---------------------------------------------------- | --------------------------------------------- |
-| `@repo/database/queries/meetings`                    | `listVerifiedMeetings`, `getMeetingById`, ... |
-| `@repo/database/queries/meeting-project-summaries`   | segmenten per project                         |
-| `@repo/database/mutations/meetings`                  | title/summary/type/metadata updates           |
-| `@repo/database/mutations/meeting-participants`      | link/unlink people                            |
-| `@repo/database/mutations/meeting-project-summaries` | segmenten schrijven                           |
-| `@repo/database/constants/meetings`                  | `MEETING_TYPES`, `formatMeetingType`          |
-| `@repo/ai/agents/summarizer`                         | summary-generator                             |
-| `@repo/ai/agents/gatekeeper`                         | extraction-filter                             |
-| `@repo/ai/pipeline/tagger`                           | extraction-tagger                             |
-| `@repo/ai/pipeline/steps/risk-specialist`            | risk-detector step                            |
-| `@repo/ai/pipeline/steps/theme-detector`             | theme-link step                               |
-| `@repo/ai/pipeline/steps/link-themes`                | theme-link writer                             |
-| `@repo/ai/pipeline/context-injection`                | entity-context voor prompts                   |
-| `@repo/ai/pipeline/segment-builder`                  | transcript → segmenten                        |
-| `@repo/ai/embeddings`                                | Cohere embed-batch                            |
+| Locatie                                              | Wat                                    |
+| ---------------------------------------------------- | -------------------------------------- |
+| `@repo/database/queries/meetings`                    | publieke deur — alle sub-exports samen |
+| `@repo/database/queries/meetings/project-summaries`  | segmenten per project (fine-grained)   |
+| `@repo/database/mutations/meetings`                  | title/summary/type/metadata updates    |
+| `@repo/database/mutations/meeting-participants`      | link/unlink people                     |
+| `@repo/database/mutations/meeting-project-summaries` | segmenten schrijven                    |
+| `@repo/database/constants/meetings`                  | `MEETING_TYPES`, `formatMeetingType`   |
+| `@repo/ai/agents/summarizer`                         | summary-generator                      |
+| `@repo/ai/agents/gatekeeper`                         | extraction-filter                      |
+| `@repo/ai/pipeline/tagger`                           | extraction-tagger                      |
+| `@repo/ai/pipeline/steps/risk-specialist`            | risk-detector step                     |
+| `@repo/ai/pipeline/steps/theme-detector`             | theme-link step                        |
+| `@repo/ai/pipeline/steps/link-themes`                | theme-link writer                      |
+| `@repo/ai/pipeline/context-injection`                | entity-context voor prompts            |
+| `@repo/ai/pipeline/segment-builder`                  | transcript → segmenten                 |
+| `@repo/ai/embeddings`                                | Cohere embed-batch                     |
 
 Als je een query/mutation toevoegt voor meetings: plaats hem in packages/,
 niet hier.

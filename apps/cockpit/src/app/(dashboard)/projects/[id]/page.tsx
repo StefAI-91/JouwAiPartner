@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { createClient } from "@repo/database/supabase/server";
 import { getProjectById } from "@repo/database/queries/projects";
-import { getSegmentsByProjectId } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentsByProjectId } from "@repo/database/queries/meetings/project-summaries";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listPeople } from "@repo/database/queries/people";
 import { ExternalLink } from "lucide-react";
@@ -11,6 +11,7 @@ import { ProjectSections } from "@/components/projects/project-sections";
 import { EditProject } from "@/components/projects/edit-project";
 import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
 import { ProjectTimeline } from "@/components/projects/project-timeline";
+import { extractProjectTimeline } from "@repo/ai/validations/project-summary";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,19 +26,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   if (!project) notFound();
 
-  // Extract timeline from briefing structured_content
-  const structuredContent = project.briefing_summary?.structured_content;
-  const timeline =
-    structuredContent && Array.isArray((structuredContent as Record<string, unknown>).timeline)
-      ? ((structuredContent as Record<string, unknown>).timeline as {
-          date: string;
-          meeting_type: string;
-          title: string;
-          summary: string;
-          key_decisions: string[];
-          open_actions: string[];
-        }[])
-      : [];
+  // Gevalideerde timeline uit briefing.structured_content (lege array als corrupt).
+  // Schema-default vangt entries van vóór de email-uitbreiding op (source_type='meeting').
+  const timeline = extractProjectTimeline(project.briefing_summary?.structured_content);
 
   return (
     <div className="px-4 py-8 lg:px-10">

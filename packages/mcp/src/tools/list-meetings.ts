@@ -8,7 +8,7 @@ import {
   resolveOrganizationIds,
   resolveMeetingIdsByParticipant,
 } from "./utils";
-import { getSegmentCountsByMeetingIds } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentCountsByMeetingIds } from "@repo/database/queries/meetings/project-summaries";
 
 export function registerListMeetingsTools(server: McpServer) {
   server.tool(

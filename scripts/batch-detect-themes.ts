@@ -26,7 +26,7 @@ import {
   getVerifiedMeetingById,
   type VerifiedMeetingIdRow,
 } from "@repo/database/queries/meetings";
-import { listTaggedMeetingIds } from "@repo/database/queries/meeting-themes";
+import { listTaggedMeetingIds } from "@repo/database/queries/meetings/themes";
 import { runThemeDetectorStep } from "@repo/ai/pipeline/steps/theme-detector";
 import { runLinkThemesStep } from "@repo/ai/pipeline/steps/link-themes";
 

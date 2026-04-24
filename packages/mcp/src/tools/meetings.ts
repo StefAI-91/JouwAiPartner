@@ -8,7 +8,7 @@ import {
   collectVerifiedByIds,
 } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
-import { getSegmentsByMeetingIds } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentsByMeetingIds } from "@repo/database/queries/meetings/project-summaries";
 
 export function registerMeetingTools(server: McpServer) {
   server.tool(

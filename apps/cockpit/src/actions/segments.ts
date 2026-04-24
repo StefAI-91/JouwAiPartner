@@ -8,7 +8,7 @@ import {
   linkSegmentToProject,
   removeSegmentTag,
 } from "@repo/database/mutations/meeting-project-summaries";
-import { getSegmentNameRaw } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentNameRaw } from "@repo/database/queries/meetings/project-summaries";
 import { getMeetingOrganizationId } from "@repo/database/queries/meetings";
 import { getProjectAliases } from "@repo/database/queries/projects";
 import { updateProjectAliases } from "@repo/database/mutations/projects";

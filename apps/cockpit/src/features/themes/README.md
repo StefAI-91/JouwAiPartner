@@ -159,7 +159,7 @@ toekomstige apps:
 | `@repo/database/queries/themes/review`       | emerging + proposals (fine-grained) |
 | `@repo/database/queries/themes/detail`       | detail-page queries (fine-grained)  |
 | `@repo/database/queries/themes/dashboard`    | time-spent stats (fine-grained)     |
-| `@repo/database/queries/meeting-themes`      | cross-tabel                         |
+| `@repo/database/queries/meetings/themes`     | cross-tabel junction                |
 | `@repo/database/mutations/themes`            | insert/update/archive               |
 | `@repo/database/mutations/meeting-themes`    | link/clear/recalc                   |
 | `@repo/database/mutations/extraction-themes` | link aan extractions                |

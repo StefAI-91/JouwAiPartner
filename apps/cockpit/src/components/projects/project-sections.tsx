@@ -6,7 +6,7 @@ import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { getMeetingHref } from "@/lib/meeting-href";
 import { EmailsSection, type ProjectEmail } from "./project-emails-section";
 import { CombinedExtractionsSection, type CombinedItem } from "./combined-extractions-section";
-import type { ProjectSegment } from "@repo/database/queries/meeting-project-summaries";
+import type { ProjectSegment } from "@repo/database/queries/meetings/project-summaries";
 
 interface Meeting {
   id: string;

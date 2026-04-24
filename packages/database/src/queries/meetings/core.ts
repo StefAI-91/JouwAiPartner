@@ -1,4 +1,4 @@
-import { getAdminClient } from "../supabase/admin";
+import { getAdminClient } from "../../supabase/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface MeetingDetail {

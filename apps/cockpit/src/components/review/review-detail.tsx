@@ -19,7 +19,7 @@ import { updateMeetingSummaryAction } from "@/features/meetings/actions";
 import { RegenerateMenu } from "@/components/shared/regenerate-menu";
 import { AlertTriangle, Mail, Tags } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
-import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
+import type { MeetingSegment } from "@repo/database/queries/meetings/project-summaries";
 import { SegmentList } from "@/components/shared/segment-list";
 import { ProposalsList, type ProposalItem } from "./proposals-list";
 

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminClient } from "../supabase/admin";
+import { getAdminClient } from "../../supabase/admin";
 
 /**
  * TH-009 — queries op `meeting_themes` junction-tabel. Afgescheiden van

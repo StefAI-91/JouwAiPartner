@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 483 |
+| Files scanned | 484 |
 | Exported functions/constants | 765 |
 | Exported types/interfaces | 250 |
 | Cross-package imports | 579 |
@@ -187,24 +187,7 @@
 - `getManagementInsights()`
 - `getDismissedInsightKeys()`
 
-### `queries/meeting-project-summaries.ts`
-
-**Exports:**
-- `getSegmentsByMeetingId()`
-- `getSegmentsByMeetingIds()`
-- `getSegmentCountsByMeetingIds()`
-- `getSegmentCountsByProjectIds()`
-- `getSegmentNameRaw()`
-- `getSegmentsByProjectId()`
-
-**Types:** `MeetingSegment`, `ProjectSegment`
-
-### `queries/meeting-themes.ts`
-
-**Exports:**
-- `listTaggedMeetingIds()`
-
-### `queries/meetings.ts`
+### `queries/meetings/core.ts`
 
 **Exports:**
 - `getVerifiedMeetingById()`
@@ -234,6 +217,23 @@
 - `getMeetingByFirefliesIdForReprocess()`
 
 **Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
+
+### `queries/meetings/project-summaries.ts`
+
+**Exports:**
+- `getSegmentsByMeetingId()`
+- `getSegmentsByMeetingIds()`
+- `getSegmentCountsByMeetingIds()`
+- `getSegmentCountsByProjectIds()`
+- `getSegmentNameRaw()`
+- `getSegmentsByProjectId()`
+
+**Types:** `MeetingSegment`, `ProjectSegment`
+
+### `queries/meetings/themes.ts`
+
+**Exports:**
+- `listTaggedMeetingIds()`
 
 ### `queries/needs.ts`
 
@@ -1262,7 +1262,7 @@
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/summaries` → getLatestSummary
-- `@repo/database/queries/meeting-project-summaries` → getSegmentsByProjectId
+- `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
 - `@repo/database/mutations/summaries` → createSummaryVersion
 
 **Internal deps:**
@@ -1666,7 +1666,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/meeting-project-summaries` → getSegmentCountsByMeetingIds
+- `@repo/database/queries/meetings/project-summaries` → getSegmentCountsByMeetingIds
 
 **Internal deps:**
 - `./usage-tracking` → trackMcpQuery
@@ -1679,7 +1679,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/meeting-project-summaries` → getSegmentsByMeetingIds
+- `@repo/database/queries/meetings/project-summaries` → getSegmentsByMeetingIds
 
 **Internal deps:**
 - `./utils` → escapeLike, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds
@@ -1728,7 +1728,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/meeting-project-summaries` → getSegmentCountsByProjectIds
+- `@repo/database/queries/meetings/project-summaries` → getSegmentCountsByProjectIds
 
 **Internal deps:**
 - `./usage-tracking` → trackMcpQuery
@@ -1918,7 +1918,7 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
 - `@repo/database/mutations/meeting-project-summaries` → linkSegmentToProject, removeSegmentTag
-- `@repo/database/queries/meeting-project-summaries` → getSegmentNameRaw
+- `@repo/database/queries/meetings/project-summaries` → getSegmentNameRaw
 - `@repo/database/queries/meetings` → getMeetingOrganizationId
 - `@repo/database/queries/projects` → getProjectAliases
 - `@repo/database/mutations/projects` → updateProjectAliases
@@ -2460,7 +2460,7 @@
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/database/queries/projects` → listProjects
 - `@repo/database/queries/tasks` → getPromotedExtractionIds
-- `@repo/database/queries/meeting-project-summaries` → getSegmentsByMeetingId
+- `@repo/database/queries/meetings/project-summaries` → getSegmentsByMeetingId
 
 ### `apps/cockpit/src/app/(dashboard)/meetings/page.tsx`
 
@@ -2535,7 +2535,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/projects` → getProjectById
-- `@repo/database/queries/meeting-project-summaries` → getSegmentsByProjectId
+- `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/database/queries/people` → listPeople
 - `@repo/ai/validations/project-summary` → extractProjectTimeline
@@ -2562,7 +2562,7 @@
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/database/queries/projects` → listProjects
 - `@repo/database/queries/tasks` → getPromotedExtractionIds
-- `@repo/database/queries/meeting-project-summaries` → getSegmentsByMeetingId
+- `@repo/database/queries/meetings/project-summaries` → getSegmentsByMeetingId
 - `@repo/database/queries/themes` → listProposedThemesForMeeting
 
 ### `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`
@@ -3108,7 +3108,7 @@
 - `ProjectSections()`
 
 **Depends on:**
-- (type) `@repo/database/queries/meeting-project-summaries` → ProjectSegment
+- (type) `@repo/database/queries/meetings/project-summaries` → ProjectSegment
 
 ### `apps/cockpit/src/components/projects/project-timeline.tsx`
 
@@ -3168,7 +3168,7 @@
 **Depends on:**
 - `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
 - (type) `@repo/database/queries/people` → PersonForAssignment
-- (type) `@repo/database/queries/meeting-project-summaries` → MeetingSegment
+- (type) `@repo/database/queries/meetings/project-summaries` → MeetingSegment
 
 ### `apps/cockpit/src/components/review/review-queue.tsx`
 
@@ -3290,7 +3290,7 @@
 - `SegmentList()`
 
 **Depends on:**
-- (type) `@repo/database/queries/meeting-project-summaries` → MeetingSegment
+- (type) `@repo/database/queries/meetings/project-summaries` → MeetingSegment
 
 ### `apps/cockpit/src/components/shared/structured-transcript.tsx`
 
@@ -4132,18 +4132,7 @@ Which queries are used where across the codebase.
 | `getManagementInsights()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
 | `getDismissedInsightKeys()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
 
-### queries/meeting-project-summaries.ts
-
-| Query | Used in |
-|-------|---------|
-| `getSegmentsByMeetingId()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
-| `getSegmentsByMeetingIds()` | `packages/mcp/src/tools/meetings.ts` |
-| `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
-| `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
-| `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
-| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
-
-### queries/meetings.ts
+### queries/meetings/core.ts
 
 | Query | Used in |
 |-------|---------|
@@ -4163,6 +4152,17 @@ Which queries are used where across the codebase.
 | `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
 | `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+
+### queries/meetings/project-summaries.ts
+
+| Query | Used in |
+|-------|---------|
+| `getSegmentsByMeetingId()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `getSegmentsByMeetingIds()` | `packages/mcp/src/tools/meetings.ts` |
+| `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
+| `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
+| `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
+| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/needs.ts
 

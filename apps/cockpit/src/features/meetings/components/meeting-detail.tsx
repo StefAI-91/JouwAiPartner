@@ -12,7 +12,7 @@ import { Pencil, FolderKanban, RefreshCw } from "lucide-react";
 import { updateMeetingSummaryAction, regenerateMeetingTitleAction } from "../actions";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
-import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";
+import type { MeetingSegment } from "@repo/database/queries/meetings/project-summaries";
 import { SegmentList } from "@/components/shared/segment-list";
 
 interface MeetingDetailViewProps {

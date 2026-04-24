@@ -4,12 +4,12 @@ vi.mock("@repo/database/supabase/admin", () => ({
   getAdminClient: vi.fn(),
 }));
 
-vi.mock("@repo/database/queries/meeting-project-summaries", () => ({
+vi.mock("@repo/database/queries/meetings/project-summaries", () => ({
   getSegmentCountsByProjectIds: vi.fn(),
 }));
 
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { getSegmentCountsByProjectIds } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentCountsByProjectIds } from "@repo/database/queries/meetings/project-summaries";
 import { registerDecisionTools } from "../../src/tools/decisions";
 import { registerOrganizationTools } from "../../src/tools/organizations";
 import { registerProjectTools } from "../../src/tools/projects";

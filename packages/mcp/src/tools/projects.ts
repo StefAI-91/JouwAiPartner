@@ -4,7 +4,7 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 
 import { trackMcpQuery } from "./usage-tracking";
 import { escapeLike, sanitizeForContains } from "./utils";
-import { getSegmentCountsByProjectIds } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentCountsByProjectIds } from "@repo/database/queries/meetings/project-summaries";
 
 export function registerProjectTools(server: McpServer) {
   server.tool(

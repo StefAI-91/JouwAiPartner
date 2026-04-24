@@ -39,7 +39,7 @@ vi.mock("@repo/database/mutations/ignored-entities", () => ({
 // — de oude chainable .from(...) mocks zijn verwijderd omdat ze
 // implementatie-specifiek waren (forbidden bij nieuwe tests).
 const mockGetSegmentNameRaw = vi.fn();
-vi.mock("@repo/database/queries/meeting-project-summaries", () => ({
+vi.mock("@repo/database/queries/meetings/project-summaries", () => ({
   getSegmentNameRaw: (...args: unknown[]) => mockGetSegmentNameRaw(...args),
 }));
 

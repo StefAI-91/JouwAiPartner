@@ -35,7 +35,7 @@ vi.mock("@repo/database/supabase/admin", () => ({
 vi.mock("@repo/database/queries/summaries", () => ({
   getLatestSummary: vi.fn(),
 }));
-vi.mock("@repo/database/queries/meeting-project-summaries", () => ({
+vi.mock("@repo/database/queries/meetings/project-summaries", () => ({
   getSegmentsByProjectId: vi.fn(),
 }));
 vi.mock("@repo/database/mutations/summaries", () => ({
@@ -53,7 +53,7 @@ import {
   triggerSummariesForEmail,
 } from "../../src/pipeline/summary-pipeline";
 import { getLatestSummary } from "@repo/database/queries/summaries";
-import { getSegmentsByProjectId } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentsByProjectId } from "@repo/database/queries/meetings/project-summaries";
 import { createSummaryVersion } from "@repo/database/mutations/summaries";
 import { runProjectSummarizer, runOrgSummarizer } from "../../src/agents/project-summarizer";
 

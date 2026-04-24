@@ -1,6 +1,6 @@
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { getLatestSummary } from "@repo/database/queries/summaries";
-import { getSegmentsByProjectId } from "@repo/database/queries/meeting-project-summaries";
+import { getSegmentsByProjectId } from "@repo/database/queries/meetings/project-summaries";
 import { createSummaryVersion } from "@repo/database/mutations/summaries";
 import { runProjectSummarizer, runOrgSummarizer } from "../agents/project-summarizer";
 
