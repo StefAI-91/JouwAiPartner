@@ -18,9 +18,8 @@ features/meetings/
 
 **Geen hooks, geen validations in deze feature.** De Zod-schemas voor
 meeting-review (`verifyMeetingSchema`, `rejectMeetingSchema`, ...) leven
-bewust in `src/validations/review.ts` omdat de review-action zelf gedeeld
-is tussen meetings en mogelijk andere review-flows. Als we die action
-ooit splitsen, verhuizen de schemas mee.
+in `features/review/validations/` omdat de review-action zelf daar
+woont — gedeeld tussen meetings en email-review-flows.
 
 ---
 
@@ -148,7 +147,7 @@ import { updateMeetingTitleAction } from "@/features/meetings/actions";
 ### Tests (integration)
 
 ```ts
-const mod = await import("../../src/features/meetings/actions/field-updates");
+const mod = await import("@/features/meetings/actions/field-updates");
 const { updateMeetingTitleAction } = mod;
 ```
 
@@ -192,7 +191,7 @@ Raw Fireflies payload: `meetings.raw_fireflies` (JSONB).
 - `/meetings` — list (consumeert `MeetingsList`)
 - `/meetings/[id]` — detail (consumeert `MeetingDetailView`)
 - `/review/[id]` — meeting-review (consumeert 7 components uit deze feature
-  via `components/review/review-detail.tsx`)
+  via de review-detail component in `features/review/components/`)
 - `/dashboard` — consumeert `recent-verified-meetings` en carousel
   (die zelf via `@repo/database/queries/meetings` draaien — geen
   component uit deze feature)
@@ -205,7 +204,7 @@ Vóór de migratie zaten actions verspreid over `actions/meetings/` en
 `actions/meeting-pipeline/`. Binnen de feature-folder heeft die splitsing
 geen meerwaarde meer — de parent-folder (`features/meetings/actions/`)
 maakt de context al expliciet. Resultaat: één barrel, consumers hoeven
-niet meer te kiezen tussen twee imports (`regenerate-menu.tsx` ging van
+niet meer te kiezen tussen twee imports (regenerate-menu ging van
 2 imports naar 1).
 
 ### Components géén barrel
@@ -214,12 +213,12 @@ Zelfde reden als themes: `components/meeting-detail.tsx` en enkele
 selectors zijn client components die transitief server-code kunnen
 raken. Per-component imports vermijden bundle-lekken in Next.js.
 
-### Validations blijven in `src/validations/review.ts`
+### Validations wonen bij de review-feature
 
 De meeting-review schemas (`verifyMeetingSchema`, `rejectMeetingSchema`,
-...) worden alleen gebruikt door `src/actions/review.ts` — een gedeelde
-review-action. Meeverhuizen = scope-creep. Als die action ooit splitst
-verhuizen de schemas mee.
+...) worden alleen gebruikt door de gedeelde review-action, en leven
+daarom in `features/review/validations/`. Meeverhuizen naar meetings zou
+duplicatie geven omdat email-review dezelfde schemas raakt.
 
 ### `meetings.raw_fireflies` blijft de bron van waarheid
 
@@ -232,12 +231,10 @@ baarheid boven netwerk-afhankelijkheid.
 
 ## Tests
 
-Locatie: `apps/cockpit/__tests__/`
+Locatie: `apps/cockpit/__tests__/` — review-action tests (approve/reject
+flow) en ingest-pipeline tests voor Fireflies. Zie de test-folder voor
+de actuele dekking.
 
-- `actions/review.test.ts` — test de gedeelde review-action die meetings
-  approveert/afwijst (gebruikt `@/features/meetings/actions` indirect)
-- `api/ingest-fireflies.test.ts` + `api/webhooks-fireflies.test.ts` —
-  ingest-pipeline tests
 - Geen directe tests op `features/meetings/actions/*` (field-updates,
   lifecycle, regenerate): kandidaat voor toekomstige coverage
 

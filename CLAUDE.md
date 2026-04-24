@@ -27,7 +27,7 @@ Data flows in a continuous loop: Knowledge In (cockpit) → Work Created → Wor
 
 AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes all company data, processes it through AI agents, and exposes it via MCP server, web dashboard, and client portal.
 
-**Current state (2026-04-23):** 73 sprints done (36 core + 5 CP-portal + 4 foundation + 14 DevHub + 6 testing + 7 quality + TH-011 Theme-Detector). Zie `sprints/done/` voor de volledige lijst en `docs/specs/docs-inventory.md §1` voor de per-prefix breakdown. Cockpit fully built (meetings, review, dashboard, emails). DevHub fase 1 complete (DH-001..007, DH-010..012, DH-017..020). Portal MVP: CP-001..005 done (wireframed). Next: cockpit↔devhub bridge, then portal launch.
+**Current state:** Cockpit + DevHub in productie, Portal MVP in wireframe. Zie `sprints/done/` voor de sprint-historie en `docs/specs/docs-inventory.md §1` voor de per-prefix breakdown.
 **Team:** 6 people, 3 internal reviewers (Stef, Wouter, Ege). Platform maintained by Stef (non-coder) via Claude Code.
 **Verification model:** All content must be human-verified before becoming queryable truth (review gate). This applies to all quadrants.
 **DevHub:** Internal tool — not a product for clients. Optimized for team workflow and AI agent execution.
@@ -53,67 +53,7 @@ npm run lint         # ESLint (all workspaces)
 npm run type-check   # TypeScript check (all workspaces)
 ```
 
-## Project Structure (Monorepo)
-
-```
-/
-├── apps/
-│   ├── cockpit/                   # Strategy & PM dashboard (built)
-│   │   ├── src/
-│   │   │   ├── app/               # Routes (dashboard, login, api, review, emails)
-│   │   │   ├── actions/           # Server Actions (tasks, entities, review, meetings)
-│   │   │   ├── components/        # UI + feature components
-│   │   │   ├── lib/utils.ts       # cn() helper (app-specific)
-│   │   │   └── middleware.ts      # Auth route guards
-│   │   ├── next.config.ts         # transpilePackages for @repo/*
-│   │   └── package.json
-│   │
-│   ├── devhub/                    # Build & Execute — internal tool (partially built)
-│   │   ├── src/
-│   │   │   ├── app/               # Routes (issues, login, api)
-│   │   │   ├── actions/           # Server Actions (issues, comments, sync)
-│   │   │   ├── components/        # Issue list, detail, triage UI
-│   │   │   └── middleware.ts      # Auth route guards
-│   │   └── package.json
-│   │
-│   └── portal/                    # Client portal — transparency & Q&A (planned)
-│
-├── packages/
-│   ├── database/                  # Shared: Supabase clients, queries, mutations, types
-│   │   └── src/
-│   │       ├── supabase/          # client.ts, server.ts, admin.ts
-│   │       ├── queries/           # Read functions (meetings, tasks, dashboard, people, review, etc.)
-│   │       ├── mutations/         # Write functions (meetings, tasks, extractions, etc.)
-│   │       └── types/             # database.ts (generated)
-│   │
-│   ├── ai/                        # Shared: Agents, embeddings, pipeline
-│   │   └── src/
-│   │       ├── agents/            # gatekeeper.ts, extractor.ts, classifier.ts
-│   │       ├── pipeline/          # gatekeeper-pipeline, entity-resolution, embed, save, re-embed
-│   │       ├── validations/       # Zod schemas for agents + fireflies
-│   │       ├── embeddings.ts      # Cohere embed-v4
-│   │       ├── fireflies.ts       # Fireflies GraphQL client
-│   │       └── transcript-processor.ts
-│   │
-│   ├── ui/                        # Shared: shadcn/ui components (Button, Badge, Card, etc.)
-│   ├── auth/                      # Shared: Auth helpers + middleware factory
-│   │
-│   └── mcp/                       # Shared: MCP server + tools
-│       └── src/
-│           ├── server.ts          # createMcpServer()
-│           └── tools/             # 10 MCP tools + utils
-│
-├── supabase/                      # Shared across apps (stays at root)
-│   ├── migrations/
-│   ├── functions/
-│   └── seed/
-│
-├── turbo.json                     # Turborepo task config
-├── package.json                   # Root workspace config
-└── CLAUDE.md
-```
-
-### Import Conventions
+## Import Conventions
 
 ```typescript
 // Cross-package imports (shared code)
@@ -124,12 +64,13 @@ import { embedText } from "@repo/ai/embeddings";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
 import { createMcpServer } from "@repo/mcp/server";
 
-// App-internal imports (within cockpit)
-import { MeetingCard } from "@/components/meetings/meeting-card";
+// App-internal imports (within cockpit) — features eerst, components als fallback
+import { MeetingCard } from "@/features/meetings/components/meeting-card";
+import { createProjectAction } from "@/features/projects/actions/projects";
 import { cn } from "@/lib/utils";
 ```
 
-**Wanneer nieuwe folders:** feature-folder in `components/` bij 2+ eigen componenten. Component naar `shared/` zodra het op 2+ plekken gebruikt wordt.
+**Waar nieuwe code landt:** zie [§ Feature-structuur](#feature-structuur) — harde regel, geen drift.
 
 ## Architecture
 
@@ -142,59 +83,7 @@ import { cn } from "@/lib/utils";
 
 ### Agent System (database-first communication)
 
-Agents write to the database, not to each other. This ensures audit trail + replay capability.
-
-**Built:**
-
-| Agent           | Model      | Quadrant | Purpose                                                                                                                                            |
-| --------------- | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Gatekeeper      | Haiku 4.5  | Cockpit  | Classify meetings: meeting_type, party_type, relevance_score                                                                                       |
-| Theme-Detector  | Sonnet 4.6 | Cockpit  | Extract-time theme scoping: identifies substantial cross-cutting themes vóór Summarizer draait, stelt nieuwe themes voor bij substantiële signalen |
-| Summarizer      | Sonnet 4.5 | Cockpit  | Rich summary per meeting: briefing, kernpunten, deelnemers, vervolgstappen                                                                         |
-| Risk Specialist | Sonnet 4.6 | Cockpit  | Gespecialiseerde risk-extractor (cross-turn patroon-detectie, high effort)                                                                         |
-| Classifier      | Haiku 4.5  | DevHub   | Classify issues: type, component, severity, repro steps                                                                                            |
-
-Volledig register (12 actieve agents): `packages/ai/src/agents/registry.ts` — voedt de `/agents` observability pagina.
-
-**Planned (see vision doc for full agent roster):**
-
-| Agent        | Model        | Quadrant | Purpose                                             |
-| ------------ | ------------ | -------- | --------------------------------------------------- |
-| Planner      | Sonnet       | DevHub   | Turn decisions/needs into implementation plans      |
-| Executor     | Sonnet/Opus  | DevHub   | Pick up tickets, write code, create PRs             |
-| Curator      | Sonnet       | Cockpit  | Nightly: dedupe, staleness, contradictions          |
-| Analyst      | Opus         | Cockpit  | Daily: cross-source patterns, trends, risk flagging |
-| Communicator | Sonnet       | Portal   | Draft client-facing answers, progress updates       |
-| Support      | Haiku/Sonnet | Delivery | Chatbot: answer questions, report bugs, escalate    |
-| Dispatcher   | Haiku/rules  | Cross    | Route insights/alerts to Slack, email               |
-
-### Tasks System (extractions vs tasks)
-
-Extractions = AI-extracted facts from meetings (decisions, action_items, needs, insights). Tasks = human-promoted action items with assignment and tracking. Separate tables, linked via `extraction_id`.
-
-- `extractions` — immutable AI output, lives in review flow
-- `tasks` — promoted from action_items, with `status` (active/done/dismissed), `assigned_to`, `due_date`
-- Mutations: `createTaskFromExtraction()`, `completeTask()`, `dismissTask()`
-- Queries: `listActiveTasks()`, `hasTaskForExtraction()`, `getPromotedExtractionIds()`
-
-### Review Flow
-
-Draft meetings go through human review before becoming verified. Reviewers can:
-
-- Approve/reject individual extractions
-- Change extraction types (e.g., action_item → decision)
-- Promote action items to tasks with assignment during review
-- MCP search filters on `verified_only` by default
-
-### Dashboard
-
-- **Meeting carousel** — auto-rotating verified meetings with AI briefings (`ai_briefing` column)
-- **AI pulse strip** — metrics: processed meetings, decisions, deadlines, open needs
-- **Tasks card** — filterable task list with urgency badges (overdue/this-week/open)
-
-### Manual CRUD
-
-Organizations, projects, people, and extractions are manually editable via inline forms. Server Actions in `apps/cockpit/src/actions/entities.ts`.
+Agents write to the database, not to each other — audit trail + replay. Volledig register: `packages/ai/src/agents/registry.ts` (voedt de `/agents` observability pagina). Geplande agents: zie vision doc.
 
 ### Key Design Principles
 
@@ -262,6 +151,30 @@ voor [doel]", haal hem weg.
 - **Data muteren via Server Actions.** Geen directe Supabase calls in components.
 - **Splits bij ~150 regels.** Component te groot? Splits het.
 - **Als je een file/functie >2× zo lang maakt als nodig lijkt voor het doel, stop en herschrijf korter.** 200 regels voor iets dat in 50 kan = signaal dat er abstractie-drift zit. Vraag jezelf: "Zou een senior engineer zeggen dat dit overgeëngineerd is?" Als ja, vereenvoudig.
+
+### Feature-structuur
+
+Drie categorieën in `apps/[app]/src/`. Kies één **vóór** je schrijft. Drift wordt bij review teruggedraaid.
+
+- **Feature** → `features/[naam]/{actions,components,validations,hooks}/` — eigen CRUD **én** eigen flows
+- **Compositiepagina** → `components/[naam]/` — pagina die alleen leest uit features
+- **Platform** → `components/{layout,shared}/` of losse `actions/*.ts` — cross-cutting
+
+Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen view-code? → compositiepagina.
+
+**Registry (2026-04-24, bindend — update bij elke wijziging):**
+
+| Type                                      | Cockpit                                                                                                                   | DevHub                               |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`, `agents`                                               | `issues`                             |
+| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`                                                    | `dashboard`, `review`                |
+| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review` |
+
+**Regels:**
+
+- Migratie van horizontaal → feature: volg `.claude/skills/feature-folder-migrate/SKILL.md`.
+- Elke `features/[naam]/` heeft een `README.md` met menu per laag. Update hem als je files toevoegt.
+- Twijfel tussen feature en compositie? Vraag eerst — verkeerd gokken = migratie-sprint later.
 
 ### Database & Queries
 
@@ -391,64 +304,6 @@ Escaleer naar de gebruiker in plaats van door te drukken.
 - DevHub requirements: `docs/specs/requirements-devhub.md`
 - Archived docs in `docs/archive/` (PRD v1, PRD v2, business model v1)
 
-### Sync-ritme
+## Deployment
 
-- **Vóór elke nieuwe sprint:** run de `sync` subagent (`.claude/agents/agent-sync.md`) om te checken dat specs/backlog/code nog op één lijn staan.
-- **Na elke merged sprint:** update `docs/specs/docs-inventory.md §1` sprint-telling + markeer eventuele nieuwe drift.
-- **Periodiek (kwartaal):** run een volledige docs-audit-spike (analoog aan Q4a) als sanity-check.
-- Het Q4a spike-rapport `docs/specs/docs-inventory.md` is de kanonieke input voor de sync-agent.
-
-## Routes
-
-### Cockpit (`apps/cockpit/`)
-
-| Route                | Purpose                                                  |
-| -------------------- | -------------------------------------------------------- |
-| `/`                  | Dashboard home (carousel, AI pulse, tasks)               |
-| `/meetings`          | Meeting list with day grouping, type/participant filters |
-| `/meetings/[id]`     | Meeting detail with extraction tabs                      |
-| `/emails`            | Email list                                               |
-| `/emails/[id]`       | Email detail                                             |
-| `/review`            | Review queue (draft meetings)                            |
-| `/review/[id]`       | Review detail (approve/reject extractions, type changes) |
-| `/review/email/[id]` | Email review detail                                      |
-| `/clients`           | Organizations list + inline create                       |
-| `/projects`          | Projects list + inline create                            |
-| `/people`            | People list + inline create                              |
-| `/login`             | Split-screen login page                                  |
-
-### DevHub (`apps/devhub/`, internal)
-
-| Route              | Purpose                                        |
-| ------------------ | ---------------------------------------------- |
-| `/`                | Issue list with project filter, triage sidebar |
-| `/issues/[id]`     | Issue detail with comments, activity, AI panel |
-| `/settings/import` | Userback sync + import management              |
-| `/login`           | Login page                                     |
-
-## Next.js 16 Warning
-
-This uses Next.js 16 which has breaking changes from earlier versions. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-
-## Path Aliases
-
-- `@/*` maps to `./src/*` within each app (`apps/cockpit/`, `apps/devhub/`) — use for app-internal imports only
-- `@repo/database/*` — shared database package (queries, mutations, supabase clients, types)
-- `@repo/ai/*` — shared AI package (agents, pipeline, embeddings, fireflies)
-- `@repo/ui/*` — shared UI components (shadcn/ui)
-- `@repo/auth/*` — shared auth helpers + middleware factory
-- `@repo/mcp/*` — shared MCP package (server, tools)
-
-## Environment Variables (new)
-
-- `NEXT_PUBLIC_USERBACK_TOKEN` — Userback feedback widget token (required for deployment)
-- `NEXT_PUBLIC_COCKPIT_URL` — Full URL naar de cockpit app (productie: `https://jouw-ai-partner.vercel.app`, dev fallback: `http://localhost:3000`). Gebruikt door (a) workspace-switcher in beide apps voor cross-app navigatie, (b) devhub `/auth/callback` om admins na magic-link login naar cockpit te redirecten, (c) cockpit middleware voor member-forbidden-redirect.
-- `NEXT_PUBLIC_DEVHUB_URL` — Full URL naar de devhub app (productie: `https://jouw-ai-partner-devhub.vercel.app`, dev fallback: `http://localhost:3001`). Gebruikt door cockpit callback + middleware om members naar devhub te redirecten + door de workspace-switcher.
-- `NEXT_PUBLIC_PORTAL_URL` — Full URL naar de portal app (nog niet gedeployed).
-
-Beide apps (cockpit + devhub) hebben de 3 NEXT*PUBLIC*\* vars nodig zodat de workspace-switcher in de sidebar naar de andere quadranten kan linken.
-
-### Supabase dashboard (handmatig, DH-018)
-
-- **Redirect URLs whitelist** (Authentication → URL Configuration) moet beide productie-URL's `${cockpit}/auth/callback` en `${devhub}/auth/callback` bevatten, plus de preview/localhost varianten.
-- **JWT / refresh-token**: zet de session refresh duration op **30 dagen** (AUTH-175).
+Environment variables, Supabase dashboard config, en deploy-specifieke quirks: zie [`docs/ops/deployment.md`](docs/ops/deployment.md).

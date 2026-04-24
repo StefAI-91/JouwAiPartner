@@ -18,7 +18,7 @@ features/themes/
   └─ validations/    (1 file + index.ts)
 ```
 
-**Waarom deur (`index.ts`) per laag behalve components?** Actions/hooks/
+**Waarom een barrel per laag behalve components?** Actions/hooks/
 validations zijn homogeen (allemaal `"use server"`, allemaal client-only,
 pure Zod). Components mixen client + server via transitive imports — een
 barrel-file daar breekt Next.js' client/server-scheiding. Zie
@@ -115,8 +115,18 @@ import { ThemeEditForm } from "@/features/themes/components/theme-edit-form";
 
 Plus twee helpers voor de donut:
 
-- `buildSegments(slices)` — slice → SVG segment-berekening
-- `DONUT_PALETTE` — 10-kleurenpalet
+- `buildSegments(slices)` uit `donut-segments.ts` — slice → SVG segment-berekening
+- `DONUT_PALETTE` uit `donut-palette.ts` — 10-kleurenpalet
+
+### File-organisatie per laag
+
+Actions leven in 3 bestanden (zie menu hierboven voor welke functies waar zitten):
+
+- `crud.ts` — `updateThemeAction`, `archiveThemeAction`, `canEditThemesAction`, `createVerifiedThemeAction`
+- `review.ts` — `approveThemeAction`, `rejectEmergingThemeAction`, `rejectThemeMatchAction`, `confirmThemeProposalAction`, `rejectThemeProposalAction`
+- `regenerate.ts` — `regenerateMeetingThemesAction`
+
+De hook `useThemeFormState` leeft in `use-theme-form-state.ts`.
 
 ---
 
@@ -197,10 +207,10 @@ Seed: `supabase/seed/themes.sql`.
 
 ### Waarom components géén barrel
 
-De Next.js build faalde in substap 2c toen we `features/themes/components/
-index.ts` hadden: de client component `meetings-tab.tsx` importeerde
+De Next.js build faalde in substap 2c toen we een barrel in
+`features/themes/components/` hadden: een client component importeerde
 `MatchRejectPopover` via de barrel en trok daarmee transitief
-`@repo/database/supabase/server.ts` de client-bundle in.
+server-code (de Supabase server client) de client-bundle in.
 
 Oplossing: directe imports per specifieke component. Bulletproof React's
 regel "no barrel files" is hier dwingend.
@@ -211,10 +221,10 @@ Die lagen zijn homogeen: alle actions zijn `"use server"` (Next.js
 scheidt ze automatisch), alle hooks zijn client-only, validations is
 pure Zod. Geen transitive leak mogelijk.
 
-### `dev-detector.ts` blijft plat
+### Dev-detector blijft plat
 
-Dev-sandbox actie (`actions/dev-detector.ts`) blijft in de platte actions-
-map, importeert wel `runDevDetectorSchema` uit deze feature via
+De dev-sandbox actie in `@/actions/dev-detector` blijft in de platte
+actions-map, importeert wel `runDevDetectorSchema` uit deze feature via
 `@/features/themes/validations`. Niet-productieve tool, hoort niet in de
 feature-folder maar gebruikt wél de feature-validations.
 
@@ -227,14 +237,9 @@ verwijderd — experimentele UI-varianten zonder productie-waarde.
 
 ## Tests
 
-Locatie: `apps/cockpit/__tests__/`
-
-- `actions/themes.test.ts` — CRUD-action tests (dynamic import)
-- `actions/themes-review.test.ts` — review-action tests
-- `actions/themes-proposals.test.ts` — proposals tests
-- `hooks/use-theme-form-state.test.ts` — pure helpers (`computeCanSubmit`,
-  `computeIsDirty`)
-- `components/donut-segments.test.ts` — `buildSegments()` met palette
+Locatie: `apps/cockpit/__tests__/` — CRUD-action tests, review- en
+proposal-action tests, hooks (pure helpers `computeCanSubmit` /
+`computeIsDirty`) en `buildSegments()` palette-berekening.
 
 ---
 
