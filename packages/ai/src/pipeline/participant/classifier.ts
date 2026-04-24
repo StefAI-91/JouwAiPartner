@@ -1,5 +1,5 @@
-import type { ParticipantInfo } from "../agents/gatekeeper";
-import type { MeetingType, PartyType } from "../validations/gatekeeper";
+import type { ParticipantInfo } from "../../agents/gatekeeper";
+import type { MeetingType, PartyType } from "../../validations/gatekeeper";
 import type { KnownPerson } from "@repo/database/queries/people";
 import { getAllKnownPeople } from "@repo/database/queries/people";
 

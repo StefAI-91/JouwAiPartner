@@ -10,7 +10,7 @@ import {
   classifyParticipantsWithCache,
   determinePartyType,
   determineRuleBasedMeetingType,
-} from "./participant-classifier";
+} from "./participant/classifier";
 import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSummarizeStep } from "./steps/summarize";
@@ -25,7 +25,7 @@ import {
   matchParticipants,
   mergeParticipantSources,
   type MeetingAttendee,
-} from "./participant-helpers";
+} from "./participant/helpers";
 
 interface MeetingInput {
   fireflies_id: string;

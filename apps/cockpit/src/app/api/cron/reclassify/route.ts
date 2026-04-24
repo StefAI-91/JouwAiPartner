@@ -8,7 +8,7 @@ import { resolveOrganization } from "@repo/ai/pipeline/entity-resolution";
 import {
   classifyParticipantsWithCache,
   determinePartyType,
-} from "@repo/ai/pipeline/participant-classifier";
+} from "@repo/ai/pipeline/participant/classifier";
 
 const RequestSchema = z.object({
   limit: z.number().min(1).max(100).optional().default(50),

@@ -10,7 +10,7 @@ import {
   determinePartyType,
   determineRuleBasedMeetingType,
   isBoardMeeting,
-} from "../../src/pipeline/participant-classifier";
+} from "../../src/pipeline/participant/classifier";
 import { getAllKnownPeople } from "@repo/database/queries/people";
 import type { KnownPerson } from "@repo/database/queries/people";
 import type { ParticipantInfo } from "../../src/agents/gatekeeper";

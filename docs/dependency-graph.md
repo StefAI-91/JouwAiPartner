@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 438 |
+| Files scanned | 439 |
 | Exported functions/constants | 690 |
 | Exported types/interfaces | 245 |
 | Cross-package imports | 479 |
@@ -1001,7 +1001,7 @@
 - `../validations/gatekeeper` → PartyType, IdentifiedProject
 - `./entity-resolution` → resolveOrganization
 - `./context-injection` → buildEntityContext
-- `./participant-classifier` → classifyParticipantsWithCache, determinePartyType, determineRuleBasedMeetingType
+- `./participant/classifier` → classifyParticipantsWithCache, determinePartyType, determineRuleBasedMeetingType
 - `./build-raw-fireflies` → buildRawFireflies
 - `./steps/transcribe` → runTranscribeStep
 - `./steps/summarize` → runSummarizeStep
@@ -1012,7 +1012,7 @@
 - `./steps/theme-detector` → runThemeDetectorStep
 - `./steps/link-themes` → runLinkThemesStep
 - `./speaker-map` → extractSpeakerNames, buildSpeakerMap, formatSpeakerContext
-- `./participant-helpers` → matchParticipants, mergeParticipantSources, type MeetingAttendee
+- `./participant/helpers` → matchParticipants, mergeParticipantSources, type MeetingAttendee
 
 ### `packages/ai/src/pipeline/generate-title.ts`
 
@@ -1041,7 +1041,7 @@
 **Internal deps:**
 - `../agents/management-insights` → runManagementInsightsAgent
 
-### `packages/ai/src/pipeline/participant-classifier.ts`
+### `packages/ai/src/pipeline/participant/classifier.ts`
 
 **Exports:**
 - `classifyParticipants()`
@@ -1055,10 +1055,10 @@
 - `@repo/database/queries/people` → getAllKnownPeople
 
 **Internal deps:**
-- `../agents/gatekeeper` → ParticipantInfo
-- `../validations/gatekeeper` → MeetingType, PartyType
+- `../../agents/gatekeeper` → ParticipantInfo
+- `../../validations/gatekeeper` → MeetingType, PartyType
 
-### `packages/ai/src/pipeline/participant-helpers.ts`
+### `packages/ai/src/pipeline/participant/helpers.ts`
 
 **Exports:**
 - `collectParticipantEmails()`
@@ -1072,7 +1072,7 @@
 - `@repo/database/mutations/meetings/participants` → linkMeetingParticipants
 
 **Internal deps:**
-- `./speaker-map` → SpeakerMap
+- `../speaker-map` → SpeakerMap
 
 ### `packages/ai/src/pipeline/re-embed-worker.ts`
 
@@ -1938,7 +1938,7 @@
 - `@repo/database/queries/meetings` → listMeetingsForReclassify
 - `@repo/database/mutations/meetings` → updateMeetingClassification
 - `@repo/ai/pipeline/entity-resolution` → resolveOrganization
-- `@repo/ai/pipeline/participant-classifier` → classifyParticipantsWithCache, determinePartyType
+- `@repo/ai/pipeline/participant/classifier` → classifyParticipantsWithCache, determinePartyType
 
 ### `apps/cockpit/src/app/api/debug/fireflies/route.ts`
 
@@ -3425,7 +3425,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant-helpers.ts` |
+| `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant/helpers.ts` |
 
 ### mutations/meetings/project-summaries.ts
 
@@ -3654,9 +3654,9 @@ Which queries are used where across the codebase.
 | `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
 | `getPersonById()` | `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx` |
 | `getStalePeople()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
-| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant-classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getPeopleForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
-| `findPeopleByEmails()` | `packages/ai/src/pipeline/participant-helpers.ts` |
+| `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |
 | `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 
 ### queries/projects/access.ts

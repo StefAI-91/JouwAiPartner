@@ -20,7 +20,7 @@ vi.mock("@repo/ai/pipeline/entity-resolution", () => ({
   resolveOrganization: vi.fn(),
 }));
 
-vi.mock("@repo/ai/pipeline/participant-classifier", () => ({
+vi.mock("@repo/ai/pipeline/participant/classifier", () => ({
   classifyParticipantsWithCache: vi.fn(),
   determinePartyType: vi.fn(),
 }));
@@ -33,8 +33,8 @@ import { resolveOrganization } from "@repo/ai/pipeline/entity-resolution";
 import {
   classifyParticipantsWithCache,
   determinePartyType,
-} from "@repo/ai/pipeline/participant-classifier";
-import { POST } from "../../src/app/api/cron/reclassify/route";
+} from "@repo/ai/pipeline/participant/classifier";
+import { POST } from "@/app/api/cron/reclassify/route";
 
 const CRON_SECRET = "test-cron-secret";
 
