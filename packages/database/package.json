@@ -18,6 +18,8 @@
     "./queries/projects/*": "./src/queries/projects/*.ts",
     "./queries/portal": "./src/queries/portal/index.ts",
     "./queries/portal/*": "./src/queries/portal/*.ts",
+    "./queries/summaries": "./src/queries/summaries/index.ts",
+    "./queries/summaries/*": "./src/queries/summaries/*.ts",
     "./queries/*": "./src/queries/*.ts",
     "./mutations/*": "./src/mutations/*.ts",
     "./types/*": "./src/types/*.ts",

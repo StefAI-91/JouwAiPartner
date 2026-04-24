@@ -9,7 +9,7 @@ import {
 } from "@repo/database/queries/dashboard";
 import { listAllTasks } from "@repo/database/queries/tasks";
 import { listPeopleForAssignment } from "@repo/database/queries/people";
-import { getManagementInsights } from "@repo/database/queries/management-insights";
+import { getManagementInsights } from "@repo/database/queries/summaries/management-insights";
 import { fetchWindowAggregation } from "@repo/database/queries/themes";
 import { ManagementInsightsOutputSchema } from "@repo/ai/validations/management-insights";
 import { Greeting } from "@/components/dashboard/greeting";

@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 457 |
-| Exported functions/constants | 728 |
-| Exported types/interfaces | 247 |
-| Cross-package imports | 533 |
-| Critical integration points (3+ packages) | 11 |
+| Files scanned | 453 |
+| Exported functions/constants | 719 |
+| Exported types/interfaces | 246 |
+| Cross-package imports | 523 |
+| Critical integration points (3+ packages) | 10 |
 
 ## Package Dependency Flow
 
@@ -181,12 +181,6 @@
 
 **Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`
 
-### `queries/management-insights.ts`
-
-**Exports:**
-- `getManagementInsights()`
-- `getDismissedInsightKeys()`
-
 ### `queries/meetings/core.ts`
 
 **Exports:**
@@ -354,13 +348,28 @@
 
 **Types:** `ReviewMeeting`, `ReviewMeetingDetail`
 
-### `queries/summaries.ts`
+### `queries/summaries/core.ts`
 
 **Exports:**
 - `getLatestSummary()`
 - `getSummaryHistory()`
 
 **Types:** `SummaryRow`
+
+### `queries/summaries/management-insights.ts`
+
+**Exports:**
+- `getManagementInsights()`
+- `getDismissedInsightKeys()`
+
+### `queries/summaries/weekly.ts`
+
+**Exports:**
+- `getWeeklyProjectData()`
+- `getLatestWeeklySummary()`
+- `listWeeklySummaries()`
+
+**Types:** `WeeklyProjectData`
 
 ### `queries/tasks.ts`
 
@@ -439,15 +448,6 @@
 - `getExistingUserbackIds()`
 - `countUserbackIssues()`
 - `listUserbackIssuesForBackfill()`
-
-### `queries/weekly-summary.ts`
-
-**Exports:**
-- `getWeeklyProjectData()`
-- `getLatestWeeklySummary()`
-- `listWeeklySummaries()`
-
-**Types:** `WeeklyProjectData`
 
 ## Database Mutations
 
@@ -1289,7 +1289,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/weekly-summary` → getWeeklyProjectData
+- `@repo/database/queries/summaries/weekly` → getWeeklyProjectData
 - `@repo/database/mutations/summaries` → createSummaryVersion
 
 **Internal deps:**
@@ -1813,19 +1813,6 @@
 - `@repo/database/queries/meetings` → getVerifiedMeetingById
 - `@repo/database/queries/themes` → listVerifiedThemes
 - `@repo/database/queries/dev-detector` → getMeetingThemesForDevDetector, getExtractionThemesForDevDetector, type DevDetectorMeetingThemeRow, type DevDetectorExtractionThemeRow
-
-### `apps/cockpit/src/actions/extractions.ts`
-
-**Exports:**
-- `createExtractionAction()`
-- `updateExtractionAction()`
-- `deleteExtractionAction()`
-
-**Depends on:**
-- `@repo/database/mutations/extractions` → createExtraction, updateExtraction, deleteExtraction
-- `@repo/database/validations/entities` → createExtractionSchema, updateExtractionSchema, deleteWithContextSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
 
 ### `apps/cockpit/src/actions/management-insights.ts`
 
@@ -2361,7 +2348,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/meetings` → listBoardMeetings
-- `@repo/database/queries/management-insights` → getManagementInsights, getDismissedInsightKeys
+- `@repo/database/queries/summaries/management-insights` → getManagementInsights, getDismissedInsightKeys
 - `@repo/ai/validations/management-insights` → ManagementInsightsOutputSchema
 
 ### `apps/cockpit/src/app/(dashboard)/intelligence/page.tsx`
@@ -2389,7 +2376,7 @@
 
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
-- `@repo/database/queries/weekly-summary` → getLatestWeeklySummary
+- `@repo/database/queries/summaries/weekly` → getLatestWeeklySummary
 
 ### `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`
 
@@ -2444,7 +2431,7 @@
 - `@repo/database/queries/dashboard` → listRecentVerifiedMeetings, listTodaysBriefingMeetings, getExtractionCountsByMeetingIds
 - `@repo/database/queries/tasks` → listAllTasks
 - `@repo/database/queries/people` → listPeopleForAssignment
-- `@repo/database/queries/management-insights` → getManagementInsights
+- `@repo/database/queries/summaries/management-insights` → getManagementInsights
 - `@repo/database/queries/themes` → fetchWindowAggregation
 - `@repo/ai/validations/management-insights` → ManagementInsightsOutputSchema
 
@@ -2662,42 +2649,6 @@
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/organizations` → OrganizationListItem
-
-### `apps/cockpit/src/components/agents/activity-feed.tsx`
-
-**Exports:**
-- `ActivityFeed()`
-
-**Depends on:**
-- (type) `@repo/database/queries/agent-runs` → AgentRunRow
-- (type) `@repo/ai/agents/registry` → AgentDefinition
-
-### `apps/cockpit/src/components/agents/agent-card.tsx`
-
-**Exports:**
-- `AgentCard()`
-
-**Depends on:**
-- (type) `@repo/ai/agents/registry` → AgentDefinition
-- (type) `@repo/database/queries/agent-runs` → AgentMetrics
-- `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle
-
-### `apps/cockpit/src/components/agents/quadrant-styles.ts`
-
-**Exports:**
-- `quadrantHeader`
-- `quadrantBadge`
-- `quadrantLabel`
-
-**Depends on:**
-- (type) `@repo/ai/agents/registry` → AgentQuadrant
-
-### `apps/cockpit/src/components/agents/system-overview.tsx`
-
-**Exports:**
-- `SystemOverview()`
-
-**Types:** `SystemStats`
 
 ### `apps/cockpit/src/components/architectuur/embeddings-card.tsx`
 
@@ -3552,9 +3503,9 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 52 | - | - | - | - | 52 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 25 | 6 | 12 | - | - | 43 |
+| Cockpit Server Actions | 23 | 6 | 10 | - | - | 39 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 20 | 5 | - | 41 | - | 66 |
+| Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 91 | 8 | 4 | 33 | - | 136 |
 | Database Queries | - | - | 3 | - | - | 3 |
@@ -3580,7 +3531,6 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` | database, ui, ai | 3 |
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
-| `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
 | `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
@@ -3635,9 +3585,6 @@ Tracing the most important data flows from action → pipeline → database.
 | `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `insertExtractions()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
-| `createExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
-| `updateExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
-| `deleteExtraction()` | `apps/cockpit/src/actions/extractions.ts` |
 | `updateNeedStatus()` | `apps/cockpit/src/actions/scan-needs.ts` |
 
 ### mutations/ignored-entities.ts
@@ -3851,13 +3798,6 @@ Which queries are used where across the codebase.
 | `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
-### queries/management-insights.ts
-
-| Query | Used in |
-|-------|---------|
-| `getManagementInsights()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
-| `getDismissedInsightKeys()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
-
 ### queries/meetings/core.ts
 
 | Query | Used in |
@@ -3967,11 +3907,25 @@ Which queries are used where across the codebase.
 | `getDraftMeetingById()` | `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getReviewStats()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 
-### queries/summaries.ts
+### queries/summaries/core.ts
 
 | Query | Used in |
 |-------|---------|
-| `getLatestSummary()` | `packages/database/src/queries/management-insights.ts`, `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/weekly-summary.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
+| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
+
+### queries/summaries/management-insights.ts
+
+| Query | Used in |
+|-------|---------|
+| `getManagementInsights()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
+| `getDismissedInsightKeys()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
+
+### queries/summaries/weekly.ts
+
+| Query | Used in |
+|-------|---------|
+| `getWeeklyProjectData()` | `packages/ai/src/pipeline/weekly-summary-pipeline.ts` |
+| `getLatestWeeklySummary()` | `apps/cockpit/src/app/(dashboard)/intelligence/weekly/page.tsx` |
 
 ### queries/tasks.ts
 
@@ -4030,10 +3984,3 @@ Which queries are used where across the codebase.
 | `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
 | `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |
 | `listUserbackIssuesForBackfill()` | `apps/devhub/src/actions/import.ts` |
-
-### queries/weekly-summary.ts
-
-| Query | Used in |
-|-------|---------|
-| `getWeeklyProjectData()` | `packages/ai/src/pipeline/weekly-summary-pipeline.ts` |
-| `getLatestWeeklySummary()` | `apps/cockpit/src/app/(dashboard)/intelligence/weekly/page.tsx` |

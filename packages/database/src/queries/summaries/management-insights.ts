@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getLatestSummary, type SummaryRow } from "./summaries";
-import { MANAGEMENT_INSIGHTS_ENTITY_ID } from "../constants/summaries";
+import { getLatestSummary, type SummaryRow } from "./core";
+import { MANAGEMENT_INSIGHTS_ENTITY_ID } from "../../constants/summaries";
 
 export async function getManagementInsights(client?: SupabaseClient): Promise<SummaryRow | null> {
   return getLatestSummary("company", MANAGEMENT_INSIGHTS_ENTITY_ID, "management_insights", client);

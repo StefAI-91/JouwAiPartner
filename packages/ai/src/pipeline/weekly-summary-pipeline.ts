@@ -1,5 +1,5 @@
 import { getAdminClient } from "@repo/database/supabase/admin";
-import { getWeeklyProjectData } from "@repo/database/queries/weekly-summary";
+import { getWeeklyProjectData } from "@repo/database/queries/summaries/weekly";
 import { createSummaryVersion } from "@repo/database/mutations/summaries";
 import { runWeeklySummarizer } from "../agents/weekly-summarizer";
 
