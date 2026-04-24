@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 496 |
-| Exported functions/constants | 779 |
-| Exported types/interfaces | 251 |
-| Cross-package imports | 596 |
+| Files scanned | 481 |
+| Exported functions/constants | 764 |
+| Exported types/interfaces | 250 |
+| Cross-package imports | 577 |
 | Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
@@ -3030,124 +3030,6 @@
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
-### `apps/cockpit/src/components/meetings/add-extraction-form.tsx`
-
-**Exports:**
-- `AddExtractionForm()`
-
-### `apps/cockpit/src/components/meetings/copy-meeting-button.tsx`
-
-**Exports:**
-- `CopyMeetingButton()`
-
-### `apps/cockpit/src/components/meetings/create-organization-modal.tsx`
-
-**Exports:**
-- `CreateOrganizationModal()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/meetings/create-person-sub-modal.tsx`
-
-**Exports:**
-- `CreatePersonSubModal()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/meetings/create-project-sub-modal.tsx`
-
-**Exports:**
-- `CreateProjectSubModal()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/meetings/edit-metadata-modal.tsx`
-
-**Exports:**
-- `EditMetadataModal()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-- `@repo/database/constants/meetings` → MEETING_TYPES
-- (type) `@repo/database/queries/people` → PersonWithOrg
-
-### `apps/cockpit/src/components/meetings/editable-title.tsx`
-
-**Exports:**
-- `EditableTitle()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/meetings/extraction-tabs-panel.tsx`
-
-**Exports:**
-- `ExtractionTabsPanel()`
-
-**Depends on:**
-- `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
-- (type) `@repo/database/queries/people` → PersonForAssignment
-
-### `apps/cockpit/src/components/meetings/meeting-detail.tsx`
-
-**Exports:**
-- `MeetingDetailView()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-- (type) `@repo/database/queries/meetings` → MeetingDetail
-- (type) `@repo/database/queries/people` → PersonWithOrg, PersonForAssignment
-- (type) `@repo/database/queries/meeting-project-summaries` → MeetingSegment
-
-### `apps/cockpit/src/components/meetings/meeting-type-selector.tsx`
-
-**Exports:**
-- `MeetingTypeSelector()`
-
-**Depends on:**
-- `@repo/database/constants/meetings` → MEETING_TYPES
-
-### `apps/cockpit/src/components/meetings/meetings-list.tsx`
-
-**Exports:**
-- `MeetingsList()`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
-- `@repo/database/constants/meetings` → MEETING_TYPES, formatMeetingType
-- (type) `@repo/database/queries/meetings` → VerifiedMeetingListItem
-
-### `apps/cockpit/src/components/meetings/party-type-selector.tsx`
-
-**Exports:**
-- `PartyTypeSelector()`
-
-### `apps/cockpit/src/components/meetings/people-selector.tsx`
-
-**Exports:**
-- `PeopleSelector()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/meetings/project-linker.tsx`
-
-**Exports:**
-- `ProjectLinker()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/cockpit/src/components/meetings/risk-list.tsx`
-
-**Exports:**
-- `RiskList()`
-
-**Types:** `RiskItem`
-
 ### `apps/cockpit/src/components/organizations/org-briefing.tsx`
 
 **Exports:**
@@ -3914,7 +3796,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 36 | 8 | 20 | - | - | 64 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 40 | 6 | - | 63 | - | 109 |
+| Cockpit Components | 31 | 6 | - | 53 | - | 90 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 91 | 7 | 4 | 33 | - | 135 |
 | Database Queries | - | - | 3 | - | - | 3 |

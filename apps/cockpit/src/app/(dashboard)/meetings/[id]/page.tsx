@@ -8,7 +8,7 @@ import { listOrganizations } from "@repo/database/queries/organizations";
 import { listProjects } from "@repo/database/queries/projects";
 import { getPromotedExtractionIds } from "@repo/database/queries/tasks";
 import { getSegmentsByMeetingId } from "@repo/database/queries/meeting-project-summaries";
-import { MeetingDetailView } from "@/components/meetings/meeting-detail";
+import { MeetingDetailView } from "@/features/meetings/components/meeting-detail";
 
 export default async function MeetingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

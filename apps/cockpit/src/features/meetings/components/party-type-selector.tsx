@@ -2,10 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { Pencil, X } from "lucide-react";
-import { updateMeetingTypeAction } from "@/features/meetings/actions";
-import { MEETING_TYPES } from "@repo/database/constants/meetings";
+import { updatePartyTypeAction } from "../actions";
 
-export function MeetingTypeSelector({
+const PARTY_TYPES = [
+  { value: "internal", label: "Intern" },
+  { value: "client", label: "Klant" },
+  { value: "partner", label: "Partner" },
+  { value: "other", label: "Overig" },
+] as const;
+
+export function PartyTypeSelector({
   meetingId,
   currentType,
 }: {
@@ -17,9 +23,7 @@ export function MeetingTypeSelector({
   const [error, setError] = useState<string | null>(null);
 
   const currentLabel =
-    MEETING_TYPES.find((t) => t.value === currentType)?.label ??
-    currentType?.replace(/_/g, " ") ??
-    "Onbekend";
+    PARTY_TYPES.find((t) => t.value === currentType)?.label ?? currentType ?? "Onbekend";
 
   function handleChange(value: string) {
     if (value === currentType) {
@@ -28,9 +32,9 @@ export function MeetingTypeSelector({
     }
     setError(null);
     startTransition(async () => {
-      const result = await updateMeetingTypeAction({
+      const result = await updatePartyTypeAction({
         meetingId,
-        meetingType: value as (typeof MEETING_TYPES)[number]["value"],
+        partyType: value as (typeof PARTY_TYPES)[number]["value"],
       });
       if ("error" in result) {
         setError(result.error);
@@ -45,7 +49,7 @@ export function MeetingTypeSelector({
       <button
         onClick={() => setEditing(true)}
         className="inline-flex cursor-pointer items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium transition-colors hover:bg-muted/80"
-        aria-label="Meeting type wijzigen"
+        aria-label="Party type wijzigen"
       >
         {currentLabel}
         <Pencil className="ml-1 size-2.5 text-muted-foreground" />
@@ -61,7 +65,7 @@ export function MeetingTypeSelector({
         disabled={isPending}
         className="h-6 rounded-md border border-border bg-background px-1.5 text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
       >
-        {MEETING_TYPES.map((type) => (
+        {PARTY_TYPES.map((type) => (
           <option key={type.value} value={type.value}>
             {type.label}
           </option>

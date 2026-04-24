@@ -3,16 +3,13 @@
 import { useState, useCallback } from "react";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
-import { ExtractionTabsPanel } from "@/components/meetings/extraction-tabs-panel";
-import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
-import { EditMetadataModal } from "@/components/meetings/edit-metadata-modal";
+import { ExtractionTabsPanel } from "./extraction-tabs-panel";
+import { CopyMeetingButton } from "./copy-meeting-button";
+import { EditMetadataModal } from "./edit-metadata-modal";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { Button } from "@repo/ui/button";
 import { Pencil, FolderKanban, RefreshCw } from "lucide-react";
-import {
-  updateMeetingSummaryAction,
-  regenerateMeetingTitleAction,
-} from "@/features/meetings/actions";
+import { updateMeetingSummaryAction, regenerateMeetingTitleAction } from "../actions";
 import type { MeetingDetail } from "@repo/database/queries/meetings";
 import type { PersonWithOrg, PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meeting-project-summaries";

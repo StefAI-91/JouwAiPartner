@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { Pencil, Check, X } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { updateMeetingTitleAction } from "@/features/meetings/actions";
+import { updateMeetingTitleAction } from "../actions";
 
 export function EditableTitle({
   meetingId,
