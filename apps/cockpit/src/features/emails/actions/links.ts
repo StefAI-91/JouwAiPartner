@@ -16,7 +16,7 @@ import {
   emailSenderPersonSchema,
   emailTypeSchema,
   emailPartyTypeSchema,
-} from "@/features/emails/validations";
+} from "../validations";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 

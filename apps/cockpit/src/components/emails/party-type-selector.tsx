@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { UserCircle, X } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { updateEmailPartyTypeAction } from "@/actions/email";
+import { updateEmailPartyTypeAction } from "@/features/emails/actions";
 
 const PARTY_TYPE_LABELS: Record<string, string> = {
   internal: "Intern",

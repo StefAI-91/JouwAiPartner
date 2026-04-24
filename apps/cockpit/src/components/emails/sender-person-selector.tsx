@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { UserCircle, X } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { updateEmailSenderPersonAction } from "@/actions/email";
+import { updateEmailSenderPersonAction } from "@/features/emails/actions";
 
 export function SenderPersonSelector({
   emailId,

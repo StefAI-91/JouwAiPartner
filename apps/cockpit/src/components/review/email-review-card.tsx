@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { ExtractionDots } from "@/components/shared/extraction-dots";
-import { approveEmailAction } from "@/actions/email";
+import { approveEmailAction } from "@/features/emails/actions";
 import { useState } from "react";
 import { timeAgo } from "@repo/ui/format";
 

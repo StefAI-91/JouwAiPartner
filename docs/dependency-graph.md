@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 521 |
-| Exported functions/constants | 818 |
+| Files scanned | 517 |
+| Exported functions/constants | 808 |
 | Exported types/interfaces | 251 |
-| Cross-package imports | 660 |
-| Critical integration points (3+ packages) | 16 |
+| Cross-package imports | 648 |
+| Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
 
@@ -1812,46 +1812,6 @@
 - `@repo/database/queries/meetings` → getVerifiedMeetingById
 - `@repo/database/queries/themes` → listVerifiedThemes
 - `@repo/database/queries/dev-detector` → getMeetingThemesForDevDetector, getExtractionThemesForDevDetector, type DevDetectorMeetingThemeRow, type DevDetectorExtractionThemeRow
-
-### `apps/cockpit/src/actions/email/filter.ts`
-
-**Exports:**
-- `unfilterEmailAction()`
-
-**Depends on:**
-- `@repo/database/mutations/emails` → updateEmailFilterStatus
-- `@repo/database/queries/emails` → getEmailForPipelineInput
-- `@repo/ai/pipeline/email-pipeline` → processEmail
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/email/links.ts`
-
-**Exports:**
-- `linkEmailProjectAction()`
-- `unlinkEmailProjectAction()`
-- `updateEmailOrganizationAction()`
-- `updateEmailSenderPersonAction()`
-- `updateEmailTypeAction()`
-- `updateEmailPartyTypeAction()`
-
-**Depends on:**
-- `@repo/database/mutations/emails` → linkEmailProject, unlinkEmailProject, updateEmailOrganization, updateEmailSenderPerson, updateEmailType, updateEmailPartyType
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/email/review.ts`
-
-**Exports:**
-- `approveEmailAction()`
-- `approveEmailWithEditsAction()`
-- `rejectEmailAction()`
-
-**Depends on:**
-- `@repo/database/mutations/emails` → verifyEmail, verifyEmailWithEdits, rejectEmail
-- `@repo/ai/pipeline/summary-pipeline` → triggerSummariesForEmail
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
 
 ### `apps/cockpit/src/actions/extractions.ts`
 
@@ -4145,7 +4105,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 52 | - | - | - | - | 52 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 57 | 21 | 36 | - | - | 114 |
+| Cockpit Server Actions | 53 | 19 | 30 | - | - | 102 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 41 | 6 | - | 76 | - | 123 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -4166,8 +4126,6 @@ parts of the codebase — changes here have the widest blast radius.
 | File | Packages | Count |
 |------|----------|-------|
 | `apps/cockpit/src/actions/dev-detector.ts` | ai, auth, database | 3 |
-| `apps/cockpit/src/actions/email/filter.ts` | database, ai, auth | 3 |
-| `apps/cockpit/src/actions/email/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/meeting-pipeline/regenerate-risks.ts` | database, ai, auth | 3 |
@@ -4201,16 +4159,9 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `insertEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateEmailClassification()` | `packages/ai/src/pipeline/email-pipeline.ts` |
-| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email/filter.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
-| `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email/links.ts` |
-| `verifyEmail()` | `apps/cockpit/src/actions/email/review.ts` |
-| `verifyEmailWithEdits()` | `apps/cockpit/src/actions/email/review.ts` |
-| `rejectEmail()` | `apps/cockpit/src/actions/email/review.ts` |
-| `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email/links.ts` |
-| `updateEmailType()` | `apps/cockpit/src/actions/email/links.ts` |
-| `updateEmailPartyType()` | `apps/cockpit/src/actions/email/links.ts` |
-| `updateEmailOrganization()` | `apps/cockpit/src/actions/email/links.ts` |
-| `unlinkEmailProject()` | `apps/cockpit/src/actions/email/links.ts` |
+| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
+| `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts` |
+| `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email-pipeline.ts` |
 
 ### mutations/embeddings.ts
 
@@ -4455,7 +4406,6 @@ Which queries are used where across the codebase.
 | `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
-| `getEmailForPipelineInput()` | `apps/cockpit/src/actions/email/filter.ts` |
 | `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
