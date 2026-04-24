@@ -8,7 +8,7 @@ import remarkGfm from "remark-gfm";
 import { formatDate } from "@repo/ui/format";
 import { Badge } from "@repo/ui/badge";
 import type { ThemeMeetingEntry } from "@repo/database/queries/themes";
-import { MatchRejectPopover } from "@/components/themes/match-reject-popover";
+import { MatchRejectPopover } from "@/features/themes/components/match-reject-popover";
 
 /**
  * TH-013 (UI-340 + EDGE-243 + EDGE-244) — Collapsible markdown-renderer voor

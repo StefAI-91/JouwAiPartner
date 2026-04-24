@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 545 |
-| Exported functions/constants | 850 |
-| Exported types/interfaces | 269 |
-| Cross-package imports | 680 |
+| Files scanned | 531 |
+| Exported functions/constants | 835 |
+| Exported types/interfaces | 261 |
+| Cross-package imports | 660 |
 | Critical integration points (3+ packages) | 16 |
 
 ## Package Dependency Flow
@@ -3719,133 +3719,6 @@
 **Depends on:**
 - `@repo/ui/format` → formatDateLong
 
-### `apps/cockpit/src/components/themes/donut-palette.ts`
-
-**Exports:**
-- `paletteColor()`
-- `DONUT_PALETTE`
-
-### `apps/cockpit/src/components/themes/donut-segments.ts`
-
-**Exports:**
-- `buildSegments()`
-
-**Types:** `DonutSegment`
-
-**Depends on:**
-- (type) `@repo/database/queries/themes` → ThemeShareSlice
-
-### `apps/cockpit/src/components/themes/emerging-themes-section.tsx`
-
-**Exports:**
-- `EmergingThemesSection()`
-
-**Depends on:**
-- (type) `@repo/database/queries/themes` → EmergingThemeRow
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/components/themes/emoji-picker-popover.tsx`
-
-**Exports:**
-- `EmojiPickerPopover()`
-
-**Types:** `EmojiPickerPopoverProps`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-- `@repo/ai/agents/theme-emojis` → THEME_EMOJIS, THEME_EMOJI_FALLBACK, type ThemeEmoji
-
-### `apps/cockpit/src/components/themes/match-reject-popover.tsx`
-
-**Exports:**
-- `MatchRejectPopover()`
-
-**Types:** `MatchRejectPopoverProps`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-- `@repo/ui/utils` → cn
-
-### `apps/cockpit/src/components/themes/theme-approval-card.tsx`
-
-**Exports:**
-- `ThemeApprovalCard()`
-
-**Types:** `ThemeApprovalCardProps`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-- `@repo/ui/utils` → cn
-- `@repo/ui/format` → formatDate
-- (type) `@repo/database/queries/themes` → EmergingThemeRow, EmergingThemeProposalMeeting
-
-### `apps/cockpit/src/components/themes/theme-edit-form.tsx`
-
-**Exports:**
-- `ThemeEditForm()`
-
-**Types:** `ThemeEditFormProps`
-
-**Depends on:**
-- (type) `@repo/database/queries/themes` → ThemeRow
-- `@repo/ui/button` → Button
-- `@repo/ui/utils` → cn
-
-### `apps/cockpit/src/components/themes/theme-header.tsx`
-
-**Exports:**
-- `ThemeHeader()`
-
-**Types:** `ThemeHeaderProps`
-
-**Depends on:**
-- `@repo/ui/format` → timeAgoDays
-- (type) `@repo/database/queries/themes` → ThemeRow
-
-### `apps/cockpit/src/components/themes/theme-pill.tsx`
-
-**Exports:**
-- `ThemePill()`
-
-**Types:** `ThemePillData`
-
-### `apps/cockpit/src/components/themes/theme-pills-skeleton.tsx`
-
-**Exports:**
-- `ThemePillsSkeleton()`
-
-### `apps/cockpit/src/components/themes/theme-pills-strip.tsx`
-
-**Exports:**
-- `ThemePillsStrip()`
-
-**Depends on:**
-- `@repo/database/queries/themes` → listTopActiveThemes, type TopActiveTheme, type WindowAggregation
-
-### `apps/cockpit/src/components/themes/time-spent-donut-section.tsx`
-
-**Exports:**
-- `TimeSpentDonutSection()`
-
-**Depends on:**
-- `@repo/database/queries/themes` → getThemeShareDistribution, type WindowAggregation
-
-### `apps/cockpit/src/components/themes/time-spent-donut-skeleton.tsx`
-
-**Exports:**
-- `TimeSpentDonutSkeleton()`
-
-### `apps/cockpit/src/components/themes/time-spent-donut.tsx`
-
-**Exports:**
-- `TimeSpentDonut()`
-
-**Types:** `TimeSpentDonutProps`
-
-**Depends on:**
-- (type) `@repo/database/queries/themes` → ThemeShareSlice
-
 ### `apps/cockpit/src/components/weekly/generate-weekly-button.tsx`
 
 **Exports:**
@@ -4335,7 +4208,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 57 | 21 | 36 | - | - | 114 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 49 | 7 | 2 | 85 | - | 143 |
+| Cockpit Components | 41 | 6 | - | 76 | - | 123 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 91 | 7 | 4 | 33 | - | 135 |
 | Database Queries | - | - | 3 | - | - | 3 |
@@ -4827,13 +4700,6 @@ Which queries are used where across the codebase.
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
-
-### queries/theme-dashboard.ts
-
-| Query | Used in |
-|-------|---------|
-| `listTopActiveThemes()` | `apps/cockpit/src/components/themes/theme-pills-strip.tsx` |
-| `getThemeShareDistribution()` | `apps/cockpit/src/components/themes/time-spent-donut-section.tsx` |
 
 ### queries/theme-detail.ts
 

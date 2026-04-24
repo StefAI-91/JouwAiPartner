@@ -17,10 +17,10 @@ import { MeetingCarousel } from "@/components/dashboard/meeting-carousel";
 import { ManagementInsightsStrip } from "@/components/dashboard/management-insights-strip";
 import { RecentVerifiedMeetings } from "@/components/dashboard/recent-verified-meetings";
 import { TasksCard } from "@/components/dashboard/tasks-card";
-import { ThemePillsStrip } from "@/components/themes/theme-pills-strip";
-import { ThemePillsSkeleton } from "@/components/themes/theme-pills-skeleton";
-import { TimeSpentDonutSection } from "@/components/themes/time-spent-donut-section";
-import { TimeSpentDonutSkeleton } from "@/components/themes/time-spent-donut-skeleton";
+import { ThemePillsStrip } from "@/features/themes/components/theme-pills-strip";
+import { ThemePillsSkeleton } from "@/features/themes/components/theme-pills-skeleton";
+import { TimeSpentDonutSection } from "@/features/themes/components/time-spent-donut-section";
+import { TimeSpentDonutSkeleton } from "@/features/themes/components/time-spent-donut-skeleton";
 
 export default async function DashboardPage() {
   const supabase = await createClient();

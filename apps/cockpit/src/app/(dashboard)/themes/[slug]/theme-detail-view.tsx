@@ -4,8 +4,8 @@ import { useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ThemeRow } from "@repo/database/queries/themes";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@repo/ui/tabs";
-import { ThemeHeader } from "@/components/themes/theme-header";
-import { ThemeEditForm } from "@/components/themes/theme-edit-form";
+import { ThemeHeader } from "@/features/themes/components/theme-header";
+import { ThemeEditForm } from "@/features/themes/components/theme-edit-form";
 
 const VALID_TABS = ["overview", "meetings", "decisions", "questions", "people"] as const;
 type TabValue = (typeof VALID_TABS)[number];

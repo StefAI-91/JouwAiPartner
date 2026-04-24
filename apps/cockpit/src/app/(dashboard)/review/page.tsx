@@ -7,7 +7,7 @@ import { listDraftEmails } from "@repo/database/queries/emails";
 import { listEmergingThemes } from "@repo/database/queries/themes";
 import { ReviewQueue } from "@/components/review/review-queue";
 import { ReviewEmptyState } from "@/components/review/empty-state";
-import { EmergingThemesSection } from "@/components/themes/emerging-themes-section";
+import { EmergingThemesSection } from "@/features/themes/components/emerging-themes-section";
 
 export default async function ReviewPage() {
   const supabase = await createClient();
