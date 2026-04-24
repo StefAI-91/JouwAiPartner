@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 447 |
-| Exported functions/constants | 702 |
+| Files scanned | 449 |
+| Exported functions/constants | 708 |
 | Exported types/interfaces | 255 |
-| Cross-package imports | 484 |
+| Cross-package imports | 491 |
 | Critical integration points (3+ packages) | 9 |
 
 ## Package Dependency Flow
@@ -171,6 +171,7 @@
 ### `queries/issues/core.ts`
 
 **Exports:**
+- `parseSearchQuery()`
 - `listIssues()`
 - `countFilteredIssues()`
 - `getIssueById()`
@@ -388,6 +389,7 @@
 - `getUserWithAccess()`
 - `countAdmins()`
 - `getProfileRole()`
+- `getProfileNameById()`
 
 **Types:** `TeamRole`, `ProfileRole`, `TeamMember`, `TeamMemberWithAccess`
 
@@ -689,6 +691,7 @@
 
 **Exports:**
 - `upsertProfile()`
+- `ensureProfileExists()`
 - `updateProfileRole()`
 - `clearProjectAccess()`
 - `insertProjectAccess()`
@@ -3102,6 +3105,19 @@
 
 ## DevHub Server Actions
 
+### `apps/devhub/src/actions/attachments.ts`
+
+**Exports:**
+- `createIssueAttachmentUploadUrlAction()`
+- `recordIssueAttachmentAction()`
+
+**Depends on:**
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/issues` → getIssueById
+- `@repo/database/mutations/issues/attachments` → insertAttachment
+
 ### `apps/devhub/src/actions/import.ts`
 
 **Exports:**
@@ -3130,7 +3146,7 @@
 - `@repo/database/queries/issues` → listIssues
 - `@repo/database/queries/projects` → getProjectById
 - `@repo/database/mutations/projects/reviews` → saveProjectReview
-- `@repo/database/mutations/profiles` → upsertProfile
+- `@repo/database/mutations/team` → ensureProfileExists
 - `@repo/ai/agents/issue-reviewer` → runIssueReviewer, type IssueForReview
 - `@repo/auth/helpers` → getAuthenticatedUser, isAuthBypassed
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
@@ -3279,6 +3295,11 @@
 **Depends on:**
 - `@repo/ui/utils` → cn
 
+### `apps/devhub/src/components/layout/search-input.tsx`
+
+**Exports:**
+- `SearchInput()`
+
 ### `apps/devhub/src/components/layout/sidebar-constants.ts`
 
 **Exports:**
@@ -3378,11 +3399,11 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 93 | 8 | 4 | 33 | - | 138 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 14 | 1 | 6 | - | - | 21 |
+| DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | - | - | - | 12 | - | 12 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 17 | - | 13 | 9 | - | 39 |
+| DevHub Pages | 19 | - | 13 | 9 | - | 41 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points
@@ -3465,6 +3486,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
+| `insertAttachment()` | `apps/devhub/src/actions/attachments.ts` |
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
 ### mutations/meetings/core.ts
@@ -3508,7 +3530,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `upsertProfile()` | `apps/cockpit/src/actions/team.ts`, `apps/devhub/src/actions/review.ts` |
+| `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
 
 ### mutations/projects/core.ts
 
@@ -3555,7 +3577,8 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `upsertProfile()` | `apps/cockpit/src/actions/team.ts`, `apps/devhub/src/actions/review.ts` |
+| `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
+| `ensureProfileExists()` | `apps/devhub/src/actions/review.ts` |
 | `updateProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 | `clearProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
@@ -3648,9 +3671,10 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
+| `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getIssueById()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueCounts()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
@@ -3795,7 +3819,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |

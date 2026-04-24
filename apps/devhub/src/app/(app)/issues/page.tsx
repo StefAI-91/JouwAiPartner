@@ -6,9 +6,12 @@ import {
   listIssues,
   countFilteredIssues,
   getIssueCounts,
+  parseSearchQuery,
   ISSUE_SORTS,
 } from "@repo/database/queries/issues";
 import { getIssueThumbnails } from "@repo/database/queries/issues/attachments";
+import { listTeamMembers } from "@repo/database/queries/team";
+import { issueListFilterSchema } from "@repo/database/validations/issues";
 import { IssueList } from "@/features/issues/components/issue-list";
 import { IssueFilters } from "@/features/issues/components/issue-filters";
 import { PaginationControls } from "@/features/issues/components/pagination-controls";
@@ -16,12 +19,9 @@ import { CountSeeder } from "@/components/layout/count-seeder";
 
 const PAGE_SIZE = 25;
 
-const issueSearchParamsSchema = z.object({
+const issueSearchParamsSchema = issueListFilterSchema.extend({
   project: z.string().uuid().optional(),
-  status: z.string().optional(),
-  priority: z.string().optional(),
-  type: z.string().optional(),
-  component: z.string().optional(),
+  q: z.string().trim().max(200).optional(),
   sort: z.enum(ISSUE_SORTS).optional(),
   page: z.coerce.number().int().min(1).optional(),
 });
@@ -32,8 +32,12 @@ export default async function IssuesPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const raw = await searchParams;
+  // On parse failure, fall back to an empty-params shape by re-parsing `{}` —
+  // the schema is lenient (every field is optional/transform-driven), so this
+  // always succeeds and produces the same shape as a happy path with no
+  // filters. Keeps downstream typing simple.
   const parsed = issueSearchParamsSchema.safeParse(raw);
-  const params = parsed.success ? parsed.data : {};
+  const params = parsed.success ? parsed.data : issueSearchParamsSchema.parse({});
   const projectId = params.project;
 
   const [user, supabase] = await Promise.all([getAuthenticatedUser(), createPageClient()]);
@@ -74,18 +78,24 @@ export default async function IssuesPage({
   const currentPage = params.page ?? 1;
   const offset = (currentPage - 1) * PAGE_SIZE;
 
+  const { issueNumber, search } = parseSearchQuery(params.q);
+
   const filterParams = {
     projectId,
-    status: params.status?.split(","),
-    priority: params.priority?.split(","),
-    type: params.type?.split(","),
-    component: params.component?.split(","),
+    status: params.status,
+    priority: params.priority,
+    type: params.type,
+    component: params.component,
+    assignedTo: params.assignee,
+    issueNumber,
+    search,
   };
 
-  const [issues, totalCount, sidebarCounts] = await Promise.all([
+  const [issues, totalCount, sidebarCounts, members] = await Promise.all([
     listIssues({ ...filterParams, sort: params.sort, limit: PAGE_SIZE, offset }, supabase),
     countFilteredIssues(filterParams, supabase),
     getIssueCounts(projectId, supabase),
+    listTeamMembers(supabase),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -95,12 +105,17 @@ export default async function IssuesPage({
     supabase,
   );
 
+  const people = members.map((m) => ({
+    id: m.id,
+    name: m.full_name?.trim() || m.email,
+  }));
+
   return (
     <div className="flex flex-1 flex-col px-4 sm:px-6 lg:px-8">
       {/* Seed the sidebar badges from the server so they're correct on first
           paint — avoids the "numbers pop in a second later" lag. */}
       <CountSeeder projectId={projectId} counts={sidebarCounts} />
-      <IssueFilters />
+      <IssueFilters people={people} />
       <IssueList issues={issues} thumbnails={thumbnails} />
       <PaginationControls currentPage={currentPage} totalPages={totalPages} />
     </div>

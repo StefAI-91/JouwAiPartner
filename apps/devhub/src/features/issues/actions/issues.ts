@@ -9,6 +9,7 @@ import {
   insertActivity,
 } from "@repo/database/mutations/issues";
 import { getIssueById, getIssueCounts } from "@repo/database/queries/issues";
+import { getProfileNameById } from "@repo/database/queries/team";
 import { classifyIssueBackground } from "./classify";
 import { CLOSED_STATUSES, type IssueStatus } from "@repo/database/constants/issues";
 import {
@@ -96,14 +97,7 @@ export async function updateIssueAction(
   if ("error" in result) return { error: "Issue bijwerken mislukt" };
 
   const activityPromises: Promise<{ success: true } | { error: string }>[] = [];
-  const trackFields = [
-    "status",
-    "priority",
-    "type",
-    "component",
-    "severity",
-    "assigned_to",
-  ] as const;
+  const trackFields = ["status", "priority", "type", "component", "severity"] as const;
 
   for (const field of trackFields) {
     if (data[field] === undefined) continue;
@@ -116,9 +110,7 @@ export async function updateIssueAction(
         ? "status_changed"
         : field === "priority"
           ? "priority_changed"
-          : field === "assigned_to"
-            ? "assigned"
-            : "field_changed";
+          : "field_changed";
 
     activityPromises.push(
       insertActivity({
@@ -128,6 +120,29 @@ export async function updateIssueAction(
         field,
         old_value: oldVal != null ? String(oldVal) : undefined,
         new_value: newVal != null ? String(newVal) : undefined,
+      }),
+    );
+  }
+
+  // Assignee changes log the resolved display name (not the uuid) so activity
+  // feeds and reports read naturally. The raw uuids stay available in metadata
+  // for audit / back-reference.
+  if (data.assigned_to !== undefined && data.assigned_to !== current.assigned_to) {
+    const oldName = current.assigned_person?.full_name?.trim() || null;
+    const newName = data.assigned_to ? await getProfileNameById(data.assigned_to) : null;
+
+    activityPromises.push(
+      insertActivity({
+        issue_id: id,
+        actor_id: user.id,
+        action: "assigned",
+        field: "assigned_to",
+        old_value: oldName ?? undefined,
+        new_value: newName ?? undefined,
+        metadata: {
+          assigned_from_id: current.assigned_to,
+          assigned_to_id: data.assigned_to,
+        },
       }),
     );
   }

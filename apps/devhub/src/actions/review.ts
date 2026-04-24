@@ -7,7 +7,7 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 import { listIssues } from "@repo/database/queries/issues";
 import { getProjectById } from "@repo/database/queries/projects";
 import { saveProjectReview } from "@repo/database/mutations/projects/reviews";
-import { upsertProfile } from "@repo/database/mutations/profiles";
+import { ensureProfileExists } from "@repo/database/mutations/team";
 import { runIssueReviewer, type IssueForReview } from "@repo/ai/agents/issue-reviewer";
 import { getAuthenticatedUser, isAuthBypassed } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
@@ -40,11 +40,12 @@ export async function generateProjectReview(
     // Use admin client in bypass mode (no user session), otherwise user-scoped client
     const db = isAuthBypassed() ? getAdminClient() : await createClient();
 
-    // project_reviews.generated_by FKs to profiles(id). Self-heal via admin
-    // upsert in case the handle_new_user trigger missed this user.
-    // Dev-bypass user ID isn't in auth.users, so skip.
+    // project_reviews.generated_by FKs to profiles(id). The handle_new_user
+    // trigger should keep profiles in sync with auth.users, but legacy or
+    // trigger-missed users may not have a row yet — self-heal. Dev-bypass
+    // user ID isn't in auth.users, so skip.
     if (!isAuthBypassed() && user.email) {
-      await upsertProfile({ id: user.id, email: user.email });
+      await ensureProfileExists({ id: user.id, email: user.email });
     }
     const generatedBy = isAuthBypassed() ? null : user.id;
 

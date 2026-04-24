@@ -13,6 +13,8 @@ export {
   getIssueById,
   getIssueCounts,
   countCriticalUnassigned,
+  parseSearchQuery,
+  UNASSIGNED_SENTINEL,
   type IssueSort,
   type IssueRow,
   type StatusCountKey,

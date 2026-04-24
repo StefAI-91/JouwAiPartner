@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@repo/database/supabase/client";
 import { createIssueAction } from "../actions/issues";
+import {
+  createIssueAttachmentUploadUrlAction,
+  recordIssueAttachmentAction,
+} from "@/actions/attachments";
 import { Button } from "@repo/ui/button";
 import {
   ISSUE_TYPES,
@@ -16,6 +21,9 @@ import {
 } from "@repo/database/constants/issues";
 import { FormSelect } from "./sidebar-fields";
 import { LabelInput } from "./label-input";
+import { ImageUpload, type PendingImage } from "./image-upload";
+
+const ATTACHMENT_BUCKET = "issue-attachments";
 
 const INPUT_CLASS =
   "w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20";
@@ -38,6 +46,66 @@ export function IssueForm({
   const [severity, setSeverity] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
   const [labels, setLabels] = useState<string[]>([]);
+  const [images, setImages] = useState<PendingImage[]>([]);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  async function uploadImages(issueId: string) {
+    if (images.length === 0) return;
+    const supabase = createClient();
+
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      setUploadStatus(`Afbeelding ${i + 1}/${images.length} uploaden…`);
+
+      // 1) Ask the server for a short-lived signed upload URL. The server
+      //    enforces project-access and returns the exact storage path to use.
+      const urlResult = await createIssueAttachmentUploadUrlAction({
+        issue_id: issueId,
+        file_name: img.file.name || "image",
+      });
+      if ("error" in urlResult) {
+        throw new Error(`Upload voorbereiden mislukt: ${urlResult.error}`);
+      }
+
+      // 2) PUT the blob to the signed URL. The token grants a one-shot upload
+      //    so no browser-side auth session is needed — this sidesteps the
+      //    whole httpOnly-cookie category of failures.
+      const { error: uploadErr } = await supabase.storage
+        .from(ATTACHMENT_BUCKET)
+        .uploadToSignedUrl(urlResult.storage_path, urlResult.token, img.file, {
+          contentType: img.file.type || undefined,
+        });
+      if (uploadErr) {
+        throw new Error(`Upload mislukt (${img.file.name}): ${uploadErr.message}`);
+      }
+
+      // 3) Persist the attachment row. The server re-validates access and
+      //    forces `issues/<id>/` prefix, so a tampered storage_path is
+      //    rejected here.
+      const recordResult = await recordIssueAttachmentAction({
+        issue_id: issueId,
+        type: "screenshot",
+        storage_path: urlResult.storage_path,
+        file_name: img.file.name || "image",
+        mime_type: img.file.type || null,
+        file_size: img.file.size,
+        width: img.width ?? null,
+        height: img.height ?? null,
+      });
+      if ("error" in recordResult) {
+        // Record-insert failed after the blob landed in storage — delete the
+        // orphan so the bucket doesn't accumulate untracked files. Ignore the
+        // delete's own failure: logging is enough, the UI surfaces the
+        // original error regardless.
+        await supabase.storage
+          .from(ATTACHMENT_BUCKET)
+          .remove([urlResult.storage_path])
+          .catch((e) => console.error("[issue-form] rollback remove failed:", e));
+        throw new Error(`Bijlage registreren mislukt: ${recordResult.error}`);
+      }
+    }
+    setUploadStatus(null);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,8 +123,21 @@ export function IssueForm({
         assigned_to: assignedTo || null,
         labels,
       });
-      if ("error" in result) setError(result.error);
-      else router.push(`/issues/${result.id}?project=${projectId}`);
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
+      try {
+        await uploadImages(result.id);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Upload mislukt");
+        setUploadStatus(null);
+        // Issue exists — still navigate so the user can retry uploads on the
+        // detail page rather than losing everything they just typed.
+        router.push(`/issues/${result.id}?project=${projectId}`);
+        return;
+      }
+      router.push(`/issues/${result.id}?project=${projectId}`);
     });
   }
 
@@ -141,6 +222,8 @@ export function IssueForm({
         onAdd={(label) => setLabels((prev) => [...prev, label])}
         onRemove={(label) => setLabels((prev) => prev.filter((l) => l !== label))}
       />
+      <ImageUpload images={images} onChange={setImages} disabled={isPending} />
+      {uploadStatus && <p className="text-xs text-muted-foreground">{uploadStatus}</p>}
       <div className="flex items-center gap-3 pt-2">
         <Button type="submit" disabled={isPending || !projectId}>
           {isPending ? "Aanmaken..." : "Issue aanmaken"}

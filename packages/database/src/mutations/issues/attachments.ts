@@ -8,7 +8,7 @@ export interface InsertAttachmentData {
   issue_id: string;
   type: "screenshot" | "video" | "attachment";
   storage_path: string;
-  original_url: string;
+  original_url: string | null;
   file_name: string;
   mime_type: string | null;
   file_size: number | null;

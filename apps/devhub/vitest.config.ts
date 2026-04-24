@@ -3,10 +3,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    // Default is node for action/query tests. Component tests that need a DOM
+    // opt in with `// @vitest-environment jsdom` at the top of the file.
     environment: "node",
-    include: ["__tests__/**/*.test.ts", "src/**/*.test.ts"],
-    // passWithNoTests: er zijn nog geen devhub-specifieke tests. Deze vlag
-    // zorgt dat `turbo test` niet rood wordt op een lege suite.
+    include: ["__tests__/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
+    setupFiles: ["./__tests__/helpers/setup.ts"],
     passWithNoTests: true,
     coverage: {
       provider: "v8",

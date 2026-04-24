@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../../supabase/admin";
-import { PRIORITY_ORDER } from "../../constants/issues";
+import { PRIORITY_ORDER, UNASSIGNED_SENTINEL } from "../../constants/issues";
+
+// Re-export so existing callers that import from queries/issues keep working.
+export { UNASSIGNED_SENTINEL };
 
 export const ISSUE_SORTS = ["priority", "newest", "oldest"] as const;
 export type IssueSort = (typeof ISSUE_SORTS)[number];
@@ -56,6 +59,33 @@ export const ISSUE_SELECT = `
  * - "newest": pure chronological, newest first
  * - "oldest": pure chronological, oldest first
  */
+// UUID v4/v1 shape — same regex as auth.users.id. Used as a last-line-of-
+// defence filter before uuids enter a raw `.or(...)` template so a crafted
+// URL param can't break out of the quoted list and inject extra filters.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Parse a raw search query into either an exact `issue_number` lookup or a
+ * free-text search. `"#464"`, `"464"`, `" #464 "` all return an issue-number
+ * match; anything containing non-digit characters falls through to ilike on
+ * title/description. Used by the issues page and the CSV export route so
+ * both entry points handle `#<n>` identically.
+ */
+export function parseSearchQuery(raw: string | undefined | null): {
+  issueNumber?: number;
+  search?: string;
+} {
+  if (!raw) return {};
+  const trimmed = raw.trim();
+  if (!trimmed) return {};
+  const numberMatch = trimmed.match(/^#?(\d+)$/);
+  if (numberMatch) {
+    const n = Number(numberMatch[1]);
+    if (Number.isSafeInteger(n) && n > 0) return { issueNumber: n };
+  }
+  return { search: trimmed };
+}
+
 export async function listIssues(
   params: {
     projectId?: string;
@@ -64,8 +94,9 @@ export async function listIssues(
     priority?: string[];
     type?: string[];
     component?: string[];
-    assignedTo?: string;
+    assignedTo?: string[];
     search?: string;
+    issueNumber?: number;
     sort?: IssueSort;
     limit?: number;
     offset?: number;
@@ -100,8 +131,28 @@ export async function listIssues(
   if (params.component && params.component.length > 0) {
     query = query.in("component", params.component);
   }
-  if (params.assignedTo) {
-    query = query.eq("assigned_to", params.assignedTo);
+  if (params.assignedTo && params.assignedTo.length > 0) {
+    const wantsUnassigned = params.assignedTo.includes(UNASSIGNED_SENTINEL);
+    const uuids = params.assignedTo.filter((v) => v !== UNASSIGNED_SENTINEL && UUID_RE.test(v));
+    if (wantsUnassigned && uuids.length > 0) {
+      // Mix of "unassigned" + specific people: OR them together. Uuids are
+      // regex-validated above so the quoted list can't be escaped.
+      const inList = uuids.map((u) => `"${u}"`).join(",");
+      query = query.or(`assigned_to.is.null,assigned_to.in.(${inList})`);
+    } else if (wantsUnassigned) {
+      query = query.is("assigned_to", null);
+    } else if (uuids.length > 0) {
+      query = query.in("assigned_to", uuids);
+    }
+    // Neither wantsUnassigned nor any valid uuid → no-op (all values were
+    // garbage). Returning without filter would silently widen the result set,
+    // so force an empty match instead.
+    if (!wantsUnassigned && uuids.length === 0) {
+      query = query.eq("assigned_to", "00000000-0000-0000-0000-000000000000");
+    }
+  }
+  if (params.issueNumber !== undefined) {
+    query = query.eq("issue_number", params.issueNumber);
   }
   if (params.search) {
     // Sanitize: escape PostgREST special characters to prevent filter injection
@@ -124,7 +175,10 @@ export async function listIssues(
 
   if (error) {
     console.error("[listIssues] Database error:", error.message);
-    return [];
+    // Bubble up so callers (API routes, Server Components) can surface the
+    // failure to the user or their error boundary, instead of returning an
+    // empty result that looks indistinguishable from "no issues exist".
+    throw new Error(`listIssues failed: ${error.message}`);
   }
 
   if (!data) return [];
@@ -155,8 +209,9 @@ export async function countFilteredIssues(
     priority?: string[];
     type?: string[];
     component?: string[];
-    assignedTo?: string;
+    assignedTo?: string[];
     search?: string;
+    issueNumber?: number;
   },
   client?: SupabaseClient,
 ): Promise<number> {
@@ -185,8 +240,20 @@ export async function countFilteredIssues(
   if (params.component && params.component.length > 0) {
     query = query.in("component", params.component);
   }
-  if (params.assignedTo) {
-    query = query.eq("assigned_to", params.assignedTo);
+  if (params.assignedTo && params.assignedTo.length > 0) {
+    const uuids = params.assignedTo.filter((v) => v !== UNASSIGNED_SENTINEL);
+    const wantsUnassigned = params.assignedTo.includes(UNASSIGNED_SENTINEL);
+    if (wantsUnassigned && uuids.length > 0) {
+      const inList = uuids.map((u) => `"${u}"`).join(",");
+      query = query.or(`assigned_to.is.null,assigned_to.in.(${inList})`);
+    } else if (wantsUnassigned) {
+      query = query.is("assigned_to", null);
+    } else {
+      query = query.in("assigned_to", uuids);
+    }
+  }
+  if (params.issueNumber !== undefined) {
+    query = query.eq("issue_number", params.issueNumber);
   }
   if (params.search) {
     const sanitized = params.search.replace(/[%_\\,().]/g, (ch) => `\\${ch}`);
@@ -197,7 +264,7 @@ export async function countFilteredIssues(
 
   if (error) {
     console.error("[countFilteredIssues] Database error:", error.message);
-    return 0;
+    throw new Error(`countFilteredIssues failed: ${error.message}`);
   }
 
   return count ?? 0;
