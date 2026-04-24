@@ -23,6 +23,8 @@
     "./queries/*": "./src/queries/*.ts",
     "./mutations/projects": "./src/mutations/projects/index.ts",
     "./mutations/projects/*": "./src/mutations/projects/*.ts",
+    "./mutations/summaries": "./src/mutations/summaries/index.ts",
+    "./mutations/summaries/*": "./src/mutations/summaries/*.ts",
     "./mutations/*": "./src/mutations/*.ts",
     "./types/*": "./src/types/*.ts",
     "./integrations/*": "./src/integrations/*.ts",

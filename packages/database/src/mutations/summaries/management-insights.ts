@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createSummaryVersion } from "./summaries";
-import { MANAGEMENT_INSIGHTS_ENTITY_ID } from "../constants/summaries";
+import { createSummaryVersion } from "./core";
+import { MANAGEMENT_INSIGHTS_ENTITY_ID } from "../../constants/summaries";
 
 export async function saveManagementInsights(
   structuredContent: Record<string, unknown>,

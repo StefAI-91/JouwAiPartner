@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 434 |
+| Files scanned | 435 |
 | Exported functions/constants | 690 |
 | Exported types/interfaces | 245 |
 | Cross-package imports | 479 |
@@ -550,12 +550,6 @@
 
 **Types:** `InsertIssueData`, `UpdateIssueData`
 
-### `mutations/management-insights.ts`
-
-**Exports:**
-- `saveManagementInsights()`
-- `dismissInsight()`
-
 ### `mutations/meeting-participants.ts`
 
 **Exports:**
@@ -663,10 +657,16 @@
 
 **Types:** `UpsertSlackConfigInput`
 
-### `mutations/summaries.ts`
+### `mutations/summaries/core.ts`
 
 **Exports:**
 - `createSummaryVersion()`
+
+### `mutations/summaries/management-insights.ts`
+
+**Exports:**
+- `saveManagementInsights()`
+- `dismissInsight()`
 
 ### `mutations/tasks.ts`
 
@@ -1036,7 +1036,7 @@
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/meetings` → listBoardMeetings
-- `@repo/database/mutations/management-insights` → saveManagementInsights
+- `@repo/database/mutations/summaries/management-insights` → saveManagementInsights
 
 **Internal deps:**
 - `../agents/management-insights` → runManagementInsightsAgent
@@ -1824,7 +1824,7 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
 - `@repo/ai/pipeline/management-insights-pipeline` → generateManagementInsights
-- `@repo/database/mutations/management-insights` → dismissInsight
+- `@repo/database/mutations/summaries/management-insights` → dismissInsight
 
 ### `apps/cockpit/src/actions/scan-needs.ts`
 
@@ -3407,13 +3407,6 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
-### mutations/management-insights.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `saveManagementInsights()` | `packages/ai/src/pipeline/management-insights-pipeline.ts` |
-| `dismissInsight()` | `apps/cockpit/src/actions/management-insights.ts` |
-
 ### mutations/meeting-participants.ts
 
 | Mutation | Called from |
@@ -3476,11 +3469,18 @@ Tracing the most important data flows from action → pipeline → database.
 | `upsertSlackConfig()` | `apps/devhub/src/actions/slack-settings.ts` |
 | `deleteSlackConfig()` | `apps/devhub/src/actions/slack-settings.ts` |
 
-### mutations/summaries.ts
+### mutations/summaries/core.ts
 
 | Mutation | Called from |
 |----------|------------|
 | `createSummaryVersion()` | `packages/ai/src/pipeline/summary-pipeline.ts`, `packages/ai/src/pipeline/weekly-summary-pipeline.ts` |
+
+### mutations/summaries/management-insights.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `saveManagementInsights()` | `packages/ai/src/pipeline/management-insights-pipeline.ts` |
+| `dismissInsight()` | `apps/cockpit/src/actions/management-insights.ts` |
 
 ### mutations/tasks.ts
 
