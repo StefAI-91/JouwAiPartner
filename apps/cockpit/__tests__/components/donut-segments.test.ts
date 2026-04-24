@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { buildSegments } from "../../src/features/themes/components/donut-segments";
-import { DONUT_PALETTE } from "../../src/features/themes/components/donut-palette";
+import { buildSegments } from "@/features/themes/components/donut-segments";
+import { DONUT_PALETTE } from "@/features/themes/components/donut-palette";
 import type { ThemeShareSlice } from "@repo/database/queries/themes";
 
 const CIRCUMFERENCE = 2 * Math.PI * 54;

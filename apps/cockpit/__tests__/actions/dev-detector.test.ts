@@ -42,7 +42,7 @@ vi.mock("@repo/ai/agents/theme-detector", () => ({
   THEME_DETECTOR_MODEL: "claude-sonnet-4-6",
 }));
 
-import { runDevDetectorAction } from "../../src/actions/dev-detector";
+import { runDevDetectorAction } from "@/actions/dev-detector";
 
 const MEETING_ID = "22222222-2222-4222-8222-222222222222";
 const USER_ID = "33333333-3333-4333-8333-333333333333";

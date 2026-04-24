@@ -26,7 +26,7 @@ import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/database/queries/meetings";
 import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
-import { POST } from "../../src/app/api/webhooks/fireflies/route";
+import { POST } from "@/app/api/webhooks/fireflies/route";
 import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
 
 const WEBHOOK_SECRET = "test-secret-123";

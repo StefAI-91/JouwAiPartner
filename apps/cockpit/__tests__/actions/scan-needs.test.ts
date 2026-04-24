@@ -33,7 +33,7 @@ describe("Scan Needs Actions", () => {
 
   describe("scanTeamNeedsAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/scan-needs");
+      const mod = await import("@/actions/scan-needs");
       return mod.scanTeamNeedsAction;
     }
 
@@ -91,7 +91,7 @@ describe("Scan Needs Actions", () => {
 
   describe("updateNeedStatusAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/scan-needs");
+      const mod = await import("@/actions/scan-needs");
       return mod.updateNeedStatusAction;
     }
 

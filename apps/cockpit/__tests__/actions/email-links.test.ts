@@ -57,7 +57,7 @@ describeWithDb("Email Links Actions (integration)")("Email Links Actions (integr
 
   describe("linkEmailProjectAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/links");
+      const mod = await import("@/features/emails/actions/links");
       return mod.linkEmailProjectAction;
     }
 
@@ -94,7 +94,7 @@ describeWithDb("Email Links Actions (integration)")("Email Links Actions (integr
 
   describe("unlinkEmailProjectAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/links");
+      const mod = await import("@/features/emails/actions/links");
       return mod.unlinkEmailProjectAction;
     }
 
@@ -136,7 +136,7 @@ describeWithDb("Email Links Actions (integration)")("Email Links Actions (integr
 
   describe("updateEmailOrganizationAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/links");
+      const mod = await import("@/features/emails/actions/links");
       return mod.updateEmailOrganizationAction;
     }
 
@@ -171,7 +171,7 @@ describeWithDb("Email Links Actions (integration)")("Email Links Actions (integr
 
   describe("updateEmailSenderPersonAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/links");
+      const mod = await import("@/features/emails/actions/links");
       return mod.updateEmailSenderPersonAction;
     }
 
@@ -206,7 +206,7 @@ describeWithDb("Email Links Actions (integration)")("Email Links Actions (integr
 
   describe("updateEmailTypeAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/links");
+      const mod = await import("@/features/emails/actions/links");
       return mod.updateEmailTypeAction;
     }
 
@@ -241,7 +241,7 @@ describeWithDb("Email Links Actions (integration)")("Email Links Actions (integr
 
   describe("updateEmailPartyTypeAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/links");
+      const mod = await import("@/features/emails/actions/links");
       return mod.updateEmailPartyTypeAction;
     }
 

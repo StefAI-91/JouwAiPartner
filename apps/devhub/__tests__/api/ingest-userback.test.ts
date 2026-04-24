@@ -29,7 +29,7 @@ import { getAdminClient } from "@repo/database/supabase/admin";
 import { getProjectByUserbackProjectId } from "@repo/database/queries/projects";
 import { executeSyncPipeline } from "@repo/database/integrations/userback-sync";
 import { isAdmin } from "@repo/auth/access";
-import { GET, POST } from "../../src/app/api/ingest/userback/route";
+import { GET, POST } from "@/app/api/ingest/userback/route";
 
 const CRON_SECRET = "test-cron-secret";
 
