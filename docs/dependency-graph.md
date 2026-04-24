@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 453 |
-| Exported functions/constants | 719 |
-| Exported types/interfaces | 246 |
-| Cross-package imports | 523 |
-| Critical integration points (3+ packages) | 10 |
+| Files scanned | 434 |
+| Exported functions/constants | 690 |
+| Exported types/interfaces | 245 |
+| Cross-package imports | 479 |
+| Critical integration points (3+ packages) | 9 |
 
 ## Package Dependency Flow
 
@@ -633,20 +633,20 @@
 **Exports:**
 - `upsertProfile()`
 
-### `mutations/project-reviews.ts`
-
-**Exports:**
-- `saveProjectReview()`
-
-**Types:** `InsertProjectReviewData`
-
-### `mutations/projects.ts`
+### `mutations/projects/core.ts`
 
 **Exports:**
 - `createProject()`
 - `updateProjectAliases()`
 - `updateProject()`
 - `deleteProject()`
+
+### `mutations/projects/reviews.ts`
+
+**Exports:**
+- `saveProjectReview()`
+
+**Types:** `InsertProjectReviewData`
 
 ### `mutations/review.ts`
 
@@ -3042,36 +3042,6 @@
 
 ## DevHub Server Actions
 
-### `apps/devhub/src/actions/classify.ts`
-
-**Exports:**
-- `classifyIssueAction()`
-- `classifyIssueBackground()`
-- `bulkReclassifyAction()`
-
-**Depends on:**
-- `@repo/database/queries/issues` → getIssueById
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
-- `@repo/database/mutations/issues` → updateIssue, insertActivity
-- `@repo/ai/agents/issue-classifier` → runIssueClassifier
-- `@repo/database/integrations/slack` → resolveSlackEvent, notifySlackIfUrgent, type SlackIssuePayload
-
-### `apps/devhub/src/actions/comments.ts`
-
-**Exports:**
-- `createCommentAction()`
-- `updateCommentAction()`
-- `deleteCommentAction()`
-
-**Depends on:**
-- `@repo/database/mutations/issues` → insertComment, updateComment, deleteComment, insertActivity
-- `@repo/database/queries/issues` → getIssueById
-- `@repo/database/queries/issues/comments` → getCommentById
-- `@repo/database/validations/issues` → createCommentSchema, updateCommentSchema, deleteCommentSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
-
 ### `apps/devhub/src/actions/import.ts`
 
 **Exports:**
@@ -3089,23 +3059,6 @@
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/database/mutations/issue-attachments` → storeIssueMedia
 
-### `apps/devhub/src/actions/issues.ts`
-
-**Exports:**
-- `createIssueAction()`
-- `updateIssueAction()`
-- `deleteIssueAction()`
-- `getIssueCountsAction()`
-
-**Depends on:**
-- `@repo/database/mutations/issues` → insertIssue, updateIssue, deleteIssue, insertActivity
-- `@repo/database/queries/issues` → getIssueById, getIssueCounts
-- `@repo/database/constants/issues` → CLOSED_STATUSES, type IssueStatus
-- `@repo/database/validations/issues` → createIssueSchema, updateIssueSchema, deleteIssueSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
-- `@repo/database/integrations/slack` → resolveSlackEvent, notifySlackIfUrgent, type SlackIssuePayload
-
 ### `apps/devhub/src/actions/review.ts`
 
 **Exports:**
@@ -3116,7 +3069,7 @@
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/issues` → listIssues
 - `@repo/database/queries/projects` → getProjectById
-- `@repo/database/mutations/project-reviews` → saveProjectReview
+- `@repo/database/mutations/projects/reviews` → saveProjectReview
 - `@repo/database/mutations/profiles` → upsertProfile
 - `@repo/ai/agents/issue-reviewer` → runIssueReviewer, type IssueForReview
 - `@repo/auth/helpers` → getAuthenticatedUser, isAuthBypassed
@@ -3200,34 +3153,6 @@
 
 ## DevHub Components
 
-### `apps/devhub/src/components/comments/comment-form.tsx`
-
-**Exports:**
-- `CommentForm()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/devhub/src/components/comments/comment-list.tsx`
-
-**Exports:**
-- `CommentActivityFeed()`
-
-**Depends on:**
-- (type) `@repo/database/queries/issues/comments` → IssueCommentRow
-- (type) `@repo/database/queries/issues/activity` → IssueActivityRow
-
-### `apps/devhub/src/components/comments/comment-section.tsx`
-
-**Exports:**
-- `CommentSection()`
-
-**Types:** `CurrentUser`
-
-**Depends on:**
-- (type) `@repo/database/queries/issues/comments` → IssueCommentRow
-- (type) `@repo/database/queries/issues/activity` → IssueActivityRow
-
 ### `apps/devhub/src/components/dashboard/area-summaries.tsx`
 
 **Exports:**
@@ -3256,122 +3181,6 @@
 
 **Depends on:**
 - `@repo/ui/utils` → cn
-
-### `apps/devhub/src/components/issues/ai-execution-panel.tsx`
-
-**Exports:**
-- `AiExecutionPanel()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-
-### `apps/devhub/src/components/issues/issue-attachments.tsx`
-
-**Exports:**
-- `IssueAttachments()`
-
-**Depends on:**
-- (type) `@repo/database/queries/issues/attachments` → IssueAttachmentRow
-
-### `apps/devhub/src/components/issues/issue-detail.tsx`
-
-**Exports:**
-- `IssueDetail()`
-
-**Depends on:**
-- (type) `@repo/database/queries/issues` → IssueRow
-- (type) `@repo/database/queries/issues/comments` → IssueCommentRow
-- (type) `@repo/database/queries/issues/activity` → IssueActivityRow
-- (type) `@repo/database/queries/issues/attachments` → IssueAttachmentRow
-
-### `apps/devhub/src/components/issues/issue-filters.tsx`
-
-**Exports:**
-- `IssueFilters()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-- `@repo/database/constants/issues` → ISSUE_STATUSES, ISSUE_STATUS_LABELS, ISSUE_PRIORITIES, ISSUE_PRIORITY_LABELS, ISSUE_TYPES, ISSUE_TYPE_LABELS, ISSUE_COMPONENTS, ISSUE_COMPONENT_LABELS
-
-### `apps/devhub/src/components/issues/issue-form.tsx`
-
-**Exports:**
-- `IssueForm()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-- `@repo/database/constants/issues` → ISSUE_TYPES, ISSUE_TYPE_LABELS, ISSUE_PRIORITIES, ISSUE_PRIORITY_LABELS, ISSUE_COMPONENTS, ISSUE_COMPONENT_LABELS, ISSUE_SEVERITIES, ISSUE_SEVERITY_LABELS
-
-### `apps/devhub/src/components/issues/issue-header.tsx`
-
-**Exports:**
-- `IssueHeader()`
-
-### `apps/devhub/src/components/issues/issue-list.tsx`
-
-**Exports:**
-- `IssueList()`
-
-**Depends on:**
-- (type) `@repo/database/queries/issues` → IssueRow
-
-### `apps/devhub/src/components/issues/issue-row.tsx`
-
-**Exports:**
-- `IssueRowItem()`
-
-**Depends on:**
-- (type) `@repo/database/queries/issues` → IssueRow
-- `@repo/ui/utils` → cn
-- `@repo/ui/dropdown-menu` → DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem
-
-### `apps/devhub/src/components/issues/issue-sidebar.tsx`
-
-**Exports:**
-- `IssueSidebar()`
-
-**Depends on:**
-- (type) `@repo/database/queries/issues` → IssueRow
-- `@repo/database/constants/issues` → ISSUE_STATUSES, ISSUE_STATUS_LABELS, ISSUE_PRIORITIES, ISSUE_PRIORITY_LABELS, ISSUE_TYPE_LABELS, ISSUE_COMPONENTS, ISSUE_COMPONENT_LABELS, type IssueType
-
-### `apps/devhub/src/components/issues/label-input.tsx`
-
-**Exports:**
-- `LabelInput()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/devhub/src/components/issues/pagination-controls.tsx`
-
-**Exports:**
-- `PaginationControls()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-
-### `apps/devhub/src/components/issues/sidebar-ai-classification.tsx`
-
-**Exports:**
-- `SidebarAiClassification()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/devhub/src/components/issues/sidebar-delete.tsx`
-
-**Exports:**
-- `SidebarDelete()`
-
-**Depends on:**
-- `@repo/ui/button` → Button
-
-### `apps/devhub/src/components/issues/sidebar-fields.tsx`
-
-**Exports:**
-- `FormSelect()`
-- `SidebarSelect()`
-- `SidebarAssignee()`
 
 ### `apps/devhub/src/components/layout/app-sidebar.tsx`
 
@@ -3509,9 +3318,9 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 91 | 8 | 4 | 33 | - | 136 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
+| DevHub Server Actions | 14 | 1 | 6 | - | - | 21 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
-| DevHub Components | 15 | - | - | 22 | - | 37 |
+| DevHub Components | - | - | - | 12 | - | 12 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 17 | - | 13 | 9 | - | 39 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
@@ -3531,7 +3340,6 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` | database, ui, ai | 3 |
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
-| `apps/devhub/src/actions/classify.ts` | database, auth, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
 ## Key Dependency Chains
@@ -3599,18 +3407,6 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
-### mutations/issues.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `insertIssue()` | `apps/devhub/src/actions/issues.ts` |
-| `updateIssue()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/issues.ts` |
-| `deleteIssue()` | `apps/devhub/src/actions/issues.ts` |
-| `insertComment()` | `apps/devhub/src/actions/comments.ts` |
-| `updateComment()` | `apps/devhub/src/actions/comments.ts` |
-| `deleteComment()` | `apps/devhub/src/actions/comments.ts` |
-| `insertActivity()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts` |
-
 ### mutations/management-insights.ts
 
 | Mutation | Called from |
@@ -3661,17 +3457,17 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `upsertProfile()` | `apps/cockpit/src/actions/team.ts`, `apps/devhub/src/actions/review.ts` |
 
-### mutations/project-reviews.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `saveProjectReview()` | `apps/devhub/src/actions/review.ts` |
-
-### mutations/projects.ts
+### mutations/projects/core.ts
 
 | Mutation | Called from |
 |----------|------------|
 | `updateProjectAliases()` | `packages/ai/src/pipeline/entity-resolution.ts`, `apps/cockpit/src/actions/segments.ts` |
+
+### mutations/projects/reviews.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `saveProjectReview()` | `apps/devhub/src/actions/review.ts` |
 
 ### mutations/slack-config.ts
 
@@ -3785,7 +3581,6 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getCommentById()` | `apps/devhub/src/actions/comments.ts` |
 | `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 
 ### queries/issues/core.ts
@@ -3794,8 +3589,8 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getIssueById()` | `apps/devhub/src/actions/classify.ts`, `apps/devhub/src/actions/comments.ts`, `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getIssueCounts()` | `apps/devhub/src/actions/issues.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
+| `getIssueById()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getIssueCounts()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/meetings/core.ts
