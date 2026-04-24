@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, ListChecks } from "lucide-react";
 import { Modal } from "@/components/shared/modal";
-import { createExtractionAction } from "@/actions/extractions";
+import { createExtractionAction } from "../actions";
 
 interface AddExtractionFormProps {
   meetingId: string;
