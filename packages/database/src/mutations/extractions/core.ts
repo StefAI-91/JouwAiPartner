@@ -1,4 +1,4 @@
-import { getAdminClient } from "../supabase/admin";
+import { getAdminClient } from "../../supabase/admin";
 
 export async function deleteExtractionsByMeetingId(
   meetingId: string,

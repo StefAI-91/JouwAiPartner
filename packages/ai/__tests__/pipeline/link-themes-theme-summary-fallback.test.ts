@@ -36,7 +36,7 @@ vi.mock("@repo/database/mutations/meeting-themes", () => ({
   clearMeetingThemes: (...args: unknown[]) => mockClearMeeting(...args),
   recalculateThemeStats: (...args: unknown[]) => mockRecalcStats(...args),
 }));
-vi.mock("@repo/database/mutations/extraction-themes", () => ({
+vi.mock("@repo/database/mutations/extractions/themes", () => ({
   linkExtractionsToThemes: (...args: unknown[]) => mockLinkExtractions(...args),
   clearExtractionThemesForMeeting: (...args: unknown[]) => mockClearExtractions(...args),
 }));

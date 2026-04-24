@@ -14,7 +14,7 @@ import {
   linkExtractionsToThemes,
   clearExtractionThemesForMeeting,
   type ExtractionThemeRow,
-} from "@repo/database/mutations/extraction-themes";
+} from "@repo/database/mutations/extractions/themes";
 import { createEmergingTheme } from "@repo/database/mutations/themes";
 import type { ThemeDetectorOutput } from "../../validations/theme-detector";
 import { parseThemesAnnotation, resolveThemeRefs, type ThemeRef } from "../tagger";

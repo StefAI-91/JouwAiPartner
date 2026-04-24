@@ -1,4 +1,4 @@
-import { getAdminClient } from "../supabase/admin";
+import { getAdminClient } from "../../supabase/admin";
 
 export interface ExperimentalRiskExtractionInput {
   meeting_id: string;

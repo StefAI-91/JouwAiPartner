@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
-import { clearExtractionThemesForThemeInMeeting } from "./extraction-themes";
+import { clearExtractionThemesForThemeInMeeting } from "./extractions/themes";
 
 export interface MeetingThemeMatch {
   themeId: string;

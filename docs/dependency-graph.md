@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 436 |
+| Files scanned | 437 |
 | Exported functions/constants | 690 |
 | Exported types/interfaces | 245 |
 | Cross-package imports | 479 |
@@ -490,23 +490,7 @@
 - `updateRowEmbedding()`
 - `batchUpdateEmbeddings()`
 
-### `mutations/experimental-risk-extractions.ts`
-
-**Exports:**
-- `insertExperimentalRiskExtraction()`
-
-**Types:** `ExperimentalRiskExtractionInput`
-
-### `mutations/extraction-themes.ts`
-
-**Exports:**
-- `linkExtractionsToThemes()`
-- `clearExtractionThemesForMeeting()`
-- `clearExtractionThemesForThemeInMeeting()`
-
-**Types:** `ExtractionThemeRow`
-
-### `mutations/extractions.ts`
+### `mutations/extractions/core.ts`
 
 **Exports:**
 - `deleteExtractionsByMeetingId()`
@@ -520,6 +504,22 @@
 - `updateNeedStatus()`
 
 **Types:** `ExtractionInsertRow`, `NeedStatus`
+
+### `mutations/extractions/experimental-risks.ts`
+
+**Exports:**
+- `insertExperimentalRiskExtraction()`
+
+**Types:** `ExperimentalRiskExtractionInput`
+
+### `mutations/extractions/themes.ts`
+
+**Exports:**
+- `linkExtractionsToThemes()`
+- `clearExtractionThemesForMeeting()`
+- `clearExtractionThemesForThemeInMeeting()`
+
+**Types:** `ExtractionThemeRow`
 
 ### `mutations/ignored-entities.ts`
 
@@ -1174,7 +1174,7 @@
 - `@repo/database/queries/themes` → listVerifiedThemes, type ThemeRow, type ThemeWithNegativeExamples
 - `@repo/database/queries/themes/review` → listRejectedThemePairsForMeeting
 - `@repo/database/mutations/meeting-themes` → linkMeetingToThemes, clearMeetingThemes, recalculateThemeStats
-- `@repo/database/mutations/extraction-themes` → linkExtractionsToThemes, clearExtractionThemesForMeeting, type ExtractionThemeRow
+- `@repo/database/mutations/extractions/themes` → linkExtractionsToThemes, clearExtractionThemesForMeeting, type ExtractionThemeRow
 - `@repo/database/mutations/themes` → createEmergingTheme
 
 **Internal deps:**
@@ -1187,7 +1187,7 @@
 - `runRiskSpecialistStep()`
 
 **Depends on:**
-- `@repo/database/mutations/experimental-risk-extractions` → insertExperimentalRiskExtraction
+- `@repo/database/mutations/extractions/experimental-risks` → insertExperimentalRiskExtraction
 
 **Internal deps:**
 - `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_MODEL, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
@@ -3372,20 +3372,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateRowEmbedding()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
 | `batchUpdateEmbeddings()` | `packages/ai/src/pipeline/embed-pipeline.ts`, `packages/ai/src/pipeline/re-embed-worker.ts` |
 
-### mutations/experimental-risk-extractions.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist.ts` |
-
-### mutations/extraction-themes.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `linkExtractionsToThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
-| `clearExtractionThemesForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
-
-### mutations/extractions.ts
+### mutations/extractions/core.ts
 
 | Mutation | Called from |
 |----------|------------|
@@ -3394,6 +3381,19 @@ Tracing the most important data flows from action → pipeline → database.
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `insertExtractions()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
 | `updateNeedStatus()` | `apps/cockpit/src/actions/scan-needs.ts` |
+
+### mutations/extractions/experimental-risks.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist.ts` |
+
+### mutations/extractions/themes.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `linkExtractionsToThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `clearExtractionThemesForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 
 ### mutations/ignored-entities.ts
 
