@@ -13,7 +13,10 @@ import {
   getThemeDecisions,
   listEmergingThemes,
 } from "../../src/queries/themes";
-import { rejectThemeMatchAsAdmin, recalculateThemeStats } from "../../src/mutations/meeting-themes";
+import {
+  rejectThemeMatchAsAdmin,
+  recalculateThemeStats,
+} from "../../src/mutations/meetings/themes";
 
 let db: ReturnType<typeof getTestClient>;
 

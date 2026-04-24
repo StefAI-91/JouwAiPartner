@@ -7,7 +7,7 @@ import {
   linkExtractionsToThemes,
   clearExtractionThemesForMeeting,
   clearExtractionThemesForThemeInMeeting,
-} from "../../src/mutations/extraction-themes";
+} from "../../src/mutations/extractions/themes";
 
 let db: ReturnType<typeof getTestClient>;
 
