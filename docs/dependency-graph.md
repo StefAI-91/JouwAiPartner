@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 439 |
+| Files scanned | 440 |
 | Exported functions/constants | 690 |
 | Exported types/interfaces | 245 |
 | Cross-package imports | 479 |
@@ -952,7 +952,7 @@
 
 **Types:** `PreClassifiedType`, `PreClassifierOutput`
 
-### `packages/ai/src/pipeline/embed-pipeline.ts`
+### `packages/ai/src/pipeline/embed/pipeline.ts`
 
 **Exports:**
 - `embedMeetingWithExtractions()`
@@ -962,10 +962,25 @@
 - `@repo/database/queries/meetings` → getMeetingExtractions, getMeetingForEmbedding, getExtractionIdsAndContent
 
 **Internal deps:**
-- `../embeddings` → embedText, embedBatch
-- `./embed-text` → buildMeetingEmbedText
+- `../../embeddings` → embedText, embedBatch
+- `./text` → buildMeetingEmbedText
 
-### `packages/ai/src/pipeline/embed-text.ts`
+### `packages/ai/src/pipeline/embed/re-embed-worker.ts`
+
+**Exports:**
+- `runReEmbedWorker()`
+
+**Depends on:**
+- `@repo/database/queries/content` → getStaleRows
+- `@repo/database/queries/meetings` → getMeetingExtractionsBatch
+- `@repo/database/queries/people` → getStalePeople
+- `@repo/database/mutations/embeddings` → batchUpdateEmbeddings
+
+**Internal deps:**
+- `../../embeddings` → embedBatch
+- `./text` → buildMeetingEmbedText
+
+### `packages/ai/src/pipeline/embed/text.ts`
 
 **Exports:**
 - `buildMeetingEmbedText()`
@@ -1074,21 +1089,6 @@
 **Internal deps:**
 - `../speaker-map` → SpeakerMap
 
-### `packages/ai/src/pipeline/re-embed-worker.ts`
-
-**Exports:**
-- `runReEmbedWorker()`
-
-**Depends on:**
-- `@repo/database/queries/content` → getStaleRows
-- `@repo/database/queries/meetings` → getMeetingExtractionsBatch
-- `@repo/database/queries/people` → getStalePeople
-- `@repo/database/mutations/embeddings` → batchUpdateEmbeddings
-
-**Internal deps:**
-- `../embeddings` → embedBatch
-- `./embed-text` → buildMeetingEmbedText
-
 ### `packages/ai/src/pipeline/save-risk-extractions.ts`
 
 **Exports:**
@@ -1146,7 +1146,7 @@
 **Types:** `EmbedStepResult`
 
 **Internal deps:**
-- `../embed-pipeline` → embedMeetingWithExtractions
+- `../embed/pipeline` → embedMeetingWithExtractions
 
 ### `packages/ai/src/pipeline/steps/generate-title.ts`
 
@@ -1925,7 +1925,7 @@
 - `POST()`
 
 **Depends on:**
-- `@repo/ai/pipeline/re-embed-worker` → runReEmbedWorker
+- `@repo/ai/pipeline/embed/re-embed-worker` → runReEmbedWorker
 
 ### `apps/cockpit/src/app/api/cron/reclassify/route.ts`
 
@@ -2029,7 +2029,7 @@
 - `@repo/database/queries/meetings` → getExistingFirefliesIds, getExistingMeetingsByTitleDates
 - `@repo/ai/validations/fireflies` → isValidDuration
 - `@repo/ai/pipeline/gatekeeper-pipeline` → processMeeting
-- `@repo/ai/pipeline/re-embed-worker` → runReEmbedWorker
+- `@repo/ai/pipeline/embed/re-embed-worker` → runReEmbedWorker
 
 ### `apps/cockpit/src/app/api/ingest/reprocess/route.ts`
 
@@ -2043,7 +2043,7 @@
 - `@repo/ai/pipeline/steps/transcribe` → runTranscribeStep
 - `@repo/ai/pipeline/steps/summarize` → runSummarizeStep
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
-- `@repo/ai/pipeline/embed-pipeline` → embedMeetingWithExtractions
+- `@repo/ai/pipeline/embed/pipeline` → embedMeetingWithExtractions
 - `@repo/database/mutations/meetings` → markMeetingEmbeddingStale
 - `@repo/database/queries/meetings` → getMeetingByFirefliesIdForReprocess
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
@@ -3369,8 +3369,8 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `updateRowEmbedding()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
-| `batchUpdateEmbeddings()` | `packages/ai/src/pipeline/embed-pipeline.ts`, `packages/ai/src/pipeline/re-embed-worker.ts` |
+| `updateRowEmbedding()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
+| `batchUpdateEmbeddings()` | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 
 ### mutations/extractions/core.ts
 
@@ -3521,7 +3521,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getStaleRows()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
+| `getStaleRows()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 
 ### queries/dashboard.ts
 
@@ -3605,10 +3605,10 @@ Which queries are used where across the codebase.
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getMeetingByTitleAndDate()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
-| `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
-| `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed-pipeline.ts` |
-| `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
-| `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
+| `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
+| `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
+| `getMeetingExtractions()` | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 | `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
 | `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
@@ -3653,7 +3653,7 @@ Which queries are used where across the codebase.
 | `findPersonIdsByName()` | `packages/mcp/src/tools/actions.ts` |
 | `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
 | `getPersonById()` | `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx` |
-| `getStalePeople()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
+| `getStalePeople()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 | `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getPeopleForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |

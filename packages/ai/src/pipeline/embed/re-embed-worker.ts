@@ -1,9 +1,9 @@
-import { embedBatch } from "../embeddings";
+import { embedBatch } from "../../embeddings";
 import { getStaleRows } from "@repo/database/queries/content";
 import { getMeetingExtractionsBatch } from "@repo/database/queries/meetings";
 import { getStalePeople } from "@repo/database/queries/people";
 import { batchUpdateEmbeddings } from "@repo/database/mutations/embeddings";
-import { buildMeetingEmbedText } from "./embed-text";
+import { buildMeetingEmbedText } from "./text";
 
 const SIMPLE_EMBEDDABLE_TABLES = [
   { table: "extractions", contentField: "content" },

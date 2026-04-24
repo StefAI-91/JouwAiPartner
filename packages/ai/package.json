@@ -10,6 +10,8 @@
     "./agents/*": "./src/agents/*.ts",
     "./pipeline/participant": "./src/pipeline/participant/index.ts",
     "./pipeline/participant/*": "./src/pipeline/participant/*.ts",
+    "./pipeline/embed": "./src/pipeline/embed/index.ts",
+    "./pipeline/embed/*": "./src/pipeline/embed/*.ts",
     "./pipeline/*": "./src/pipeline/*.ts",
     "./embeddings": "./src/embeddings.ts",
     "./fireflies": "./src/fireflies.ts",

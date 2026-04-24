@@ -20,7 +20,7 @@ vi.mock("@repo/ai/pipeline/steps/risk-specialist", () => ({
   runRiskSpecialistStep: vi.fn(),
 }));
 
-vi.mock("@repo/ai/pipeline/embed-pipeline", () => ({
+vi.mock("@repo/ai/pipeline/embed/pipeline", () => ({
   embedMeetingWithExtractions: vi.fn(),
 }));
 

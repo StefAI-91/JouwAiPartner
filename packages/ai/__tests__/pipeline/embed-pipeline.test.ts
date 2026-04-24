@@ -45,7 +45,7 @@ vi.mock("../../src/embeddings", () => ({
   embedBatch: vi.fn(),
 }));
 
-import { embedMeetingWithExtractions } from "../../src/pipeline/embed-pipeline";
+import { embedMeetingWithExtractions } from "../../src/pipeline/embed/pipeline";
 import { updateRowEmbedding, batchUpdateEmbeddings } from "@repo/database/mutations/embeddings";
 import {
   getMeetingExtractions,

@@ -1,11 +1,11 @@
-import { embedText, embedBatch } from "../embeddings";
+import { embedText, embedBatch } from "../../embeddings";
 import { updateRowEmbedding, batchUpdateEmbeddings } from "@repo/database/mutations/embeddings";
 import {
   getMeetingExtractions,
   getMeetingForEmbedding,
   getExtractionIdsAndContent,
 } from "@repo/database/queries/meetings";
-import { buildMeetingEmbedText } from "./embed-text";
+import { buildMeetingEmbedText } from "./text";
 
 /**
  * Embed a meeting and all its extractions right after pipeline processing.

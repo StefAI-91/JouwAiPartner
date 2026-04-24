@@ -22,7 +22,7 @@ vi.mock("@repo/ai/pipeline/gatekeeper-pipeline", () => ({
   processMeeting: vi.fn(),
 }));
 
-vi.mock("@repo/ai/pipeline/re-embed-worker", () => ({
+vi.mock("@repo/ai/pipeline/embed/re-embed-worker", () => ({
   runReEmbedWorker: vi.fn(),
 }));
 
@@ -33,8 +33,8 @@ import {
 } from "@repo/database/queries/meetings";
 import { isValidDuration } from "@repo/ai/validations/fireflies";
 import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
-import { runReEmbedWorker } from "@repo/ai/pipeline/re-embed-worker";
-import { GET, POST } from "../../src/app/api/ingest/fireflies/route";
+import { runReEmbedWorker } from "@repo/ai/pipeline/embed/re-embed-worker";
+import { GET, POST } from "@/app/api/ingest/fireflies/route";
 import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
 
 const CRON_SECRET = "test-cron-secret";
