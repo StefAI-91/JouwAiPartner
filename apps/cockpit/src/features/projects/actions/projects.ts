@@ -7,7 +7,7 @@ import { updateProjectSchema, deleteSchema } from "@repo/database/validations/en
 import { createProjectSchema } from "@repo/database/validations/meetings";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
-import { cleanInput } from "./_utils";
+import { cleanInput } from "@/actions/_utils";
 
 export async function createProjectAction(
   input: z.infer<typeof createProjectSchema>,

@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 442 |
-| Exported functions/constants | 690 |
-| Exported types/interfaces | 245 |
+| Files scanned | 443 |
+| Exported functions/constants | 694 |
+| Exported types/interfaces | 249 |
 | Cross-package imports | 479 |
 | Critical integration points (3+ packages) | 9 |
 
@@ -432,6 +432,15 @@
 
 **Types:** `ThemeBasicRow`, `WindowAggregation`
 
+### `queries/themes/narrative.ts`
+
+**Exports:**
+- `getThemeNarrative()`
+- `listThemeMeetingSummaries()`
+- `INSUFFICIENT_MEETINGS_SENTINEL`
+
+**Types:** `ThemeNarrativeRow`, `ThemeNarrativeWithStaleness`, `ThemeMeetingSummaryForNarrator`
+
 ### `queries/themes/review.ts`
 
 **Exports:**
@@ -693,9 +702,10 @@
 - `updateTheme()`
 - `createEmergingTheme()`
 - `createVerifiedTheme()`
+- `upsertThemeNarrative()`
 - `archiveTheme()`
 
-**Types:** `InsertThemeInput`, `UpdateThemeInput`, `EmergingThemeProposal`
+**Types:** `InsertThemeInput`, `UpdateThemeInput`, `EmergingThemeProposal`, `UpsertThemeNarrativeInput`
 
 ## AI Agents
 

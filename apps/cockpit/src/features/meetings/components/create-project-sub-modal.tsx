@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
-import { createProjectAction } from "@/actions/projects";
+import { createProjectAction } from "@/features/projects/actions/projects";
 
 interface CreateProjectSubModalProps {
   open: boolean;

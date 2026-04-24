@@ -5,7 +5,7 @@ import { FolderKanban, X, Plus } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
 import { linkMeetingProjectAction, unlinkMeetingProjectAction } from "../actions";
-import { createProjectAction } from "@/actions/projects";
+import { createProjectAction } from "@/features/projects/actions/projects";
 
 interface Organization {
   id: string;

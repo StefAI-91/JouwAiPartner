@@ -7,10 +7,10 @@ import { getSegmentsByProjectId } from "@repo/database/queries/meetings/project-
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listPeople } from "@repo/database/queries/people";
 import { ExternalLink } from "lucide-react";
-import { ProjectSections } from "@/components/projects/project-sections";
-import { EditProject } from "@/components/projects/edit-project";
-import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
-import { ProjectTimeline } from "@/components/projects/project-timeline";
+import { ProjectSections } from "@/features/projects/components/project-sections";
+import { EditProject } from "@/features/projects/components/edit-project";
+import { ProjectSummaryCard } from "@/features/projects/components/project-summary-card";
+import { ProjectTimeline } from "@/features/projects/components/project-timeline";
 import { extractProjectTimeline } from "@repo/ai/validations/project-summary";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -59,14 +59,28 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      {timeline.length > 0 && (
-        <div className="mb-6 space-y-4">
-          <ProjectTimeline timeline={timeline} />
-          <div className="flex justify-end">
-            <RegenerateSummaryButton entityType="project" entityId={project.id} />
-          </div>
-        </div>
-      )}
+      <div className="mb-6 space-y-6">
+        <ProjectSummaryCard
+          projectId={project.id}
+          startDate={project.start_date}
+          deadline={project.deadline}
+          context={project.context_summary}
+          briefing={
+            project.briefing_summary
+              ? {
+                  content: project.briefing_summary.content,
+                  version: project.briefing_summary.version,
+                  created_at: project.briefing_summary.created_at,
+                }
+              : null
+          }
+        />
+        <ProjectTimeline
+          timeline={timeline}
+          startDate={project.start_date}
+          deadline={project.deadline}
+        />
+      </div>
 
       {/* Tabs */}
       <ProjectSections

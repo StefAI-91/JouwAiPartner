@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@repo/database/supabase/server";
 import { listProjects } from "@repo/database/queries/projects";
 import { listOrganizations } from "@repo/database/queries/organizations";
-import { ProjectCard } from "@/components/projects/project-card";
-import { AddProjectButton } from "@/components/projects/add-project-button";
+import { ProjectCard } from "@/features/projects/components/project-card";
+import { AddProjectButton } from "@/features/projects/components/add-project-button";
 import { FolderKanban } from "lucide-react";
 
 export default async function ProjectsPage() {
