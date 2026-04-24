@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 440 |
+| Files scanned | 441 |
 | Exported functions/constants | 690 |
 | Exported types/interfaces | 245 |
 | Cross-package imports | 479 |
@@ -1043,19 +1043,6 @@
 **Internal deps:**
 - `../agents/title-generator` → generateMeetingSubject
 
-### `packages/ai/src/pipeline/management-insights-pipeline.ts`
-
-**Exports:**
-- `generateManagementInsights()`
-
-**Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/meetings` → listBoardMeetings
-- `@repo/database/mutations/summaries/management-insights` → saveManagementInsights
-
-**Internal deps:**
-- `../agents/management-insights` → runManagementInsightsAgent
-
 ### `packages/ai/src/pipeline/participant/classifier.ts`
 
 **Exports:**
@@ -1251,7 +1238,7 @@
 **Internal deps:**
 - `../../transcribe-elevenlabs` → transcribeWithElevenLabs, formatScribeTranscript
 
-### `packages/ai/src/pipeline/summary-pipeline.ts`
+### `packages/ai/src/pipeline/summary/core.ts`
 
 **Exports:**
 - `generateProjectSummaries()`
@@ -1266,7 +1253,33 @@
 - `@repo/database/mutations/summaries` → createSummaryVersion
 
 **Internal deps:**
-- `../agents/project-summarizer` → runProjectSummarizer, runOrgSummarizer
+- `../../agents/project-summarizer` → runProjectSummarizer, runOrgSummarizer
+
+### `packages/ai/src/pipeline/summary/management-insights.ts`
+
+**Exports:**
+- `generateManagementInsights()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/meetings` → listBoardMeetings
+- `@repo/database/mutations/summaries/management-insights` → saveManagementInsights
+
+**Internal deps:**
+- `../../agents/management-insights` → runManagementInsightsAgent
+
+### `packages/ai/src/pipeline/summary/weekly.ts`
+
+**Exports:**
+- `generateWeeklySummary()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/summaries/weekly` → getWeeklyProjectData
+- `@repo/database/mutations/summaries` → createSummaryVersion
+
+**Internal deps:**
+- `../../agents/weekly-summarizer` → runWeeklySummarizer
 
 ### `packages/ai/src/pipeline/tagger.ts`
 
@@ -1281,19 +1294,6 @@
 
 **Internal deps:**
 - `../validations/gatekeeper` → IdentifiedProject
-
-### `packages/ai/src/pipeline/weekly-summary-pipeline.ts`
-
-**Exports:**
-- `generateWeeklySummary()`
-
-**Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/summaries/weekly` → getWeeklyProjectData
-- `@repo/database/mutations/summaries` → createSummaryVersion
-
-**Internal deps:**
-- `../agents/weekly-summarizer` → runWeeklySummarizer
 
 ## AI Core
 
@@ -1823,7 +1823,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
-- `@repo/ai/pipeline/management-insights-pipeline` → generateManagementInsights
+- `@repo/ai/pipeline/summary/management-insights` → generateManagementInsights
 - `@repo/database/mutations/summaries/management-insights` → dismissInsight
 
 ### `apps/cockpit/src/actions/scan-needs.ts`
@@ -1860,7 +1860,7 @@
 - `regenerateSummaryAction()`
 
 **Depends on:**
-- `@repo/ai/pipeline/summary-pipeline` → generateProjectSummaries, generateOrgSummaries
+- `@repo/ai/pipeline/summary/core` → generateProjectSummaries, generateOrgSummaries
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -1902,7 +1902,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
-- `@repo/ai/pipeline/weekly-summary-pipeline` → generateWeeklySummary
+- `@repo/ai/pipeline/summary/weekly` → generateWeeklySummary
 
 ## Cockpit API Routes
 
@@ -2061,7 +2061,7 @@
 - `maxDuration`
 
 **Depends on:**
-- `@repo/ai/pipeline/management-insights-pipeline` → generateManagementInsights
+- `@repo/ai/pipeline/summary/management-insights` → generateManagementInsights
 
 ### `apps/cockpit/src/app/api/mcp/route.ts`
 
@@ -3473,13 +3473,13 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `createSummaryVersion()` | `packages/ai/src/pipeline/summary-pipeline.ts`, `packages/ai/src/pipeline/weekly-summary-pipeline.ts` |
+| `createSummaryVersion()` | `packages/ai/src/pipeline/summary/core.ts`, `packages/ai/src/pipeline/summary/weekly.ts` |
 
 ### mutations/summaries/management-insights.ts
 
 | Mutation | Called from |
 |----------|------------|
-| `saveManagementInsights()` | `packages/ai/src/pipeline/management-insights-pipeline.ts` |
+| `saveManagementInsights()` | `packages/ai/src/pipeline/summary/management-insights.ts` |
 | `dismissInsight()` | `apps/cockpit/src/actions/management-insights.ts` |
 
 ### mutations/tasks.ts
@@ -3599,7 +3599,7 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getVerifiedMeetingById()` | `apps/cockpit/src/actions/dev-detector.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
 | `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/dev/detector/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
-| `listBoardMeetings()` | `packages/ai/src/pipeline/management-insights-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
+| `listBoardMeetings()` | `packages/ai/src/pipeline/summary/management-insights.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
 | `getMeetingByFirefliesId()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `getExistingFirefliesIds()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
@@ -3623,7 +3623,7 @@ Which queries are used where across the codebase.
 | `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
 | `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
 | `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
-| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
+| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/core.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/needs.ts
 
@@ -3706,7 +3706,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
+| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary/core.ts` |
 
 ### queries/summaries/management-insights.ts
 
@@ -3719,7 +3719,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getWeeklyProjectData()` | `packages/ai/src/pipeline/weekly-summary-pipeline.ts` |
+| `getWeeklyProjectData()` | `packages/ai/src/pipeline/summary/weekly.ts` |
 | `getLatestWeeklySummary()` | `apps/cockpit/src/app/(dashboard)/intelligence/weekly/page.tsx` |
 
 ### queries/tasks.ts

@@ -16,7 +16,7 @@ vi.mock("@repo/auth/access", () => ({
 
 const mockGenerateProjectSummaries = vi.fn();
 const mockGenerateOrgSummaries = vi.fn();
-vi.mock("@repo/ai/pipeline/summary-pipeline", () => ({
+vi.mock("@repo/ai/pipeline/summary/core", () => ({
   generateProjectSummaries: (...args: unknown[]) => mockGenerateProjectSummaries(...args),
   generateOrgSummaries: (...args: unknown[]) => mockGenerateOrgSummaries(...args),
 }));
@@ -31,7 +31,7 @@ describe("Summaries Actions", () => {
 
   describe("regenerateSummaryAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/summaries");
+      const mod = await import("@/actions/summaries");
       return mod.regenerateSummaryAction;
     }
 

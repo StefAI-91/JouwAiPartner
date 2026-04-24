@@ -22,7 +22,7 @@ import { describeWithDb } from "../helpers/describe-with-db";
 
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
-vi.mock("@repo/ai/pipeline/summary-pipeline", () => ({
+vi.mock("@repo/ai/pipeline/summary/core", () => ({
   triggerSummariesForEmail: vi.fn(async () => {}),
 }));
 
@@ -59,7 +59,7 @@ describeWithDb("Email Review Actions (integration)")("Email Review Actions (inte
 
   describe("approveEmailAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/review");
+      const mod = await import("@/features/emails/actions/review");
       return mod.approveEmailAction;
     }
 
@@ -106,7 +106,7 @@ describeWithDb("Email Review Actions (integration)")("Email Review Actions (inte
 
   describe("approveEmailWithEditsAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/review");
+      const mod = await import("@/features/emails/actions/review");
       return mod.approveEmailWithEditsAction;
     }
 
@@ -141,7 +141,7 @@ describeWithDb("Email Review Actions (integration)")("Email Review Actions (inte
 
   describe("rejectEmailAction", () => {
     async function getAction() {
-      const mod = await import("../../src/features/emails/actions/review");
+      const mod = await import("@/features/emails/actions/review");
       return mod.rejectEmailAction;
     }
 

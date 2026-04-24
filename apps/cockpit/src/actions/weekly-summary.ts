@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
 import { isAdmin } from "@repo/auth/access";
-import { generateWeeklySummary } from "@repo/ai/pipeline/weekly-summary-pipeline";
+import { generateWeeklySummary } from "@repo/ai/pipeline/summary/weekly";
 
 const generateWeeklySummarySchema = z.object({
   weekStart: z.string().optional(),

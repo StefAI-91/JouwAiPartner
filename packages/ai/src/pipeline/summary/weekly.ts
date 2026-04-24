@@ -1,7 +1,7 @@
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { getWeeklyProjectData } from "@repo/database/queries/summaries/weekly";
 import { createSummaryVersion } from "@repo/database/mutations/summaries";
-import { runWeeklySummarizer } from "../agents/weekly-summarizer";
+import { runWeeklySummarizer } from "../../agents/weekly-summarizer";
 
 // Fixed entity_id for company-wide summaries (deterministic UUID)
 const COMPANY_ENTITY_ID = "00000000-0000-0000-0000-000000000001";

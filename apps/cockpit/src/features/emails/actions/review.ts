@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { verifyEmail, verifyEmailWithEdits, rejectEmail } from "@repo/database/mutations/emails";
-import { triggerSummariesForEmail } from "@repo/ai/pipeline/summary-pipeline";
+import { triggerSummariesForEmail } from "@repo/ai/pipeline/summary/core";
 import { verifyEmailSchema, verifyEmailWithEditsSchema, rejectEmailSchema } from "../validations";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";

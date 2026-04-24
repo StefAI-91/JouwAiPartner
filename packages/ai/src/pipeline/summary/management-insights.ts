@@ -1,7 +1,7 @@
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { listBoardMeetings } from "@repo/database/queries/meetings";
 import { saveManagementInsights } from "@repo/database/mutations/summaries/management-insights";
-import { runManagementInsightsAgent } from "../agents/management-insights";
+import { runManagementInsightsAgent } from "../../agents/management-insights";
 
 /**
  * Generate management insights by analysing all board meetings.

@@ -51,7 +51,7 @@ import {
   generateOrgSummaries,
   triggerSummariesForMeeting,
   triggerSummariesForEmail,
-} from "../../src/pipeline/summary-pipeline";
+} from "../../src/pipeline/summary/core";
 import { getLatestSummary } from "@repo/database/queries/summaries";
 import { getSegmentsByProjectId } from "@repo/database/queries/meetings/project-summaries";
 import { createSummaryVersion } from "@repo/database/mutations/summaries";
