@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 531 |
-| Exported functions/constants | 835 |
-| Exported types/interfaces | 261 |
+| Files scanned | 521 |
+| Exported functions/constants | 818 |
+| Exported types/interfaces | 251 |
 | Cross-package imports | 660 |
 | Critical integration points (3+ packages) | 16 |
 
@@ -2717,67 +2717,6 @@
 **Depends on:**
 - `@repo/ui/badge` → Badge
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/mock-data.ts`
-
-**Exports:**
-- `THEMES`
-- `PEOPLE`
-- `MEETINGS`
-- `QUOTES`
-- `CONTRADICTIONS`
-- `TIMELINE_EVENTS`
-- `OPEN_QUESTIONS`
-
-**Types:** `ThemeTemp`, `ThemeMock`, `MeetingMock`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/page.tsx`
-
-**Exports:**
-- `metadata`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/storyline/page.tsx`
-
-**Exports:**
-- `metadata`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/storyline/storyline-data.ts`
-
-**Exports:**
-- `HIRING_STORY`
-
-**Types:** `ExtractionType`, `ThemeExtraction`, `Confidence`, `MeetingBlock`, `MomentKind`, `StoryMoment`, `ThemeStoryline`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/storyline/storyline-page.tsx`
-
-**Exports:**
-- `StorylinePage()`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/theme-lab.tsx`
-
-**Exports:**
-- `ThemeLab()`
-- `VariantCard()`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-a.tsx`
-
-**Exports:**
-- `SectionA()`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-b.tsx`
-
-**Exports:**
-- `SectionB()`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-c.tsx`
-
-**Exports:**
-- `SectionC()`
-
-### `apps/cockpit/src/app/(dashboard)/theme-lab/variants/section-d.tsx`
-
-**Exports:**
-- `SectionD()`
 
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx`
 

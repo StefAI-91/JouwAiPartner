@@ -8,9 +8,7 @@ export interface ThemePillData {
 }
 
 /**
- * Klikbare pill voor één thema. Styling 1-op-1 overgenomen uit
- * `theme-lab/variants/section-a.tsx` (VariantA1) zodat het prototype en
- * productie visueel identiek zijn: hover-lift + border-accent, geen tooltip.
+ * Klikbare pill voor één thema. Hover-lift + border-accent, geen tooltip.
  *
  * Emoji + naam + mention-count-badge. Default link-target `/themes/[slug]` —
  * de echte detail-page komt in TH-005; in TH-004 resolvt dit naar een

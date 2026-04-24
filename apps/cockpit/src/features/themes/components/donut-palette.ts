@@ -3,8 +3,7 @@
  * primary-kleur gehouden — de donut is een visueel hulpmiddel, geen CTA.
  * Top-6 kleuren zijn onderscheidend en WCAG-accessible op light background;
  * positie 7-9 dienen als fallback, positie 10 is neutraal grijs voor
- * "overige thema's". Kleuren zijn 1-op-1 overgenomen uit VariantB8 in
- * `theme-lab/variants/section-b.tsx`.
+ * "overige thema's".
  */
 export const DONUT_PALETTE = [
   "#006b3f",
