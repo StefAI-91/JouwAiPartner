@@ -15,8 +15,8 @@ import {
   regenerateMeetingAction,
   regenerateRisksAction,
   reprocessMeetingAction,
-} from "@/actions/meeting-pipeline";
-import { regenerateMeetingTitleAction } from "@/actions/meetings";
+  regenerateMeetingTitleAction,
+} from "@/features/meetings/actions";
 import { regenerateMeetingThemesAction } from "@/features/themes/actions";
 
 interface RegenerateMenuProps {

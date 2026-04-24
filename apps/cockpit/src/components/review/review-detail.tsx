@@ -15,7 +15,7 @@ import { ProjectLinker } from "@/components/meetings/project-linker";
 import { CopyMeetingButton } from "@/components/meetings/copy-meeting-button";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "@/actions/review";
-import { updateMeetingSummaryAction } from "@/actions/meetings";
+import { updateMeetingSummaryAction } from "@/features/meetings/actions";
 import { RegenerateMenu } from "@/components/shared/regenerate-menu";
 import { AlertTriangle, Mail, Tags } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";

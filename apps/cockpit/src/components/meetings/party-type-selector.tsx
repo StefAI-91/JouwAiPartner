@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Pencil, X } from "lucide-react";
-import { updatePartyTypeAction } from "@/actions/meetings";
+import { updatePartyTypeAction } from "@/features/meetings/actions";
 
 const PARTY_TYPES = [
   { value: "internal", label: "Intern" },

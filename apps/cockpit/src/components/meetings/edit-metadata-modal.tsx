@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { X } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
-import { updateMeetingMetadataAction } from "@/actions/meetings";
+import { updateMeetingMetadataAction } from "@/features/meetings/actions";
 import { CreateOrganizationModal } from "./create-organization-modal";
 import { CreateProjectSubModal } from "./create-project-sub-modal";
 import { CreatePersonSubModal } from "./create-person-sub-modal";
