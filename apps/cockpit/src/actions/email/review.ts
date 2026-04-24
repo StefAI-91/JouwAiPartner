@@ -8,7 +8,7 @@ import {
   verifyEmailSchema,
   verifyEmailWithEditsSchema,
   rejectEmailSchema,
-} from "@/validations/email-review";
+} from "@/features/emails/validations";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 
