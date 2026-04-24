@@ -42,7 +42,7 @@ import {
   archiveThemeAction,
   canEditThemesAction,
   createVerifiedThemeAction,
-} from "../../src/actions/themes";
+} from "../../src/features/themes/actions";
 
 // Must be a valid v4 UUID (zod v4 validates strict RFC format)
 const THEME_ID = "11111111-1111-4111-8111-111111111111";

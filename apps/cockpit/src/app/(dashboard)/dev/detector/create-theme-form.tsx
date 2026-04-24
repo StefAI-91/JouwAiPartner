@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { ALL_THEME_EMOJIS } from "@repo/ai/agents/theme-emojis";
-import { createVerifiedThemeAction } from "@/actions/themes";
+import { createVerifiedThemeAction } from "@/features/themes/actions";
 
 const EMOJI_CHOICES = ALL_THEME_EMOJIS;
 

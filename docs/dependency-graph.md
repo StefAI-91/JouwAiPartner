@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 549 |
-| Exported functions/constants | 860 |
+| Files scanned | 545 |
+| Exported functions/constants | 850 |
 | Exported types/interfaces | 269 |
-| Cross-package imports | 690 |
-| Critical integration points (3+ packages) | 17 |
+| Cross-package imports | 680 |
+| Critical integration points (3+ packages) | 16 |
 
 ## Package Dependency Flow
 
@@ -2085,44 +2085,6 @@
 - `@repo/database/queries/team` → countAdmins, getProfileRole, getUserWithAccess
 - `@repo/database/mutations/team` → upsertProfile, updateProfileRole, clearProjectAccess, insertProjectAccess
 - `@repo/database/validations/team` → inviteUserSchema, updateUserAccessSchema, deactivateUserSchema, type InviteUserInput, type UpdateUserAccessInput, type DeactivateUserInput
-
-### `apps/cockpit/src/actions/themes/crud.ts`
-
-**Exports:**
-- `updateThemeAction()`
-- `archiveThemeAction()`
-- `canEditThemesAction()`
-- `createVerifiedThemeAction()`
-
-**Depends on:**
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin, requireAdminInAction
-- `@repo/database/mutations/themes` → updateTheme, archiveTheme, createVerifiedTheme
-
-### `apps/cockpit/src/actions/themes/regenerate.ts`
-
-**Exports:**
-- `regenerateMeetingThemesAction()`
-
-**Depends on:**
-- `@repo/auth/access` → requireAdminInAction
-- `@repo/ai/pipeline/steps/theme-detector` → runThemeDetectorStep
-- `@repo/ai/pipeline/steps/link-themes` → runLinkThemesStep
-- `@repo/database/queries/meetings` → getVerifiedMeetingById
-
-### `apps/cockpit/src/actions/themes/review.ts`
-
-**Exports:**
-- `approveThemeAction()`
-- `rejectEmergingThemeAction()`
-- `rejectThemeMatchAction()`
-- `confirmThemeProposalAction()`
-- `rejectThemeProposalAction()`
-
-**Depends on:**
-- `@repo/auth/access` → requireAdminInAction
-- `@repo/database/mutations/themes` → updateTheme, archiveTheme
-- `@repo/database/mutations/meeting-themes` → rejectThemeMatchAsAdmin, recalculateThemeStats
 
 ### `apps/cockpit/src/actions/weekly-summary.ts`
 
@@ -4371,7 +4333,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 52 | - | - | - | - | 52 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 61 | 23 | 40 | - | - | 124 |
+| Cockpit Server Actions | 57 | 21 | 36 | - | - | 114 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 49 | 7 | 2 | 85 | - | 143 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -4399,7 +4361,6 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/actions/meeting-pipeline/regenerate-risks.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
-| `apps/cockpit/src/actions/themes/regenerate.ts` | auth, ai, database | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` | database, ui, ai | 3 |
 | `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` | database, ui, ai | 3 |
@@ -4527,8 +4488,7 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `linkMeetingToThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `clearMeetingThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
-| `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `apps/cockpit/src/actions/themes/review.ts` |
-| `rejectThemeMatchAsAdmin()` | `apps/cockpit/src/actions/themes/review.ts` |
+| `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 
 ### mutations/meetings.ts
 
@@ -4633,10 +4593,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `updateTheme()` | `apps/cockpit/src/actions/themes/crud.ts`, `apps/cockpit/src/actions/themes/review.ts` |
 | `createEmergingTheme()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
-| `createVerifiedTheme()` | `apps/cockpit/src/actions/themes/crud.ts` |
-| `archiveTheme()` | `apps/cockpit/src/actions/themes/crud.ts`, `apps/cockpit/src/actions/themes/review.ts` |
 
 ## Query Usage Map
 
@@ -4749,7 +4706,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getVerifiedMeetingById()` | `apps/cockpit/src/actions/dev-detector.ts`, `apps/cockpit/src/actions/themes/regenerate.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
+| `getVerifiedMeetingById()` | `apps/cockpit/src/actions/dev-detector.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
 | `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/dev/detector/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
 | `listBoardMeetings()` | `packages/ai/src/pipeline/management-insights-pipeline.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
 | `getMeetingByFirefliesId()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |

@@ -5,10 +5,7 @@ import { requireAdminInAction } from "@repo/auth/access";
 import { runThemeDetectorStep } from "@repo/ai/pipeline/steps/theme-detector";
 import { runLinkThemesStep } from "@repo/ai/pipeline/steps/link-themes";
 import { getVerifiedMeetingById } from "@repo/database/queries/meetings";
-import {
-  regenerateMeetingThemesSchema,
-  type RegenerateMeetingThemesInput,
-} from "@/features/themes/validations";
+import { regenerateMeetingThemesSchema, type RegenerateMeetingThemesInput } from "../validations";
 
 /**
  * TH-011 (FUNC-283) — Regenerate thema-links voor één meeting.

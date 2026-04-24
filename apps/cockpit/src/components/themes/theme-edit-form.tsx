@@ -6,7 +6,7 @@ import { Button } from "@repo/ui/button";
 import { cn } from "@repo/ui/utils";
 import { EmojiPickerPopover } from "./emoji-picker-popover";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
-import { updateThemeAction, archiveThemeAction } from "@/actions/themes";
+import { updateThemeAction, archiveThemeAction } from "@/features/themes/actions";
 import { useThemeFormState } from "@/features/themes/hooks";
 import {
   THEME_NAME_MIN,

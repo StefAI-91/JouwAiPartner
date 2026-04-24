@@ -17,7 +17,7 @@ import {
   reprocessMeetingAction,
 } from "@/actions/meeting-pipeline";
 import { regenerateMeetingTitleAction } from "@/actions/meetings";
-import { regenerateMeetingThemesAction } from "@/actions/themes";
+import { regenerateMeetingThemesAction } from "@/features/themes/actions";
 
 interface RegenerateMenuProps {
   meetingId: string;

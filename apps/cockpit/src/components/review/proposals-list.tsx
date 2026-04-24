@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@repo/ui/badge";
-import { confirmThemeProposalAction, rejectThemeProposalAction } from "@/actions/themes";
+import { confirmThemeProposalAction, rejectThemeProposalAction } from "@/features/themes/actions";
 
 export interface ProposalItem {
   id: string;

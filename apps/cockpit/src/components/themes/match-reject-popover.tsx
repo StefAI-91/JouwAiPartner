@@ -6,7 +6,7 @@ import { CircleOff } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { cn } from "@repo/ui/utils";
 import { REJECTION_REASONS, type RejectionReason } from "@/features/themes/validations";
-import { rejectThemeMatchAction } from "@/actions/themes";
+import { rejectThemeMatchAction } from "@/features/themes/actions";
 
 const REASON_LABELS: Record<RejectionReason, { title: string; hint: string }> = {
   niet_substantieel: {

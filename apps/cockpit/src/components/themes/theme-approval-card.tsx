@@ -8,7 +8,7 @@ import { cn } from "@repo/ui/utils";
 import { formatDate } from "@repo/ui/format";
 import type { EmergingThemeRow, EmergingThemeProposalMeeting } from "@repo/database/queries/themes";
 import { EmojiPickerPopover } from "./emoji-picker-popover";
-import { approveThemeAction, rejectEmergingThemeAction } from "@/actions/themes";
+import { approveThemeAction, rejectEmergingThemeAction } from "@/features/themes/actions";
 import { useThemeFormState } from "@/features/themes/hooks";
 import {
   THEME_NAME_MIN,
