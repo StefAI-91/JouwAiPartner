@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 444 |
-| Exported functions/constants | 696 |
-| Exported types/interfaces | 250 |
-| Cross-package imports | 479 |
+| Files scanned | 446 |
+| Exported functions/constants | 701 |
+| Exported types/interfaces | 254 |
+| Cross-package imports | 482 |
 | Critical integration points (3+ packages) | 9 |
 
 ## Package Dependency Flow
@@ -879,6 +879,20 @@
 
 **Types:** `ThemeEmoji`
 
+### `packages/ai/src/agents/theme-narrator.ts`
+
+**Exports:**
+- `runThemeNarrator()`
+- `THEME_NARRATOR_PROMPT_VERSION`
+- `THEME_NARRATOR_MODEL`
+- `THEME_NARRATOR_SYSTEM_PROMPT`
+
+**Types:** `ThemeNarratorThemeInput`, `ThemeNarratorMeetingInput`, `RunThemeNarratorInput`
+
+**Internal deps:**
+- `../validations/theme-narrator` → ThemeNarratorOutputSchema, NARRATIVE_TOTAL_CHAR_CAP, type ThemeNarratorOutput
+- `./run-logger` → withAgentRun
+
 ### `packages/ai/src/agents/title-generator.ts`
 
 **Exports:**
@@ -1177,6 +1191,7 @@
 **Internal deps:**
 - `../../validations/theme-detector` → ThemeDetectorOutput
 - `../tagger` → parseThemesAnnotation, resolveThemeRefs, type ThemeRef
+- `./synthesize-theme-narrative` → runThemeNarrativeSynthesis
 
 ### `packages/ai/src/pipeline/steps/risk-specialist.ts`
 
@@ -1203,6 +1218,22 @@
 
 **Internal deps:**
 - `../../agents/summarizer` → runSummarizer, formatSummary, formatThemeSummary, type SummarizerIdentifiedTheme
+
+### `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts`
+
+**Exports:**
+- `runThemeNarrativeSynthesis()`
+
+**Types:** `ThemeNarrativeSynthesisResult`
+
+**Depends on:**
+- `@repo/database/queries/themes` → listThemeMeetingSummaries, INSUFFICIENT_MEETINGS_SENTINEL
+- `@repo/database/mutations/themes` → upsertThemeNarrative
+- `@repo/database/supabase/admin` → getAdminClient
+
+**Internal deps:**
+- `../../agents/theme-narrator` → runThemeNarrator
+- `../../validations/theme-narrator` → ThemeNarratorOutput
 
 ### `packages/ai/src/pipeline/steps/tag-and-segment.ts`
 
@@ -3328,7 +3359,7 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 52 | - | - | - | - | 52 |
+| AI Pipeline | 55 | - | - | - | - | 55 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 23 | 6 | 10 | - | - | 39 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
@@ -3523,6 +3554,7 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `createEmergingTheme()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `upsertThemeNarrative()` | `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts` |
 
 ## Query Usage Map
 
@@ -3781,6 +3813,12 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `windowStartIso()` | `packages/database/src/queries/themes/detail.ts` |
 | `fetchWindowAggregation()` | `packages/database/src/queries/themes/dashboard.ts`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
+
+### queries/themes/narrative.ts
+
+| Query | Used in |
+|-------|---------|
+| `listThemeMeetingSummaries()` | `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts` |
 
 ### queries/themes/review.ts
 
