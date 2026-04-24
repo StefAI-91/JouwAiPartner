@@ -10,6 +10,8 @@
     "./supabase/*": "./src/supabase/*.ts",
     "./queries/themes": "./src/queries/themes/index.ts",
     "./queries/themes/*": "./src/queries/themes/*.ts",
+    "./queries/issues": "./src/queries/issues/index.ts",
+    "./queries/issues/*": "./src/queries/issues/*.ts",
     "./queries/*": "./src/queries/*.ts",
     "./mutations/*": "./src/mutations/*.ts",
     "./types/*": "./src/types/*.ts",

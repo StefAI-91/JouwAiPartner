@@ -1,8 +1,8 @@
 "use client";
 
 import { useOptimistic } from "react";
-import type { IssueCommentRow } from "@repo/database/queries/issue-comments";
-import type { IssueActivityRow } from "@repo/database/queries/issue-activity";
+import type { IssueCommentRow } from "@repo/database/queries/issues/comments";
+import type { IssueActivityRow } from "@repo/database/queries/issues/activity";
 import { CommentActivityFeed } from "./comment-list";
 import { CommentForm } from "./comment-form";
 

@@ -2,9 +2,9 @@
 
 import { useOptimistic, useTransition } from "react";
 import type { IssueRow } from "@repo/database/queries/issues";
-import type { IssueCommentRow } from "@repo/database/queries/issue-comments";
-import type { IssueActivityRow } from "@repo/database/queries/issue-activity";
-import type { IssueAttachmentRow } from "@repo/database/queries/issue-attachments";
+import type { IssueCommentRow } from "@repo/database/queries/issues/comments";
+import type { IssueActivityRow } from "@repo/database/queries/issues/activity";
+import type { IssueAttachmentRow } from "@repo/database/queries/issues/attachments";
 import { updateIssueAction } from "@/actions/issues";
 import { issueCountStore } from "@/components/layout/issue-count-store";
 

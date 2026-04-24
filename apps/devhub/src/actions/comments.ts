@@ -9,7 +9,7 @@ import {
   insertActivity,
 } from "@repo/database/mutations/issues";
 import { getIssueById } from "@repo/database/queries/issues";
-import { getCommentById } from "@repo/database/queries/issue-comments";
+import { getCommentById } from "@repo/database/queries/issues/comments";
 import {
   createCommentSchema,
   updateCommentSchema,

@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 482 |
+| Files scanned | 483 |
 | Exported functions/constants | 765 |
 | Exported types/interfaces | 250 |
 | Cross-package imports | 579 |
@@ -144,14 +144,14 @@
 **Exports:**
 - `getIgnoredEntityNames()`
 
-### `queries/issue-activity.ts`
+### `queries/issues/activity.ts`
 
 **Exports:**
 - `listIssueActivity()`
 
 **Types:** `IssueActivityRow`
 
-### `queries/issue-attachments.ts`
+### `queries/issues/attachments.ts`
 
 **Exports:**
 - `getIssueThumbnails()`
@@ -160,7 +160,7 @@
 
 **Types:** `IssueAttachmentRow`
 
-### `queries/issue-comments.ts`
+### `queries/issues/comments.ts`
 
 **Exports:**
 - `getCommentById()`
@@ -168,7 +168,7 @@
 
 **Types:** `IssueCommentRow`
 
-### `queries/issues.ts`
+### `queries/issues/core.ts`
 
 **Exports:**
 - `listIssues()`
@@ -3361,7 +3361,7 @@
 **Depends on:**
 - `@repo/database/mutations/issues` → insertComment, updateComment, deleteComment, insertActivity
 - `@repo/database/queries/issues` → getIssueById
-- `@repo/database/queries/issue-comments` → getCommentById
+- `@repo/database/queries/issues/comments` → getCommentById
 - `@repo/database/validations/issues` → createCommentSchema, updateCommentSchema, deleteCommentSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
@@ -3378,7 +3378,7 @@
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin, assertProjectAccess, NotAuthorizedError
 - `@repo/database/queries/userback-issues` → getUserbackSyncCursor, countUserbackIssues, listUserbackIssuesForBackfill
-- `@repo/database/queries/issue-attachments` → getIssueIdsWithAttachments
+- `@repo/database/queries/issues/attachments` → getIssueIdsWithAttachments
 - `@repo/database/integrations/userback` → extractMediaFromMetadata
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/database/mutations/issue-attachments` → storeIssueMedia
@@ -3508,8 +3508,8 @@
 - `CommentActivityFeed()`
 
 **Depends on:**
-- (type) `@repo/database/queries/issue-comments` → IssueCommentRow
-- (type) `@repo/database/queries/issue-activity` → IssueActivityRow
+- (type) `@repo/database/queries/issues/comments` → IssueCommentRow
+- (type) `@repo/database/queries/issues/activity` → IssueActivityRow
 
 ### `apps/devhub/src/components/comments/comment-section.tsx`
 
@@ -3519,8 +3519,8 @@
 **Types:** `CurrentUser`
 
 **Depends on:**
-- (type) `@repo/database/queries/issue-comments` → IssueCommentRow
-- (type) `@repo/database/queries/issue-activity` → IssueActivityRow
+- (type) `@repo/database/queries/issues/comments` → IssueCommentRow
+- (type) `@repo/database/queries/issues/activity` → IssueActivityRow
 
 ### `apps/devhub/src/components/dashboard/area-summaries.tsx`
 
@@ -3565,7 +3565,7 @@
 - `IssueAttachments()`
 
 **Depends on:**
-- (type) `@repo/database/queries/issue-attachments` → IssueAttachmentRow
+- (type) `@repo/database/queries/issues/attachments` → IssueAttachmentRow
 
 ### `apps/devhub/src/components/issues/issue-detail.tsx`
 
@@ -3574,9 +3574,9 @@
 
 **Depends on:**
 - (type) `@repo/database/queries/issues` → IssueRow
-- (type) `@repo/database/queries/issue-comments` → IssueCommentRow
-- (type) `@repo/database/queries/issue-activity` → IssueActivityRow
-- (type) `@repo/database/queries/issue-attachments` → IssueAttachmentRow
+- (type) `@repo/database/queries/issues/comments` → IssueCommentRow
+- (type) `@repo/database/queries/issues/activity` → IssueActivityRow
+- (type) `@repo/database/queries/issues/attachments` → IssueAttachmentRow
 
 ### `apps/devhub/src/components/issues/issue-filters.tsx`
 
@@ -4094,13 +4094,13 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getIgnoredEntityNames()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
-### queries/issue-activity.ts
+### queries/issues/activity.ts
 
 | Query | Used in |
 |-------|---------|
 | `listIssueActivity()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 
-### queries/issue-attachments.ts
+### queries/issues/attachments.ts
 
 | Query | Used in |
 |-------|---------|
@@ -4108,14 +4108,14 @@ Which queries are used where across the codebase.
 | `listIssueAttachments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueIdsWithAttachments()` | `apps/devhub/src/actions/import.ts` |
 
-### queries/issue-comments.ts
+### queries/issues/comments.ts
 
 | Query | Used in |
 |-------|---------|
 | `getCommentById()` | `apps/devhub/src/actions/comments.ts` |
 | `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 
-### queries/issues.ts
+### queries/issues/core.ts
 
 | Query | Used in |
 |-------|---------|

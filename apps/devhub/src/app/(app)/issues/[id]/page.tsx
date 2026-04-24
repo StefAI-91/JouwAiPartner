@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getIssueById } from "@repo/database/queries/issues";
-import { listIssueComments } from "@repo/database/queries/issue-comments";
-import { listIssueActivity } from "@repo/database/queries/issue-activity";
-import { listIssueAttachments } from "@repo/database/queries/issue-attachments";
+import { listIssueComments } from "@repo/database/queries/issues/comments";
+import { listIssueActivity } from "@repo/database/queries/issues/activity";
+import { listIssueAttachments } from "@repo/database/queries/issues/attachments";
 import { listTeamMembers } from "@repo/database/queries/team";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";

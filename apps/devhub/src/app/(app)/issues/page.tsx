@@ -8,7 +8,7 @@ import {
   getIssueCounts,
   ISSUE_SORTS,
 } from "@repo/database/queries/issues";
-import { getIssueThumbnails } from "@repo/database/queries/issue-attachments";
+import { getIssueThumbnails } from "@repo/database/queries/issues/attachments";
 import { IssueList } from "@/components/issues/issue-list";
 import { IssueFilters } from "@/components/issues/issue-filters";
 import { PaginationControls } from "@/components/issues/pagination-controls";

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminClient } from "../supabase/admin";
-import { PRIORITY_ORDER } from "../constants/issues";
+import { getAdminClient } from "../../supabase/admin";
+import { PRIORITY_ORDER } from "../../constants/issues";
 
 export const ISSUE_SORTS = ["priority", "newest", "oldest"] as const;
 export type IssueSort = (typeof ISSUE_SORTS)[number];
