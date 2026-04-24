@@ -227,7 +227,9 @@ export async function getProjectById(
   const emails = (emailLinksResult.data ?? [])
     .map((link) => link.email as unknown as ProjectDetail["emails"][number])
     .filter(Boolean)
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .sort((a: ProjectDetail["emails"][number], b: ProjectDetail["emails"][number]) =>
+      b.date.localeCompare(a.date),
+    );
 
   const typedProject = project as unknown as {
     id: string;
