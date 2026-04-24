@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architectuur: Hybride model — horizontaal + verticaal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+            },
+            fontFamily: {
+              mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+      }
+      .status-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .layer-row {
+        background: linear-gradient(90deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 2px solid #86efac;
+        border-radius: 8px;
+      }
+      .feature-col {
+        background: linear-gradient(180deg, #fefce8 0%, #fef9c3 100%);
+        border: 2px solid #fde047;
+        border-radius: 8px;
+      }
+      .app-box {
+        background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+        border: 2px solid #d1d5db;
+        border-radius: 10px;
+      }
+      .shared-box {
+        background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 2px solid #86efac;
+        border-radius: 10px;
+      }
+      .arrow-down {
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 12px solid #6b7280;
+        margin: 6px auto;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+
+    <!-- ============ HERO ============ -->
+    <section class="max-w-6xl mx-auto px-6 pt-12 pb-10">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Architectuur-principe · deel 2</p>
+      <h1 class="text-4xl font-bold text-gray-900 leading-tight mb-4">
+        Horizontaal of verticaal groeperen?
+      </h1>
+      <p class="text-lg text-gray-600 max-w-3xl leading-relaxed">
+        Nu we weten wat diepe modules zijn, komt de vraag: <strong>hoe groeperen
+        we ze?</strong> Per technische laag (horizontaal) of per feature
+        (verticaal)? Het antwoord is allebei — op de juiste plek.
+      </p>
+    </section>
+
+    <!-- ============ TWEE PATRONEN NAAST ELKAAR ============ -->
+    <section class="max-w-6xl mx-auto px-6 pb-16">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        <!-- HORIZONTAAL -->
+        <div>
+          <div class="flex items-center mb-3">
+            <span class="tag bg-primary-100 text-primary-800">Patroon A</span>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2">Horizontaal — per laag</h2>
+          <p class="text-sm text-gray-600 mb-5 h-12">
+            Alle queries bij elkaar, alle mutations bij elkaar. Zoals een fabriek
+            met één werkplaats per type taak.
+          </p>
+
+          <div class="space-y-2">
+            <div class="layer-row px-4 py-3 flex items-center justify-between">
+              <span class="font-mono text-sm font-semibold text-primary-900">queries/</span>
+              <span class="text-xs text-gray-600 font-mono">meetings · emails · themes · ...</span>
+            </div>
+            <div class="layer-row px-4 py-3 flex items-center justify-between">
+              <span class="font-mono text-sm font-semibold text-primary-900">mutations/</span>
+              <span class="text-xs text-gray-600 font-mono">meetings · emails · themes · ...</span>
+            </div>
+            <div class="layer-row px-4 py-3 flex items-center justify-between">
+              <span class="font-mono text-sm font-semibold text-primary-900">actions/</span>
+              <span class="text-xs text-gray-600 font-mono">meetings · emails · themes · ...</span>
+            </div>
+            <div class="layer-row px-4 py-3 flex items-center justify-between">
+              <span class="font-mono text-sm font-semibold text-primary-900">components/</span>
+              <span class="text-xs text-gray-600 font-mono">meetings · emails · themes · ...</span>
+            </div>
+          </div>
+
+          <div class="mt-5 space-y-2 text-sm">
+            <div class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">✓</span>
+              <span class="text-gray-700">Gedeelde code <strong>makkelijk importeren</strong> vanuit meerdere apps</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">✓</span>
+              <span class="text-gray-700">Technische conventies op één plek</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-gray-400 mt-0.5">✗</span>
+              <span class="text-gray-600">Feature-werk raakt 4 mappen tegelijk</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VERTICAAL -->
+        <div>
+          <div class="flex items-center mb-3">
+            <span class="tag bg-amber-100 text-amber-800">Patroon B</span>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 mb-2">Verticaal — per feature</h2>
+          <p class="text-sm text-gray-600 mb-5 h-12">
+            Alles over meetings in één map, alles over emails in één map. Zoals
+            een bedrijf met afdelingen — elke afdeling compleet zelfstandig.
+          </p>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div class="feature-col p-3">
+              <div class="font-mono text-xs font-bold text-amber-900 mb-2">meetings/</div>
+              <div class="space-y-1">
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">queries</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">mutations</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">actions</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">components</div>
+              </div>
+            </div>
+            <div class="feature-col p-3">
+              <div class="font-mono text-xs font-bold text-amber-900 mb-2">emails/</div>
+              <div class="space-y-1">
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">queries</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">mutations</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">actions</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">components</div>
+              </div>
+            </div>
+            <div class="feature-col p-3">
+              <div class="font-mono text-xs font-bold text-amber-900 mb-2">themes/</div>
+              <div class="space-y-1">
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">queries</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">mutations</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">actions</div>
+                <div class="bg-white/70 rounded px-2 py-1 text-[10px] font-mono text-gray-700">components</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 space-y-2 text-sm">
+            <div class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">✓</span>
+              <span class="text-gray-700">AI werkt aan één feature = <strong>één folder lezen</strong></span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-primary-600 mt-0.5">✓</span>
+              <span class="text-gray-700">Feature verwijderen = één folder deleten</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <span class="text-gray-400 mt-0.5">✗</span>
+              <span class="text-gray-600">Onmogelijk zodra 2 apps dezelfde code nodig hebben</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ DE HARDE CONSTRAINT ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">De harde constraint</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Waarom packages horizontaal móéten blijven</h2>
+        <p class="text-gray-600 max-w-3xl mb-10">
+          In onze monorepo worden <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded">@repo/database</code>,
+          <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded">@repo/ai</code> en
+          <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded">@repo/ui</code> gedeeld door méérdere apps.
+          Verticaal groeperen kán daar niet — de feature zou "vastzitten" in één app.
+        </p>
+
+        <!-- APP DIAGRAM -->
+        <div class="bg-gray-50 rounded-xl p-8 border border-gray-200">
+          <!-- 3 apps boven -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="app-box p-4 text-center">
+              <div class="text-xs uppercase tracking-wider text-gray-500 mb-1">App</div>
+              <div class="font-bold text-gray-900">Cockpit</div>
+              <div class="text-xs text-gray-500 mt-1">Strategy & PM</div>
+            </div>
+            <div class="app-box p-4 text-center">
+              <div class="text-xs uppercase tracking-wider text-gray-500 mb-1">App</div>
+              <div class="font-bold text-gray-900">DevHub</div>
+              <div class="text-xs text-gray-500 mt-1">Build & Execute</div>
+            </div>
+            <div class="app-box p-4 text-center">
+              <div class="text-xs uppercase tracking-wider text-gray-500 mb-1">Server</div>
+              <div class="font-bold text-gray-900">MCP</div>
+              <div class="text-xs text-gray-500 mt-1">External access</div>
+            </div>
+          </div>
+
+          <!-- pijlen naar beneden -->
+          <div class="grid grid-cols-3 gap-4">
+            <div class="arrow-down"></div>
+            <div class="arrow-down"></div>
+            <div class="arrow-down"></div>
+          </div>
+
+          <!-- shared packages -->
+          <div class="mt-4 space-y-2">
+            <div class="shared-box px-5 py-3 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm font-bold text-primary-900">@repo/database</span>
+                <span class="tag bg-primary-200 text-primary-800">shared</span>
+              </div>
+              <div class="text-xs text-gray-600 font-mono">
+                listMeetings · listThemes · listEmails → alle 3 apps
+              </div>
+            </div>
+            <div class="shared-box px-5 py-3 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm font-bold text-primary-900">@repo/ai</span>
+                <span class="tag bg-primary-200 text-primary-800">shared</span>
+              </div>
+              <div class="text-xs text-gray-600 font-mono">
+                processMeeting · agents → cockpit + devhub
+              </div>
+            </div>
+            <div class="shared-box px-5 py-3 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="font-mono text-sm font-bold text-primary-900">@repo/ui</span>
+                <span class="tag bg-primary-200 text-primary-800">shared</span>
+              </div>
+              <div class="text-xs text-gray-600 font-mono">
+                Button · Card · Badge → alle 3 apps
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+          <p class="text-sm text-gray-700 leading-relaxed">
+            <strong class="text-red-800">Stel je voor dat we verticaal zouden gaan in packages:</strong>
+            dan zou <code class="text-xs bg-white px-1.5 py-0.5 rounded">listMeetings()</code> in
+            <code class="text-xs bg-white px-1.5 py-0.5 rounded">apps/cockpit/features/meetings/</code> leven.
+            DevHub en de MCP-server kunnen daar niet bij — ze zijn andere apps. Horizontaal bij packages = niet-onderhandelbaar.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HET HYBRIDE MODEL ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Het hybride model</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Horizontaal bij packages, verticaal bij apps</h2>
+      <p class="text-gray-600 max-w-3xl mb-10">
+        Beide patronen hebben hun plek. Niet mixen binnen dezelfde laag — dát
+        zorgt voor verwarring.
+      </p>
+
+      <!-- DE MATRIX -->
+      <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <div class="grid grid-cols-12 bg-gray-50 border-b border-gray-200 px-6 py-3 text-xs uppercase tracking-wider font-semibold text-gray-500">
+          <div class="col-span-5">Map</div>
+          <div class="col-span-3">Organisatie</div>
+          <div class="col-span-4">Waarom</div>
+        </div>
+
+        <!-- packages -->
+        <div class="grid grid-cols-12 px-6 py-4 border-b border-gray-100 items-center">
+          <div class="col-span-5 font-mono text-sm text-gray-900">packages/database/</div>
+          <div class="col-span-3">
+            <span class="tag bg-primary-100 text-primary-800">→ Horizontaal</span>
+          </div>
+          <div class="col-span-4 text-sm text-gray-600">Gedeeld door 3 apps</div>
+        </div>
+        <div class="grid grid-cols-12 px-6 py-4 border-b border-gray-100 items-center">
+          <div class="col-span-5 font-mono text-sm text-gray-900">packages/ai/</div>
+          <div class="col-span-3">
+            <span class="tag bg-primary-100 text-primary-800">→ Horizontaal</span>
+          </div>
+          <div class="col-span-4 text-sm text-gray-600">Gedeeld door cockpit + devhub</div>
+        </div>
+        <div class="grid grid-cols-12 px-6 py-4 border-b border-gray-100 items-center">
+          <div class="col-span-5 font-mono text-sm text-gray-900">packages/ui/</div>
+          <div class="col-span-3">
+            <span class="tag bg-primary-100 text-primary-800">→ Horizontaal</span>
+          </div>
+          <div class="col-span-4 text-sm text-gray-600">Gedeeld door 3 apps</div>
+        </div>
+
+        <!-- Separator -->
+        <div class="px-6 py-2 bg-gray-50 border-b border-gray-200">
+          <span class="text-[11px] uppercase tracking-widest text-gray-500 font-semibold">↓ app-specifiek ↓</span>
+        </div>
+
+        <div class="grid grid-cols-12 px-6 py-4 border-b border-gray-100 items-center">
+          <div class="col-span-5 font-mono text-sm text-gray-900">apps/cockpit/src/</div>
+          <div class="col-span-3">
+            <span class="tag bg-amber-100 text-amber-800">→ Verticaal</span>
+          </div>
+          <div class="col-span-4 text-sm text-gray-600">Alleen cockpit gebruikt dit</div>
+        </div>
+        <div class="grid grid-cols-12 px-6 py-4 border-b border-gray-100 items-center">
+          <div class="col-span-5 font-mono text-sm text-gray-900">apps/devhub/src/</div>
+          <div class="col-span-3">
+            <span class="tag bg-amber-100 text-amber-800">→ Verticaal</span>
+          </div>
+          <div class="col-span-4 text-sm text-gray-600">Alleen devhub gebruikt dit</div>
+        </div>
+        <div class="grid grid-cols-12 px-6 py-4 items-center">
+          <div class="col-span-5 font-mono text-sm text-gray-900">apps/portal/src/</div>
+          <div class="col-span-3">
+            <span class="tag bg-amber-100 text-amber-800">→ Verticaal</span>
+          </div>
+          <div class="col-span-4 text-sm text-gray-600">Alleen portal gebruikt dit</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ONZE SITUATIE NU ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Stand van zaken</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Hoe doen we het nu?</h2>
+        <p class="text-gray-600 max-w-3xl mb-10">
+          We zijn er deels al. Eerlijke stand per laag:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <div class="bg-primary-50 border-2 border-primary-200 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-mono text-sm font-bold text-primary-900">packages/database/queries/</span>
+              <span class="tag bg-primary-200 text-primary-800">✓ Goed</span>
+            </div>
+            <p class="text-sm text-gray-700">Horizontaal. Zoals het hoort voor gedeelde code.</p>
+          </div>
+
+          <div class="bg-primary-50 border-2 border-primary-200 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-mono text-sm font-bold text-primary-900">packages/database/mutations/</span>
+              <span class="tag bg-primary-200 text-primary-800">✓ Goed</span>
+            </div>
+            <p class="text-sm text-gray-700">Horizontaal. Goed.</p>
+          </div>
+
+          <div class="bg-amber-50 border-2 border-amber-200 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-mono text-sm font-bold text-amber-900">packages/ai/pipeline/</span>
+              <span class="tag bg-amber-200 text-amber-800">△ Shallow-drift</span>
+            </div>
+            <p class="text-sm text-gray-700">Horizontaal is juist — maar binnen de map zijn 20+ platte files. Zie vorige visualisatie.</p>
+          </div>
+
+          <div class="bg-primary-50 border-2 border-primary-200 rounded-lg p-5">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-mono text-sm font-bold text-primary-900">cockpit/src/components/</span>
+              <span class="tag bg-primary-200 text-primary-800">✓ Feature-gegroepeerd</span>
+            </div>
+            <p class="text-sm text-gray-700">Al verticaal: <code class="text-xs bg-white px-1 py-0.5 rounded">meetings/ themes/ emails/ review/ dashboard/ ...</code></p>
+          </div>
+
+          <div class="bg-amber-50 border-2 border-amber-200 rounded-lg p-5 md:col-span-2">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-mono text-sm font-bold text-amber-900">cockpit/src/actions/</span>
+              <span class="tag bg-amber-200 text-amber-800">△ Hybride in uitvoering</span>
+            </div>
+            <p class="text-sm text-gray-700 mb-2">
+              Deels plat (organizations, people, projects), deels submap
+              (themes/, meeting-pipeline/, meetings/). Inconsistent — maar
+              groeit de goede kant op.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HOE COCKPIT ERUIT ZOU KUNNEN ZIEN ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Toekomstbeeld</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Hoe cockpit eruit zou kunnen zien — volledig verticaal</h2>
+      <p class="text-gray-600 max-w-3xl mb-10">
+        Let op: <strong>geen aanbeveling om nu te migreren.</strong> Dit is het denkmodel.
+        Als je ooit merkt dat je constant zoekt naar "waar zit dat meetings-ding", is dít de vorm.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- NU -->
+        <div>
+          <div class="flex items-center mb-3">
+            <span class="status-dot bg-amber-500"></span>
+            <h3 class="font-semibold text-gray-900">Nu (verspreid)</h3>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 shadow-lg">
+            <div class="text-gray-400">apps/cockpit/src/</div>
+            <div class="pl-3">├─ actions/</div>
+            <div class="pl-6 text-yellow-200">│  ├─ meetings.ts</div>
+            <div class="pl-6 text-yellow-200">│  ├─ meetings/field-updates.ts</div>
+            <div class="pl-6 text-yellow-200">│  └─ meetings/lifecycle.ts</div>
+            <div class="pl-3">├─ components/</div>
+            <div class="pl-6 text-yellow-200">│  └─ meetings/*.tsx</div>
+            <div class="pl-3">└─ app/(dashboard)/</div>
+            <div class="pl-6 text-yellow-200">   └─ meetings/page.tsx</div>
+            <div class="mt-3 pt-2 border-t border-gray-700 text-gray-500">
+              <div>// Meetings-code zit op 3 plekken</div>
+              <div>// AI moet 3 mappen lezen</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STRAKS -->
+        <div>
+          <div class="flex items-center mb-3">
+            <span class="status-dot bg-primary-500"></span>
+            <h3 class="font-semibold text-gray-900">Straks (bij elkaar)</h3>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 shadow-lg">
+            <div class="text-gray-400">apps/cockpit/src/</div>
+            <div class="pl-3">├─ features/</div>
+            <div class="pl-6 text-primary-300">│  ├─ meetings/</div>
+            <div class="pl-9 text-gray-400">│  │  ├─ actions/</div>
+            <div class="pl-9 text-gray-400">│  │  ├─ components/</div>
+            <div class="pl-9 text-primary-300">│  │  └─ index.ts</div>
+            <div class="pl-6 text-primary-300">│  ├─ themes/</div>
+            <div class="pl-6 text-primary-300">│  ├─ emails/</div>
+            <div class="pl-6 text-primary-300">│  └─ review/</div>
+            <div class="pl-3">└─ app/(dashboard)/</div>
+            <div class="pl-6 text-gray-400">   └─ meetings/page.tsx</div>
+            <div class="mt-3 pt-2 border-t border-gray-700 text-primary-200">
+              <div>// Eén deur per feature:</div>
+              <div class="text-green-300">import {'{ ... }'} from '@/features/meetings'</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 bg-gradient-to-br from-amber-50 to-white border border-amber-200 rounded-xl p-6">
+        <div class="flex gap-4 items-start">
+          <div class="text-2xl">⚠️</div>
+          <div>
+            <h3 class="font-bold text-amber-900 mb-1">Belangrijke nuance</h3>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              Dit is <strong>geen migratie-sprint.</strong> De winst zit in
+              <strong>consistent toepassen bij nieuwe features</strong>, niet in
+              het herordenen van bestaande code. Blast radius van een rewrite
+              weegt niet op tegen de ergonomische winst — zolang je de huidige
+              structuur niet als pijnlijk ervaart.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DE REGEL ============ -->
+    <section class="bg-primary-700 text-white py-14">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <p class="text-xs uppercase tracking-widest text-primary-200 font-semibold mb-4">De regel</p>
+        <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-6">
+          "Verticaal als de feature geïsoleerd is in één app.<br>
+          Horizontaal als de code gedeeld wordt."
+        </h2>
+        <p class="text-primary-100 text-lg max-w-2xl mx-auto leading-relaxed">
+          Eén vraag bij elke nieuwe map: <em>"Wordt dit door meerdere apps
+          gebruikt?"</em> Ja → horizontaal (per laag). Nee → verticaal (per feature).
+        </p>
+        <div class="mt-8 inline-flex items-center gap-3 bg-primary-600 border border-primary-400 rounded-full px-5 py-2.5 text-sm">
+          <span>📎</span>
+          <span>Zie ook: <code class="font-mono bg-primary-800 px-2 py-0.5 rounded">sketch-architectuur-deep-vs-shallow-modules.html</code></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="max-w-6xl mx-auto px-6 py-8 text-center text-xs text-gray-400">
+      <p>Deel 2 van een tweeluik over codebase-organisatie.</p>
+    </footer>
+
+  </body>
+</html>

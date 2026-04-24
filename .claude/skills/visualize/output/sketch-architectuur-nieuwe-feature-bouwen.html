@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Architectuur: Nieuwe feature bouwen in het hybride model</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+            },
+            fontFamily: {
+              mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .step-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: #006B3F;
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .arrow-down {
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 10px solid #9ca3af;
+        margin: 4px auto;
+      }
+      .arrow-up-green {
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 10px solid #006B3F;
+      }
+      .decision-diamond {
+        width: 180px;
+        height: 100px;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 2px solid #f59e0b;
+        transform: rotate(45deg);
+        position: relative;
+      }
+      .decision-diamond-inner {
+        transform: rotate(-45deg);
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 8px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+
+    <!-- ============ HERO ============ -->
+    <section class="max-w-6xl mx-auto px-6 pt-12 pb-10">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Architectuur-principe · deel 3</p>
+      <h1 class="text-4xl font-bold text-gray-900 leading-tight mb-4">
+        Een nieuwe feature bouwen — waar komt wat?
+      </h1>
+      <p class="text-lg text-gray-600 max-w-3xl leading-relaxed">
+        Deel 1 en 2 waren theorie. Dit is de praktijk: <strong>als je morgen
+        een feature wilt toevoegen, weet je van tevoren precies waar elk bestand
+        heen gaat.</strong> Geen "waar hoort dit thuis"-momenten meer.
+      </p>
+    </section>
+
+    <!-- ============ DEEL A: DE CODEBASE IN BEELD ============ -->
+    <section class="max-w-6xl mx-auto px-6 pb-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Deel A · de kaart</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Zo ziet het hybride model er op de schijf uit</h2>
+      <p class="text-gray-600 max-w-3xl mb-8">
+        Onderaan de gedeelde fundering (horizontaal). Daarboven de app-specifieke
+        features (verticaal). Pijlen = import-richting.
+      </p>
+
+      <!-- BOVENKANT: ROUTES -->
+      <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-5 mb-1">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🗺️</span>
+            <div>
+              <div class="font-bold text-blue-900">apps/cockpit/src/app/</div>
+              <div class="text-xs text-blue-700">URL-routes — Next.js App Router dicteert deze structuur</div>
+            </div>
+          </div>
+          <span class="tag bg-blue-200 text-blue-900">Next.js</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 font-mono text-xs">
+          <div class="bg-white border border-blue-100 rounded px-2 py-1.5">(dashboard)/page.tsx</div>
+          <div class="bg-white border border-blue-100 rounded px-2 py-1.5">meetings/page.tsx</div>
+          <div class="bg-white border border-blue-100 rounded px-2 py-1.5">themes/page.tsx</div>
+          <div class="bg-white border border-blue-100 rounded px-2 py-1.5">review/page.tsx</div>
+        </div>
+      </div>
+
+      <div class="flex justify-center"><div class="arrow-down"></div></div>
+      <div class="text-center text-xs text-gray-500 mb-1 font-mono">import from '@/features/…'</div>
+      <div class="flex justify-center"><div class="arrow-down"></div></div>
+
+      <!-- MIDDEN: FEATURES (VERTICAAL) -->
+      <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-5 mb-1">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🧩</span>
+            <div>
+              <div class="font-bold text-amber-900">apps/cockpit/src/features/</div>
+              <div class="text-xs text-amber-700">App-specifieke features — verticaal gegroepeerd</div>
+            </div>
+          </div>
+          <span class="tag bg-amber-200 text-amber-900">Verticaal</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <!-- meetings feature -->
+          <div class="bg-white border border-amber-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-amber-900 mb-2">meetings/</div>
+            <div class="space-y-1 text-[10px] font-mono text-gray-600">
+              <div>├─ actions/</div>
+              <div>├─ components/</div>
+              <div class="text-primary-700 font-semibold">└─ index.ts ←</div>
+            </div>
+          </div>
+          <div class="bg-white border border-amber-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-amber-900 mb-2">themes/</div>
+            <div class="space-y-1 text-[10px] font-mono text-gray-600">
+              <div>├─ actions/</div>
+              <div>├─ components/</div>
+              <div class="text-primary-700 font-semibold">└─ index.ts ←</div>
+            </div>
+          </div>
+          <div class="bg-white border border-amber-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-amber-900 mb-2">emails/</div>
+            <div class="space-y-1 text-[10px] font-mono text-gray-600">
+              <div>├─ actions/</div>
+              <div>├─ components/</div>
+              <div class="text-primary-700 font-semibold">└─ index.ts ←</div>
+            </div>
+          </div>
+          <div class="bg-white border border-amber-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-amber-900 mb-2">review/</div>
+            <div class="space-y-1 text-[10px] font-mono text-gray-600">
+              <div>├─ actions/</div>
+              <div>├─ components/</div>
+              <div class="text-primary-700 font-semibold">└─ index.ts ←</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-center"><div class="arrow-down"></div></div>
+      <div class="text-center text-xs text-gray-500 mb-1 font-mono">import from '@repo/…'</div>
+      <div class="flex justify-center"><div class="arrow-down"></div></div>
+
+      <!-- ONDER: PACKAGES (HORIZONTAAL) -->
+      <div class="bg-primary-50 border-2 border-primary-200 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📦</span>
+            <div>
+              <div class="font-bold text-primary-900">packages/</div>
+              <div class="text-xs text-primary-700">Gedeelde code — horizontaal per technische laag</div>
+            </div>
+          </div>
+          <span class="tag bg-primary-200 text-primary-900">Horizontaal · Shared</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div class="bg-white border border-primary-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-primary-900 mb-2">@repo/database</div>
+            <div class="space-y-0.5 text-[10px] font-mono text-gray-600">
+              <div>queries/</div>
+              <div>mutations/</div>
+              <div>supabase/</div>
+            </div>
+          </div>
+          <div class="bg-white border border-primary-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-primary-900 mb-2">@repo/ai</div>
+            <div class="space-y-0.5 text-[10px] font-mono text-gray-600">
+              <div>pipeline/</div>
+              <div>agents/</div>
+              <div>embeddings</div>
+            </div>
+          </div>
+          <div class="bg-white border border-primary-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-primary-900 mb-2">@repo/ui</div>
+            <div class="space-y-0.5 text-[10px] font-mono text-gray-600">
+              <div>Button</div>
+              <div>Card</div>
+              <div>Badge</div>
+            </div>
+          </div>
+          <div class="bg-white border border-primary-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-primary-900 mb-2">@repo/auth</div>
+            <div class="space-y-0.5 text-[10px] font-mono text-gray-600">
+              <div>helpers</div>
+              <div>middleware</div>
+            </div>
+          </div>
+          <div class="bg-white border border-primary-200 rounded-lg p-3">
+            <div class="font-mono text-xs font-bold text-primary-900 mb-2">@repo/mcp</div>
+            <div class="space-y-0.5 text-[10px] font-mono text-gray-600">
+              <div>server</div>
+              <div>tools</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="mt-6 flex flex-wrap gap-4 justify-center text-xs">
+        <div class="flex items-center gap-2">
+          <span class="tag bg-blue-200 text-blue-900">Next.js</span>
+          <span class="text-gray-600">URL-routes (framework-gedicteerd)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="tag bg-amber-200 text-amber-900">Verticaal</span>
+          <span class="text-gray-600">Per feature (alleen één app)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="tag bg-primary-200 text-primary-900">Horizontaal</span>
+          <span class="text-gray-600">Per laag (meerdere apps)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DEEL B: NIEUWE FEATURE BOUWEN ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Deel B · in de praktijk</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">7 stappen: feature "Announcements" bouwen</h2>
+        <p class="text-gray-600 max-w-3xl mb-2">
+          <strong>Scenario:</strong> team-aankondigingen die op het dashboard
+          verschijnen (titel, body, wie heeft 'm geplaatst, datum).
+        </p>
+        <p class="text-gray-500 max-w-3xl mb-10 text-sm italic">
+          Fictief voorbeeld — puur om alle 7 stappen te laten zien.
+        </p>
+
+        <div class="space-y-4">
+
+          <!-- STAP 1 -->
+          <div class="bg-primary-50 border-2 border-primary-200 rounded-xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="step-num">1</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <h3 class="font-bold text-gray-900">Database migratie</h3>
+                  <span class="tag bg-primary-200 text-primary-900">Horizontaal · shared schema</span>
+                </div>
+                <div class="font-mono text-xs text-gray-700 bg-white border border-primary-100 rounded px-3 py-2 mb-2">
+                  supabase/migrations/20260425_announcements.sql
+                </div>
+                <p class="text-sm text-gray-600">
+                  Tabel <code class="text-xs bg-white px-1 py-0.5 rounded">announcements</code>
+                  met kolommen <code class="text-xs bg-white px-1 py-0.5 rounded">id · title · body · author_id · created_at</code>.
+                  RLS policy erbij. Eén database = één schema, gedeeld door alle apps.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAP 2 -->
+          <div class="bg-primary-50 border-2 border-primary-200 rounded-xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="step-num">2</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <h3 class="font-bold text-gray-900">Types regenereren</h3>
+                  <span class="tag bg-primary-200 text-primary-900">Horizontaal · auto-gegenereerd</span>
+                </div>
+                <div class="font-mono text-xs text-gray-700 bg-white border border-primary-100 rounded px-3 py-2 mb-2">
+                  packages/database/src/types/database.ts
+                </div>
+                <p class="text-sm text-gray-600">
+                  <code class="text-xs bg-white px-1 py-0.5 rounded">npm run types:generate</code> → Supabase levert TypeScript-types
+                  voor de nieuwe tabel. Automatisch. Niet handmatig editen.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAP 3 -->
+          <div class="bg-primary-50 border-2 border-primary-200 rounded-xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="step-num">3</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <h3 class="font-bold text-gray-900">Queries (lezen)</h3>
+                  <span class="tag bg-primary-200 text-primary-900">Horizontaal · gedeeld</span>
+                </div>
+                <div class="font-mono text-xs text-gray-700 bg-white border border-primary-100 rounded px-3 py-2 mb-2">
+                  packages/database/src/queries/announcements.ts
+                </div>
+                <p class="text-sm text-gray-600">
+                  <code class="text-xs bg-white px-1 py-0.5 rounded">listAnnouncements()</code>,
+                  <code class="text-xs bg-white px-1 py-0.5 rounded">getAnnouncementById()</code>.
+                  Horizontaal omdat zowel cockpit als portal straks aankondigingen kunnen tonen.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAP 4 -->
+          <div class="bg-primary-50 border-2 border-primary-200 rounded-xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="step-num">4</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <h3 class="font-bold text-gray-900">Mutations (schrijven)</h3>
+                  <span class="tag bg-primary-200 text-primary-900">Horizontaal · gedeeld</span>
+                </div>
+                <div class="font-mono text-xs text-gray-700 bg-white border border-primary-100 rounded px-3 py-2 mb-2">
+                  packages/database/src/mutations/announcements.ts
+                </div>
+                <p class="text-sm text-gray-600">
+                  <code class="text-xs bg-white px-1 py-0.5 rounded">insertAnnouncement()</code>,
+                  <code class="text-xs bg-white px-1 py-0.5 rounded">deleteAnnouncement()</code>.
+                  Dezelfde reden als queries: gedeeld, dus horizontaal.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAP 5 -->
+          <div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="step-num" style="background:#b45309">5</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <h3 class="font-bold text-gray-900">Feature map — het hart</h3>
+                  <span class="tag bg-amber-200 text-amber-900">Verticaal · app-specifiek</span>
+                </div>
+                <div class="font-mono text-xs text-gray-700 bg-white border border-amber-200 rounded px-3 py-2 mb-3">
+                  apps/cockpit/src/features/announcements/
+                </div>
+
+                <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-300 mb-3">
+                  <div>announcements/</div>
+                  <div class="pl-3">├─ actions/</div>
+                  <div class="pl-6 text-yellow-200">│  └─ create.ts</div>
+                  <div class="pl-3">├─ components/</div>
+                  <div class="pl-6 text-yellow-200">│  ├─ announcement-card.tsx</div>
+                  <div class="pl-6 text-yellow-200">│  └─ announcement-form.tsx</div>
+                  <div class="pl-3 text-primary-300">└─ index.ts      ← de deur</div>
+                </div>
+
+                <p class="text-sm text-gray-700 leading-relaxed">
+                  Alle UI + actions bij elkaar. <code class="text-xs bg-white px-1 py-0.5 rounded">index.ts</code>
+                  exporteert alléén wat de route nodig heeft:
+                </p>
+                <div class="mt-2 bg-gray-900 rounded-lg p-3 font-mono text-xs text-primary-200">
+                  export { AnnouncementCard, AnnouncementForm } from './components/...'<br>
+                  export { createAnnouncement } from './actions/create'
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAP 6 -->
+          <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="step-num" style="background:#1d4ed8">6</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <h3 class="font-bold text-gray-900">Route (URL)</h3>
+                  <span class="tag bg-blue-200 text-blue-900">Next.js dicteert</span>
+                </div>
+                <div class="font-mono text-xs text-gray-700 bg-white border border-blue-100 rounded px-3 py-2 mb-2">
+                  apps/cockpit/src/app/(dashboard)/announcements/page.tsx
+                </div>
+                <p class="text-sm text-gray-600 mb-2">
+                  Ultra-dun bestand — alleen composeren, niet uitvoeren:
+                </p>
+                <div class="bg-gray-900 rounded-lg p-3 font-mono text-xs text-gray-200">
+                  <div class="text-primary-300">import {'{'} AnnouncementCard, AnnouncementForm {'}'} from '@/features/announcements'</div>
+                  <div class="text-primary-300">import {'{'} listAnnouncements {'}'} from '@repo/database/queries/announcements'</div>
+                  <div class="mt-2 text-gray-400">// Server Component haalt data op, rendert de feature-componenten</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STAP 7 -->
+          <div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-5">
+            <div class="flex items-start gap-4">
+              <div class="step-num" style="background:#b45309">7</div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <h3 class="font-bold text-gray-900">Dashboard-integratie</h3>
+                  <span class="tag bg-amber-200 text-amber-900">Verticaal · via de deur</span>
+                </div>
+                <div class="font-mono text-xs text-gray-700 bg-white border border-amber-200 rounded px-3 py-2 mb-2">
+                  apps/cockpit/src/features/dashboard/components/announcements-card.tsx
+                </div>
+                <p class="text-sm text-gray-600 mb-2">
+                  De dashboard-feature hergebruikt de announcements-componenten
+                  <strong>via de index.ts</strong> — niet via directe paden:
+                </p>
+                <div class="bg-gray-900 rounded-lg p-3 font-mono text-xs">
+                  <div class="text-green-300">// ✓ Via de deur</div>
+                  <div class="text-primary-200">import {'{'} AnnouncementCard {'}'} from '@/features/announcements'</div>
+                  <div class="mt-2 text-red-400">// ✗ Niet zo — dat is door de muur stappen</div>
+                  <div class="text-gray-500 line-through">import {'{'} AnnouncementCard {'}'} from '@/features/announcements/components/announcement-card'</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CHECKLIST -->
+        <div class="mt-10 bg-gradient-to-br from-primary-50 to-white border border-primary-200 rounded-xl p-6">
+          <h3 class="font-bold text-primary-900 mb-3">🎯 Wat je nu hebt</h3>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600">✓</span>
+              <span><strong>Eén pagina</strong> om op te pakken: <code class="text-xs bg-white px-1 py-0.5 rounded border">/announcements</code></span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600">✓</span>
+              <span><strong>Eén map</strong> om de feature te begrijpen: <code class="text-xs bg-white px-1 py-0.5 rounded border">features/announcements/</code></span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600">✓</span>
+              <span><strong>Eén import</strong> voor hergebruik: <code class="text-xs bg-white px-1 py-0.5 rounded border">'@/features/announcements'</code></span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-primary-600">✓</span>
+              <span><strong>Portal kan meekijken</strong> zonder cockpit-code te kennen — via <code class="text-xs bg-white px-1 py-0.5 rounded border">@repo/database/queries/announcements</code></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DEEL C: BESLISBOOM ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Deel C · spiekbriefje</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">"Waar komt dit bestand?"</h2>
+      <p class="text-gray-600 max-w-3xl mb-10">
+        Vier vragen — volg de eerste die met "ja" wordt beantwoord.
+      </p>
+
+      <div class="space-y-3">
+
+        <!-- V1 -->
+        <div class="flex items-stretch gap-4">
+          <div class="w-10 flex-shrink-0 flex items-center justify-center">
+            <span class="text-2xl font-bold text-gray-300">1</span>
+          </div>
+          <div class="flex-1 bg-white border-2 border-gray-200 rounded-xl p-5 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div class="font-bold text-gray-900 mb-1">Is het een database-wijziging?</div>
+              <div class="text-sm text-gray-600">Migratie, RLS policy, seed data</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-500">→</span>
+              <div class="font-mono text-xs bg-primary-50 border border-primary-200 text-primary-900 rounded px-3 py-2">
+                supabase/migrations/
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- V2 -->
+        <div class="flex items-stretch gap-4">
+          <div class="w-10 flex-shrink-0 flex items-center justify-center">
+            <span class="text-2xl font-bold text-gray-300">2</span>
+          </div>
+          <div class="flex-1 bg-white border-2 border-gray-200 rounded-xl p-5 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div class="font-bold text-gray-900 mb-1">Wordt het door <strong>meerdere apps</strong> gebruikt?</div>
+              <div class="text-sm text-gray-600">Queries, mutations, agents, shared UI</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-500">→</span>
+              <div class="font-mono text-xs bg-primary-50 border border-primary-200 text-primary-900 rounded px-3 py-2">
+                packages/ · horizontaal
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- V3 -->
+        <div class="flex items-stretch gap-4">
+          <div class="w-10 flex-shrink-0 flex items-center justify-center">
+            <span class="text-2xl font-bold text-gray-300">3</span>
+          </div>
+          <div class="flex-1 bg-white border-2 border-gray-200 rounded-xl p-5 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div class="font-bold text-gray-900 mb-1">Is het een <strong>URL-route</strong>?</div>
+              <div class="text-sm text-gray-600">Pagina, layout, loading, error state</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-500">→</span>
+              <div class="font-mono text-xs bg-blue-50 border border-blue-200 text-blue-900 rounded px-3 py-2">
+                apps/[app]/src/app/ · Next.js
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- V4 -->
+        <div class="flex items-stretch gap-4">
+          <div class="w-10 flex-shrink-0 flex items-center justify-center">
+            <span class="text-2xl font-bold text-gray-300">4</span>
+          </div>
+          <div class="flex-1 bg-white border-2 border-gray-200 rounded-xl p-5 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div class="font-bold text-gray-900 mb-1">Anders — alles wat bij <strong>één feature</strong> hoort</div>
+              <div class="text-sm text-gray-600">Server Action, feature-component, feature-specifieke helper</div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-500">→</span>
+              <div class="font-mono text-xs bg-amber-50 border border-amber-200 text-amber-900 rounded px-3 py-2">
+                apps/[app]/src/features/[naam]/ · verticaal
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ SLOT ============ -->
+    <section class="bg-primary-700 text-white py-14">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <p class="text-xs uppercase tracking-widest text-primary-200 font-semibold mb-4">De kern</p>
+        <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-6">
+          Geen beslissingsmoeheid meer.
+        </h2>
+        <p class="text-primary-100 text-lg max-w-2xl mx-auto leading-relaxed mb-6">
+          Als je de vier vragen doorloopt, weet je precies waar elk bestand
+          heen gaat. AI weet het ook. De codebase vertelt zichzelf.
+        </p>
+        <div class="flex flex-wrap gap-3 justify-center">
+          <div class="bg-primary-600 border border-primary-400 rounded-full px-4 py-2 text-sm">
+            📎 Deel 1 — deep vs shallow modules
+          </div>
+          <div class="bg-primary-600 border border-primary-400 rounded-full px-4 py-2 text-sm">
+            📎 Deel 2 — horizontaal vs verticaal
+          </div>
+          <div class="bg-white text-primary-700 rounded-full px-4 py-2 text-sm font-semibold">
+            ✓ Deel 3 — nieuwe feature bouwen
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="max-w-6xl mx-auto px-6 py-8 text-center text-xs text-gray-400">
+      <p>Drieluik over codebase-organisatie. Open alle drie naast elkaar voor het volledige verhaal.</p>
+    </footer>
+
+  </body>
+</html>

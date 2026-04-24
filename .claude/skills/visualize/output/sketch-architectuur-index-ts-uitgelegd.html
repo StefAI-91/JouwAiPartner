@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>index.ts uitgelegd — wat is die "deur" eigenlijk?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0fdf4",
+                100: "#dcfce7",
+                200: "#bbf7d0",
+                300: "#86efac",
+                400: "#4ade80",
+                500: "#006B3F",
+                600: "#005a35",
+                700: "#004a2b",
+                800: "#003d23",
+                900: "#00301b",
+              },
+            },
+            fontFamily: {
+              mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body::before {
+        content: "🎓 UITLEG — index.ts van A tot Z";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+      }
+      /* Kamer (zonder deur) */
+      .room-wall {
+        background: linear-gradient(180deg, #fecaca 0%, #fca5a5 100%);
+        border: 4px solid #991b1b;
+        border-radius: 12px;
+        position: relative;
+      }
+      .room-door {
+        background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 4px solid #006B3F;
+        border-radius: 12px;
+        position: relative;
+      }
+      .door-handle {
+        position: absolute;
+        bottom: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 28px;
+        background: #006B3F;
+        border-radius: 0 0 12px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+      }
+      .hole {
+        width: 20px;
+        height: 20px;
+        background: #7f1d1d;
+        border-radius: 999px;
+        position: absolute;
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      .step-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: #006B3F;
+        color: white;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .arrow-right {
+        width: 0;
+        height: 0;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-left: 12px solid #006B3F;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+
+    <!-- ============ HERO ============ -->
+    <section class="max-w-6xl mx-auto px-6 pt-12 pb-10">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Uitleg · zonder jargon</p>
+      <h1 class="text-4xl font-bold text-gray-900 leading-tight mb-4">
+        Wat is <code class="text-primary-700">index.ts</code> eigenlijk?
+      </h1>
+      <p class="text-lg text-gray-600 max-w-3xl leading-relaxed mb-6">
+        Gewoon een bestand. Maar met een speciale rol:
+        <strong class="text-primary-700">het is het doorgeefluik van een map.</strong>
+        Niks magisch, niks spannends. Laten we het stap voor stap afpellen.
+      </p>
+
+      <div class="bg-white border-2 border-primary-200 rounded-xl p-5 inline-block">
+        <div class="flex items-center gap-4">
+          <div class="text-4xl">📄</div>
+          <div>
+            <div class="text-xs uppercase tracking-widest text-primary-700 font-semibold">In één zin</div>
+            <div class="text-gray-900 font-medium max-w-lg">
+              <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded">index.ts</code>
+              is een bestand dat andere bestanden uit dezelfde map
+              <em>opnieuw naar buiten publiceert</em>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ METAFOOR: KAMER MET/ZONDER DEUR ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-14">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">De metafoor</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-8">Een kamer met of zonder deur</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+          <!-- Kamer zonder deur -->
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <span class="tag bg-red-200 text-red-900">❌ Zonder index.ts</span>
+              <span class="text-sm text-gray-600">— kamer zonder deur</span>
+            </div>
+            <div class="room-wall p-8 h-64 flex flex-col items-center justify-center">
+              <div class="text-center text-red-900 font-bold text-lg mb-2">actions/themes/</div>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="bg-white border border-red-300 rounded px-3 py-2 text-xs font-mono">crud.ts</div>
+                <div class="bg-white border border-red-300 rounded px-3 py-2 text-xs font-mono">review.ts</div>
+                <div class="bg-white border border-red-300 rounded px-3 py-2 text-xs font-mono">regenerate.ts</div>
+              </div>
+              <!-- Gaten in de muur -->
+              <div class="hole" style="top: 20%; left: 10%;"></div>
+              <div class="hole" style="top: 60%; left: 90%;"></div>
+              <div class="hole" style="bottom: 15%; left: 30%;"></div>
+            </div>
+            <p class="text-sm text-gray-600 mt-3 leading-relaxed">
+              Om bij een functie te komen, moet elke consumer <em>door de muur
+              breken</em> op de juiste plek. "Ik wil <code class="text-xs bg-gray-100 px-1 rounded">createTheme</code>
+              — die zit in <code class="text-xs bg-gray-100 px-1 rounded">crud.ts</code>." Iedereen moet alle interne bestanden kennen.
+            </p>
+          </div>
+
+          <!-- Kamer met deur -->
+          <div>
+            <div class="flex items-center gap-2 mb-4">
+              <span class="tag bg-primary-200 text-primary-900">✓ Met index.ts</span>
+              <span class="text-sm text-gray-600">— één duidelijke deur</span>
+            </div>
+            <div class="room-door p-8 h-64 flex flex-col items-center justify-center">
+              <div class="text-center text-primary-900 font-bold text-lg mb-2">actions/themes/</div>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="bg-white border border-primary-300 rounded px-3 py-2 text-xs font-mono">crud.ts</div>
+                <div class="bg-white border border-primary-300 rounded px-3 py-2 text-xs font-mono">review.ts</div>
+                <div class="bg-white border border-primary-300 rounded px-3 py-2 text-xs font-mono">regenerate.ts</div>
+              </div>
+              <div class="mt-4 bg-primary-700 text-white text-xs font-mono px-3 py-1 rounded">+ index.ts</div>
+              <div class="door-handle">DEUR</div>
+            </div>
+            <p class="text-sm text-gray-600 mt-3 leading-relaxed">
+              Consumers kloppen op één deur. <code class="text-xs bg-gray-100 px-1 rounded">index.ts</code>
+              regelt welke functies naar binnen/buiten gaan. Consumer hoeft niet
+              te weten welke interne bestanden er zijn.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VOOR/NA IMPORTS ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Het concrete verschil</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Zelfde behoefte, andere import</h2>
+      <p class="text-gray-600 max-w-3xl mb-10">
+        Stel: een component wil drie functies gebruiken — <code class="text-sm bg-gray-100 px-1 rounded">createTheme</code>, <code class="text-sm bg-gray-100 px-1 rounded">approveTheme</code>, <code class="text-sm bg-gray-100 px-1 rounded">regenerateTheme</code>.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- ZONDER -->
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="tag bg-red-200 text-red-900">❌ Zonder</span>
+            <span class="text-sm text-gray-600">— 3 imports, 3 paden</span>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-200 shadow-lg">
+            <div class="text-gray-500">// consumer moet weten waar alles zit</div>
+            <div class="mt-2 text-yellow-200">import {'{ createTheme }'} from '@/actions/themes/crud'</div>
+            <div class="text-yellow-200">import {'{ approveTheme }'} from '@/actions/themes/review'</div>
+            <div class="text-yellow-200">import {'{ regenerateTheme }'} from '@/actions/themes/regenerate'</div>
+          </div>
+          <div class="mt-3 text-sm text-gray-600 space-y-1">
+            <div class="flex items-start gap-2"><span class="text-red-500">✗</span><span>3 import-regels</span></div>
+            <div class="flex items-start gap-2"><span class="text-red-500">✗</span><span>Consumer kent alle interne bestandsnamen</span></div>
+            <div class="flex items-start gap-2"><span class="text-red-500">✗</span><span>Hernoem <code class="text-xs bg-gray-100 px-1 rounded">crud.ts</code> → alle consumers breken</span></div>
+          </div>
+        </div>
+
+        <!-- MET -->
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="tag bg-primary-200 text-primary-900">✓ Met index.ts</span>
+            <span class="text-sm text-gray-600">— 1 import, 1 pad</span>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4 font-mono text-xs text-gray-200 shadow-lg">
+            <div class="text-gray-500">// consumer noemt alleen de map</div>
+            <div class="mt-2 text-green-300">import {'{ createTheme, approveTheme, regenerateTheme }'}</div>
+            <div class="text-green-300 pl-9">from '@/actions/themes'</div>
+          </div>
+          <div class="mt-3 text-sm text-gray-600 space-y-1">
+            <div class="flex items-start gap-2"><span class="text-primary-600">✓</span><span>1 import-regel</span></div>
+            <div class="flex items-start gap-2"><span class="text-primary-600">✓</span><span>Consumer kent geen interne bestanden</span></div>
+            <div class="flex items-start gap-2"><span class="text-primary-600">✓</span><span>Hernoem <code class="text-xs bg-gray-100 px-1 rounded">crud.ts</code> → niemand merkt het</span></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ WAT STAAT ER IN INDEX.TS ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">De inhoud</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Wat staat er letterlijk in die <code class="text-primary-700">index.ts</code>?</h2>
+        <p class="text-gray-600 max-w-3xl mb-8">
+          Voor jullie <code class="text-sm bg-gray-100 px-1 rounded">themes/</code>-map: drie regels.
+          Echt. Niet meer.
+        </p>
+
+        <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm shadow-lg max-w-3xl">
+          <div class="text-gray-500 text-xs mb-3">// apps/cockpit/src/actions/themes/index.ts</div>
+          <div class="text-green-300">export * from './crud'</div>
+          <div class="text-green-300">export * from './review'</div>
+          <div class="text-green-300">export * from './regenerate'</div>
+        </div>
+
+        <div class="mt-6 bg-primary-50 border-l-4 border-primary-500 rounded-r-lg p-5 max-w-3xl">
+          <h3 class="font-bold text-primary-900 mb-2">Wat betekent <code class="text-sm">export *</code>?</h3>
+          <p class="text-sm text-gray-700 leading-relaxed">
+            <strong>"Alles wat <code class="text-xs bg-white px-1 rounded">crud.ts</code> naar buiten geeft, geef ik ook naar buiten."</strong>
+            Letterlijk een doorgeefluik. <code class="text-xs bg-white px-1 rounded">crud.ts</code>
+            exporteert <code class="text-xs bg-white px-1 rounded">createTheme</code> en <code class="text-xs bg-white px-1 rounded">updateTheme</code>?
+            Dan exporteert <code class="text-xs bg-white px-1 rounded">index.ts</code> die nu ook — zonder dat je ze apart hoeft op te noemen.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WAAROM HEET HET INDEX.TS ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">De naam</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Waarom heet het <code class="text-primary-700">index.ts</code> en niet bijvoorbeeld <code class="text-gray-500">main.ts</code>?</h2>
+
+      <div class="bg-white border-2 border-gray-200 rounded-xl p-6 mt-6">
+        <p class="text-gray-700 leading-relaxed mb-4">
+          Het is een oude conventie, net als bij websites. Als je naar
+          <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded">jouw-ai-partner.nl/</code>
+          gaat, toont de browser automatisch
+          <code class="text-sm bg-gray-100 px-1.5 py-0.5 rounded">index.html</code> — zonder dat je dat in de URL hoeft te zetten.
+        </p>
+        <p class="text-gray-700 leading-relaxed mb-6">
+          TypeScript en Node.js doen precies hetzelfde trucje met mappen:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="text-xs uppercase tracking-widest text-blue-700 font-semibold mb-2">Website-wereld</div>
+            <div class="font-mono text-sm text-gray-800">
+              <div class="text-blue-900">jouw-ai-partner.nl/</div>
+              <div class="text-gray-500 text-xs mt-1">→ browser opent automatisch</div>
+              <div class="text-blue-700 mt-1">index.html</div>
+            </div>
+          </div>
+          <div class="bg-primary-50 border border-primary-200 rounded-lg p-4">
+            <div class="text-xs uppercase tracking-widest text-primary-700 font-semibold mb-2">TypeScript-wereld</div>
+            <div class="font-mono text-sm text-gray-800">
+              <div class="text-primary-900">'@/actions/themes'</div>
+              <div class="text-gray-500 text-xs mt-1">→ TypeScript opent automatisch</div>
+              <div class="text-primary-700 mt-1">themes/index.ts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LIVE FLOW ============ -->
+    <section class="bg-white border-t border-b border-gray-200 py-16">
+      <div class="max-w-6xl mx-auto px-6">
+        <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">Hoe werkt het écht?</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-3">Stap voor stap: wat gebeurt er achter de schermen?</h2>
+        <p class="text-gray-600 max-w-3xl mb-10">
+          Stel: het component <code class="text-sm bg-gray-100 px-1 rounded">ThemeEditForm</code> wil een thema bijwerken door <code class="text-sm bg-gray-100 px-1 rounded">updateTheme()</code> aan te roepen.
+        </p>
+
+        <div class="space-y-4">
+
+          <!-- Stap 1 -->
+          <div class="bg-white border-2 border-primary-200 rounded-xl p-5 flex items-start gap-4">
+            <div class="step-badge">1</div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-2">ThemeEditForm schrijft een import</div>
+              <div class="bg-gray-900 rounded-lg p-3 font-mono text-xs text-green-300">
+                import {'{ updateTheme }'} from '@/actions/themes'
+              </div>
+              <p class="text-sm text-gray-600 mt-2">
+                Niks bijzonders — gewoon "ik wil deze functie uit deze map".
+              </p>
+            </div>
+          </div>
+
+          <!-- Stap 2 -->
+          <div class="bg-white border-2 border-primary-200 rounded-xl p-5 flex items-start gap-4">
+            <div class="step-badge">2</div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-2">TypeScript zoekt in de map</div>
+              <p class="text-sm text-gray-600 mb-2">
+                TypeScript ziet "map, geen bestand". Dus zoekt hij standaard naar <code class="text-xs bg-gray-100 px-1 rounded">themes/index.ts</code>.
+              </p>
+              <div class="bg-gray-900 rounded-lg p-3 font-mono text-xs">
+                <div class="text-gray-400">// ziet: '@/actions/themes' → map</div>
+                <div class="text-primary-200">→ open themes/index.ts</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stap 3 -->
+          <div class="bg-white border-2 border-primary-200 rounded-xl p-5 flex items-start gap-4">
+            <div class="step-badge">3</div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-2">index.ts wijst naar de juiste file</div>
+              <p class="text-sm text-gray-600 mb-2">
+                index.ts zegt: "updateTheme? Die komt uit <code class="text-xs bg-gray-100 px-1 rounded">./crud</code>." (Want <code class="text-xs bg-gray-100 px-1 rounded">export * from './crud'</code> heeft hem doorgegeven.)
+              </p>
+              <div class="bg-gray-900 rounded-lg p-3 font-mono text-xs">
+                <div class="text-primary-200">→ open themes/crud.ts</div>
+                <div class="text-primary-200">→ vind updateTheme</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stap 4 -->
+          <div class="bg-white border-2 border-primary-200 rounded-xl p-5 flex items-start gap-4">
+            <div class="step-badge">4</div>
+            <div class="flex-1">
+              <div class="font-semibold text-gray-900 mb-2">Component krijgt de functie</div>
+              <p class="text-sm text-gray-600">
+                <code class="text-xs bg-gray-100 px-1 rounded">ThemeEditForm</code> kan nu <code class="text-xs bg-gray-100 px-1 rounded">updateTheme(...)</code> aanroepen —
+                <strong>zonder ooit te weten dat hij uit <code class="text-xs bg-white px-1 rounded">crud.ts</code> komt.</strong>
+                Het component kent alleen de voordeur.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WAT WINT/VERLIEST ============ -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <p class="text-xs uppercase tracking-widest text-primary-600 font-semibold mb-3">De balans</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Wat levert dit op?</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        <div class="bg-primary-50 border-2 border-primary-200 rounded-xl p-5">
+          <div class="text-2xl mb-2">🤖</div>
+          <h3 class="font-bold text-primary-900 mb-2">Voor Claude / AI</h3>
+          <p class="text-sm text-gray-700">
+            Eén plek om te onthouden per feature. AI hoeft niet te raden welk bestand welke functie heeft. "Themes-dingen? Kijk achter de deur van <code class="text-xs bg-white px-1 rounded">themes/</code>."
+          </p>
+        </div>
+
+        <div class="bg-primary-50 border-2 border-primary-200 rounded-xl p-5">
+          <div class="text-2xl mb-2">🔧</div>
+          <h3 class="font-bold text-primary-900 mb-2">Voor refactoring</h3>
+          <p class="text-sm text-gray-700">
+            Kun je interne bestanden hernoemen of splitsen zonder dat consumers iets merken. De deur blijft hetzelfde, de kamer erachter mag veranderen.
+          </p>
+        </div>
+
+        <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-5">
+          <div class="text-2xl mb-2">⚖️</div>
+          <h3 class="font-bold text-amber-900 mb-2">Wat je verliest</h3>
+          <p class="text-sm text-gray-700">
+            Consumer kan niet meer direct bij een intern bestand — móét via de deur. <strong>Dat is juist de bedoeling</strong> (geen achterdeurtjes), maar soms voelt het beperkend.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ AHA SLOT ============ -->
+    <section class="bg-primary-700 text-white py-14">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <p class="text-xs uppercase tracking-widest text-primary-200 font-semibold mb-4">Samengevat</p>
+        <h2 class="text-3xl md:text-4xl font-bold leading-tight mb-6">
+          <code class="text-white">index.ts</code> = doorgeefluik. Niks meer.
+        </h2>
+        <p class="text-primary-100 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
+          Een bestand van 3 regels dat zegt: "deze functies mag de buitenwereld
+          zien, gebruik de map-naam om ze te importeren."
+        </p>
+        <div class="inline-flex items-center gap-3 bg-primary-600 border border-primary-400 rounded-full px-5 py-2.5 text-sm">
+          <span>🎯</span>
+          <span>Voor ons: 4 zulke bestandjes maken — themes, meetings, meeting-pipeline, email</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="max-w-6xl mx-auto px-6 py-8 text-center text-xs text-gray-400">
+      <p>Uitleg bij het uitvoeringsplan · zie ook sketch-architectuur-stap1-schoonmaak-actions.html</p>
+    </footer>
+
+  </body>
+</html>
