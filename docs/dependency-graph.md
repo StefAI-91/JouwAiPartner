@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 484 |
+| Files scanned | 485 |
 | Exported functions/constants | 765 |
 | Exported types/interfaces | 250 |
 | Cross-package imports | 579 |
@@ -300,7 +300,7 @@
 **Depends on:**
 - `@repo/auth/access` → isAdmin
 
-### `queries/project-access.ts`
+### `queries/projects/access.ts`
 
 **Exports:**
 - `listAccessibleProjects()`
@@ -310,16 +310,7 @@
 **Depends on:**
 - `@repo/auth/access` → listAccessibleProjectIds
 
-### `queries/project-reviews.ts`
-
-**Exports:**
-- `getLatestProjectReview()`
-- `listProjectReviews()`
-- `getHealthTrend()`
-
-**Types:** `ProjectReviewRow`
-
-### `queries/projects.ts`
+### `queries/projects/core.ts`
 
 **Exports:**
 - `listProjects()`
@@ -334,6 +325,15 @@
 - `matchProjectsByEmbedding()`
 
 **Types:** `ProjectListItem`, `ProjectDetail`, `FocusProject`, `ActiveProjectForContext`
+
+### `queries/projects/reviews.ts`
+
+**Exports:**
+- `getLatestProjectReview()`
+- `listProjectReviews()`
+- `getHealthTrend()`
+
+**Types:** `ProjectReviewRow`
 
 ### `queries/reports.ts`
 
@@ -4198,20 +4198,13 @@ Which queries are used where across the codebase.
 | `findPeopleByEmails()` | `packages/ai/src/pipeline/participant-helpers.ts` |
 | `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 
-### queries/project-access.ts
+### queries/projects/access.ts
 
 | Query | Used in |
 |-------|---------|
 | `listAccessibleProjects()` | `apps/devhub/src/app/(app)/layout.tsx`, `apps/devhub/src/app/(app)/page.tsx`, `apps/devhub/src/app/(app)/settings/slack/page.tsx` |
 
-### queries/project-reviews.ts
-
-| Query | Used in |
-|-------|---------|
-| `getLatestProjectReview()` | `apps/devhub/src/app/(app)/page.tsx` |
-| `getHealthTrend()` | `apps/devhub/src/app/(app)/page.tsx` |
-
-### queries/projects.ts
+### queries/projects/core.ts
 
 | Query | Used in |
 |-------|---------|
@@ -4223,6 +4216,13 @@ Which queries are used where across the codebase.
 | `getActiveProjectsForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/entity-resolution.ts` |
+
+### queries/projects/reviews.ts
+
+| Query | Used in |
+|-------|---------|
+| `getLatestProjectReview()` | `apps/devhub/src/app/(app)/page.tsx` |
+| `getHealthTrend()` | `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/reports.ts
 
@@ -4245,7 +4245,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getLatestSummary()` | `packages/database/src/queries/management-insights.ts`, `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects.ts`, `packages/database/src/queries/weekly-summary.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
+| `getLatestSummary()` | `packages/database/src/queries/management-insights.ts`, `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/weekly-summary.ts`, `packages/ai/src/pipeline/summary-pipeline.ts` |
 
 ### queries/tasks.ts
 

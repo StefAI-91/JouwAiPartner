@@ -14,6 +14,8 @@
     "./queries/issues/*": "./src/queries/issues/*.ts",
     "./queries/meetings": "./src/queries/meetings/index.ts",
     "./queries/meetings/*": "./src/queries/meetings/*.ts",
+    "./queries/projects": "./src/queries/projects/index.ts",
+    "./queries/projects/*": "./src/queries/projects/*.ts",
     "./queries/*": "./src/queries/*.ts",
     "./mutations/*": "./src/mutations/*.ts",
     "./types/*": "./src/types/*.ts",

@@ -1,5 +1,5 @@
-import { listAccessibleProjects } from "@repo/database/queries/project-access";
-import { getLatestProjectReview, getHealthTrend } from "@repo/database/queries/project-reviews";
+import { listAccessibleProjects } from "@repo/database/queries/projects/access";
+import { getLatestProjectReview, getHealthTrend } from "@repo/database/queries/projects/reviews";
 import { getIssueCounts, countCriticalUnassigned } from "@repo/database/queries/issues";
 import { getAuthenticatedUser, createPageClient } from "@repo/auth/helpers";
 import { redirect } from "next/navigation";

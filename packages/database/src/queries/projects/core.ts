@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminClient } from "../supabase/admin";
-import { getLatestSummary } from "./summaries";
+import { getAdminClient } from "../../supabase/admin";
+import { getLatestSummary } from "../summaries";
 
 export interface ProjectListItem {
   id: string;

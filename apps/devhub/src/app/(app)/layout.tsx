@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopBar } from "@/components/layout/top-bar";
-import { listAccessibleProjects } from "@repo/database/queries/project-access";
+import { listAccessibleProjects } from "@repo/database/queries/projects/access";
 import { getAuthenticatedUser, createPageClient } from "@repo/auth/helpers";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

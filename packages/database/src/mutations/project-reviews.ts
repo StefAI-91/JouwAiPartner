@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
-import type { ProjectReviewRow } from "../queries/project-reviews";
+import type { ProjectReviewRow } from "../queries/projects/reviews";
 
 export interface InsertProjectReviewData {
   project_id: string;
