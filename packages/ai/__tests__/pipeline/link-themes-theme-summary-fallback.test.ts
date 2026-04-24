@@ -31,7 +31,7 @@ vi.mock("@repo/database/queries/themes", () => ({
 vi.mock("@repo/database/queries/themes/review", () => ({
   listRejectedThemePairsForMeeting: (...args: [string]) => mockListRejected(...args),
 }));
-vi.mock("@repo/database/mutations/meeting-themes", () => ({
+vi.mock("@repo/database/mutations/meetings/themes", () => ({
   linkMeetingToThemes: (...args: unknown[]) => mockLinkMeeting(...args),
   clearMeetingThemes: (...args: unknown[]) => mockClearMeeting(...args),
   recalculateThemeStats: (...args: unknown[]) => mockRecalcStats(...args),

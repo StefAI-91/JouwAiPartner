@@ -161,7 +161,7 @@ toekomstige apps:
 | `@repo/database/queries/themes/dashboard`     | time-spent stats (fine-grained)     |
 | `@repo/database/queries/meetings/themes`      | cross-tabel junction                |
 | `@repo/database/mutations/themes`             | insert/update/archive               |
-| `@repo/database/mutations/meeting-themes`     | link/clear/recalc                   |
+| `@repo/database/mutations/meetings/themes`    | link/clear/recalc                   |
 | `@repo/database/mutations/extractions/themes` | link aan extractions                |
 | `@repo/ai/agents/theme-detector`              | runThemeDetector + prompt           |
 | `@repo/ai/agents/theme-emojis`                | emoji-catalogus                     |

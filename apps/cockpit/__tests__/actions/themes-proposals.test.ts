@@ -31,7 +31,7 @@ vi.mock("@repo/database/mutations/themes", () => ({
   archiveTheme: (...args: [string]) => mockArchiveTheme(...args),
   createVerifiedTheme: vi.fn(),
 }));
-vi.mock("@repo/database/mutations/meeting-themes", () => ({
+vi.mock("@repo/database/mutations/meetings/themes", () => ({
   rejectThemeMatchAsAdmin: (...args: [Record<string, unknown>]) => mockRejectMatch(...args),
   recalculateThemeStats: (...args: [string[]]) => mockRecalc(...args),
 }));
@@ -51,10 +51,7 @@ vi.mock("next/cache", () => ({
   revalidatePath: (...args: unknown[]) => mockRevalidate(...args),
 }));
 
-import {
-  confirmThemeProposalAction,
-  rejectThemeProposalAction,
-} from "../../src/features/themes/actions";
+import { confirmThemeProposalAction, rejectThemeProposalAction } from "@/features/themes/actions";
 
 const THEME_ID = "11111111-1111-4111-8111-111111111111";
 const MEETING_ID = "22222222-2222-4222-8222-222222222222";

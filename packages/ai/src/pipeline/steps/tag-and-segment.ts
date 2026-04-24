@@ -5,7 +5,7 @@ import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import {
   insertMeetingProjectSummaries,
   updateSegmentEmbedding,
-} from "@repo/database/mutations/meeting-project-summaries";
+} from "@repo/database/mutations/meetings/project-summaries";
 import type { IdentifiedProject } from "../../validations/gatekeeper";
 
 export interface TagAndSegmentInput {

@@ -7,7 +7,7 @@ import { isAdmin } from "@repo/auth/access";
 import {
   linkSegmentToProject,
   removeSegmentTag,
-} from "@repo/database/mutations/meeting-project-summaries";
+} from "@repo/database/mutations/meetings/project-summaries";
 import { getSegmentNameRaw } from "@repo/database/queries/meetings/project-summaries";
 import { getMeetingOrganizationId } from "@repo/database/queries/meetings";
 import { getProjectAliases } from "@repo/database/queries/projects";

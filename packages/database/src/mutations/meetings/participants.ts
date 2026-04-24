@@ -1,4 +1,4 @@
-import { getAdminClient } from "../supabase/admin";
+import { getAdminClient } from "../../supabase/admin";
 
 /**
  * Link participants (people) to a meeting via the meeting_participants table.
@@ -29,10 +29,7 @@ export async function linkMeetingParticipant(
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient()
     .from("meeting_participants")
-    .upsert(
-      { meeting_id: meetingId, person_id: personId },
-      { onConflict: "meeting_id,person_id" },
-    );
+    .upsert({ meeting_id: meetingId, person_id: personId }, { onConflict: "meeting_id,person_id" });
 
   if (error) return { error: error.message };
   return { success: true };

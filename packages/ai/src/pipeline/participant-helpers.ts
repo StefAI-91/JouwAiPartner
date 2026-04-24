@@ -1,5 +1,5 @@
 import { findPeopleByEmails } from "@repo/database/queries/people";
-import { linkMeetingParticipants } from "@repo/database/mutations/meeting-participants";
+import { linkMeetingParticipants } from "@repo/database/mutations/meetings/participants";
 import type { SpeakerMap } from "./speaker-map";
 
 export interface MeetingAttendee {

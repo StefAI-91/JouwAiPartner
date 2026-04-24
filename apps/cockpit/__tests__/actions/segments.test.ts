@@ -19,7 +19,7 @@ vi.mock("@repo/auth/access", () => ({
 
 const mockLinkSegmentToProject = vi.fn();
 const mockRemoveSegmentTag = vi.fn();
-vi.mock("@repo/database/mutations/meeting-project-summaries", () => ({
+vi.mock("@repo/database/mutations/meetings/project-summaries", () => ({
   linkSegmentToProject: (...args: unknown[]) => mockLinkSegmentToProject(...args),
   removeSegmentTag: (...args: unknown[]) => mockRemoveSegmentTag(...args),
 }));
@@ -68,7 +68,7 @@ describe("Segments Actions", () => {
 
   describe("linkSegmentToProjectAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/segments");
+      const mod = await import("@/actions/segments");
       return mod.linkSegmentToProjectAction;
     }
 
@@ -151,7 +151,7 @@ describe("Segments Actions", () => {
 
   describe("removeSegmentTagAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/segments");
+      const mod = await import("@/actions/segments");
       return mod.removeSegmentTagAction;
     }
 

@@ -15,7 +15,7 @@ import {
 import {
   linkMeetingParticipant,
   unlinkMeetingParticipant,
-} from "@repo/database/mutations/meeting-participants";
+} from "@repo/database/mutations/meetings/participants";
 import { listMeetingProjectIds, listMeetingParticipantIds } from "@repo/database/queries/meetings";
 import {
   updateTitleSchema,

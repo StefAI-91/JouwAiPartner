@@ -9,7 +9,7 @@ import {
 import {
   rejectThemeMatchAsAdmin,
   recalculateThemeStats,
-} from "@repo/database/mutations/meeting-themes";
+} from "@repo/database/mutations/meetings/themes";
 import {
   approveThemeSchema,
   rejectEmergingThemeSchema,

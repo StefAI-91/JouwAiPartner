@@ -16,7 +16,7 @@ import { buildSegments } from "@repo/ai/pipeline/segment-builder";
 import {
   insertMeetingProjectSummaries,
   updateSegmentEmbedding,
-} from "@repo/database/mutations/meeting-project-summaries";
+} from "@repo/database/mutations/meetings/project-summaries";
 import { embedBatch } from "@repo/ai/embeddings";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import type { IdentifiedProject } from "@repo/ai/validations/gatekeeper";

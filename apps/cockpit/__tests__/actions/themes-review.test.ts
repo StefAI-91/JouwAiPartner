@@ -33,7 +33,7 @@ vi.mock("@repo/database/mutations/themes", () => ({
   updateTheme: (...args: [string, Record<string, unknown>]) => mockUpdateTheme(...args),
   archiveTheme: (...args: [string]) => mockArchiveTheme(...args),
 }));
-vi.mock("@repo/database/mutations/meeting-themes", () => ({
+vi.mock("@repo/database/mutations/meetings/themes", () => ({
   rejectThemeMatchAsAdmin: (...args: [Record<string, unknown>]) => mockRejectMatch(...args),
   recalculateThemeStats: (...args: [string[]]) => mockRecalc(...args),
 }));
@@ -58,7 +58,7 @@ import {
   rejectEmergingThemeAction,
   rejectThemeMatchAction,
   regenerateMeetingThemesAction,
-} from "../../src/features/themes/actions";
+} from "@/features/themes/actions";
 
 const THEME_ID = "11111111-1111-4111-8111-111111111111";
 const MEETING_ID = "22222222-2222-4222-8222-222222222222";

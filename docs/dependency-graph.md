@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 437 |
+| Files scanned | 438 |
 | Exported functions/constants | 690 |
 | Exported types/interfaces | 245 |
 | Cross-package imports | 479 |
@@ -550,34 +550,7 @@
 
 **Types:** `InsertIssueData`, `UpdateIssueData`
 
-### `mutations/meeting-participants.ts`
-
-**Exports:**
-- `linkMeetingParticipants()`
-- `linkMeetingParticipant()`
-- `unlinkMeetingParticipant()`
-
-### `mutations/meeting-project-summaries.ts`
-
-**Exports:**
-- `insertMeetingProjectSummaries()`
-- `linkSegmentToProject()`
-- `removeSegmentTag()`
-- `updateSegmentEmbedding()`
-- `deleteSegmentsByMeetingId()`
-
-### `mutations/meeting-themes.ts`
-
-**Exports:**
-- `linkMeetingToThemes()`
-- `clearMeetingThemes()`
-- `recalculateThemeStats()`
-- `deleteMatchesForMeeting()`
-- `rejectThemeMatchAsAdmin()`
-
-**Types:** `MeetingThemeMatch`
-
-### `mutations/meetings.ts`
+### `mutations/meetings/core.ts`
 
 **Exports:**
 - `insertMeeting()`
@@ -598,6 +571,33 @@
 - `deleteMeeting()`
 - `parkMeetingForReprocess()`
 - `restoreParkedMeeting()`
+
+### `mutations/meetings/participants.ts`
+
+**Exports:**
+- `linkMeetingParticipants()`
+- `linkMeetingParticipant()`
+- `unlinkMeetingParticipant()`
+
+### `mutations/meetings/project-summaries.ts`
+
+**Exports:**
+- `insertMeetingProjectSummaries()`
+- `linkSegmentToProject()`
+- `removeSegmentTag()`
+- `updateSegmentEmbedding()`
+- `deleteSegmentsByMeetingId()`
+
+### `mutations/meetings/themes.ts`
+
+**Exports:**
+- `linkMeetingToThemes()`
+- `clearMeetingThemes()`
+- `recalculateThemeStats()`
+- `deleteMatchesForMeeting()`
+- `rejectThemeMatchAsAdmin()`
+
+**Types:** `MeetingThemeMatch`
 
 ### `mutations/organizations.ts`
 
@@ -1069,7 +1069,7 @@
 
 **Depends on:**
 - `@repo/database/queries/people` → findPeopleByEmails
-- `@repo/database/mutations/meeting-participants` → linkMeetingParticipants
+- `@repo/database/mutations/meetings/participants` → linkMeetingParticipants
 
 **Internal deps:**
 - `./speaker-map` → SpeakerMap
@@ -1173,7 +1173,7 @@
 - `@repo/database/queries/meetings` → getMeetingExtractions
 - `@repo/database/queries/themes` → listVerifiedThemes, type ThemeRow, type ThemeWithNegativeExamples
 - `@repo/database/queries/themes/review` → listRejectedThemePairsForMeeting
-- `@repo/database/mutations/meeting-themes` → linkMeetingToThemes, clearMeetingThemes, recalculateThemeStats
+- `@repo/database/mutations/meetings/themes` → linkMeetingToThemes, clearMeetingThemes, recalculateThemeStats
 - `@repo/database/mutations/extractions/themes` → linkExtractionsToThemes, clearExtractionThemesForMeeting, type ExtractionThemeRow
 - `@repo/database/mutations/themes` → createEmergingTheme
 
@@ -1216,7 +1216,7 @@
 
 **Depends on:**
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
-- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
+- `@repo/database/mutations/meetings/project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
 
 **Internal deps:**
 - `../tagger` → runTagger
@@ -1847,7 +1847,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
-- `@repo/database/mutations/meeting-project-summaries` → linkSegmentToProject, removeSegmentTag
+- `@repo/database/mutations/meetings/project-summaries` → linkSegmentToProject, removeSegmentTag
 - `@repo/database/queries/meetings/project-summaries` → getSegmentNameRaw
 - `@repo/database/queries/meetings` → getMeetingOrganizationId
 - `@repo/database/queries/projects` → getProjectAliases
@@ -2049,7 +2049,7 @@
 - `@repo/ai/pipeline/context-injection` → buildEntityContext
 - `@repo/ai/pipeline/tagger` → runTagger
 - `@repo/ai/pipeline/segment-builder` → buildSegments
-- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
+- `@repo/database/mutations/meetings/project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
 - `@repo/ai/embeddings` → embedBatch
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
 - (type) `@repo/ai/validations/gatekeeper` → IdentifiedProject
@@ -3407,30 +3407,7 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
-### mutations/meeting-participants.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant-helpers.ts` |
-
-### mutations/meeting-project-summaries.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-| `linkSegmentToProject()` | `apps/cockpit/src/actions/segments.ts` |
-| `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
-| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-
-### mutations/meeting-themes.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `linkMeetingToThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
-| `clearMeetingThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
-| `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
-
-### mutations/meetings.ts
+### mutations/meetings/core.ts
 
 | Mutation | Called from |
 |----------|------------|
@@ -3443,6 +3420,29 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
 | `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+
+### mutations/meetings/participants.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant-helpers.ts` |
+
+### mutations/meetings/project-summaries.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `linkSegmentToProject()` | `apps/cockpit/src/actions/segments.ts` |
+| `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
+| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+
+### mutations/meetings/themes.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `linkMeetingToThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `clearMeetingThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 
 ### mutations/profiles.ts
 

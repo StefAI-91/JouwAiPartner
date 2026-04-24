@@ -9,7 +9,7 @@ import {
   linkMeetingToThemes,
   clearMeetingThemes,
   recalculateThemeStats,
-} from "@repo/database/mutations/meeting-themes";
+} from "@repo/database/mutations/meetings/themes";
 import {
   linkExtractionsToThemes,
   clearExtractionThemesForMeeting,

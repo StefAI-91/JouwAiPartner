@@ -48,7 +48,7 @@ vi.mock("@repo/ai/pipeline/segment-builder", () => ({
   buildSegments: vi.fn(() => []),
 }));
 
-vi.mock("@repo/database/mutations/meeting-project-summaries", () => ({
+vi.mock("@repo/database/mutations/meetings/project-summaries", () => ({
   insertMeetingProjectSummaries: vi.fn(),
   updateSegmentEmbedding: vi.fn(),
 }));
@@ -66,7 +66,7 @@ import { runTranscribeStep } from "@repo/ai/pipeline/steps/transcribe";
 import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { getMeetingByFirefliesIdForReprocess } from "@repo/database/queries/meetings";
-import { POST } from "../../src/app/api/ingest/reprocess/route";
+import { POST } from "@/app/api/ingest/reprocess/route";
 import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";
 
 const CRON_SECRET = "test-cron-secret";

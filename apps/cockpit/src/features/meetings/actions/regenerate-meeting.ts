@@ -21,7 +21,7 @@ import {
   insertMeetingProjectSummaries,
   updateSegmentEmbedding,
   deleteSegmentsByMeetingId,
-} from "@repo/database/mutations/meeting-project-summaries";
+} from "@repo/database/mutations/meetings/project-summaries";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import { regenerateSchema } from "@repo/database/validations/meetings";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
