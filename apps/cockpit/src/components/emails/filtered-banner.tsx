@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Filter, Loader2 } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { unfilterEmailAction } from "@/actions/email-filter";
+import { unfilterEmailAction } from "@/actions/email";
 
 interface FilteredBannerProps {
   emailId: string;

@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 547 |
-| Exported functions/constants | 872 |
+| Files scanned | 549 |
+| Exported functions/constants | 860 |
 | Exported types/interfaces | 269 |
-| Cross-package imports | 697 |
+| Cross-package imports | 690 |
 | Critical integration points (3+ packages) | 17 |
 
 ## Package Dependency Flow
@@ -1813,7 +1813,7 @@
 - `@repo/database/queries/themes` → listVerifiedThemes
 - `@repo/database/queries/dev-detector` → getMeetingThemesForDevDetector, getExtractionThemesForDevDetector, type DevDetectorMeetingThemeRow, type DevDetectorExtractionThemeRow
 
-### `apps/cockpit/src/actions/email-filter.ts`
+### `apps/cockpit/src/actions/email/filter.ts`
 
 **Exports:**
 - `unfilterEmailAction()`
@@ -1825,7 +1825,7 @@
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
-### `apps/cockpit/src/actions/email-links.ts`
+### `apps/cockpit/src/actions/email/links.ts`
 
 **Exports:**
 - `linkEmailProjectAction()`
@@ -1840,7 +1840,7 @@
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
-### `apps/cockpit/src/actions/email-review.ts`
+### `apps/cockpit/src/actions/email/review.ts`
 
 **Exports:**
 - `approveEmailAction()`
@@ -1923,31 +1923,6 @@
 - `@repo/database/mutations/meetings` → deleteMeeting, parkMeetingForReprocess, restoreParkedMeeting
 - `@repo/database/queries/meetings` → getMeetingForReprocess
 - `@repo/database/validations/meetings` → regenerateSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/meetings.ts`
-
-**Exports:**
-- `updateMeetingTitleAction()`
-- `updateMeetingSummaryAction()`
-- `updateMeetingTypeAction()`
-- `updatePartyTypeAction()`
-- `updateMeetingOrganizationAction()`
-- `linkMeetingProjectAction()`
-- `unlinkMeetingProjectAction()`
-- `linkMeetingParticipantAction()`
-- `unlinkMeetingParticipantAction()`
-- `updateMeetingMetadataAction()`
-- `regenerateMeetingTitleAction()`
-- `deleteMeetingAction()`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject, deleteMeeting
-- `@repo/database/mutations/meeting-participants` → linkMeetingParticipant, unlinkMeetingParticipant
-- `@repo/database/queries/meetings` → listMeetingProjectIds, listMeetingParticipantIds
-- `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema, regenerateSchema
-- `@repo/database/validations/entities` → deleteSchema
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -4396,7 +4371,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 52 | - | - | - | - | 52 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 66 | 23 | 42 | - | - | 131 |
+| Cockpit Server Actions | 61 | 23 | 40 | - | - | 124 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 49 | 7 | 2 | 85 | - | 143 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -4417,8 +4392,8 @@ parts of the codebase — changes here have the widest blast radius.
 | File | Packages | Count |
 |------|----------|-------|
 | `apps/cockpit/src/actions/dev-detector.ts` | ai, auth, database | 3 |
-| `apps/cockpit/src/actions/email-filter.ts` | database, ai, auth | 3 |
-| `apps/cockpit/src/actions/email-review.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/actions/email/filter.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/actions/email/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/meeting-pipeline/regenerate-risks.ts` | database, ai, auth | 3 |
@@ -4453,16 +4428,16 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `insertEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateEmailClassification()` | `packages/ai/src/pipeline/email-pipeline.ts` |
-| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-filter.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
-| `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-links.ts` |
-| `verifyEmail()` | `apps/cockpit/src/actions/email-review.ts` |
-| `verifyEmailWithEdits()` | `apps/cockpit/src/actions/email-review.ts` |
-| `rejectEmail()` | `apps/cockpit/src/actions/email-review.ts` |
-| `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email-links.ts` |
-| `updateEmailType()` | `apps/cockpit/src/actions/email-links.ts` |
-| `updateEmailPartyType()` | `apps/cockpit/src/actions/email-links.ts` |
-| `updateEmailOrganization()` | `apps/cockpit/src/actions/email-links.ts` |
-| `unlinkEmailProject()` | `apps/cockpit/src/actions/email-links.ts` |
+| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email/filter.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
+| `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email/links.ts` |
+| `verifyEmail()` | `apps/cockpit/src/actions/email/review.ts` |
+| `verifyEmailWithEdits()` | `apps/cockpit/src/actions/email/review.ts` |
+| `rejectEmail()` | `apps/cockpit/src/actions/email/review.ts` |
+| `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/actions/email/links.ts` |
+| `updateEmailType()` | `apps/cockpit/src/actions/email/links.ts` |
+| `updateEmailPartyType()` | `apps/cockpit/src/actions/email/links.ts` |
+| `updateEmailOrganization()` | `apps/cockpit/src/actions/email/links.ts` |
+| `unlinkEmailProject()` | `apps/cockpit/src/actions/email/links.ts` |
 
 ### mutations/embeddings.ts
 
@@ -4533,8 +4508,8 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant-helpers.ts` |
-| `linkMeetingParticipant()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
-| `unlinkMeetingParticipant()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `linkMeetingParticipant()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
+| `unlinkMeetingParticipant()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
 
 ### mutations/meeting-project-summaries.ts
 
@@ -4563,18 +4538,18 @@ Tracing the most important data flows from action → pipeline → database.
 | `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
 | `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
-| `updateMeetingType()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
-| `updateMeetingPartyType()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
-| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts`, `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings/lifecycle.ts`, `apps/cockpit/src/actions/meetings.ts` |
-| `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
-| `linkMeetingProject()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `updateMeetingType()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
+| `updateMeetingPartyType()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
+| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts`, `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings/lifecycle.ts` |
+| `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
+| `linkMeetingProject()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts` |
-| `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/actions/review.ts` |
+| `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/review.ts` |
 | `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
-| `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-| `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
-| `deleteMeeting()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts`, `apps/cockpit/src/actions/meetings/lifecycle.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
+| `deleteMeeting()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts`, `apps/cockpit/src/actions/meetings/lifecycle.ts` |
 | `parkMeetingForReprocess()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts` |
 | `restoreParkedMeeting()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts` |
 
@@ -4711,7 +4686,7 @@ Which queries are used where across the codebase.
 | `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
-| `getEmailForPipelineInput()` | `apps/cockpit/src/actions/email-filter.ts` |
+| `getEmailForPipelineInput()` | `apps/cockpit/src/actions/email/filter.ts` |
 | `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
@@ -4791,8 +4766,8 @@ Which queries are used where across the codebase.
 | `getMeetingForRegenerateRisks()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-risks.ts` |
 | `getMeetingForReprocess()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts` |
 | `getMeetingOrganizationId()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/actions/segments.ts` |
-| `listMeetingProjectIds()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
-| `listMeetingParticipantIds()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings.ts` |
+| `listMeetingProjectIds()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
+| `listMeetingParticipantIds()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
 | `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 

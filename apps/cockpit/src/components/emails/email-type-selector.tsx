@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Tag, X } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { updateEmailTypeAction } from "@/actions/email-links";
+import { updateEmailTypeAction } from "@/actions/email";
 
 const EMAIL_TYPE_LABELS: Record<string, string> = {
   project_communication: "Projectcommunicatie",
