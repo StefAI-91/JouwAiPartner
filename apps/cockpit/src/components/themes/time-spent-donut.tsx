@@ -86,7 +86,7 @@ export function TimeSpentDonut({ slices, totalMentions, windowDays }: TimeSpentD
   return (
     <aside
       aria-label="Time-spent donut"
-      className="flex items-center gap-6 rounded-xl border border-border/60 bg-muted/20 p-5"
+      className="flex flex-col items-center gap-6 rounded-xl border border-border/60 bg-muted/20 p-5 sm:flex-row"
     >
       <svg
         width="140"
@@ -148,7 +148,7 @@ export function TimeSpentDonut({ slices, totalMentions, windowDays }: TimeSpentD
             : `${topSixPercent}% top-${Math.min(LEGEND_MAX, segments.length)}`}
         </text>
       </svg>
-      <ul className="flex-1 space-y-1">
+      <ul className="w-full min-w-0 space-y-1 sm:flex-1">
         {segments.slice(0, LEGEND_MAX).map((s) => (
           <li key={s.slice.theme.id} className="flex items-center gap-2 text-[12px]">
             <span
