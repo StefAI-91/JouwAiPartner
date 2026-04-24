@@ -38,7 +38,7 @@ vi.mock("@repo/database/queries/issues", () => ({
 }));
 
 const mockInsertAttachment = vi.fn();
-vi.mock("@repo/database/mutations/issue-attachments", () => ({
+vi.mock("@repo/database/mutations/issues/attachments", () => ({
   insertAttachment: (...args: unknown[]) => mockInsertAttachment(...args),
 }));
 
