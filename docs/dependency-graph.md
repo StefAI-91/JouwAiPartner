@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 481 |
-| Exported functions/constants | 764 |
+| Files scanned | 482 |
+| Exported functions/constants | 765 |
 | Exported types/interfaces | 250 |
-| Cross-package imports | 577 |
+| Cross-package imports | 579 |
 | Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
@@ -382,7 +382,17 @@
 
 **Types:** `TeamRole`, `ProfileRole`, `TeamMember`, `TeamMemberWithAccess`
 
-### `queries/theme-dashboard.ts`
+### `queries/themes/core.ts`
+
+**Exports:**
+- `listVerifiedThemes()`
+- `listVerifiedThemes()`
+- `listVerifiedThemes()`
+- `getThemeBySlug()`
+
+**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`
+
+### `queries/themes/dashboard.ts`
 
 **Exports:**
 - `listTopActiveThemes()`
@@ -390,7 +400,7 @@
 
 **Types:** `TopActiveTheme`, `ThemeShareSlice`, `ThemeShareDistribution`
 
-### `queries/theme-detail.ts`
+### `queries/themes/detail.ts`
 
 **Exports:**
 - `getThemeRecentActivity()`
@@ -400,7 +410,7 @@
 
 **Types:** `ThemeRecentActivity`, `ThemeMeetingExtraction`, `ThemeMeetingEntry`, `ThemeDecisionEntry`, `ThemeParticipantEntry`
 
-### `queries/theme-internals.ts`
+### `queries/themes/internals.ts`
 
 **Exports:**
 - `windowStartIso()`
@@ -413,7 +423,7 @@
 
 **Types:** `ThemeBasicRow`, `WindowAggregation`
 
-### `queries/theme-review.ts`
+### `queries/themes/review.ts`
 
 **Exports:**
 - `listEmergingThemes()`
@@ -421,16 +431,6 @@
 - `listProposedThemesForMeeting()`
 
 **Types:** `EmergingThemeProposalMeeting`, `EmergingThemeRow`
-
-### `queries/themes.ts`
-
-**Exports:**
-- `listVerifiedThemes()`
-- `listVerifiedThemes()`
-- `listVerifiedThemes()`
-- `getThemeBySlug()`
-
-**Types:** `ThemeRow`, `ThemeRejectionExample`, `ThemeWithNegativeExamples`, `ListVerifiedThemesOptions`
 
 ### `queries/userback-issues.ts`
 
@@ -1172,7 +1172,7 @@
 **Depends on:**
 - `@repo/database/queries/meetings` → getMeetingExtractions
 - `@repo/database/queries/themes` → listVerifiedThemes, type ThemeRow, type ThemeWithNegativeExamples
-- `@repo/database/queries/theme-review` → listRejectedThemePairsForMeeting
+- `@repo/database/queries/themes/review` → listRejectedThemePairsForMeeting
 - `@repo/database/mutations/meeting-themes` → linkMeetingToThemes, clearMeetingThemes, recalculateThemeStats
 - `@repo/database/mutations/extraction-themes` → linkExtractionsToThemes, clearExtractionThemesForMeeting, type ExtractionThemeRow
 - `@repo/database/mutations/themes` → createEmergingTheme
@@ -1460,6 +1460,7 @@
 
 **Exports:**
 - `extractOrgTimeline()`
+- `extractProjectTimeline()`
 - `TimelineEntrySchema`
 - `ProjectSummaryOutputSchema`
 - `OrgTimelineEntrySchema`
@@ -2537,6 +2538,7 @@
 - `@repo/database/queries/meeting-project-summaries` → getSegmentsByProjectId
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/database/queries/people` → listPeople
+- `@repo/ai/validations/project-summary` → extractProjectTimeline
 
 ### `apps/cockpit/src/app/(dashboard)/projects/page.tsx`
 
@@ -3115,6 +3117,7 @@
 
 **Depends on:**
 - `@repo/ui/format` → formatDate
+- (type) `@repo/ai/validations/project-summary` → TimelineEntry
 
 ### `apps/cockpit/src/components/projects/regenerate-summary-button.tsx`
 
@@ -3796,9 +3799,9 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 36 | 8 | 20 | - | - | 64 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 31 | 6 | - | 53 | - | 90 |
+| Cockpit Components | 31 | 7 | - | 53 | - | 91 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 91 | 7 | 4 | 33 | - | 135 |
+| Cockpit Pages | 91 | 8 | 4 | 33 | - | 136 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 2 | 12 | - | - | 40 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -4261,7 +4264,16 @@ Which queries are used where across the codebase.
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 
-### queries/theme-detail.ts
+### queries/themes/core.ts
+
+| Query | Used in |
+|-------|---------|
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
+| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
+| `getThemeBySlug()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+
+### queries/themes/detail.ts
 
 | Query | Used in |
 |-------|---------|
@@ -4270,29 +4282,20 @@ Which queries are used where across the codebase.
 | `getThemeDecisions()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 | `getThemeParticipants()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
-### queries/theme-internals.ts
+### queries/themes/internals.ts
 
 | Query | Used in |
 |-------|---------|
-| `windowStartIso()` | `packages/database/src/queries/theme-detail.ts` |
-| `fetchWindowAggregation()` | `packages/database/src/queries/theme-dashboard.ts`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
+| `windowStartIso()` | `packages/database/src/queries/themes/detail.ts` |
+| `fetchWindowAggregation()` | `packages/database/src/queries/themes/dashboard.ts`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
 
-### queries/theme-review.ts
+### queries/themes/review.ts
 
 | Query | Used in |
 |-------|---------|
 | `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `listRejectedThemePairsForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `listProposedThemesForMeeting()` | `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
-
-### queries/themes.ts
-
-| Query | Used in |
-|-------|---------|
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
-| `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
-| `getThemeBySlug()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/userback-issues.ts
 

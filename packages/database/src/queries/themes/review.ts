@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminClient } from "../supabase/admin";
-import type { ThemeRow } from "./themes";
-import { THEME_COLUMNS } from "./theme-internals";
+import { getAdminClient } from "../../supabase/admin";
+import type { ThemeRow } from "./core";
+import { THEME_COLUMNS } from "./internals";
 
 /**
  * TH-006 — review-flow queries. Gesplitst uit `queries/themes.ts` in TH-008.

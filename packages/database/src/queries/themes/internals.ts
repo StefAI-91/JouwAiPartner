@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminClient } from "../supabase/admin";
+import { getAdminClient } from "../../supabase/admin";
 
 /**
  * TH-008 — gedeelde helpers voor alle theme-query-files. Kolom-lijst en

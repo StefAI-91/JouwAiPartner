@@ -153,22 +153,21 @@ const { updateThemeAction } = mod;
 Deze code hoort NIET in deze feature — wordt gedeeld door cockpit + MCP +
 toekomstige apps:
 
-| Locatie                                      | Wat                                    |
-| -------------------------------------------- | -------------------------------------- |
-| `@repo/database/queries/themes`              | `listVerifiedThemes`, `getThemeBySlug` |
-| `@repo/database/queries/theme-internals`     | kolom-constanten                       |
-| `@repo/database/queries/theme-review`        | emerging + proposals                   |
-| `@repo/database/queries/theme-detail`        | detail-page queries                    |
-| `@repo/database/queries/theme-dashboard`     | time-spent stats                       |
-| `@repo/database/queries/meeting-themes`      | cross-tabel                            |
-| `@repo/database/mutations/themes`            | insert/update/archive                  |
-| `@repo/database/mutations/meeting-themes`    | link/clear/recalc                      |
-| `@repo/database/mutations/extraction-themes` | link aan extractions                   |
-| `@repo/ai/agents/theme-detector`             | runThemeDetector + prompt              |
-| `@repo/ai/agents/theme-emojis`               | emoji-catalogus                        |
-| `@repo/ai/pipeline/steps/theme-detector`     | pipeline-stap                          |
-| `@repo/ai/pipeline/steps/link-themes`        | pipeline-stap                          |
-| `@repo/ai/pipeline/tagger`                   | theme-annotatie parser                 |
+| Locatie                                      | Wat                                 |
+| -------------------------------------------- | ----------------------------------- |
+| `@repo/database/queries/themes`              | publieke deur — alle exports samen  |
+| `@repo/database/queries/themes/review`       | emerging + proposals (fine-grained) |
+| `@repo/database/queries/themes/detail`       | detail-page queries (fine-grained)  |
+| `@repo/database/queries/themes/dashboard`    | time-spent stats (fine-grained)     |
+| `@repo/database/queries/meeting-themes`      | cross-tabel                         |
+| `@repo/database/mutations/themes`            | insert/update/archive               |
+| `@repo/database/mutations/meeting-themes`    | link/clear/recalc                   |
+| `@repo/database/mutations/extraction-themes` | link aan extractions                |
+| `@repo/ai/agents/theme-detector`             | runThemeDetector + prompt           |
+| `@repo/ai/agents/theme-emojis`               | emoji-catalogus                     |
+| `@repo/ai/pipeline/steps/theme-detector`     | pipeline-stap                       |
+| `@repo/ai/pipeline/steps/link-themes`        | pipeline-stap                       |
+| `@repo/ai/pipeline/tagger`                   | theme-annotatie parser              |
 
 Als je een query/mutation toevoegt voor themes: plaats hem in packages/,
 niet hier.

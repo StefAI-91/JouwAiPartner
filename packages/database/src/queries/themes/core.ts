@@ -1,18 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminClient } from "../supabase/admin";
-import { NEGATIVE_EXAMPLES_PER_THEME, THEME_COLUMNS } from "./theme-internals";
+import { getAdminClient } from "../../supabase/admin";
+import { NEGATIVE_EXAMPLES_PER_THEME, THEME_COLUMNS } from "./internals";
 
 /**
- * TH-001 — base theme types + queries (listVerifiedThemes, getThemeBySlug).
- *
- * TH-008 file-split:
- * - Dashboard-queries (pills + donut) → `theme-dashboard.ts`
- * - Detail-page queries (activity, meetings, decisions, participants) → `theme-detail.ts`
- * - Review-flow queries (emerging themes) → `theme-review.ts`
- * - Shared internals (THEME_COLUMNS, window-helpers, fetchWindowAggregation) → `theme-internals.ts`
- *
- * Dit bestand blijft de single-source-of-truth voor `ThemeRow` + gerelateerde
- * types die alle andere theme-files importeren.
+ * Base theme types + queries (listVerifiedThemes, getThemeBySlug). Single
+ * source of truth voor `ThemeRow` — alle andere files in deze submap
+ * (dashboard/detail/review) importeren hiervan. De publieke deur is
+ * `./index.ts` die ook re-exporteert uit de andere sub-files.
  */
 
 export interface ThemeRow {
@@ -129,39 +123,3 @@ export async function getThemeBySlug(
   if (error) throw new Error(`theme fetch failed: ${error.message}`);
   return (data as ThemeRow | null) ?? null;
 }
-
-// ──────────────────────────────────────────────────────────────────────────
-// TH-008 — Re-exports voor backwards-compat. Nieuwe code importeert direct
-// uit de sub-files (`theme-dashboard.ts`, `theme-detail.ts`, `theme-review.ts`).
-// Deze re-exports houden de bestaande call-sites levend tot we ze één voor
-// één kunnen migreren.
-// ──────────────────────────────────────────────────────────────────────────
-export {
-  listTopActiveThemes,
-  getThemeShareDistribution,
-  fetchWindowAggregation,
-  type TopActiveTheme,
-  type ThemeShareSlice,
-  type ThemeShareDistribution,
-  type WindowAggregation,
-} from "./theme-dashboard";
-
-export {
-  getThemeRecentActivity,
-  getThemeMeetings,
-  getThemeDecisions,
-  getThemeParticipants,
-  type ThemeRecentActivity,
-  type ThemeMeetingEntry,
-  type ThemeMeetingExtraction,
-  type ThemeDecisionEntry,
-  type ThemeParticipantEntry,
-} from "./theme-detail";
-
-export {
-  listEmergingThemes,
-  listProposedThemesForMeeting,
-  listRejectedThemePairsForMeeting,
-  type EmergingThemeRow,
-  type EmergingThemeProposalMeeting,
-} from "./theme-review";

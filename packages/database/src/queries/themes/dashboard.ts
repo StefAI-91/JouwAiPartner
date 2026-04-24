@@ -1,9 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  DEFAULT_WINDOW_DAYS,
-  fetchWindowAggregation,
-  type WindowAggregation,
-} from "./theme-internals";
+import { DEFAULT_WINDOW_DAYS, fetchWindowAggregation, type WindowAggregation } from "./internals";
 
 /**
  * TH-008 — dashboard-queries (pills + donut). Beide functies accepteren een

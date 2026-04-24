@@ -8,6 +8,8 @@
   },
   "exports": {
     "./supabase/*": "./src/supabase/*.ts",
+    "./queries/themes": "./src/queries/themes/index.ts",
+    "./queries/themes/*": "./src/queries/themes/*.ts",
     "./queries/*": "./src/queries/*.ts",
     "./mutations/*": "./src/mutations/*.ts",
     "./types/*": "./src/types/*.ts",

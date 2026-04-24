@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminClient } from "../supabase/admin";
-import { DEFAULT_WINDOW_DAYS, windowStartIso } from "./theme-internals";
+import { getAdminClient } from "../../supabase/admin";
+import { DEFAULT_WINDOW_DAYS, windowStartIso } from "./internals";
 
 /**
  * TH-005 — Detail-page queries: header-badge stats, meetings-tab,

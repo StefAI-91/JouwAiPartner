@@ -28,7 +28,7 @@ vi.mock("@repo/database/queries/meetings", () => ({
 vi.mock("@repo/database/queries/themes", () => ({
   listVerifiedThemes: () => mockListVerifiedThemes(),
 }));
-vi.mock("@repo/database/queries/theme-review", () => ({
+vi.mock("@repo/database/queries/themes/review", () => ({
   listRejectedThemePairsForMeeting: (...args: [string]) => mockListRejected(...args),
 }));
 vi.mock("@repo/database/mutations/meeting-themes", () => ({

@@ -4,7 +4,7 @@ import {
   type ThemeRow,
   type ThemeWithNegativeExamples,
 } from "@repo/database/queries/themes";
-import { listRejectedThemePairsForMeeting } from "@repo/database/queries/theme-review";
+import { listRejectedThemePairsForMeeting } from "@repo/database/queries/themes/review";
 import {
   linkMeetingToThemes,
   clearMeetingThemes,
