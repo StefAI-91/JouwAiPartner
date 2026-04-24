@@ -43,7 +43,7 @@ vi.mock("@repo/database/supabase/admin", () => ({
   })),
 }));
 
-import { processEmail } from "../../src/pipeline/email-pipeline";
+import { processEmail } from "../../src/pipeline/email/core";
 import { runEmailClassifier } from "../../src/agents/email-classifier";
 import { getAllOrganizations } from "@repo/database/queries/organizations";
 import { getActiveProjectsForContext } from "@repo/database/queries/projects";

@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 441 |
+| Files scanned | 442 |
 | Exported functions/constants | 690 |
 | Exported types/interfaces | 245 |
 | Cross-package imports | 479 |
@@ -914,14 +914,7 @@
 - `@repo/database/queries/people` → getPeopleForContext
 - (type) `@repo/database/queries/projects` → ActiveProjectForContext
 
-### `packages/ai/src/pipeline/email-filter-gatekeeper.ts`
-
-**Exports:**
-- `decideEmailFilter()`
-
-**Types:** `FilterReason`, `FilterDecision`
-
-### `packages/ai/src/pipeline/email-pipeline.ts`
+### `packages/ai/src/pipeline/email/core.ts`
 
 **Exports:**
 - `resolveEmailOrganization()`
@@ -937,15 +930,22 @@
 - `@repo/database/supabase/admin` → getAdminClient
 
 **Internal deps:**
-- `../agents/email-classifier` → runEmailClassifier
-- `../agents/email-classifier` → EmailClassifierOutput
-- `./context-injection` → buildEntityContext
-- `./entity-resolution` → resolveOrganization
-- `./email-filter-gatekeeper` → decideEmailFilter, type FilterReason
-- `./email-pre-classifier` → preClassifyEmail
-- `../embeddings` → embedText
+- `../../agents/email-classifier` → runEmailClassifier
+- `../../agents/email-classifier` → EmailClassifierOutput
+- `../context-injection` → buildEntityContext
+- `../entity-resolution` → resolveOrganization
+- `./filter-gatekeeper` → decideEmailFilter, type FilterReason
+- `./pre-classifier` → preClassifyEmail
+- `../../embeddings` → embedText
 
-### `packages/ai/src/pipeline/email-pre-classifier.ts`
+### `packages/ai/src/pipeline/email/filter-gatekeeper.ts`
+
+**Exports:**
+- `decideEmailFilter()`
+
+**Types:** `FilterReason`, `FilterDecision`
+
+### `packages/ai/src/pipeline/email/pre-classifier.ts`
 
 **Exports:**
 - `preClassifyEmail()`
@@ -1917,7 +1917,7 @@
 - `@repo/database/queries/emails` → listActiveGoogleAccounts, getExistingGmailIds, getUnprocessedEmails
 - `@repo/database/mutations/emails` → insertEmails, updateGoogleAccountTokens, updateGoogleAccountLastSync
 - `@repo/ai/gmail` → fetchEmails
-- `@repo/ai/pipeline/email-pipeline` → processEmailBatch
+- `@repo/ai/pipeline/email/core` → processEmailBatch
 
 ### `apps/cockpit/src/app/api/cron/re-embed/route.ts`
 
@@ -1976,7 +1976,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → getUnprocessedEmails
-- `@repo/ai/pipeline/email-pipeline` → processEmailBatch
+- `@repo/ai/pipeline/email/core` → processEmailBatch
 - `@repo/auth/access` → isAdmin
 
 ### `apps/cockpit/src/app/api/email/reclassify/route.ts`
@@ -1988,7 +1988,7 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → listEmailsForReclassify
-- `@repo/ai/pipeline/email-pipeline` → processEmail
+- `@repo/ai/pipeline/email/core` → processEmail
 - `@repo/database/mutations/emails` → updateEmailFilterStatus
 - `@repo/auth/access` → isAdmin
 
@@ -2004,7 +2004,7 @@
 - `@repo/database/queries/emails` → getExistingGmailIds, getUnprocessedEmails
 - `@repo/database/mutations/emails` → insertEmails, updateGoogleAccountTokens, updateGoogleAccountLastSync
 - `@repo/ai/gmail` → fetchEmails
-- `@repo/ai/pipeline/email-pipeline` → processEmailBatch
+- `@repo/ai/pipeline/email/core` → processEmailBatch
 
 ### `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts`
 
@@ -3360,10 +3360,10 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateGoogleAccountTokens()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `insertEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
-| `updateEmailClassification()` | `packages/ai/src/pipeline/email-pipeline.ts` |
-| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email-pipeline.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
-| `linkEmailProject()` | `packages/ai/src/pipeline/email-pipeline.ts` |
-| `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email-pipeline.ts` |
+| `updateEmailClassification()` | `packages/ai/src/pipeline/email/core.ts` |
+| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email/core.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
+| `linkEmailProject()` | `packages/ai/src/pipeline/email/core.ts` |
+| `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email/core.ts` |
 
 ### mutations/embeddings.ts
 
@@ -3639,7 +3639,7 @@ Which queries are used where across the codebase.
 | `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
 | `getAllOrganizations()` | `packages/ai/src/pipeline/context-injection.ts`, `packages/ai/src/pipeline/entity-resolution.ts` |
-| `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
+| `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 | `listOrganizationsByType()` | `apps/cockpit/src/app/(dashboard)/administratie/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/page.tsx` |
 
 ### queries/people.ts
@@ -3657,7 +3657,7 @@ Which queries are used where across the codebase.
 | `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getPeopleForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
 | `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |
-| `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email-pipeline.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
+| `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 
 ### queries/projects/access.ts
 

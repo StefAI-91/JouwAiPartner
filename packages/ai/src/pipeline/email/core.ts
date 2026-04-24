@@ -1,9 +1,9 @@
-import { runEmailClassifier } from "../agents/email-classifier";
-import type { EmailClassifierOutput } from "../agents/email-classifier";
-import { buildEntityContext } from "./context-injection";
-import { resolveOrganization } from "./entity-resolution";
-import { decideEmailFilter, type FilterReason } from "./email-filter-gatekeeper";
-import { preClassifyEmail } from "./email-pre-classifier";
+import { runEmailClassifier } from "../../agents/email-classifier";
+import type { EmailClassifierOutput } from "../../agents/email-classifier";
+import { buildEntityContext } from "../context-injection";
+import { resolveOrganization } from "../entity-resolution";
+import { decideEmailFilter, type FilterReason } from "./filter-gatekeeper";
+import { preClassifyEmail } from "./pre-classifier";
 import {
   updateEmailClassification,
   updateEmailFilterStatus,
@@ -12,7 +12,7 @@ import {
 } from "@repo/database/mutations/emails";
 import { findPersonOrgByEmail } from "@repo/database/queries/people";
 import { findOrganizationIdByEmailDomain } from "@repo/database/queries/organizations";
-import { embedText } from "../embeddings";
+import { embedText } from "../../embeddings";
 import { getAdminClient } from "@repo/database/supabase/admin";
 
 /**

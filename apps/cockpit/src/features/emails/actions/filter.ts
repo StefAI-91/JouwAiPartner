@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { updateEmailFilterStatus } from "@repo/database/mutations/emails";
 import { getEmailForPipelineInput } from "@repo/database/queries/emails";
-import { processEmail } from "@repo/ai/pipeline/email-pipeline";
+import { processEmail } from "@repo/ai/pipeline/email/core";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 

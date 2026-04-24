@@ -14,6 +14,8 @@
     "./pipeline/embed/*": "./src/pipeline/embed/*.ts",
     "./pipeline/summary": "./src/pipeline/summary/index.ts",
     "./pipeline/summary/*": "./src/pipeline/summary/*.ts",
+    "./pipeline/email": "./src/pipeline/email/index.ts",
+    "./pipeline/email/*": "./src/pipeline/email/*.ts",
     "./pipeline/*": "./src/pipeline/*.ts",
     "./embeddings": "./src/embeddings.ts",
     "./fireflies": "./src/fireflies.ts",
