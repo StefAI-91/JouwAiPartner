@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 503 |
-| Exported functions/constants | 794 |
+| Files scanned | 496 |
+| Exported functions/constants | 779 |
 | Exported types/interfaces | 251 |
-| Cross-package imports | 634 |
-| Critical integration points (3+ packages) | 14 |
+| Cross-package imports | 596 |
+| Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
 
@@ -1837,89 +1837,6 @@
 - `@repo/auth/access` → isAdmin
 - `@repo/ai/pipeline/management-insights-pipeline` → generateManagementInsights
 - `@repo/database/mutations/management-insights` → dismissInsight
-
-### `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`
-
-**Exports:**
-- `regenerateMeetingAction()`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingSummary, updateMeetingTitle, markMeetingEmbeddingStale
-- `@repo/database/queries/meetings` → getMeetingForRegenerate, getMeetingOrganizationId
-- `@repo/ai/agents/summarizer` → runSummarizer, formatSummary, formatThemeSummary
-- `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
-- `@repo/ai/pipeline/context-injection` → buildEntityContext
-- `@repo/ai/agents/gatekeeper` → runGatekeeper
-- `@repo/ai/pipeline/tagger` → runTagger
-- `@repo/ai/pipeline/segment-builder` → buildSegments
-- `@repo/ai/embeddings` → embedBatch
-- `@repo/ai/pipeline/steps/theme-detector` → runThemeDetectorStep
-- `@repo/ai/pipeline/steps/link-themes` → runLinkThemesStep
-- `@repo/database/mutations/meeting-project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding, deleteSegmentsByMeetingId
-- `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
-- `@repo/database/validations/meetings` → regenerateSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/meeting-pipeline/regenerate-risks.ts`
-
-**Exports:**
-- `regenerateRisksAction()`
-
-**Depends on:**
-- `@repo/database/queries/meetings` → getMeetingForRegenerateRisks
-- `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
-- `@repo/ai/pipeline/context-injection` → buildEntityContext
-- `@repo/database/validations/meetings` → regenerateSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts`
-
-**Exports:**
-- `reprocessMeetingAction()`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → deleteMeeting, parkMeetingForReprocess, restoreParkedMeeting
-- `@repo/database/queries/meetings` → getMeetingForReprocess
-- `@repo/database/validations/meetings` → regenerateSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/meetings/field-updates.ts`
-
-**Exports:**
-- `updateMeetingTitleAction()`
-- `updateMeetingSummaryAction()`
-- `updateMeetingTypeAction()`
-- `updatePartyTypeAction()`
-- `updateMeetingOrganizationAction()`
-- `linkMeetingProjectAction()`
-- `unlinkMeetingProjectAction()`
-- `linkMeetingParticipantAction()`
-- `unlinkMeetingParticipantAction()`
-- `updateMeetingMetadataAction()`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingTitle, updateMeetingType, updateMeetingPartyType, updateMeetingOrganization, updateMeetingSummaryOnly, markMeetingEmbeddingStale, linkMeetingProject, unlinkMeetingProject
-- `@repo/database/mutations/meeting-participants` → linkMeetingParticipant, unlinkMeetingParticipant
-- `@repo/database/queries/meetings` → listMeetingProjectIds, listMeetingParticipantIds
-- `@repo/database/validations/meetings` → updateTitleSchema, updateSummarySchema, updateMeetingTypeSchema, updatePartyTypeSchema, updateMeetingOrganizationSchema, meetingProjectSchema, meetingParticipantSchema, updateMeetingMetadataSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/meetings/lifecycle.ts`
-
-**Exports:**
-- `regenerateMeetingTitleAction()`
-- `deleteMeetingAction()`
-
-**Depends on:**
-- `@repo/database/mutations/meetings` → updateMeetingTitle, deleteMeeting
-- `@repo/database/validations/meetings` → regenerateSchema
-- `@repo/database/validations/entities` → deleteSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
 
 ### `apps/cockpit/src/actions/organizations.ts`
 
@@ -3995,7 +3912,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 52 | - | - | - | - | 52 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 53 | 19 | 30 | - | - | 102 |
+| Cockpit Server Actions | 36 | 8 | 20 | - | - | 64 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 40 | 6 | - | 63 | - | 109 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -4017,8 +3934,6 @@ parts of the codebase — changes here have the widest blast radius.
 |------|----------|-------|
 | `apps/cockpit/src/actions/dev-detector.ts` | ai, auth, database | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
-| `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts` | database, ai, auth | 3 |
-| `apps/cockpit/src/actions/meeting-pipeline/regenerate-risks.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
@@ -4122,18 +4037,15 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant-helpers.ts` |
-| `linkMeetingParticipant()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
-| `unlinkMeetingParticipant()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
 
 ### mutations/meeting-project-summaries.ts
 
 | Mutation | Called from |
 |----------|------------|
-| `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 | `linkSegmentToProject()` | `apps/cockpit/src/actions/segments.ts` |
 | `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
-| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-| `deleteSegmentsByMeetingId()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts` |
+| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meeting-themes.ts
 
@@ -4151,20 +4063,12 @@ Tracing the most important data flows from action → pipeline → database.
 | `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
 | `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
-| `updateMeetingType()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
-| `updateMeetingPartyType()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
-| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts`, `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/meetings/lifecycle.ts` |
-| `updateMeetingOrganization()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
-| `linkMeetingProject()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
+| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
-| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts`, `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts` |
-| `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/actions/review.ts` |
+| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
+| `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/review.ts` |
 | `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
-| `markMeetingEmbeddingStale()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/actions/meetings/field-updates.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-| `unlinkMeetingProject()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
-| `deleteMeeting()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts`, `apps/cockpit/src/actions/meetings/lifecycle.ts` |
-| `parkMeetingForReprocess()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts` |
-| `restoreParkedMeeting()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts` |
+| `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/organizations.ts
 
@@ -4303,7 +4207,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getIgnoredEntityNames()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `getIgnoredEntityNames()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### queries/issue-activity.ts
 
@@ -4371,12 +4275,7 @@ Which queries are used where across the codebase.
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed-pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/re-embed-worker.ts` |
 | `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
-| `getMeetingForRegenerate()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts` |
-| `getMeetingForRegenerateRisks()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-risks.ts` |
-| `getMeetingForReprocess()` | `apps/cockpit/src/actions/meeting-pipeline/reprocess-meeting.ts` |
-| `getMeetingOrganizationId()` | `apps/cockpit/src/actions/meeting-pipeline/regenerate-meeting.ts`, `apps/cockpit/src/actions/segments.ts` |
-| `listMeetingProjectIds()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
-| `listMeetingParticipantIds()` | `apps/cockpit/src/actions/meetings/field-updates.ts` |
+| `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
 | `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
