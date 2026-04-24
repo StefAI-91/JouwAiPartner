@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: Projectverloop v2 — Cai Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      .timeline-rail {
+        background: rgba(0, 107, 63, 0.15);
+      }
+      .pivot-bar {
+        background: linear-gradient(180deg, #006B3F 0%, rgba(0, 107, 63, 0.3) 100%);
+      }
+      .entry-card {
+        transition: background-color 150ms ease, transform 150ms ease;
+      }
+      .entry-card:hover {
+        background-color: rgba(0, 107, 63, 0.04);
+      }
+      details > summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      details > summary::-webkit-details-marker {
+        display: none;
+      }
+      details[open] .chevron {
+        transform: rotate(180deg);
+      }
+      .chevron {
+        transition: transform 200ms ease;
+      }
+      .chip {
+        transition: all 150ms ease;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <!-- TOP BAR: Voor / Na toggle -->
+    <div class="sticky top-7 z-40 bg-white border-b border-gray-200 shadow-sm">
+      <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div>
+          <h1 class="text-lg font-semibold text-gray-900">Projectverloop — UX-mockup</h1>
+          <p class="text-xs text-gray-500">Cai Studio · 35 touchpoints · vergelijk huidige met voorstel</p>
+        </div>
+        <div class="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+          <button id="tab-voor" class="px-4 py-1.5 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 transition-colors" onclick="switchTab('voor')">Voor</button>
+          <button id="tab-na" class="px-4 py-1.5 text-sm font-medium rounded-md bg-white shadow-sm text-gray-900" onclick="switchTab('na')">Na ✨</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CANVAS -->
+    <main class="max-w-6xl mx-auto px-6 py-8">
+      <!-- Project header (gedeeld) -->
+      <div class="mb-6">
+        <p class="text-sm font-medium text-gray-600">Cai Studio</p>
+        <h2 class="text-2xl font-semibold text-gray-900">Cai Studio Platform</h2>
+      </div>
+
+      <!-- ───────────────── VOOR (huidig) ───────────────── -->
+      <section id="view-voor" class="hidden">
+        <!-- COMPONENT: huidige ProjectTimeline -->
+        <div class="rounded-lg px-5 py-4" style="background: rgba(0, 107, 63, 0.03);">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.6);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: rgba(0, 107, 63, 0.7);">Projectverloop</h3>
+              <span class="text-[10px] text-gray-500">35 touchpoints</span>
+            </div>
+            <button class="flex items-center gap-1 text-xs hover:text-[#006B3F] transition-colors" style="color: rgba(0, 107, 63, 0.7);">
+              Alles tonen
+              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+
+          <div class="relative ml-2">
+            <div class="absolute left-[5px] top-2 bottom-2 w-px timeline-rail"></div>
+            <div class="space-y-4">
+              <!-- Entry 1 -->
+              <div class="relative pl-6">
+                <div class="absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border-2 bg-white" style="border-color: rgba(0, 107, 63, 0.3);"></div>
+                <div class="flex items-baseline gap-2 flex-wrap">
+                  <span class="text-xs font-medium text-gray-700">21 apr 2026</span>
+                  <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                    <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    Status update
+                  </span>
+                </div>
+                <p class="mt-0.5 text-sm font-medium text-gray-900">(Management): platform feedback en exportfunctionaliteit</p>
+                <p class="mt-0.5 text-[13px] leading-relaxed text-gray-700">Stef (klant bij Cai Studio) stelde vragen over markdown en afbeeldinglimieten; Wouter verdedigde technische keuzes en Stef bouwt AI-export rapport.</p>
+                <div class="mt-1.5 space-y-0.5">
+                  <div class="flex items-start gap-1.5">
+                    <svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span class="text-xs text-gray-700">Afbeeldinglimieten blijven op 5MB</span>
+                  </div>
+                </div>
+                <div class="mt-1 space-y-0.5">
+                  <div class="flex items-start gap-1.5">
+                    <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span class="text-xs text-gray-700">Stef bouwt AI-gegenereerd exportrapport uit DevHub met format opgelost/in-progress/komend/FAQ — donderdag gewenst</span>
+                  </div>
+                  <div class="flex items-start gap-1.5">
+                    <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span class="text-xs text-gray-700">Stef en Wouter bespreken DevApp-status — donderdag</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Entry 2 -->
+              <div class="relative pl-6">
+                <div class="absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border-2 bg-white" style="border-color: rgba(0, 107, 63, 0.3);"></div>
+                <div class="flex items-baseline gap-2 flex-wrap">
+                  <span class="text-xs font-medium text-gray-700">23 apr 2026</span>
+                  <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                    <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    Status update
+                  </span>
+                </div>
+                <p class="mt-0.5 text-sm font-medium text-gray-900">(Status): Cai Automations / Cai Studio → rapportage-inrichting en bug-prioritering</p>
+                <p class="mt-0.5 text-[13px] leading-relaxed text-gray-700">Stefan wilde eenvoudig overzicht van opgelost/plannen/komend/niet-geprioriteerd; Wouter herziet planning en Stef bouwt client-facing portaal los van DevHub.</p>
+                <div class="mt-1.5 space-y-0.5 text-xs text-gray-700">
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Wouter herziet planning op basis van Joeps prioriteiten en deelt export</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Stef bouwt client-facing portaal waar klanten voortgang kunnen inzien en exporteren</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Feature-verzoeken van Joep voortaan via Slack, niet e-mail</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>PDF uploaden naar kennisbank en genereren vanuit chat zijn opgelost</div>
+                </div>
+                <div class="mt-1 space-y-0.5 text-xs text-gray-700">
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Vier nieuwe features als tickets in DevHub zetten — Wouter, vandaag</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Circle doorlopen en FAQ-antwoorden uitdraaien — Wouter, vanmiddag</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>SLA-document delen in thread — Wouter</div>
+                </div>
+              </div>
+
+              <!-- Entry 3 -->
+              <div class="relative pl-6">
+                <div class="absolute left-0 top-1.5 h-[11px] w-[11px] rounded-full border-2 bg-white" style="border-color: rgba(0, 107, 63, 0.3);"></div>
+                <div class="flex items-baseline gap-2 flex-wrap">
+                  <span class="text-xs font-medium text-gray-700">23 apr 2026</span>
+                  <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                    <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    Strategie
+                  </span>
+                </div>
+                <p class="mt-0.5 text-sm font-medium text-gray-900">(Strategie): Cai Studio → client-facing bug- en featureportaal</p>
+                <p class="mt-0.5 text-[13px] leading-relaxed text-gray-700">Stef en Wouter evalueerden druk van Cai Automations op bug-rapportage en feature-management; besloten client-facing portaal apart van interne DevHub.</p>
+                <div class="mt-1.5 space-y-0.5 text-xs text-gray-700">
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Er komt client-facing portaal apart van interne DevHub met bug-voortgang, feature requests en prioritering (P0/P1/P2)</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Verplicht reasoning-veld toevoegen bij afsluiting bugs (hoe gereproduceerd, hoe opgelost)</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Features worden gefilterd als Feature Requests in DevHub en klanten kunnen prioriteren via portaal</div>
+                </div>
+                <div class="mt-1 space-y-0.5 text-xs text-gray-700">
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Client-facing portaal bouwen met bug-voortgang — Stef, voor donderdag</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Filter in DevHub maken voor openstaande feature requests — Stef</div>
+                  <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Features uit Circle documenteren en in DevOps zetten met prioritering — Wouter, voor 17:00 vandaag</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="mt-4 text-xs text-gray-500 italic text-center">Dit is de huidige UI — switch naar "Na ✨" voor het voorstel.</p>
+      </section>
+
+      <!-- ───────────────── NA (voorstel) ───────────────── -->
+      <section id="view-na">
+        <!-- ① PROGRESS-STRIP -->
+        <div class="rounded-lg border border-gray-200 bg-white px-5 py-4 mb-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <svg class="h-4 w-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+              <span class="text-xs font-semibold uppercase tracking-wider text-gray-600">Voortgang</span>
+            </div>
+            <span class="text-xs text-gray-500">52 dagen tot deadline</span>
+          </div>
+          <div class="relative h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+            <div class="absolute inset-y-0 left-0 rounded-full" style="width: 50%; background: linear-gradient(90deg, #006B3F, #4ade80);"></div>
+            <div class="absolute top-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-white border-2" style="left: calc(50% - 6px); border-color: #006B3F;"></div>
+          </div>
+          <div class="mt-2 flex justify-between text-[11px] text-gray-500">
+            <span><span class="font-medium text-gray-700">Kickoff</span> · 12 jan</span>
+            <span class="font-semibold" style="color: #006B3F;">Vandaag · 24 apr · 50%</span>
+            <span><span class="font-medium text-gray-700">Deadline</span> · 15 jun</span>
+          </div>
+        </div>
+
+        <!-- ② OPEN-ACTIES ROLLUP -->
+        <details class="group rounded-lg border border-amber-200 bg-amber-50/40 mb-4">
+          <summary class="flex items-center justify-between px-5 py-3">
+            <div class="flex items-center gap-2.5">
+              <svg class="h-4 w-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span class="text-sm font-medium text-gray-900">12 open acties</span>
+              <span class="text-xs text-gray-500">uit alle meetings</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <!-- Avatar pills -->
+              <div class="flex items-center gap-1">
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-white border border-amber-200 text-gray-700">Stef · 5</span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-white border border-amber-200 text-gray-700">Wouter · 4</span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-white border border-amber-200 text-gray-700">Chloë · 1</span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-white border border-gray-200 text-gray-500">? · 2</span>
+              </div>
+              <svg class="chevron h-4 w-4 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </summary>
+          <div class="px-5 pb-4 pt-2 border-t border-amber-200/60">
+            <!-- Per persoon -->
+            <div class="space-y-3">
+              <!-- Stef -->
+              <div>
+                <h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Stef · 5 acties</h4>
+                <ul class="space-y-1 text-xs text-gray-700">
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">Bouwt AI-gegenereerd exportrapport uit DevHub <span class="text-gray-400">— donderdag</span></span>
+                    <span class="text-[10px] text-gray-400">21 apr · Status update</span>
+                  </li>
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">Bespreekt DevApp-status met Wouter <span class="text-gray-400">— donderdag</span></span>
+                    <span class="text-[10px] text-gray-400">21 apr · Status update</span>
+                  </li>
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">Client-facing portaal bouwen met bug-voortgang <span class="text-gray-400">— voor donderdag</span></span>
+                    <span class="text-[10px] text-gray-400">23 apr · Strategie</span>
+                  </li>
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">Filter in DevHub maken voor openstaande feature requests</span>
+                    <span class="text-[10px] text-gray-400">23 apr · Strategie</span>
+                  </li>
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">Verplicht reasoning-veld toevoegen bij afsluiting bugs</span>
+                    <span class="text-[10px] text-gray-400">23 apr · Strategie</span>
+                  </li>
+                </ul>
+              </div>
+              <!-- Wouter -->
+              <div>
+                <h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Wouter · 4 acties</h4>
+                <ul class="space-y-1 text-xs text-gray-700">
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">Vier nieuwe features als tickets in DevHub zetten <span class="text-gray-400">— vandaag</span></span>
+                    <span class="text-[10px] text-gray-400">23 apr · Status update</span>
+                  </li>
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">Circle doorlopen en FAQ-antwoorden uitdraaien <span class="text-gray-400">— vanmiddag</span></span>
+                    <span class="text-[10px] text-gray-400">23 apr · Status update</span>
+                  </li>
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">SLA-document delen in thread</span>
+                    <span class="text-[10px] text-gray-400">23 apr · Status update</span>
+                  </li>
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">Features uit Circle documenteren in DevOps met prioritering <span class="text-gray-400">— voor 17:00 vandaag</span></span>
+                    <span class="text-[10px] text-gray-400">23 apr · Strategie</span>
+                  </li>
+                </ul>
+              </div>
+              <!-- Chloë -->
+              <div>
+                <h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Chloë · 1 actie</h4>
+                <ul class="space-y-1 text-xs text-gray-700">
+                  <li class="flex items-baseline gap-2 hover:bg-white rounded px-1 py-0.5 cursor-pointer">
+                    <span class="text-amber-600">●</span>
+                    <span class="flex-1">FAQ-pagina's aanvullen op basis van Circle-data <span class="text-gray-400">— vanmiddag tot morgen</span></span>
+                    <span class="text-[10px] text-gray-400">23 apr · Status update</span>
+                  </li>
+                </ul>
+              </div>
+              <p class="text-[11px] text-gray-400 italic mt-2">+ 2 acties zonder eigenaar — <a href="#" class="underline">toewijzen</a></p>
+            </div>
+          </div>
+        </details>
+
+        <!-- ③ TIMELINE met header + filter-chips + datum-grouping -->
+        <div class="rounded-lg px-5 py-4" style="background: rgba(0, 107, 63, 0.03);">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.6);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: rgba(0, 107, 63, 0.7);">Projectverloop</h3>
+              <span class="text-[10px] text-gray-500">35 touchpoints</span>
+            </div>
+            <button class="flex items-center gap-1 text-xs hover:text-[#006B3F] transition-colors" style="color: rgba(0, 107, 63, 0.7);">
+              Alles tonen
+              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+
+          <!-- Filter chips -->
+          <div class="flex items-center gap-2 mb-4 flex-wrap">
+            <button data-chip="decisions" class="chip inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-gray-200 bg-white text-gray-700 hover:border-[#006B3F]" onclick="toggleChip(this)">
+              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Met besluiten <span class="text-gray-400">· 18</span>
+            </button>
+            <button data-chip="actions" class="chip inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-gray-200 bg-white text-gray-700 hover:border-amber-500" onclick="toggleChip(this)">
+              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Met open acties <span class="text-gray-400">· 22</span>
+            </button>
+            <div class="relative">
+              <button class="chip inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-gray-200 bg-white text-gray-700 hover:border-gray-400" onclick="toggleDropdown(event)">
+                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Type <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="type-dropdown" class="hidden absolute top-full left-0 mt-1 w-44 rounded-lg border border-gray-200 bg-white shadow-lg z-10 py-1">
+                <label class="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="rounded" checked> Status update <span class="ml-auto text-gray-400">14</span></label>
+                <label class="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="rounded" checked> Strategie <span class="ml-auto text-gray-400">6</span></label>
+                <label class="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="rounded" checked> Sales <span class="ml-auto text-gray-400">4</span></label>
+                <label class="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="rounded" checked> Discovery <span class="ml-auto text-gray-400">3</span></label>
+                <label class="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="rounded" checked> E-mail <span class="ml-auto text-gray-400">8</span></label>
+              </div>
+            </div>
+            <div class="ml-auto inline-flex rounded-full border border-gray-200 bg-white p-0.5">
+              <button class="px-2 py-0.5 text-[11px] font-medium text-gray-500 hover:text-gray-900 rounded-full transition-colors" onclick="toggleSort(this, 'old')">Oud → Nieuw</button>
+              <button class="px-2 py-0.5 text-[11px] font-medium bg-gray-100 text-gray-900 rounded-full transition-colors" onclick="toggleSort(this, 'new')">Nieuw → Oud</button>
+            </div>
+          </div>
+
+          <!-- Timeline content -->
+          <div class="space-y-5">
+            <!-- DAG-GROUP: 23 april -->
+            <div>
+              <div class="flex items-center gap-2 mb-2 pl-2">
+                <h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-600">23 april 2026</h4>
+                <span class="text-[10px] text-gray-400">· 2 touchpoints</span>
+              </div>
+
+              <div class="relative ml-2">
+                <div class="absolute left-[5px] top-2 bottom-2 w-px timeline-rail"></div>
+                <div class="space-y-2">
+
+                  <!-- Entry: Strategie (KANTELPUNT) -->
+                  <div class="entry-card relative pl-6 py-2 rounded-md cursor-pointer">
+                    <!-- Pivot left bar -->
+                    <div class="absolute left-[2px] top-2 bottom-2 w-[3px] rounded-full pivot-bar"></div>
+                    <!-- Larger dot -->
+                    <div class="absolute left-[-2px] top-1.5 h-[15px] w-[15px] rounded-full border-2 bg-white shadow-sm flex items-center justify-center" style="border-color: #006B3F;">
+                      <svg class="h-2 w-2" viewBox="0 0 24 24" fill="#006B3F" stroke="none"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    </div>
+
+                    <div class="flex items-baseline gap-2 flex-wrap">
+                      <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.12); color: #006B3F;">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                        Strategie
+                      </span>
+                      <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0, 107, 63, 0.08); color: #006B3F;">
+                        ★ Kantelpunt
+                      </span>
+                      <span class="text-[10px] text-gray-400 ml-auto">15:00</span>
+                    </div>
+                    <p class="mt-1 text-sm font-semibold text-gray-900">Cai Studio → client-facing bug- en featureportaal</p>
+                    <p class="mt-0.5 text-[13px] leading-relaxed text-gray-700">Stef en Wouter evalueerden druk van Cai Automations op bug-rapportage en feature-management; besloten client-facing portaal apart van interne DevHub.</p>
+                    <div class="mt-1.5 space-y-0.5 text-xs text-gray-700">
+                      <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.6);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Client-facing portaal apart van interne DevHub met bug-voortgang, feature requests en prioritering (P0/P1/P2)</div>
+                      <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.6);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Verplicht reasoning-veld bij afsluiting bugs (hoe gereproduceerd, hoe opgelost)</div>
+                      <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.6);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Klanten kunnen feature requests prioriteren via portaal</div>
+                    </div>
+                    <div class="mt-1.5 space-y-1 text-xs text-gray-700">
+                      <div class="flex items-start gap-1.5">
+                        <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="flex-1">Client-facing portaal bouwen met bug-voortgang</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">Stef · do</span>
+                      </div>
+                      <div class="flex items-start gap-1.5">
+                        <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="flex-1">Filter in DevHub maken voor openstaande feature requests</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">Stef</span>
+                      </div>
+                      <div class="flex items-start gap-1.5">
+                        <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="flex-1">Features uit Circle in DevOps zetten met prioritering</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">Wouter · 17:00</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Entry: Status update -->
+                  <div class="entry-card relative pl-6 py-2 rounded-md cursor-pointer">
+                    <div class="absolute left-0 top-2.5 h-[11px] w-[11px] rounded-full border-2 bg-white" style="border-color: rgba(0, 107, 63, 0.3);"></div>
+
+                    <div class="flex items-baseline gap-2 flex-wrap">
+                      <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                        Status update
+                      </span>
+                      <span class="text-[10px] text-gray-400 ml-auto">11:00</span>
+                    </div>
+                    <p class="mt-1 text-sm font-medium text-gray-900">Cai Automations / Cai Studio → rapportage-inrichting en bug-prioritering</p>
+                    <p class="mt-0.5 text-[13px] leading-relaxed text-gray-700">Stefan wilde eenvoudig overzicht van opgelost/plannen/komend/niet-geprioriteerd; Wouter herziet planning en Stef bouwt client-facing portaal los van DevHub.</p>
+                    <div class="mt-1.5 space-y-0.5 text-xs text-gray-700">
+                      <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Wouter herziet planning op basis van Joeps prioriteiten</div>
+                      <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Feature-verzoeken van Joep voortaan via Slack, niet e-mail</div>
+                      <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>PDF uploaden naar kennisbank en genereren vanuit chat zijn opgelost</div>
+                      <button class="text-[11px] text-gray-500 hover:text-[#006B3F] underline ml-4.5">+3 meer besluiten</button>
+                    </div>
+                    <div class="mt-1.5 space-y-1 text-xs text-gray-700">
+                      <div class="flex items-start gap-1.5">
+                        <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="flex-1">Vier nieuwe features als tickets in DevHub zetten</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">Wouter · vandaag</span>
+                      </div>
+                      <div class="flex items-start gap-1.5">
+                        <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="flex-1">Circle doorlopen en FAQ-antwoorden uitdraaien</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">Wouter · vanmiddag</span>
+                      </div>
+                      <div class="flex items-start gap-1.5">
+                        <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="flex-1">FAQ-pagina's aanvullen op basis van Circle-data</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">Chloë · do</span>
+                      </div>
+                      <button class="text-[11px] text-gray-500 hover:text-amber-600 underline ml-4.5">+2 meer acties</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- DAG-GROUP: 21 april -->
+            <div>
+              <div class="flex items-center gap-2 mb-2 pl-2">
+                <h4 class="text-[11px] font-semibold uppercase tracking-wider text-gray-600">21 april 2026</h4>
+                <span class="text-[10px] text-gray-400">· 1 touchpoint</span>
+              </div>
+              <div class="relative ml-2">
+                <div class="absolute left-[5px] top-2 bottom-2 w-px timeline-rail"></div>
+                <div class="space-y-2">
+                  <div class="entry-card relative pl-6 py-2 rounded-md cursor-pointer">
+                    <div class="absolute left-0 top-2.5 h-[11px] w-[11px] rounded-full border-2 bg-white" style="border-color: rgba(0, 107, 63, 0.3);"></div>
+                    <div class="flex items-baseline gap-2 flex-wrap">
+                      <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                        Status update
+                      </span>
+                      <span class="text-[10px] text-gray-400 ml-auto">10:30</span>
+                    </div>
+                    <p class="mt-1 text-sm font-medium text-gray-900">Platform feedback en exportfunctionaliteit</p>
+                    <p class="mt-0.5 text-[13px] leading-relaxed text-gray-700">Stef (klant bij Cai Studio) stelde vragen over markdown en afbeeldinglimieten; Wouter verdedigde technische keuzes en Stef bouwt AI-export rapport.</p>
+                    <div class="mt-1.5 space-y-0.5 text-xs text-gray-700">
+                      <div class="flex items-start gap-1.5"><svg class="mt-0.5 h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: rgba(0, 107, 63, 0.5);"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Afbeeldinglimieten blijven op 5MB</div>
+                    </div>
+                    <div class="mt-1.5 space-y-1 text-xs text-gray-700">
+                      <div class="flex items-start gap-1.5">
+                        <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="flex-1">Bouwt AI-gegenereerd exportrapport uit DevHub</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">Stef · do</span>
+                      </div>
+                      <div class="flex items-start gap-1.5">
+                        <svg class="mt-0.5 h-3 w-3 shrink-0 text-amber-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="flex-1">Bespreekt DevApp-status met Wouter</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600">Stef · do</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Annotaties / legenda -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px] text-gray-600">
+          <div class="rounded-md border border-gray-200 bg-white px-3 py-2">
+            <div class="flex items-center gap-1.5 mb-1"><span class="text-base leading-none">①</span><strong class="text-gray-800">Progress-strip</strong></div>
+            <p>Geeft temporele context — hoe ver in het traject zit dit project? Klein en niet-dominant.</p>
+          </div>
+          <div class="rounded-md border border-gray-200 bg-white px-3 py-2">
+            <div class="flex items-center gap-1.5 mb-1"><span class="text-base leading-none">②</span><strong class="text-gray-800">Open-acties rollup</strong></div>
+            <p>Aggregaat over álle 35 meetings, gegroepeerd per persoon. Verandert de timeline van logboek → status-overzicht.</p>
+          </div>
+          <div class="rounded-md border border-gray-200 bg-white px-3 py-2">
+            <div class="flex items-center gap-1.5 mb-1"><span class="text-base leading-none">③</span><strong class="text-gray-800">Filter-chips + datum-grouping</strong></div>
+            <p>Met besluiten / met acties / type. Meerdere meetings op dezelfde dag worden samengevat onder één datum-header.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      function switchTab(tab) {
+        const voor = document.getElementById('view-voor');
+        const na = document.getElementById('view-na');
+        const tabVoor = document.getElementById('tab-voor');
+        const tabNa = document.getElementById('tab-na');
+
+        if (tab === 'voor') {
+          voor.classList.remove('hidden');
+          na.classList.add('hidden');
+          tabVoor.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
+          tabVoor.classList.remove('text-gray-600');
+          tabNa.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
+          tabNa.classList.add('text-gray-600');
+        } else {
+          na.classList.remove('hidden');
+          voor.classList.add('hidden');
+          tabNa.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
+          tabNa.classList.remove('text-gray-600');
+          tabVoor.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
+          tabVoor.classList.add('text-gray-600');
+        }
+      }
+
+      function toggleChip(btn) {
+        const active = btn.dataset.active === 'true';
+        if (active) {
+          btn.dataset.active = 'false';
+          btn.classList.remove('bg-[#006B3F]', 'text-white', 'border-[#006B3F]');
+          btn.classList.add('bg-white', 'text-gray-700', 'border-gray-200');
+          btn.style.background = '';
+          btn.style.color = '';
+          btn.style.borderColor = '';
+        } else {
+          btn.dataset.active = 'true';
+          btn.style.background = btn.dataset.chip === 'actions' ? '#f59e0b' : '#006B3F';
+          btn.style.color = 'white';
+          btn.style.borderColor = btn.dataset.chip === 'actions' ? '#f59e0b' : '#006B3F';
+        }
+      }
+
+      function toggleDropdown(e) {
+        e.stopPropagation();
+        document.getElementById('type-dropdown').classList.toggle('hidden');
+      }
+
+      document.addEventListener('click', () => {
+        document.getElementById('type-dropdown')?.classList.add('hidden');
+      });
+
+      function toggleSort(btn, dir) {
+        btn.parentElement.querySelectorAll('button').forEach(b => {
+          b.classList.remove('bg-gray-100', 'text-gray-900');
+          b.classList.add('text-gray-500');
+        });
+        btn.classList.add('bg-gray-100', 'text-gray-900');
+        btn.classList.remove('text-gray-500');
+      }
+    </script>
+  </body>
+</html>

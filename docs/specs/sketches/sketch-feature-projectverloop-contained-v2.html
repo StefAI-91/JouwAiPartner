@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup v2: Summary + Inzichten + Projectverloop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP v2 — summary + inzichten + verloop in eigen container";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #fafaf9;
+      }
+
+      /* ── Scroll-container voor verloop ── */
+      .verloop-scroll {
+        height: 640px;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+      }
+      .verloop-scroll::-webkit-scrollbar { width: 8px; }
+      .verloop-scroll::-webkit-scrollbar-track { background: rgba(0,107,63,0.04); border-radius: 4px; }
+      .verloop-scroll::-webkit-scrollbar-thumb { background: rgba(0,107,63,0.2); border-radius: 4px; }
+      .verloop-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,107,63,0.4); }
+
+      .spine { position: sticky; top: 0; height: 100%; max-height: 640px; }
+      .spine-rail {
+        background: linear-gradient(180deg, rgba(0,107,63,0.4) 0%, rgba(0,107,63,0.15) 50%, rgba(0,107,63,0.05) 100%);
+      }
+      .spine-dot { transition: all 400ms ease; }
+      .spine-dot.active {
+        transform: scale(1.4);
+        background: #006B3F !important;
+        box-shadow: 0 0 0 4px rgba(0,107,63,0.15);
+      }
+      .spine-progress { transition: height 200ms linear; }
+      .spine-you-are-here { transition: top 200ms linear; }
+
+      .entry { scroll-margin-top: 5rem; }
+      .entry-card { transition: opacity 400ms ease; opacity: 0.45; }
+      .entry-card.in-view { opacity: 1; }
+
+      .pivot-bar {
+        background: linear-gradient(180deg, #006B3F 0%, rgba(0,107,63,0.2) 100%);
+      }
+
+      .month-heading {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        backdrop-filter: blur(8px);
+        background: rgba(250,250,249,0.92);
+        margin-left: -0.25rem;
+        padding-left: 0.25rem;
+      }
+
+      .scroll-fade-top { background: linear-gradient(180deg, rgba(250,250,249,1) 0%, rgba(250,250,249,0) 100%); }
+      .scroll-fade-bottom { background: linear-gradient(0deg, rgba(250,250,249,1) 0%, rgba(250,250,249,0) 100%); }
+
+      /* Inzicht-cards: subtiele hover */
+      .insight-item {
+        transition: background-color 150ms ease, transform 150ms ease;
+        cursor: pointer;
+      }
+      .insight-item:hover { background-color: rgba(255, 255, 255, 0.8); }
+
+      /* Tabs voor inzichten (op mobile) */
+      .insight-tab.active {
+        background: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        color: #111827;
+      }
+    </style>
+  </head>
+  <body class="text-gray-900">
+    <header class="max-w-5xl mx-auto px-6 pt-10 pb-6">
+      <p class="text-sm font-medium text-gray-600">Cai Studio</p>
+      <div class="flex items-baseline gap-3">
+        <h1 class="text-3xl font-bold text-gray-900">Cai Studio Platform</h1>
+        <a href="#" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#006B3F]">
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          github.com/cai-studio/platform
+        </a>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 pb-16 space-y-6">
+
+      <!-- ═══════════════ ① PROJECT SUMMARY ═══════════════ -->
+      <section class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div class="border-b border-gray-100 px-6 py-4 bg-gradient-to-r from-[#006B3F]/[0.03] to-transparent">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <svg class="h-3.5 w-3.5 text-[#006B3F]/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="text-xs font-semibold uppercase tracking-wider text-[#006B3F]/70">Voortgang</span>
+              <span class="text-[10px] text-gray-500">· 50%</span>
+            </div>
+            <span class="text-xs text-gray-500"><strong class="text-gray-700">52 dagen</strong> tot deadline</span>
+          </div>
+          <div class="relative h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+            <div class="absolute inset-y-0 left-0 rounded-full" style="width: 50%; background: linear-gradient(90deg, #006B3F, #4ade80);"></div>
+            <div class="absolute top-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-white border-2 shadow" style="left: calc(50% - 6px); border-color: #006B3F;"></div>
+          </div>
+          <div class="mt-1.5 flex justify-between text-[10px] text-gray-500">
+            <span>Kickoff · 12 jan 2026</span>
+            <span class="font-semibold text-[#006B3F]">Vandaag · 24 apr 2026</span>
+            <span>Deadline · 15 jun 2026</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+          <div class="px-6 py-5">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="h-3.5 w-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-600">Context</h2>
+              <span class="text-[10px] text-gray-400">v4 · 23 apr</span>
+            </div>
+            <p class="text-sm leading-relaxed text-gray-700">
+              Cai Studio Platform is een AI-gedreven knowledge platform met chat en exportfunctionaliteit voor klant Stefan (Cai Studio).
+              Stef en Wouter bouwen het in TypeScript/Next.js met Anthropic Claude als AI-laag. Scope omvat document-upload (PDF/Markdown),
+              chat-interface met document-context-selectie, export naar Markdown en PDF, en sinds maart een aparte client-facing portaal.
+              Deadline: 15 juni 2026.
+            </p>
+          </div>
+
+          <div class="px-6 py-5 bg-amber-50/30">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="h-3.5 w-3.5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-amber-700">Briefing</h2>
+              <span class="text-[10px] text-gray-400">v4 · 23 apr</span>
+            </div>
+            <p class="text-sm leading-relaxed text-gray-700">
+              Project zit op 50% van de tijdslijn met client-portaal als hoofdfocus na het strategie-besluit van 23 april.
+              <strong class="text-gray-900">Stef bouwt portaal voor donderdag</strong>, Wouter migreert features vandaag voor 17:00.
+              Risico: scope-uitbreiding van maart drukt op de deadline — overweeg of de demo eind april kan blijven staan.
+              <strong class="text-gray-900">12 open acties</strong> verdeeld over Stef (5), Wouter (4), Chloë (1) en 2 zonder eigenaar.
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 px-6 py-2.5 flex items-center justify-between bg-gray-50/50">
+          <span class="text-[11px] text-gray-500">Automatisch bijgewerkt na elke verified meeting/email</span>
+          <button class="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-600 hover:text-[#006B3F] transition-colors">
+            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Regenereer summary
+          </button>
+        </div>
+      </section>
+
+      <!-- ═══════════════ ② INZICHTEN — NIEUW! ═══════════════ -->
+      <section class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <!-- Container header -->
+        <div class="border-b border-gray-100 px-6 py-3 flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            <h2 class="text-sm font-semibold text-gray-900">Inzichten & signalen</h2>
+            <span class="text-xs text-gray-500">· 9 actieve signalen uit 10 touchpoints</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-[11px] text-gray-400">Bijgewerkt 23 apr 16:42</span>
+            <button class="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-600 hover:text-indigo-600 transition-colors">
+              <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Bijwerken
+            </button>
+          </div>
+        </div>
+
+        <!-- 3-koloms grid: Risico's | Insights | Needs -->
+        <div class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+
+          <!-- ─── RISICO'S ─── -->
+          <div class="bg-rose-50/30">
+            <div class="px-5 py-3 border-b border-rose-100/60 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-rose-700">Risico's</h3>
+              </div>
+              <span class="text-[10px] font-semibold text-rose-600 bg-white border border-rose-200 px-1.5 py-0.5 rounded-full">3</span>
+            </div>
+            <ul class="px-3 py-2 space-y-1">
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Scope-uitbreiding drukt op deadline</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">Client-portaal voegt ~3 weken werk toe; demo eind april mogelijk niet haalbaar.</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-rose-600">
+                      <span>🎯</span> 10 mrt · Strategie
+                      <span class="text-gray-300">+</span>
+                      <span>🎯</span> 23 apr · Strategie
+                    </p>
+                  </div>
+                </div>
+              </li>
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Cai-team wil meer features dan MVP-scope</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">Joep blijft features pushen via Slack; nog geen prioriteringsproces.</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-rose-600">
+                      <span>📋</span> 23 apr · Status update
+                    </p>
+                  </div>
+                </div>
+              </li>
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Externe afhankelijkheid van Anthropic API</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">Performance van chat afhankelijk van uptime/latency Claude. Geen fallback.</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-rose-600">
+                      <span>🚀</span> 12 jan · Kickoff
+                    </p>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- ─── INSIGHTS ─── -->
+          <div class="bg-indigo-50/30">
+            <div class="px-5 py-3 border-b border-indigo-100/60 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-indigo-700">Insights</h3>
+              </div>
+              <span class="text-[10px] font-semibold text-indigo-600 bg-white border border-indigo-200 px-1.5 py-0.5 rounded-full">3</span>
+            </div>
+            <ul class="px-3 py-2 space-y-1">
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Klant prefereert Slack boven e-mail</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">Joep reageert sneller op Slack; e-mail-feature-requests verdwijnen vaak.</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-indigo-600">
+                      <span>📋</span> 23 apr · Status update
+                    </p>
+                  </div>
+                </div>
+              </li>
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Stefan accepteert technische trade-offs</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">Reageert constructief als keuzes goed onderbouwd worden (5MB-limiet).</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-indigo-600">
+                      <span>📋</span> 21 apr · Status update
+                    </p>
+                  </div>
+                </div>
+              </li>
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Joep prioriteert content boven features</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">Wil eerst alle docs in kennisbank voordat hij klant-test wil doen.</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-indigo-600">
+                      <span>📋</span> 3 apr · Status update
+                    </p>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- ─── NEEDS ─── -->
+          <div class="bg-emerald-50/30">
+            <div class="px-5 py-3 border-b border-emerald-100/60 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Needs</h3>
+              </div>
+              <span class="text-[10px] font-semibold text-emerald-600 bg-white border border-emerald-200 px-1.5 py-0.5 rounded-full">3</span>
+            </div>
+            <ul class="px-3 py-2 space-y-1">
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Eigenaarschap content moderation</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">Klant wil zelf kunnen bepalen wat in de chat-context komt — nog geen UI.</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-emerald-600">
+                      <span>🎬</span> 28 feb · Demo
+                    </p>
+                  </div>
+                </div>
+              </li>
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Onboarding-materiaal voor eindgebruikers</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">Zonder docs kan Cai het platform niet uitrollen aan hun klanten.</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-emerald-600">
+                      <span>📋</span> 3 apr · Status update
+                    </p>
+                  </div>
+                </div>
+              </li>
+              <li class="insight-item rounded-md px-2 py-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 leading-snug">Compliance-documentatie voor go-live</p>
+                    <p class="text-xs text-gray-600 mt-0.5 leading-relaxed">AVG-statement en data-residency policy nog niet opgesteld.</p>
+                    <p class="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-emerald-600">
+                      <span>🚀</span> 12 jan · Kickoff
+                    </p>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Footer met optionele extra categorieën -->
+        <div class="border-t border-gray-100 px-6 py-2.5 flex items-center justify-between bg-gray-50/50">
+          <div class="flex items-center gap-3 text-[11px]">
+            <span class="text-gray-500">Andere signalen:</span>
+            <button class="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 hover:underline">💡 Opportunities <span class="text-gray-400">(2)</span></button>
+            <button class="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 hover:underline">❓ Open vragen <span class="text-gray-400">(4)</span></button>
+            <button class="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 hover:underline">🤝 Stakeholders <span class="text-gray-400">(5)</span></button>
+          </div>
+          <span class="text-[11px] text-gray-400">Gegenereerd door <span class="font-mono">insights-extractor</span></span>
+        </div>
+      </section>
+
+      <!-- ═══════════════ ③ PROJECTVERLOOP CONTAINER ═══════════════ -->
+      <section class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div class="border-b border-gray-100 px-6 py-3 flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-[#006B3F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <h2 class="text-sm font-semibold text-gray-900">Projectverloop</h2>
+            <span class="text-xs text-gray-500">· 10 touchpoints over 103 dagen</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            <span class="text-gray-500">Kijkt nu naar:</span>
+            <span id="active-month-label" class="inline-flex items-center gap-1.5 rounded-full bg-[#006B3F]/[0.08] px-2 py-0.5 font-medium text-[#006B3F]">
+              <span class="h-1.5 w-1.5 rounded-full bg-[#006B3F] animate-pulse"></span>
+              Januari 2026
+            </span>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div class="pointer-events-none absolute top-0 left-0 right-2 h-6 z-10 scroll-fade-top"></div>
+          <div class="pointer-events-none absolute bottom-0 left-0 right-2 h-8 z-10 scroll-fade-bottom"></div>
+
+          <div id="verloop-container" class="verloop-scroll" style="background: #fafaf9;">
+            <div class="grid grid-cols-[140px_1fr] gap-6 px-6 py-5">
+
+              <aside class="spine">
+                <div class="relative h-full flex flex-col py-2">
+                  <div class="mb-2">
+                    <p class="text-[9px] font-semibold uppercase tracking-wider text-gray-400">Kickoff</p>
+                    <p class="text-xs font-semibold text-gray-700">12 jan</p>
+                  </div>
+                  <div class="relative flex-1 mx-3">
+                    <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 rounded-full spine-rail"></div>
+                    <div id="spine-progress" class="spine-progress absolute top-0 left-1/2 -translate-x-1/2 w-0.5 rounded-full" style="height: 0%; background: #006B3F;"></div>
+                    <div id="spine-you-are-here" class="spine-you-are-here absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10" style="top: 0%;">
+                      <div class="relative">
+                        <div class="absolute inset-0 h-3.5 w-3.5 rounded-full bg-[#006B3F] animate-ping opacity-40"></div>
+                        <div class="relative h-3.5 w-3.5 rounded-full bg-[#006B3F] border-2 border-white shadow"></div>
+                      </div>
+                    </div>
+                    <div class="absolute inset-0 flex flex-col justify-between py-1">
+                      <div class="relative" data-spine="jan-2026">
+                        <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-300"></div>
+                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-500 whitespace-nowrap">Jan</span>
+                      </div>
+                      <div class="relative" data-spine="feb-2026">
+                        <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-300"></div>
+                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-500 whitespace-nowrap">Feb</span>
+                      </div>
+                      <div class="relative" data-spine="mar-2026">
+                        <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-300"></div>
+                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-500 whitespace-nowrap">Mrt</span>
+                      </div>
+                      <div class="relative" data-spine="apr-2026">
+                        <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-300"></div>
+                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-500 whitespace-nowrap">Apr</span>
+                      </div>
+                      <div class="relative">
+                        <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-200"></div>
+                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-400 whitespace-nowrap">Mei</span>
+                      </div>
+                      <div class="relative">
+                        <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-200"></div>
+                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-400 whitespace-nowrap">Jun</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <p class="text-[9px] font-semibold uppercase tracking-wider text-amber-600">Deadline</p>
+                    <p class="text-xs font-semibold text-gray-700">15 jun</p>
+                  </div>
+                </div>
+              </aside>
+
+              <div class="space-y-10 pb-4 min-w-0">
+                <section data-month="jan-2026">
+                  <header class="month-heading py-2 mb-4 border-b border-gray-200">
+                    <div class="flex items-baseline gap-2">
+                      <h3 class="text-lg font-bold text-gray-900">Januari</h3>
+                      <span class="text-xs text-gray-500">· De start · 2 touchpoints</span>
+                    </div>
+                  </header>
+
+                  <article class="entry mb-6" data-date="2026-01-12">
+                    <div class="entry-card relative pl-4">
+                      <div class="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full pivot-bar"></div>
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">12 januari</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.12); color: #006B3F;">🚀 Kickoff</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0,107,63,0.08); color: #006B3F;">★ Mijlpaal</span>
+                      </div>
+                      <h4 class="text-base font-semibold text-gray-900 mb-1">Project Cai Studio Platform start</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                        Stef en Wouter ontmoeten Stefan en Joep voor de kickoff. Scope wordt vastgesteld:
+                        AI-platform met knowledge base, chat en exportfunctionaliteit. Deadline 15 juni bevestigd.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700">✓ Scope vastgezet</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700">✓ Wekelijkse status</span>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="entry mb-6" data-date="2026-01-19">
+                    <div class="entry-card relative pl-4">
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">19 januari</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.08); color: rgba(0,107,63,0.7);">🔍 Discovery</span>
+                      </div>
+                      <h4 class="text-sm font-semibold text-gray-900 mb-1">Requirements-sessie met Stefan en Joep</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                        Use cases doorgesproken: documenten, chat-output, export-formats. Joep noemt afbeeldingen als cruciaal.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">◉ Stef · 2 feb</span>
+                      </div>
+                    </div>
+                  </article>
+                </section>
+
+                <section data-month="feb-2026">
+                  <header class="month-heading py-2 mb-4 border-b border-gray-200">
+                    <div class="flex items-baseline gap-2">
+                      <h3 class="text-lg font-bold text-gray-900">Februari</h3>
+                      <span class="text-xs text-gray-500">· Scope lock & eerste sprint · 2 touchpoints</span>
+                    </div>
+                  </header>
+
+                  <article class="entry mb-6" data-date="2026-02-02">
+                    <div class="entry-card relative pl-4">
+                      <div class="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full pivot-bar"></div>
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">2 februari</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.12); color: #006B3F;">🎯 Strategie</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0,107,63,0.08); color: #006B3F;">★ Kantelpunt</span>
+                      </div>
+                      <h4 class="text-base font-semibold text-gray-900 mb-1">Scope definitief: MVP afgekaderd</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                        PDF-upload en afbeeldingen blijven in scope, geavanceerde zoekfilters gaan naar fase 2.
+                        Prioriteit: werkende MVP in april.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700">✓ MVP-scope</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700">✓ 2-wekelijkse demo's</span>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="entry mb-6" data-date="2026-02-28">
+                    <div class="entry-card relative pl-4">
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">28 februari</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.08); color: rgba(0,107,63,0.7);">🎬 Demo</span>
+                      </div>
+                      <h4 class="text-sm font-semibold text-gray-900 mb-1">Eerste demo aan Stefan</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                        Stefan enthousiast over chat-kwaliteit, wil meer controle over welke documenten in context staan.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700">✓ Context-selectie</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">◉ Wouter · mrt</span>
+                      </div>
+                    </div>
+                  </article>
+                </section>
+
+                <section data-month="mar-2026">
+                  <header class="month-heading py-2 mb-4 border-b border-gray-200">
+                    <div class="flex items-baseline gap-2">
+                      <h3 class="text-lg font-bold text-gray-900">Maart</h3>
+                      <span class="text-xs text-gray-500">· Koerswijziging · 2 touchpoints</span>
+                    </div>
+                  </header>
+
+                  <article class="entry mb-6" data-date="2026-03-10">
+                    <div class="entry-card relative pl-4">
+                      <div class="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full pivot-bar"></div>
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">10 maart</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.12); color: #006B3F;">🎯 Strategie</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0,107,63,0.08); color: #006B3F;">★ Kantelpunt</span>
+                      </div>
+                      <h4 class="text-base font-semibold text-gray-900 mb-1">Besluit: client-portaal apart van interne DevHub</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                        Aparte client-facing omgeving naast DevHub voor bug-voortgang en feature requests.
+                        Voegt ~3 weken werk toe maar verhoogt klantwaarde sterk.
+                      </p>
+                      <div class="rounded-md border-l-2 border-[#006B3F] bg-[#006B3F]/[0.04] px-3 py-2 mb-2">
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-[#006B3F] mb-0.5">Waarom een kantelpunt</p>
+                        <p class="text-xs text-gray-700">Van "interne tool" naar "interne tool + client-portaal" — scope verbreedt, deadline onder druk.</p>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="entry mb-6" data-date="2026-03-20">
+                    <div class="entry-card relative pl-4">
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">20 maart</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.08); color: rgba(0,107,63,0.7);">📊 Sprint review</span>
+                      </div>
+                      <h4 class="text-sm font-semibold text-gray-900 mb-1">Sprint 2 gesloten, portaal-werk begonnen</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed">
+                        Document-selector live. Eerste architectuur-schets voor portaal gedeeld. Deadline blijft staan.
+                      </p>
+                    </div>
+                  </article>
+                </section>
+
+                <section data-month="apr-2026">
+                  <header class="month-heading py-2 mb-4 border-b border-gray-200">
+                    <div class="flex items-baseline gap-2">
+                      <h3 class="text-lg font-bold text-gray-900">April</h3>
+                      <span class="text-xs text-[#006B3F] font-semibold">· Jij bent hier · 4 touchpoints</span>
+                    </div>
+                  </header>
+
+                  <article class="entry mb-6" data-date="2026-04-03">
+                    <div class="entry-card relative pl-4">
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">3 april</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.08); color: rgba(0,107,63,0.7);">📋 Status update</span>
+                      </div>
+                      <h4 class="text-sm font-semibold text-gray-900 mb-1">Op koers, client-portaal 40% klaar</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed">
+                        Technische schets goedgekeurd. Joep begint met content-migratie. Eerste klant-test eind april.
+                      </p>
+                    </div>
+                  </article>
+
+                  <article class="entry mb-6" data-date="2026-04-21">
+                    <div class="entry-card relative pl-4">
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">21 april</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.08); color: rgba(0,107,63,0.7);">📋 Status update</span>
+                      </div>
+                      <h4 class="text-sm font-semibold text-gray-900 mb-1">Platform feedback en exportfunctionaliteit</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                        Vragen over markdown en afbeeldinglimieten; Stef bouwt AI-export rapport.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700">✓ 5MB-limiet blijft</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">◉ Stef · do</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">◉ Stef · do</span>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="entry mb-6" data-date="2026-04-23-1">
+                    <div class="entry-card relative pl-4">
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">23 april · 11:00</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.08); color: rgba(0,107,63,0.7);">📋 Status update</span>
+                      </div>
+                      <h4 class="text-sm font-semibold text-gray-900 mb-1">Rapportage-inrichting en bug-prioritering</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                        Stefan wilde overzicht van opgelost/plannen/komend; Wouter herziet planning, Stef bouwt portaal.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700">✓ 6 besluiten</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">◉ 5 acties</span>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="entry mb-6" data-date="2026-04-23-2">
+                    <div class="entry-card relative pl-4">
+                      <div class="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full pivot-bar"></div>
+                      <div class="flex items-baseline gap-2 flex-wrap mb-1.5">
+                        <span class="text-xs font-medium text-gray-500">23 april · 15:00</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0,107,63,0.12); color: #006B3F;">🎯 Strategie</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0,107,63,0.08); color: #006B3F;">★ Kantelpunt</span>
+                      </div>
+                      <h4 class="text-base font-semibold text-gray-900 mb-1">Client-facing portaal definitief</h4>
+                      <p class="text-sm text-gray-700 leading-relaxed mb-2">
+                        Bevestiging en concretisering van het besluit van 10 maart. Vanaf hier wordt het portaal de zichtbare kant
+                        van het project richting klanten. Verplicht reasoning-veld bij bugafsluiting.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5 text-xs">
+                        <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-700">✓ 3 besluiten</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">◉ Stef · do</span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-amber-700">◉ Wouter · 17:00</span>
+                      </div>
+                    </div>
+                  </article>
+                </section>
+
+                <div class="text-center py-2 text-[11px] text-gray-400">
+                  <p>— Einde verloop · vandaag is 24 april —</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 px-6 py-2.5 flex items-center justify-between bg-gray-50/50">
+          <span class="text-[11px] text-gray-500">Scroll binnen het verloop · spine en maand-headers blijven plakken</span>
+          <span class="text-[11px] text-gray-400">Laatste update · 23 apr 16:42</span>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-dashed border-gray-300 bg-gray-50/40 px-6 py-8 text-center">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 mb-2">Onder de fold</p>
+        <p class="text-sm text-gray-600">Tabs met meetings, e-mails, extracties en segments — de bestaande detail-tabs.</p>
+      </section>
+
+    </main>
+
+    <script>
+      const container = document.getElementById('verloop-container');
+      const entries = container.querySelectorAll('.entry');
+      const activeMonthLabel = document.getElementById('active-month-label');
+      const spineProgress = document.getElementById('spine-progress');
+      const youAreHere = document.getElementById('spine-you-are-here');
+
+      const MONTH_LABELS = {
+        'jan-2026': 'Januari 2026',
+        'feb-2026': 'Februari 2026',
+        'mar-2026': 'Maart 2026',
+        'apr-2026': 'April 2026'
+      };
+
+      let lastVisibleMonth = 'jan-2026';
+
+      const observer = new IntersectionObserver((items) => {
+        items.forEach(item => {
+          if (item.isIntersecting && item.intersectionRatio > 0.3) {
+            item.target.querySelector('.entry-card').classList.add('in-view');
+            const month = item.target.closest('[data-month]')?.dataset.month;
+            if (month) lastVisibleMonth = month;
+          } else {
+            item.target.querySelector('.entry-card').classList.remove('in-view');
+          }
+        });
+
+        const label = MONTH_LABELS[lastVisibleMonth] ?? lastVisibleMonth;
+        activeMonthLabel.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-[#006B3F] animate-pulse"></span>${label}`;
+        document.querySelectorAll('[data-spine] .spine-dot').forEach(d => d.classList.remove('active'));
+        document.querySelector(`[data-spine="${lastVisibleMonth}"] .spine-dot`)?.classList.add('active');
+      }, { root: container, threshold: [0, 0.3, 0.6, 1] });
+
+      entries.forEach(e => observer.observe(e));
+
+      function updateScrollProgress() {
+        const scrolled = container.scrollTop;
+        const total = container.scrollHeight - container.clientHeight;
+        const pct = total > 0 ? Math.min(100, Math.max(0, (scrolled / total) * 100)) : 0;
+        spineProgress.style.height = pct + '%';
+        youAreHere.style.top = pct + '%';
+      }
+
+      container.addEventListener('scroll', updateScrollProgress, { passive: true });
+      updateScrollProgress();
+
+      setTimeout(() => {
+        entries.forEach(e => {
+          const rect = e.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          if (rect.top < containerRect.bottom && rect.bottom > containerRect.top) {
+            e.querySelector('.entry-card').classList.add('in-view');
+          }
+        });
+      }, 100);
+    </script>
+  </body>
+</html>

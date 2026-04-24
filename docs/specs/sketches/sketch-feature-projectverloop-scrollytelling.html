@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mockup: Projectverloop — Scrollytelling</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body::before {
+        content: "🎨 MOCKUP — ter validatie · scroll door het project";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fef3c7;
+        color: #92400e;
+        text-align: center;
+        padding: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 9999;
+      }
+      body {
+        padding-top: 28px;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #fafaf9;
+      }
+
+      /* ── Sticky spine ── */
+      .spine {
+        position: sticky;
+        top: 6rem;
+        height: calc(100vh - 8rem);
+      }
+      .spine-rail {
+        background: linear-gradient(180deg,
+          rgba(0, 107, 63, 0.4) 0%,
+          rgba(0, 107, 63, 0.15) 50%,
+          rgba(0, 107, 63, 0.05) 100%);
+      }
+      .spine-dot {
+        transition: all 400ms ease;
+      }
+      .spine-dot.active {
+        transform: scale(1.3);
+        background: #006B3F !important;
+        box-shadow: 0 0 0 4px rgba(0, 107, 63, 0.15);
+      }
+      .spine-progress {
+        transition: height 200ms linear;
+      }
+      .spine-you-are-here {
+        transition: top 200ms linear;
+      }
+
+      /* ── Entries ── */
+      .entry {
+        scroll-margin-top: 8rem;
+      }
+      .entry-card {
+        transition: transform 400ms ease, opacity 400ms ease;
+      }
+      .entry-card.in-view {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      .entry-card:not(.in-view) {
+        opacity: 0.35;
+      }
+
+      .pivot-bar {
+        background: linear-gradient(180deg, #006B3F 0%, rgba(0, 107, 63, 0.2) 100%);
+      }
+
+      /* Maand-header: sticky within section */
+      .month-heading {
+        position: sticky;
+        top: 5rem;
+        z-index: 5;
+        backdrop-filter: blur(8px);
+      }
+
+      /* Scrollbar esthetiek */
+      ::-webkit-scrollbar { width: 10px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 5px; }
+      ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    </style>
+  </head>
+  <body class="text-gray-900">
+    <!-- TOP BAR -->
+    <div class="sticky top-7 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200">
+      <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div class="min-w-0">
+          <p class="text-xs font-medium text-gray-500">Cai Studio</p>
+          <h1 class="text-lg font-semibold text-gray-900 truncate">Cai Studio Platform — Projectverloop</h1>
+        </div>
+        <div class="flex items-center gap-3 text-xs text-gray-500">
+          <span id="active-month-label" class="font-medium text-[#006B3F]">Januari 2026</span>
+          <span class="h-4 w-px bg-gray-300"></span>
+          <span><span id="entries-in-view">0</span> / 10 touchpoints</span>
+        </div>
+      </div>
+      <!-- Thin progress bar under topbar -->
+      <div class="relative h-0.5 bg-gray-100">
+        <div id="scroll-progress" class="absolute inset-y-0 left-0" style="width: 0%; background: linear-gradient(90deg, #006B3F, #4ade80);"></div>
+      </div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-6 py-10">
+      <!-- Intro header -->
+      <div class="mb-12 max-w-2xl">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-[#006B3F]/70 mb-2">Projectverloop</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">Van kickoff tot vandaag</h2>
+        <p class="text-gray-600 leading-relaxed">
+          103 dagen, 10 touchpoints, 3 kantelpunten. Scroll naar beneden om het project te doorlopen van de
+          <strong class="text-gray-900">kickoff op 12 januari</strong> tot <strong class="text-gray-900">vandaag, 24 april</strong>.
+          Je zit op <strong class="text-[#006B3F]">50%</strong> van de tijd tot de deadline (15 juni).
+        </p>
+      </div>
+
+      <!-- Two-column: sticky spine + content -->
+      <div class="grid grid-cols-[180px_1fr] gap-10">
+        <!-- ═══════════════ STICKY SPINE ═══════════════ -->
+        <aside class="spine">
+          <div class="relative h-full flex flex-col">
+            <!-- Kickoff label -->
+            <div class="mb-3">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Kickoff</p>
+              <p class="text-sm font-semibold text-gray-900">12 jan 2026</p>
+            </div>
+
+            <!-- Rail -->
+            <div class="relative flex-1 mx-4">
+              <!-- Background rail -->
+              <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 rounded-full spine-rail"></div>
+
+              <!-- Progress fill (groen filled deel = hoever je gescrolld hebt) -->
+              <div id="spine-progress" class="spine-progress absolute top-0 left-1/2 -translate-x-1/2 w-0.5 rounded-full" style="height: 0%; background: #006B3F;"></div>
+
+              <!-- "Je bent hier"-indicator (pulse) -->
+              <div id="spine-you-are-here" class="spine-you-are-here absolute left-1/2 -translate-x-1/2 -translate-y-1/2" style="top: 0%;">
+                <div class="relative">
+                  <div class="absolute inset-0 h-4 w-4 rounded-full bg-[#006B3F] animate-ping opacity-40"></div>
+                  <div class="relative h-4 w-4 rounded-full bg-[#006B3F] border-2 border-white shadow"></div>
+                </div>
+              </div>
+
+              <!-- Dots per maand (worden dynamisch active) -->
+              <div class="absolute inset-0 flex flex-col justify-between py-1">
+                <div class="relative flex items-center gap-2" data-spine="jan-2026">
+                  <div class="spine-dot h-2 w-2 rounded-full ml-1/2 -translate-x-1/2 mx-auto bg-gray-300"></div>
+                  <span class="absolute left-full ml-3 text-[10px] font-medium text-gray-500 whitespace-nowrap">Jan</span>
+                </div>
+                <div class="relative flex items-center gap-2" data-spine="feb-2026">
+                  <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-300"></div>
+                  <span class="absolute left-full ml-3 text-[10px] font-medium text-gray-500 whitespace-nowrap">Feb</span>
+                </div>
+                <div class="relative flex items-center gap-2" data-spine="mar-2026">
+                  <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-300"></div>
+                  <span class="absolute left-full ml-3 text-[10px] font-medium text-gray-500 whitespace-nowrap">Mrt</span>
+                </div>
+                <div class="relative flex items-center gap-2" data-spine="apr-2026">
+                  <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-300"></div>
+                  <span class="absolute left-full ml-3 text-[10px] font-medium text-gray-500 whitespace-nowrap">Apr</span>
+                </div>
+                <div class="relative flex items-center gap-2" data-spine="mei-2026">
+                  <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-200"></div>
+                  <span class="absolute left-full ml-3 text-[10px] font-medium text-gray-400 whitespace-nowrap">Mei</span>
+                </div>
+                <div class="relative flex items-center gap-2" data-spine="jun-2026">
+                  <div class="spine-dot h-2 w-2 rounded-full mx-auto bg-gray-200"></div>
+                  <span class="absolute left-full ml-3 text-[10px] font-medium text-gray-400 whitespace-nowrap">Jun</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Deadline label -->
+            <div class="mt-3">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-amber-600">Deadline</p>
+              <p class="text-sm font-semibold text-gray-900">15 jun 2026</p>
+              <p class="text-[11px] text-gray-500 mt-0.5">52 dagen te gaan</p>
+            </div>
+          </div>
+        </aside>
+
+        <!-- ═══════════════ SCROLLYTELLING CONTENT ═══════════════ -->
+        <div class="space-y-16 pb-24">
+
+          <!-- ─────────── JANUARI ─────────── -->
+          <section data-month="jan-2026">
+            <header class="month-heading bg-[#fafaf9]/90 py-3 mb-6 border-b border-gray-200">
+              <div class="flex items-baseline gap-3">
+                <h3 class="text-2xl font-bold text-gray-900">Januari 2026</h3>
+                <span class="text-sm text-gray-500">· De start</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">2 touchpoints · project kickoff en eerste discovery</p>
+            </header>
+
+            <article class="entry mb-10" data-date="2026-01-12">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <!-- Pivot-bar want kickoff -->
+                  <div class="absolute left-0 top-2 bottom-2 w-[3px] rounded-full pivot-bar"></div>
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">12 januari · maandag</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.12); color: #006B3F;">
+                      🚀 Kickoff
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0, 107, 63, 0.08); color: #006B3F;">★ Mijlpaal</span>
+                  </div>
+                  <h4 class="text-xl font-semibold text-gray-900 mb-2">Project Cai Studio Platform start</h4>
+                  <p class="text-gray-700 leading-relaxed mb-3">
+                    Stef en Wouter ontmoeten Stefan (Cai Studio) en Joep voor de kickoff. Scope wordt op hoofdlijnen vastgesteld:
+                    een AI-platform met knowledge base, chat en exportfunctionaliteit. Deadline van 15 juni wordt bevestigd.
+                  </p>
+                  <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1">Besluit</p>
+                      <p class="text-gray-800">Scope vastgezet op knowledge base + chat + export</p>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1">Besluit</p>
+                      <p class="text-gray-800">Wekelijkse status-updates op maandagochtend</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="entry mb-10" data-date="2026-01-19">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">19 januari · maandag</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                      🔍 Discovery
+                    </span>
+                  </div>
+                  <h4 class="text-lg font-semibold text-gray-900 mb-2">Requirements-sessie met Stefan en Joep</h4>
+                  <p class="text-gray-700 leading-relaxed mb-2">
+                    Diepgaand gesprek over de use cases: welke documenten moeten uploadbaar zijn, hoe ziet de gewenste chat-output eruit,
+                    welke export-formats (Markdown, PDF) zijn nodig. Joep noemt afbeeldingen als cruciaal.
+                  </p>
+                  <div class="flex items-start gap-2 text-sm text-gray-700">
+                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] text-amber-700">
+                      ◉ Actie · Stef
+                    </span>
+                    <span>Technische architectuur uitwerken voor 2 februari</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- ─────────── FEBRUARI ─────────── -->
+          <section data-month="feb-2026">
+            <header class="month-heading bg-[#fafaf9]/90 py-3 mb-6 border-b border-gray-200">
+              <div class="flex items-baseline gap-3">
+                <h3 class="text-2xl font-bold text-gray-900">Februari 2026</h3>
+                <span class="text-sm text-gray-500">· Scope lock & eerste sprint</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">2 touchpoints · scope bevestigd, eerste demo gegeven</p>
+            </header>
+
+            <article class="entry mb-10" data-date="2026-02-02">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="absolute left-0 top-2 bottom-2 w-[3px] rounded-full pivot-bar"></div>
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">2 februari · maandag</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.12); color: #006B3F;">
+                      🎯 Strategie
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0, 107, 63, 0.08); color: #006B3F;">★ Kantelpunt</span>
+                  </div>
+                  <h4 class="text-xl font-semibold text-gray-900 mb-2">Scope definitief: MVP afgekaderd</h4>
+                  <p class="text-gray-700 leading-relaxed mb-3">
+                    Intern strategie-gesprek tussen Stef en Wouter. PDF-upload en afbeeldingen blijven in scope,
+                    geavanceerde zoekfilters gaan naar fase 2. Prioriteit: werkende MVP in april, dan iteratie met Cai-team.
+                  </p>
+                  <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1">Besluit</p>
+                      <p class="text-gray-800">MVP-scope: upload, chat, export. Filters in fase 2.</p>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                      <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1">Besluit</p>
+                      <p class="text-gray-800">Demo-momenten elke 2 weken ipv wekelijks</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="entry mb-10" data-date="2026-02-28">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">28 februari · vrijdag</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                      🎬 Demo
+                    </span>
+                  </div>
+                  <h4 class="text-lg font-semibold text-gray-900 mb-2">Eerste demo aan Stefan</h4>
+                  <p class="text-gray-700 leading-relaxed mb-3">
+                    MVP-versie getoond met upload, chat en eerste export. Stefan enthousiast over chat-kwaliteit,
+                    wil meer controle over welke documenten wel/niet in de context worden gebruikt.
+                  </p>
+                  <div class="space-y-1.5 text-sm text-gray-700">
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-[10px] text-green-700 shrink-0">✓ Besluit</span>
+                      <span>Context-selectie toevoegen aan chat UI</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] text-amber-700 shrink-0">◉ Wouter · mrt</span>
+                      <span>Document-selector component ontwerpen</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- ─────────── MAART ─────────── -->
+          <section data-month="mar-2026">
+            <header class="month-heading bg-[#fafaf9]/90 py-3 mb-6 border-b border-gray-200">
+              <div class="flex items-baseline gap-3">
+                <h3 class="text-2xl font-bold text-gray-900">Maart 2026</h3>
+                <span class="text-sm text-gray-500">· Koerswijziging: eigen portaal</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">2 touchpoints · beslissing om client-portaal los van DevHub te bouwen</p>
+            </header>
+
+            <article class="entry mb-10" data-date="2026-03-10">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="absolute left-0 top-2 bottom-2 w-[3px] rounded-full pivot-bar"></div>
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">10 maart · dinsdag</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.12); color: #006B3F;">
+                      🎯 Strategie
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0, 107, 63, 0.08); color: #006B3F;">★ Kantelpunt</span>
+                  </div>
+                  <h4 class="text-xl font-semibold text-gray-900 mb-2">Besluit: client-portaal apart van interne DevHub</h4>
+                  <p class="text-gray-700 leading-relaxed mb-3">
+                    Na feedback van Cai wordt besloten om een aparte client-facing omgeving te bouwen naast DevHub —
+                    met alleen de voor de klant relevante bug-voortgang, feature requests en prioritering. Dit verandert de
+                    architectuur en voegt ~3 weken werk toe.
+                  </p>
+                  <div class="rounded-lg border-l-4 border-[#006B3F] bg-[#006B3F]/5 px-4 py-3">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#006B3F] mb-1">Waarom dit een kantelpunt is</p>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                      Van "één interne tool" naar "interne tool + client-facing portaal". Scope verbreedt,
+                      deadline komt onder druk, maar klant-waarde stijgt sterk.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="entry mb-10" data-date="2026-03-20">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">20 maart · vrijdag</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                      📊 Sprint review
+                    </span>
+                  </div>
+                  <h4 class="text-lg font-semibold text-gray-900 mb-2">Sprint 2 gesloten, portaal-werk begonnen</h4>
+                  <p class="text-gray-700 leading-relaxed">
+                    Document-selector is live. Eerste architectuur-schets voor het client-portaal gedeeld met Cai.
+                    Deadline blijft voorlopig staan; Stef neemt extra uren in week 15.
+                  </p>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- ─────────── APRIL ─────────── -->
+          <section data-month="apr-2026">
+            <header class="month-heading bg-[#fafaf9]/90 py-3 mb-6 border-b border-gray-200">
+              <div class="flex items-baseline gap-3">
+                <h3 class="text-2xl font-bold text-gray-900">April 2026</h3>
+                <span class="text-sm text-[#006B3F] font-medium">· Jij bent hier</span>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">4 touchpoints · deep dive in prioritering en exportfunctionaliteit</p>
+            </header>
+
+            <article class="entry mb-10" data-date="2026-04-03">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">3 april · vrijdag</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                      📋 Status update
+                    </span>
+                  </div>
+                  <h4 class="text-lg font-semibold text-gray-900 mb-2">Status: op koers, client-portaal 40% klaar</h4>
+                  <p class="text-gray-700 leading-relaxed">
+                    Technische schets door Cai goedgekeurd. Joep begint met content-migratie naar kennisbank.
+                    Eerste klant-test staat gepland voor eind april.
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <article class="entry mb-10" data-date="2026-04-21">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">21 april · dinsdag</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                      📋 Status update
+                    </span>
+                  </div>
+                  <h4 class="text-lg font-semibold text-gray-900 mb-2">Platform feedback en exportfunctionaliteit</h4>
+                  <p class="text-gray-700 leading-relaxed mb-3">
+                    Stef stelde vragen over markdown en afbeeldinglimieten; Wouter verdedigde technische keuzes
+                    en Stef bouwt AI-export rapport.
+                  </p>
+                  <div class="space-y-1.5 text-sm text-gray-700">
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-[10px] text-green-700 shrink-0">✓ Besluit</span>
+                      <span>Afbeeldinglimieten blijven op 5MB</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] text-amber-700 shrink-0">◉ Stef · do</span>
+                      <span>Bouwt AI-gegenereerd exportrapport uit DevHub</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] text-amber-700 shrink-0">◉ Stef · do</span>
+                      <span>Bespreekt DevApp-status met Wouter</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="entry mb-10" data-date="2026-04-23-1">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">23 april · donderdag · 11:00</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.08); color: rgba(0, 107, 63, 0.7);">
+                      📋 Status update
+                    </span>
+                  </div>
+                  <h4 class="text-lg font-semibold text-gray-900 mb-2">Rapportage-inrichting en bug-prioritering</h4>
+                  <p class="text-gray-700 leading-relaxed mb-3">
+                    Stefan wilde eenvoudig overzicht van opgelost/plannen/komend/niet-geprioriteerd; Wouter herziet
+                    planning en Stef bouwt client-facing portaal los van DevHub.
+                  </p>
+                  <div class="space-y-1.5 text-sm text-gray-700">
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-[10px] text-green-700 shrink-0">✓ 6 besluiten</span>
+                      <span class="text-gray-600 italic">Wouter herziet planning op Joeps prioriteiten, PDF-upload opgelost, + 4 meer…</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] text-amber-700 shrink-0">◉ 5 acties</span>
+                      <span class="text-gray-600 italic">Wouter · vandaag, Chloë · do, + 3 meer…</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="entry mb-10" data-date="2026-04-23-2">
+              <div class="entry-card">
+                <div class="relative pl-6">
+                  <div class="absolute left-0 top-2 bottom-2 w-[3px] rounded-full pivot-bar"></div>
+                  <div class="flex items-baseline gap-2 flex-wrap mb-2">
+                    <span class="text-xs font-medium text-gray-500">23 april · donderdag · 15:00</span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium" style="background: rgba(0, 107, 63, 0.12); color: #006B3F;">
+                      🎯 Strategie
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="background: rgba(0, 107, 63, 0.08); color: #006B3F;">★ Kantelpunt</span>
+                  </div>
+                  <h4 class="text-xl font-semibold text-gray-900 mb-2">Client-facing bug- en featureportaal definitief</h4>
+                  <p class="text-gray-700 leading-relaxed mb-3">
+                    Stef en Wouter evalueerden druk van Cai Automations op bug-rapportage en feature-management;
+                    besloten client-facing portaal apart van interne DevHub, met verplicht reasoning-veld bij bugafsluiting.
+                  </p>
+                  <div class="rounded-lg border-l-4 border-[#006B3F] bg-[#006B3F]/5 px-4 py-3 mb-3">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#006B3F] mb-1">Waarom dit een kantelpunt is</p>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                      Bevestigt en concretiseert de beslissing van 10 maart. Vanaf hier wordt het portaal
+                      de zichtbare kant van het project richting klanten.
+                    </p>
+                  </div>
+                  <div class="space-y-1.5 text-sm text-gray-700">
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-[10px] text-green-700 shrink-0">✓ 3 besluiten</span>
+                      <span class="text-gray-600 italic">Client-portaal apart van DevHub, reasoning-veld bij bugs, prioritering P0/P1/P2</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] text-amber-700 shrink-0">◉ 4 acties</span>
+                      <span class="text-gray-600 italic">Stef bouwt portaal (do), Wouter migreert features (17:00 vandaag), + 2 meer…</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- END marker -->
+          <section class="border-t-2 border-dashed border-gray-300 pt-8 text-center">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Einde van het verloop</p>
+            <p class="text-sm text-gray-600 mt-2">Vandaag is 24 april. Volgende deadline: 15 juni.</p>
+            <p class="text-xs text-gray-400 mt-4">Scroll terug om een moment te herbezoeken, of gebruik de spine-navigatie links.</p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // ── Intersection Observer voor entries ──
+      const entries = document.querySelectorAll('.entry');
+      const activeMonthLabel = document.getElementById('active-month-label');
+      const entriesInView = document.getElementById('entries-in-view');
+      const scrollProgress = document.getElementById('scroll-progress');
+      const spineProgress = document.getElementById('spine-progress');
+      const youAreHere = document.getElementById('spine-you-are-here');
+
+      const MONTH_LABELS = {
+        'jan-2026': 'Januari 2026',
+        'feb-2026': 'Februari 2026',
+        'mar-2026': 'Maart 2026',
+        'apr-2026': 'April 2026',
+        'mei-2026': 'Mei 2026',
+        'jun-2026': 'Juni 2026'
+      };
+
+      let lastVisible = null;
+
+      const observer = new IntersectionObserver((items) => {
+        items.forEach(item => {
+          if (item.isIntersecting && item.intersectionRatio > 0.3) {
+            item.target.querySelector('.entry-card').classList.add('in-view');
+            lastVisible = item.target;
+          } else {
+            item.target.querySelector('.entry-card').classList.remove('in-view');
+          }
+        });
+
+        // Update active month
+        if (lastVisible) {
+          const month = lastVisible.closest('[data-month]')?.dataset.month;
+          if (month) {
+            activeMonthLabel.textContent = MONTH_LABELS[month] ?? month;
+            // Activeer de juiste dot
+            document.querySelectorAll('[data-spine] .spine-dot').forEach(d => d.classList.remove('active'));
+            const dot = document.querySelector(`[data-spine="${month}"] .spine-dot`);
+            dot?.classList.add('active');
+          }
+        }
+
+        // Tel zichtbare
+        const visibleCount = document.querySelectorAll('.entry-card.in-view').length;
+        entriesInView.textContent = visibleCount;
+      }, { threshold: [0, 0.3, 0.6, 1] });
+
+      entries.forEach(e => observer.observe(e));
+
+      // ── Scroll progress bar + spine ──
+      function updateScrollProgress() {
+        const scrolled = window.scrollY;
+        const total = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = Math.min(100, Math.max(0, (scrolled / total) * 100));
+        scrollProgress.style.width = pct + '%';
+        spineProgress.style.height = pct + '%';
+        youAreHere.style.top = pct + '%';
+      }
+
+      window.addEventListener('scroll', updateScrollProgress, { passive: true });
+      updateScrollProgress();
+    </script>
+  </body>
+</html>
