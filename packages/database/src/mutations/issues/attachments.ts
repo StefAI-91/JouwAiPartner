@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminClient } from "../supabase/admin";
+import { getAdminClient } from "../../supabase/admin";
 
 const BUCKET_ID = "issue-attachments";
 const DOWNLOAD_TIMEOUT_MS = 30_000;

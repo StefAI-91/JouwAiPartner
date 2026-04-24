@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 435 |
+| Files scanned | 436 |
 | Exported functions/constants | 690 |
 | Exported types/interfaces | 245 |
 | Cross-package imports | 479 |
@@ -526,7 +526,7 @@
 **Exports:**
 - `addIgnoredEntity()`
 
-### `mutations/issue-attachments.ts`
+### `mutations/issues/attachments.ts`
 
 **Exports:**
 - `downloadAndUpload()`
@@ -536,7 +536,7 @@
 
 **Types:** `InsertAttachmentData`
 
-### `mutations/issues.ts`
+### `mutations/issues/core.ts`
 
 **Exports:**
 - `insertIssue()`
@@ -3057,7 +3057,7 @@
 - `@repo/database/queries/issues/attachments` → getIssueIdsWithAttachments
 - `@repo/database/integrations/userback` → extractMediaFromMetadata
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
-- `@repo/database/mutations/issue-attachments` → storeIssueMedia
+- `@repo/database/mutations/issues/attachments` → storeIssueMedia
 
 ### `apps/devhub/src/actions/review.ts`
 
@@ -3401,7 +3401,7 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `addIgnoredEntity()` | `apps/cockpit/src/actions/segments.ts` |
 
-### mutations/issue-attachments.ts
+### mutations/issues/attachments.ts
 
 | Mutation | Called from |
 |----------|------------|

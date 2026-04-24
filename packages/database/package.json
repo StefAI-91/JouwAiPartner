@@ -25,6 +25,8 @@
     "./mutations/projects/*": "./src/mutations/projects/*.ts",
     "./mutations/summaries": "./src/mutations/summaries/index.ts",
     "./mutations/summaries/*": "./src/mutations/summaries/*.ts",
+    "./mutations/issues": "./src/mutations/issues/index.ts",
+    "./mutations/issues/*": "./src/mutations/issues/*.ts",
     "./mutations/*": "./src/mutations/*.ts",
     "./types/*": "./src/types/*.ts",
     "./integrations/*": "./src/integrations/*.ts",

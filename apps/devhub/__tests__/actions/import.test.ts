@@ -17,7 +17,7 @@ vi.mock("@repo/database/integrations/userback-sync", () => ({
 }));
 
 const mockClassifyIssueBackground = vi.fn();
-vi.mock("../../src/actions/classify", () => ({
+vi.mock("../../src/features/issues/actions/classify", () => ({
   classifyIssueBackground: (...args: unknown[]) => mockClassifyIssueBackground(...args),
 }));
 
@@ -34,7 +34,7 @@ vi.mock("@repo/database/integrations/userback", () => ({
 }));
 
 const mockStoreIssueMedia = vi.fn();
-vi.mock("@repo/database/mutations/issue-attachments", () => ({
+vi.mock("@repo/database/mutations/issues/attachments", () => ({
   storeIssueMedia: (...args: unknown[]) => mockStoreIssueMedia(...args),
 }));
 
