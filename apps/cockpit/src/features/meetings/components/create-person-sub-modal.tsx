@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
-import { createPersonAction } from "@/actions/people";
+import { createPersonAction } from "@/features/directory/actions/people";
 
 interface CreatePersonSubModalProps {
   open: boolean;

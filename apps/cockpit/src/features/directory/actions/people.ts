@@ -2,63 +2,55 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import {
-  createOrganization,
-  updateOrganization,
-  deleteOrganization,
-} from "@repo/database/mutations/organizations";
-import { updateOrganizationSchema, deleteSchema } from "@repo/database/validations/entities";
-import { createOrganizationSchema } from "@repo/database/validations/meetings";
+import { createPerson, updatePerson, deletePerson } from "@repo/database/mutations/people";
+import { updatePersonSchema, deleteSchema } from "@repo/database/validations/entities";
+import { createPersonSchema } from "@repo/database/validations/meetings";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
-import { cleanInput } from "./_utils";
+import { cleanInput } from "@/actions/_utils";
 
-export async function createOrganizationAction(
-  input: z.infer<typeof createOrganizationSchema>,
+export async function createPersonAction(
+  input: z.infer<typeof createPersonSchema>,
 ): Promise<{ success: true; data: { id: string; name: string } } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
   if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
-  const parsed = createOrganizationSchema.safeParse(input);
+  const parsed = createPersonSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
-  const result = await createOrganization({
+  const result = await createPerson({
     name: parsed.data.name,
-    type: parsed.data.type,
-    email: parsed.data.email ?? null,
-    email_domains: parsed.data.email_domains,
+    email: parsed.data.email,
+    role: parsed.data.role,
+    organizationId: parsed.data.organizationId,
   });
   if ("error" in result) return result;
 
-  revalidatePath("/clients");
-  revalidatePath("/administratie");
+  revalidatePath("/people");
   return { success: true, data: result.data };
 }
 
-export async function updateOrganizationAction(
-  input: z.infer<typeof updateOrganizationSchema>,
+export async function updatePersonAction(
+  input: z.infer<typeof updatePersonSchema>,
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
   if (!(await isAdmin(user.id))) return { error: "Geen toegang" };
 
-  const parsed = updateOrganizationSchema.safeParse(cleanInput(input));
+  const parsed = updatePersonSchema.safeParse(cleanInput(input));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
 
   const { id, ...data } = parsed.data;
-  const result = await updateOrganization(id, data);
+  const result = await updatePerson(id, data);
   if ("error" in result) return result;
 
-  revalidatePath(`/clients/${id}`);
-  revalidatePath(`/administratie/${id}`);
-  revalidatePath("/clients");
-  revalidatePath("/administratie");
-  revalidatePath("/");
+  revalidatePath(`/people/${id}`);
+  revalidatePath("/people");
   return { success: true };
 }
 
-export async function deleteOrganizationAction(
+export async function deletePersonAction(
   input: z.infer<typeof deleteSchema>,
 ): Promise<{ success: true } | { error: string }> {
   const user = await getAuthenticatedUser();
@@ -68,10 +60,9 @@ export async function deleteOrganizationAction(
   const parsed = deleteSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
-  const result = await deleteOrganization(parsed.data.id);
+  const result = await deletePerson(parsed.data.id);
   if ("error" in result) return result;
 
-  revalidatePath("/clients");
-  revalidatePath("/");
+  revalidatePath("/people");
   return { success: true };
 }

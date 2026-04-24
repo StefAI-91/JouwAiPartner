@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
-import { createOrganizationAction } from "@/actions/organizations";
+import { createOrganizationAction } from "@/features/directory/actions/organizations";
 
 interface CreateOrganizationModalProps {
   open: boolean;

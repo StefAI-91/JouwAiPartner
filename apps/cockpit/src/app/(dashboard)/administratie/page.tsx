@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { createClient } from "@repo/database/supabase/server";
 import { listOrganizationsByType } from "@repo/database/queries/organizations";
-import { AddOrganizationButton } from "@/components/clients/add-organization-button";
+import { AddOrganizationButton } from "@/features/directory/components/add-organization-button";
 import { AdministratieTabs } from "@/components/administratie/administratie-tabs";
 
 export default async function AdministratiePage({

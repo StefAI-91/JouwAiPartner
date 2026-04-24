@@ -2,10 +2,10 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@repo/ui/utils";
-import { OrganizationsGrid } from "@/components/directory/organizations-grid";
-import { PeopleGrid } from "@/components/directory/people-grid";
-import { AddOrganizationButton } from "@/components/clients/add-organization-button";
-import { AddPersonButton } from "@/components/people/add-person-button";
+import { OrganizationsGrid } from "./organizations-grid";
+import { PeopleGrid } from "./people-grid";
+import { AddOrganizationButton } from "./add-organization-button";
+import { AddPersonButton } from "./add-person-button";
 import type { OrganizationListItem } from "@repo/database/queries/organizations";
 import type { PersonListItem } from "@repo/database/queries/people";
 

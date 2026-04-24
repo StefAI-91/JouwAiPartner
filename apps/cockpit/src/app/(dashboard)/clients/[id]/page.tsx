@@ -11,11 +11,11 @@ import { notFound } from "next/navigation";
 import { formatDate } from "@repo/ui/format";
 import { ORG_TYPE_COLORS, ORG_STATUS_COLORS } from "@/components/shared/organization-colors";
 import { getMeetingHref } from "@/lib/meeting-href";
-import { EditOrganization } from "@/components/clients/edit-organization";
-import { OrgSummary } from "@/components/organizations/org-summary";
-import { OrgBriefing } from "@/components/organizations/org-briefing";
-import { OrgTimeline } from "@/components/organizations/org-timeline";
-import { RegenerateSummaryButton } from "@/components/projects/regenerate-summary-button";
+import { EditOrganization } from "@/features/directory/components/edit-organization";
+import { OrgSummary } from "@/features/directory/components/org-summary";
+import { OrgBriefing } from "@/features/directory/components/org-briefing";
+import { OrgTimeline } from "@/features/directory/components/org-timeline";
+import { RegenerateSummaryButton } from "@/features/projects/components/regenerate-summary-button";
 import { extractOrgTimeline } from "@repo/ai/validations/project-summary";
 
 interface ClientDetailPageProps {

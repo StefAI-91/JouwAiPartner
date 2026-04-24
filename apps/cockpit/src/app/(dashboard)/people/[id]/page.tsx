@@ -7,7 +7,7 @@ import { listOrganizations } from "@repo/database/queries/organizations";
 import { Badge } from "@repo/ui/badge";
 import { Mail, Users } from "lucide-react";
 import Link from "next/link";
-import { EditPerson } from "@/components/people/edit-person";
+import { EditPerson } from "@/features/directory/components/edit-person";
 
 export default async function PersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

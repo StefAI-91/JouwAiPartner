@@ -6,7 +6,7 @@ import { Briefcase, Building2 } from "lucide-react";
 import type { OrganizationListItem } from "@repo/database/queries/organizations";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@repo/ui/tabs";
 import { OrganizationCard } from "./organization-card";
-import { AddOrganizationButton } from "@/components/clients/add-organization-button";
+import { AddOrganizationButton } from "@/features/directory/components/add-organization-button";
 
 const TAB_ADVISORS = "adviseurs";
 const TAB_INTERNAL = "intern";
