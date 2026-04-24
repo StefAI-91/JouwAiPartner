@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isAdmin } from "@repo/auth/access";
-import { getAdminClient } from "../supabase/admin";
+import { getAdminClient } from "../../supabase/admin";
 
 export interface PortalProject {
   id: string;

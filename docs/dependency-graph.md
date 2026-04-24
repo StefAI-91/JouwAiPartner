@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 485 |
-| Exported functions/constants | 765 |
-| Exported types/interfaces | 250 |
-| Cross-package imports | 579 |
-| Critical integration points (3+ packages) | 12 |
+| Files scanned | 457 |
+| Exported functions/constants | 728 |
+| Exported types/interfaces | 247 |
+| Cross-package imports | 533 |
+| Critical integration points (3+ packages) | 11 |
 
 ## Package Dependency Flow
 
@@ -274,7 +274,7 @@
 
 **Types:** `PersonListItem`, `PersonWithOrg`, `PersonForAssignment`, `PersonDetail`, `KnownPerson`, `PersonForContext`
 
-### `queries/portal-access.ts`
+### `queries/portal/access.ts`
 
 **Exports:**
 - `listPortalProjects()`
@@ -285,7 +285,7 @@
 **Depends on:**
 - `@repo/auth/access` → isAdmin
 
-### `queries/portal.ts`
+### `queries/portal/core.ts`
 
 **Exports:**
 - `listPortalProjectsWithDetails()`
@@ -1839,63 +1839,6 @@
 - `@repo/ai/pipeline/management-insights-pipeline` → generateManagementInsights
 - `@repo/database/mutations/management-insights` → dismissInsight
 
-### `apps/cockpit/src/actions/organizations.ts`
-
-**Exports:**
-- `createOrganizationAction()`
-- `updateOrganizationAction()`
-- `deleteOrganizationAction()`
-
-**Depends on:**
-- `@repo/database/mutations/organizations` → createOrganization, updateOrganization, deleteOrganization
-- `@repo/database/validations/entities` → updateOrganizationSchema, deleteSchema
-- `@repo/database/validations/meetings` → createOrganizationSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/people.ts`
-
-**Exports:**
-- `createPersonAction()`
-- `updatePersonAction()`
-- `deletePersonAction()`
-
-**Depends on:**
-- `@repo/database/mutations/people` → createPerson, updatePerson, deletePerson
-- `@repo/database/validations/entities` → updatePersonSchema, deleteSchema
-- `@repo/database/validations/meetings` → createPersonSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/projects.ts`
-
-**Exports:**
-- `createProjectAction()`
-- `updateProjectAction()`
-- `deleteProjectAction()`
-
-**Depends on:**
-- `@repo/database/mutations/projects` → createProject, updateProject, deleteProject
-- `@repo/database/validations/entities` → updateProjectSchema, deleteSchema
-- `@repo/database/validations/meetings` → createProjectSchema
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
-### `apps/cockpit/src/actions/review.ts`
-
-**Exports:**
-- `approveMeetingAction()`
-- `approveMeetingWithEditsAction()`
-- `rejectMeetingAction()`
-
-**Depends on:**
-- `@repo/database/mutations/review` → verifyMeeting, verifyMeetingWithEdits, rejectMeeting
-- `@repo/database/mutations/meetings` → updateMeetingSummaryOnly
-- `@repo/ai/pipeline/summary-pipeline` → triggerSummariesForMeeting
-- `@repo/ai/pipeline/scan-needs` → scanMeetingNeeds
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → isAdmin
-
 ### `apps/cockpit/src/actions/scan-needs.ts`
 
 **Exports:**
@@ -2874,22 +2817,6 @@
 **Depends on:**
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 
-### `apps/cockpit/src/components/clients/add-organization-button.tsx`
-
-**Exports:**
-- `AddOrganizationButton()`
-
-**Depends on:**
-- `@repo/database/constants/organizations` → ORG_TYPES
-
-### `apps/cockpit/src/components/clients/edit-organization.tsx`
-
-**Exports:**
-- `EditOrganization()`
-
-**Depends on:**
-- `@repo/database/constants/organizations` → ORG_TYPES, ORG_STATUSES
-
 ### `apps/cockpit/src/components/dashboard/greeting.tsx`
 
 **Exports:**
@@ -2943,35 +2870,6 @@
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
 - (type) `@repo/database/queries/tasks` → TaskRow
 - (type) `@repo/database/queries/people` → PersonForAssignment
-
-### `apps/cockpit/src/components/directory/directory-tabs.tsx`
-
-**Exports:**
-- `DirectoryTabs()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-- (type) `@repo/database/queries/organizations` → OrganizationListItem
-- (type) `@repo/database/queries/people` → PersonListItem
-
-### `apps/cockpit/src/components/directory/organizations-grid.tsx`
-
-**Exports:**
-- `OrganizationsGrid()`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
-- `@repo/ui/format` → formatDate
-- (type) `@repo/database/queries/organizations` → OrganizationListItem
-
-### `apps/cockpit/src/components/directory/people-grid.tsx`
-
-**Exports:**
-- `PeopleGrid()`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
-- (type) `@repo/database/queries/people` → PersonListItem
 
 ### `apps/cockpit/src/components/intelligence/board-meeting-card.tsx`
 
@@ -3031,149 +2929,6 @@
 **Depends on:**
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
-
-### `apps/cockpit/src/components/organizations/org-briefing.tsx`
-
-**Exports:**
-- `OrgBriefing()`
-
-**Depends on:**
-- `@repo/ui/format` → timeAgoDays
-
-### `apps/cockpit/src/components/organizations/org-summary.tsx`
-
-**Exports:**
-- `OrgSummary()`
-
-**Depends on:**
-- `@repo/ui/format` → timeAgoDays
-
-### `apps/cockpit/src/components/organizations/org-timeline.tsx`
-
-**Exports:**
-- `OrgTimeline()`
-
-**Depends on:**
-- `@repo/ui/format` → formatDate
-- (type) `@repo/ai/validations/project-summary` → OrgTimelineEntry
-
-### `apps/cockpit/src/components/people/add-person-button.tsx`
-
-**Exports:**
-- `AddPersonButton()`
-
-### `apps/cockpit/src/components/people/edit-person.tsx`
-
-**Exports:**
-- `EditPerson()`
-
-### `apps/cockpit/src/components/projects/add-project-button.tsx`
-
-**Exports:**
-- `AddProjectButton()`
-
-### `apps/cockpit/src/components/projects/combined-extractions-section.tsx`
-
-**Exports:**
-- `CombinedExtractionsSection()`
-
-**Types:** `CombinedItem`
-
-### `apps/cockpit/src/components/projects/edit-project.tsx`
-
-**Exports:**
-- `EditProject()`
-
-**Depends on:**
-- `@repo/database/constants/projects` → PROJECT_STATUSES, STATUS_LABELS
-
-### `apps/cockpit/src/components/projects/project-card.tsx`
-
-**Exports:**
-- `ProjectCard()`
-
-**Depends on:**
-- `@repo/ui/format` → daysUntil
-
-### `apps/cockpit/src/components/projects/project-emails-section.tsx`
-
-**Exports:**
-- `EmailsSection()`
-
-**Types:** `ProjectEmail`
-
-### `apps/cockpit/src/components/projects/project-sections.tsx`
-
-**Exports:**
-- `ProjectSections()`
-
-**Depends on:**
-- (type) `@repo/database/queries/meetings/project-summaries` → ProjectSegment
-
-### `apps/cockpit/src/components/projects/project-timeline.tsx`
-
-**Exports:**
-- `ProjectTimeline()`
-
-**Depends on:**
-- `@repo/ui/format` → formatDate
-- (type) `@repo/ai/validations/project-summary` → TimelineEntry
-
-### `apps/cockpit/src/components/projects/regenerate-summary-button.tsx`
-
-**Exports:**
-- `RegenerateSummaryButton()`
-
-### `apps/cockpit/src/components/projects/status-pipeline.tsx`
-
-**Exports:**
-- `StatusPipeline()`
-
-**Depends on:**
-- `@repo/database/constants/projects` → ALL_STEPS, OTHER_STEPS, STATUS_LABELS, getPhaseSteps
-
-### `apps/cockpit/src/components/review/empty-state.tsx`
-
-**Exports:**
-- `ReviewEmptyState()`
-
-### `apps/cockpit/src/components/review/proposals-list.tsx`
-
-**Exports:**
-- `ProposalsList()`
-
-**Types:** `ProposalItem`
-
-**Depends on:**
-- `@repo/ui/badge` → Badge
-
-### `apps/cockpit/src/components/review/review-action-bar.tsx`
-
-**Exports:**
-- `ReviewActionBar()`
-
-### `apps/cockpit/src/components/review/review-card.tsx`
-
-**Exports:**
-- `ReviewCard()`
-
-**Depends on:**
-- `@repo/ui/format` → timeAgo
-
-### `apps/cockpit/src/components/review/review-detail.tsx`
-
-**Exports:**
-- `ReviewDetail()`
-
-**Depends on:**
-- `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
-- (type) `@repo/database/queries/people` → PersonForAssignment
-- (type) `@repo/database/queries/meetings/project-summaries` → MeetingSegment
-
-### `apps/cockpit/src/components/review/review-queue.tsx`
-
-**Exports:**
-- `ReviewQueue()`
 
 ### `apps/cockpit/src/components/shared/confidence-bar.tsx`
 
@@ -3797,9 +3552,9 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 52 | - | - | - | - | 52 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 36 | 8 | 20 | - | - | 64 |
+| Cockpit Server Actions | 25 | 6 | 12 | - | - | 43 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 31 | 7 | - | 53 | - | 91 |
+| Cockpit Components | 20 | 5 | - | 41 | - | 66 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 91 | 8 | 4 | 33 | - | 136 |
 | Database Queries | - | - | 3 | - | - | 3 |
@@ -3819,7 +3574,6 @@ parts of the codebase — changes here have the widest blast radius.
 |------|----------|-------|
 | `apps/cockpit/src/actions/dev-detector.ts` | ai, auth, database | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
-| `apps/cockpit/src/actions/review.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` | database, ui, ai | 3 |
@@ -3951,25 +3705,8 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
-| `updateMeetingSummaryOnly()` | `apps/cockpit/src/actions/review.ts` |
 | `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-
-### mutations/organizations.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `createOrganization()` | `apps/cockpit/src/actions/organizations.ts` |
-| `updateOrganization()` | `apps/cockpit/src/actions/organizations.ts` |
-| `deleteOrganization()` | `apps/cockpit/src/actions/organizations.ts` |
-
-### mutations/people.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `createPerson()` | `apps/cockpit/src/actions/people.ts` |
-| `updatePerson()` | `apps/cockpit/src/actions/people.ts` |
-| `deletePerson()` | `apps/cockpit/src/actions/people.ts` |
 
 ### mutations/profiles.ts
 
@@ -3987,18 +3724,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `createProject()` | `apps/cockpit/src/actions/projects.ts` |
 | `updateProjectAliases()` | `packages/ai/src/pipeline/entity-resolution.ts`, `apps/cockpit/src/actions/segments.ts` |
-| `updateProject()` | `apps/cockpit/src/actions/projects.ts` |
-| `deleteProject()` | `apps/cockpit/src/actions/projects.ts` |
-
-### mutations/review.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `verifyMeeting()` | `apps/cockpit/src/actions/review.ts` |
-| `verifyMeetingWithEdits()` | `apps/cockpit/src/actions/review.ts` |
-| `rejectMeeting()` | `apps/cockpit/src/actions/review.ts` |
 
 ### mutations/slack-config.ts
 

@@ -4,7 +4,7 @@ import {
   PORTAL_KEY_TO_INTERNAL_STATUSES,
   PORTAL_STATUS_GROUPS,
   type PortalStatusKey,
-} from "../constants/issues";
+} from "../../constants/issues";
 
 export type PortalStatusFilter = PortalStatusKey;
 
