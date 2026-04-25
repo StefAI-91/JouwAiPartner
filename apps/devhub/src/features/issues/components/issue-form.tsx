@@ -7,7 +7,7 @@ import { createIssueAction } from "../actions/issues";
 import {
   createIssueAttachmentUploadUrlAction,
   recordIssueAttachmentAction,
-} from "@/actions/attachments";
+} from "../actions/attachments";
 import { Button } from "@repo/ui/button";
 import {
   ISSUE_TYPES,

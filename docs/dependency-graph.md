@@ -1,17 +1,17 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-24. Do not edit manually.
+> Auto-generated on 2026-04-25. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 449 |
-| Exported functions/constants | 708 |
-| Exported types/interfaces | 255 |
-| Cross-package imports | 491 |
-| Critical integration points (3+ packages) | 9 |
+| Files scanned | 452 |
+| Exported functions/constants | 712 |
+| Exported types/interfaces | 256 |
+| Cross-package imports | 492 |
+| Critical integration points (3+ packages) | 10 |
 
 ## Package Dependency Flow
 
@@ -2713,6 +2713,42 @@
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/organizations` → OrganizationListItem
 
+### `apps/cockpit/src/components/agents/activity-feed.tsx`
+
+**Exports:**
+- `ActivityFeed()`
+
+**Depends on:**
+- (type) `@repo/database/queries/agent-runs` → AgentRunRow
+- (type) `@repo/ai/agents/registry` → AgentDefinition
+
+### `apps/cockpit/src/components/agents/agent-card.tsx`
+
+**Exports:**
+- `AgentCard()`
+
+**Depends on:**
+- (type) `@repo/ai/agents/registry` → AgentDefinition
+- (type) `@repo/database/queries/agent-runs` → AgentMetrics
+- `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle
+
+### `apps/cockpit/src/components/agents/quadrant-styles.ts`
+
+**Exports:**
+- `quadrantHeader`
+- `quadrantBadge`
+- `quadrantLabel`
+
+**Depends on:**
+- (type) `@repo/ai/agents/registry` → AgentQuadrant
+
+### `apps/cockpit/src/components/agents/system-overview.tsx`
+
+**Exports:**
+- `SystemOverview()`
+
+**Types:** `SystemStats`
+
 ### `apps/cockpit/src/components/architectuur/embeddings-card.tsx`
 
 **Exports:**
@@ -3105,19 +3141,6 @@
 
 ## DevHub Server Actions
 
-### `apps/devhub/src/actions/attachments.ts`
-
-**Exports:**
-- `createIssueAttachmentUploadUrlAction()`
-- `recordIssueAttachmentAction()`
-
-**Depends on:**
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/issues` → getIssueById
-- `@repo/database/mutations/issues/attachments` → insertAttachment
-
 ### `apps/devhub/src/actions/import.ts`
 
 **Exports:**
@@ -3395,11 +3418,11 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 23 | 6 | 10 | - | - | 39 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 18 | 2 | - | 40 | - | 60 |
+| Cockpit Components | 20 | 5 | - | 41 | - | 66 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 93 | 8 | 4 | 33 | - | 138 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
+| DevHub Server Actions | 14 | 1 | 6 | - | - | 21 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | - | - | - | 12 | - | 12 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
@@ -3421,6 +3444,7 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` | database, ui, ai | 3 |
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
 ## Key Dependency Chains
@@ -3486,7 +3510,6 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `insertAttachment()` | `apps/devhub/src/actions/attachments.ts` |
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
 ### mutations/meetings/core.ts
@@ -3674,7 +3697,7 @@ Which queries are used where across the codebase.
 | `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getIssueById()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueCounts()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
@@ -3721,7 +3744,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
 | `getAllOrganizations()` | `packages/ai/src/pipeline/context-injection.ts`, `packages/ai/src/pipeline/entity-resolution.ts` |
 | `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
@@ -3754,7 +3777,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 | `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
@@ -3819,7 +3842,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
