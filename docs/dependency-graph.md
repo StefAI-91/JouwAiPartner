@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 455 |
-| Exported functions/constants | 724 |
-| Exported types/interfaces | 261 |
-| Cross-package imports | 500 |
-| Critical integration points (3+ packages) | 10 |
+| Files scanned | 461 |
+| Exported functions/constants | 736 |
+| Exported types/interfaces | 273 |
+| Cross-package imports | 508 |
+| Critical integration points (3+ packages) | 11 |
 
 ## Package Dependency Flow
 
@@ -732,6 +732,21 @@
 
 ## AI Agents
 
+### `packages/ai/src/agents/action-item-specialist.ts`
+
+**Exports:**
+- `runActionItemSpecialist()`
+- `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
+- `ACTION_ITEM_SPECIALIST_MODEL`
+- `ACTION_ITEM_SPECIALIST_SYSTEM_PROMPT`
+
+**Types:** `ActionItemSpecialistContext`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`
+
+**Internal deps:**
+- `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
+- `../utils/normalise` → emptyToNull, sentinelToNull
+- `./run-logger` → withAgentRun
+
 ### `packages/ai/src/agents/email-classifier.ts`
 
 **Exports:**
@@ -1394,6 +1409,15 @@
 - `createAuthenticatedClient()`
 - `getAuthenticatedEmail()`
 
+### `packages/ai/src/lib/golden-comparison.ts`
+
+**Exports:**
+- `contentSimilarity()`
+- `comparePrecisionRecall()`
+- `aggregateComparisons()`
+
+**Types:** `ComparableItem`, `DiffStatus`, `DiffEntry`, `ComparisonResult`
+
 ### `packages/ai/src/transcribe-elevenlabs.ts`
 
 **Exports:**
@@ -1429,6 +1453,14 @@
 **Types:** `ParsedExtractionType`, `ParsedExtraction`
 
 ## AI Validations
+
+### `packages/ai/src/validations/action-item-specialist.ts`
+
+**Exports:**
+- `ActionItemSpecialistRawItemSchema`
+- `ActionItemSpecialistRawOutputSchema`
+
+**Types:** `RawActionItemSpecialistOutput`, `ActionItemSpecialistItem`, `ActionItemSpecialistOutput`
 
 ### `packages/ai/src/validations/communication.ts`
 
@@ -1870,6 +1902,20 @@
 
 **Exports:**
 - `cleanInput()`
+
+### `apps/cockpit/src/actions/dev-action-item-runner.ts`
+
+**Exports:**
+- `runActionItemAgentAction()`
+
+**Types:** `RunActionItemAgentInput`, `RunActionItemAgentResult`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdminInAction
+- `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
+- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_PROMPT_VERSION, ACTION_ITEM_SPECIALIST_SYSTEM_PROMPT
+- `@repo/ai/lib/golden-comparison` → comparePrecisionRecall, type ComparisonResult, type ComparableItem
+- (type) `@repo/ai/validations/action-item-specialist` → ActionItemSpecialistItem
 
 ### `apps/cockpit/src/actions/dev-detector.ts`
 
@@ -2394,6 +2440,23 @@
 - `@repo/ui/format` → formatDate
 - `@repo/database/queries/golden` → listMeetingsWithGoldenStatus
 - (type) `@repo/database/queries/golden` → MeetingWithGoldenStatus
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/client.tsx`
+
+**Exports:**
+- `RunActionItemHarnessClient()`
+
+**Depends on:**
+- `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/page.tsx`
+
+**Exports:**
+- `metadata`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdmin
+- `@repo/database/queries/golden` → listMeetingsWithGoldenStatus
 
 ### `apps/cockpit/src/app/(dashboard)/dev/detector/client.tsx`
 
@@ -3454,11 +3517,11 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 55 | - | - | - | - | 55 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 24 | 6 | 11 | - | - | 41 |
+| Cockpit Server Actions | 25 | 9 | 12 | - | - | 46 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 97 | 8 | 6 | 34 | - | 145 |
+| Cockpit Pages | 98 | 8 | 7 | 35 | - | 148 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -3474,6 +3537,7 @@ parts of the codebase — changes here have the widest blast radius.
 
 | File | Packages | Count |
 |------|----------|-------|
+| `apps/cockpit/src/actions/dev-action-item-runner.ts` | auth, database, ai | 3 |
 | `apps/cockpit/src/actions/dev-detector.ts` | ai, auth, database | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
@@ -3717,9 +3781,9 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listMeetingsWithGoldenStatus()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx` |
-| `getMeetingForGoldenCoder()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
-| `getGoldenForMeeting()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
+| `listMeetingsWithGoldenStatus()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx`, `apps/cockpit/src/app/(dashboard)/dev/action-items/run/page.tsx` |
+| `getMeetingForGoldenCoder()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
+| `getGoldenForMeeting()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
 
 ### queries/ignored-entities.ts
 

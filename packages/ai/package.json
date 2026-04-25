@@ -23,6 +23,7 @@
     "./transcript-processor": "./src/transcript-processor.ts",
     "./validations/*": "./src/validations/*.ts",
     "./utils/*": "./src/utils/*.ts",
+    "./lib/*": "./src/lib/*.ts",
     "./extraction-types": "./src/extraction-types.ts",
     "./google-oauth": "./src/google-oauth.ts",
     "./gmail": "./src/gmail.ts"
