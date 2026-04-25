@@ -103,7 +103,21 @@ Als de spreker zelf de eerste handeling toezegt en het effect alleen naderhand b
 - ✅ "Ik zal de vragen aanleveren, zodat we de testgroep op de hoogte kunnen brengen" — spreker zegt zelf X (vragen aanleveren) toe; "zodat Y" is rationale, geen voorwaarde
 - ❌ "Wanneer jij de vragen hebt ingevuld, zal ik dit mededelen met de testgroep" — spreker wacht op JOUW invulling; geen eigen agency tot dat moment
 
-**Toets:** Begint de zin met de eigen actie van de spreker ("ik zal X"), of met een voorwaarde over een ander ("wanneer/zodra/als jij X")? Eerste vorm = mogelijk action_item, tweede vorm = niet extraheren.
+**Onderscheid — wel extraheren bij tijdsgebonden deadline-framing:**
+
+Niet alle "als/wanneer ... dan ..." structuren zijn voorwaardelijk in de zin van anti-patroon I. Cruciaal onderscheid: wat is de TRIGGER in de voorwaarde?
+
+- **Trigger = iemand anders' werk/input/actie** → voorwaardelijk, NIET extraheren
+- **Trigger = een tijdsmoment, kalenderpunt of geplande gebeurtenis** (volgende call, eind van de week, volgende sprint, deadline) → de "als" is alleen een tijdsanker; de spreker committeert zelfstandig tot eigen werk vóór dat moment → WÉL extraheren
+
+Voorbeelden:
+- ✅ "Als wij volgende week bellen, dan heb ik die vragen beantwoord" — "als we bellen" is tijdsanker (= deadline = volgende call), Jan committeert zelfstandig tot vragen-beantwoorden vóór dat moment. Extraheer met deadline = volgende call/week
+- ✅ "Tegen eind volgende week is de offerte klaar" — directe commitment met deadline
+- ❌ "Wanneer jij me de input geeft, dan beantwoord ik de vragen" — wacht op andermans actie, geen eigen agency
+
+**Toets:** Begint de zin met de eigen actie van de spreker ("ik zal X"), met een tijdsanker ("tegen X / als we Y") gevolgd door eigen actie, óf met een voorwaarde over een ander ("wanneer/zodra/als jij X")?
+- Eerste twee vormen → mogelijk action_item
+- Derde vorm → niet extraheren
 
 ============================================================
 ## 1. JAIP IN EEN NOTENDOP
@@ -153,6 +167,7 @@ Voorbeelden van wat hierdoor wegvalt:
 - "Een mei om acht uur, tot dan!" — afspraak-bevestiging, geen action_item maar decision → NIET extraheren (anti-patroon H)
 - "Wanneer jij de vragen hebt ingevuld, dan zal ik dit mededelen met de testgroep" — voorwaardelijke vervolgactie, spreker wacht passief → NIET extraheren op spreker (anti-patroon I)
 - WEL extraheren: "Ik zal de vragen aanleveren, zodat we de testgroep op de hoogte kunnen brengen" — directe commitment door spreker, "zodat Y" is rationale (uitzondering anti-patroon I)
+- WEL extraheren: "Als wij volgende week bellen, dan heb ik die vragen beantwoord" — "als we bellen" is tijdsanker/deadline, geen voorwaarde over andermans werk; spreker committeert zelfstandig (uitzondering anti-patroon I)
 - WEL extraheren: "Tibor levert marketingplan aan JAIP" — JAIP is afhankelijk van levering, concrete handeling, Tibor heeft eigen agency
 - WEL extraheren: "Ik zal Monique opvolgen, herinner me hier volgende week aan" — externe vraagt JAIP om reminder → JAIP wordt actor (uitzondering anti-patroon F)
 
