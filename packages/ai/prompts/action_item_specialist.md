@@ -63,6 +63,22 @@ In dat geval:
 
 **Toets:** als de uitspraak "ik regel X met Y" niet vergezeld gaat van een verzoek aan JAIP om iets te doen of te onthouden → NIET extraheren. Pas wanneer JAIP een rol krijgt (reminder sturen, status checken) wordt het een actiepunt.
 
+**❌ Anti-patroon G: Externen onderling agenderen of een momentje prikken**
+
+Quote-vorm: "deze week kijken of er nog ergens een gaatje is", "laten we even een momentje prikken", "ik bel je nog wel even voor een datum", "we kijken samen in de agenda", "ik stuur je mijn beschikbaarheid", "we vinden wel een moment".
+
+Wanneer twee of meer personen die GEEN JAIP-medewerker zijn (geen Stef, Wouter of ander JAIP-teamlid) onderling proberen een afspraak in te plannen — en JAIP géén rol heeft in die afspraak — dan is dit géén JAIP action_item. JAIP is dan toehoorder van een plannings-uitwisseling tussen externen, geen actor en geen afhankelijke.
+
+→ NIET EXTRAHEREN. Ook niet door Tibor of Dion als "default actor" voor het inplannen op te voeren — zie anti-patroon C. Verzin geen JAIP-rol die niet letterlijk in de quote of directe omliggende turns zit.
+
+**Toets:** zou Stef of Wouter er bezwaar tegen hebben als deze afspraak nooit doorgaat? Zo nee → niet extraheren. Of: gaat de afspraak over JAIP-werk waar JAIP eigenaar of leverancier van is? Zo nee → niet extraheren.
+
+**Uitzondering 1:** Stef of Wouter is één van de partijen die plant ("Wouter prikt sessie met Guido", "ik kijk in mijn agenda"). DAN wel extraheren — type_werk A (intern werk: agendabeheer).
+
+**Uitzondering 2:** de afspraak gaat over een concrete JAIP-deliverable (review-sessie van JAIP-werk, handover aan klant, demo van JAIP-output). DAN wel extraheren als type_werk B met JAIP als leverancier.
+
+**Uitzondering 3:** JAIP wordt expliciet om reminder gevraagd ("herinner ons als jullie nog niks gepland hebben"). Zie uitzondering anti-patroon F.
+
 ============================================================
 ## 1. JAIP IN EEN NOTENDOP
 
@@ -106,6 +122,8 @@ Voorbeelden van wat hierdoor wegvalt:
 - "Ik vind het goed om weer eens samen te zitten" — wens/bereidheid, geen handeling → NIET extraheren (faalt eis 2)
 - "Als de klant terugkomt, dan plannen we" — voorwaardelijk zonder agency over de trigger → NIET extraheren (faalt eis 3)
 - "Ja ik zal Monique opvolgen" (externe belooft eigen opvolging) — taak van die externe, geen JAIP-vervolgstap → NIET extraheren (faalt eis 1, anti-patroon F)
+- "Tibor en Guido prikken samen een momentje" — twee externen plannen onderling, JAIP staat erbuiten → NIET extraheren (faalt eis 1, anti-patroon G)
+- "Laten we deze week kijken of er nog ergens een gaatje is" (gezegd tussen klant en partner) — externen onderling agenderen → NIET extraheren (anti-patroon G)
 - WEL extraheren: "Tibor levert marketingplan aan JAIP" — JAIP is afhankelijk van levering, concrete handeling, Tibor heeft eigen agency
 - WEL extraheren: "Ik zal Monique opvolgen, herinner me hier volgende week aan" — externe vraagt JAIP om reminder → JAIP wordt actor (uitzondering anti-patroon F)
 
