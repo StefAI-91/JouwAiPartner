@@ -162,12 +162,12 @@ Drie categorieën in `apps/[app]/src/`. Kies één **vóór** je schrijft. Drift
 
 Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen view-code? → compositiepagina.
 
-**Registry (2026-04-24, bindend — update bij elke wijziging):**
+**Registry (2026-04-25, bindend — update bij elke wijziging):**
 
 | Type                                      | Cockpit                                                                                                                   | DevHub                               |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`, `agents`                                               | `issues`                             |
-| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`                                                    | `dashboard`, `review`                |
+| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`                                                         | `issues`                             |
+| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                          | `dashboard`, `review`                |
 | Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review` |
 
 **Regels:**

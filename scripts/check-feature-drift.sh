@@ -7,9 +7,13 @@
 #   Nieuwe code voor zo'n domein hoort NIET in apps/[app]/src/components/[naam]/
 #   of in apps/[app]/src/actions/[naam].ts — dat is drift.
 #
-# Registry (stand 2026-04-24) — bindend, synchroon houden met CLAUDE.md:
-#   cockpit: themes, meetings, emails, projects, review, directory, agents
+# Registry (stand 2026-04-25) — bindend, synchroon houden met CLAUDE.md:
+#   cockpit: themes, meetings, emails, projects, review, directory
 #   devhub:  issues
+#
+# `agents` is bewust géén feature: het is een read-only observability-pagina
+# zonder eigen actions/validations. Hij leeft als compositiepagina onder
+# apps/cockpit/src/components/agents/. Zie CLAUDE.md § Feature-structuur.
 
 set -e
 
@@ -21,7 +25,6 @@ FEATURES=(
   "cockpit:projects"
   "cockpit:review"
   "cockpit:directory"
-  "cockpit:agents"
   "devhub:issues"
 )
 
