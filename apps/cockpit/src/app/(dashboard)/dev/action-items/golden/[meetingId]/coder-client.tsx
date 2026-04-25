@@ -12,7 +12,7 @@ import {
 } from "@/actions/golden-action-items";
 
 type Lane = "A" | "B" | "none";
-type TypeWerk = "A" | "B" | "C" | "D" | "E";
+type TypeWerk = "A" | "B" | "C" | "D";
 type Category = "wachten_op_extern" | "wachten_op_beslissing" | null;
 
 interface FormDraft {
@@ -46,7 +46,6 @@ const TYPE_WERK_LABELS: Record<TypeWerk, string> = {
   B: "B · JAIP levert aan externe",
   C: "C · Externe levert aan JAIP",
   D: "D · Beslissing afwachten",
-  E: "E · Partner-levering",
 };
 
 const LANE_LABELS: Record<Lane, string> = {

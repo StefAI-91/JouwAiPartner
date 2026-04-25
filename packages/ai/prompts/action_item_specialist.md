@@ -9,11 +9,15 @@ ALLE output is in het Nederlands (behalve enum-waarden en exacte quotes als het 
 
 JAIP is een AI-implementatie-bureau voor MKB-bedrijven. Drie diensten: MVP-ontwikkeling value-based, maatwerk-oplossingen op budget, AI-gedreven delivery. Typische klantrelatie: 2-3 jaar langetermijn-partnerschap.
 
-JAIP-medewerkers:
+JAIP-medewerkers (alleen deze tellen als JAIP-actor):
 - **Stef en Wouter** — mede-eigenaren JAIP. Action_items waar zij uitvoerder zijn = intern werk (type A of B).
-- **Tibor** — commerciële partner. Bij concrete leveringen met deadline: behandel als extern (type E). Plant Tibor onderling overleg met een andere externe (klant, prospect, partner) zonder JAIP-deliverable? → tussen-externen-regel geldt, NIET extraheren — ook al is Tibor "van JAIP".
-- **Dion** — ad-hoc expert, behandel als extern.
-- **Externe klanten/prospects**: standaard extern.
+
+Externen (alle anderen):
+- **Tibor** — commerciële partner van JAIP, maar voor extractie GEWOON EXTERN. Levert hij iets aan JAIP? → type C, net als elke andere klant/leverancier.
+- **Dion** — ad-hoc expert, gewoon extern.
+- **Klanten en prospects** — gewoon extern.
+
+Belangrijke consequentie: een afspraak tussen Tibor en een andere externe (klant, prospect, andere partner) is een afspraak tussen twee externen. Dit valt onder de tussen-externen-regel (Eis 1) → NIET extraheren, ook al heet Tibor "partner van JAIP".
 
 Buiten scope (NOOIT extraheren):
 - Recruitment-acties (kandidaten, vacature-opvolging) — handmatig systeem
@@ -44,7 +48,7 @@ Geen rol = geen action_item. Dit dekt onder andere:
 **Drie gefabriceerde JAIP-rollen die NIET tellen** (allemaal verleidelijk maar fout):
 - *"JAIP heeft belang bij de uitkomst"* — interesse is geen rol. Belang ≠ wachtende vervolgstap.
 - *"Een JAIP-medewerker noemt het in de meeting"* — Wouter die zegt "die afspraak moet er komen" creëert geen action_item op de externen die het moeten doen. Benoemen ≠ leveren.
-- *"Het is partner-werk dus type E"* — type E vereist dat Tibor/Dion **zelf concreet werk levert aan JAIP of een JAIP-klant**. Tibor die met een andere externe een overleg plant = tussen-externen, niet type E.
+- *"Het is partner-werk dus JAIP-actie"* — Tibor en Dion zijn voor extractie gewoon externen. Tibor met een andere externe = tussen-externen-regel, niet extraheren. Tibor die concreet werk aan JAIP levert (bv. marketingplan voor JAIP-propositie) = type C, net als elke andere externe.
 
 ### Eis 2 — ER IS EEN TOEZEGGING
 
@@ -142,11 +146,10 @@ Geldt NIET als:
 
 - **A — Intern JAIP-werk**: Stef of Wouter voert intern uit ("Wouter herziet onze prijsstrategie")
 - **B — JAIP levert aan externe**: Stef of Wouter levert iets naar buiten ("Stef stuurt vragenlijst naar Jan")
-- **C — Externe levert aan JAIP**: externe partij heeft toegezegd te leveren waar JAIP op wacht ("Jan retourneert getekende NDA")
+- **C — Externe levert aan JAIP**: externe partij heeft toegezegd te leveren waar JAIP op wacht. Geldt voor klanten, prospects, én Tibor/Dion ("Jan retourneert getekende NDA", "Tibor levert marketingplan voor JAIP-propositie")
 - **D — Beslissing afwachten**: concrete persoon moet beslissing nemen ("Bart bepaalt of we pivotten naar versie 2")
-- **E — Partner-levering**: Tibor of Dion levert concreet werk ("Tibor levert marketingplan deze week")
 
-**Type-fout-test:** als type B, zorg dat Stef of Wouter ook echt de uitvoerder is. Als type C, zorg dat JAIP ook echt op de uitkomst wacht voor een groundbare vervolgstap.
+**Type-fout-test:** als type B, zorg dat Stef of Wouter ook echt de uitvoerder is. Als type C, zorg dat JAIP ook echt op de uitkomst wacht voor een groundbare vervolgstap (zie anti-hallucinatie sub-toets in Eis 1).
 
 ============================================================
 ## 5. DEADLINE-REGELS
@@ -170,7 +173,7 @@ Format: ISO YYYY-MM-DD.
 ## 6. CATEGORY-CLASSIFICATIE
 
 Per item, kies één van:
-- `wachten_op_extern` — type_werk C of E (we wachten op extern werk)
+- `wachten_op_extern` — type_werk C (we wachten op extern werk)
 - `wachten_op_beslissing` — type_werk D (we wachten op iemand's beslissing)
 - `n/a` — overige (intern werk type_werk A of B)
 

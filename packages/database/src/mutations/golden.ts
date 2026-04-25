@@ -46,7 +46,7 @@ export interface GoldenItemInput {
   category: "wachten_op_extern" | "wachten_op_beslissing" | null;
   deadline: string | null;
   lane: "A" | "B" | "none";
-  type_werk: "A" | "B" | "C" | "D" | "E";
+  type_werk: "A" | "B" | "C" | "D";
   project_context: string | null;
   coder_notes: string | null;
 }

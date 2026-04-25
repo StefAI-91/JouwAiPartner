@@ -44,14 +44,14 @@ export const ActionItemSpecialistRawItemSchema = z.object({
       "ISO YYYY-MM-DD. Lege string als geen deadline-cue benoemd is (NIET een fake default invullen).",
     ),
   type_werk: z
-    .enum(["A", "B", "C", "D", "E"])
+    .enum(["A", "B", "C", "D"])
     .describe(
-      "A=intern JAIP, B=JAIP levert aan extern, C=extern levert aan JAIP, D=beslissing afwachten, E=partner-levering (Tibor/Dion).",
+      "A=intern JAIP, B=JAIP levert aan extern, C=extern levert aan JAIP, D=beslissing afwachten. Tibor en Dion zijn gewone externen — hun leveringen aan JAIP vallen onder C.",
     ),
   category: z
     .enum(["wachten_op_extern", "wachten_op_beslissing", "n/a"])
     .describe(
-      "wachten_op_extern voor type_werk C/E. wachten_op_beslissing voor type_werk D. n/a voor intern werk (A/B).",
+      "wachten_op_extern voor type_werk C. wachten_op_beslissing voor type_werk D. n/a voor intern werk (A/B).",
     ),
   confidence: z
     .number()
@@ -78,7 +78,7 @@ export type ActionItemSpecialistItem = {
   source_quote: string | null;
   project_context: string | null;
   deadline: string | null;
-  type_werk: "A" | "B" | "C" | "D" | "E";
+  type_werk: "A" | "B" | "C" | "D";
   category: "wachten_op_extern" | "wachten_op_beslissing" | null;
   confidence: number;
   reasoning: string | null;
