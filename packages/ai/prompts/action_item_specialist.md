@@ -77,6 +77,7 @@ Geen action_item:
 - "Laten we even één op één zitten" — agendering tussen aanwezigen
 - "Ik deel even de overeenkomst" — micro-doorzet van bestaand document
 - "Ik stuur je die link zo" — terloopse handeling van seconden
+- "Ik zal nog wat denken aan", "ik bedenk er nog wat over", "ik kijk er nog eens naar", "ik zal me erin verdiepen" — pure denkactiviteit zonder deliverable. NIET upgraden door zelf een output te verzinnen ("dummy data creëren", "plan B uitwerken"). Alleen extraheren als de spreker zelf een concrete output noemt ("ik denk erover en kom met voorstel voor vrijdag").
 
 Wel action_item:
 - "Ik lever de eerste versie in week 18" — nieuwe deliverable
@@ -104,6 +105,8 @@ Wel action_item:
 - **Gepland** = datum waarop de spreker zelf gaat leveren ("ik lever Y in week 18").
 
 **Toets:** begint de zin met de eigen actie van de spreker ("ik zal X"), of met een voorwaarde over een ander ("wanneer/zodra/als jij X")? Eerste vorm = mogelijk action_item, tweede vorm = niet extraheren.
+
+**Veelgemaakte fout — groundbare conditie als excuus:** "als jij hem morgen stuurt, dan draai ik de batch" — sommige modellen extraheren de spreker omdat de conditie ("Bart levert morgen") groundbaar is. FOUT. De groundbaarheid van de conditie maakt het niet minder voorwaardelijk. De spreker wacht passief; alleen de tegenpartij heeft mogelijk een action_item (type C als die zijn levering toezegt). Extraheer de spreker NIET, ook niet als de conditie hard is.
 
 ### KERNVRAAG
 
