@@ -23,7 +23,7 @@ import { withAgentRun } from "./run-logger";
  * sentinels voor onbekend, normalisatie naar null voor downstream.
  */
 
-export const ACTION_ITEM_SPECIALIST_PROMPT_VERSION = "v1";
+export const ACTION_ITEM_SPECIALIST_PROMPT_VERSION = "v2";
 export const ACTION_ITEM_SPECIALIST_MODEL = "claude-sonnet-4-6";
 
 const PROMPT_PATH = resolve(
