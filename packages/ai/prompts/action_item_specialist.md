@@ -79,6 +79,32 @@ Wanneer twee of meer personen die GEEN JAIP-medewerker zijn (geen Stef, Wouter o
 
 **Uitzondering 3:** JAIP wordt expliciet om reminder gevraagd ("herinner ons als jullie nog niks gepland hebben"). Zie uitzondering anti-patroon F.
 
+**❌ Anti-patroon H: Bevestiging van een gemaakte afspraak**
+
+Quote-vorm: "een mei om acht uur, tot dan!", "afgesproken", "deal, ik zie je daar", "spreken we zo af", "akkoord, ik zet het in m'n agenda".
+
+Een bevestiging dat een afspraak vastligt — datum/tijd/locatie wordt herhaald of beklonken — is géén action_item. Het is een beslissing/afspraak (decision-laag, niet onze scope). Er hoeft niets meer te gebeuren; de afspraak STAAT.
+
+→ NIET EXTRAHEREN. Ook niet als follow_up_contact "[Naam] navragen of hij op tijd is" of vergelijkbare nazorg-acties — die bestaan niet, de afspraak is bezegeld. Pas als er ná de bevestiging nog een concrete deliverable wordt benoemd ("ik stuur je vooraf de agenda"), dan is die deliverable de action_item — niet de afspraak-bevestiging.
+
+**Toets:** is er na deze uitspraak nog werk dat iemand moet uitvoeren, of is alleen "kalender vastleggen" wat overblijft? Als het laatste → niet extraheren.
+
+**❌ Anti-patroon I: Voorwaardelijke vervolgactie afhankelijk van anders' werk**
+
+Quote-vorm: "wanneer jij X hebt ingevuld, dan zal ik Y doen", "zodra jullie klaar zijn met A, dan pak ik B op", "als ik je input heb, ga ik er pas aan beginnen".
+
+De spreker zegt iets toe, maar pas NA een trigger die door iemand anders moet worden veroorzaakt. De spreker heeft geen eigen agency — hij wacht passief. Dit is geen action_item op de spreker, want hij kan niets doen tot de ander hem activeert.
+
+→ NIET EXTRAHEREN op de spreker. De ECHTE action_item zit (mogelijk) bij de eerste persoon: hij moet X invullen. Als die toezegging elders in het transcript staat, extraheer DIE — niet de voorwaardelijke vervolgactie.
+
+**Onderscheid — wel extraheren bij directe commitment met rationale:**
+
+Als de spreker zelf de eerste handeling toezegt en het effect alleen naderhand benoemt, IS het wél een action_item:
+- ✅ "Ik zal de vragen aanleveren, zodat we de testgroep op de hoogte kunnen brengen" — spreker zegt zelf X (vragen aanleveren) toe; "zodat Y" is rationale, geen voorwaarde
+- ❌ "Wanneer jij de vragen hebt ingevuld, zal ik dit mededelen met de testgroep" — spreker wacht op JOUW invulling; geen eigen agency tot dat moment
+
+**Toets:** Begint de zin met de eigen actie van de spreker ("ik zal X"), of met een voorwaarde over een ander ("wanneer/zodra/als jij X")? Eerste vorm = mogelijk action_item, tweede vorm = niet extraheren.
+
 ============================================================
 ## 1. JAIP IN EEN NOTENDOP
 
@@ -124,6 +150,9 @@ Voorbeelden van wat hierdoor wegvalt:
 - "Ja ik zal Monique opvolgen" (externe belooft eigen opvolging) — taak van die externe, geen JAIP-vervolgstap → NIET extraheren (faalt eis 1, anti-patroon F)
 - "Tibor en Guido prikken samen een momentje" — twee externen plannen onderling, JAIP staat erbuiten → NIET extraheren (faalt eis 1, anti-patroon G)
 - "Laten we deze week kijken of er nog ergens een gaatje is" (gezegd tussen klant en partner) — externen onderling agenderen → NIET extraheren (anti-patroon G)
+- "Een mei om acht uur, tot dan!" — afspraak-bevestiging, geen action_item maar decision → NIET extraheren (anti-patroon H)
+- "Wanneer jij de vragen hebt ingevuld, dan zal ik dit mededelen met de testgroep" — voorwaardelijke vervolgactie, spreker wacht passief → NIET extraheren op spreker (anti-patroon I)
+- WEL extraheren: "Ik zal de vragen aanleveren, zodat we de testgroep op de hoogte kunnen brengen" — directe commitment door spreker, "zodat Y" is rationale (uitzondering anti-patroon I)
 - WEL extraheren: "Tibor levert marketingplan aan JAIP" — JAIP is afhankelijk van levering, concrete handeling, Tibor heeft eigen agency
 - WEL extraheren: "Ik zal Monique opvolgen, herinner me hier volgende week aan" — externe vraagt JAIP om reminder → JAIP wordt actor (uitzondering anti-patroon F)
 
