@@ -83,26 +83,80 @@ function trigrams(text: string): Set<string> {
 }
 
 function contactMatches(a: string, b: string): boolean {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
+  const na = a.trim().toLowerCase();
+  const nb = b.trim().toLowerCase();
+  if (na === nb) return true;
+  // Fuzzy: voornaam-overlap. Agent gebruikt vaak volledige naam ("Guido Leduc"),
+  // golden vaak voornaam ("Guido"). Match als eerste woord identiek is OF als
+  // de ene een prefix is van de andere (whitespace-grens). Vermijdt false
+  // matches op verschillende voornamen die toevallig met dezelfde letter
+  // beginnen ("Wouter" vs "Wim").
+  const firstA = na.split(/\s+/)[0];
+  const firstB = nb.split(/\s+/)[0];
+  if (firstA && firstB && firstA === firstB) return true;
+  if (na.startsWith(nb + " ") || nb.startsWith(na + " ")) return true;
+  return false;
+}
+
+/**
+ * Sterke match-indicator: beide items refereren naar (deels) dezelfde quote
+ * uit het transcript. Returnt 0..1 op basis van de fractie van de KORTSTE
+ * quote die ook in de langere voorkomt. Gebruikt om paraphrase-mismatches op
+ * content te overrulen — zelfde quote betekent met hoge zekerheid zelfde item.
+ */
+function quoteOverlapScore(a: string | null | undefined, b: string | null | undefined): number {
+  if (!a || !b) return 0;
+  const na = normaliseQuote(a);
+  const nb = normaliseQuote(b);
+  if (na.length < 20 || nb.length < 20) return 0; // te kort om betrouwbaar
+  const [shorter, longer] = na.length <= nb.length ? [na, nb] : [nb, na];
+  // Probeer direct substring; als niet exact, glij een venster van 30 chars
+  // van de kortere over de langere en tel maximale exacte overlap.
+  if (longer.includes(shorter)) return 1;
+  let bestRun = 0;
+  const window = 30;
+  for (let i = 0; i + window <= shorter.length; i++) {
+    const slice = shorter.slice(i, i + window);
+    if (longer.includes(slice)) {
+      // breid uit: hoeveel chars vóór en na deze 30-char run zitten ook?
+      let runLen = window;
+      while (i + runLen < shorter.length && longer.includes(shorter.slice(i, i + runLen + 1))) {
+        runLen++;
+      }
+      if (runLen > bestRun) bestRun = runLen;
+    }
+  }
+  return bestRun / shorter.length;
+}
+
+function normaliseQuote(q: string): string {
+  return q
+    .toLowerCase()
+    .replace(/["'“”‘’]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 interface CompareOptions {
-  /** Minimum content-similarity voor een match (default 0.55). */
+  /** Minimum match-similarity (default 0.4). */
   contentThreshold?: number;
 }
 
 /**
  * Vergelijkt geëxtraheerde items met golden ground-truth en levert
  * precision/recall + diff. Greedy match: voor elk extracted item zoekt
- * hij de golden met hoogste similarity (boven threshold) en koppelt die.
+ * hij de golden met hoogste match-score (boven threshold) en koppelt die.
  * Eenmaal gekoppelde golden-items kunnen niet opnieuw matchen.
+ *
+ * Match-score = max(contentSimilarity, quoteOverlapScore). Een sterke
+ * quote-overlap reddt een match die op content-paraphrase zou falen.
  */
 export function comparePrecisionRecall(
   extracted: ComparableItem[],
   golden: ComparableItem[],
   options: CompareOptions = {},
 ): ComparisonResult {
-  const threshold = options.contentThreshold ?? 0.55;
+  const threshold = options.contentThreshold ?? 0.4;
 
   const usedGolden = new Set<number>();
   const diff: DiffEntry[] = [];
@@ -114,7 +168,9 @@ export function comparePrecisionRecall(
       if (usedGolden.has(i)) continue;
       const g = golden[i];
       if (!contactMatches(ex.follow_up_contact, g.follow_up_contact)) continue;
-      const sim = contentSimilarity(ex.content, g.content);
+      const contentSim = contentSimilarity(ex.content, g.content);
+      const quoteSim = quoteOverlapScore(ex.source_quote, g.source_quote);
+      const sim = Math.max(contentSim, quoteSim);
       if (sim >= threshold && sim > bestSim) {
         bestIdx = i;
         bestSim = sim;

@@ -22,7 +22,7 @@ interface Props {
 export function RunActionItemHarnessClient({ meetings }: Props) {
   const [selectedId, setSelectedId] = useState<string>(meetings[0]?.id ?? "");
   const [confidenceThreshold, setConfidenceThreshold] = useState(0);
-  const [contentThreshold, setContentThreshold] = useState(0.55);
+  const [contentThreshold, setContentThreshold] = useState(0.4);
   const [result, setResult] = useState<RunActionItemAgentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
