@@ -28,11 +28,7 @@ CREATE TABLE IF NOT EXISTS action_item_golden_meetings (
   notes TEXT
 );
 
-COMMENT ON TABLE action_item_golden_meetings IS
-  'Coding-state per meeting voor de Action Item Specialist golden dataset. ' ||
-  'Een rij hier betekent: deze meeting is door een mens beoordeeld. status=coded ' ||
-  'met 0 items in action_item_golden_items = expliciete "geen action items" — ' ||
-  'cruciaal voor recall-meting op lege meetings.';
+COMMENT ON TABLE action_item_golden_meetings IS 'Coding-state per meeting voor de Action Item Specialist golden dataset. Een rij hier betekent: deze meeting is door een mens beoordeeld. status=coded met 0 items in action_item_golden_items = expliciete geen action items, cruciaal voor recall-meting op lege meetings.';
 
 -- ============================================================================
 -- 2. Per-item golden ground truth
@@ -62,11 +58,7 @@ CREATE TABLE IF NOT EXISTS action_item_golden_items (
   coder_notes TEXT
 );
 
-COMMENT ON TABLE action_item_golden_items IS
-  'Handmatig-gecodeerde action items per meeting voor evaluatie van de ' ||
-  'Action Item Specialist. Per item leg je vast wat de agent IDEALITER zou ' ||
-  'moeten produceren — content, contact, lane, type_werk. coder_notes legt ' ||
-  'uit waarom dit het juiste antwoord is, zodat prompt-tuning herleidbaar is.';
+COMMENT ON TABLE action_item_golden_items IS 'Handmatig-gecodeerde action items per meeting voor evaluatie van de Action Item Specialist. Per item leg je vast wat de agent idealiter zou moeten produceren — content, contact, lane, type_werk. coder_notes legt uit waarom dit het juiste antwoord is, zodat prompt-tuning herleidbaar is.';
 
 -- ============================================================================
 -- 3. Indices voor harness-queries
