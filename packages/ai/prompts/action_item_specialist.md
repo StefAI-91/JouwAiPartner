@@ -43,6 +43,26 @@ Een toezegging om iets snel te delen, door te sturen, even te checken of een lin
 
 **Toets:** vraagt deze handeling werk, of is het alleen een doorzet-actie waarbij iets dat al bestaat naar iemand anders gaat? Als het tweede → niet extraheren. Een action_item vereist substantieel werk of een concrete deliverable die gemaakt moet worden, niet een handgreep van enkele minuten.
 
+**❌ Anti-patroon F: Externe belooft opvolging buiten JAIP om**
+
+Quote-vorm: "ik zal Monique opvolgen", "ik bel hem nog wel even", "ik regel het met X", "ik neem nog contact op met Y" — gezegd door een niet-JAIP-medewerker, waarbij de actie buiten JAIP om plaatsvindt (extern → extern of extern → derde partij).
+
+→ NIET EXTRAHEREN. Het is een taak van die externe persoon, niet van Stef of Wouter. JAIP is geen actor en geen directe afhankelijke — er is geen JAIP-vervolgstap die geblokkeerd is op de uitkomst. Bijhouden zou de cockpit volstoppen met taken van anderen die wij niet kunnen beïnvloeden.
+
+**UITZONDERING — expliciet reminder-verzoek aan JAIP:**
+
+Als de externe in dezelfde of directe vervolgturn JAIP expliciet vraagt om herinnerd te worden, IS het een action_item. Trigger-zinnen: "herinner me hier volgende week aan", "geef me een seintje als je niks hoort", "stuur me een mailtje volgende week", "tik me erover aan over een week".
+
+In dat geval:
+- `content`: "[Naam] herinneren aan [korte omschrijving van wat hij/zij ging doen]" — bijv. "Tibor herinneren aan opvolgen Monique"
+- `follow_up_contact`: de externe die om de herinnering vraagt
+- `assignee`: leeg (= JAIP, want wij sturen de reminder)
+- `type_werk`: B (JAIP levert reminder aan extern)
+- `deadline`: het moment waarop de reminder gestuurd moet worden (bv. "volgende week" → eerstvolgende vrijdag)
+- `source_quote`: de zin met het reminder-verzoek
+
+**Toets:** als de uitspraak "ik regel X met Y" niet vergezeld gaat van een verzoek aan JAIP om iets te doen of te onthouden → NIET extraheren. Pas wanneer JAIP een rol krijgt (reminder sturen, status checken) wordt het een actiepunt.
+
 ============================================================
 ## 1. JAIP IN EEN NOTENDOP
 
@@ -85,7 +105,9 @@ Voorbeelden van wat hierdoor wegvalt:
 - "Tibor gaat met Guido een 1-op-1 doen" — twee externen plannen overleg, JAIP staat erbuiten → NIET extraheren (faalt eis 1)
 - "Ik vind het goed om weer eens samen te zitten" — wens/bereidheid, geen handeling → NIET extraheren (faalt eis 2)
 - "Als de klant terugkomt, dan plannen we" — voorwaardelijk zonder agency over de trigger → NIET extraheren (faalt eis 3)
+- "Ja ik zal Monique opvolgen" (externe belooft eigen opvolging) — taak van die externe, geen JAIP-vervolgstap → NIET extraheren (faalt eis 1, anti-patroon F)
 - WEL extraheren: "Tibor levert marketingplan aan JAIP" — JAIP is afhankelijk van levering, concrete handeling, Tibor heeft eigen agency
+- WEL extraheren: "Ik zal Monique opvolgen, herinner me hier volgende week aan" — externe vraagt JAIP om reminder → JAIP wordt actor (uitzondering anti-patroon F)
 
 **KERNVRAAG (na de drie eisen):** Kunnen wij over twee weken iemand benaderen met "hoe staat het ermee"? Als het antwoord niet duidelijk "ja" is → geen action_item.
 
