@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 449 |
-| Exported functions/constants | 708 |
-| Exported types/interfaces | 255 |
-| Cross-package imports | 491 |
-| Critical integration points (3+ packages) | 9 |
+| Files scanned | 455 |
+| Exported functions/constants | 724 |
+| Exported types/interfaces | 261 |
+| Cross-package imports | 500 |
+| Critical integration points (3+ packages) | 10 |
 
 ## Package Dependency Flow
 
@@ -138,6 +138,15 @@
 - `getExtractionsForMeetingByType()`
 
 **Types:** `ExtractionForHarness`
+
+### `queries/golden.ts`
+
+**Exports:**
+- `listMeetingsWithGoldenStatus()`
+- `getMeetingForGoldenCoder()`
+- `getGoldenForMeeting()`
+
+**Types:** `MeetingWithGoldenStatus`, `MeetingForGoldenCoder`, `GoldenItemRow`, `GoldenMeetingState`
 
 ### `queries/ignored-entities.ts`
 
@@ -531,6 +540,17 @@
 - `clearExtractionThemesForThemeInMeeting()`
 
 **Types:** `ExtractionThemeRow`
+
+### `mutations/golden.ts`
+
+**Exports:**
+- `upsertGoldenMeeting()`
+- `insertGoldenItem()`
+- `updateGoldenItem()`
+- `deleteGoldenItem()`
+- `resetGoldenForMeeting()`
+
+**Types:** `UpsertGoldenMeetingInput`, `GoldenItemInput`
 
 ### `mutations/ignored-entities.ts`
 
@@ -1866,6 +1886,19 @@
 - `@repo/database/queries/themes` → listVerifiedThemes
 - `@repo/database/queries/dev-detector` → getMeetingThemesForDevDetector, getExtractionThemesForDevDetector, type DevDetectorMeetingThemeRow, type DevDetectorExtractionThemeRow
 
+### `apps/cockpit/src/actions/golden-action-items.ts`
+
+**Exports:**
+- `upsertGoldenMeetingAction()`
+- `insertGoldenItemAction()`
+- `updateGoldenItemAction()`
+- `deleteGoldenItemAction()`
+- `resetGoldenForMeetingAction()`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdminInAction
+- `@repo/database/mutations/golden` → upsertGoldenMeeting, insertGoldenItem, updateGoldenItem, deleteGoldenItem, resetGoldenForMeeting, type GoldenItemInput
+
 ### `apps/cockpit/src/actions/management-insights.ts`
 
 **Exports:**
@@ -2333,6 +2366,34 @@
 - `@repo/database/queries/organizations` → listOrganizationsByType
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-client.tsx`
+
+**Exports:**
+- `GoldenCoderClient()`
+
+**Depends on:**
+- (type) `@repo/database/queries/golden` → GoldenItemRow, GoldenMeetingState
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx`
+
+**Exports:**
+- `metadata`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdmin
+- `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx`
+
+**Exports:**
+- `metadata`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdmin
+- `@repo/ui/format` → formatDate
+- `@repo/database/queries/golden` → listMeetingsWithGoldenStatus
+- (type) `@repo/database/queries/golden` → MeetingWithGoldenStatus
 
 ### `apps/cockpit/src/app/(dashboard)/dev/detector/client.tsx`
 
@@ -3393,11 +3454,11 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 55 | - | - | - | - | 55 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 23 | 6 | 10 | - | - | 39 |
+| Cockpit Server Actions | 24 | 6 | 11 | - | - | 41 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 93 | 8 | 4 | 33 | - | 138 |
+| Cockpit Pages | 97 | 8 | 6 | 34 | - | 145 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -3419,6 +3480,7 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` | database, ui, ai | 3 |
 | `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` | database, ui, ai | 3 |
+| `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx` | auth, ui, database | 3 |
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
@@ -3475,6 +3537,16 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `linkExtractionsToThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `clearExtractionThemesForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
+
+### mutations/golden.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `upsertGoldenMeeting()` | `apps/cockpit/src/actions/golden-action-items.ts` |
+| `insertGoldenItem()` | `apps/cockpit/src/actions/golden-action-items.ts` |
+| `updateGoldenItem()` | `apps/cockpit/src/actions/golden-action-items.ts` |
+| `deleteGoldenItem()` | `apps/cockpit/src/actions/golden-action-items.ts` |
+| `resetGoldenForMeeting()` | `apps/cockpit/src/actions/golden-action-items.ts` |
 
 ### mutations/ignored-entities.ts
 
@@ -3640,6 +3712,14 @@ Which queries are used where across the codebase.
 | `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 | `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+
+### queries/golden.ts
+
+| Query | Used in |
+|-------|---------|
+| `listMeetingsWithGoldenStatus()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx` |
+| `getMeetingForGoldenCoder()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
+| `getGoldenForMeeting()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
 
 ### queries/ignored-entities.ts
 
