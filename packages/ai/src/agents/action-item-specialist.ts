@@ -26,10 +26,18 @@ import { withAgentRun } from "./run-logger";
 export const ACTION_ITEM_SPECIALIST_PROMPT_VERSION = "v1";
 export const ACTION_ITEM_SPECIALIST_MODEL = "claude-sonnet-4-6";
 
-const SYSTEM_PROMPT = readFileSync(
-  resolve(dirname(fileURLToPath(import.meta.url)), "../../prompts/action_item_specialist.md"),
-  "utf8",
-).trimEnd();
+const PROMPT_PATH = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../prompts/action_item_specialist.md",
+);
+
+// Tijdens prompt-tuning lezen we de markdown vers per call: een dev-server
+// herlaadt deze .ts niet als alleen de markdown verandert, en dan hangt de
+// oude prompt in module-memory. Zodra de prompt stabiel is mag dit terug
+// naar een module-level constant (zoals de andere agents).
+function loadSystemPrompt(): string {
+  return readFileSync(PROMPT_PATH, "utf8").trimEnd();
+}
 
 export interface ActionItemSpecialistContext {
   title: string;
@@ -62,6 +70,7 @@ export async function runActionItemSpecialist(
   context: ActionItemSpecialistContext,
 ): Promise<ActionItemSpecialistRunResult> {
   const startedAt = Date.now();
+  const systemPrompt = loadSystemPrompt();
 
   const contextPrefix = [
     `Titel: ${context.title}`,
@@ -93,7 +102,7 @@ export async function runActionItemSpecialist(
         messages: [
           {
             role: "system",
-            content: SYSTEM_PROMPT,
+            content: systemPrompt,
             providerOptions: {
               anthropic: { cacheControl: { type: "ephemeral" } },
             },
@@ -151,5 +160,8 @@ function normaliseActionItemSpecialistOutput(
   };
 }
 
-/** Exposed voor harness + tests. */
-export const ACTION_ITEM_SPECIALIST_SYSTEM_PROMPT = SYSTEM_PROMPT;
+/** Exposed voor harness + tests. Leest fresh van disk zodat de UI de
+ *  prompt toont die de laatste run ook gebruikt. */
+export function getActionItemSpecialistSystemPrompt(): string {
+  return loadSystemPrompt();
+}

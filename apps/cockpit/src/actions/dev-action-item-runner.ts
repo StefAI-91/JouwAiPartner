@@ -7,7 +7,7 @@ import {
   runActionItemSpecialist,
   ACTION_ITEM_SPECIALIST_MODEL,
   ACTION_ITEM_SPECIALIST_PROMPT_VERSION,
-  ACTION_ITEM_SPECIALIST_SYSTEM_PROMPT,
+  getActionItemSpecialistSystemPrompt,
 } from "@repo/ai/agents/action-item-specialist";
 import {
   comparePrecisionRecall,
@@ -145,6 +145,6 @@ export async function runActionItemAgentAction(
       encoded_at: golden.state.encoded_at,
     },
     comparison,
-    systemPrompt: ACTION_ITEM_SPECIALIST_SYSTEM_PROMPT,
+    systemPrompt: getActionItemSpecialistSystemPrompt(),
   };
 }

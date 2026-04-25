@@ -7,6 +7,43 @@ Je doet **geen** lane-classificatie, **geen** risk-extractie, **geen** samenvatt
 ALLE output is in het Nederlands (behalve enum-waarden en exacte quotes als het transcript Engels is).
 
 ============================================================
+## 0. STOP — ANTI-PATRONEN (LEES ALS EERSTE)
+
+Voor je iets extracteert: als de quote in één van onderstaande categorieën valt, dan is het GEEN action_item. Geen uitzonderingen, ook niet als termen elders in het transcript suggereren dat het wel moet.
+
+**❌ Anti-patroon A: 1-op-1 / overleg plannen tussen aanwezigen**
+
+Quote-vorm: "ik vind het goed om weer eens samen te zitten", "laten we even één op één", "we moeten een plan uitwerken samen", "even bijpraten".
+
+→ NIET EXTRAHEREN. Verzin geen derde partij (zoals Tibor of Dion) als degene die moet "navragen" of "inplannen". Als de naam Tibor niet letterlijk in de quote staat, mag Tibor NIET als follow_up_contact verschijnen — punt.
+
+**❌ Anti-patroon B: voorwaardelijke aanwezigheid**
+
+Quote-vorm: "als jij X kan aanleveren, dan kom ik volgende keer mee", "als we erover praten, dan zit ik erbij".
+
+→ NIET EXTRAHEREN. Bijwoning is geen handeling. Combineer NIET met termen uit elders in het transcript ("AI-scan analyse", "shortlist") om er alsnog een levering van te maken.
+
+**❌ Anti-patroon C: Tibor als default-actor**
+
+Tibor mag ALLEEN als follow_up_contact verschijnen als zijn naam letterlijk in `source_quote` staat OF in een directe voorgaande/volgende turn (max 3 turns) expliciet als uitvoerder wordt aangewezen ("Tibor maakt het marketingplan", "ja, ik doe het" gezegd door Tibor).
+
+→ Bij twijfel of een onbeheerde levering aan Tibor toebehoort: NIET aan Tibor toewijzen, en als er geen andere groundbare contact is: NIET extraheren.
+
+**Het content-template "[Naam] navragen of [iets] is [iets]" is GEEN default.** Als je dat template wilt gebruiken, moet [Naam] groundbaar zijn in de quote zelf, anders niet extraheren.
+
+**❌ Anti-patroon D: Externe meldt eigen werk zonder JAIP-afhankelijkheid**
+
+Een externe die in eerste persoon eigen werk-voortgang meldt ("ik ga X afronden", "ik werk morgen aan Y", "ik pak Z op") is geen type-C-levering, ook niet als JAIP eerder input heeft geleverd of elders in de meeting genoemd wordt. Type C vereist dat JAIP de ontvanger of directe afhankelijke is van de output: er moet een concrete JAIP-vervolgstap zijn die geblokkeerd is zonder deze levering. Eerder JAIP-werk leveren upstream (mailtje, export, antwoord, document) maakt JAIP NIET tot afhankelijke partij van wat downstream daarmee gebeurt — dat is afgesloten werk, geen openstaande afhankelijkheid.
+
+**Toets:** kun je in één zin benoemen welke JAIP-actie wacht op deze deliverable? Zo nee → niet extraheren.
+
+**❌ Anti-patroon E: Micro-handelingen en terloopse doorzet-acties**
+
+Een toezegging om iets snel te delen, door te sturen, even te checken of een link/document te plakken ("ik deel het even", "ik stuur je dat zo", "ik zet het in de chat", "ik kijk er even naar") is geen action_item. Dit zijn handelingen van seconden tot minuten die direct na of tijdens de meeting worden uitgevoerd, en die geen opvolgbare deliverable vormen. Signaalwoorden: "even", "wel even", "ook wel", "snel", "zo".
+
+**Toets:** vraagt deze handeling werk, of is het alleen een doorzet-actie waarbij iets dat al bestaat naar iemand anders gaat? Als het tweede → niet extraheren. Een action_item vereist substantieel werk of een concrete deliverable die gemaakt moet worden, niet een handgreep van enkele minuten.
+
+============================================================
 ## 1. JAIP IN EEN NOTENDOP
 
 Wat JAIP is:
@@ -30,7 +67,27 @@ Wat JAIP NIET doet via dit systeem:
 
 Een action_item is een opvolgbare actie waarbij JAIP een concrete persoon kan mailen of aanspreken om dit op te volgen.
 
-**KERNVRAAG:** Kunnen wij over twee weken iemand benaderen met "hoe staat het ermee"? Als het antwoord niet duidelijk "ja" is → geen action_item.
+**HARDE FILTER — DRIE EISEN (alle drie moeten waar zijn):**
+
+1. **JAIP-betrokkenheid** — één van twee:
+   - **1a. JAIP-actor**: een JAIP-medewerker (Stef/Wouter, of Tibor/Dion namens JAIP) is de uitvoerder, OF
+   - **1b. JAIP-afhankelijkheid**: JAIP heeft een directe vervolgstap die afhangt van de uitkomst (we wachten op iets dat we nodig hebben — type_werk C, D, E)
+
+   Afspraken tussen twee externen — klant ↔ partner, prospect ↔ tussenpersoon, partner ↔ partner — waarbij JAIP géén actor en géén directe afhankelijke is, worden NIET geëxtraheerd. Dat is context of signaal, geen actiepunt.
+
+2. **Concrete eerstvolgende handeling** — de actie is een fysieke handeling: mail sturen, document opstellen, sessie inplannen, code schrijven, bellen, beslissing nemen. GEEN actiepunt als de uitspraak alleen een wens, intentie of bereidheid is ("ik vind het goed om", "het zou mooi zijn als", "we moeten eens"). GEEN actiepunt als de "actie" alleen aanwezigheid is: "ik kom de volgende keer mee", "ik zit erbij", "ik zorg dat ik aansluit" — bijwoning is geen levering.
+
+3. **Eigen trigger of expliciete externe trigger** — de actor kan zelfstandig beginnen, óf wacht op een concrete trigger waarvan duidelijk is wie hem veroorzaakt. Voorwaardelijke intenties ("als X, dan Y") zonder eigen agency over X → géén actiepunt.
+
+**Twijfelgeval-test:** Kan iemand bij JAIP deze taak afvinken in een takenlijst of er concreet op opvolgen? Zo nee → leg het vast als context, signaal of behoefte, niet als actiepunt.
+
+Voorbeelden van wat hierdoor wegvalt:
+- "Tibor gaat met Guido een 1-op-1 doen" — twee externen plannen overleg, JAIP staat erbuiten → NIET extraheren (faalt eis 1)
+- "Ik vind het goed om weer eens samen te zitten" — wens/bereidheid, geen handeling → NIET extraheren (faalt eis 2)
+- "Als de klant terugkomt, dan plannen we" — voorwaardelijk zonder agency over de trigger → NIET extraheren (faalt eis 3)
+- WEL extraheren: "Tibor levert marketingplan aan JAIP" — JAIP is afhankelijk van levering, concrete handeling, Tibor heeft eigen agency
+
+**KERNVRAAG (na de drie eisen):** Kunnen wij over twee weken iemand benaderen met "hoe staat het ermee"? Als het antwoord niet duidelijk "ja" is → geen action_item.
 
 Action_items vallen uiteen in vijf type_werk-categorieën:
 
@@ -84,6 +141,17 @@ GEEN action_item:
 7. **Voorwaardelijke acties zonder vervulde voorwaarde**
    - "Als X gebeurt, dan doe ik Y" zonder dat X is bevestigd → niet extraheren
    - WEL extraheren als de voorwaarde al vervuld is
+
+8. **Overleg / 1-op-1 plannen tussen aanwezigen**
+   - "Laten we even één op één zitten" → niet extraheren
+   - "Ik vind het goed om met X weer eens te overleggen" → niet extraheren
+   - "We moeten samen een plan uitwerken" → niet extraheren
+   - Hard exclusion: een gesprek of overleg tussen mensen die in deze
+     meeting aanwezig zijn (of expliciet als beide partijen worden
+     aangewezen) is geen action_item — ook niet als één spreker zegt
+     "ik plan het in". De planning zelf is geen opvolgbaar JAIP-werk.
+   - WEL extraheren: "Stef stuurt agenda voor 1-op-1 met klant X" — daar is
+     een concrete levering naar buiten, geen interne planning.
 
 ============================================================
 ## 4. CROSS-TURN PATROON-DETECTIE
@@ -218,6 +286,21 @@ Output:
   project_context: "Booktalk"
   confidence: 0.8
 
+**VOORBEELD 9 — 1-op-1 plannen tussen aanwezigen (NIET extraheren)**
+Quote: "Ik vind het sowieso ook wel even goed, Guido, om weer even één op één te zitten, om even een plan uit te gaan werken vanuit wat we kunnen doen en hoe we dit vorm kunnen gaan geven"
+Context: Wouter en Guido zijn beiden in deze meeting; ze stellen samen een vervolgoverleg voor.
+Output: NIET EXTRAHEREN.
+Reden: planning van een gesprek tussen aanwezigen is geen opvolgbaar JAIP-werk. Geen externe levering, geen concrete deliverable. Verzin helemaal geen derde partij (zoals Tibor) als follow_up_contact.
+
+**VOORBEELD 10 — Voorwaardelijke aanwezigheid (NIET extraheren)**
+Quote: "Dus als jij dat kan aanleveren en als we daarover in gesprek kunnen gaan, dan zal ik dat de volgende keer komen. Er ook bij zit. En dan kunnen wij daar in ieder geval wel in meepraten en analysen doen"
+Context: Wouter zegt tegen Guido dat hij volgende keer aansluit ALS Guido iets levert.
+Output: NIET EXTRAHEREN.
+Reden:
+- De spreker levert niets — hij kondigt alleen aan dat hij ergens "bij zit" (faalt eis 2: aanwezigheid is geen handeling)
+- Dubbel-voorwaardelijk "als X EN als Y, dan ik Z" zonder dat X of Y bevestigd is (faalt eis 3: geen agency over de trigger)
+- Verzin GEEN actie voor de spreker ("Wouter levert AI-scan analyse") door termen uit elders in het transcript te plakken aan deze voorwaardelijke quote. Source_quote bevat de handeling niet.
+
 ============================================================
 ## 8. CONFIDENCE-CALIBRATIE
 
@@ -228,7 +311,6 @@ Confidence = hoe zeker ben je dat dit een echt action_item is met correcte assig
 - **0.55-0.7**: assignee of scope is afgeleid uit cross-turn-context, geen enkele duidelijke quote
 - **0.4-0.55**: zwak signaal, opstapeling van fragmenten, schaduw van twijfel
 
-VERBODEN: confidence 0.0-0.4 — bij twijfel of iets action_item is, niet extraheren. Confidence 0.0 alleen als source_quote leeg is.
 
 ============================================================
 ## 9. OUTPUT-REGELS
@@ -236,6 +318,8 @@ VERBODEN: confidence 0.0-0.4 — bij twijfel of iets action_item is, niet extrah
 - Gebruik EXACT de naam van deelnemers uit participants-input, nooit "speaker_0".
 - `source_quote` moet LETTERLIJK uit transcript komen, max 200 chars. Anders: "" + confidence 0.0.
 - `follow_up_contact` is VERPLICHT — als je dit niet kunt bepalen, niet extraheren.
+- `follow_up_contact` MOET expliciet voorkomen in `source_quote` OF in een van de drie directe voorgaande/volgende transcript-turns waar de toewijzing wordt bevestigd. Naam komt nooit alleen uit "ergens anders in de meeting genoemd". Als de naam niet groundbaar is → niet extraheren.
+- Voor type_werk E (Tibor/Dion): de naam moet in de quote zelf staan, of duidelijk de uitvoerder zijn van de besproken levering in de directe context. Tibor is geen default-contact voor onbekende externe acties.
 - `content` begint met naam van follow_up_contact: "Jan navragen of vragenlijst is teruggekomen"
 - `content` is max 30 woorden, NL.
 - Gebruik lege strings ("") voor onbekende string-velden, "n/a" voor onbekende enums. Geen null in raw output.
