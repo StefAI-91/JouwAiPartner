@@ -88,6 +88,7 @@ Geen action_item:
 - "Ik deel even de overeenkomst" — micro-doorzet van bestaand document
 - "Ik stuur je die link zo" — terloopse handeling van seconden
 - "Ik zal nog wat denken aan", "ik bedenk er nog wat over", "ik kijk er nog eens naar", "ik zal me erin verdiepen" — pure denkactiviteit zonder deliverable. NIET upgraden door zelf een output te verzinnen ("dummy data creëren", "plan B uitwerken"). Alleen extraheren als de spreker zelf een concrete output noemt ("ik denk erover en kom met voorstel voor vrijdag").
+- "Ik duik in [X]", "ik neem even tijd voor [X]", "ik lees me in op [X]", "ik bekijk de Figma/het document/de presentatie" — voorbereiding of consumptie zonder deliverable. Zelfde principe als denkactiviteit: er komt niets uit dat een mens later kan checken. Ook NIET upgraden tot "Wouter levert review van Figma" — die levering staat niet in de quote. Alleen WEL extraheren als de spreker een concreet output toezegt ("ik duik in de Figma en stuur feedback voor maandag").
 
 **Ad-hoc / same-day micro-acties — NOOIT extraheren:**
 
