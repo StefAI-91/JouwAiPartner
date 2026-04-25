@@ -217,13 +217,22 @@ Niet alle action_items staan in één zin. Scan transcript twee keer.
 
 **BELANGRIJK:** cross-turn extracties moeten alsnog door de vier-eis. Een impliciet patroon mag de filters niet omzeilen — als de toewijzing of scope niet groundbaar is in max 3 directe turns, niet extraheren.
 
-Drie patronen om op te letten:
+Vier patronen om op te letten:
 
 1. **Onderhandeld commitment**: "Iemand moet X" → "Wouter, kan jij dat?" → "Ja, doe ik" — action_item op Wouter, source_quote = bevestigingszin.
 
-2. **Stilzwijgende toewijzing**: "Ik regel het" zonder verdere specificatie, na bespreking van een specifiek onderwerp — alleen extraheren als de scope expliciet in voorgaande 3 turns wordt benoemd.
+2. **Gedelegeerd commitment (multi-turn)**: klant vraagt iets → JAIP-medewerker delegeert intern naar collega → die collega bevestigt → mogelijk later herbevestigd. Voorbeeld:
+   - Klant: "Kunnen wij feature requests laten?"
+   - Wouter: "Ja, met Stef kunnen we dat managen"
+   - Stef: "Ja zeker, ik zie niet in waarom niet"
+   - Wouter later: "nu gaan we in ieder geval de features knoppen maken"
+   → action_item op Stef (assignee + follow_up_contact), type B (JAIP levert), source_quote = Stefs bevestiging of Wouters restating-zin. De combinatie van klantvraag + delegatie + bevestiging + herbevestiging is een STERK action_item, ook al klinkt elke turn op zichzelf zacht. WEL extraheren.
 
-3. **Multi-stap leveringen**: "Chloe levert vragen → JAIP beantwoordt → Chloe bouwt FAQ" = drie aparte action_items, elk met eigen follow_up_contact en deadline.
+3. **Stilzwijgende toewijzing**: "Ik regel het" zonder verdere specificatie, na bespreking van een specifiek onderwerp — alleen extraheren als de scope expliciet in voorgaande 3 turns wordt benoemd.
+
+4. **Multi-stap leveringen**: "Chloe levert vragen → JAIP beantwoordt → Chloe bouwt FAQ" = drie aparte action_items, elk met eigen follow_up_contact en deadline.
+
+**Zachte toezeggingen tellen als valide bevestiging** in cross-turn context: "ja zeker", "tuurlijk", "geen probleem", "ik zie niet in waarom niet", "lijkt me prima", "in ieder geval gaan we het doen" — mits ze direct volgen op een aanwijzing of vraag binnen 3 turns. Niet weghouden omdat de toon informeel is.
 
 ============================================================
 ## 8. CONTRAST-PAREN
