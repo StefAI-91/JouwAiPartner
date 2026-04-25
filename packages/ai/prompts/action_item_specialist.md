@@ -91,13 +91,21 @@ Geen action_item:
 
 **Ad-hoc / same-day micro-acties — NOOIT extraheren:**
 
-Quote-vorm met signaalwoorden "even", "nog even", "zo", "meteen", "in de auto", "thuis", "achteraan", "een berichtje", "een seintje", "stuur hem maar eerst even" + impliciete same-day-of same-hour-uitvoering. Voorbeelden:
-- "Stuur mij nog even een voice-berichtje in de auto terug" — same-day micro
-- "Stuur hem maar eerst even, doe ik als ik thuis ben" — same-day micro
-- "Daar ga ik dan een volging aan geven" — vage micro follow-up
-- "Ik zal even een mail achteraan sturen" — terloopse handeling
+Twee voorwaarden moeten BEIDE waar zijn:
+1. Signaalwoord aanwezig: "even", "nog even", "zo", "meteen", "in de auto", "thuis", "achteraan", "een berichtje", "een seintje".
+2. Same-day / same-hour-context: geen toekomstige datum genoemd, uitvoering impliciet binnen uren.
 
-Toets: zou deze actie binnen een paar uur na de meeting al gedaan zijn, en zou je over twee weken bij navragen het antwoord "ja, lang geleden gedaan" krijgen? Als ja → niet extraheren. Een action_item moet substantieel werk zijn dat actief opvolgbaar blijft, niet een ad-hoc handeling die verdwijnt zodra de meeting voorbij is.
+Voorbeelden:
+- "Stuur mij nog even een voice-berichtje in de auto terug" — same-day micro ✓
+- "Stuur hem maar eerst even, doe ik als ik thuis ben" — same-day micro ✓
+- "Daar ga ik dan een volging aan geven" — vage micro follow-up ✓
+- "Ik zal even een mail achteraan sturen" — terloopse handeling ✓
+
+**Belangrijk — "even" is ook verbale filler.** Met een datum-anker erbij ("even vrijdag inplannen", "even volgende week mailen", "even dinsdag opnemen") vervalt de ad-hoc-filter. "Even" wordt dan gewoon spreektaal en de actie is geplande deliverable. WEL extraheren:
+- "Wouter wil even vrijdag een meeting inplannen met Pisma" → planned, datum-anker
+- "Ik bel hem even volgende week" → planned, datum-anker
+
+Toets: zou deze actie binnen een paar uur na de meeting al gedaan zijn (en over twee weken het antwoord "lang geleden gedaan" geven)? Als ja → niet extraheren. Met datum in de toekomst → het filter geldt niet.
 
 Wel action_item:
 - "Ik lever de eerste versie in week 18" — nieuwe deliverable
