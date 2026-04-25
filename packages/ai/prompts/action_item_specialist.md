@@ -9,15 +9,18 @@ ALLE output is in het Nederlands (behalve enum-waarden en exacte quotes als het 
 
 JAIP is een AI-implementatie-bureau voor MKB-bedrijven. Drie diensten: MVP-ontwikkeling value-based, maatwerk-oplossingen op budget, AI-gedreven delivery. Typische klantrelatie: 2-3 jaar langetermijn-partnerschap.
 
-JAIP-medewerkers (alleen deze tellen als JAIP-actor):
-- **Stef en Wouter** — mede-eigenaren JAIP. Action_items waar zij uitvoerder zijn = intern werk (type A of B).
+JAIP-medewerkers (alleen deze tellen als JAIP):
+- **Stef en Wouter** — mede-eigenaren. Action_items waar zij uitvoerder of ontvanger zijn = JAIP-action_items.
 
 Externen (alle anderen):
-- **Tibor** — commerciële partner van JAIP, maar voor extractie GEWOON EXTERN. Levert hij iets aan JAIP? → type C, net als elke andere klant/leverancier.
+- **Tibor** — commerciële partner. Voor extractie GEWOON EXTERN.
 - **Dion** — ad-hoc expert, gewoon extern.
 - **Klanten en prospects** — gewoon extern.
 
-Belangrijke consequentie: een afspraak tussen Tibor en een andere externe (klant, prospect, andere partner) is een afspraak tussen twee externen. Dit valt onder de tussen-externen-regel (Eis 1) → NIET extraheren, ook al heet Tibor "partner van JAIP".
+Belangrijke consequenties:
+- Tibor of Dion die iets levert aan een klant (zelfs "namens JAIP") = tussen-externen, NIET extraheren. JAIP managet dat niet.
+- Tibor die iets levert aan Stef of Wouter = type C, net als elke andere externe.
+- Een afspraak tussen Tibor en een klant ("Tibor komt terug bij Levent met voorstel") staat volledig buiten JAIP — niet onze taak om op te volgen.
 
 Buiten scope (NOOIT extraheren):
 - Recruitment-acties (kandidaten, vacature-opvolging) — handmatig systeem
@@ -31,15 +34,22 @@ Een action_item voldoet aan ALLE VIER. Faalt er één → niet extraheren.
 
 ### Eis 1 — JAIP HEEFT EEN ROL
 
-JAIP is óf actor (Stef/Wouter doet iets), óf wachtende (JAIP heeft een groundbare vervolgstap die op deze uitkomst wacht).
+**JAIP = Stef of Wouter.** Niemand anders. Tibor, Dion, klanten, prospects en partners zijn allemaal externen voor extractie.
+
+JAIP heeft een rol als:
+- **1a Actor**: Stef of Wouter is de uitvoerder
+- **1b Ontvanger**: een externe levert iets concreet aan Stef of Wouter, en Stef/Wouter heeft een groundbare vervolgstap die daarop wacht
 
 Geen rol = geen action_item. Dit dekt onder andere:
-- Afspraken tussen externen onderling (klant ↔ partner, partner ↔ partner)
+- Afspraken tussen externen onderling (klant ↔ partner, partner ↔ partner, **Tibor ↔ klant**, **Dion ↔ klant**)
 - Externe doet eigen werk in eigen project zonder dat JAIP wacht
 - Externe belooft opvolging buiten JAIP om naar derde partij
 - Aanwezigheid in dezelfde meeting maakt JAIP geen afhankelijke
+- **Tibor of Dion levert iets aan een klant** (zelfs "namens JAIP") — Stef/Wouter zijn niet de ontvanger, dus geen JAIP-action
 
-**BELANGRIJK — aanspreker ≠ leverancier.** Als Wouter zegt "Robert, jij doet X", dan is Wouter niet de leverancier. Type B vereist dat Stef of Wouter zelf uitvoert. Anders alleen type C als JAIP echt op de uitkomst wacht (eis 1 herhaald).
+**Cruciaal voorbeeld:** "Tibor komt donderdag terug bij Levent met voorstel marketing" → NIET extraheren. Tibor is externe, Levent is externe, Stef/Wouter staan erbuiten. JAIP managet die afspraak niet.
+
+**BELANGRIJK — aanspreker ≠ leverancier.** Als Wouter zegt "Robert, jij doet X", dan is Wouter niet de leverancier. Type B vereist dat Stef of Wouter zelf uitvoert. Anders alleen type C als de levering naar Stef of Wouter komt en zij een groundbare vervolgstap hebben.
 
 **Toets:** kun je in één zin benoemen wat JAIP zelf doet of waarop wacht? Als die zin "JAIP wil graag op de hoogte blijven" of "JAIP volgt het" wordt — dat is geen rol, dat is interesse → niet extraheren.
 
@@ -78,6 +88,16 @@ Geen action_item:
 - "Ik deel even de overeenkomst" — micro-doorzet van bestaand document
 - "Ik stuur je die link zo" — terloopse handeling van seconden
 - "Ik zal nog wat denken aan", "ik bedenk er nog wat over", "ik kijk er nog eens naar", "ik zal me erin verdiepen" — pure denkactiviteit zonder deliverable. NIET upgraden door zelf een output te verzinnen ("dummy data creëren", "plan B uitwerken"). Alleen extraheren als de spreker zelf een concrete output noemt ("ik denk erover en kom met voorstel voor vrijdag").
+
+**Ad-hoc / same-day micro-acties — NOOIT extraheren:**
+
+Quote-vorm met signaalwoorden "even", "nog even", "zo", "meteen", "in de auto", "thuis", "achteraan", "een berichtje", "een seintje", "stuur hem maar eerst even" + impliciete same-day-of same-hour-uitvoering. Voorbeelden:
+- "Stuur mij nog even een voice-berichtje in de auto terug" — same-day micro
+- "Stuur hem maar eerst even, doe ik als ik thuis ben" — same-day micro
+- "Daar ga ik dan een volging aan geven" — vage micro follow-up
+- "Ik zal even een mail achteraan sturen" — terloopse handeling
+
+Toets: zou deze actie binnen een paar uur na de meeting al gedaan zijn, en zou je over twee weken bij navragen het antwoord "ja, lang geleden gedaan" krijgen? Als ja → niet extraheren. Een action_item moet substantieel werk zijn dat actief opvolgbaar blijft, niet een ad-hoc handeling die verdwijnt zodra de meeting voorbij is.
 
 Wel action_item:
 - "Ik lever de eerste versie in week 18" — nieuwe deliverable
@@ -151,7 +171,7 @@ Geldt NIET als:
 
 - **A — Intern JAIP-werk**: Stef of Wouter voert intern uit ("Wouter herziet onze prijsstrategie")
 - **B — JAIP levert aan externe**: Stef of Wouter levert iets naar buiten ("Stef stuurt vragenlijst naar Jan")
-- **C — Externe levert aan JAIP**: externe partij heeft toegezegd te leveren waar JAIP op wacht. Geldt voor klanten, prospects, én Tibor/Dion ("Jan retourneert getekende NDA", "Tibor levert marketingplan voor JAIP-propositie")
+- **C — Externe levert aan Stef of Wouter**: externe partij heeft toegezegd te leveren aan Stef of Wouter, waar zij op wachten. Geldt voor klanten, prospects, én Tibor/Dion. Voorbeelden: "Jan retourneert getekende NDA naar Wouter", "Tibor levert marketingplan voor JAIP-propositie aan Stef". Levering aan een klant of derde partij telt NIET als type C.
 - **D — Beslissing afwachten**: concrete persoon moet beslissing nemen ("Bart bepaalt of we pivotten naar versie 2")
 
 **Type-fout-test:** als type B, zorg dat Stef of Wouter ook echt de uitvoerder is. Als type C, zorg dat JAIP ook echt op de uitkomst wacht voor een groundbare vervolgstap (zie anti-hallucinatie sub-toets in Eis 1).
