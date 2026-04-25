@@ -181,6 +181,14 @@ Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen 
 - **Geen `select('*')`.** Selecteer alleen kolommen die je nodig hebt.
 - **Geen queries in loops (N+1).** Gebruik Supabase joins voor relaties.
 - **Centraliseer queries in `packages/database/src/queries/`.** Eén plek per domein. Mutations in `packages/database/src/mutations/`.
+- **Cluster of flat? Hard criterium om drift te voorkomen:**
+  - **Cluster** (`queries/<naam>/` met submap + README) als één geldt:
+    1. > 300 regels of >15 exports in één file (te groot om te overzien)
+    2. ≥2 sub-domeinen die elk ≥3 functies hebben (splitsbaar op naamgeving)
+    3. domein heeft een corresponderende `features/<naam>/` in cockpit/devhub
+  - **Flat** (`queries/<naam>.ts`) als <200 regels EN <8 exports EN één coherent sub-domein.
+  - **Twijfelzone (200–300 regels, 8–15 exports):** flat tenzij criterium 2 of 3 geldt. Vraag bij twijfel — verkeerd gokken = migratie-sprint later.
+  - Zelfde regel geldt voor `mutations/` en `packages/ai/src/pipeline/`.
 - **Geen directe `.from()` in `apps/*/actions` of `apps/*/app/api`.** Gebruik een helper uit `@repo/database/queries/*` of `@repo/database/mutations/*`. Check via `npm run check:queries`; de pre-commit hook blokkeert overtredingen.
 - **Client-scope beleid:** helpers accepteren een optionele `client?: SupabaseClient`; default is admin (service-role). Zie [`packages/database/README.md`](packages/database/README.md) voor signatuur-voorbeelden en uitzonderingen.
 - **Filter op de database.** Niet ophalen en dan in JS filteren.
