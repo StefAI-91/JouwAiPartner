@@ -108,6 +108,8 @@ Wel action_item:
 
 **Veelgemaakte fout — groundbare conditie als excuus:** "als jij hem morgen stuurt, dan draai ik de batch" — sommige modellen extraheren de spreker omdat de conditie ("Bart levert morgen") groundbaar is. FOUT. De groundbaarheid van de conditie maakt het niet minder voorwaardelijk. De spreker wacht passief; alleen de tegenpartij heeft mogelijk een action_item (type C als die zijn levering toezegt). Extraheer de spreker NIET, ook niet als de conditie hard is.
 
+**Tegenovergestelde fout — tijdsanker als conditie lezen:** datum/week/sprint-ankers ("in week van 4 mei", "voor vrijdag", "tegen sprint 18", "deze maand", "in de week van X") zijn GEEN condities waarop de spreker wacht — het zijn deadlines waar de spreker zelf op afkoerst. Extraheer deze juist WEL, ook bij toekomstige tijdvorm ("ik zal in week X delen", "ik ga voor vrijdag opleveren"). Onderscheid: "als jij X" = ander persoon moet iets doen → niet extraheren. "In week X" / "voor datum Y" = kalenderpunt → wel extraheren.
+
 ### KERNVRAAG
 
 Na de vier-eis: kunnen wij over twee weken iemand benaderen met "hoe staat het ermee" en een zinvol antwoord verwachten? Als het antwoord "nee, dat is allang gedaan" of "nee, dat was nooit afgesproken" wordt → geen action_item.
