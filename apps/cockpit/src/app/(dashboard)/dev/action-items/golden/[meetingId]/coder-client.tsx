@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { GoldenItemRow, GoldenMeetingState } from "@repo/database/queries/golden";
 import {
@@ -81,6 +81,9 @@ export function GoldenCoderClient({
   const [skipDialogOpen, setSkipDialogOpen] = useState(false);
   const [skipReason, setSkipReason] = useState("");
   const [selectedQuote, setSelectedQuote] = useState<string>("");
+  const [localTranscript, setLocalTranscript] = useState<string>(transcript ?? "");
+  const transcriptRef = useRef<HTMLTextAreaElement>(null);
+  const transcriptIsModified = localTranscript !== (transcript ?? "");
 
   const itemToDraft = (item: GoldenItemRow): FormDraft => ({
     content: item.content,
@@ -109,8 +112,19 @@ export function GoldenCoderClient({
   });
 
   const handleSelectionCapture = () => {
-    const sel = window.getSelection()?.toString().trim();
-    if (sel) setSelectedQuote(sel.slice(0, 400));
+    // Eerst proberen vanuit het transcript-textarea (selectionStart/End werkt
+    // niet met window.getSelection in textarea's). Fallback naar window-selectie
+    // zodat ook tekst uit de summary of andere panels gevangen kan worden.
+    const ta = transcriptRef.current;
+    if (ta && ta.selectionStart !== ta.selectionEnd) {
+      const sel = ta.value.substring(ta.selectionStart, ta.selectionEnd).trim();
+      if (sel) {
+        setSelectedQuote(sel.slice(0, 400));
+        return;
+      }
+    }
+    const winSel = window.getSelection()?.toString().trim();
+    if (winSel) setSelectedQuote(winSel.slice(0, 400));
   };
 
   const startNew = () => {
@@ -292,25 +306,51 @@ export function GoldenCoderClient({
             )}
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Selecteer tekst → klik &ldquo;Vang selectie&rdquo; → wordt voor-ingevuld bij het
-            volgende nieuwe item.
+            Bewerkbaar — plak een eigen transcript of werk in het bestaande. Selecteer tekst → klik
+            &ldquo;Vang selectie&rdquo; → wordt voor-ingevuld bij het volgende nieuwe item.
+            Wijzigingen blijven lokaal in deze sessie en worden niet opgeslagen.
           </p>
-          <button
-            type="button"
-            onClick={handleSelectionCapture}
-            className="mt-2 rounded-md border border-border/60 bg-background px-2 py-1 text-[11px] hover:bg-muted"
-          >
-            Vang selectie
-          </button>
-          {transcript ? (
-            <pre className="mt-3 max-h-[480px] overflow-auto whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-[11.5px] leading-relaxed">
-              {transcript}
-            </pre>
-          ) : (
-            <p className="mt-3 text-[11.5px] italic text-muted-foreground">
-              Geen transcript beschikbaar.
-            </p>
-          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSelectionCapture}
+              className="rounded-md border border-border/60 bg-background px-2 py-1 text-[11px] hover:bg-muted"
+            >
+              Vang selectie
+            </button>
+            {transcriptIsModified && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setLocalTranscript(transcript ?? "")}
+                  className="rounded-md border border-border/60 bg-background px-2 py-1 text-[11px] hover:bg-muted"
+                >
+                  Reset naar origineel
+                </button>
+                <span className="text-[10.5px] italic text-amber-700">
+                  lokaal aangepast (niet opgeslagen)
+                </span>
+              </>
+            )}
+            {!transcript && !localTranscript && (
+              <span className="text-[10.5px] italic text-muted-foreground">
+                Geen transcript in DB — plak er een in het veld hieronder.
+              </span>
+            )}
+          </div>
+          <textarea
+            ref={transcriptRef}
+            value={localTranscript}
+            onChange={(e) => setLocalTranscript(e.target.value)}
+            spellCheck={false}
+            className="mt-3 max-h-[480px] min-h-[260px] w-full overflow-auto whitespace-pre-wrap rounded-md border border-border/60 bg-muted/40 p-3 font-mono text-[11.5px] leading-relaxed"
+            placeholder="Plak hier een transcript…"
+          />
+          <p className="mt-1 text-[10.5px] text-muted-foreground">
+            {localTranscript.length.toLocaleString("nl-NL")} tekens
+            {localTranscript.trim().length > 0 &&
+              ` · ${localTranscript.trim().split(/\s+/).length.toLocaleString("nl-NL")} woorden`}
+          </p>
         </section>
       </aside>
 
