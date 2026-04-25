@@ -11,7 +11,7 @@ JAIP is een AI-implementatie-bureau voor MKB-bedrijven. Drie diensten: MVP-ontwi
 
 JAIP-medewerkers:
 - **Stef en Wouter** — mede-eigenaren JAIP. Action_items waar zij uitvoerder zijn = intern werk (type A of B).
-- **Tibor** — commerciële partner. Bij concrete leveringen met deadline: behandel als extern (type E).
+- **Tibor** — commerciële partner. Bij concrete leveringen met deadline: behandel als extern (type E). Plant Tibor onderling overleg met een andere externe (klant, prospect, partner) zonder JAIP-deliverable? → tussen-externen-regel geldt, NIET extraheren — ook al is Tibor "van JAIP".
 - **Dion** — ad-hoc expert, behandel als extern.
 - **Externe klanten/prospects**: standaard extern.
 
@@ -38,6 +38,13 @@ Geen rol = geen action_item. Dit dekt onder andere:
 **BELANGRIJK — aanspreker ≠ leverancier.** Als Wouter zegt "Robert, jij doet X", dan is Wouter niet de leverancier. Type B vereist dat Stef of Wouter zelf uitvoert. Anders alleen type C als JAIP echt op de uitkomst wacht (eis 1 herhaald).
 
 **Toets:** kun je in één zin benoemen wat JAIP zelf doet of waarop wacht? Als die zin "JAIP wil graag op de hoogte blijven" of "JAIP volgt het" wordt — dat is geen rol, dat is interesse → niet extraheren.
+
+**Sub-toets voor wachtende-rol (anti-hallucinatie):** als je type C of D overweegt, MOET de concrete JAIP-vervolgstap die geblokkeerd is, letterlijk in transcript groundbaar zijn — niet door jou erbij verzonnen. "JAIP wacht op X voor panelcommunicatie" of "voor opvolging" zonder dat panelcommunicatie/opvolging ergens in transcript benoemd wordt = verzonnen rol → niet extraheren. Een externe die eigen werk in eigen project doet (mail naar eigen testgroep, eigen klantcontact) is geen type C, ook niet als JAIP er ooit input voor heeft geleverd.
+
+**Drie gefabriceerde JAIP-rollen die NIET tellen** (allemaal verleidelijk maar fout):
+- *"JAIP heeft belang bij de uitkomst"* — interesse is geen rol. Belang ≠ wachtende vervolgstap.
+- *"Een JAIP-medewerker noemt het in de meeting"* — Wouter die zegt "die afspraak moet er komen" creëert geen action_item op de externen die het moeten doen. Benoemen ≠ leveren.
+- *"Het is partner-werk dus type E"* — type E vereist dat Tibor/Dion **zelf concreet werk levert aan JAIP of een JAIP-klant**. Tibor die met een andere externe een overleg plant = tussen-externen, niet type E.
 
 ### Eis 2 — ER IS EEN TOEZEGGING
 
@@ -111,6 +118,24 @@ Output-format:
 - `assignee`: leeg (= JAIP, want wij sturen de reminder)
 - `type_werk`: B (JAIP levert reminder)
 - `deadline`: het reminder-moment
+
+============================================================
+## 3b. UITZONDERING — KLANTVERZOEK AAN JAIP
+
+Wanneer een externe in de quote direct aan een JAIP-medewerker (Stef of Wouter, met naam of "jij/je") vraagt om iets concreets te leveren, en JAIP niet expliciet weigert binnen 3 turns, telt het verzoek zélf als trigger. De toezegging-eis (Eis 2) vervalt in dit specifieke geval.
+
+Trigger-zinnen: "als je mij dat mailt", "kun je me X sturen", "stuur me even Y", "laat me dat weten", "kan jij die cijfers nog rondsturen".
+
+Output-format:
+- `type_werk`: B (JAIP levert)
+- `assignee` + `follow_up_contact`: de aangesproken JAIP-medewerker
+- `source_quote`: het verzoek van de externe (letterlijk)
+- `content`: "[JAIP-naam] [werkwoord] [object] naar [externe]"
+
+Geldt NIET als:
+- het verzoek vaag is ("hou me op de hoogte", "stuur me iets ooit") — Eis 3 blijft hard
+- de aangesprokene expliciet weigert ("kan ik nu niet", "doe ik niet")
+- het verzoek aan een derde (niet-JAIP) gericht is
 
 ============================================================
 ## 4. TYPE_WERK
