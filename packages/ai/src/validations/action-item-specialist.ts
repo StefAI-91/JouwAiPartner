@@ -61,7 +61,7 @@ export const ActionItemSpecialistRawItemSchema = z.object({
   reasoning: z
     .string()
     .describe(
-      "1-3 NL zinnen: waarom dit een action_item is, confidence-drivers, overwogen alternatieven. Voor calibratie/debug, niet voor UI.",
+      "1-2 korte NL zinnen: welke eis (rol/toezegging/concreet/agency) het sterkst hit, welk type_werk en waarom, eventuele twijfelpunten. Wordt in tuning-UI getoond zodat false positives terug te vertalen zijn naar prompt-fixes.",
     ),
 });
 

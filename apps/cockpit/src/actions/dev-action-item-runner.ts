@@ -102,7 +102,8 @@ export async function runActionItemAgentAction(
     (i) => i.confidence >= parsed.data.confidenceThreshold,
   );
 
-  // Map naar ComparableItem voor de comparison helper
+  // Map naar ComparableItem voor de comparison helper. reasoning + confidence
+  // gaan mee zodat de tuning-UI ze kan tonen op false positives en matches.
   const extractedComparable: ComparableItem[] = filteredItems.map((i) => ({
     content: i.content,
     follow_up_contact: i.follow_up_contact,
@@ -110,6 +111,8 @@ export async function runActionItemAgentAction(
     deadline: i.deadline,
     source_quote: i.source_quote,
     category: i.category,
+    reasoning: i.reasoning,
+    confidence: i.confidence,
   }));
 
   const goldenComparable: ComparableItem[] = golden.items.map((i) => ({

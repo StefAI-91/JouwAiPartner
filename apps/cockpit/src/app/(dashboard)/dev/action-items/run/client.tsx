@@ -229,6 +229,12 @@ function DiffEntryCard({
                   {entry.extracted.type_werk && ` · type ${entry.extracted.type_werk}`}
                   {entry.extracted.deadline && ` · ${entry.extracted.deadline}`}
                 </p>
+                {entry.extracted.reasoning && (
+                  <p className="mt-1 text-[11px] italic text-muted-foreground">
+                    <span className="font-semibold not-italic">reasoning:</span>{" "}
+                    {entry.extracted.reasoning}
+                  </p>
+                )}
               </div>
               <div className="border-t border-border/40 pt-2">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -257,6 +263,12 @@ function DiffEntryCard({
                 <blockquote className="mt-1 border-l-2 border-amber-300 pl-2 text-[11px] italic text-muted-foreground">
                   &ldquo;{entry.extracted.source_quote}&rdquo;
                 </blockquote>
+              )}
+              {entry.extracted.reasoning && (
+                <p className="mt-1 text-[11px] italic text-amber-900/80">
+                  <span className="font-semibold not-italic">reasoning:</span>{" "}
+                  {entry.extracted.reasoning}
+                </p>
               )}
             </div>
           )}

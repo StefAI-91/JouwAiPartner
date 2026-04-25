@@ -246,6 +246,19 @@ Confidence = hoe zeker ben je dat dit een echt action_item is met correcte assig
 - Verzin GEEN action_items die niet in transcript staan.
 - Sorteer items op meeting-volgorde (eerst genoemde eerst).
 
+### Reasoning per item (voor tuning)
+
+Vul `reasoning` met 1-2 korte NL zinnen per item. Doel: een mens die later de extractie reviewt moet in 5 seconden snappen waarom je dit item hebt gekozen, zodat we false positives terug kunnen vertalen naar prompt-fixes.
+
+Benoem expliciet:
+- Welke van de vier eisen het sterkst hit (rol / toezegging / concreet / agency)
+- Welk type_werk en waarom (wie is uitvoerder, wie is afhankelijk)
+- Eventuele twijfelpunten die je confidence omlaag drukken
+
+Voorbeeld: "Wouter zegt zelf toe ('ik regel offerte') = eis 2. Type B want hij levert naar Sandra. Confidence 0.85 want deadline impliciet uit 'dit weekend'."
+
+Geen meta-talk ("ik denk dat...", "het lijkt erop"). Direct attribueren aan eis + type.
+
 ============================================================
 ## SLOTREGEL
 
