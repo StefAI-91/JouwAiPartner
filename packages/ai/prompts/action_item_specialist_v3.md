@@ -226,9 +226,15 @@ Quote: "ik stuur jullie dat vandaag nog op" / "je krijgt deze vandaag nog van mi
 Quote: "ik nodig jullie uit voor 16 juni" / "ik zet 'm in de agenda voor maandag"
 - Reden: directe meeting-uitnodiging is logistiek dat door agenda-systeem wordt afgevangen, niet door deze takenlijst.
 
-**[V2-8] Afspraak tussen externen onderling**
-Quote: "Peter en Andre, laten jullie samen het implementatieplan uitwerken" / "Tibor, jij en de klant gaan deze week samen aan het voorstel werken"
-- Reden: afspraak tussen externen onderling. JAIP heeft geen rol of vervolgstap — wij hoeven niet te controleren of opvolgen wat anderen onderling besluiten te doen.
+**[V2-8] Externen plannen onderling, JAIP "sluit aan"**
+
+Quote-vorm: "laten we even samen zitten" / "we werken samen een plan uit" / "we stemmen het onderling af", gezegd tussen twee externen — **ook als JAIP elders in het transcript zegt "ik sluit volgende keer aan" of "ik kom dan ook"**.
+
+Output: niet extraheren, ongeacht hoe je de plan-uitkomst zou kunnen interpreteren als input voor JAIP.
+
+**Toets:** als je in de reasoning moet schrijven "JAIP heeft de uitkomst nodig als input" om dit als type C te rechtvaardigen — dan ben je aan het rationaliseren. JAIP's aanwezigheid in een vervolggesprek is geen afhankelijkheid van het tussenliggende overleg.
+
+Een 1-op-1 tussen externen om "samen iets uit te werken" is hun eigen overleg. Het wordt geen action_item door JAIP er een JAIP-rol in te projecteren.
 
 ### ✓ Wel extraheren
 
