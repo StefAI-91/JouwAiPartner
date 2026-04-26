@@ -23,7 +23,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
   const [selectedId, setSelectedId] = useState<string>(meetings[0]?.id ?? "");
   const [confidenceThreshold, setConfidenceThreshold] = useState(0);
   const [contentThreshold, setContentThreshold] = useState(0.4);
-  const [promptVersion, setPromptVersion] = useState<"v2" | "v3">("v2");
+  const [promptVersion, setPromptVersion] = useState<"v2" | "v3" | "v4">("v2");
   const [mode, setMode] = useState<"single" | "two-stage" | "spotter-only">("single");
   const [result, setResult] = useState<RunActionItemAgentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -96,12 +96,13 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
             Prompt
             <select
               value={promptVersion}
-              onChange={(e) => setPromptVersion(e.target.value as "v2" | "v3")}
+              onChange={(e) => setPromptVersion(e.target.value as "v2" | "v3" | "v4")}
               disabled={isPending || mode !== "single"}
               className="rounded-md border border-border/60 bg-background px-2 py-2 text-[13px] disabled:opacity-50"
             >
               <option value="v2">v2 — vier-eis</option>
               <option value="v3">v3 — drie-vragen</option>
+              <option value="v4">v4 — voorbeeld-zwaar</option>
             </select>
           </label>
           <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
