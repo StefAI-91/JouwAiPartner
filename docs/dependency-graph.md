@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 462 |
-| Exported functions/constants | 747 |
-| Exported types/interfaces | 288 |
+| Files scanned | 463 |
+| Exported functions/constants | 751 |
+| Exported types/interfaces | 292 |
 | Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
 
@@ -742,15 +742,19 @@
 - `runActionItemSpecialistTwoStage()`
 - `getActionItemCandidateSpotterPrompt()`
 - `getActionItemJudgePrompt()`
+- `getActionItemActionValidatorPrompt()`
+- `validateFollowupAction()`
+- `extractTranscriptContext()`
 - `ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION`
 - `ACTION_ITEM_SPECIALIST_MODEL`
 - `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
-**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemSpotterRunResult`
+**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemTwoStageRunOptions`, `ActionItemSpotterRunResult`, `ActionItemActionValidatorInput`, `ActionItemActionValidatorResult`
 
 **Internal deps:**
 - `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemFollowupAction, type ActionItemRecipientPerQuote, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
 - `../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemCandidate, type ActionItemJudgement
+- `../validations/action-item-action-validator` → ActionItemActionValidatorOutputSchema, type ActionItemActionValidatorOutput
 - `../utils/normalise` → emptyToNull, sentinelToNull
 - `./run-logger` → withAgentRun
 
@@ -1460,6 +1464,13 @@
 **Types:** `ParsedExtractionType`, `ParsedExtraction`
 
 ## AI Validations
+
+### `packages/ai/src/validations/action-item-action-validator.ts`
+
+**Exports:**
+- `ActionItemActionValidatorOutputSchema`
+
+**Types:** `ActionItemActionValidatorOutput`
 
 ### `packages/ai/src/validations/action-item-specialist.ts`
 

@@ -25,6 +25,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
   const [contentThreshold, setContentThreshold] = useState(0.4);
   const [promptVersion, setPromptVersion] = useState<"v2" | "v3" | "v4">("v2");
   const [mode, setMode] = useState<"single" | "two-stage" | "spotter-only">("single");
+  const [validateAction, setValidateAction] = useState(true);
   const [result, setResult] = useState<RunActionItemAgentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -39,6 +40,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
         contentThreshold,
         promptVersion,
         mode,
+        validateAction,
       });
       if ("error" in res) {
         setError(res.error);
@@ -52,7 +54,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
   return (
     <div className="space-y-6">
       <section className="rounded-xl border border-border/60 bg-card p-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto_auto_auto_auto]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto_auto_auto_auto_auto]">
           <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
             Meeting (alleen gecodeerde)
             <select
@@ -117,6 +119,18 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
               <option value="two-stage">two-stage (spotter + judge)</option>
               <option value="spotter-only">spotter-only (Haiku)</option>
             </select>
+          </label>
+          <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
+            Validator
+            <label className="flex items-center gap-2 rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]">
+              <input
+                type="checkbox"
+                checked={validateAction}
+                onChange={(e) => setValidateAction(e.target.checked)}
+                disabled={isPending}
+              />
+              <span>action-validator (Haiku)</span>
+            </label>
           </label>
           <button
             type="button"

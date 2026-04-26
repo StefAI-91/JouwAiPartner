@@ -45,6 +45,10 @@ const runSchema = z.object({
   // judge. spotter-only = alleen Haiku spotter (voor tuning van die prompt
   // zonder de judge-overhead).
   mode: z.enum(["single", "two-stage", "spotter-only"]).default("single"),
+  // Stage 3 action-validator. Default true: voor elk type C/D-accept met
+  // jaip_followup_action: productive draait een Haiku-validator die de
+  // classificatie cross-checkt en bij consumptive het item downgrade.
+  validateAction: z.boolean().default(true),
 });
 
 export type RunActionItemAgentInput = z.input<typeof runSchema>;
@@ -147,7 +151,9 @@ export async function runActionItemAgentAction(
 
   try {
     if (mode === "two-stage") {
-      const res = await runActionItemSpecialistTwoStage(meeting.transcript, ctx);
+      const res = await runActionItemSpecialistTwoStage(meeting.transcript, ctx, {
+        validateAction: parsed.data.validateAction,
+      });
       items = res.output.items;
       runMetrics = {
         latency_ms: res.metrics.total_latency_ms,
@@ -190,7 +196,10 @@ export async function runActionItemAgentAction(
         judge_prompt: "",
       };
     } else {
-      const res = await runActionItemSpecialist(meeting.transcript, ctx, { promptVersion });
+      const res = await runActionItemSpecialist(meeting.transcript, ctx, {
+        promptVersion,
+        validateAction: parsed.data.validateAction,
+      });
       items = res.output.items;
       gatedItems = res.gated;
       runMetrics = res.metrics;

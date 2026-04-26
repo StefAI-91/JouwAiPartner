@@ -17,6 +17,10 @@ import {
   type ActionItemCandidate,
   type ActionItemJudgement,
 } from "../validations/action-item-two-stage";
+import {
+  ActionItemActionValidatorOutputSchema,
+  type ActionItemActionValidatorOutput,
+} from "../validations/action-item-action-validator";
 import { emptyToNull, sentinelToNull } from "../utils/normalise";
 import { withAgentRun } from "./run-logger";
 
@@ -74,6 +78,11 @@ export interface ActionItemSpecialistContext {
 export interface ActionItemSpecialistRunOptions {
   /** Welke promptversie gebruiken. Default v2. */
   promptVersion?: ActionItemPromptVersion;
+  /** Stage 3 action-validator aan: voor élk type C/D-accept met
+   *  jaip_followup_action: productive draait een Haiku-validator die
+   *  de classificatie cross-checkt. Bij verdict consumptive wordt het
+   *  item naar gated[] verplaatst. Default true tijdens harness-tuning. */
+  validateAction?: boolean;
 }
 
 export interface ActionItemSpecialistRunMetrics {
@@ -86,6 +95,9 @@ export interface ActionItemSpecialistRunMetrics {
 export interface ActionItemGatedItem {
   item: ActionItemSpecialistItem;
   reason: string;
+  /** Aanwezig wanneer het item via de stage-3 validator-call is gedowngrade
+   *  (niet via de mechanische gate). */
+  validator?: { verdict: "consumptive"; reason: string };
 }
 
 export interface ActionItemSpecialistRunResult {
@@ -181,11 +193,52 @@ export async function runActionItemSpecialist(
     }
   }
 
+  // Stage 3 validator: voor elk type C/D item dat de gate haalde, vraag een
+  // adversariële Haiku-validator of jaip_followup_action: productive klopt.
+  // Default aan; uit te zetten via options.validateAction = false.
+  const shouldValidate = options.validateAction ?? true;
+  const validatedPassed: ActionItemSpecialistItem[] = [];
+  if (shouldValidate) {
+    const validations = await Promise.all(
+      passed.map(async (item) => {
+        if (item.type_werk !== "C" && item.type_werk !== "D") return { item, validator: null };
+        if (item.jaip_followup_action !== "productive") return { item, validator: null };
+        try {
+          const v = await validateFollowupAction({
+            source_quote: item.source_quote ?? "",
+            jaip_followup_quote: item.jaip_followup_quote ?? "",
+            transcript_context: extractTranscriptContext(transcript, item.source_quote ?? ""),
+            participants: context.participants,
+          });
+          return { item, validator: v };
+        } catch (err) {
+          // Validator-failure = item doorlaten (fail-open). We willen niet dat
+          // een 5xx van Anthropic alle type C/D items wegfiltert.
+          console.error("[action-item-validator] crashed, item passes:", err);
+          return { item, validator: null };
+        }
+      }),
+    );
+    for (const { item, validator } of validations) {
+      if (validator && validator.verdict === "consumptive") {
+        gated.push({
+          item,
+          reason: `validator-override: action herclassificeerd naar consumptive (${validator.reason})`,
+          validator: { verdict: "consumptive", reason: validator.reason },
+        });
+      } else {
+        validatedPassed.push(item);
+      }
+    }
+  } else {
+    validatedPassed.push(...passed);
+  }
+
   const latencyMs = Date.now() - startedAt;
   const reasoningTokens = typeof usage?.reasoningTokens === "number" ? usage.reasoningTokens : null;
 
   return {
-    output: { items: passed },
+    output: { items: validatedPassed },
     gated,
     metrics: {
       latency_ms: latencyMs,
@@ -308,6 +361,14 @@ export interface ActionItemTwoStageRunResult {
   metrics: ActionItemTwoStageRunMetrics;
 }
 
+export interface ActionItemTwoStageRunOptions {
+  /** Stage 3 action-validator aan: voor élk type C/D-accept met
+   *  jaip_followup_action: productive draait een Haiku-validator die de
+   *  classificatie cross-checkt. Bij verdict consumptive wordt het item
+   *  van accepts naar rejects verplaatst. Default true. */
+  validateAction?: boolean;
+}
+
 export interface ActionItemSpotterRunResult {
   candidates: ActionItemCandidate[];
   metrics: {
@@ -389,6 +450,7 @@ export async function runActionItemCandidateSpotter(
 export async function runActionItemSpecialistTwoStage(
   transcript: string,
   context: ActionItemSpecialistContext,
+  options: ActionItemTwoStageRunOptions = {},
 ): Promise<ActionItemTwoStageRunResult> {
   const startedAt = Date.now();
   const contextPrefix = [
@@ -473,9 +535,48 @@ export async function runActionItemSpecialistTwoStage(
     }
   }
 
+  // Stage 3 validator: voor elk type C/D-accept met jaip_followup_action:
+  // productive checkt een Haiku-validator of die classificatie klopt.
+  // Default aan; uit te zetten via options.validateAction = false.
+  const shouldValidate = options.validateAction ?? true;
+  const acceptedAfterValidator: typeof acceptedAfterGate = [];
+  const validatorRejected: { candidate_index: number; rejection_reason: string }[] = [];
+  if (shouldValidate) {
+    const validations = await Promise.all(
+      acceptedAfterGate.map(async (item) => {
+        if (item.type_werk !== "C" && item.type_werk !== "D") return { item, validator: null };
+        if (item.jaip_followup_action !== "productive") return { item, validator: null };
+        try {
+          const v = await validateFollowupAction({
+            source_quote: item.source_quote,
+            jaip_followup_quote: item.jaip_followup_quote,
+            transcript_context: extractTranscriptContext(transcript, item.source_quote),
+            participants: context.participants,
+          });
+          return { item, validator: v };
+        } catch (err) {
+          console.error("[action-item-validator two-stage] crashed, item passes:", err);
+          return { item, validator: null };
+        }
+      }),
+    );
+    for (const { item, validator } of validations) {
+      if (validator && validator.verdict === "consumptive") {
+        validatorRejected.push({
+          candidate_index: item.candidate_index,
+          rejection_reason: `validator-override: action herclassificeerd naar consumptive (${validator.reason})`,
+        });
+      } else {
+        acceptedAfterValidator.push(item);
+      }
+    }
+  } else {
+    acceptedAfterValidator.push(...acceptedAfterGate);
+  }
+
   // Clamp confidence en map naar RawActionItemSpecialistOutput
   const acceptedRaw: RawActionItemSpecialistOutput = {
-    items: acceptedAfterGate.map((j) => ({
+    items: acceptedAfterValidator.map((j) => ({
       content: j.content,
       follow_up_contact: j.follow_up_contact,
       assignee: j.assignee,
@@ -493,9 +594,9 @@ export async function runActionItemSpecialistTwoStage(
   };
 
   // Verenigde judgements view voor UI: één lijst, gesorteerd op candidate-index
-  const allRejects = [...rejectedItems, ...gateRejected];
+  const allRejects = [...rejectedItems, ...gateRejected, ...validatorRejected];
   const judgements: ActionItemJudgement[] = [
-    ...acceptedAfterGate.map((a) => ({
+    ...acceptedAfterValidator.map((a) => ({
       candidate_index: a.candidate_index,
       decision: "accept" as const,
       accepted: a,
@@ -507,7 +608,7 @@ export async function runActionItemSpecialistTwoStage(
     })),
   ].sort((a, b) => a.candidate_index - b.candidate_index);
 
-  const accepts = acceptedAfterGate.length;
+  const accepts = acceptedAfterValidator.length;
   const rejects = allRejects.length;
 
   return {
@@ -543,4 +644,141 @@ export function getActionItemCandidateSpotterPrompt(): string {
 
 export function getActionItemJudgePrompt(): string {
   return loadJudgePrompt();
+}
+
+// ============================================================================
+// STAGE 3 — ACTION VALIDATOR
+// ============================================================================
+
+const ACTION_VALIDATOR_PROMPT_PATH = resolve(PROMPT_DIR, "action_item_action_validator.md");
+const ACTION_VALIDATOR_MODEL = "claude-haiku-4-5-20251001";
+
+function loadActionValidatorPrompt(): string {
+  return readFileSync(ACTION_VALIDATOR_PROMPT_PATH, "utf8").trimEnd();
+}
+
+export function getActionItemActionValidatorPrompt(): string {
+  return loadActionValidatorPrompt();
+}
+
+export interface ActionItemActionValidatorInput {
+  source_quote: string;
+  jaip_followup_quote: string;
+  /** Korte transcript-context rond de quote (±3 turns volstaat). */
+  transcript_context: string;
+  participants: string[];
+}
+
+export interface ActionItemActionValidatorResult {
+  verdict: "productive" | "consumptive";
+  reason: string;
+  metrics: {
+    latency_ms: number;
+    input_tokens: number | null;
+    output_tokens: number | null;
+  };
+}
+
+/**
+ * Stage 3 — Action Validator.
+ *
+ * Adversariële tweede pas: krijgt één type C/D item dat de extractor als
+ * jaip_followup_action: productive heeft geclassificeerd, en oordeelt of
+ * dat klopt. Default consumptive bij twijfel — bedoeld om rationalisatie
+ * van de eerste-lijns-extractor te compenseren.
+ *
+ * Per item één Haiku-call; goedkoop genoeg om standaard te draaien
+ * voor type C/D.
+ */
+export async function validateFollowupAction(
+  input: ActionItemActionValidatorInput,
+): Promise<ActionItemActionValidatorResult> {
+  const startedAt = Date.now();
+  const userBlock = [
+    `Deelnemers: ${input.participants.join(", ")}`,
+    "",
+    `--- TRANSCRIPT-CONTEXT (±3 turns rond de quote) ---`,
+    input.transcript_context,
+    "",
+    `--- TE VALIDEREN ITEM ---`,
+    `source_quote: "${input.source_quote}"`,
+    `jaip_followup_quote: "${input.jaip_followup_quote}"`,
+    `claim: jaip_followup_action = productive`,
+    "",
+    `Klopt deze claim? Antwoord met verdict + reason.`,
+  ].join("\n");
+
+  const run = await withAgentRun(
+    {
+      agent_name: "action-item-action-validator",
+      model: ACTION_VALIDATOR_MODEL,
+      prompt_version: "v1",
+    },
+    async () => {
+      const res = await generateObject({
+        model: anthropic(ACTION_VALIDATOR_MODEL),
+        maxRetries: 3,
+        temperature: 0,
+        maxOutputTokens: 2000,
+        schema: ActionItemActionValidatorOutputSchema,
+        messages: [
+          {
+            role: "system",
+            content: loadActionValidatorPrompt(),
+            providerOptions: {
+              anthropic: { cacheControl: { type: "ephemeral" } },
+            },
+          },
+          { role: "user", content: userBlock },
+        ],
+      });
+      return { result: { object: res.object, usage: res.usage }, usage: res.usage };
+    },
+  );
+
+  const validated: ActionItemActionValidatorOutput = run.object;
+
+  return {
+    verdict: validated.verdict,
+    reason: validated.reason,
+    metrics: {
+      latency_ms: Date.now() - startedAt,
+      input_tokens: typeof run.usage?.inputTokens === "number" ? run.usage.inputTokens : null,
+      output_tokens: typeof run.usage?.outputTokens === "number" ? run.usage.outputTokens : null,
+    },
+  };
+}
+
+/**
+ * Pakt ±N turns rond de eerste match van de quote in het transcript.
+ * Als de quote niet wordt gevonden, valt terug op de hele transcript
+ * (afgekapt op 4000 chars zodat de validator niet in een 30k-input
+ * verdrinkt). De validator hoeft niet het hele transcript te zien —
+ * alleen genoeg context om productive/consumptive te beoordelen.
+ */
+export function extractTranscriptContext(
+  transcript: string,
+  quote: string,
+  surroundingChars = 1500,
+): string {
+  if (!quote.trim()) return transcript.slice(0, 4000);
+  const idx = transcript.indexOf(quote);
+  if (idx < 0) {
+    // Fuzzy fallback — eerste 6 woorden van quote
+    const firstWords = quote.trim().split(/\s+/).slice(0, 6).join(" ");
+    const fuzzyIdx = transcript.indexOf(firstWords);
+    if (fuzzyIdx < 0) return transcript.slice(0, 4000);
+    return sliceAround(transcript, fuzzyIdx, surroundingChars);
+  }
+  return sliceAround(transcript, idx, surroundingChars);
+}
+
+function sliceAround(transcript: string, idx: number, surroundingChars: number): string {
+  const start = Math.max(0, idx - surroundingChars);
+  const end = Math.min(transcript.length, idx + surroundingChars);
+  return (
+    (start > 0 ? "...\n" : "") +
+    transcript.slice(start, end) +
+    (end < transcript.length ? "\n..." : "")
+  );
 }
