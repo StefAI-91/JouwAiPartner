@@ -186,6 +186,29 @@ Reden: directe uitnodiging of agenda-bevestiging is logistiek, geen action_item.
 Quote: "ik zou je dat eens kunnen mailen" / "ik kan dat misschien een keer voor je doen"
 Reden: modaal werkwoord ("zou kunnen", "kan misschien") zonder harde tijdsanker = wens of vrijblijvend aanbod, geen toezegging. "Eens", "een keer" zijn geen tijdsanker. Pas als er een concrete deadline staat ("morgen", "deze week", "in week X", "voor sprint Y") wordt het type B — anders niet extraheren.
 
+**E23 — JAIP-helper-rol in andermans project (rol-omkering)**
+
+Quote (externe): "morgen kan ik echt wel al heel veel afhebben, maar dan ga ik wel morgen mee beginnen"
+JAIP elders in transcript: "ik help haar met de extractie"
+
+Output: niet extraheren.
+
+- recipient_per_quote: `own_sphere` of `third_party` (extern werkt in eigen project)
+- jaip_followup_action: `consumptive` (JAIP doet ondersteunend werk, geen eigen wachtende deliverable)
+
+Reden: de externe werkt aan zijn/haar eigen werk (eigen FAQ, eigen extractie, eigen bouw, eigen panel) en JAIP zegt "ik help mee" / "ik help [naam] met X". Dat is een **helper-rol**, geen **wachter-rol**. Er is géén JAIP-deliverable die geblokkeerd is door de externe levering — JAIP doet samen met extern, niet ná extern.
+
+**Toets:** zou JAIP zelfs los van de externe levering al iets kunnen doen? Als ja → JAIP-helper. Als JAIP pas eigen output kan maken zodra extern levert (offerte afmaken zodra cijfers binnen zijn, planning maken zodra go gegeven is) → wel type C/D. Reasoning die begint met "JAIP helpt [naam] met X" is een rode vlag voor rationalisatie.
+
+**E24 — Wekelijkse / terugkerende agenda-uitnodiging**
+
+Quote: "Zal ik jullie uitnodigen voor de wekelijkse statusmeeting op donderdag 13:00?" — "Ja."
+Of: "ik plan de volgende sessie elke donderdag in"
+
+Output: niet extraheren.
+
+Reden: terugkerende meetings (wekelijks, dagelijks, sprint-cadans) zijn agenda-onderhoud, geen action_item. Hetzelfde geldt voor een uitnodiging die tijdens deze meeting wordt afgesproken en direct na de meeting verstuurd wordt — dat is real-time logistiek dat al door de agenda-tool wordt afgevangen. Een action_item-systeem is voor "hoe staat het ermee over twee weken", niet voor "stuur die invite vanmiddag nog". Combineert E5 (routine) + E20 (agenda-uitnodiging).
+
 **E21 — Externen plannen onderling, JAIP "sluit aan"**
 
 Quote-vorm: "laten we even samen zitten" / "we werken samen een plan uit" / "we stemmen het onderling af", gezegd tussen twee externen — **ook als JAIP elders in het transcript zegt "ik sluit volgende keer aan" of "ik kom dan ook" of "als jij dat aanlevert dan kom ik langs"**.
