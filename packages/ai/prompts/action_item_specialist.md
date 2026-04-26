@@ -234,10 +234,10 @@ Vijf patronen om op te letten:
 4. **Multi-stap leveringen**: "Chloe levert vragen → JAIP beantwoordt → Chloe bouwt FAQ" = drie aparte action_items, elk met eigen follow_up_contact en deadline.
 
 5. **Klant beschrijft eigen werk + JAIP bevestigt afhankelijkheid**: een externe beschrijft een concrete deliverable die hij gaat maken (zonder hard "ik lever X"), en een JAIP-medewerker bevestigt expliciet binnen 3 turns dat hij erop wacht of er iets mee gaat doen. Voorbeeld:
-   - Guido (klant): "Aan ons is het om een shortlist te maken met prioriteit"
-   - Guido: "Ik wil intern even mensen erbij betrekken"
-   - Wouter: "Als jij dat kan aanleveren, dan zal ik..."
-   → action_item op Guido (type C), source_quote = Guido's beschrijving van het werk OF Wouter's afhankelijkheidsbevestiging. De externe heeft soft toezegging gedaan ("aan ons is het om..."), de JAIP-medewerker heeft hard de afhankelijkheid bevestigd → genoeg samen voor type C. Pas op: de JAIP-bevestiging moet letterlijk in transcript staan, niet door jou verzonnen (anti-hallucinatie).
+   - Mark (klant): "Bij ons is het de bedoeling om de Q3-cijfers op een rij te zetten"
+   - Mark: "Ik wil onze finance-collega er nog even bij hebben"
+   - Stef: "Stuur het maar door zodra je het hebt, dan kan ik de analyse draaien"
+   → action_item op Mark (type C), source_quote = Mark's beschrijving van het werk OF Stef's afhankelijkheidsbevestiging. De externe heeft soft toezegging gedaan ("bij ons is het de bedoeling..."), de JAIP-medewerker heeft hard de afhankelijkheid bevestigd → genoeg samen voor type C. Pas op: de JAIP-bevestiging moet letterlijk in transcript staan, niet door jou verzonnen (anti-hallucinatie).
 
 **Zachte toezeggingen tellen als valide bevestiging** in cross-turn context: "ja zeker", "tuurlijk", "geen probleem", "ik zie niet in waarom niet", "lijkt me prima", "in ieder geval gaan we het doen" — mits ze direct volgen op een aanwijzing of vraag binnen 3 turns. Niet weghouden omdat de toon informeel is.
 
