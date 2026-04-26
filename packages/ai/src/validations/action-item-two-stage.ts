@@ -12,7 +12,9 @@ import { ActionItemSpecialistRawItemSchema } from "./action-item-specialist";
  */
 
 export const ActionItemCandidateSchema = z.object({
-  quote: z.string().describe("Letterlijke trigger-zin uit transcript, max 200 chars."),
+  quote: z
+    .string()
+    .describe("Letterlijke trigger-zin uit transcript, max 120 chars. Houd zo kort mogelijk."),
   speaker: z.string().describe("Exacte naam uit participants-input. Geen 'speaker_0'."),
   pattern_type: z
     .enum([
@@ -25,9 +27,6 @@ export const ActionItemCandidateSchema = z.object({
       "klantverzoek",
     ])
     .describe("Welke van de zeven candidate-patronen deze quote raakt."),
-  context_summary: z
-    .string()
-    .describe("1-2 NL zinnen over wat hieraan voorafging of wat er omheen werd besproken."),
 });
 
 export const ActionItemCandidatesSchema = z.object({

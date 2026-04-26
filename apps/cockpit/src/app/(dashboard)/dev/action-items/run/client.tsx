@@ -405,7 +405,6 @@ function TwoStagePanel({ debug }: { debug: NonNullable<RunActionItemAgentResult[
                   </span>
                 </div>
                 <p className="mt-1 italic">&ldquo;{c.quote}&rdquo;</p>
-                <p className="mt-1 text-[10.5px] text-muted-foreground">{c.context_summary}</p>
                 {judgement?.decision === "reject" && judgement.rejection_reason && (
                   <p className="mt-1 text-[10.5px] text-rose-700">
                     <span className="font-semibold">reject:</span> {judgement.rejection_reason}

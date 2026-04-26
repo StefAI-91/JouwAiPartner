@@ -44,10 +44,10 @@ Deze categorieën NOOIT als candidate opnemen, ook niet als ze iets met de zeven
 ============================================================
 ## OUTPUT-FORMAT
 
-Voor elke candidate:
-- `quote`: de letterlijke trigger-zin uit transcript, max 200 chars
+Houd het kort — de judge heeft het volledige transcript. Per candidate slechts:
+
+- `quote`: de letterlijke trigger-zin, **max 120 chars**. Knip lange zinnen af op de relevante actie.
 - `speaker`: exacte naam uit participants-input
 - `pattern_type`: één van de zeven hierboven (`toezegging`, `aanwijzing`, `werkbeschrijving`, `wachtende_uitspraak`, `beslissing`, `reminder_verzoek`, `klantverzoek`)
-- `context_summary`: 1-2 NL zinnen over wat hieraan voorafging
 
 Sorteer op meeting-volgorde. **Richtwaarde**: 5-25 candidates per uur transcript. Meer dan 30 = je bent te breed aan het spotten — ga terug naar de hard-uitsluiting-lijst.

@@ -341,11 +341,8 @@ export async function runActionItemSpecialistTwoStage(
   // STAGE 2 — Judge (Sonnet, strict)
   const stage2Started = Date.now();
   const candidateBlock = candidates
-    .map(
-      (c, i) =>
-        `[${i + 1}] (${c.pattern_type}) ${c.speaker}: "${c.quote}"\n    context: ${c.context_summary}`,
-    )
-    .join("\n\n");
+    .map((c, i) => `[${i + 1}] (${c.pattern_type}) ${c.speaker}: "${c.quote}"`)
+    .join("\n");
 
   const stage2 = await withAgentRun(
     {
