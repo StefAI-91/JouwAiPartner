@@ -40,7 +40,7 @@ Een externe heeft een concrete deliverable beschreven of toegezegd, EN Stef of W
 JA vereist allemaal:
 - De externe is met naam genoemd (klant, prospect, Tibor, Dion) — geen "iemand" of "we"
 - De deliverable is concreet (document, lijst, beslissing, antwoord) — geen vage "voortgang" of "input"
-- De wachtende vervolgstap van Stef/Wouter staat **letterlijk** in transcript ("als jij dat aanlevert dan kan ik de analyse draaien", "stuur het maar door zodra je het hebt") — niet door jou erbij verzonnen
+- De wachtende vervolgstap van Stef/Wouter staat **letterlijk** in transcript én is **expliciet aan Stef of Wouter toegeschreven** — ofwel uitgesproken in eerste persoon ("dan ga ik X doen", "dan kan ik Y draaien") ofwel direct aan hen gericht door de spreker ("als jij dat hebt, dan kun jij Z"). Een vervolgstap die je uit context moet afleiden is geen grounding.
 - De levering komt naar Stef of Wouter, niet naar een derde partij
 - JAIP heeft een eigen vervolgstap of deliverable die op de uitkomst wacht — meeleven of co-aanwezigheid is niet genoeg
 
@@ -50,8 +50,13 @@ NEE als:
 - Een JAIP-medewerker noemt het in de meeting ("die afspraak moet er komen") — benoemen ≠ wachten
 - De vervolgstap is door jou gerationaliseerd ("JAIP wacht voor panelcommunicatie") zonder dat panelcommunicatie ergens in transcript staat
 - De externe handelt in zijn eigen werk-sfeer (eigen team informeren, eigen tooling regelen, eigen planning maken, eigen netwerk activeren) zonder dat JAIP een eigen vervolgstap of deliverable heeft die afhangt van de uitkomst — **óók als een JAIP-medewerker de externe expliciet aanwijst**. Een aanwijzing van JAIP maakt het niet automatisch een JAIP-action_item; alleen een JAIP-deliverable of opvolg-rol die wacht doet dat.
+- De vervolgstap is uit een **passieve constructie** afgeleid ("dan kan er X gebeuren", "dan mag er Y", "dan wordt er Z gedeeld") zonder dat het subject expliciet wordt genoemd. Wie de actie uitvoert is dan onbekend — vul niet zelf "JAIP" in. Alleen als de zin uitdrukkelijk Stef of Wouter als actor noemt, telt het als JAIP-vervolgstap.
 
-Contrast-paar:
+Contrast-paar (grounding van de JAIP-vervolgstap):
+- ✓ "Als jij de input hebt aangeleverd, kan ik de analyse draaien" → expliciete JAIP-actor ("ik")
+- ✗ "Als de input binnen is, kan er gestart worden" → passief, actor onbekend, geen grounding voor JAIP
+
+Contrast-paar (eigen sfeer):
 - ✓ Externe levert pricing-cijfers die Stef gebruikt om de offerte af te ronden → V2=JA (JAIP-deliverable hangt eraan)
 - ✗ Externe stelt zijn eigen collega's intern op de hoogte over een wijziging → V2=NEE (eigen sfeer, geen JAIP-vervolgstap)
 
