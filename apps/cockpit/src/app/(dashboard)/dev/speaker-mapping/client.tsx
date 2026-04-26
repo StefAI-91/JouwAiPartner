@@ -164,7 +164,7 @@ function ResultPanel({ result }: { result: RunSpeakerMappingResult }) {
 
       <details className="rounded-xl border border-border/60 bg-card p-4">
         <summary className="cursor-pointer text-sm font-semibold hover:underline">
-          Sample-utterances naar Haiku ({debug.speaker_ids.length} speakers)
+          ElevenLabs-samples ({debug.speaker_ids.length} speakers)
         </summary>
         <div className="mt-3 space-y-3">
           {debug.speaker_ids.map((sid) => (
@@ -183,6 +183,30 @@ function ResultPanel({ result }: { result: RunSpeakerMappingResult }) {
           ))}
         </div>
       </details>
+
+      {debug.fireflies_names.length > 0 && (
+        <details className="rounded-xl border border-border/60 bg-card p-4">
+          <summary className="cursor-pointer text-sm font-semibold hover:underline">
+            Fireflies-samples ({debug.fireflies_names.length} named speakers)
+          </summary>
+          <div className="mt-3 space-y-3">
+            {debug.fireflies_names.map((name) => (
+              <div key={name}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {name}
+                </p>
+                <ul className="mt-1 space-y-1 text-[11.5px]">
+                  {(debug.fireflies_samples[name] ?? []).map((u, i) => (
+                    <li key={i} className="rounded-md bg-muted/50 p-2 italic">
+                      &ldquo;{u}&rdquo;
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
 
       <details className="rounded-xl border border-border/60 bg-card p-4">
         <summary className="cursor-pointer text-sm font-semibold hover:underline">

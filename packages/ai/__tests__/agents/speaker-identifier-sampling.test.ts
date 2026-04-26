@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   parseElevenLabsUtterances,
+  parseFirefliesUtterances,
+  sampleUtterancesPerName,
   sampleUtterancesPerSpeaker,
 } from "../../src/agents/speaker-identifier-sampling";
 
@@ -43,6 +45,79 @@ Second sentence on next line.
 [speaker_0]: Ja.`;
     const got = parseElevenLabsUtterances(t);
     expect(got[0].speaker_id).toBe("unknown");
+  });
+});
+
+describe("parseFirefliesUtterances", () => {
+  it("parses simple multi-name transcript", () => {
+    const t = `Stef Banninga: Ja.
+Wouter van den Heuvel: Het doel van vandaag is de weeklijst.
+Stef Banninga: Oké.`;
+    const got = parseFirefliesUtterances(t);
+    expect(got).toEqual([
+      { name: "Stef Banninga", text: "Ja." },
+      { name: "Wouter van den Heuvel", text: "Het doel van vandaag is de weeklijst." },
+      { name: "Stef Banninga", text: "Oké." },
+    ]);
+  });
+
+  it("ondersteunt Nederlandse tussenvoegsels (van, de, den, der)", () => {
+    const t = `Wouter van den Heuvel: Ja.
+Pieter de Jong: Oké.
+Sander der Kinderen: Top.`;
+    const got = parseFirefliesUtterances(t);
+    expect(got.map((u) => u.name)).toEqual([
+      "Wouter van den Heuvel",
+      "Pieter de Jong",
+      "Sander der Kinderen",
+    ]);
+  });
+
+  it("voegt vervolgregels samen met de vorige speaker", () => {
+    const t = `Stef Banninga: Eerste regel.
+Tweede regel zonder naam-prefix.
+Wouter: Andere spreker.`;
+    const got = parseFirefliesUtterances(t);
+    expect(got).toHaveLength(2);
+    expect(got[0].text).toBe("Eerste regel. Tweede regel zonder naam-prefix.");
+    expect(got[1].name).toBe("Wouter");
+  });
+
+  it("blacklist voorkomt dat 'Note:' / 'Action:' als spreker telt", () => {
+    const t = `Stef Banninga: Yes.
+Note: dit is een notitie.
+Action: iets doen.
+Wouter: oké.`;
+    const got = parseFirefliesUtterances(t);
+    // Note + Action regels worden bij de vorige spreker (Stef) geappend
+    expect(got).toHaveLength(2);
+    expect(got[0].name).toBe("Stef Banninga");
+    expect(got[0].text).toContain("dit is een notitie");
+    expect(got[1].name).toBe("Wouter");
+  });
+
+  it("rejecteert te lange of te onsamenhangende prefixes", () => {
+    const t = `dit is een hele lange zin met veel woorden en geen echte naam: niet als speaker tellen
+Stef: Echte spreker.`;
+    const got = parseFirefliesUtterances(t);
+    expect(got).toHaveLength(1);
+    expect(got[0].name).toBe("Stef");
+  });
+});
+
+describe("sampleUtterancesPerName", () => {
+  it("groepeert per naam en pakt langste utterances", () => {
+    const fixture = parseFirefliesUtterances(
+      [
+        "Stef Banninga: " + "x".repeat(80),
+        "Wouter van den Heuvel: " + "y".repeat(50),
+        "Stef Banninga: kort.",
+        "Wouter van den Heuvel: " + "z".repeat(100),
+      ].join("\n"),
+    );
+    const got = sampleUtterancesPerName(fixture, 1, 40);
+    expect(got.get("Wouter van den Heuvel")![0].length).toBe(100);
+    expect(got.get("Stef Banninga")![0].length).toBe(80);
   });
 });
 

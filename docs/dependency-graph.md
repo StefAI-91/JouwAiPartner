@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 470 |
-| Exported functions/constants | 764 |
-| Exported types/interfaces | 304 |
+| Exported functions/constants | 766 |
+| Exported types/interfaces | 305 |
 | Cross-package imports | 515 |
 | Critical integration points (3+ packages) | 12 |
 
@@ -901,9 +901,11 @@
 
 **Exports:**
 - `parseElevenLabsUtterances()`
+- `parseFirefliesUtterances()`
+- `sampleUtterancesPerName()`
 - `sampleUtterancesPerSpeaker()`
 
-**Types:** `SpeakerUtterance`
+**Types:** `SpeakerUtterance`, `NamedUtterance`
 
 ### `packages/ai/src/agents/speaker-identifier.ts`
 
@@ -915,7 +917,7 @@
 
 **Internal deps:**
 - `../validations/speaker-identifier` → SpeakerMappingOutputSchema, type SpeakerMappingOutput
-- `./speaker-identifier-sampling` → parseElevenLabsUtterances, sampleUtterancesPerSpeaker
+- `./speaker-identifier-sampling` → parseElevenLabsUtterances, parseFirefliesUtterances, sampleUtterancesPerName, sampleUtterancesPerSpeaker
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/summarizer.ts`

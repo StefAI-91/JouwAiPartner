@@ -52,6 +52,12 @@ export interface MeetingForGoldenCoder {
    *  ElevenLabs Scribe v2 wordt verkozen boven Fireflies wanneer beide
    *  beschikbaar zijn (zelfde voorkeur als gatekeeper-pipeline). */
   transcript_source: "elevenlabs" | "fireflies" | null;
+  /** Raw Fireflies-transcript (kolom `meetings.transcript`). Apart blootgesteld
+   *  zodat tools beide versies tegelijk kunnen vergelijken (bv. speaker-mapping
+   *  cross-references named Fireflies-utterances tegen anonieme ElevenLabs). */
+  transcript_fireflies: string | null;
+  /** Raw ElevenLabs-transcript (kolom `meetings.transcript_elevenlabs`). */
+  transcript_elevenlabs: string | null;
   participants: GoldenCoderParticipant[];
 }
 
@@ -242,6 +248,8 @@ export async function getMeetingForGoldenCoder(
     summary: raw.summary,
     transcript,
     transcript_source,
+    transcript_fireflies: raw.transcript,
+    transcript_elevenlabs: raw.transcript_elevenlabs,
     participants: [...structured, ...flatExtras],
   };
 }

@@ -1,8 +1,28 @@
 # Speaker Identifier
 
-Je krijgt sample-utterances uit een ElevenLabs-transcript waar de spreker anoniem is gelabeld (`speaker_0`, `speaker_1`, etc.) plus een lijst van deelnemers met hun naam, organisatie en rol. Voor elke `speaker_X` bepaal je welke deelnemer dat is — of laat het leeg als je geen overtuigend signaal vindt.
+Je krijgt twee soorten input:
+
+1. **ElevenLabs-samples** — utterances per anoniem label (`speaker_0`, `speaker_1`, etc.). Hoge transcriptie-kwaliteit, geen namen.
+2. **Fireflies-samples (optioneel)** — utterances per genoemde deelnemer (`Stef Banninga: ...`). De namen kloppen pér regel zoals Fireflies ze gaf, maar de attributie kan **incompleet of onjuist** zijn (bv. alle utterances naar de meeting-organizer geplakt). Het is dus een hint, geen waarheid.
+3. **Deelnemers-lijst** — autoritatieve namen, organisaties en rollen uit de DB. Alleen deze namen mogen in de output.
+
+Plus optioneel een transcript in een andere taal — Fireflies kan in het Nederlands transcriberen en ElevenLabs in het Engels (of omgekeerd). Match dan op betekenis, niet op woord-voor-woord.
+
+Voor elke `speaker_X` uit ElevenLabs bepaal je welke deelnemer dat is — of laat het leeg als je geen overtuigend signaal vindt.
 
 ALLE output in het Nederlands waar mogelijk; namen kopiëer je letterlijk uit de Deelnemers-lijst (ook als die in een andere taal zijn).
+
+============================================================
+
+## STRATEGIE — KRUISVERWIJZEN
+
+Gebruik bij voorkeur de Fireflies-samples als eerste signaal:
+
+- **Content-overlap** — een ElevenLabs-utterance van `speaker_1` die qua betekenis (zelfde feiten, zelfde namen, zelfde getallen) overeenkomt met een Fireflies-utterance van "Wouter van den Heuvel" → speaker_1 = Wouter, ook bij taalverschil.
+- **Anker-zinnen** — opvallende zinnen ("Lieke is thirty weeks pregnant" / "Lieke is 30 weken zwanger") zijn sterke ankers. Eén match is vaak genoeg.
+- **Patroon** — als Fireflies alle of meeste utterances aan één naam toeschrijft (verdacht — geen echte diarization), gebruik dán de inhoud als hoofdsignaal: welke speaker_X heeft het over díe persoon's leven (verlof, kind, rol)?
+
+Als Fireflies-samples ontbreken, val terug op pure content-clues.
 
 ============================================================
 

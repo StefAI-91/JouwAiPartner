@@ -87,7 +87,8 @@ export async function runSpeakerMappingAction(
 
   try {
     const result = await runSpeakerIdentifier({
-      transcript: meeting.transcript,
+      transcript: meeting.transcript_elevenlabs ?? meeting.transcript,
+      firefliesTranscript: meeting.transcript_fireflies,
       participants,
       perSpeaker: parsed.data.perSpeaker,
     });
