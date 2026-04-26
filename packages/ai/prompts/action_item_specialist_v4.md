@@ -166,6 +166,10 @@ Reden: same-day toezeggingen zijn real-time werkverdeling, geen toekomstig commi
 Quote: "ik nodig jullie uit voor 16 juni" / "ik zet 'm in de agenda voor maandag"
 Reden: directe uitnodiging of agenda-bevestiging is logistiek, geen action_item. Het systeem dat op de mail komt is de agenda-tool, niet deze takenlijst.
 
+**E21 — Afspraak tussen externen onderling**
+Quote: "Peter en Andre, laten jullie samen het implementatieplan uitwerken" / "Tibor, jij en de klant gaan deze week samen aan het voorstel werken"
+Reden: afspraak tussen externen onderling. JAIP heeft geen rol of vervolgstap — wij hoeven niet te controleren of opvolgen wat anderen onderling besluiten te doen. Verschilt van E6 (extern → andere extern levert iets) door het wederzijdse karakter, maar dezelfde uitkomst: niet ons probleem.
+
 ### ✓ Wel extraheren
 
 **A1 — JAIP levert aan extern (type B)**
