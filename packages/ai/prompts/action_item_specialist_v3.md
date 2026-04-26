@@ -33,21 +33,27 @@ NEE als:
 
 → JA = type B. NEE = ga naar V2.
 
-### Vraag 2 — WACHTEN WIJ OP EEN EXTERNE?
+### Vraag 2 — WACHTEN WIJ OP EEN EXTERNE VOOR IETS DAT JAIP RAAKT?
 
-Een externe heeft een concrete deliverable beschreven of toegezegd, EN Stef of Wouter heeft een groundbare vervolgstap die op die levering wacht.
+Een externe heeft een concrete deliverable beschreven of toegezegd, EN Stef of Wouter heeft een groundbare vervolgstap of JAIP-deliverable die op die levering wacht. Niet elke actie van een externe is een action_item voor JAIP — alleen acties waar JAIP zelf op moet opvolgen of die JAIP-werk blokkeren.
 
 JA vereist allemaal:
 - De externe is met naam genoemd (klant, prospect, Tibor, Dion) — geen "iemand" of "we"
 - De deliverable is concreet (document, lijst, beslissing, antwoord) — geen vage "voortgang" of "input"
 - De wachtende vervolgstap van Stef/Wouter staat **letterlijk** in transcript ("als jij dat aanlevert dan kan ik de analyse draaien", "stuur het maar door zodra je het hebt") — niet door jou erbij verzonnen
 - De levering komt naar Stef of Wouter, niet naar een derde partij
+- JAIP heeft een eigen vervolgstap of deliverable die op de uitkomst wacht — meeleven of co-aanwezigheid is niet genoeg
 
 NEE als:
 - De externe levert iets aan een andere externe (Tibor → klant, klant → andere klant) — JAIP managet dat niet
 - "JAIP heeft belang bij uitkomst" zonder concrete vervolgstap = interesse, geen rol
 - Een JAIP-medewerker noemt het in de meeting ("die afspraak moet er komen") — benoemen ≠ wachten
 - De vervolgstap is door jou gerationaliseerd ("JAIP wacht voor panelcommunicatie") zonder dat panelcommunicatie ergens in transcript staat
+- De externe handelt in zijn eigen werk-sfeer (eigen team informeren, eigen tooling regelen, eigen planning maken, eigen netwerk activeren) zonder dat JAIP een eigen vervolgstap of deliverable heeft die afhangt van de uitkomst — **óók als een JAIP-medewerker de externe expliciet aanwijst**. Een aanwijzing van JAIP maakt het niet automatisch een JAIP-action_item; alleen een JAIP-deliverable of opvolg-rol die wacht doet dat.
+
+Contrast-paar:
+- ✓ Externe levert pricing-cijfers die Stef gebruikt om de offerte af te ronden → V2=JA (JAIP-deliverable hangt eraan)
+- ✗ Externe stelt zijn eigen collega's intern op de hoogte over een wijziging → V2=NEE (eigen sfeer, geen JAIP-vervolgstap)
 
 Twee specifieke patroon-stappen om JA-kandidaten op te vangen:
 
