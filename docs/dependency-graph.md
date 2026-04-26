@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 462 |
-| Exported functions/constants | 746 |
-| Exported types/interfaces | 285 |
+| Exported functions/constants | 747 |
+| Exported types/interfaces | 287 |
 | Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
 
@@ -736,6 +736,7 @@
 
 **Exports:**
 - `runActionItemSpecialist()`
+- `checkActionItemGate()`
 - `getActionItemSpecialistSystemPrompt()`
 - `runActionItemCandidateSpotter()`
 - `runActionItemSpecialistTwoStage()`
@@ -745,10 +746,10 @@
 - `ACTION_ITEM_SPECIALIST_MODEL`
 - `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
-**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemSpotterRunResult`
+**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemSpotterRunResult`
 
 **Internal deps:**
-- `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
+- `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemRecipientPerQuote, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
 - `../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemCandidate, type ActionItemJudgement
 - `../utils/normalise` → emptyToNull, sentinelToNull
 - `./run-logger` → withAgentRun
@@ -1466,7 +1467,7 @@
 - `ActionItemSpecialistRawItemSchema`
 - `ActionItemSpecialistRawOutputSchema`
 
-**Types:** `RawActionItemSpecialistOutput`, `ActionItemSpecialistItem`, `ActionItemSpecialistOutput`
+**Types:** `RawActionItemSpecialistOutput`, `ActionItemRecipientPerQuote`, `ActionItemSpecialistItem`, `ActionItemSpecialistOutput`
 
 ### `packages/ai/src/validations/action-item-two-stage.ts`
 
@@ -1933,7 +1934,7 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
-- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, runActionItemSpecialistTwoStage, runActionItemCandidateSpotter, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, getActionItemCandidateSpotterPrompt, getActionItemJudgePrompt, type ActionItemPromptVersion
+- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, runActionItemSpecialistTwoStage, runActionItemCandidateSpotter, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, getActionItemCandidateSpotterPrompt, getActionItemJudgePrompt, type ActionItemPromptVersion, type ActionItemGatedItem
 - `@repo/ai/lib/golden-comparison` → comparePrecisionRecall, type ComparisonResult, type ComparableItem
 - (type) `@repo/ai/validations/action-item-specialist` → ActionItemSpecialistItem
 - (type) `@repo/ai/validations/action-item-two-stage` → ActionItemCandidate, ActionItemJudgement

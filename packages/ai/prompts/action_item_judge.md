@@ -67,6 +67,10 @@ Twee cross-turn-patronen om JA op te vangen:
 - **Soft toezegging + harde JAIP-bevestiging**: externe beschrijft werk zacht ("aan ons is het om..."), JAIP-medewerker bevestigt afhankelijkheid hard binnen 3 turns. Samen sterk genoeg.
 - **Beslissing afwachten**: persoon X moet beslissing nemen ("Bart bepaalt of..."). Apart als type D / `wachten_op_beslissing`.
 
+**Verplichte gate-velden voor type C en D** (worden mechanisch in code gecontroleerd — niet zelf afzwakken):
+- `recipient_per_quote`: kies één van `stef_wouter` / `third_party` / `own_sphere` / `from_jaip` / `unclear`. Voor type C of D MOET dit `stef_wouter` zijn — anders auto-reject.
+- `jaip_followup_quote`: letterlijke zin waar Stef of Wouter zelf hun vervolgstap uitspreken (eerste persoon of direct aan hen gericht). Voor type C of D MOET dit gevuld zijn — anders auto-reject. Geen citaat te vinden = leeg laten = item wordt gerejecteerd.
+
 → JA = type C (levering) of type D (beslissing). NEE = reject.
 
 ### Vraag 3 — BINNEN WAT VOOR TERMIJN?
@@ -140,7 +144,9 @@ Output bevat twee aparte arrays — elke kandidaat hoort in EXACT één van beid
       "type_werk": "A" | "B" | "C" | "D",
       "category": "wachten_op_extern" | "wachten_op_beslissing" | "n/a",
       "confidence": <0.4-1.0>,
-      "reasoning": "1-2 NL zinnen: welke vraag JA scoort, type-rationale"
+      "reasoning": "1-2 NL zinnen: welke vraag JA scoort, type-rationale",
+      "recipient_per_quote": "stef_wouter" | "third_party" | "own_sphere" | "from_jaip" | "unclear",
+      "jaip_followup_quote": "letterlijk citaat met Stef/Wouter als actor, of leeg"
     }
   ],
   "rejects": [
@@ -155,6 +161,70 @@ Output bevat twee aparte arrays — elke kandidaat hoort in EXACT één van beid
 Belangrijk: elke `candidate_index` uit de input komt EXACT één keer terug — óf in `accepts`, óf in `rejects`. Niet in beide. Niet weggelaten. Sorteer accepts in meeting-volgorde.
 
 ============================================================
+## VOORBEELDEN
+
+Concrete patronen voor de gate-velden (recipient_per_quote en jaip_followup_quote). Nieuwe randgevallen worden hier toegevoegd zodat je niet abstracte regels hoeft te interpreteren — kijk eerst of een kandidaat op een van deze voorbeelden lijkt.
+
+### ✗ Reject
+
+**[V2-1] Externe regelt eigen tooling / interne organisatie**
+Quote: "ik regel even het Notion-account aan voor mijn team"
+- type_werk poging: C
+- recipient_per_quote: own_sphere
+- jaip_followup_quote: ""
+- Reden: externe doet iets in eigen werk-sfeer; JAIP heeft geen vervolgstap die wacht op die actie. Auto-gate.
+
+**[V2-2] Externe kondigt eigen vervolgactie aan na JAIP-deliverable**
+Quote: "als jij de spec klaar hebt, dan stuur ik mijn collega's even een update over hoe we doorgaan"
+- type_werk poging: C
+- recipient_per_quote: own_sphere (collega's van extern, niet JAIP)
+- jaip_followup_quote: ""
+- Reden: de JAIP-deliverable (spec) is een type B op Stef/Wouter. Wat de externe daarna in eigen kring doet valt buiten scope. Auto-gate.
+
+**[V2-3] Passieve constructie zonder JAIP-actor**
+Quote: "als de cijfers er zijn, kan er gestart worden"
+- type_werk poging: C
+- recipient_per_quote: unclear
+- jaip_followup_quote: "" (geen zin met Stef/Wouter als expliciete actor)
+- Reden: passief, actor onbekend. Vul niet zelf "JAIP" in. Auto-gate.
+
+**[V2-4] Externe communiceert met derde partij**
+Quote: "ik bel even met mijn klant om dit door te geven"
+- type_werk poging: C
+- recipient_per_quote: third_party
+- Reden: levering komt niet bij Stef of Wouter terecht. Auto-gate.
+
+### ✓ Accept
+
+**[A1] Externe levert input voor JAIP-werk (type C)**
+Quote: "ik stuur jullie morgen de finale pricing-cijfers door"
+Eerdere turn (Stef): "dan kunnen wij de offerte afronden zodra die binnen zijn"
+- type_werk: C
+- recipient_per_quote: stef_wouter
+- jaip_followup_quote: "dan kunnen wij de offerte afronden zodra die binnen zijn"
+- Reden: externe levert direct aan JAIP; Stef heeft expliciete vervolgstap. Gate passes.
+
+**[A2] Externe stuurt feedback retour op JAIP-document (type C)**
+Quote: "ik stuur jullie de feedback op het document terug zodat jullie het kunnen verwerken"
+- type_werk: C
+- recipient_per_quote: stef_wouter (ontvanger expliciet "jullie")
+- jaip_followup_quote: "zodat jullie het kunnen verwerken" (vervolgstap aan JAIP toegeschreven door spreker)
+- Reden: levering naar JAIP, vervolgstap geattribueerd. Gate passes.
+
+**[A3] Beslissing afwachten (type D)**
+Quote: "Bart bepaalt vrijdag of we doorgaan met fase 2"
+Eerdere turn (Wouter): "wij wachten op die go om de planning te kunnen maken"
+- type_werk: D
+- category: wachten_op_beslissing
+- recipient_per_quote: stef_wouter
+- jaip_followup_quote: "wij wachten op die go om de planning te kunnen maken"
+- Reden: beslissing komt naar JAIP, vervolgstap (planning) expliciet uitgesproken. Gate passes.
+
+============================================================
 ## SLOTREGEL
 
-"Accept met confidence 0.3" bestaat niet. Reject als de drie vragen niet duidelijk JA + groundbaar zijn. Een schone takenlijst met 80% van de echte items > vervuilde lijst met 100% + 50% ruis.
+"Accept met confidence 0.3" bestaat niet. Reject als de drie vragen niet duidelijk JA + groundbaar zijn.
+
+Voor type C en D: de gate-velden zijn niet onderhandelbaar. Geen letterlijk citaat van een JAIP-vervolgstap = reject. Externe levert niet direct aan Stef/Wouter = reject. Code controleert dit los van je oordeel — als je toch accept met `recipient_per_quote ≠ stef_wouter` of leeg `jaip_followup_quote`, wordt het item alsnog automatisch gerejecteerd.
+
+Een schone takenlijst met 80% van de echte items > vervuilde lijst met 100% + 50% ruis.

@@ -63,6 +63,16 @@ export const ActionItemSpecialistRawItemSchema = z.object({
     .describe(
       "1-2 korte NL zinnen: welke eis (rol/toezegging/concreet/agency) het sterkst hit, welk type_werk en waarom, eventuele twijfelpunten. Wordt in tuning-UI getoond zodat false positives terug te vertalen zijn naar prompt-fixes.",
     ),
+  recipient_per_quote: z
+    .enum(["stef_wouter", "third_party", "own_sphere", "from_jaip", "unclear"])
+    .describe(
+      "Wie is volgens de quote zelf de ontvanger van de levering? stef_wouter = JAIP-medewerker. third_party = andere externe (bv. Tibor → klant). own_sphere = eigen kring van de externe (eigen team, eigen panel, eigen klanten, eigen tooling). from_jaip = JAIP is uitvoerder (type A/B). unclear = niet eenduidig uit quote af te leiden. Voor type_werk C of D MOET dit 'stef_wouter' zijn — anders auto-reject.",
+    ),
+  jaip_followup_quote: z
+    .string()
+    .describe(
+      "Letterlijke zin uit transcript waar Stef of Wouter zelf hun eigen vervolgstap uitspreken (eerste persoon: 'dan ga ik X', 'ik wacht hierop omdat ik Y') of waar de spreker hen direct aanspreekt ('als jij dat hebt, dan kun jij Z'). Lege string als geen citaat te vinden. Voor type_werk C of D MOET deze gevuld zijn — anders auto-reject. Voor type A/B mag leeg.",
+    ),
 });
 
 export const ActionItemSpecialistRawOutputSchema = z.object({
@@ -70,6 +80,13 @@ export const ActionItemSpecialistRawOutputSchema = z.object({
 });
 
 export type RawActionItemSpecialistOutput = z.infer<typeof ActionItemSpecialistRawOutputSchema>;
+
+export type ActionItemRecipientPerQuote =
+  | "stef_wouter"
+  | "third_party"
+  | "own_sphere"
+  | "from_jaip"
+  | "unclear";
 
 export type ActionItemSpecialistItem = {
   content: string;
@@ -82,6 +99,8 @@ export type ActionItemSpecialistItem = {
   category: "wachten_op_extern" | "wachten_op_beslissing" | null;
   confidence: number;
   reasoning: string | null;
+  recipient_per_quote: ActionItemRecipientPerQuote;
+  jaip_followup_quote: string | null;
 };
 
 export type ActionItemSpecialistOutput = {

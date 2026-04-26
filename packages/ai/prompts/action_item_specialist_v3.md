@@ -65,6 +65,10 @@ Twee specifieke patroon-stappen om JA-kandidaten op te vangen:
 - **Soft toezegging + harde JAIP-bevestiging**: externe beschrijft werk zonder hard "ik lever X" ("aan ons is het om...", "wij gaan...", "ik ga even de finance-collega erbij betrekken"), JAIP-medewerker bevestigt expliciet de afhankelijkheid binnen 3 turns ("stuur het maar door zodra je het hebt"). Samen sterk genoeg → wel extraheren.
 - **Beslissing afwachten**: een concrete persoon moet een beslissing nemen ("Bart bepaalt of we doorgaan met v2", "Sandra laat maandag weten of het akkoord is"). Aparte category `wachten_op_beslissing`.
 
+**Verplichte gate-velden voor type C en D** (worden mechanisch in code gecontroleerd — niet zelf afzwakken):
+- `recipient_per_quote`: kies één van `stef_wouter` / `third_party` / `own_sphere` / `from_jaip` / `unclear`. Voor type C of D MOET dit `stef_wouter` zijn — anders auto-reject.
+- `jaip_followup_quote`: letterlijke zin waar Stef of Wouter zelf hun vervolgstap uitspreken (eerste persoon of direct aan hen gericht). Voor type C of D MOET dit gevuld zijn — anders auto-reject. Geen citaat te vinden = leeg laten = item wordt gerejecteerd.
+
 → JA = type C (levering) of type D (beslissing). NEE = niet extraheren.
 
 ### Vraag 3 — BINNEN WAT VOOR TERMIJN?
@@ -164,13 +168,77 @@ VERBODEN: confidence 0.0-0.4 (bij twijfel niet extraheren). Confidence 0.0 allee
 - `content` begint met naam van follow_up_contact, max 30 woorden, NL.
 - **Strikte content-grounding**: alle entiteiten in content (deliverable, ontvangers, scope) moeten groundbaar zijn in de quote of max 3 directe turns. Bij vage termen in de quote ("de overeenkomst", "het document"): gebruik letterlijk dat woord, geen synoniem of specificatie. Liever vaag-maar-correct dan specifiek-maar-verzonnen.
 - `reasoning` (1-2 NL zinnen): welke vraag (V1/V2) JA scoort en waarom, type_werk-rationale, eventuele twijfelpunten. Geen meta-talk ("ik denk dat..."), wel directe attributie.
+- `recipient_per_quote`: enum (zie V2). Verplicht voor élk item, ook type A/B (vul daar `from_jaip` of `stef_wouter` in).
+- `jaip_followup_quote`: leeg voor type A/B; voor C/D verplicht een letterlijk citaat met Stef of Wouter als actor.
 - Lege strings ("") voor onbekende strings, "n/a" voor onbekende enums.
 - Verzin GEEN action_items die niet in transcript staan.
 - Sorteer op meeting-volgorde (eerst genoemde eerst).
 
 ============================================================
+## VOORBEELDEN
+
+Concrete patronen die de filter moet vangen. Nieuwe randgevallen worden hier toegevoegd zodat je niet abstracte regels hoeft te interpreteren — kijk eerst of een quote op een van deze voorbeelden lijkt.
+
+### ✗ Niet extraheren
+
+**[V2-1] Externe regelt eigen tooling / interne organisatie**
+Quote: "ik regel even het Notion-account aan voor mijn team"
+- type_werk poging: C
+- recipient_per_quote: own_sphere
+- jaip_followup_quote: ""
+- Reden: externe doet iets in eigen werk-sfeer; JAIP heeft geen vervolgstap die wacht op die actie. Auto-gate.
+
+**[V2-2] Externe kondigt eigen vervolgactie aan na JAIP-deliverable**
+Quote: "als jij de spec klaar hebt, dan stuur ik mijn collega's even een update over hoe we doorgaan"
+- type_werk poging: C
+- recipient_per_quote: own_sphere (collega's van extern, niet JAIP)
+- jaip_followup_quote: ""
+- Reden: de JAIP-deliverable (spec) is een type B op Stef/Wouter. Wat de externe daarna in eigen kring doet valt buiten scope. Auto-gate.
+
+**[V2-3] Passieve constructie zonder JAIP-actor**
+Quote: "als de cijfers er zijn, kan er gestart worden"
+- type_werk poging: C
+- recipient_per_quote: unclear
+- jaip_followup_quote: "" (geen zin met Stef/Wouter als expliciete actor)
+- Reden: passief, actor onbekend. Vul niet zelf "JAIP" in. Auto-gate.
+
+**[V2-4] Externe communiceert met derde partij**
+Quote: "ik bel even met mijn klant om dit door te geven"
+- type_werk poging: C
+- recipient_per_quote: third_party
+- Reden: levering komt niet bij Stef of Wouter terecht. Auto-gate.
+
+### ✓ Wel extraheren
+
+**[A1] Externe levert input voor JAIP-werk (type C)**
+Quote: "ik stuur jullie morgen de finale pricing-cijfers door"
+Eerdere turn (Stef): "dan kunnen wij de offerte afronden zodra die binnen zijn"
+- type_werk: C
+- recipient_per_quote: stef_wouter
+- jaip_followup_quote: "dan kunnen wij de offerte afronden zodra die binnen zijn"
+- Reden: externe levert direct aan JAIP; Stef heeft expliciete vervolgstap. Gate passes.
+
+**[A2] Externe stuurt feedback retour op JAIP-document (type C)**
+Quote: "ik stuur jullie de feedback op het document terug zodat jullie het kunnen verwerken"
+- type_werk: C
+- recipient_per_quote: stef_wouter (ontvanger expliciet "jullie")
+- jaip_followup_quote: "zodat jullie het kunnen verwerken" (vervolgstap aan JAIP toegeschreven door spreker)
+- Reden: levering naar JAIP, vervolgstap geattribueerd. Gate passes.
+
+**[A3] Beslissing afwachten (type D)**
+Quote: "Bart bepaalt vrijdag of we doorgaan met fase 2"
+Eerdere turn (Wouter): "wij wachten op die go om de planning te kunnen maken"
+- type_werk: D
+- category: wachten_op_beslissing
+- recipient_per_quote: stef_wouter
+- jaip_followup_quote: "wij wachten op die go om de planning te kunnen maken"
+- Reden: beslissing komt naar JAIP, vervolgstap (planning) expliciet uitgesproken. Gate passes.
+
+============================================================
 ## SLOTREGEL
 
 De drie vragen zijn de filter. Lukt het niet om V1 of V2 met een duidelijke "ja" te beantwoorden uit transcript-grounding alleen? Niet extraheren. "Extraheren met confidence 0.3" bestaat niet — het is 0.4+ of niets.
+
+Voor type C en D: de gate-velden zijn niet onderhandelbaar. Geen letterlijk citaat van een JAIP-vervolgstap = niet extraheren. Externe levert niet direct aan Stef/Wouter = niet extraheren. Code controleert dit los van de prompt.
 
 Een schone takenlijst met 80% van de echte items is waardevoller dan een vervuilde takenlijst met 100% van de echte items en 50% ruis.

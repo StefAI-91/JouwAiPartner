@@ -5,6 +5,7 @@ import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import {
   ActionItemSpecialistRawOutputSchema,
+  type ActionItemRecipientPerQuote,
   type ActionItemSpecialistItem,
   type ActionItemSpecialistOutput,
   type RawActionItemSpecialistOutput,
@@ -76,8 +77,17 @@ export interface ActionItemSpecialistRunMetrics {
   reasoning_tokens: number | null;
 }
 
+export interface ActionItemGatedItem {
+  item: ActionItemSpecialistItem;
+  reason: string;
+}
+
 export interface ActionItemSpecialistRunResult {
   output: ActionItemSpecialistOutput;
+  /** Items die het model wilde accepteren maar door de mechanische gate
+   *  zijn gedowngrade (type C/D zonder valide grounding). Bedoeld voor de
+   *  harness-UI zodat false-positive-rationalisaties zichtbaar blijven. */
+  gated: ActionItemGatedItem[];
   metrics: ActionItemSpecialistRunMetrics;
   promptVersion: ActionItemPromptVersion;
 }
@@ -147,11 +157,29 @@ export async function runActionItemSpecialist(
     item.confidence = Math.max(0, Math.min(1, item.confidence));
   }
 
+  // Mechanische gate: filter type C/D items zonder geldige grounding eruit.
+  const normalised = normaliseActionItemSpecialistOutput(object);
+  const passed: ActionItemSpecialistItem[] = [];
+  const gated: ActionItemGatedItem[] = [];
+  for (const item of normalised.items) {
+    const reason = checkActionItemGate({
+      type_werk: item.type_werk,
+      recipient_per_quote: item.recipient_per_quote,
+      jaip_followup_quote: item.jaip_followup_quote ?? "",
+    });
+    if (reason) {
+      gated.push({ item, reason });
+    } else {
+      passed.push(item);
+    }
+  }
+
   const latencyMs = Date.now() - startedAt;
   const reasoningTokens = typeof usage?.reasoningTokens === "number" ? usage.reasoningTokens : null;
 
   return {
-    output: normaliseActionItemSpecialistOutput(object),
+    output: { items: passed },
+    gated,
     metrics: {
       latency_ms: latencyMs,
       input_tokens: typeof usage?.inputTokens === "number" ? usage.inputTokens : null,
@@ -181,9 +209,40 @@ function normaliseActionItemSpecialistOutput(
           | null,
         confidence: r.confidence,
         reasoning: emptyToNull(r.reasoning),
+        recipient_per_quote: r.recipient_per_quote,
+        jaip_followup_quote: emptyToNull(r.jaip_followup_quote),
       }),
     ),
   };
+}
+
+/**
+ * Mechanische gate voor type C/D items.
+ *
+ * Het model krijgt twee verplichte velden (recipient_per_quote en
+ * jaip_followup_quote) waar het de feiten zelf moet benoemen voordat het
+ * accept kan zeggen. Deze functie controleert die feiten in code, los van
+ * de prompt — geen ruimte voor rationalisatie via taal.
+ *
+ * Type A (intern) en B (JAIP levert) gaan altijd door — de gate geldt
+ * alleen voor type C en D waar het rationalisatie-probleem zit.
+ *
+ * Returns: null als gate passes (item mag door), string met reden als gate
+ * faalt (item moet downgraden naar reject).
+ */
+export function checkActionItemGate(item: {
+  type_werk: "A" | "B" | "C" | "D";
+  recipient_per_quote: ActionItemRecipientPerQuote;
+  jaip_followup_quote: string;
+}): string | null {
+  if (item.type_werk !== "C" && item.type_werk !== "D") return null;
+  if (item.recipient_per_quote !== "stef_wouter") {
+    return `auto-gate: recipient_per_quote=${item.recipient_per_quote} (vereist stef_wouter voor type ${item.type_werk})`;
+  }
+  if (!item.jaip_followup_quote.trim()) {
+    return `auto-gate: jaip_followup_quote leeg (geen citaat van JAIP-vervolgstap gevonden voor type ${item.type_werk})`;
+  }
+  return null;
 }
 
 /** Exposed voor harness + tests. Leest fresh van disk zodat de UI de
@@ -382,9 +441,28 @@ export async function runActionItemSpecialistTwoStage(
 
   const { accepts: acceptedItems, rejects: rejectedItems } = stage2.object;
 
+  // Mechanische gate: splits accepts in echt-passes en gate-failures.
+  // Gate-failures worden naar rejects verplaatst met expliciete reason zodat
+  // de harness ze in het judgements-panel kan tonen ipv ze stilletjes te
+  // verbergen. Type A/B passeren altijd (gate geldt alleen voor C/D).
+  const acceptedAfterGate: typeof acceptedItems = [];
+  const gateRejected: { candidate_index: number; rejection_reason: string }[] = [];
+  for (const item of acceptedItems) {
+    const reason = checkActionItemGate({
+      type_werk: item.type_werk,
+      recipient_per_quote: item.recipient_per_quote,
+      jaip_followup_quote: item.jaip_followup_quote,
+    });
+    if (reason) {
+      gateRejected.push({ candidate_index: item.candidate_index, rejection_reason: reason });
+    } else {
+      acceptedAfterGate.push(item);
+    }
+  }
+
   // Clamp confidence en map naar RawActionItemSpecialistOutput
   const acceptedRaw: RawActionItemSpecialistOutput = {
-    items: acceptedItems.map((j) => ({
+    items: acceptedAfterGate.map((j) => ({
       content: j.content,
       follow_up_contact: j.follow_up_contact,
       assignee: j.assignee,
@@ -395,25 +473,28 @@ export async function runActionItemSpecialistTwoStage(
       category: j.category,
       confidence: Math.max(0, Math.min(1, j.confidence)),
       reasoning: j.reasoning,
+      recipient_per_quote: j.recipient_per_quote,
+      jaip_followup_quote: j.jaip_followup_quote,
     })),
   };
 
   // Verenigde judgements view voor UI: één lijst, gesorteerd op candidate-index
+  const allRejects = [...rejectedItems, ...gateRejected];
   const judgements: ActionItemJudgement[] = [
-    ...acceptedItems.map((a) => ({
+    ...acceptedAfterGate.map((a) => ({
       candidate_index: a.candidate_index,
       decision: "accept" as const,
       accepted: a,
     })),
-    ...rejectedItems.map((r) => ({
+    ...allRejects.map((r) => ({
       candidate_index: r.candidate_index,
       decision: "reject" as const,
       rejection_reason: r.rejection_reason,
     })),
   ].sort((a, b) => a.candidate_index - b.candidate_index);
 
-  const accepts = acceptedItems.length;
-  const rejects = rejectedItems.length;
+  const accepts = acceptedAfterGate.length;
+  const rejects = allRejects.length;
 
   return {
     output: normaliseActionItemSpecialistOutput(acceptedRaw),

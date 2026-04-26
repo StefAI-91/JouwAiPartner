@@ -13,6 +13,7 @@ import {
   getActionItemCandidateSpotterPrompt,
   getActionItemJudgePrompt,
   type ActionItemPromptVersion,
+  type ActionItemGatedItem,
 } from "@repo/ai/agents/action-item-specialist";
 import {
   comparePrecisionRecall,
@@ -82,6 +83,11 @@ export interface RunActionItemAgentResult {
     mode: "single" | "two-stage" | "spotter-only";
     promptVersion: string;
     items: ActionItemSpecialistItem[];
+    /** Items die het model wilde accepteren maar door de mechanische
+     *  gate zijn gedowngrade (single-call mode). In two-stage staan
+     *  gegate items in twoStage.judgements als rejects met "auto-gate:"
+     *  reason. */
+    gated?: ActionItemGatedItem[];
     metrics: {
       latency_ms: number;
       input_tokens: number | null;
@@ -130,6 +136,7 @@ export async function runActionItemAgentAction(
   };
 
   let items: ActionItemSpecialistItem[];
+  let gatedItems: ActionItemGatedItem[] | undefined;
   let runMetrics: {
     latency_ms: number;
     input_tokens: number | null;
@@ -185,6 +192,7 @@ export async function runActionItemAgentAction(
     } else {
       const res = await runActionItemSpecialist(meeting.transcript, ctx, { promptVersion });
       items = res.output.items;
+      gatedItems = res.gated;
       runMetrics = res.metrics;
     }
   } catch (err) {
@@ -258,6 +266,7 @@ export async function runActionItemAgentAction(
       mode,
       promptVersion,
       items: filteredItems,
+      gated: gatedItems,
       metrics: runMetrics,
     },
     golden: {
