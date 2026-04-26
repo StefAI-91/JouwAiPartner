@@ -56,7 +56,7 @@ const LANE_LABELS: Record<Lane, string> = {
 
 interface Props {
   meetingId: string;
-  participants: { id: string; name: string }[];
+  participants: { id: string | null; name: string }[];
   summary: string | null;
   transcript: string | null;
   initialState: GoldenMeetingState | null;
@@ -557,7 +557,7 @@ function ItemForm({
 }: {
   draft: FormDraft;
   setDraft: (d: FormDraft) => void;
-  participants: { id: string; name: string }[];
+  participants: { id: string | null; name: string }[];
   onSubmit: () => void;
   onCancel: () => void;
   isPending: boolean;
@@ -600,7 +600,7 @@ function ItemForm({
 
       <datalist id="participants-list">
         {participants.map((p) => (
-          <option key={p.id} value={p.name} />
+          <option key={p.id ?? p.name} value={p.name} />
         ))}
       </datalist>
 

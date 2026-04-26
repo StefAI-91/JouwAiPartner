@@ -26,7 +26,10 @@ export interface MeetingWithGoldenStatus {
 }
 
 export interface GoldenCoderParticipant {
-  id: string;
+  /** People-row id voor gematchte deelnemers; null voor namen die alleen in
+   *  `meetings.participants` (flat Fireflies-lijst) staan en nog niet aan een
+   *  canonical person zijn gelinkt. */
+  id: string | null;
   name: string;
   /** Functie / rol binnen organisatie (bv. "CEO", "lead developer"). */
   role: string | null;
@@ -163,6 +166,7 @@ export async function getMeetingForGoldenCoder(
     .from("meetings")
     .select(
       `id, title, date, meeting_type, party_type, summary, transcript, transcript_elevenlabs,
+       participants,
        meeting_participants(person:people(id, name, role, organization:organizations(name, type)))`,
     )
     .eq("id", meetingId)
@@ -188,6 +192,9 @@ export async function getMeetingForGoldenCoder(
     summary: string | null;
     transcript: string | null;
     transcript_elevenlabs: string | null;
+    /** Flat Fireflies-namen op het meetings-record zelf. Kan namen bevatten
+     *  die nog niet via meeting_participants aan een canonical person zijn gelinkt. */
+    participants: string[] | null;
     meeting_participants: { person: RawPerson | null }[];
   };
 
@@ -198,6 +205,34 @@ export async function getMeetingForGoldenCoder(
     : raw.transcript
       ? "fireflies"
       : null;
+
+  // Structured deelnemers eerst (uit meeting_participants → people → organization).
+  const structured: GoldenCoderParticipant[] = raw.meeting_participants
+    .map((mp) => mp.person)
+    .filter((p): p is RawPerson => p !== null)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      role: p.role,
+      organization: p.organization?.name ?? null,
+      organization_type: p.organization?.type ?? null,
+    }));
+
+  // Aanvullen met namen uit de flat Fireflies-lijst die nog niet zijn gelinkt
+  // aan een canonical person — anders mist het model deelnemers helemaal.
+  const knownNames = new Set(structured.map((p) => p.name.trim().toLowerCase()));
+  const flatExtras: GoldenCoderParticipant[] = (raw.participants ?? [])
+    .map((n) => n?.trim())
+    .filter((n): n is string => Boolean(n))
+    .filter((n) => !knownNames.has(n.toLowerCase()))
+    .map((n) => ({
+      id: null,
+      name: n,
+      role: null,
+      organization: null,
+      organization_type: null,
+    }));
+
   return {
     id: raw.id,
     title: raw.title ?? "(geen titel)",
@@ -207,16 +242,7 @@ export async function getMeetingForGoldenCoder(
     summary: raw.summary,
     transcript,
     transcript_source,
-    participants: raw.meeting_participants
-      .map((mp) => mp.person)
-      .filter((p): p is RawPerson => p !== null)
-      .map((p) => ({
-        id: p.id,
-        name: p.name,
-        role: p.role,
-        organization: p.organization?.name ?? null,
-        organization_type: p.organization?.type ?? null,
-      })),
+    participants: [...structured, ...flatExtras],
   };
 }
 
