@@ -9,6 +9,12 @@ import {
   type ActionItemSpecialistOutput,
   type RawActionItemSpecialistOutput,
 } from "../validations/action-item-specialist";
+import {
+  ActionItemCandidatesSchema,
+  ActionItemJudgementsSchema,
+  type ActionItemCandidate,
+  type ActionItemJudgement,
+} from "../validations/action-item-two-stage";
 import { emptyToNull, sentinelToNull } from "../utils/normalise";
 import { withAgentRun } from "./run-logger";
 
@@ -186,4 +192,207 @@ export function getActionItemSpecialistSystemPrompt(
   version: ActionItemPromptVersion = ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION,
 ): string {
   return loadSystemPrompt(version);
+}
+
+// ============================================================================
+// TWO-STAGE MODE — candidate spotter + judge
+// ============================================================================
+
+const CANDIDATE_SPOTTER_PROMPT_PATH = resolve(PROMPT_DIR, "action_item_candidate_spotter.md");
+const JUDGE_PROMPT_PATH = resolve(PROMPT_DIR, "action_item_judge.md");
+
+const CANDIDATE_SPOTTER_MODEL = "claude-haiku-4-5-20251001";
+const JUDGE_MODEL = "claude-sonnet-4-6";
+
+function loadCandidateSpotterPrompt(): string {
+  return readFileSync(CANDIDATE_SPOTTER_PROMPT_PATH, "utf8").trimEnd();
+}
+
+function loadJudgePrompt(): string {
+  return readFileSync(JUDGE_PROMPT_PATH, "utf8").trimEnd();
+}
+
+export interface ActionItemTwoStageRunMetrics {
+  spotter: {
+    latency_ms: number;
+    input_tokens: number | null;
+    output_tokens: number | null;
+    candidate_count: number;
+  };
+  judge: {
+    latency_ms: number;
+    input_tokens: number | null;
+    output_tokens: number | null;
+    reasoning_tokens: number | null;
+    accept_count: number;
+    reject_count: number;
+  };
+  total_latency_ms: number;
+}
+
+export interface ActionItemTwoStageRunResult {
+  output: ActionItemSpecialistOutput;
+  candidates: ActionItemCandidate[];
+  judgements: ActionItemJudgement[];
+  metrics: ActionItemTwoStageRunMetrics;
+}
+
+/**
+ * Twee-staps Action Item extractie. Stage 1 (Haiku) spot brede kandidaten,
+ * stage 2 (Sonnet) beoordeelt elke kandidaat los tegen de drie vragen.
+ *
+ * Voordeel: minder rationalisatie-ruis omdat stage 2 één kandidaat tegelijk
+ * weegt in plaats van 30 turns voor 5 outputs te wegen. Kost ~2x latency en
+ * tokens; bedoeld voor recall+precision-gevoelige use cases.
+ */
+export async function runActionItemSpecialistTwoStage(
+  transcript: string,
+  context: ActionItemSpecialistContext,
+): Promise<ActionItemTwoStageRunResult> {
+  const startedAt = Date.now();
+  const contextPrefix = [
+    `Titel: ${context.title}`,
+    `Type: ${context.meeting_type}`,
+    `Party: ${context.party_type}`,
+    `Meetingdatum: ${context.meeting_date}`,
+    `Deelnemers: ${context.participants.join(", ")}`,
+  ].join("\n");
+
+  // STAGE 1 — Candidate Spotter (Haiku, broad)
+  const stage1Started = Date.now();
+  const stage1 = await withAgentRun(
+    {
+      agent_name: "action-item-candidate-spotter",
+      model: CANDIDATE_SPOTTER_MODEL,
+      prompt_version: "v1",
+    },
+    async () => {
+      const res = await generateObject({
+        model: anthropic(CANDIDATE_SPOTTER_MODEL),
+        maxRetries: 3,
+        temperature: 0,
+        maxOutputTokens: 6000,
+        schema: ActionItemCandidatesSchema,
+        messages: [
+          {
+            role: "system",
+            content: loadCandidateSpotterPrompt(),
+            providerOptions: {
+              anthropic: { cacheControl: { type: "ephemeral" } },
+            },
+          },
+          {
+            role: "user",
+            content: `${contextPrefix}\n\n--- TRANSCRIPT ---\n${transcript}`,
+          },
+        ],
+      });
+      return { result: { object: res.object, usage: res.usage }, usage: res.usage };
+    },
+  );
+  const stage1Latency = Date.now() - stage1Started;
+  const candidates = stage1.object.candidates;
+
+  // STAGE 2 — Judge (Sonnet, strict)
+  const stage2Started = Date.now();
+  const candidateBlock = candidates
+    .map(
+      (c, i) =>
+        `[${i + 1}] (${c.pattern_type}) ${c.speaker}: "${c.quote}"\n    context: ${c.context_summary}`,
+    )
+    .join("\n\n");
+
+  const stage2 = await withAgentRun(
+    {
+      agent_name: "action-item-judge",
+      model: JUDGE_MODEL,
+      prompt_version: "v1",
+    },
+    async () => {
+      const res = await generateObject({
+        model: anthropic(JUDGE_MODEL),
+        maxRetries: 3,
+        temperature: 0,
+        maxOutputTokens: 12000,
+        schema: ActionItemJudgementsSchema,
+        providerOptions: {
+          anthropic: { effort: "high" },
+        },
+        messages: [
+          {
+            role: "system",
+            content: loadJudgePrompt(),
+            providerOptions: {
+              anthropic: { cacheControl: { type: "ephemeral" } },
+            },
+          },
+          {
+            role: "user",
+            content: `${contextPrefix}\n\n--- TRANSCRIPT ---\n${transcript}\n\n--- KANDIDATEN ---\n${candidateBlock}`,
+          },
+        ],
+      });
+      return { result: { object: res.object, usage: res.usage }, usage: res.usage };
+    },
+  );
+  const stage2Latency = Date.now() - stage2Started;
+
+  const judgements = stage2.object.judgements;
+
+  // Clamp confidence + filter accepts → ActionItemSpecialistItem
+  const acceptedRaw: RawActionItemSpecialistOutput = {
+    items: judgements
+      .filter((j) => j.decision === "accept")
+      .map((j) => ({
+        content: j.content,
+        follow_up_contact: j.follow_up_contact,
+        assignee: j.assignee,
+        source_quote: j.source_quote,
+        project_context: j.project_context,
+        deadline: j.deadline,
+        type_werk: j.type_werk,
+        category: j.category,
+        confidence: Math.max(0, Math.min(1, j.confidence)),
+        reasoning: j.reasoning,
+      })),
+  };
+
+  const accepts = acceptedRaw.items.length;
+  const rejects = judgements.length - accepts;
+
+  return {
+    output: normaliseActionItemSpecialistOutput(acceptedRaw),
+    candidates,
+    judgements,
+    metrics: {
+      spotter: {
+        latency_ms: stage1Latency,
+        input_tokens:
+          typeof stage1.usage?.inputTokens === "number" ? stage1.usage.inputTokens : null,
+        output_tokens:
+          typeof stage1.usage?.outputTokens === "number" ? stage1.usage.outputTokens : null,
+        candidate_count: candidates.length,
+      },
+      judge: {
+        latency_ms: stage2Latency,
+        input_tokens:
+          typeof stage2.usage?.inputTokens === "number" ? stage2.usage.inputTokens : null,
+        output_tokens:
+          typeof stage2.usage?.outputTokens === "number" ? stage2.usage.outputTokens : null,
+        reasoning_tokens:
+          typeof stage2.usage?.reasoningTokens === "number" ? stage2.usage.reasoningTokens : null,
+        accept_count: accepts,
+        reject_count: rejects,
+      },
+      total_latency_ms: Date.now() - startedAt,
+    },
+  };
+}
+
+export function getActionItemCandidateSpotterPrompt(): string {
+  return loadCandidateSpotterPrompt();
+}
+
+export function getActionItemJudgePrompt(): string {
+  return loadJudgePrompt();
 }

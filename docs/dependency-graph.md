@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 461 |
-| Exported functions/constants | 737 |
-| Exported types/interfaces | 275 |
-| Cross-package imports | 508 |
+| Files scanned | 462 |
+| Exported functions/constants | 744 |
+| Exported types/interfaces | 282 |
+| Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
 
 ## Package Dependency Flow
@@ -737,14 +737,18 @@
 **Exports:**
 - `runActionItemSpecialist()`
 - `getActionItemSpecialistSystemPrompt()`
+- `runActionItemSpecialistTwoStage()`
+- `getActionItemCandidateSpotterPrompt()`
+- `getActionItemJudgePrompt()`
 - `ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION`
 - `ACTION_ITEM_SPECIALIST_MODEL`
 - `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
-**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`
+**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`
 
 **Internal deps:**
 - `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
+- `../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemCandidate, type ActionItemJudgement
 - `../utils/normalise` → emptyToNull, sentinelToNull
 - `./run-logger` → withAgentRun
 
@@ -1463,6 +1467,19 @@
 
 **Types:** `RawActionItemSpecialistOutput`, `ActionItemSpecialistItem`, `ActionItemSpecialistOutput`
 
+### `packages/ai/src/validations/action-item-two-stage.ts`
+
+**Exports:**
+- `ActionItemCandidateSchema`
+- `ActionItemCandidatesSchema`
+- `ActionItemJudgementSchema`
+- `ActionItemJudgementsSchema`
+
+**Types:** `ActionItemCandidate`, `ActionItemCandidatesOutput`, `ActionItemJudgement`, `ActionItemJudgementsOutput`
+
+**Internal deps:**
+- `./action-item-specialist` → ActionItemSpecialistRawItemSchema
+
 ### `packages/ai/src/validations/communication.ts`
 
 **Exports:**
@@ -1909,14 +1926,15 @@
 **Exports:**
 - `runActionItemAgentAction()`
 
-**Types:** `RunActionItemAgentInput`, `RunActionItemAgentResult`
+**Types:** `RunActionItemAgentInput`, `TwoStageDebug`, `RunActionItemAgentResult`
 
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
-- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, type ActionItemPromptVersion
+- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, runActionItemSpecialistTwoStage, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, getActionItemCandidateSpotterPrompt, getActionItemJudgePrompt, type ActionItemPromptVersion
 - `@repo/ai/lib/golden-comparison` → comparePrecisionRecall, type ComparisonResult, type ComparableItem
 - (type) `@repo/ai/validations/action-item-specialist` → ActionItemSpecialistItem
+- (type) `@repo/ai/validations/action-item-two-stage` → ActionItemCandidate, ActionItemJudgement
 
 ### `apps/cockpit/src/actions/dev-detector.ts`
 
@@ -3518,7 +3536,7 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 55 | - | - | - | - | 55 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 25 | 9 | 12 | - | - | 46 |
+| Cockpit Server Actions | 25 | 10 | 12 | - | - | 47 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |

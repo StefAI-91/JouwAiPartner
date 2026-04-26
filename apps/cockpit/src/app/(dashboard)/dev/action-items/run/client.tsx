@@ -24,6 +24,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
   const [confidenceThreshold, setConfidenceThreshold] = useState(0);
   const [contentThreshold, setContentThreshold] = useState(0.4);
   const [promptVersion, setPromptVersion] = useState<"v2" | "v3">("v2");
+  const [mode, setMode] = useState<"single" | "two-stage">("single");
   const [result, setResult] = useState<RunActionItemAgentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -37,6 +38,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
         confidenceThreshold,
         contentThreshold,
         promptVersion,
+        mode,
       });
       if ("error" in res) {
         setError(res.error);
@@ -50,7 +52,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
   return (
     <div className="space-y-6">
       <section className="rounded-xl border border-border/60 bg-card p-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto_auto_auto_auto]">
           <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
             Meeting (alleen gecodeerde)
             <select
@@ -95,11 +97,23 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
             <select
               value={promptVersion}
               onChange={(e) => setPromptVersion(e.target.value as "v2" | "v3")}
-              disabled={isPending}
-              className="rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]"
+              disabled={isPending || mode === "two-stage"}
+              className="rounded-md border border-border/60 bg-background px-2 py-2 text-[13px] disabled:opacity-50"
             >
               <option value="v2">v2 — vier-eis</option>
               <option value="v3">v3 — drie-vragen</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
+            Mode
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value as "single" | "two-stage")}
+              disabled={isPending}
+              className="rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]"
+            >
+              <option value="single">single-call</option>
+              <option value="two-stage">two-stage (spotter + judge)</option>
             </select>
           </label>
           <button
@@ -164,6 +178,7 @@ function ResultPanel({ result }: { result: RunActionItemAgentResult }) {
       <section className="rounded-xl border border-border/60 bg-card p-4">
         <h2 className="text-sm font-semibold">Agent run</h2>
         <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-[12px] md:grid-cols-4">
+          <Stat label="Mode" value={agent.mode} />
           <Stat label="Model" value={agent.model} />
           <Stat label="Prompt v" value={agent.promptVersion} />
           <Stat label="Latency" value={`${agent.metrics.latency_ms} ms`} />
@@ -177,6 +192,8 @@ function ResultPanel({ result }: { result: RunActionItemAgentResult }) {
           <Stat label="Items extracted" value={agent.items.length} />
         </dl>
       </section>
+
+      {result.twoStage && <TwoStagePanel debug={result.twoStage} />}
 
       <section className="rounded-xl border border-border/60 bg-card p-4">
         <h2 className="text-sm font-semibold">Diff per item ({comparison.diff.length})</h2>
@@ -332,5 +349,90 @@ function Stat({
       <dd className={`font-mono text-sm ${valueClass}`}>{value}</dd>
       {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
     </div>
+  );
+}
+
+function TwoStagePanel({ debug }: { debug: NonNullable<RunActionItemAgentResult["twoStage"]> }) {
+  return (
+    <section className="rounded-xl border border-indigo-200 bg-indigo-50/30 p-4">
+      <h2 className="text-sm font-semibold">Two-stage debug</h2>
+      <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-[12px] md:grid-cols-4">
+        <Stat label="Spotter latency" value={`${debug.spotter_metrics.latency_ms} ms`} />
+        <Stat
+          label="Spotter tokens"
+          value={`${debug.spotter_metrics.input_tokens ?? 0}/${debug.spotter_metrics.output_tokens ?? 0}`}
+          hint="in/out"
+        />
+        <Stat label="Candidates" value={debug.spotter_metrics.candidate_count} />
+        <Stat
+          label="Accept/Reject"
+          value={`${debug.judge_metrics.accept_count}/${debug.judge_metrics.reject_count}`}
+        />
+        <Stat label="Judge latency" value={`${debug.judge_metrics.latency_ms} ms`} />
+        <Stat
+          label="Judge tokens"
+          value={`${debug.judge_metrics.input_tokens ?? 0}/${debug.judge_metrics.output_tokens ?? 0}`}
+          hint="in/out"
+        />
+        <Stat label="Judge reasoning" value={debug.judge_metrics.reasoning_tokens ?? "—"} />
+      </div>
+
+      <details className="mt-4">
+        <summary className="cursor-pointer text-[12px] font-semibold hover:underline">
+          Candidates ({debug.candidates.length})
+        </summary>
+        <ul className="mt-2 space-y-1 text-[11.5px]">
+          {debug.candidates.map((c, i) => {
+            const judgement = debug.judgements.find((j) => j.candidate_index === i + 1);
+            const status = judgement?.decision ?? "—";
+            const statusClass =
+              status === "accept"
+                ? "text-emerald-700"
+                : status === "reject"
+                  ? "text-rose-700"
+                  : "text-muted-foreground";
+            return (
+              <li key={i} className="rounded-md border border-border/40 bg-background/50 p-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] text-muted-foreground">[{i + 1}]</span>
+                  <span className="rounded-sm bg-indigo-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-indigo-800">
+                    {c.pattern_type}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">{c.speaker}</span>
+                  <span className={`ml-auto text-[10px] font-semibold uppercase ${statusClass}`}>
+                    {status}
+                  </span>
+                </div>
+                <p className="mt-1 italic">&ldquo;{c.quote}&rdquo;</p>
+                <p className="mt-1 text-[10.5px] text-muted-foreground">{c.context_summary}</p>
+                {judgement?.decision === "reject" && judgement.rejection_reason && (
+                  <p className="mt-1 text-[10.5px] text-rose-700">
+                    <span className="font-semibold">reject:</span> {judgement.rejection_reason}
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </details>
+
+      <details className="mt-3">
+        <summary className="cursor-pointer text-[12px] font-semibold hover:underline">
+          Spotter prompt ({debug.candidate_spotter_prompt.length.toLocaleString("nl-NL")} chars)
+        </summary>
+        <pre className="mt-2 max-h-[400px] overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-[11px] leading-relaxed">
+          {debug.candidate_spotter_prompt}
+        </pre>
+      </details>
+
+      <details className="mt-3">
+        <summary className="cursor-pointer text-[12px] font-semibold hover:underline">
+          Judge prompt ({debug.judge_prompt.length.toLocaleString("nl-NL")} chars)
+        </summary>
+        <pre className="mt-2 max-h-[400px] overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-[11px] leading-relaxed">
+          {debug.judge_prompt}
+        </pre>
+      </details>
+    </section>
   );
 }
