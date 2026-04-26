@@ -272,9 +272,10 @@ export async function runActionItemSpecialistTwoStage(
         maxRetries: 3,
         temperature: 0,
         // Safety net: een uur transcript met te brede candidate-detectie kan
-        // 15k+ chars JSON produceren. Met scherpe spotter-prompt blijft het
-        // meestal onder 5k, maar 16k voorkomt parse-failures bij uitschieters.
-        maxOutputTokens: 16000,
+        // 18k+ chars JSON produceren. 40k geeft genoeg headroom voor de
+        // breedste meetings zonder dat we tijdens tuning steeds tegen de cap
+        // aanlopen.
+        maxOutputTokens: 40000,
         schema: ActionItemCandidatesSchema,
         messages: [
           {
