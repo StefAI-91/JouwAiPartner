@@ -31,17 +31,19 @@ import { withAgentRun } from "./run-logger";
  * Volgt het Risk Specialist patroon: Sonnet 4.6 high-effort, strict schema,
  * sentinels voor onbekend, normalisatie naar null voor downstream.
  *
- * Drie promptversies leven naast elkaar:
+ * Vier promptversies leven naast elkaar:
  *  - v2: 4-eis-model (rol/toezegging/concreet/agency) met contrast-paren
  *  - v3: drie-vragen-model (leveren wij? / wachten wij? / termijn?) +
  *        gate-velden voor type C/D
  *  - v4: voorbeeld-zwaar — minimaal kader, gewicht ligt op contrast-paren
  *        die het model met pattern-matching kan toepassen ipv regels
  *        interpreteren
+ *  - v5: v4 + sales-context-nuance (cold contact buiten scope, vervolg-
+ *        acties op leads wél in scope) + A12 voorbeeld voor lead-vervolg
  * Caller kiest expliciet, anders default v2 voor backwards compat.
  */
 
-export type ActionItemPromptVersion = "v2" | "v3" | "v4";
+export type ActionItemPromptVersion = "v2" | "v3" | "v4" | "v5";
 
 export const ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION: ActionItemPromptVersion = "v2";
 export const ACTION_ITEM_SPECIALIST_MODEL = "claude-sonnet-4-6";
@@ -56,6 +58,7 @@ const PROMPT_FILE_BY_VERSION: Record<ActionItemPromptVersion, string> = {
   v2: "action_item_specialist.md",
   v3: "action_item_specialist_v3.md",
   v4: "action_item_specialist_v4.md",
+  v5: "action_item_specialist_v5.md",
 };
 
 // Tijdens prompt-tuning lezen we de markdown vers per call: een dev-server

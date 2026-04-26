@@ -40,8 +40,10 @@ const runSchema = z.object({
   confidenceThreshold: z.number().min(0).max(1).default(0),
   contentThreshold: z.number().min(0).max(1).default(0.55),
   // Welke promptversie testen (alleen relevant in single-mode).
-  promptVersion: z.enum(["v2", "v3", "v4"]).default(ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION),
-  // single = bestaande v2/v3/v4 single-call. two-stage = candidate-spotter +
+  promptVersion: z
+    .enum(["v2", "v3", "v4", "v5"])
+    .default(ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION),
+  // single = bestaande v2/v3/v4/v5 single-call. two-stage = candidate-spotter +
   // judge. spotter-only = alleen Haiku spotter (voor tuning van die prompt
   // zonder de judge-overhead).
   mode: z.enum(["single", "two-stage", "spotter-only"]).default("single"),
