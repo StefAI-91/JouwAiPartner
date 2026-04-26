@@ -38,8 +38,12 @@ Worden mechanisch in code gecontroleerd — niet zelf afzwakken.
   - Een collectief waar JAIP toevallig óók in zit (groepschat, kanaal, mailinglijst, gedeelde drive, evenement) telt **niet** als `stef_wouter`. Dat is infrastructuur, geen levering. Kies dan `own_sphere` of `third_party`.
 - **`jaip_followup_quote`**: letterlijke zin waar Stef of Wouter zelf hun vervolgstap uitspreken (eerste persoon) of waar de spreker hen direct aanspreekt ("als jij dat hebt, dan kun jij Z"). Voor type C of D MOET dit gevuld zijn.
   - Een passieve zin zonder genoemd subject ("kan er X", "mag er Y", "wordt er Z gedaan") is **automatisch ongeldig**, ook als context suggereert dat JAIP de actor zou kunnen zijn. Laat het veld leeg.
+- **`jaip_followup_action`**: kies één van `productive` / `consumptive` / `n/a`. Voor type C of D MOET dit `productive` zijn.
+  - **productive** = JAIP doet eigen werk dat output produceert: offerte schrijven, document maken, mail sturen, beslissing nemen, feedback formuleren, correcties geven, planning maken.
+  - **consumptive** = JAIP consumeert / luistert / sluit aan / komt langs / kijkt naar wat externen hebben uitgewerkt — geen eigen output. "Ik kom de volgende keer langs", "ik sluit aan", "ik kom luisteren" = consumptive, ook al klinkt het als toezegging.
+  - **n/a** = geen JAIP-vervolgstap (type A puur intern, geen action).
 
-Voor type A/B vul je `from_jaip` in en mag `jaip_followup_quote` leeg zijn.
+Voor type A/B vul je `from_jaip` in en mag `jaip_followup_quote` leeg zijn (`jaip_followup_action` mag dan `productive` of `n/a`).
 
 ============================================================
 
@@ -59,6 +63,7 @@ Per item:
 - `reasoning` (1-2 NL zinnen)
 - `recipient_per_quote` (zie sectie 4)
 - `jaip_followup_quote` (zie sectie 4)
+- `jaip_followup_action` (zie sectie 4)
 
 Sorteer op meeting-volgorde. Verzin geen items.
 
@@ -168,13 +173,16 @@ Reden: directe uitnodiging of agenda-bevestiging is logistiek, geen action_item.
 
 **E21 — Externen plannen onderling, JAIP "sluit aan"**
 
-Quote-vorm: "laten we even samen zitten" / "we werken samen een plan uit" / "we stemmen het onderling af", gezegd tussen twee externen — **ook als JAIP elders in het transcript zegt "ik sluit volgende keer aan" of "ik kom dan ook"**.
+Quote-vorm: "laten we even samen zitten" / "we werken samen een plan uit" / "we stemmen het onderling af", gezegd tussen twee externen — **ook als JAIP elders in het transcript zegt "ik sluit volgende keer aan" of "ik kom dan ook" of "als jij dat aanlevert dan kom ik langs"**.
 
 Output: niet extraheren, ongeacht hoe je de plan-uitkomst zou kunnen interpreteren als input voor JAIP.
 
+- recipient_per_quote: own_sphere (overleg tussen externen, JAIP toehoorder)
+- jaip_followup_action: consumptive (JAIP "komt langs" / "sluit aan" / "luistert mee")
+
 **Toets:** als je in de reasoning moet schrijven "JAIP heeft de uitkomst nodig als input" om dit als type C te rechtvaardigen — dan ben je aan het rationaliseren. JAIP's aanwezigheid in een vervolggesprek is geen afhankelijkheid van het tussenliggende overleg.
 
-Een 1-op-1 tussen externen om "samen iets uit te werken" is hun eigen overleg. Het wordt geen action_item door JAIP er een JAIP-rol in te projecteren.
+Een 1-op-1 tussen externen om "samen iets uit te werken" is hun eigen overleg. Het wordt geen action_item door JAIP er een JAIP-rol in te projecteren. Een JAIP-uitspraak als "als jij dat aanlevert, dan kom ik de volgende keer langs" is **consumptief** — JAIP doet geen eigen werk dat afhangt van het plan, JAIP komt luisteren naar wat is uitgewerkt. Auto-gate.
 
 ### ✓ Wel extraheren
 
@@ -182,6 +190,7 @@ Een 1-op-1 tussen externen om "samen iets uit te werken" is hun eigen overleg. H
 Quote (Stef): "ik stuur jullie morgen een voorstel toe"
 - type_werk: B
 - recipient_per_quote: from_jaip
+- jaip_followup_action: productive (voorstel schrijven en sturen = output)
 - deadline: meetingdatum + 1 werkdag
 
 **A2 — Klantverzoek aan JAIP (type B, uitzondering)**
@@ -189,6 +198,7 @@ Quote (klant): "kan jij me die cijfers nog mailen?" — JAIP weigert niet binnen
 - type_werk: B
 - assignee: aangesproken JAIP-medewerker
 - source_quote: het verzoek zelf
+- jaip_followup_action: productive (cijfers mailen = output)
 Reden: verzoek = trigger, geen weigering = impliciete acceptatie.
 
 **A3 — Externe levert blokkerend (type C)**
@@ -197,12 +207,14 @@ Eerdere Stef-turn: "dan kan ik de offerte afronden zodra die binnen zijn"
 - type_werk: C
 - recipient_per_quote: stef_wouter
 - jaip_followup_quote: "dan kan ik de offerte afronden zodra die binnen zijn"
+- jaip_followup_action: productive (offerte afronden = eigen output)
 
 **A4 — Externe stuurt feedback retour (type C)**
 Quote (klant): "ik stuur jullie mijn opmerkingen op het document terug zodat jullie het kunnen verwerken"
 - type_werk: C
 - recipient_per_quote: stef_wouter
 - jaip_followup_quote: "zodat jullie het kunnen verwerken"
+- jaip_followup_action: productive (verwerken van opmerkingen = eigen werk dat output produceert)
 
 **A5 — Beslissing afwachten (type D)**
 Quote (klant): "Bart bepaalt vrijdag of we doorgaan met fase 2"
@@ -211,6 +223,7 @@ Eerdere Wouter-turn: "wij wachten op die go om de planning te kunnen maken"
 - category: wachten_op_beslissing
 - recipient_per_quote: stef_wouter
 - jaip_followup_quote: "wij wachten op die go om de planning te kunnen maken"
+- jaip_followup_action: productive (planning maken = eigen output)
 
 **A6 — Reminder-verzoek (type B, uitzondering)**
 Quote (klant): "stuur me een seintje als je niks hoort"

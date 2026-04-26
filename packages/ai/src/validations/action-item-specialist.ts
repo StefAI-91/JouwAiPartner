@@ -73,6 +73,11 @@ export const ActionItemSpecialistRawItemSchema = z.object({
     .describe(
       "Letterlijke zin uit transcript waar Stef of Wouter zelf hun eigen vervolgstap uitspreken (eerste persoon: 'dan ga ik X', 'ik wacht hierop omdat ik Y') of waar de spreker hen direct aanspreekt ('als jij dat hebt, dan kun jij Z'). Lege string als geen citaat te vinden. Voor type_werk C of D MOET deze gevuld zijn — anders auto-reject. Voor type A/B mag leeg.",
     ),
+  jaip_followup_action: z
+    .enum(["productive", "consumptive", "n/a"])
+    .describe(
+      "Wat doet JAIP in de vervolgstap die in jaip_followup_quote staat? productive = JAIP produceert iets eigens (offerte schrijven, document maken, mail sturen, beslissing nemen, feedback formuleren, correcties geven). consumptive = JAIP consumeert/luistert/sluit aan zonder eigen output (langskomen, bijwonen, mee-luisteren, kijken naar wat externen hebben uitgewerkt). n/a = geen JAIP-vervolgstap (type A puur intern of geen action). Voor type_werk C of D MOET dit 'productive' zijn — anders auto-reject. Een 'kom-luisteren'-vervolgstap rechtvaardigt geen type C; dan is het externen-overleg met JAIP als toehoorder.",
+    ),
 });
 
 export const ActionItemSpecialistRawOutputSchema = z.object({
@@ -88,6 +93,8 @@ export type ActionItemRecipientPerQuote =
   | "from_jaip"
   | "unclear";
 
+export type ActionItemFollowupAction = "productive" | "consumptive" | "n/a";
+
 export type ActionItemSpecialistItem = {
   content: string;
   follow_up_contact: string;
@@ -101,6 +108,7 @@ export type ActionItemSpecialistItem = {
   reasoning: string | null;
   recipient_per_quote: ActionItemRecipientPerQuote;
   jaip_followup_quote: string | null;
+  jaip_followup_action: ActionItemFollowupAction;
 };
 
 export type ActionItemSpecialistOutput = {

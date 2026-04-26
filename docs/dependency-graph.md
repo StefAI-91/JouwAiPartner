@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 462 |
 | Exported functions/constants | 747 |
-| Exported types/interfaces | 287 |
+| Exported types/interfaces | 288 |
 | Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
 
@@ -749,7 +749,7 @@
 **Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemSpotterRunResult`
 
 **Internal deps:**
-- `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemRecipientPerQuote, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
+- `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemFollowupAction, type ActionItemRecipientPerQuote, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
 - `../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemCandidate, type ActionItemJudgement
 - `../utils/normalise` → emptyToNull, sentinelToNull
 - `./run-logger` → withAgentRun
@@ -1467,7 +1467,7 @@
 - `ActionItemSpecialistRawItemSchema`
 - `ActionItemSpecialistRawOutputSchema`
 
-**Types:** `RawActionItemSpecialistOutput`, `ActionItemRecipientPerQuote`, `ActionItemSpecialistItem`, `ActionItemSpecialistOutput`
+**Types:** `RawActionItemSpecialistOutput`, `ActionItemRecipientPerQuote`, `ActionItemFollowupAction`, `ActionItemSpecialistItem`, `ActionItemSpecialistOutput`
 
 ### `packages/ai/src/validations/action-item-two-stage.ts`
 

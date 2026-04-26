@@ -73,6 +73,11 @@ Twee cross-turn-patronen om JA op te vangen:
   - **Hard:** een collectief waar JAIP toevallig óók in zit (groepschat, Slack-kanaal, mailinglijst, gedeelde drive, evenement, communicatie-infrastructuur) telt **niet** als `stef_wouter`. Dat is infrastructuur, geen levering. Kies `own_sphere` als het kanaal door/voor de eigen kring van de externe is, `third_party` als het naar derden gaat. Alleen levering rechtstreeks aan Stef of Wouter persoonlijk = `stef_wouter`.
 - `jaip_followup_quote`: letterlijke zin waar Stef of Wouter zelf hun vervolgstap uitspreken (eerste persoon of direct aan hen gericht). Voor type C of D MOET dit gevuld zijn — anders auto-reject. Geen citaat te vinden = leeg laten = item wordt gerejecteerd.
   - **Hard:** een passieve zin zonder genoemd subject ("kan er X", "mag er Y", "wordt er Z gedaan") is **automatisch ongeldig**, ook als de context suggereert dat JAIP de actor zou kunnen zijn. Laat het veld leeg. Vul niet zelf "JAIP" in als de spreker dat niet expliciet doet.
+- `jaip_followup_action`: kies één van `productive` / `consumptive` / `n/a`. Voor type C of D MOET dit `productive` zijn — anders auto-reject.
+  - **productive** = JAIP doet eigen werk dat output produceert: offerte schrijven, document maken, mail sturen, beslissing nemen, feedback formuleren, correcties geven.
+  - **consumptive** = JAIP consumeert / luistert / sluit aan / komt langs / kijkt naar wat externen hebben uitgewerkt — zonder eigen output.
+  - **n/a** = geen JAIP-vervolgstap (type A puur intern, of geen action).
+  - Een "kom-luisteren"-vervolgstap rechtvaardigt **geen** type C. Als JAIP alleen "ik kom volgende keer langs" of "ik sluit aan" zegt, dan is het externen-overleg met JAIP als toehoorder — niet trackbaar als wachtende JAIP-deliverable.
 
 → JA = type C (levering) of type D (beslissing). NEE = reject.
 
@@ -149,7 +154,8 @@ Output bevat twee aparte arrays — elke kandidaat hoort in EXACT één van beid
       "confidence": <0.4-1.0>,
       "reasoning": "1-2 NL zinnen: welke vraag JA scoort, type-rationale",
       "recipient_per_quote": "stef_wouter" | "third_party" | "own_sphere" | "from_jaip" | "unclear",
-      "jaip_followup_quote": "letterlijk citaat met Stef/Wouter als actor, of leeg"
+      "jaip_followup_quote": "letterlijk citaat met Stef/Wouter als actor, of leeg",
+      "jaip_followup_action": "productive" | "consumptive" | "n/a"
     }
   ],
   "rejects": [
@@ -214,13 +220,16 @@ Quote: "ik nodig jullie uit voor 16 juni" / "ik zet 'm in de agenda voor maandag
 
 **[V2-8] Externen plannen onderling, JAIP "sluit aan"**
 
-Quote-vorm: "laten we even samen zitten" / "we werken samen een plan uit" / "we stemmen het onderling af", gezegd tussen twee externen — **ook als JAIP elders in het transcript zegt "ik sluit volgende keer aan" of "ik kom dan ook"**.
+Quote-vorm: "laten we even samen zitten" / "we werken samen een plan uit" / "we stemmen het onderling af", gezegd tussen twee externen — **ook als JAIP elders in het transcript zegt "ik sluit volgende keer aan" of "ik kom dan ook" of "als jij dat aanlevert dan kom ik langs"**.
 
 Output: niet extraheren, ongeacht hoe je de plan-uitkomst zou kunnen interpreteren als input voor JAIP.
 
+- recipient_per_quote: own_sphere (overleg tussen externen, JAIP toehoorder)
+- jaip_followup_action: consumptive (JAIP "komt langs" / "sluit aan" / "luistert mee")
+
 **Toets:** als je in de reasoning moet schrijven "JAIP heeft de uitkomst nodig als input" om dit als type C te rechtvaardigen — dan ben je aan het rationaliseren. JAIP's aanwezigheid in een vervolggesprek is geen afhankelijkheid van het tussenliggende overleg.
 
-Een 1-op-1 tussen externen om "samen iets uit te werken" is hun eigen overleg. Het wordt geen action_item door JAIP er een JAIP-rol in te projecteren.
+Een 1-op-1 tussen externen om "samen iets uit te werken" is hun eigen overleg. Het wordt geen action_item door JAIP er een JAIP-rol in te projecteren. Een JAIP-uitspraak als "als jij dat aanlevert, dan kom ik de volgende keer langs" is **consumptief** — JAIP doet geen eigen werk dat afhangt van het plan, JAIP komt luisteren naar wat is uitgewerkt. Auto-gate.
 
 ### ✓ Accept
 
@@ -230,14 +239,16 @@ Eerdere turn (Stef): "dan kunnen wij de offerte afronden zodra die binnen zijn"
 - type_werk: C
 - recipient_per_quote: stef_wouter
 - jaip_followup_quote: "dan kunnen wij de offerte afronden zodra die binnen zijn"
-- Reden: externe levert direct aan JAIP; Stef heeft expliciete vervolgstap. Gate passes.
+- jaip_followup_action: productive (offerte afronden = eigen output)
+- Reden: externe levert direct aan JAIP; Stef heeft expliciete productieve vervolgstap. Gate passes.
 
 **[A2] Externe stuurt feedback retour op JAIP-document (type C)**
 Quote: "ik stuur jullie de feedback op het document terug zodat jullie het kunnen verwerken"
 - type_werk: C
 - recipient_per_quote: stef_wouter (ontvanger expliciet "jullie")
 - jaip_followup_quote: "zodat jullie het kunnen verwerken" (vervolgstap aan JAIP toegeschreven door spreker)
-- Reden: levering naar JAIP, vervolgstap geattribueerd. Gate passes.
+- jaip_followup_action: productive (verwerken van feedback = eigen werk dat output produceert)
+- Reden: levering naar JAIP, vervolgstap geattribueerd én productief. Gate passes.
 
 **[A3] Beslissing afwachten (type D)**
 Quote: "Bart bepaalt vrijdag of we doorgaan met fase 2"
@@ -246,7 +257,8 @@ Eerdere turn (Wouter): "wij wachten op die go om de planning te kunnen maken"
 - category: wachten_op_beslissing
 - recipient_per_quote: stef_wouter
 - jaip_followup_quote: "wij wachten op die go om de planning te kunnen maken"
-- Reden: beslissing komt naar JAIP, vervolgstap (planning) expliciet uitgesproken. Gate passes.
+- jaip_followup_action: productive (planning maken = eigen output)
+- Reden: beslissing komt naar JAIP, vervolgstap (planning) expliciet én productief. Gate passes.
 
 ============================================================
 ## SLOTREGEL

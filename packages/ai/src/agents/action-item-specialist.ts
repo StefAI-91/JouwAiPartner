@@ -5,6 +5,7 @@ import { generateObject } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import {
   ActionItemSpecialistRawOutputSchema,
+  type ActionItemFollowupAction,
   type ActionItemRecipientPerQuote,
   type ActionItemSpecialistItem,
   type ActionItemSpecialistOutput,
@@ -171,6 +172,7 @@ export async function runActionItemSpecialist(
       type_werk: item.type_werk,
       recipient_per_quote: item.recipient_per_quote,
       jaip_followup_quote: item.jaip_followup_quote ?? "",
+      jaip_followup_action: item.jaip_followup_action,
     });
     if (reason) {
       gated.push({ item, reason });
@@ -216,6 +218,7 @@ function normaliseActionItemSpecialistOutput(
         reasoning: emptyToNull(r.reasoning),
         recipient_per_quote: r.recipient_per_quote,
         jaip_followup_quote: emptyToNull(r.jaip_followup_quote),
+        jaip_followup_action: r.jaip_followup_action,
       }),
     ),
   };
@@ -239,6 +242,7 @@ export function checkActionItemGate(item: {
   type_werk: "A" | "B" | "C" | "D";
   recipient_per_quote: ActionItemRecipientPerQuote;
   jaip_followup_quote: string;
+  jaip_followup_action: ActionItemFollowupAction;
 }): string | null {
   if (item.type_werk !== "C" && item.type_werk !== "D") return null;
   if (item.recipient_per_quote !== "stef_wouter") {
@@ -246,6 +250,9 @@ export function checkActionItemGate(item: {
   }
   if (!item.jaip_followup_quote.trim()) {
     return `auto-gate: jaip_followup_quote leeg (geen citaat van JAIP-vervolgstap gevonden voor type ${item.type_werk})`;
+  }
+  if (item.jaip_followup_action !== "productive") {
+    return `auto-gate: jaip_followup_action=${item.jaip_followup_action} (vereist productive voor type ${item.type_werk}; consumptief vervolg = niet trackbaar als wachtende JAIP-deliverable)`;
   }
   return null;
 }
@@ -457,6 +464,7 @@ export async function runActionItemSpecialistTwoStage(
       type_werk: item.type_werk,
       recipient_per_quote: item.recipient_per_quote,
       jaip_followup_quote: item.jaip_followup_quote,
+      jaip_followup_action: item.jaip_followup_action,
     });
     if (reason) {
       gateRejected.push({ candidate_index: item.candidate_index, rejection_reason: reason });
@@ -480,6 +488,7 @@ export async function runActionItemSpecialistTwoStage(
       reasoning: j.reasoning,
       recipient_per_quote: j.recipient_per_quote,
       jaip_followup_quote: j.jaip_followup_quote,
+      jaip_followup_action: j.jaip_followup_action,
     })),
   };
 
