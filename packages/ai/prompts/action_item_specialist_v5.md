@@ -67,6 +67,7 @@ Per item:
 - `source_quote` (letterlijk uit transcript, max 200 chars)
 - `project_context` (project-naam of leeg)
 - `deadline` (ISO YYYY-MM-DD, leeg als geen cue)
+- `follow_up_date` (ISO YYYY-MM-DD, ALLEEN invullen als `deadline` leeg is én er een aparte ping-cue in transcript staat zoals "stuur me over een week reminder", "ping me eind volgende maand", "kom hier over twee weken op terug". Bij gevulde `deadline` → laat dit leeg, code leidt het deterministisch af. Geen aparte ping-cue → leeg.)
 - `type_werk` (A/B/C/D)
 - `category` (`wachten_op_extern` voor type C, `wachten_op_beslissing` voor type D, `n/a` voor A/B)
 - `confidence` (0.4-1.0, geen 0.0-0.4)

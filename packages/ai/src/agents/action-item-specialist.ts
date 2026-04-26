@@ -22,6 +22,7 @@ import {
   type ActionItemActionValidatorOutput,
 } from "../validations/action-item-action-validator";
 import { emptyToNull, sentinelToNull } from "../utils/normalise";
+import { resolveFollowUpDate } from "./action-item-follow-up";
 import { withAgentRun } from "./run-logger";
 
 /**
@@ -180,6 +181,7 @@ export async function runActionItemSpecialist(
 
   // Mechanische gate: filter type C/D items zonder geldige grounding eruit.
   const normalised = normaliseActionItemSpecialistOutput(object);
+  applyFollowUpResolver(normalised.items, context.meeting_date);
   const passed: ActionItemSpecialistItem[] = [];
   const gated: ActionItemGatedItem[] = [];
   for (const item of normalised.items) {
@@ -253,6 +255,23 @@ export async function runActionItemSpecialist(
   };
 }
 
+/**
+ * Past de follow-up-resolver toe op een lijst items: bij gevulde deadline
+ * wordt `follow_up_date` deterministisch overschreven (type A = deadline,
+ * type B/C/D = deadline − 1 werkdag, met floor > meetingdatum). Bij lege
+ * deadline blijft de AI-extracted waarde staan, mits ná meeting.
+ */
+function applyFollowUpResolver(items: ActionItemSpecialistItem[], meetingDate: string): void {
+  for (const item of items) {
+    item.follow_up_date = resolveFollowUpDate({
+      deadline: item.deadline,
+      aiFollowUp: item.follow_up_date,
+      typeWerk: item.type_werk,
+      meetingDate,
+    });
+  }
+}
+
 function normaliseActionItemSpecialistOutput(
   raw: RawActionItemSpecialistOutput,
 ): ActionItemSpecialistOutput {
@@ -265,6 +284,7 @@ function normaliseActionItemSpecialistOutput(
         source_quote: emptyToNull(r.source_quote),
         project_context: emptyToNull(r.project_context),
         deadline: emptyToNull(r.deadline),
+        follow_up_date: emptyToNull(r.follow_up_date),
         type_werk: r.type_werk,
         category: sentinelToNull(r.category) as
           | "wachten_op_extern"
@@ -577,6 +597,19 @@ export async function runActionItemSpecialistTwoStage(
     acceptedAfterValidator.push(...acceptedAfterGate);
   }
 
+  // Resolver toepassen op de raw judge-output zodat zowel de UI-judgements
+  // (die de raw accepted tonen) als de uiteindelijke output dezelfde
+  // deterministische follow_up_date dragen.
+  for (const item of acceptedAfterValidator) {
+    const resolved = resolveFollowUpDate({
+      deadline: emptyToNull(item.deadline),
+      aiFollowUp: emptyToNull(item.follow_up_date),
+      typeWerk: item.type_werk,
+      meetingDate: context.meeting_date,
+    });
+    item.follow_up_date = resolved ?? "";
+  }
+
   // Clamp confidence en map naar RawActionItemSpecialistOutput
   const acceptedRaw: RawActionItemSpecialistOutput = {
     items: acceptedAfterValidator.map((j) => ({
@@ -586,6 +619,7 @@ export async function runActionItemSpecialistTwoStage(
       source_quote: j.source_quote,
       project_context: j.project_context,
       deadline: j.deadline,
+      follow_up_date: j.follow_up_date,
       type_werk: j.type_werk,
       category: j.category,
       confidence: Math.max(0, Math.min(1, j.confidence)),
@@ -614,8 +648,11 @@ export async function runActionItemSpecialistTwoStage(
   const accepts = acceptedAfterValidator.length;
   const rejects = allRejects.length;
 
+  const normalisedOutput = normaliseActionItemSpecialistOutput(acceptedRaw);
+  applyFollowUpResolver(normalisedOutput.items, context.meeting_date);
+
   return {
-    output: normaliseActionItemSpecialistOutput(acceptedRaw),
+    output: normalisedOutput,
     candidates,
     judgements,
     metrics: {

@@ -19,6 +19,7 @@ export interface ComparableItem {
   follow_up_contact: string;
   type_werk?: string | null;
   deadline?: string | null;
+  follow_up_date?: string | null;
   source_quote?: string | null;
   category?: string | null;
   /** Alleen gevuld voor agent-output (niet voor golden). Toont per-item

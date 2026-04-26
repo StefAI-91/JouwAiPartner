@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 463 |
-| Exported functions/constants | 751 |
-| Exported types/interfaces | 292 |
+| Files scanned | 464 |
+| Exported functions/constants | 753 |
+| Exported types/interfaces | 293 |
 | Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
 
@@ -732,6 +732,14 @@
 
 ## AI Agents
 
+### `packages/ai/src/agents/action-item-follow-up.ts`
+
+**Exports:**
+- `addWorkdays()`
+- `resolveFollowUpDate()`
+
+**Types:** `ResolveFollowUpInput`
+
 ### `packages/ai/src/agents/action-item-specialist.ts`
 
 **Exports:**
@@ -756,6 +764,7 @@
 - `../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemCandidate, type ActionItemJudgement
 - `../validations/action-item-action-validator` → ActionItemActionValidatorOutputSchema, type ActionItemActionValidatorOutput
 - `../utils/normalise` → emptyToNull, sentinelToNull
+- `./action-item-follow-up` → resolveFollowUpDate
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/email-classifier.ts`

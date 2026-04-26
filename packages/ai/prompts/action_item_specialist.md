@@ -319,6 +319,7 @@ Confidence = hoe zeker ben je dat dit een echt action_item is met correcte assig
 - `content` begint met naam van follow_up_contact: "Jan navragen of vragenlijst is teruggekomen"
 - `content` is max 30 woorden, NL.
 - **Strikte content-grounding:** alle entiteiten in content (deliverable-type, ontvangers, scope) moeten groundbaar zijn in de quote of max 3 directe turns. Bij vage termen in de quote ("de overeenkomst", "het document"): gebruik letterlijk dat woord, geen synoniem of specificatie. Liever vaag-maar-correct dan specifiek-maar-verzonnen.
+- `follow_up_date` (ISO YYYY-MM-DD): ALLEEN invullen als `deadline` leeg is én er een aparte ping-cue in transcript staat ("stuur me over een week reminder", "ping me eind volgende maand", "kom hier over twee weken op terug"). Bij gevulde `deadline` → leeg laten, code leidt het deterministisch af. Geen aparte ping-cue → leeg.
 - Gebruik lege strings ("") voor onbekende string-velden, "n/a" voor onbekende enums. Geen null in raw output.
 - Verzin GEEN action_items die niet in transcript staan.
 - Sorteer items op meeting-volgorde (eerst genoemde eerst).

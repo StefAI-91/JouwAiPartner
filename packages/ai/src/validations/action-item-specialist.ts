@@ -43,6 +43,11 @@ export const ActionItemSpecialistRawItemSchema = z.object({
     .describe(
       "ISO YYYY-MM-DD. Lege string als geen deadline-cue benoemd is (NIET een fake default invullen).",
     ),
+  follow_up_date: z
+    .string()
+    .describe(
+      "ISO YYYY-MM-DD. Wanneer JAIP intern moet pingen of extern moet opvolgen. ALLEEN invullen als deadline leeg is én er een aparte ping-cue in transcript staat ('stuur me over een week reminder', 'ping me eind volgende maand'). Bij gevulde deadline → laat dit leeg, code leidt het deterministisch af. Bij geen ping-cue → leeg laten.",
+    ),
   type_werk: z
     .enum(["A", "B", "C", "D"])
     .describe(
@@ -102,6 +107,7 @@ export type ActionItemSpecialistItem = {
   source_quote: string | null;
   project_context: string | null;
   deadline: string | null;
+  follow_up_date: string | null;
   type_werk: "A" | "B" | "C" | "D";
   category: "wachten_op_extern" | "wachten_op_beslissing" | null;
   confidence: number;

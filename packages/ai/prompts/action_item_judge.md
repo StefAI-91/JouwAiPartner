@@ -150,6 +150,7 @@ Output bevat twee aparte arrays — elke kandidaat hoort in EXACT één van beid
       "source_quote": "letterlijk uit transcript, max 200 chars",
       "project_context": "project-naam of leeg",
       "deadline": "YYYY-MM-DD of leeg",
+      "follow_up_date": "YYYY-MM-DD of leeg — ALLEEN invullen als deadline leeg is én er een aparte ping-cue in transcript staat ('stuur me over een week reminder', 'ping me eind volgende maand'). Bij gevulde deadline → leeg, code leidt het deterministisch af.",
       "type_werk": "A" | "B" | "C" | "D",
       "category": "wachten_op_extern" | "wachten_op_beslissing" | "n/a",
       "confidence": <0.4-1.0>,

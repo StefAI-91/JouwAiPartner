@@ -244,6 +244,7 @@ export async function runActionItemAgentAction(
     follow_up_contact: i.follow_up_contact,
     type_werk: i.type_werk,
     deadline: i.deadline,
+    follow_up_date: i.follow_up_date,
     source_quote: i.source_quote,
     category: i.category,
     reasoning: i.reasoning,

@@ -180,6 +180,7 @@ VERBODEN: confidence 0.0-0.4 (bij twijfel niet extraheren). Confidence 0.0 allee
 - `recipient_per_quote`: enum (zie V2). Verplicht voor élk item, ook type A/B (vul daar `from_jaip` of `stef_wouter` in).
 - `jaip_followup_quote`: leeg voor type A/B; voor C/D verplicht een letterlijk citaat met Stef of Wouter als actor.
 - `jaip_followup_action`: enum (zie V2). Voor C/D MOET `productive`. Voor A/B mag `productive` of `n/a`. Een consumptief vervolg ("kom langs", "sluit aan") = auto-reject voor C/D.
+- `follow_up_date` (ISO YYYY-MM-DD): ALLEEN invullen als `deadline` leeg is én er een aparte ping-cue in transcript staat ("stuur me over een week reminder", "ping me eind volgende maand", "kom hier over twee weken op terug"). Bij gevulde `deadline` → leeg laten, code leidt het deterministisch af. Geen aparte ping-cue → leeg.
 - Lege strings ("") voor onbekende strings, "n/a" voor onbekende enums.
 - Verzin GEEN action_items die niet in transcript staan.
 - Sorteer op meeting-volgorde (eerst genoemde eerst).

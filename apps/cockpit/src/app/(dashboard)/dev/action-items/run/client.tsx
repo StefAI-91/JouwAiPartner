@@ -277,7 +277,8 @@ function DiffEntryCard({
                 <p className="text-[11px] text-muted-foreground">
                   contact: {entry.extracted.follow_up_contact}
                   {entry.extracted.type_werk && ` · type ${entry.extracted.type_werk}`}
-                  {entry.extracted.deadline && ` · ${entry.extracted.deadline}`}
+                  {entry.extracted.deadline && ` · deadline ${entry.extracted.deadline}`}
+                  {entry.extracted.follow_up_date && ` · opvolg ${entry.extracted.follow_up_date}`}
                 </p>
                 {entry.extracted.reasoning && (
                   <p className="mt-1 text-[11px] italic text-muted-foreground">
@@ -294,7 +295,7 @@ function DiffEntryCard({
                 <p className="text-[11px] text-muted-foreground">
                   contact: {entry.golden.follow_up_contact}
                   {entry.golden.type_werk && ` · type ${entry.golden.type_werk}`}
-                  {entry.golden.deadline && ` · ${entry.golden.deadline}`}
+                  {entry.golden.deadline && ` · deadline ${entry.golden.deadline}`}
                 </p>
               </div>
             </>
@@ -308,6 +309,8 @@ function DiffEntryCard({
               <p className="text-[11px] text-muted-foreground">
                 contact: {entry.extracted.follow_up_contact}
                 {entry.extracted.type_werk && ` · type ${entry.extracted.type_werk}`}
+                {entry.extracted.deadline && ` · deadline ${entry.extracted.deadline}`}
+                {entry.extracted.follow_up_date && ` · opvolg ${entry.extracted.follow_up_date}`}
               </p>
               {entry.extracted.source_quote && (
                 <blockquote className="mt-1 border-l-2 border-amber-300 pl-2 text-[11px] italic text-muted-foreground">
@@ -450,7 +453,11 @@ function TwoStagePanel({ debug }: { debug: NonNullable<RunActionItemAgentResult[
                     <span className="font-semibold">accept:</span> {judgement.accepted.content}{" "}
                     <span className="text-muted-foreground">
                       (type {judgement.accepted.type_werk}, conf{" "}
-                      {judgement.accepted.confidence.toFixed(2)})
+                      {judgement.accepted.confidence.toFixed(2)}
+                      {judgement.accepted.deadline && `, deadline ${judgement.accepted.deadline}`}
+                      {judgement.accepted.follow_up_date &&
+                        `, opvolg ${judgement.accepted.follow_up_date}`}
+                      )
                     </span>
                   </p>
                 )}
@@ -551,6 +558,21 @@ function GatedPanel({ gated }: { gated: NonNullable<RunActionItemAgentResult["ag
                 {g.item.jaip_followup_action} · <span className="font-semibold">recipient:</span>{" "}
                 {g.item.recipient_per_quote}
               </p>
+              {(g.item.deadline || g.item.follow_up_date) && (
+                <p className="mt-1 text-[11.5px]">
+                  {g.item.deadline && (
+                    <>
+                      <span className="font-semibold">Deadline:</span> {g.item.deadline}
+                    </>
+                  )}
+                  {g.item.deadline && g.item.follow_up_date && " · "}
+                  {g.item.follow_up_date && (
+                    <>
+                      <span className="font-semibold">Opvolgdatum:</span> {g.item.follow_up_date}
+                    </>
+                  )}
+                </p>
+              )}
               <p className="mt-2 rounded-sm bg-white/60 p-2 text-[11px]">
                 <span className="font-semibold">Reden filter:</span> {g.reason}
               </p>
