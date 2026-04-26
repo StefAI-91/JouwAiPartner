@@ -13,30 +13,41 @@ import { emptyToNull, sentinelToNull } from "../utils/normalise";
 import { withAgentRun } from "./run-logger";
 
 /**
- * Action Item Specialist v1.
+ * Action Item Specialist.
  *
  * Single-type specialist die action_items uit een transcript extraheert.
- * Geen lane-classificatie (komt post-processing in v2). Wel type_werk en
- * category — die vereisen LLM-context over intern/extern relaties.
- *
  * Volgt het Risk Specialist patroon: Sonnet 4.6 high-effort, strict schema,
  * sentinels voor onbekend, normalisatie naar null voor downstream.
+ *
+ * Twee promptversies leven naast elkaar:
+ *  - v2: 4-eis-model (rol/toezegging/concreet/agency) met contrast-paren
+ *  - v3: drie-vragen-model (leveren wij? / wachten wij? / termijn?)
+ * Caller kiest expliciet, anders default v2 voor backwards compat.
  */
 
-export const ACTION_ITEM_SPECIALIST_PROMPT_VERSION = "v2";
+export type ActionItemPromptVersion = "v2" | "v3";
+
+export const ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION: ActionItemPromptVersion = "v2";
 export const ACTION_ITEM_SPECIALIST_MODEL = "claude-sonnet-4-6";
 
-const PROMPT_PATH = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../prompts/action_item_specialist.md",
-);
+/** @deprecated gebruik ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION of geef
+ *  promptVersion expliciet mee aan runActionItemSpecialist. */
+export const ACTION_ITEM_SPECIALIST_PROMPT_VERSION = ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION;
+
+const PROMPT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../prompts");
+
+const PROMPT_FILE_BY_VERSION: Record<ActionItemPromptVersion, string> = {
+  v2: "action_item_specialist.md",
+  v3: "action_item_specialist_v3.md",
+};
 
 // Tijdens prompt-tuning lezen we de markdown vers per call: een dev-server
 // herlaadt deze .ts niet als alleen de markdown verandert, en dan hangt de
 // oude prompt in module-memory. Zodra de prompt stabiel is mag dit terug
 // naar een module-level constant (zoals de andere agents).
-function loadSystemPrompt(): string {
-  return readFileSync(PROMPT_PATH, "utf8").trimEnd();
+function loadSystemPrompt(version: ActionItemPromptVersion): string {
+  const path = resolve(PROMPT_DIR, PROMPT_FILE_BY_VERSION[version]);
+  return readFileSync(path, "utf8").trimEnd();
 }
 
 export interface ActionItemSpecialistContext {
@@ -45,6 +56,11 @@ export interface ActionItemSpecialistContext {
   party_type: string;
   meeting_date: string;
   participants: string[];
+}
+
+export interface ActionItemSpecialistRunOptions {
+  /** Welke promptversie gebruiken. Default v2. */
+  promptVersion?: ActionItemPromptVersion;
 }
 
 export interface ActionItemSpecialistRunMetrics {
@@ -57,6 +73,7 @@ export interface ActionItemSpecialistRunMetrics {
 export interface ActionItemSpecialistRunResult {
   output: ActionItemSpecialistOutput;
   metrics: ActionItemSpecialistRunMetrics;
+  promptVersion: ActionItemPromptVersion;
 }
 
 /**
@@ -68,9 +85,11 @@ export interface ActionItemSpecialistRunResult {
 export async function runActionItemSpecialist(
   transcript: string,
   context: ActionItemSpecialistContext,
+  options: ActionItemSpecialistRunOptions = {},
 ): Promise<ActionItemSpecialistRunResult> {
   const startedAt = Date.now();
-  const systemPrompt = loadSystemPrompt();
+  const promptVersion = options.promptVersion ?? ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION;
+  const systemPrompt = loadSystemPrompt(promptVersion);
 
   const contextPrefix = [
     `Titel: ${context.title}`,
@@ -84,7 +103,7 @@ export async function runActionItemSpecialist(
     {
       agent_name: "action-item-specialist",
       model: ACTION_ITEM_SPECIALIST_MODEL,
-      prompt_version: ACTION_ITEM_SPECIALIST_PROMPT_VERSION,
+      prompt_version: promptVersion,
     },
     async () => {
       const res = await generateObject({
@@ -133,6 +152,7 @@ export async function runActionItemSpecialist(
       output_tokens: typeof usage?.outputTokens === "number" ? usage.outputTokens : null,
       reasoning_tokens: reasoningTokens,
     },
+    promptVersion,
   };
 }
 
@@ -162,6 +182,8 @@ function normaliseActionItemSpecialistOutput(
 
 /** Exposed voor harness + tests. Leest fresh van disk zodat de UI de
  *  prompt toont die de laatste run ook gebruikt. */
-export function getActionItemSpecialistSystemPrompt(): string {
-  return loadSystemPrompt();
+export function getActionItemSpecialistSystemPrompt(
+  version: ActionItemPromptVersion = ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION,
+): string {
+  return loadSystemPrompt(version);
 }

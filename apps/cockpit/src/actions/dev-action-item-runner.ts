@@ -6,8 +6,9 @@ import { getMeetingForGoldenCoder, getGoldenForMeeting } from "@repo/database/qu
 import {
   runActionItemSpecialist,
   ACTION_ITEM_SPECIALIST_MODEL,
-  ACTION_ITEM_SPECIALIST_PROMPT_VERSION,
+  ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION,
   getActionItemSpecialistSystemPrompt,
+  type ActionItemPromptVersion,
 } from "@repo/ai/agents/action-item-specialist";
 import {
   comparePrecisionRecall,
@@ -32,6 +33,9 @@ const runSchema = z.object({
   // confidence-cutoff te variëren zonder code-change.
   confidenceThreshold: z.number().min(0).max(1).default(0),
   contentThreshold: z.number().min(0).max(1).default(0.55),
+  // Welke promptversie testen. Default v2 (production prompt). v3 = nieuwe
+  // drie-vragen-model die parallel naast v2 draait voor vergelijking.
+  promptVersion: z.enum(["v2", "v3"]).default(ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION),
 });
 
 export type RunActionItemAgentInput = z.input<typeof runSchema>;
@@ -81,16 +85,22 @@ export async function runActionItemAgentAction(
     return { error: "Meeting is niet gecodeerd in golden dataset" };
   }
 
+  const promptVersion: ActionItemPromptVersion = parsed.data.promptVersion;
+
   // Run agent
   let runResult: Awaited<ReturnType<typeof runActionItemSpecialist>>;
   try {
-    runResult = await runActionItemSpecialist(meeting.transcript, {
-      title: meeting.title,
-      meeting_type: meeting.meeting_type ?? "team_sync",
-      party_type: meeting.party_type ?? "internal",
-      meeting_date: meeting.date ?? new Date().toISOString().slice(0, 10),
-      participants: meeting.participants.map((p) => p.name),
-    });
+    runResult = await runActionItemSpecialist(
+      meeting.transcript,
+      {
+        title: meeting.title,
+        meeting_type: meeting.meeting_type ?? "team_sync",
+        party_type: meeting.party_type ?? "internal",
+        meeting_date: meeting.date ?? new Date().toISOString().slice(0, 10),
+        participants: meeting.participants.map((p) => p.name),
+      },
+      { promptVersion },
+    );
   } catch (err) {
     return { error: `Agent crashte: ${err instanceof Error ? err.message : String(err)}` };
   }
@@ -139,7 +149,7 @@ export async function runActionItemAgentAction(
     },
     agent: {
       model: ACTION_ITEM_SPECIALIST_MODEL,
-      promptVersion: ACTION_ITEM_SPECIALIST_PROMPT_VERSION,
+      promptVersion,
       items: filteredItems,
       metrics: runResult.metrics,
     },
@@ -148,6 +158,6 @@ export async function runActionItemAgentAction(
       encoded_at: golden.state.encoded_at,
     },
     comparison,
-    systemPrompt: getActionItemSpecialistSystemPrompt(),
+    systemPrompt: getActionItemSpecialistSystemPrompt(promptVersion),
   };
 }

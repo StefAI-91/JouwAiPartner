@@ -23,6 +23,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
   const [selectedId, setSelectedId] = useState<string>(meetings[0]?.id ?? "");
   const [confidenceThreshold, setConfidenceThreshold] = useState(0);
   const [contentThreshold, setContentThreshold] = useState(0.4);
+  const [promptVersion, setPromptVersion] = useState<"v2" | "v3">("v2");
   const [result, setResult] = useState<RunActionItemAgentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -35,6 +36,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
         meetingId: selectedId,
         confidenceThreshold,
         contentThreshold,
+        promptVersion,
       });
       if ("error" in res) {
         setError(res.error);
@@ -48,7 +50,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
   return (
     <div className="space-y-6">
       <section className="rounded-xl border border-border/60 bg-card p-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto_auto]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
           <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
             Meeting (alleen gecodeerde)
             <select
@@ -87,6 +89,18 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
               onChange={(e) => setContentThreshold(parseFloat(e.target.value))}
               className="w-20 rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]"
             />
+          </label>
+          <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
+            Prompt
+            <select
+              value={promptVersion}
+              onChange={(e) => setPromptVersion(e.target.value as "v2" | "v3")}
+              disabled={isPending}
+              className="rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]"
+            >
+              <option value="v2">v2 — vier-eis</option>
+              <option value="v3">v3 — drie-vragen</option>
+            </select>
           </label>
           <button
             type="button"

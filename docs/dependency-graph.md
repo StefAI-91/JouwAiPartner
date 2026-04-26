@@ -1,6 +1,6 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-25. Do not edit manually.
+> Auto-generated on 2026-04-26. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 461 |
-| Exported functions/constants | 736 |
-| Exported types/interfaces | 273 |
+| Exported functions/constants | 737 |
+| Exported types/interfaces | 275 |
 | Cross-package imports | 508 |
 | Critical integration points (3+ packages) | 11 |
 
@@ -737,10 +737,11 @@
 **Exports:**
 - `runActionItemSpecialist()`
 - `getActionItemSpecialistSystemPrompt()`
-- `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
+- `ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION`
 - `ACTION_ITEM_SPECIALIST_MODEL`
+- `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
-**Types:** `ActionItemSpecialistContext`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`
+**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`
 
 **Internal deps:**
 - `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
@@ -1913,7 +1914,7 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
-- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_PROMPT_VERSION, getActionItemSpecialistSystemPrompt
+- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, type ActionItemPromptVersion
 - `@repo/ai/lib/golden-comparison` → comparePrecisionRecall, type ComparisonResult, type ComparableItem
 - (type) `@repo/ai/validations/action-item-specialist` → ActionItemSpecialistItem
 
