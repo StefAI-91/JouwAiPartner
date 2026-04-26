@@ -66,8 +66,11 @@ Twee specifieke patroon-stappen om JA-kandidaten op te vangen:
 - **Beslissing afwachten**: een concrete persoon moet een beslissing nemen ("Bart bepaalt of we doorgaan met v2", "Sandra laat maandag weten of het akkoord is"). Aparte category `wachten_op_beslissing`.
 
 **Verplichte gate-velden voor type C en D** (worden mechanisch in code gecontroleerd — niet zelf afzwakken):
+
 - `recipient_per_quote`: kies één van `stef_wouter` / `third_party` / `own_sphere` / `from_jaip` / `unclear`. Voor type C of D MOET dit `stef_wouter` zijn — anders auto-reject.
+  - **Hard:** een collectief waar JAIP toevallig óók in zit (groepschat, Slack-kanaal, mailinglijst, gedeelde drive, evenement, communicatie-infrastructuur) telt **niet** als `stef_wouter`. Dat is infrastructuur, geen levering. Kies `own_sphere` als het kanaal door/voor de eigen kring van de externe is, `third_party` als het naar derden gaat. Alleen levering rechtstreeks aan Stef of Wouter persoonlijk = `stef_wouter`.
 - `jaip_followup_quote`: letterlijke zin waar Stef of Wouter zelf hun vervolgstap uitspreken (eerste persoon of direct aan hen gericht). Voor type C of D MOET dit gevuld zijn — anders auto-reject. Geen citaat te vinden = leeg laten = item wordt gerejecteerd.
+  - **Hard:** een passieve zin zonder genoemd subject ("kan er X", "mag er Y", "wordt er Z gedaan") is **automatisch ongeldig**, ook als de context suggereert dat JAIP de actor zou kunnen zijn. Laat het veld leeg. Vul niet zelf "JAIP" in als de spreker dat niet expliciet doet.
 
 → JA = type C (levering) of type D (beslissing). NEE = niet extraheren.
 
@@ -207,6 +210,13 @@ Quote: "ik bel even met mijn klant om dit door te geven"
 - type_werk poging: C
 - recipient_per_quote: third_party
 - Reden: levering komt niet bij Stef of Wouter terecht. Auto-gate.
+
+**[V2-5] Collectief communicatiekanaal opgezet door externe**
+Quote: "Je richt zelf het Slack-kanaal in en zet je teamleden erop"
+- type_werk poging: C
+- recipient_per_quote: own_sphere (kanaal voor extern team; JAIP zit er mogelijk in maar is niet de primaire ontvanger)
+- jaip_followup_quote: ""
+- Reden: collectief kanaal opgezet door externe = infrastructuur, geen levering aan JAIP. Een aanwijzing van JAIP-medewerker ("je richt het in") maakt dat niet anders. Auto-gate.
 
 ### ✓ Wel extraheren
 
