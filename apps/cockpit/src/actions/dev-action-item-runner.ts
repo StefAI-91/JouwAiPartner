@@ -6,6 +6,7 @@ import { getMeetingForGoldenCoder, getGoldenForMeeting } from "@repo/database/qu
 import {
   runActionItemSpecialist,
   runActionItemSpecialistTwoStage,
+  runActionItemCandidateSpotter,
   ACTION_ITEM_SPECIALIST_MODEL,
   ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION,
   getActionItemSpecialistSystemPrompt,
@@ -40,8 +41,9 @@ const runSchema = z.object({
   // Welke promptversie testen (alleen relevant in single-mode).
   promptVersion: z.enum(["v2", "v3"]).default(ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION),
   // single = bestaande v2/v3 single-call. two-stage = candidate-spotter +
-  // judge, twee API-calls voor minder rationalisatie-ruis.
-  mode: z.enum(["single", "two-stage"]).default("single"),
+  // judge. spotter-only = alleen Haiku spotter (voor tuning van die prompt
+  // zonder de judge-overhead).
+  mode: z.enum(["single", "two-stage", "spotter-only"]).default("single"),
 });
 
 export type RunActionItemAgentInput = z.input<typeof runSchema>;
@@ -77,7 +79,7 @@ export interface RunActionItemAgentResult {
   };
   agent: {
     model: string;
-    mode: "single" | "two-stage";
+    mode: "single" | "two-stage" | "spotter-only";
     promptVersion: string;
     items: ActionItemSpecialistItem[];
     metrics: {
@@ -140,9 +142,6 @@ export async function runActionItemAgentAction(
     if (mode === "two-stage") {
       const res = await runActionItemSpecialistTwoStage(meeting.transcript, ctx);
       items = res.output.items;
-      // Voor de top-level metrics tellen we beide stages op voor latency,
-      // judge-tokens als hoofd-tokens (sonnet doet het zware werk), spotter-
-      // tokens komen apart in twoStageDebug.
       runMetrics = {
         latency_ms: res.metrics.total_latency_ms,
         input_tokens:
@@ -158,6 +157,30 @@ export async function runActionItemAgentAction(
         judge_metrics: res.metrics.judge,
         candidate_spotter_prompt: getActionItemCandidateSpotterPrompt(),
         judge_prompt: getActionItemJudgePrompt(),
+      };
+    } else if (mode === "spotter-only") {
+      const res = await runActionItemCandidateSpotter(meeting.transcript, ctx);
+      items = []; // spotter-only kent geen action_items, alleen candidates
+      runMetrics = {
+        latency_ms: res.metrics.latency_ms,
+        input_tokens: res.metrics.input_tokens,
+        output_tokens: res.metrics.output_tokens,
+        reasoning_tokens: null,
+      };
+      twoStageDebug = {
+        candidates: res.candidates,
+        judgements: [],
+        spotter_metrics: res.metrics,
+        judge_metrics: {
+          latency_ms: 0,
+          input_tokens: null,
+          output_tokens: null,
+          reasoning_tokens: null,
+          accept_count: 0,
+          reject_count: 0,
+        },
+        candidate_spotter_prompt: getActionItemCandidateSpotterPrompt(),
+        judge_prompt: "",
       };
     } else {
       const res = await runActionItemSpecialist(meeting.transcript, ctx, { promptVersion });

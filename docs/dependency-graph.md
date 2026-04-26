@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 462 |
-| Exported functions/constants | 745 |
-| Exported types/interfaces | 284 |
+| Exported functions/constants | 746 |
+| Exported types/interfaces | 285 |
 | Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
 
@@ -737,6 +737,7 @@
 **Exports:**
 - `runActionItemSpecialist()`
 - `getActionItemSpecialistSystemPrompt()`
+- `runActionItemCandidateSpotter()`
 - `runActionItemSpecialistTwoStage()`
 - `getActionItemCandidateSpotterPrompt()`
 - `getActionItemJudgePrompt()`
@@ -744,7 +745,7 @@
 - `ACTION_ITEM_SPECIALIST_MODEL`
 - `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
-**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`
+**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemSpotterRunResult`
 
 **Internal deps:**
 - `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
@@ -1932,7 +1933,7 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
-- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, runActionItemSpecialistTwoStage, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, getActionItemCandidateSpotterPrompt, getActionItemJudgePrompt, type ActionItemPromptVersion
+- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, runActionItemSpecialistTwoStage, runActionItemCandidateSpotter, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, getActionItemCandidateSpotterPrompt, getActionItemJudgePrompt, type ActionItemPromptVersion
 - `@repo/ai/lib/golden-comparison` → comparePrecisionRecall, type ComparisonResult, type ComparableItem
 - (type) `@repo/ai/validations/action-item-specialist` → ActionItemSpecialistItem
 - (type) `@repo/ai/validations/action-item-two-stage` → ActionItemCandidate, ActionItemJudgement

@@ -24,7 +24,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
   const [confidenceThreshold, setConfidenceThreshold] = useState(0);
   const [contentThreshold, setContentThreshold] = useState(0.4);
   const [promptVersion, setPromptVersion] = useState<"v2" | "v3">("v2");
-  const [mode, setMode] = useState<"single" | "two-stage">("single");
+  const [mode, setMode] = useState<"single" | "two-stage" | "spotter-only">("single");
   const [result, setResult] = useState<RunActionItemAgentResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -97,7 +97,7 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
             <select
               value={promptVersion}
               onChange={(e) => setPromptVersion(e.target.value as "v2" | "v3")}
-              disabled={isPending || mode === "two-stage"}
+              disabled={isPending || mode !== "single"}
               className="rounded-md border border-border/60 bg-background px-2 py-2 text-[13px] disabled:opacity-50"
             >
               <option value="v2">v2 — vier-eis</option>
@@ -108,12 +108,13 @@ export function RunActionItemHarnessClient({ meetings }: Props) {
             Mode
             <select
               value={mode}
-              onChange={(e) => setMode(e.target.value as "single" | "two-stage")}
+              onChange={(e) => setMode(e.target.value as "single" | "two-stage" | "spotter-only")}
               disabled={isPending}
               className="rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]"
             >
               <option value="single">single-call</option>
               <option value="two-stage">two-stage (spotter + judge)</option>
+              <option value="spotter-only">spotter-only (Haiku)</option>
             </select>
           </label>
           <button
@@ -434,14 +435,16 @@ function TwoStagePanel({ debug }: { debug: NonNullable<RunActionItemAgentResult[
         </pre>
       </details>
 
-      <details className="mt-3">
-        <summary className="cursor-pointer text-[12px] font-semibold hover:underline">
-          Judge prompt ({debug.judge_prompt.length.toLocaleString("nl-NL")} chars)
-        </summary>
-        <pre className="mt-2 max-h-[400px] overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-[11px] leading-relaxed">
-          {debug.judge_prompt}
-        </pre>
-      </details>
+      {debug.judge_prompt && (
+        <details className="mt-3">
+          <summary className="cursor-pointer text-[12px] font-semibold hover:underline">
+            Judge prompt ({debug.judge_prompt.length.toLocaleString("nl-NL")} chars)
+          </summary>
+          <pre className="mt-2 max-h-[400px] overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-[11px] leading-relaxed">
+            {debug.judge_prompt}
+          </pre>
+        </details>
+      )}
     </section>
   );
 }

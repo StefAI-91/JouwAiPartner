@@ -237,6 +237,76 @@ export interface ActionItemTwoStageRunResult {
   metrics: ActionItemTwoStageRunMetrics;
 }
 
+export interface ActionItemSpotterRunResult {
+  candidates: ActionItemCandidate[];
+  metrics: {
+    latency_ms: number;
+    input_tokens: number | null;
+    output_tokens: number | null;
+    candidate_count: number;
+  };
+}
+
+/**
+ * Standalone spotter-run voor tuning. Geeft de Haiku-output direct terug
+ * zonder de judge te draaien — handig om alleen de spotter-prompt te
+ * tunen op breedte/precision.
+ */
+export async function runActionItemCandidateSpotter(
+  transcript: string,
+  context: ActionItemSpecialistContext,
+): Promise<ActionItemSpotterRunResult> {
+  const startedAt = Date.now();
+  const contextPrefix = [
+    `Titel: ${context.title}`,
+    `Type: ${context.meeting_type}`,
+    `Party: ${context.party_type}`,
+    `Meetingdatum: ${context.meeting_date}`,
+    `Deelnemers: ${context.participants.join(", ")}`,
+  ].join("\n");
+
+  const run = await withAgentRun(
+    {
+      agent_name: "action-item-candidate-spotter",
+      model: CANDIDATE_SPOTTER_MODEL,
+      prompt_version: "v1",
+    },
+    async () => {
+      const res = await generateObject({
+        model: anthropic(CANDIDATE_SPOTTER_MODEL),
+        maxRetries: 3,
+        temperature: 0,
+        maxOutputTokens: 40000,
+        schema: ActionItemCandidatesSchema,
+        messages: [
+          {
+            role: "system",
+            content: loadCandidateSpotterPrompt(),
+            providerOptions: {
+              anthropic: { cacheControl: { type: "ephemeral" } },
+            },
+          },
+          {
+            role: "user",
+            content: `${contextPrefix}\n\n--- TRANSCRIPT ---\n${transcript}`,
+          },
+        ],
+      });
+      return { result: { object: res.object, usage: res.usage }, usage: res.usage };
+    },
+  );
+
+  return {
+    candidates: run.object.candidates,
+    metrics: {
+      latency_ms: Date.now() - startedAt,
+      input_tokens: typeof run.usage?.inputTokens === "number" ? run.usage.inputTokens : null,
+      output_tokens: typeof run.usage?.outputTokens === "number" ? run.usage.outputTokens : null,
+      candidate_count: run.object.candidates.length,
+    },
+  };
+}
+
 /**
  * Twee-staps Action Item extractie. Stage 1 (Haiku) spot brede kandidaten,
  * stage 2 (Sonnet) beoordeelt elke kandidaat los tegen de drie vragen.
@@ -258,44 +328,15 @@ export async function runActionItemSpecialistTwoStage(
     `Deelnemers: ${context.participants.join(", ")}`,
   ].join("\n");
 
-  // STAGE 1 — Candidate Spotter (Haiku, broad)
-  const stage1Started = Date.now();
-  const stage1 = await withAgentRun(
-    {
-      agent_name: "action-item-candidate-spotter",
-      model: CANDIDATE_SPOTTER_MODEL,
-      prompt_version: "v1",
-    },
-    async () => {
-      const res = await generateObject({
-        model: anthropic(CANDIDATE_SPOTTER_MODEL),
-        maxRetries: 3,
-        temperature: 0,
-        // Safety net: een uur transcript met te brede candidate-detectie kan
-        // 18k+ chars JSON produceren. 40k geeft genoeg headroom voor de
-        // breedste meetings zonder dat we tijdens tuning steeds tegen de cap
-        // aanlopen.
-        maxOutputTokens: 40000,
-        schema: ActionItemCandidatesSchema,
-        messages: [
-          {
-            role: "system",
-            content: loadCandidateSpotterPrompt(),
-            providerOptions: {
-              anthropic: { cacheControl: { type: "ephemeral" } },
-            },
-          },
-          {
-            role: "user",
-            content: `${contextPrefix}\n\n--- TRANSCRIPT ---\n${transcript}`,
-          },
-        ],
-      });
-      return { result: { object: res.object, usage: res.usage }, usage: res.usage };
-    },
-  );
-  const stage1Latency = Date.now() - stage1Started;
-  const candidates = stage1.object.candidates;
+  // STAGE 1 — Candidate Spotter (delegeert aan standalone functie zodat de
+  // tuning-harness die ook los kan aanroepen).
+  const spotterResult = await runActionItemCandidateSpotter(transcript, context);
+  const candidates = spotterResult.candidates;
+  const stage1Latency = spotterResult.metrics.latency_ms;
+  const stage1Usage = {
+    inputTokens: spotterResult.metrics.input_tokens ?? undefined,
+    outputTokens: spotterResult.metrics.output_tokens ?? undefined,
+  };
 
   // STAGE 2 — Judge (Sonnet, strict)
   const stage2Started = Date.now();
@@ -384,10 +425,8 @@ export async function runActionItemSpecialistTwoStage(
     metrics: {
       spotter: {
         latency_ms: stage1Latency,
-        input_tokens:
-          typeof stage1.usage?.inputTokens === "number" ? stage1.usage.inputTokens : null,
-        output_tokens:
-          typeof stage1.usage?.outputTokens === "number" ? stage1.usage.outputTokens : null,
+        input_tokens: stage1Usage.inputTokens ?? null,
+        output_tokens: stage1Usage.outputTokens ?? null,
         candidate_count: candidates.length,
       },
       judge: {
