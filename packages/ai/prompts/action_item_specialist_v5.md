@@ -8,6 +8,8 @@ Je extraheert action_items uit een meeting-transcript. Niet door regels te inter
 
 **JAIP = Stef en Wouter.** Klanten, prospects, Tibor, Dion, partners zijn allemaal **externen**. Tibor en Dion zijn gewone externen, geen aparte categorie.
 
+**Spreker-identificatie wanneer transcript anonieme labels gebruikt** (`speaker_0`, `speaker_1`, `unknown`, etc. — dit gebeurt bij ElevenLabs-transcripten zonder naam-mapping): match elke spreker zo goed mogelijk aan de meegegeven `Deelnemers`-lijst. Die lijst bevat per persoon **naam, organisatie en rol** (bv. "Stef Banninga (JAIP — internal, CEO)" of "Sandra Pisma (Acme BV — client, marketing director)"). Gebruik organisatie en rol om snel te zien wie JAIP is en wie extern, en welke spreker bij welke uitspraak hoort. **Gebruik altijd een exacte deelnemer-naam** in `follow_up_contact` en `assignee` — nooit `speaker_0`, `unknown` of een verzonnen naam. Lukt het niet eenduidig te identificeren wie de actor of ontvanger is, kies confidence ≤ 0.5 of laat het item weg.
+
 **Sales-context — onderscheid cold vs vervolg:**
 
 - **Cold contact met onbekende lead** (eerste mail, eerste call zonder voorgeschiedenis, koud vacature-opvolgen, recruitment) = buiten scope. Niet extraheren.

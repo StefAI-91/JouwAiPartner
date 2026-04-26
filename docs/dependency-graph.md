@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 464 |
 | Exported functions/constants | 754 |
-| Exported types/interfaces | 293 |
+| Exported types/interfaces | 295 |
 | Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
 
@@ -146,7 +146,7 @@
 - `getMeetingForGoldenCoder()`
 - `getGoldenForMeeting()`
 
-**Types:** `MeetingWithGoldenStatus`, `MeetingForGoldenCoder`, `GoldenItemRow`, `GoldenMeetingState`
+**Types:** `MeetingWithGoldenStatus`, `GoldenCoderParticipant`, `MeetingForGoldenCoder`, `GoldenItemRow`, `GoldenMeetingState`
 
 ### `queries/ignored-entities.ts`
 
@@ -758,7 +758,7 @@
 - `ACTION_ITEM_SPECIALIST_MODEL`
 - `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
-**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemTwoStageRunOptions`, `ActionItemSpotterRunResult`, `ActionItemActionValidatorInput`, `ActionItemActionValidatorResult`
+**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistParticipant`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemTwoStageRunOptions`, `ActionItemSpotterRunResult`, `ActionItemActionValidatorInput`, `ActionItemActionValidatorResult`
 
 **Internal deps:**
 - `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemFollowupAction, type ActionItemRecipientPerQuote, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput

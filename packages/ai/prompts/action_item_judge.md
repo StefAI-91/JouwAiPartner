@@ -16,6 +16,8 @@ Buiten scope (ALTIJD reject):
 - Eerste-contact-acties bij nieuwe leads (sales komt later)
 - Vrijblijvende netwerk-acties zonder project-hook
 
+**Spreker-identificatie wanneer transcript anonieme labels gebruikt** (`speaker_0`, `speaker_1`, `unknown` — komt voor bij ElevenLabs-transcripten zonder naam-mapping): match elke spreker aan de meegegeven `Deelnemers`-lijst op basis van het patroon van uitspraken. Gebruik **altijd een exacte deelnemer-naam** in `follow_up_contact` en `assignee` — nooit `speaker_0`, `unknown` of een verzonnen naam. Lukt het niet eenduidig te identificeren, reject.
+
 ============================================================
 ## 2. DE DRIE VRAGEN
 

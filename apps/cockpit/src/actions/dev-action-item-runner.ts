@@ -83,6 +83,7 @@ export interface RunActionItemAgentResult {
     date: string | null;
     meeting_type: string | null;
     transcript_length: number;
+    transcript_source: "elevenlabs" | "fireflies" | null;
   };
   agent: {
     model: string;
@@ -138,7 +139,12 @@ export async function runActionItemAgentAction(
     meeting_type: meeting.meeting_type ?? "team_sync",
     party_type: meeting.party_type ?? "internal",
     meeting_date: meeting.date ?? new Date().toISOString().slice(0, 10),
-    participants: meeting.participants.map((p) => p.name),
+    participants: meeting.participants.map((p) => ({
+      name: p.name,
+      role: p.role,
+      organization: p.organization,
+      organization_type: p.organization_type,
+    })),
   };
 
   let items: ActionItemSpecialistItem[];
@@ -272,6 +278,7 @@ export async function runActionItemAgentAction(
       date: meeting.date,
       meeting_type: meeting.meeting_type,
       transcript_length: meeting.transcript.length,
+      transcript_source: meeting.transcript_source,
     },
     agent: {
       model: ACTION_ITEM_SPECIALIST_MODEL,

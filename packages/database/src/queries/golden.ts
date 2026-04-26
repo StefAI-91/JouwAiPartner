@@ -25,6 +25,18 @@ export interface MeetingWithGoldenStatus {
   encoded_at: string | null;
 }
 
+export interface GoldenCoderParticipant {
+  id: string;
+  name: string;
+  /** Functie / rol binnen organisatie (bv. "CEO", "lead developer"). */
+  role: string | null;
+  /** Naam van de organisatie waar deze persoon werkt (bv. "JAIP", "Acme BV"). */
+  organization: string | null;
+  /** Type organisatie (bv. "internal", "client", "partner"). Helpt het model
+   *  meteen te zien wie JAIP is en wie extern, zonder naam-pattern-matching. */
+  organization_type: string | null;
+}
+
 export interface MeetingForGoldenCoder {
   id: string;
   title: string;
@@ -33,7 +45,11 @@ export interface MeetingForGoldenCoder {
   party_type: string | null;
   summary: string | null;
   transcript: string | null;
-  participants: { id: string; name: string }[];
+  /** Welke transcript-bron we daadwerkelijk teruggeven in `transcript`.
+   *  ElevenLabs Scribe v2 wordt verkozen boven Fireflies wanneer beide
+   *  beschikbaar zijn (zelfde voorkeur als gatekeeper-pipeline). */
+  transcript_source: "elevenlabs" | "fireflies" | null;
+  participants: GoldenCoderParticipant[];
 }
 
 export interface GoldenItemRow {
@@ -146,8 +162,8 @@ export async function getMeetingForGoldenCoder(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, summary, transcript,
-       meeting_participants(person:people(id, name))`,
+      `id, title, date, meeting_type, party_type, summary, transcript, transcript_elevenlabs,
+       meeting_participants(person:people(id, name, role, organization:organizations(name, type)))`,
     )
     .eq("id", meetingId)
     .single();
@@ -157,6 +173,12 @@ export async function getMeetingForGoldenCoder(
     throw new Error(`getMeetingForGoldenCoder failed: ${error.message}`);
   }
 
+  type RawPerson = {
+    id: string;
+    name: string;
+    role: string | null;
+    organization: { name: string | null; type: string | null } | null;
+  };
   type Raw = {
     id: string;
     title: string | null;
@@ -165,10 +187,17 @@ export async function getMeetingForGoldenCoder(
     party_type: string | null;
     summary: string | null;
     transcript: string | null;
-    meeting_participants: { person: { id: string; name: string } | null }[];
+    transcript_elevenlabs: string | null;
+    meeting_participants: { person: RawPerson | null }[];
   };
 
   const raw = data as unknown as Raw;
+  const transcript = raw.transcript_elevenlabs ?? raw.transcript ?? null;
+  const transcript_source: MeetingForGoldenCoder["transcript_source"] = raw.transcript_elevenlabs
+    ? "elevenlabs"
+    : raw.transcript
+      ? "fireflies"
+      : null;
   return {
     id: raw.id,
     title: raw.title ?? "(geen titel)",
@@ -176,10 +205,18 @@ export async function getMeetingForGoldenCoder(
     meeting_type: raw.meeting_type,
     party_type: raw.party_type,
     summary: raw.summary,
-    transcript: raw.transcript,
+    transcript,
+    transcript_source,
     participants: raw.meeting_participants
       .map((mp) => mp.person)
-      .filter((p): p is { id: string; name: string } => p !== null),
+      .filter((p): p is RawPerson => p !== null)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        role: p.role,
+        organization: p.organization?.name ?? null,
+        organization_type: p.organization?.type ?? null,
+      })),
   };
 }
 

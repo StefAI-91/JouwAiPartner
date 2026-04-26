@@ -206,6 +206,7 @@ function ResultPanel({ result }: { result: RunActionItemAgentResult }) {
             label="Transcript chars"
             value={meetingContext.transcript_length.toLocaleString("nl-NL")}
           />
+          <Stat label="Transcript bron" value={meetingContext.transcript_source ?? "—"} />
           <Stat label="Items extracted" value={agent.items.length} />
         </dl>
       </section>

@@ -71,12 +71,39 @@ function loadSystemPrompt(version: ActionItemPromptVersion): string {
   return readFileSync(path, "utf8").trimEnd();
 }
 
+export interface ActionItemSpecialistParticipant {
+  name: string;
+  /** Functie binnen organisatie (bv. "CEO", "lead developer"). Mag null. */
+  role: string | null;
+  /** Naam van de organisatie (bv. "JAIP", "Acme BV"). Mag null. */
+  organization: string | null;
+  /** Type organisatie (bv. "internal", "client", "partner"). Mag null. */
+  organization_type: string | null;
+}
+
 export interface ActionItemSpecialistContext {
   title: string;
   meeting_type: string;
   party_type: string;
   meeting_date: string;
-  participants: string[];
+  participants: ActionItemSpecialistParticipant[];
+}
+
+/** Render één participant-regel: "Stef (JAIP, CEO)" of "Sandra (Acme BV — client)".
+ *  Houdt het compact maar toont alle info die ContextPrefix anders mist. */
+function formatParticipantLine(p: ActionItemSpecialistParticipant): string {
+  const orgPart = p.organization
+    ? p.organization_type
+      ? `${p.organization} — ${p.organization_type}`
+      : p.organization
+    : null;
+  const meta = [orgPart, p.role].filter(Boolean).join(", ");
+  return meta ? `${p.name} (${meta})` : p.name;
+}
+
+function formatParticipantBlock(participants: ActionItemSpecialistParticipant[]): string {
+  if (participants.length === 0) return "Deelnemers: (geen geregistreerd)";
+  return ["Deelnemers:", ...participants.map((p) => `- ${formatParticipantLine(p)}`)].join("\n");
 }
 
 export interface ActionItemSpecialistRunOptions {
@@ -134,7 +161,7 @@ export async function runActionItemSpecialist(
     `Type: ${context.meeting_type}`,
     `Party: ${context.party_type}`,
     `Meetingdatum: ${context.meeting_date}`,
-    `Deelnemers: ${context.participants.join(", ")}`,
+    formatParticipantBlock(context.participants),
   ].join("\n");
 
   const { object, usage } = await withAgentRun(
@@ -213,7 +240,7 @@ export async function runActionItemSpecialist(
             source_quote: item.source_quote ?? "",
             jaip_followup_quote: item.jaip_followup_quote ?? "",
             transcript_context: extractTranscriptContext(transcript, item.source_quote ?? ""),
-            participants: context.participants,
+            participants: context.participants.map((p) => p.name),
           });
           return { item, validator: v };
         } catch (err) {
@@ -417,7 +444,7 @@ export async function runActionItemCandidateSpotter(
     `Type: ${context.meeting_type}`,
     `Party: ${context.party_type}`,
     `Meetingdatum: ${context.meeting_date}`,
-    `Deelnemers: ${context.participants.join(", ")}`,
+    formatParticipantBlock(context.participants),
   ].join("\n");
 
   const run = await withAgentRun(
@@ -481,7 +508,7 @@ export async function runActionItemSpecialistTwoStage(
     `Type: ${context.meeting_type}`,
     `Party: ${context.party_type}`,
     `Meetingdatum: ${context.meeting_date}`,
-    `Deelnemers: ${context.participants.join(", ")}`,
+    formatParticipantBlock(context.participants),
   ].join("\n");
 
   // STAGE 1 — Candidate Spotter (delegeert aan standalone functie zodat de
@@ -574,7 +601,7 @@ export async function runActionItemSpecialistTwoStage(
             source_quote: item.source_quote,
             jaip_followup_quote: item.jaip_followup_quote,
             transcript_context: extractTranscriptContext(transcript, item.source_quote),
-            participants: context.participants,
+            participants: context.participants.map((p) => p.name),
           });
           return { item, validator: v };
         } catch (err) {
