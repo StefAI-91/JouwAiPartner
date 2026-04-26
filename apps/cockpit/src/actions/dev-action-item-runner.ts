@@ -166,18 +166,31 @@ export async function runActionItemAgentAction(
     }
   } catch (err) {
     // AI SDK's NoObjectGeneratedError heeft text (raw model output) en cause
-    // erbij. Tel die mee in de message zodat we bij parse-failures kunnen zien
-    // wat het model wel produceerde.
+    // erbij. .text kan op err zelf OF op err.cause zitten — walk both.
+    console.error("[dev-action-item-runner] agent crashed", err);
     const base = err instanceof Error ? err.message : String(err);
-    const extra =
-      err && typeof err === "object" && "text" in err && typeof err.text === "string"
-        ? `\nRaw model output (eerste 1000 chars):\n${err.text.slice(0, 1000)}`
-        : "";
-    const cause =
+    const extractText = (e: unknown): string | undefined => {
+      if (
+        e &&
+        typeof e === "object" &&
+        "text" in e &&
+        typeof (e as { text?: unknown }).text === "string"
+      ) {
+        return (e as { text: string }).text;
+      }
+      return undefined;
+    };
+    const text =
+      extractText(err) ??
+      (err && typeof err === "object" && "cause" in err
+        ? extractText((err as { cause: unknown }).cause)
+        : undefined);
+    const causeMsg =
       err && typeof err === "object" && "cause" in err && err.cause instanceof Error
-        ? `\nCause: ${err.cause.message}`
+        ? err.cause.message
         : "";
-    return { error: `Agent crashte: ${base}${cause}${extra}` };
+    const extra = text ? `\nRaw model output (eerste 2000 chars):\n${text.slice(0, 2000)}` : "";
+    return { error: `Agent crashte: ${base}${causeMsg ? ` (${causeMsg})` : ""}${extra}` };
   }
 
   const filteredItems = items.filter((i) => i.confidence >= parsed.data.confidenceThreshold);
