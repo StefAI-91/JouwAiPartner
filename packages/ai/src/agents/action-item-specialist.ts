@@ -271,7 +271,10 @@ export async function runActionItemSpecialistTwoStage(
         model: anthropic(CANDIDATE_SPOTTER_MODEL),
         maxRetries: 3,
         temperature: 0,
-        maxOutputTokens: 6000,
+        // Safety net: een uur transcript met te brede candidate-detectie kan
+        // 15k+ chars JSON produceren. Met scherpe spotter-prompt blijft het
+        // meestal onder 5k, maar 16k voorkomt parse-failures bij uitschieters.
+        maxOutputTokens: 16000,
         schema: ActionItemCandidatesSchema,
         messages: [
           {
