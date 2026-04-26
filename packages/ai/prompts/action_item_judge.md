@@ -37,18 +37,26 @@ NEE als:
 
 → JA = type B. NEE = ga naar V2.
 
-### Vraag 2 — WACHTEN WIJ OP EEN EXTERNE?
+### Vraag 2 — WACHTEN WIJ OP EEN EXTERNE VOOR IETS DAT JAIP RAAKT?
+
+Niet elke actie van een externe is een action_item voor JAIP — alleen acties waar JAIP zelf op moet opvolgen of die JAIP-werk blokkeren.
 
 JA als ALLES waar:
 - De externe is met naam genoemd
 - De deliverable is concreet (document, lijst, beslissing, antwoord)
 - De wachtende vervolgstap van Stef of Wouter staat **letterlijk** in transcript ("als jij dat aanlevert dan kan ik X", "stuur het maar door zodra je klaar bent")
 - De levering komt naar Stef of Wouter, niet naar derde partij
+- JAIP heeft een eigen vervolgstap of deliverable die op de uitkomst wacht — meeleven of co-aanwezigheid is niet genoeg
 
 NEE als:
 - Externe levert aan andere externe (Tibor → klant) — JAIP managet dat niet
 - "JAIP heeft belang" zonder concrete vervolgstap — interesse, geen rol
 - Vervolgstap is door jou gerationaliseerd zonder dat hij in transcript staat
+- Externe handelt in zijn eigen werk-sfeer (eigen team informeren, eigen tooling regelen, eigen planning maken, eigen netwerk activeren) zonder dat JAIP een eigen vervolgstap of deliverable heeft die afhangt van de uitkomst — **óók als een JAIP-medewerker de externe expliciet aanwijst**. Een aanwijzing maakt het niet automatisch een JAIP-action_item; alleen een JAIP-deliverable of opvolg-rol die wacht doet dat.
+
+Contrast-paar:
+- ✓ Externe levert pricing-cijfers die Stef gebruikt om de offerte af te ronden → V2=JA (JAIP-deliverable hangt eraan)
+- ✗ Externe stelt zijn eigen collega's intern op de hoogte over een wijziging → V2=NEE (eigen sfeer, geen JAIP-vervolgstap)
 
 Twee cross-turn-patronen om JA op te vangen:
 - **Soft toezegging + harde JAIP-bevestiging**: externe beschrijft werk zacht ("aan ons is het om..."), JAIP-medewerker bevestigt afhankelijkheid hard binnen 3 turns. Samen sterk genoeg.
