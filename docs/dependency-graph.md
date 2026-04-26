@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 464 |
-| Exported functions/constants | 754 |
-| Exported types/interfaces | 295 |
-| Cross-package imports | 509 |
-| Critical integration points (3+ packages) | 11 |
+| Files scanned | 470 |
+| Exported functions/constants | 764 |
+| Exported types/interfaces | 304 |
+| Cross-package imports | 515 |
+| Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
 
@@ -897,6 +897,27 @@
 **Depends on:**
 - `@repo/database/mutations/agent-runs` → insertAgentRun, type AgentRunInput
 
+### `packages/ai/src/agents/speaker-identifier-sampling.ts`
+
+**Exports:**
+- `parseElevenLabsUtterances()`
+- `sampleUtterancesPerSpeaker()`
+
+**Types:** `SpeakerUtterance`
+
+### `packages/ai/src/agents/speaker-identifier.ts`
+
+**Exports:**
+- `runSpeakerIdentifier()`
+- `getSpeakerIdentifierPrompt()`
+
+**Types:** `SpeakerIdentifierParticipant`, `SpeakerIdentifierInput`, `SpeakerIdentifierResult`
+
+**Internal deps:**
+- `../validations/speaker-identifier` → SpeakerMappingOutputSchema, type SpeakerMappingOutput
+- `./speaker-identifier-sampling` → parseElevenLabsUtterances, sampleUtterancesPerSpeaker
+- `./run-logger` → withAgentRun
+
 ### `packages/ai/src/agents/summarizer.ts`
 
 **Exports:**
@@ -1614,6 +1635,14 @@
 
 **Types:** `RawRiskSpecialistOutput`, `RiskSpecialistItem`, `RiskSpecialistOutput`
 
+### `packages/ai/src/validations/speaker-identifier.ts`
+
+**Exports:**
+- `SpeakerMappingItemSchema`
+- `SpeakerMappingOutputSchema`
+
+**Types:** `SpeakerMappingItem`, `SpeakerMappingOutput`
+
 ### `packages/ai/src/validations/summarizer.ts`
 
 **Exports:**
@@ -1974,6 +2003,20 @@
 - `@repo/database/queries/meetings` → getVerifiedMeetingById
 - `@repo/database/queries/themes` → listVerifiedThemes
 - `@repo/database/queries/dev-detector` → getMeetingThemesForDevDetector, getExtractionThemesForDevDetector, type DevDetectorMeetingThemeRow, type DevDetectorExtractionThemeRow
+
+### `apps/cockpit/src/actions/dev-speaker-mapping.ts`
+
+**Exports:**
+- `listSpeakerMappingMeetings()`
+- `runSpeakerMappingAction()`
+
+**Types:** `RunSpeakerMappingInput`, `SpeakerMappingMeetingOption`, `RunSpeakerMappingResult`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdminInAction
+- `@repo/database/queries/golden` → getMeetingForGoldenCoder
+- `@repo/database/queries/meetings/core` → listMeetingsWithTranscript
+- `@repo/ai/agents/speaker-identifier` → runSpeakerIdentifier, getSpeakerIdentifierPrompt, type SpeakerIdentifierResult
 
 ### `apps/cockpit/src/actions/golden-action-items.ts`
 
@@ -2526,6 +2569,22 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdmin
 - `@repo/database/queries/meetings` → listVerifiedMeetings
+
+### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
+
+**Exports:**
+- `SpeakerMappingClient()`
+
+**Depends on:**
+- `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/page.tsx`
+
+**Exports:**
+- `metadata`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdmin
 
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
@@ -3560,11 +3619,11 @@ Which layers depend on which packages:
 | AI Core | 10 | - | - | - | - | 10 |
 | AI Pipeline | 55 | - | - | - | - | 55 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 25 | 10 | 12 | - | - | 47 |
+| Cockpit Server Actions | 27 | 11 | 13 | - | - | 51 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 98 | 8 | 7 | 35 | - | 148 |
+| Cockpit Pages | 98 | 8 | 8 | 36 | - | 150 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -3582,6 +3641,7 @@ parts of the codebase — changes here have the widest blast radius.
 |------|----------|-------|
 | `apps/cockpit/src/actions/dev-action-item-runner.ts` | auth, database, ai | 3 |
 | `apps/cockpit/src/actions/dev-detector.ts` | ai, auth, database | 3 |
+| `apps/cockpit/src/actions/dev-speaker-mapping.ts` | auth, database, ai | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
@@ -3825,7 +3885,7 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `listMeetingsWithGoldenStatus()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx`, `apps/cockpit/src/app/(dashboard)/dev/action-items/run/page.tsx` |
-| `getMeetingForGoldenCoder()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
+| `getMeetingForGoldenCoder()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/actions/dev-speaker-mapping.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
 | `getGoldenForMeeting()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
 
 ### queries/ignored-entities.ts
@@ -3877,6 +3937,7 @@ Which queries are used where across the codebase.
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getMeetingByTitleAndDate()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `listMeetingsWithTranscript()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
 | `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
 | `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
