@@ -218,7 +218,7 @@ Niet alle action_items staan in één zin. Scan transcript twee keer.
 
 **BELANGRIJK:** cross-turn extracties moeten alsnog door de vier-eis. Een impliciet patroon mag de filters niet omzeilen — als de toewijzing of scope niet groundbaar is in max 3 directe turns, niet extraheren.
 
-Vier patronen om op te letten:
+Vijf patronen om op te letten:
 
 1. **Onderhandeld commitment**: "Iemand moet X" → "Wouter, kan jij dat?" → "Ja, doe ik" — action_item op Wouter, source_quote = bevestigingszin.
 
@@ -232,6 +232,12 @@ Vier patronen om op te letten:
 3. **Stilzwijgende toewijzing**: "Ik regel het" zonder verdere specificatie, na bespreking van een specifiek onderwerp — alleen extraheren als de scope expliciet in voorgaande 3 turns wordt benoemd.
 
 4. **Multi-stap leveringen**: "Chloe levert vragen → JAIP beantwoordt → Chloe bouwt FAQ" = drie aparte action_items, elk met eigen follow_up_contact en deadline.
+
+5. **Klant beschrijft eigen werk + JAIP bevestigt afhankelijkheid**: een externe beschrijft een concrete deliverable die hij gaat maken (zonder hard "ik lever X"), en een JAIP-medewerker bevestigt expliciet binnen 3 turns dat hij erop wacht of er iets mee gaat doen. Voorbeeld:
+   - Guido (klant): "Aan ons is het om een shortlist te maken met prioriteit"
+   - Guido: "Ik wil intern even mensen erbij betrekken"
+   - Wouter: "Als jij dat kan aanleveren, dan zal ik..."
+   → action_item op Guido (type C), source_quote = Guido's beschrijving van het werk OF Wouter's afhankelijkheidsbevestiging. De externe heeft soft toezegging gedaan ("aan ons is het om..."), de JAIP-medewerker heeft hard de afhankelijkheid bevestigd → genoeg samen voor type C. Pas op: de JAIP-bevestiging moet letterlijk in transcript staan, niet door jou verzonnen (anti-hallucinatie).
 
 **Zachte toezeggingen tellen als valide bevestiging** in cross-turn context: "ja zeker", "tuurlijk", "geen probleem", "ik zie niet in waarom niet", "lijkt me prima", "in ieder geval gaan we het doen" — mits ze direct volgen op een aanwijzing of vraag binnen 3 turns. Niet weghouden omdat de toon informeel is.
 
