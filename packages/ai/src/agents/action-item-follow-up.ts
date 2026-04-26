@@ -9,10 +9,17 @@
  *  - type B/C/D → follow_up = deadline − 1 werkdag
  *  - Floor: follow_up MOET > meetingdatum. Anders bumpt naar deadline + 1 werkdag
  *    (same-day en korte-termijn-deadlines: dag erna checken of het gebeurd is).
- *  - Geen deadline → gebruik AI-extracted follow_up_date (mits ISO + > meetingdatum), anders null.
+ *  - Geen deadline → gebruik AI-extracted follow_up_date (mits ISO + > meetingdatum), anders:
+ *    voor type C een fallback van meetingdatum + TYPE_C_FALLBACK_WORKDAYS werkdagen
+ *    (consultancy-cadans: één werkweek "geef ze ruimte"). Voor andere types null —
+ *    daar weet JAIP de eigen agency en hoeft het systeem geen default op te leggen.
  *
  * Werkdag-rekenkunde skipt zaterdag (6) en zondag (0). Geen feestdagen.
  */
+
+/** Default opvolgvenster voor type C zonder deadline-cue. Bewust een
+ *  hele werkweek: korter geeft prematuur porren, langer laat het wegzakken. */
+export const TYPE_C_FALLBACK_WORKDAYS = 5;
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -85,6 +92,12 @@ export function resolveFollowUpDate(input: ResolveFollowUpInput): string | null 
     if (!ai) return null;
     if (ai.getTime() <= meetingDate.getTime()) return null;
     return input.aiFollowUp;
+  }
+
+  // Fallback: type C zonder deadline en zonder ping-cue → meeting + N werkdagen.
+  // Andere types blijven null — daar heeft JAIP eigen agency.
+  if (input.typeWerk === "C") {
+    return addWorkdays(input.meetingDate, TYPE_C_FALLBACK_WORKDAYS);
   }
 
   return null;

@@ -309,6 +309,19 @@ Quote (Wouter): "ik wil eigenlijk gewoon even vrijdag een meeting met Pisma inpl
 - assignee: Wouter
 Reden: meeting inplannen met een bestaande lead is een **vervolgactie**, geen cold contact. JAIP weet wie Pisma is en gaat verkennen wat ze willen — dat is type B (uitnodiging is de output naar externe). Modaal werkwoord ("wil ik inplannen") + harde tijdsanker (vrijdag) = toezegging. Informele woorden ("eigenlijk gewoon even") maken het niet vrijblijvend.
 
+**A13 — Type C met ping-cue zonder leverdatum (`follow_up_date`-laan)**
+
+Quote (klant): "ik kom er binnen twee weken op terug" — Stef: "oké, dan check ik of het binnen is"
+
+- type_werk: C
+- recipient_per_quote: stef_wouter
+- jaip_followup_quote: "dan check ik of het binnen is"
+- jaip_followup_action: productive (verwerken zodra binnen)
+- deadline: leeg (klant noemt geen concrete leverdatum)
+- follow_up_date: meetingdatum + 14 dagen (uit "binnen twee weken")
+
+Reden: klant noemt **wanneer JAIP mag pingen** maar **niet wanneer hij gaat leveren**. Vul dan `follow_up_date` met de ping-cue en laat `deadline` leeg — code houdt ze gescheiden. Doet de klant geen uitspraak over een ping-moment? Dan beide leeg laten; de resolver vult automatisch een type-C-fallback in (één werkweek na meeting).
+
 ============================================================
 
 ## SLOTREGEL

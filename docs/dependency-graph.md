@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 464 |
-| Exported functions/constants | 753 |
+| Exported functions/constants | 754 |
 | Exported types/interfaces | 293 |
 | Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
@@ -737,6 +737,7 @@
 **Exports:**
 - `addWorkdays()`
 - `resolveFollowUpDate()`
+- `TYPE_C_FALLBACK_WORKDAYS`
 
 **Types:** `ResolveFollowUpInput`
 

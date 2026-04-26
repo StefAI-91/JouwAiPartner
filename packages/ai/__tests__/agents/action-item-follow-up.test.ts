@@ -123,11 +123,42 @@ describe("resolveFollowUpDate", () => {
     expect(got).toBeNull();
   });
 
-  it("geen deadline + geen AI-followup: null", () => {
+  it("type C zonder deadline en zonder AI-cue: fallback meetingdatum + 5 werkdagen", () => {
+    // meeting = ma 2026-04-20 → +5 werkdagen = ma 2026-04-27 (skip weekend)
     const got = resolveFollowUpDate({
       deadline: null,
       aiFollowUp: null,
       typeWerk: "C",
+      meetingDate,
+    });
+    expect(got).toBe("2026-04-27");
+  });
+
+  it("type B zonder deadline en zonder AI-cue: null (geen fallback)", () => {
+    const got = resolveFollowUpDate({
+      deadline: null,
+      aiFollowUp: null,
+      typeWerk: "B",
+      meetingDate,
+    });
+    expect(got).toBeNull();
+  });
+
+  it("type A zonder deadline en zonder AI-cue: null (geen fallback)", () => {
+    const got = resolveFollowUpDate({
+      deadline: null,
+      aiFollowUp: null,
+      typeWerk: "A",
+      meetingDate,
+    });
+    expect(got).toBeNull();
+  });
+
+  it("type D zonder deadline en zonder AI-cue: null (geen fallback)", () => {
+    const got = resolveFollowUpDate({
+      deadline: null,
+      aiFollowUp: null,
+      typeWerk: "D",
       meetingDate,
     });
     expect(got).toBeNull();
