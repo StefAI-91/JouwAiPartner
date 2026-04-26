@@ -313,7 +313,9 @@ export async function runActionItemSpecialistTwoStage(
         model: anthropic(JUDGE_MODEL),
         maxRetries: 3,
         temperature: 0,
-        maxOutputTokens: 12000,
+        // High-effort thinking + ~30 candidates × 200 tokens accept-output kan
+        // makkelijk over 12k. Geef ruimte zodat de judge niet halverwege afkapt.
+        maxOutputTokens: 24000,
         schema: ActionItemJudgementsSchema,
         providerOptions: {
           anthropic: { effort: "high" },

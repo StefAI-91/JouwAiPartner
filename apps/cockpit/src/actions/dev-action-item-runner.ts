@@ -165,7 +165,19 @@ export async function runActionItemAgentAction(
       runMetrics = res.metrics;
     }
   } catch (err) {
-    return { error: `Agent crashte: ${err instanceof Error ? err.message : String(err)}` };
+    // AI SDK's NoObjectGeneratedError heeft text (raw model output) en cause
+    // erbij. Tel die mee in de message zodat we bij parse-failures kunnen zien
+    // wat het model wel produceerde.
+    const base = err instanceof Error ? err.message : String(err);
+    const extra =
+      err && typeof err === "object" && "text" in err && typeof err.text === "string"
+        ? `\nRaw model output (eerste 1000 chars):\n${err.text.slice(0, 1000)}`
+        : "";
+    const cause =
+      err && typeof err === "object" && "cause" in err && err.cause instanceof Error
+        ? `\nCause: ${err.cause.message}`
+        : "";
+    return { error: `Agent crashte: ${base}${cause}${extra}` };
   }
 
   const filteredItems = items.filter((i) => i.confidence >= parsed.data.confidenceThreshold);

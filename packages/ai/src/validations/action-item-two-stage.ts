@@ -42,13 +42,17 @@ export type ActionItemCandidatesOutput = z.infer<typeof ActionItemCandidatesSche
  * Anthropic strict-mode accepteert geen omitted velden; bij accept zijn alle
  * action_item-velden verplicht, bij reject alleen index + reason. Twee arrays
  * lossen dit cleaner op dan één schema met alles optional.
+ *
+ * Numerieke constraints (.int().min(1)) zijn weggelaten — Anthropic strict-
+ * mode handelt min/max niet betrouwbaar af, dezelfde reden als waarom de
+ * confidence-veld in ActionItemSpecialistRawItemSchema post-clamped wordt.
  */
 export const ActionItemAcceptedSchema = ActionItemSpecialistRawItemSchema.extend({
-  candidate_index: z.number().int().min(1).describe("1-based volgnummer uit candidate-input."),
+  candidate_index: z.number().describe("1-based volgnummer uit candidate-input."),
 });
 
 export const ActionItemRejectedSchema = z.object({
-  candidate_index: z.number().int().min(1).describe("1-based volgnummer uit candidate-input."),
+  candidate_index: z.number().describe("1-based volgnummer uit candidate-input."),
   rejection_reason: z.string().describe("Kort welke van V1/V2/V3 faalt en waarom."),
 });
 
