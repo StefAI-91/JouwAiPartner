@@ -28,6 +28,8 @@ Voor elk patroon dat je in transcript ziet, kies één:
 
 Type A (intern JAIP zonder externe ontvanger) is bijna altijd buiten scope, tenzij de interne actie uiteindelijk naar een externe levert (= dan eigenlijk type B).
 
+**Modaal werkwoord telt als toezegging mits er een concrete tijdsanker bij staat.** "Ik zal je in week van 4 mei de versie kunnen delen" = type B (de week is hard). "Ik zou je dat eens kunnen mailen" = wens (geen tijdsanker, geen action_item). Informele woorden als "wel", "even", "gewoon" bij een modale toezegging met deadline maken hem niet vrijblijvend — als de deliverable, ontvanger en datum concreet zijn = toezegging.
+
 ============================================================
 
 ## 4. VERPLICHTE GATE-VELDEN VOOR TYPE C EN D
@@ -172,6 +174,10 @@ Reden: same-day toezeggingen zijn real-time werkverdeling, geen toekomstig commi
 Quote: "ik nodig jullie uit voor 16 juni" / "ik zet 'm in de agenda voor maandag"
 Reden: directe uitnodiging of agenda-bevestiging is logistiek, geen action_item. Het systeem dat op de mail komt is de agenda-tool, niet deze takenlijst.
 
+**E22 — Modale wens zonder concrete tijdsanker**
+Quote: "ik zou je dat eens kunnen mailen" / "ik kan dat misschien een keer voor je doen"
+Reden: modaal werkwoord ("zou kunnen", "kan misschien") zonder harde tijdsanker = wens of vrijblijvend aanbod, geen toezegging. "Eens", "een keer" zijn geen tijdsanker. Pas als er een concrete deadline staat ("morgen", "deze week", "in week X", "voor sprint Y") wordt het type B — anders niet extraheren.
+
 **E21 — Externen plannen onderling, JAIP "sluit aan"**
 
 Quote-vorm: "laten we even samen zitten" / "we werken samen een plan uit" / "we stemmen het onderling af", gezegd tussen twee externen — **ook als JAIP elders in het transcript zegt "ik sluit volgende keer aan" of "ik kom dan ook" of "als jij dat aanlevert dan kom ik langs"**.
@@ -254,6 +260,14 @@ Quote: "we plannen volgende week een vervolgsessie" — geen vermelding van wie 
 - type_werk: B (JAIP plant en stuurt uitnodiging)
 - assignee: aangesproken JAIP-medewerker
 Reden: zonder duidelijke uitnodiging-flow blijft het een open toezegging.
+
+**A11 — Modale toezegging met concrete tijdsanker (type B)**
+Quote (Wouter): "ik zal jou wel in de week van 4 mei de eerste versie kunnen delen"
+- type_werk: B
+- recipient_per_quote: from_jaip
+- jaip_followup_action: productive (versie delen = output)
+- deadline: vrijdag week van 4 mei
+Reden: modaal werkwoord ("zal kunnen") gecombineerd met harde tijdsanker (week 4 mei) = toezegging, niet wens. Concrete deliverable (eerste versie) en benoemde ontvangers (jullie). Informele "wel" maakt het niet vrijblijvend zolang deliverable + ontvanger + datum concreet zijn.
 
 ============================================================
 
