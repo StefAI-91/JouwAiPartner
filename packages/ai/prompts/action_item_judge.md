@@ -204,6 +204,14 @@ Quote: "Je richt zelf het Slack-kanaal in en zet je teamleden erop"
 - jaip_followup_quote: ""
 - Reden: collectief kanaal opgezet door externe = infrastructuur, geen levering aan JAIP. Een aanwijzing van JAIP-medewerker ("je richt het in") maakt dat niet anders. Auto-gate.
 
+**[V2-6] Same-day deadline ("vandaag nog")**
+Quote: "ik stuur jullie dat vandaag nog op" / "je krijgt deze vandaag nog van mij" / "ik ga dit nu doen"
+- Reden: same-day toezeggingen zijn real-time werkverdeling, geen toekomstig commitment. Een action_item-systeem is voor opvolging over dagen/weken — vandaag-nog-handelingen zijn al gebeurd voor de takenlijst rondgaat. Geldt voor zowel JAIP-spreker als externe spreker.
+
+**[V2-7] Concrete agenda-uitnodiging bevestigen**
+Quote: "ik nodig jullie uit voor 16 juni" / "ik zet 'm in de agenda voor maandag"
+- Reden: directe meeting-uitnodiging is logistiek dat door agenda-systeem wordt afgevangen, niet door deze takenlijst.
+
 ### ✓ Accept
 
 **[A1] Externe levert input voor JAIP-werk (type C)**

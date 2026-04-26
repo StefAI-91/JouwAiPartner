@@ -158,6 +158,14 @@ Reden: spreker (Stef) wacht passief. NIET op spreker extraheren. Het echte actio
 Quote: "we plannen vrijdag een vervolgsessie, ik stuur je de uitnodiging"
 Reden: meeting-planning met expliciete mail-flow is logistiek dat al door agenda-systeem is afgevangen.
 
+**E19 — Same-day deadline ("vandaag nog")**
+Quote: "ik stuur jullie dat vandaag nog op" / "ik werk hier vandaag nog aan" / "je krijgt deze vandaag nog van mij" / "ik ga dit nu doen"
+Reden: same-day toezeggingen zijn real-time werkverdeling, geen toekomstig commitment. Een action_item-systeem is voor "hoe staat het ermee over twee weken" — vandaag-nog-handelingen zijn al gebeurd voor de mail rondgaat. Geldt ongeacht of de spreker JAIP of extern is.
+
+**E20 — Concrete agenda-uitnodiging bevestigen**
+Quote: "ik nodig jullie uit voor 16 juni" / "ik zet 'm in de agenda voor maandag"
+Reden: directe uitnodiging of agenda-bevestiging is logistiek, geen action_item. Het systeem dat op de mail komt is de agenda-tool, niet deze takenlijst.
+
 ### ✓ Wel extraheren
 
 **A1 — JAIP levert aan extern (type B)**
