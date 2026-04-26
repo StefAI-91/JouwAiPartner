@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 462 |
-| Exported functions/constants | 744 |
-| Exported types/interfaces | 282 |
+| Exported functions/constants | 745 |
+| Exported types/interfaces | 284 |
 | Cross-package imports | 509 |
 | Critical integration points (3+ packages) | 11 |
 
@@ -1472,10 +1472,11 @@
 **Exports:**
 - `ActionItemCandidateSchema`
 - `ActionItemCandidatesSchema`
-- `ActionItemJudgementSchema`
+- `ActionItemAcceptedSchema`
+- `ActionItemRejectedSchema`
 - `ActionItemJudgementsSchema`
 
-**Types:** `ActionItemCandidate`, `ActionItemCandidatesOutput`, `ActionItemJudgement`, `ActionItemJudgementsOutput`
+**Types:** `ActionItemCandidate`, `ActionItemCandidatesOutput`, `ActionItemAccepted`, `ActionItemRejected`, `ActionItemJudgementsOutput`, `ActionItemJudgement`
 
 **Internal deps:**
 - `./action-item-specialist` → ActionItemSpecialistRawItemSchema

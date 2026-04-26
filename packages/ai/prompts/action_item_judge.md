@@ -109,29 +109,37 @@ Externe vraagt direct aan Stef of Wouter om iets concreets te leveren ("kun je m
 **Grounding-plafond:** als follow_up_contact niet letterlijk in source_quote OF directe ±3 turns staat, MAX 0.4 → reject.
 
 ============================================================
-## 6. OUTPUT PER KANDIDAAT
+## 6. OUTPUT-FORMAT
+
+Output bevat twee aparte arrays — elke kandidaat hoort in EXACT één van beide:
 
 ```
 {
-  "candidate_index": <1-based volgnummer uit input>,
-  "decision": "accept" | "reject",
-  // Bij accept (alle velden verplicht):
-  "content": "[Naam] [werkwoord] [object]" (max 30 woorden NL),
-  "follow_up_contact": "naam exact uit participants",
-  "assignee": "naam of leeg als zelfde als follow_up_contact",
-  "source_quote": "letterlijk uit transcript, max 200 chars",
-  "project_context": "project-naam of leeg",
-  "deadline": "YYYY-MM-DD of leeg",
-  "type_werk": "A" | "B" | "C" | "D",
-  "category": "wachten_op_extern" | "wachten_op_beslissing" | "n/a",
-  "confidence": <0.4-1.0>,
-  "reasoning": "1-2 NL zinnen: welke vraag JA scoort, type-rationale",
-  // Bij reject:
-  "rejection_reason": "kort: welke van V1/V2/V3 faalt en waarom"
+  "accepts": [
+    {
+      "candidate_index": <1-based volgnummer uit input>,
+      "content": "[Naam] [werkwoord] [object]" (max 30 woorden NL),
+      "follow_up_contact": "naam exact uit participants",
+      "assignee": "naam of leeg als zelfde als follow_up_contact",
+      "source_quote": "letterlijk uit transcript, max 200 chars",
+      "project_context": "project-naam of leeg",
+      "deadline": "YYYY-MM-DD of leeg",
+      "type_werk": "A" | "B" | "C" | "D",
+      "category": "wachten_op_extern" | "wachten_op_beslissing" | "n/a",
+      "confidence": <0.4-1.0>,
+      "reasoning": "1-2 NL zinnen: welke vraag JA scoort, type-rationale"
+    }
+  ],
+  "rejects": [
+    {
+      "candidate_index": <1-based volgnummer uit input>,
+      "rejection_reason": "kort welke van V1/V2/V3 faalt en waarom"
+    }
+  ]
 }
 ```
 
-Sorteer accepts in meeting-volgorde. Reject-items mogen op hun candidate-volgorde blijven.
+Belangrijk: elke `candidate_index` uit de input komt EXACT één keer terug — óf in `accepts`, óf in `rejects`. Niet in beide. Niet weggelaten. Sorteer accepts in meeting-volgorde.
 
 ============================================================
 ## SLOTREGEL

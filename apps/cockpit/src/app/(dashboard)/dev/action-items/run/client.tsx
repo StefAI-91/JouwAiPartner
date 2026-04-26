@@ -410,6 +410,15 @@ function TwoStagePanel({ debug }: { debug: NonNullable<RunActionItemAgentResult[
                     <span className="font-semibold">reject:</span> {judgement.rejection_reason}
                   </p>
                 )}
+                {judgement?.decision === "accept" && judgement.accepted && (
+                  <p className="mt-1 text-[10.5px] text-emerald-700">
+                    <span className="font-semibold">accept:</span> {judgement.accepted.content}{" "}
+                    <span className="text-muted-foreground">
+                      (type {judgement.accepted.type_werk}, conf{" "}
+                      {judgement.accepted.confidence.toFixed(2)})
+                    </span>
+                  </p>
+                )}
               </li>
             );
           })}

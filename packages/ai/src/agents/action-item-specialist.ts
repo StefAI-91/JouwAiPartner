@@ -337,28 +337,40 @@ export async function runActionItemSpecialistTwoStage(
   );
   const stage2Latency = Date.now() - stage2Started;
 
-  const judgements = stage2.object.judgements;
+  const { accepts: acceptedItems, rejects: rejectedItems } = stage2.object;
 
-  // Clamp confidence + filter accepts → ActionItemSpecialistItem
+  // Clamp confidence en map naar RawActionItemSpecialistOutput
   const acceptedRaw: RawActionItemSpecialistOutput = {
-    items: judgements
-      .filter((j) => j.decision === "accept")
-      .map((j) => ({
-        content: j.content,
-        follow_up_contact: j.follow_up_contact,
-        assignee: j.assignee,
-        source_quote: j.source_quote,
-        project_context: j.project_context,
-        deadline: j.deadline,
-        type_werk: j.type_werk,
-        category: j.category,
-        confidence: Math.max(0, Math.min(1, j.confidence)),
-        reasoning: j.reasoning,
-      })),
+    items: acceptedItems.map((j) => ({
+      content: j.content,
+      follow_up_contact: j.follow_up_contact,
+      assignee: j.assignee,
+      source_quote: j.source_quote,
+      project_context: j.project_context,
+      deadline: j.deadline,
+      type_werk: j.type_werk,
+      category: j.category,
+      confidence: Math.max(0, Math.min(1, j.confidence)),
+      reasoning: j.reasoning,
+    })),
   };
 
-  const accepts = acceptedRaw.items.length;
-  const rejects = judgements.length - accepts;
+  // Verenigde judgements view voor UI: één lijst, gesorteerd op candidate-index
+  const judgements: ActionItemJudgement[] = [
+    ...acceptedItems.map((a) => ({
+      candidate_index: a.candidate_index,
+      decision: "accept" as const,
+      accepted: a,
+    })),
+    ...rejectedItems.map((r) => ({
+      candidate_index: r.candidate_index,
+      decision: "reject" as const,
+      rejection_reason: r.rejection_reason,
+    })),
+  ].sort((a, b) => a.candidate_index - b.candidate_index);
+
+  const accepts = acceptedItems.length;
+  const rejects = rejectedItems.length;
 
   return {
     output: normaliseActionItemSpecialistOutput(acceptedRaw),

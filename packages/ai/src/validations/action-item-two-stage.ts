@@ -38,21 +38,38 @@ export type ActionItemCandidate = z.infer<typeof ActionItemCandidateSchema>;
 export type ActionItemCandidatesOutput = z.infer<typeof ActionItemCandidatesSchema>;
 
 /**
- * Judge-output: union van accept (action_item-velden) en reject (reden).
- * Anthropic structured output staat geen union toe — daarom één flat schema
- * met `decision` als discriminator en alle velden optional. Caller filtert.
+ * Judge-output: split in twee arrays zodat elk een eigen strict schema heeft.
+ * Anthropic strict-mode accepteert geen omitted velden; bij accept zijn alle
+ * action_item-velden verplicht, bij reject alleen index + reason. Twee arrays
+ * lossen dit cleaner op dan één schema met alles optional.
  */
-export const ActionItemJudgementSchema = ActionItemSpecialistRawItemSchema.extend({
+export const ActionItemAcceptedSchema = ActionItemSpecialistRawItemSchema.extend({
   candidate_index: z.number().int().min(1).describe("1-based volgnummer uit candidate-input."),
-  decision: z.enum(["accept", "reject"]).describe("accept = wel action_item, reject = niet."),
-  rejection_reason: z
-    .string()
-    .describe("Bij reject: kort welke van V1/V2/V3 faalt. Bij accept: lege string. Geen sentinel."),
+});
+
+export const ActionItemRejectedSchema = z.object({
+  candidate_index: z.number().int().min(1).describe("1-based volgnummer uit candidate-input."),
+  rejection_reason: z.string().describe("Kort welke van V1/V2/V3 faalt en waarom."),
 });
 
 export const ActionItemJudgementsSchema = z.object({
-  judgements: z.array(ActionItemJudgementSchema),
+  accepts: z.array(ActionItemAcceptedSchema),
+  rejects: z.array(ActionItemRejectedSchema),
 });
 
-export type ActionItemJudgement = z.infer<typeof ActionItemJudgementSchema>;
+export type ActionItemAccepted = z.infer<typeof ActionItemAcceptedSchema>;
+export type ActionItemRejected = z.infer<typeof ActionItemRejectedSchema>;
 export type ActionItemJudgementsOutput = z.infer<typeof ActionItemJudgementsSchema>;
+
+/**
+ * Verenigde view die de UI gebruikt om accepts en rejects naast elkaar te
+ * tonen, gesorteerd op candidate_index.
+ */
+export interface ActionItemJudgement {
+  candidate_index: number;
+  decision: "accept" | "reject";
+  /** Alleen gevuld bij accept. */
+  accepted?: ActionItemAccepted;
+  /** Alleen gevuld bij reject. */
+  rejection_reason?: string;
+}
