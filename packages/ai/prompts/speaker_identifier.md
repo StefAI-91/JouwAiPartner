@@ -10,6 +10,8 @@ Plus optioneel een transcript in een andere taal — Fireflies kan in het Nederl
 
 Voor elke `speaker_X` uit ElevenLabs bepaal je welke deelnemer dat is — of laat het leeg als je geen overtuigend signaal vindt.
 
+**Belangrijk over diarization-splits:** ElevenLabs detecteert vaak méér `speaker_X`-labels dan er werkelijk personen zijn. Wisselend mic-volume, mic-positie, kuchen, lachen of korte interrupties kunnen dezelfde persoon over twee of drie labels verdelen. Als 9 labels en maar 5 deelnemers — dan klopt dat: meerdere `speaker_X` mappen naar dezelfde deelnemer. Toegestaan en juist verwacht.
+
 ALLE output in het Nederlands waar mogelijk; namen kopiëer je letterlijk uit de Deelnemers-lijst (ook als die in een andere taal zijn).
 
 ============================================================
@@ -42,8 +44,9 @@ Gebruik concrete clues in de utterances:
 
 - **Verzin geen namen.** Alleen exacte namen uit de Deelnemers-lijst zijn toegestaan. Als geen overtuigende match → lege string.
 - **Default conservatief.** Bij twijfel kies confidence onder 0.6 en lege person_name. Een verkeerde mapping is schadelijker dan een ontbrekende.
-- **Eén persoon per speaker.** Verschillende `speaker_X` kunnen niet aan dezelfde persoon worden gemapt — als je twee speakers ziet die op dezelfde deelnemer wijzen, wijs ze aan twee verschillende deelnemers toe (anders is je signaal te zwak; geef beide lage confidence).
+- **Many-to-one is toegestaan.** Meerdere `speaker_X` mogen naar dezelfde persoon mappen — dat is de manier om diarization-splits te corrigeren. Eén persoon mag dus 2, 3 of meer labels krijgen toegewezen, mits elke toewijzing op zijn eigen content-clue rust. Geef niet expres twee labels aan twee verschillende personen alleen om verdeling te forceren.
 - **Output-volledigheid.** Geef voor élke `speaker_id` in de input precies één entry, ook als je geen mapping kunt geven.
+- **Korte / inhoudsloze speakers** (1-2 utterances zonder duidelijke clue, vaak diarization-noise) krijgen lege `person_name` met confidence < 0.4. Probeer dit niet te gokken.
 
 ============================================================
 
