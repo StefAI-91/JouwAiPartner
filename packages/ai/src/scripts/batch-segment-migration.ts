@@ -15,10 +15,10 @@ import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import { insertMeetingProjectSummaries } from "@repo/database/mutations/meetings/project-summaries";
 import { updateSegmentEmbedding } from "@repo/database/mutations/meetings/project-summaries";
 import { linkAllMeetingProjects } from "@repo/database/mutations/meetings";
-import { buildEntityContext } from "../pipeline/context-injection";
+import { buildEntityContext } from "../pipeline/lib/context-injection";
 import { runGatekeeper } from "../agents/gatekeeper";
 import { runTagger } from "../pipeline/tagger";
-import { buildSegments } from "../pipeline/segment-builder";
+import { buildSegments } from "../pipeline/lib/segment-builder";
 import { embedBatch } from "../embeddings";
 
 const BATCH_SIZE = 10;

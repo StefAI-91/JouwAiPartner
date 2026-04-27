@@ -23,5 +23,5 @@ import { processEmailBatch } from "@repo/ai/pipeline/email";
 ## Cross-package
 
 Roept `@repo/ai/agents/email-classifier` aan voor de hoofd-LLM step.
-Gebruikt `pipeline/context-injection` + `pipeline/entity-resolution`
-(beide platte files in pipeline/) en `@repo/ai/embeddings`.
+Gebruikt `pipeline/lib/context-injection` + `pipeline/lib/entity-resolution`
+en `@repo/ai/embeddings`.

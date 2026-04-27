@@ -3,7 +3,7 @@ import {
   extractSpeakerNames,
   buildSpeakerMap,
   formatSpeakerContext,
-} from "../../src/pipeline/speaker-map";
+} from "../../src/pipeline/lib/speaker-map";
 import type { KnownPerson } from "@repo/database/queries/people";
 
 const makePerson = (overrides: Partial<KnownPerson> & { name: string }): KnownPerson => ({

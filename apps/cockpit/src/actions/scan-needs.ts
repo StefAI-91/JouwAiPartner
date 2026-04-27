@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
 import { isAdmin } from "@repo/auth/access";
-import { scanAllUnscannedMeetings } from "@repo/ai/pipeline/scan-needs";
+import { scanAllUnscannedMeetings } from "@repo/ai/scan-needs";
 import { updateNeedStatus } from "@repo/database/mutations/extractions";
 
 export async function scanTeamNeedsAction(): Promise<

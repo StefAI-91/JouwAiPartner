@@ -22,7 +22,7 @@ export async function regenerateMeetingTitleAction(
   const meeting = await getMeetingForTitleGeneration(parsed.data.meetingId);
   if (!meeting) return { error: "Meeting niet gevonden" };
 
-  const { generateMeetingTitle } = await import("@repo/ai/pipeline/generate-title");
+  const { generateMeetingTitle } = await import("@repo/ai/pipeline/lib/title-builder");
 
   const orgName = meeting.organization?.name ?? null;
   const projectName = meeting.meeting_projects?.[0]?.project?.name ?? null;

@@ -1,4 +1,4 @@
-import type { TaggerOutput } from "./tagger";
+import type { TaggerOutput } from "../tagger";
 
 export interface Segment {
   project_id: string | null;

@@ -1,5 +1,5 @@
-import type { ParticipantInfo } from "../agents/gatekeeper";
-import type { GatekeeperOutput } from "../validations/gatekeeper";
+import type { ParticipantInfo } from "../../agents/gatekeeper";
+import type { GatekeeperOutput } from "../../validations/gatekeeper";
 
 /**
  * Build the raw_fireflies JSONB metadata for a meeting.

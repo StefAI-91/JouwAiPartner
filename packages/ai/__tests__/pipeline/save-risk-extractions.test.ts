@@ -8,7 +8,7 @@ vi.mock("@repo/database/mutations/extractions", () => ({
   insertExtractions: vi.fn(),
 }));
 
-import { saveRiskExtractions } from "../../src/pipeline/save-risk-extractions";
+import { saveRiskExtractions } from "../../src/pipeline/saves/risk-extractions";
 import { linkAllMeetingProjects } from "@repo/database/mutations/meetings";
 import {
   deleteExtractionsByMeetingAndType,

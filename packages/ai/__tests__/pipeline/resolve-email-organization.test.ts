@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("../../src/pipeline/entity-resolution", () => ({
+vi.mock("../../src/pipeline/lib/entity-resolution", () => ({
   resolveOrganization: vi.fn(),
 }));
 vi.mock("@repo/database/queries/people", () => ({
@@ -12,7 +12,7 @@ vi.mock("@repo/database/queries/organizations", () => ({
 }));
 
 import { resolveEmailOrganization } from "../../src/pipeline/email/core";
-import { resolveOrganization } from "../../src/pipeline/entity-resolution";
+import { resolveOrganization } from "../../src/pipeline/lib/entity-resolution";
 import { findPersonOrgByEmail } from "@repo/database/queries/people";
 import { findOrganizationIdByEmailDomain } from "@repo/database/queries/organizations";
 

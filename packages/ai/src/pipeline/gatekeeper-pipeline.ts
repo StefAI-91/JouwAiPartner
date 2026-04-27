@@ -3,15 +3,15 @@ import type { ParticipantInfo } from "../agents/gatekeeper";
 import { GatekeeperOutput } from "../validations/gatekeeper";
 import type { PartyType, IdentifiedProject } from "../validations/gatekeeper";
 import { insertMeeting } from "@repo/database/mutations/meetings";
-import { resolveOrganization } from "./entity-resolution";
-import { buildEntityContext } from "./context-injection";
+import { resolveOrganization } from "./lib/entity-resolution";
+import { buildEntityContext } from "./lib/context-injection";
 import { getAllKnownPeople } from "@repo/database/queries/people";
 import {
   classifyParticipantsWithCache,
   determinePartyType,
   determineRuleBasedMeetingType,
 } from "./participant/classifier";
-import { buildRawFireflies } from "./build-raw-fireflies";
+import { buildRawFireflies } from "./lib/build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
 import { runSpeakerMappingStep } from "./steps/speaker-mapping";
 import { runSummarizeStep } from "./steps/summarize";
@@ -25,7 +25,7 @@ import { runTagAndSegmentStep } from "./steps/tag-and-segment";
 import { runEmbedStep } from "./steps/embed";
 import { runThemeDetectorStep } from "./steps/theme-detector";
 import { runLinkThemesStep } from "./steps/link-themes";
-import { extractSpeakerNames, buildSpeakerMap, formatSpeakerContext } from "./speaker-map";
+import { extractSpeakerNames, buildSpeakerMap, formatSpeakerContext } from "./lib/speaker-map";
 import {
   matchParticipants,
   mergeParticipantSources,

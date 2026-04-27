@@ -40,7 +40,7 @@ Zod-schemas voor de review-actions.
 | `@repo/database/mutations/review`   | `verifyMeeting`, `verifyMeetingWithEdits`, `rejectMeeting`.       |
 | `@repo/database/mutations/meetings` | `updateMeetingSummaryOnly` (gebruikt tijdens approve-with-edits). |
 | `@repo/ai/pipeline/summary/core`    | `triggerSummariesForMeeting` — draait ná approve.                 |
-| `@repo/ai/pipeline/scan-needs`      | `scanMeetingNeeds` — draait ná approve.                           |
+| `@repo/ai/scan-needs`               | `scanMeetingNeeds` — draait ná approve.                           |
 | `@repo/database/validations/uuid`   | `zUuid` (basis-schema).                                           |
 
 ## Design decisions

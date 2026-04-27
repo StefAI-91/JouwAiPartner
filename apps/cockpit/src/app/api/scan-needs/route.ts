@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { scanAllUnscannedMeetings } from "@repo/ai/pipeline/scan-needs";
+import { scanAllUnscannedMeetings } from "@repo/ai/scan-needs";
 
 /**
  * POST /api/scan-needs

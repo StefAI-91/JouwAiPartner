@@ -26,7 +26,8 @@
     "./lib/*": "./src/lib/*.ts",
     "./extraction-types": "./src/extraction-types.ts",
     "./google-oauth": "./src/google-oauth.ts",
-    "./gmail": "./src/gmail.ts"
+    "./gmail": "./src/gmail.ts",
+    "./scan-needs": "./src/scan-needs.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.64",

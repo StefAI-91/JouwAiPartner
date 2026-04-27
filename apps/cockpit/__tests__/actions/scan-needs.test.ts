@@ -10,7 +10,7 @@ vi.mock("@repo/auth/access", () => ({
 }));
 
 const mockScanAllUnscannedMeetings = vi.fn();
-vi.mock("@repo/ai/pipeline/scan-needs", () => ({
+vi.mock("@repo/ai/scan-needs", () => ({
   scanAllUnscannedMeetings: (...args: unknown[]) => mockScanAllUnscannedMeetings(...args),
 }));
 

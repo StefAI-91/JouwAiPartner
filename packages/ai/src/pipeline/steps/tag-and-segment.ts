@@ -1,5 +1,5 @@
 import { runTagger } from "../tagger";
-import { buildSegments } from "../segment-builder";
+import { buildSegments } from "../lib/segment-builder";
 import { embedBatch } from "../../embeddings";
 import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
 import {

@@ -36,7 +36,7 @@ vi.mock("@repo/database/queries/meetings", () => ({
   getMeetingByFirefliesIdForReprocess: vi.fn(),
 }));
 
-vi.mock("@repo/ai/pipeline/context-injection", () => ({
+vi.mock("@repo/ai/pipeline/lib/context-injection", () => ({
   buildEntityContext: vi.fn(() => ({ projects: [], organizations: [], people: [] })),
 }));
 
@@ -44,7 +44,7 @@ vi.mock("@repo/ai/pipeline/tagger", () => ({
   runTagger: vi.fn(() => []),
 }));
 
-vi.mock("@repo/ai/pipeline/segment-builder", () => ({
+vi.mock("@repo/ai/pipeline/lib/segment-builder", () => ({
   buildSegments: vi.fn(() => []),
 }));
 

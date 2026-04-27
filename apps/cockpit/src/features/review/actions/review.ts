@@ -9,7 +9,7 @@ import {
 } from "@repo/database/mutations/review";
 import { updateMeetingSummaryOnly } from "@repo/database/mutations/meetings";
 import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary/core";
-import { scanMeetingNeeds } from "@repo/ai/pipeline/scan-needs";
+import { scanMeetingNeeds } from "@repo/ai/scan-needs";
 import {
   verifyMeetingSchema,
   verifyMeetingWithEditsSchema,
