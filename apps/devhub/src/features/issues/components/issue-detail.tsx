@@ -12,6 +12,7 @@ import { IssueHeader } from "./issue-header";
 import { IssueAttachments } from "./issue-attachments";
 import { IssueSidebar } from "./issue-sidebar";
 import { AiExecutionPanel } from "./ai-execution-panel";
+import { ClientTranslationSection } from "./client-translation-section";
 import { CommentSection, type CurrentUser } from "./comment-section";
 
 interface Person {
@@ -110,6 +111,12 @@ export function IssueDetail({
             </div>
           </section>
         )}
+
+        <ClientTranslationSection
+          issueId={issue.id}
+          initialClientTitle={issue.client_title}
+          initialClientDescription={issue.client_description}
+        />
 
         <AiExecutionPanel
           aiContext={
