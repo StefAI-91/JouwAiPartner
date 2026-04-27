@@ -19,5 +19,9 @@
 5. [Functionele Eisen](./05-functionele-eisen.md)
 6. [Data Model](./06-data-model.md)
 7. [Technische Constraints](./07-technische-constraints.md)
+8. [Niet-functionele Eisen](./08-niet-functionele-eisen.md)
+9. [Open Vragen & Aannames](./09-open-vragen-aannames.md)
+10. [Acceptatiecriteria](./10-acceptatiecriteria.md)
+11. [Sprint-indicatie](./11-sprint-indicatie.md)
 
 > Document wordt in batches aangevuld — sectie-bestanden verschijnen zodra de inhoud is aangeleverd.
