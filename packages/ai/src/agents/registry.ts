@@ -211,6 +211,20 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     entrypoint: "packages/ai/src/pipeline/steps/risk-specialist.ts",
   },
   {
+    id: "action-item-specialist",
+    name: "Action Item Specialist",
+    role: "De toezeggings-detective",
+    description:
+      "Single-type specialist die action_items uit een Fireflies-transcript extraheert op Sonnet 4.6 high-effort. Past het 4-eis-model toe (rol/toezegging/concreet/agency) met een action-validator als adversariële tweede stage. Draait parallel aan de hoofdpipeline en schrijft naar extractions + run-telemetrie naar experimental_action_item_extractions.",
+    mascot: "🎯",
+    model: "claude-sonnet-4-6",
+    modelLabel: "Sonnet 4.6",
+    quadrant: "cockpit",
+    status: "live",
+    promptFile: "action_item_specialist.md",
+    entrypoint: "packages/ai/src/pipeline/steps/action-item-specialist.ts",
+  },
+  {
     id: "theme-detector",
     name: "Theme Detector",
     role: "De thema-kartograaf",
