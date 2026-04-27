@@ -8,7 +8,7 @@ Het project (v1) is opgeleverd wanneer:
   - "Onze meldingen" → `source IN ('portal','userback')`
   - "JAIP-meldingen" → `source IN ('manual','ai')`
   - "Alles" → geen filter
-- [ ] Type-filter Bugs/Features werkt orthogonaal aan source-switch
+- [ ] Type-filter (Alles / Bugs / Features / Vragen) werkt orthogonaal aan source-switch en dekt het volledige `ISSUE_TYPES`-enum
 - [ ] Issue-detailpagina toont `client_title`/`client_description` met fallback naar `title`/`description`
 - [ ] JAIP-admin kan in DevHub issue-editor `client_title` en `client_description` invullen en opslaan
 - [ ] Feedback-formulier (CP-005) blijft functioneel: ingediend issue verschijnt direct in dashboard onder "Onze meldingen"

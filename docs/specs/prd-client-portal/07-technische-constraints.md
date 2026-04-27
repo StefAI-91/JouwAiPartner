@@ -16,15 +16,15 @@
 
 ## Routes (bestaand + nieuw)
 
-| Route                             | Pagina                                                                          | Auth                    | Status    |
-| --------------------------------- | ------------------------------------------------------------------------------- | ----------------------- | --------- |
-| `/login`                          | Email-OTP login                                                                 | Public                  | Bestaand  |
-| `/auth/callback`                  | OTP-callback handler                                                            | Public                  | Bestaand  |
-| `/`                               | Project-overzicht (redirect bij 1 project)                                      | Client                  | Bestaand  |
-| `/projects/[id]`                  | Project-dashboard                                                               | Client + project access | Bestaand  |
-| `/projects/[id]/issues`           | Issue-lijst — uit te breiden naar 4-bucket view + source-switch                 | Client + project access | Aanpassen |
-| `/projects/[id]/issues/[issueId]` | Issue-detail — uit te breiden met `client_title`/`client_description` fallbacks | Client + project access | Aanpassen |
-| `/projects/[id]/feedback`         | Feedback-formulier (`submitFeedback`-action al gebouwd in CP-005)               | Client + project access | Bestaand  |
+| Route                             | Pagina                                                                                                                                                                        | Auth                    | Status    |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | --------- |
+| `/login`                          | Email-OTP login                                                                                                                                                               | Public                  | Bestaand  |
+| `/auth/callback`                  | OTP-callback handler                                                                                                                                                          | Public                  | Bestaand  |
+| `/`                               | Project-overzicht (redirect bij 1 project)                                                                                                                                    | Client                  | Bestaand  |
+| `/projects/[id]`                  | Project-dashboard                                                                                                                                                             | Client + project access | Bestaand  |
+| `/projects/[id]/issues`           | Issue-overzicht — bestaande `IssueStatusFilter` (single-status query-param) wordt vervangen door 4-bucket view + source-switch + type-tabs (Alles / Bugs / Features / Vragen) | Client + project access | Aanpassen |
+| `/projects/[id]/issues/[issueId]` | Issue-detail — uit te breiden met `client_title`/`client_description` fallbacks                                                                                               | Client + project access | Aanpassen |
+| `/projects/[id]/feedback`         | Feedback-formulier (`submitFeedback`-action al gebouwd in CP-005)                                                                                                             | Client + project access | Bestaand  |
 
 ## Constraints
 

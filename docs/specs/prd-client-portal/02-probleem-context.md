@@ -22,16 +22,16 @@ Stefan Roevros (project manager Cai Automations) ontving van JAIP drie verschill
 
 Wekelijkse exports zijn (a) altijd al verouderd op het moment van versturen, (b) niet bidirectioneel (klant kan niet reageren), en (c) tijdsintensief om handmatig samen te stellen.
 
-## Beoogde feedbackloop (overgenomen uit `portal-mvp.md`)
+## Beoogde feedbackloop
 
 ```
 1. JAIP levert op → DevHub issue status update
 2. Klant opent portal → ziet voortgang in vier-bucket dashboard
-3. Klant bekijkt issues → ziet status van eerdere meldingen
-4. JAIP-admin markeert relevante issues als client_visible (handmatig of via label-regel)
-5. Klant ziet nieuwe of bijgewerkte issues bij volgend bezoek
-6. v2: klant geeft feedback / vraagt om voting / tekent af op delivery
+3. Klant bekijkt issues → ziet status van eerdere meldingen (alle issues van het project,
+   gefilterd via has_portal_access-RLS; transparantie via source-switch in de UI)
+4. Klant ziet nieuwe of bijgewerkte issues bij volgend bezoek
+5. v2: klant geeft feedback / vraagt om voting / tekent af op delivery
 → Loop herhaalt
 ```
 
-In v1 is de feedbackloop nog éénrichtingsverkeer (read-only). Bidirectionaliteit (feedback-formulier, comments, voting) volgt in v2.
+In v1 is de feedbackloop richtinggevend read-only met één uitzondering: het feedback-formulier (zie §5.4). Volledige bidirectionaliteit (comments, voting, sign-off) volgt in v2.

@@ -4,7 +4,7 @@
 
 - Magic link OTP via Supabase Auth (geen wachtwoorden)
 - Sessies via secure HTTP-only cookies
-- RLS op alle relevante tabellen (`issues`, `audit_log`, `users`)
+- RLS op alle relevante tabellen (`issues`, `profiles`, `portal_project_access`)
 - Geen email-enumeration in login-flow
 - HTTPS-only via Vercel
 - CSP-headers via Next.js middleware
@@ -22,11 +22,11 @@
 
 - Streefuptime: 99% (Vercel + Supabase SLA's bieden hoger, geen formele SLA in v1)
 - Backup: Supabase point-in-time recovery (standaard 7 dagen op Pro-tier)
-- Fallback bij storing: statuspagina met `status.jouwaipartner.nl` (TBD)
+- Fallback bij storing: statuspagina met `status.jouw-ai-partner.nl` (TBD)
 
 ## Logging & monitoring
 
 - Frontend errors via Vercel Analytics
 - Backend errors via Supabase logs
-- Audit-log voor visibility-changes in eigen tabel
+- Geen aparte audit-log in v1 — er is geen visibility-mechanisme om te loggen, en de bestaande `updated_at` op `issues` dekt wijzigingen aan `client_title`/`client_description`
 - Geen externe error-tracker in v1 (Sentry overwegen v2)
