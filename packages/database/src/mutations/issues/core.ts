@@ -7,6 +7,8 @@ export interface InsertIssueData {
   project_id: string;
   title: string;
   description?: string | null;
+  client_title?: string | null;
+  client_description?: string | null;
   type?: string;
   status?: string;
   priority?: string;
@@ -34,6 +36,8 @@ export interface InsertIssueData {
 export interface UpdateIssueData {
   title?: string;
   description?: string | null;
+  client_title?: string | null;
+  client_description?: string | null;
   type?: string;
   status?: string;
   priority?: string;

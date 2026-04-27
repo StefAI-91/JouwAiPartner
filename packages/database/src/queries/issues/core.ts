@@ -13,6 +13,8 @@ export interface IssueRow {
   project_id: string;
   title: string;
   description: string | null;
+  client_title: string | null;
+  client_description: string | null;
   type: string;
   status: string;
   priority: string;
@@ -40,7 +42,8 @@ export interface IssueRow {
 }
 
 export const ISSUE_SELECT = `
-  id, project_id, title, description, type, status, priority, component, severity,
+  id, project_id, title, description, client_title, client_description,
+  type, status, priority, component, severity,
   labels, assigned_to, reporter_name, reporter_email, source, userback_id, source_url, source_metadata,
   issue_number, execution_type, ai_executable, ai_context, ai_result, duplicate_of_id, ai_classification,
   created_at, updated_at, closed_at,
