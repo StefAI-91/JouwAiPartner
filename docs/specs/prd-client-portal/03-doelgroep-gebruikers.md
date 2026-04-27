@@ -7,7 +7,8 @@
 - **Technisch niveau**: Gemiddeld tot hoog (begrijpt issue trackers, software development cycles)
 - **Primaire taken**:
   - Status van bugs en features bekijken in vier buckets
-  - Begrijpen welke productie-issues actief zijn die hun eindgebruikers raken
+  - Switchen tussen eigen meldingen en JAIP-meldingen
+  - Eigen issues indienen via feedback-formulier
   - Issues filteren en zoeken
 - **Device**: Desktop primair, mobiel secundair (read-only)
 
@@ -15,21 +16,23 @@
 
 - **Wie**: Andere medewerkers bij de klant die meekijken (voor CAI: Joep, Chloë)
 - **Technisch niveau**: Variabel
-- **Primaire taken**: Meekijken, geen actieve interactie in v1
+- **Primaire taken**: Meekijken + eventueel feedback indienen, geen verdere interactie in v1
 
 ## 3.3 JAIP Team (admin)
 
 - **Wie**: Stef, Wouter, Kenji, Myrrh, Ege
 - **Toegang**: Via bestaande DevHub-app voor issue-beheer (Cockpit blijft voor knowledge/projecten/themes); niet via deze portal
-- **Primaire taken in relatie tot portal**: Bepalen welke issues `client_visible` zijn (manuele override + automatische regels). Toggle wordt toegevoegd aan de bestaande issue-editor in DevHub (`apps/devhub/src/features/issues/`)
+- **Primaire taken in relatie tot portal**: Optioneel `client_title` / `client_description` invullen op issues om technische titels naar klant-taal te hertalen. Geen `client_visible`-mechanisme — alle issues van een project zijn voor de klant zichtbaar in de portal (gefilterd via bestaande `has_portal_access`-RLS).
 
 ## Rechtenmatrix
 
-| Actie                                     | Klant PM | Klant-collega | JAIP Admin      |
-| ----------------------------------------- | -------- | ------------- | --------------- |
-| Issues bekijken (alleen `client_visible`) | ✅       | ✅            | ✅              |
-| Issues van andere klanten bekijken        | ❌       | ❌            | ✅              |
-| Issue als `client_visible` markeren       | ❌       | ❌            | ✅ (via DevHub) |
-| Comments plaatsen                         | v2       | v2            | v2              |
-| Voting                                    | v2       | v2            | v2              |
-| Sign-off geven                            | v2       | ❌            | v2              |
+| Actie                                          | Klant PM | Klant-collega | JAIP Admin      |
+| ---------------------------------------------- | -------- | ------------- | --------------- |
+| Alle issues van eigen project(en) bekijken     | ✅       | ✅            | ✅              |
+| Issues van andere klanten bekijken             | ❌       | ❌            | ✅              |
+| Switchen tussen "Onze meldingen" / "JAIP"      | ✅       | ✅            | ✅              |
+| Feedback / nieuw issue indienen                | ✅       | ✅            | n.v.t.          |
+| `client_title` / `client_description` invullen | ❌       | ❌            | ✅ (via DevHub) |
+| Comments plaatsen                              | v2       | v2            | v2              |
+| Voting                                         | v2       | v2            | v2              |
+| Sign-off geven                                 | v2       | ❌            | v2              |

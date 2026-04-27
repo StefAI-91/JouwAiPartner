@@ -8,12 +8,12 @@
 
 **Gedrag**:
 
-1. Gebruiker bezoekt portal-URL
+1. Gebruiker bezoekt `https://portal.jouw-ai-partner.nl/`
 2. Gebruiker voert email in op login-scherm
 3. Systeem stuurt 6-cijferige OTP-code (`shouldCreateUser: false`, voorkomt enumeratie)
 4. Bij niet-gekoppelde email: zelfde melding (security: geen email enumeration)
-5. Klant voert code in → directe login → middleware-gating route's gebruiker naar portal-app op basis van role
-6. Sessie blijft 30 dagen geldig (Supabase JWT-config — momenteel default; aandachtspunt)
+5. Klant voert code in → directe login → middleware route naar portal-app op basis van role
+6. Sessie blijft geldig conform Supabase JWT-default (~1 jaar; geaccepteerd in v1)
 
 **Velden/Data**:
 
@@ -41,14 +41,13 @@
 
 - [ ] Onbekende email leakt niet of er een account bestaat (`shouldCreateUser: false`)
 - [ ] OTP-flow werkt op desktop en mobiel
-- [ ] Sessie blijft 30 dagen actief op zelfde device (Supabase config aangepast)
 - [ ] Logout-knop in header werkt en redirect naar login
 
 ---
 
-## 5.2 Vier-Bucket Dashboard
+## 5.2 Vier-Bucket Dashboard met Source-Switch
 
-**Beschrijving**: Hoofdpagina van het portaal. Toont alle issues waar `client_visible = true` van de klant gegroepeerd in vier buckets. Bucket-namen en mapping zijn bron-van-waarheid in `packages/database/src/constants/issues.ts` (`PORTAL_STATUS_GROUPS`).
+**Beschrijving**: Hoofdpagina van het portaal. Toont alle issues van projecten waar de klant toegang toe heeft, gegroepeerd in vier buckets. Een source-switch laat de klant kiezen tussen "Onze meldingen", "JAIP-meldingen" of "Alles". Geen verborgen issues — transparantie is het ontwerpprincipe. Bucket-namen en mapping zijn bron-van-waarheid in `packages/database/src/constants/issues.ts` (`PORTAL_STATUS_GROUPS`).
 
 **Gebruiker**: Klant PM, klant-collega
 
@@ -63,44 +62,56 @@
 
 > Wijzigen van een mapping = aanpassen in `issues.ts` constants. Niet duplicate'n in PRD-tekst.
 
+**Source-switch (nieuw)**:
+
+| Tab            | Filter                            | Toelichting                                    |
+| -------------- | --------------------------------- | ---------------------------------------------- |
+| Alles          | _geen filter_                     | Default-view                                   |
+| Onze meldingen | `source IN ('portal','userback')` | Door klant zelf gemeld                         |
+| JAIP-meldingen | `source IN ('manual','ai')`       | Door JAIP-team gemeld of AI-pipeline ingelezen |
+
+> Bron-van-waarheid voor source-mapping wordt vastgelegd als constant in `packages/database/src/constants/issues.ts` (bijv. `PORTAL_SOURCE_GROUPS`) — niet in client-side code dupliceren.
+
 **Gedrag**:
 
 1. Gebruiker landt op portal-dashboard na login
-2. Systeem laadt alle issues waar `client_visible = true` AND `has_portal_access(auth.uid(), project_id)` (via RLS)
+2. Systeem laadt alle issues waar `has_portal_access(auth.uid(), project_id)` (via bestaande RLS — geen wijziging)
 3. Issues worden in vier buckets verdeeld o.b.v. `INTERNAL_STATUS_TO_PORTAL_KEY`
 4. Per bucket: telling (bijv. "In behandeling (4)")
-5. Tab-toggle: `Alles` / `Bugs` / `Features` (default: Alles) — nieuwe filter, naast bestaande status-filter
-6. Klik op issue → navigeert naar bestaande detail-route (`/projects/[id]/issues/[issueId]`)
+5. Source-switch (Alles / Onze meldingen / JAIP-meldingen) — default Alles
+6. Type-filter (Alles / Bugs / Features) — default Alles, orthogonaal aan source-switch
+7. Klik op issue → navigeert naar bestaande detail-route (`/projects/[id]/issues/[issueId]`)
 
 **Velden/Data per issue-card in lijst**:
 
-| Veld                           | Type      | Toelichting                              |
-| ------------------------------ | --------- | ---------------------------------------- |
-| client_title (fallback: title) | text      | Titel die klant ziet                     |
-| type                           | enum      | bug / feature_request / question (badge) |
-| priority                       | enum      | urgent / high / medium / low (kleur)     |
-| updated_at                     | timestamp | "Bijgewerkt 2 dagen geleden"             |
-| has_production_impact          | boolean   | 🔴 indicator als true                    |
+| Veld                           | Type      | Toelichting                                            |
+| ------------------------------ | --------- | ------------------------------------------------------ |
+| client_title (fallback: title) | text      | Titel die klant ziet                                   |
+| type                           | enum      | bug / feature_request / question (badge)               |
+| priority                       | enum      | urgent / high / medium / low (kleur)                   |
+| source                         | enum      | Subtiele indicator (bv. icoon) "Onze melding" / "JAIP" |
+| updated_at                     | timestamp | "Bijgewerkt 2 dagen geleden"                           |
 
 **States**:
 
 - **Leeg (geen issues in bucket)**: "Geen items" in lichte tekst
-- **Leeg (helemaal niks)**: "Er zijn nog geen items zichtbaar voor jou. Het JAIP-team werkt aan je project — kom hier later terug."
+- **Leeg (helemaal niks)**: "Er zijn nog geen items in dit project. Het JAIP-team werkt aan je project — kom hier later terug, of dien zelf een melding in."
 - **Laden**: Skeleton loaders per bucket
 - **Fout**: "Kon issues niet laden. Ververs de pagina." met retry-knop
 - **Succes**: Vier kolommen (desktop) / verticaal gestapeld (mobiel)
 
 **Edge cases**:
 
-- Een issue heeft tegelijkertijd meerdere statussen door state-conflict — toon in meest recente bucket o.b.v. `updated_at`
 - Klant heeft geen `portal_project_access` (data integriteitsfout) — toon foutpagina, log incident
 - Bucket bevat 100+ issues (CAI heeft veel backlog) — paginering binnen bucket, 25 per scroll
+- Issue heeft een onbekende `source` — valt onder "JAIP-meldingen" als default
 
 **Acceptatiecriteria**:
 
-- [ ] Default-view toont vier buckets met juiste tellingen
-- [ ] Tab-filter `Bugs` toont alleen `type = bug`
-- [ ] Tab-filter `Features` toont alleen `type = feature_request`
+- [ ] Default-view toont vier buckets met juiste tellingen op basis van álle issues van het project
+- [ ] Source-switch `Onze meldingen` toont alleen issues met `source IN ('portal','userback')`
+- [ ] Source-switch `JAIP-meldingen` toont alleen issues met `source IN ('manual','ai')`
+- [ ] Type-filter werkt orthogonaal aan source-switch (combinaties geven verwacht resultaat)
 - [ ] `client_title` wordt getoond als gevuld, anders fallback naar `title`
 - [ ] Klant van CAI ziet alleen CAI-issues (RLS-test met testaccount andere klant)
 - [ ] Mobiele weergave is leesbaar zonder horizontaal scrollen
@@ -109,7 +120,7 @@
 
 ## 5.3 Issue Detail-pagina
 
-**Beschrijving**: Detail-weergave van één issue met klant-vriendelijke titel, beschrijving, status en metadata. Bestaande pagina (`apps/portal/src/app/(app)/projects/[id]/issues/[issueId]/`) wordt uitgebreid met `client_title`/`client_description` fallback en productie-impact-banner.
+**Beschrijving**: Detail-weergave van één issue met klant-vriendelijke titel, beschrijving, status en metadata. Bestaande pagina (`apps/portal/src/app/(app)/projects/[id]/issues/[issueId]/`) wordt uitgebreid met `client_title`/`client_description` fallback en source-indicator.
 
 **Gebruiker**: Klant PM, klant-collega
 
@@ -117,21 +128,21 @@
 
 1. Gebruiker klikt op issue-card in dashboard
 2. Navigeert naar bestaande detail-route
-3. Systeem laadt issue, RLS controleert `client_visible = true` AND project-access
+3. RLS controleert project-access (geen extra check meer nodig)
 4. Toont detail-pagina
 
 **Velden in weergave**:
 
-| Veld                                       | Type      | Toelichting                                          |
-| ------------------------------------------ | --------- | ---------------------------------------------------- |
-| client_title (fallback: title)             | text      | Titel als heading                                    |
-| client_description (fallback: description) | markdown  | Beschrijving                                         |
-| type                                       | enum      | Badge: Bug / Functionaliteit / Vraag                 |
-| priority                                   | enum      | Badge: urgent / high / medium / low                  |
-| status                                     | enum      | Bucket-label uit `PORTAL_STATUS_LABELS`              |
-| created_at                                 | timestamp | Datum aangemaakt                                     |
-| updated_at                                 | timestamp | Laatst bijgewerkt                                    |
-| has_production_impact                      | boolean   | Banner als true: "Dit issue raakt je eindgebruikers" |
+| Veld                                       | Type      | Toelichting                             |
+| ------------------------------------------ | --------- | --------------------------------------- |
+| client_title (fallback: title)             | text      | Titel als heading                       |
+| client_description (fallback: description) | markdown  | Beschrijving                            |
+| type                                       | enum      | Badge: Bug / Functionaliteit / Vraag    |
+| priority                                   | enum      | Badge: urgent / high / medium / low     |
+| status                                     | enum      | Bucket-label uit `PORTAL_STATUS_LABELS` |
+| source                                     | enum      | Indicator: "Onze melding" / "JAIP"      |
+| created_at                                 | timestamp | Datum aangemaakt                        |
+| updated_at                                 | timestamp | Laatst bijgewerkt                       |
 
 **States**:
 
@@ -143,49 +154,32 @@
 **Edge cases**:
 
 - Klant deeplinkt naar issue van andere klant → 404 (geen leak van bestaan)
-- Issue is na bezoek `client_visible = false` gezet door JAIP → 404 bij refresh
 - Description bevat afbeeldingen/bijlagen → in v1 alleen text-rendering, bijlagen v2
 
 **Acceptatiecriteria**:
 
 - [ ] Detailpagina rendert zonder errors voor alle types
 - [ ] `client_description` wordt als markdown gerenderd
-- [ ] Niet-zichtbaar issue geeft 404 (geen 403, geen leak)
+- [ ] Issue van andere klant geeft 404
 - [ ] Terug-knop werkt naar dashboard met behoud van scroll-positie
 
 ---
 
-## 5.4 Automatische Client-Visibility-Regels
+## 5.4 Feedback-formulier (bestaand, behouden in v1)
 
-**Beschrijving**: Backend-logica die bepaalt welke issues automatisch `client_visible = true` worden zonder handmatige actie. Dit is geen UI-feature maar een gedrag van het systeem.
+**Beschrijving**: Klant kan via `/projects/[id]/feedback` een nieuw issue indienen. Reeds geïmplementeerd in `apps/portal/src/actions/feedback.ts` (`submitFeedback`) + bijhorende pagina. Feedback wordt opgeslagen als `issues`-rij met `source = 'portal'` en status `triage`.
 
-**Gebruiker**: Geen directe interactie. Wordt getriggerd bij issue-creatie en bij label-wijzigingen.
+**Gebruiker**: Klant PM, klant-collega
 
-**Regels (in volgorde van precedentie)**:
+**Gedrag (bestaand)**:
 
-1. **Manuele override** wint altijd: als JAIP-admin in DevHub `client_visible_override = true` zet, blijft de waarde van `client_visible` zoals expliciet gezet — automatisering wordt genegeerd voor dat issue
-2. **Productie-impact**: issue met label `production` of `customer-impact` → `client_visible = true`, `has_production_impact = true`
-3. **Klant-bron**: issue aangemaakt met `source = 'portal'` (klant heeft het zelf ingediend in v2; in v1 onmogelijk) → `client_visible = true`
-4. **Default**: `client_visible = false`
+1. Klant gaat naar `/projects/[id]/feedback`
+2. Vult titel, beschrijving en type (`bug` / `feature_request` / `question`) in
+3. Server action `submitFeedback` valideert via `portalFeedbackSchema`, controleert `hasPortalProjectAccess`, en doet `insertIssue` met `source: 'portal'`
+4. Bij succes: redirect of confirmatie + issue verschijnt in dashboard onder "Onze meldingen"
 
-**Implementatie**: Postgres trigger op `issues` tabel bij `INSERT` en `UPDATE` van `labels` of `source`. Trigger respecteert `client_visible_override`.
+**Acceptatiecriteria** (verifieer dat bestaande implementatie nog werkt na 5.2-wijzigingen):
 
-**Admin-toggle**: in de bestaande issue-editor in `apps/devhub/src/features/issues/` worden drie velden toegevoegd:
-
-- `client_visible` (boolean toggle)
-- `client_visible_override` (boolean — checkbox "handmatig beheerd")
-- `client_title` + `client_description` (optionele tekstvelden)
-
-**Edge cases**:
-
-- Issue krijgt eerst geen labels, later `production` → trigger update `client_visible` automatisch (mits geen override)
-- Admin zet handmatig `client_visible = false` + `override = true` op productie-issue → blijft verborgen ondanks regel
-- Label-wijziging in DevHub → trigger reageert in zelfde transactie
-
-**Acceptatiecriteria**:
-
-- [ ] Nieuw issue met label `production` is direct zichtbaar in portal
-- [ ] Issue zonder labels en aangemaakt door JAIP-dev is niet zichtbaar
-- [ ] Manuele override blokkeert automatische regel
-- [ ] Bij verwijderen van `production`-label valt issue terug naar default-regel (tenzij override)
-- [ ] DevHub issue-editor toont en bewerkt de drie nieuwe velden
+- [ ] Ingediend issue verschijnt direct in `Ontvangen`-bucket onder "Onze meldingen"
+- [ ] Zod-validatie blokkeert lege titel/beschrijving
+- [ ] Klant zonder project-access kan geen feedback indienen voor dat project

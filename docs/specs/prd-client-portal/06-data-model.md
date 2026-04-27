@@ -10,25 +10,25 @@
 
 ## Toe te voegen kolommen op `issues`
 
-| Kolom                   | Type    | Nullable | Default | Toelichting                                                             |
-| ----------------------- | ------- | -------- | ------- | ----------------------------------------------------------------------- |
-| client_visible          | boolean | Nee      | false   | Of issue in portal getoond wordt                                        |
-| client_visible_override | boolean | Nee      | false   | True als handmatig gezet (negeert auto-regel)                           |
-| client_title            | text    | Ja       | null    | Klant-vriendelijke titel; fallback naar `title`                         |
-| client_description      | text    | Ja       | null    | Klant-vriendelijke beschrijving; fallback naar `description`            |
-| has_production_impact   | boolean | Nee      | false   | Computed door trigger: true als label `production` of `customer-impact` |
+| Kolom              | Type | Nullable | Default | Toelichting                                                  |
+| ------------------ | ---- | -------- | ------- | ------------------------------------------------------------ |
+| client_title       | text | Ja       | null    | Klant-vriendelijke titel; fallback naar `title`              |
+| client_description | text | Ja       | null    | Klant-vriendelijke beschrijving; fallback naar `description` |
 
-## Toe te voegen tabel: `audit_log` (light)
+> **Geschrapt na review 2026-04-27** (zie §4 Scope): `client_visible`, `client_visible_override`, `has_production_impact`, de `audit_log`-tabel en de Postgres-trigger voor auto-visibility. Reden: alle issues van een project zijn zichtbaar voor de klant; transparantie loopt via de source-switch in de UI, niet via per-issue verbergmechanisme.
 
-| Kolom       | Type      | Nullable | Toelichting                         |
-| ----------- | --------- | -------- | ----------------------------------- |
-| id          | uuid      | Nee      | Primary key                         |
-| user_id     | uuid (FK) | Nee      | → profiles.id                       |
-| action      | text      | Nee      | bijv. `issue_visibility_changed`    |
-| entity_type | text      | Nee      | bijv. `issue`                       |
-| entity_id   | uuid      | Nee      | ID van geraakte entiteit            |
-| metadata    | jsonb     | Ja       | Extra context (oude/nieuwe waardes) |
-| created_at  | timestamp | Nee      | Auto                                |
+## Toe te voegen constanten (geen schema-wijziging)
+
+In `packages/database/src/constants/issues.ts` toe te voegen:
+
+```typescript
+export const PORTAL_SOURCE_GROUPS = [
+  { key: "client", label: "Onze meldingen", sources: ["portal", "userback"] },
+  { key: "jaip", label: "JAIP-meldingen", sources: ["manual", "ai"] },
+] as const;
+```
+
+Onbekende `source`-waarden vallen default onder `jaip` (zie §5.2 edge cases).
 
 ## Relaties
 
@@ -41,34 +41,14 @@
 
 ## RLS (Row Level Security)
 
-**Issues-tabel — leesregels (uit te breiden):**
+**Geen wijzigingen nodig.** Bestaande policy in `20260418110000_issues_rls_client_hardening.sql` filtert clients correct op `has_portal_access(auth.uid(), project_id)` voor SELECT, en staat INSERT toe als `source = 'portal'` met status `triage` (feedback-flow). Dat dekt de hele scope van v1.
 
-Bestaande policy in `20260418110000_issues_rls_client_hardening.sql` filtert clients op `has_portal_access(auth.uid(), project_id)`, maar mist de `client_visible`-check. Nieuwe migratie moet de policy uitbreiden:
+**Schrijfregels:**
 
-```sql
--- Client kan alleen client_visible issues zien in projecten waar hij toegang toe heeft
-CREATE POLICY "client_can_read_visible_issues" ON issues
-FOR SELECT USING (
-  is_client(auth.uid())
-  AND client_visible = true
-  AND has_portal_access(auth.uid(), project_id)
-);
-
--- Admin/member (JAIP) kunnen alles zien (bestaande policy ongewijzigd)
-```
-
-**Issues-tabel — schrijfregels:**
-
-- Clients kunnen niet schrijven in v1 (feedback-formulier verschoven naar v2)
-- Admins/members schrijven via DevHub (bestaande logica) — toggle voor `client_visible` / `client_visible_override` / `client_title` / `client_description` komt erbij in DevHub issue-editor
-
-**Audit_log-tabel — RLS:**
-
-- Clients lezen alleen audit-rijen waar `entity_id` een issue is dat zij mogen zien
-- Admins/members lezen alles
+- Clients schrijven via `submitFeedback`-action (`apps/portal/src/actions/feedback.ts`) — al opgeleverd in CP-005
+- Admins/members schrijven via DevHub (bestaande logica). De DevHub issue-editor wordt uitgebreid met twee tekstvelden (`client_title`, `client_description`) — geen nieuwe mutation, bestaande `updateIssue` accepteert de velden zodra de migratie is gedraaid
 
 ## Audit trail
 
 - Alle bestaande tabellen hebben `created_at`/`updated_at` (al aanwezig)
-- Wijzigingen aan `client_visible` / `client_visible_override` worden via trigger gelogd in `audit_log`
-- Trigger registreert: oude waarde, nieuwe waarde, `user_id` van actor (uit `auth.uid()`)
+- Geen aparte `audit_log` voor de portal in v1 — er is geen visibility-mechanisme om te loggen, en aanpassingen aan `client_title`/`client_description` zijn editor-changes die de bestaande `updated_at` al dekt

@@ -16,15 +16,15 @@
 
 ## Routes (bestaand + nieuw)
 
-| Route                             | Pagina                                          | Auth                    | Status                              |
-| --------------------------------- | ----------------------------------------------- | ----------------------- | ----------------------------------- |
-| `/login`                          | Email-OTP login                                 | Public                  | Bestaand                            |
-| `/auth/callback`                  | OTP-callback handler                            | Public                  | Bestaand                            |
-| `/`                               | Project-overzicht (redirect bij 1 project)      | Client                  | Bestaand                            |
-| `/projects/[id]`                  | Project-dashboard                               | Client + project access | Bestaand                            |
-| `/projects/[id]/issues`           | Issue-lijst — uit te breiden naar 4-bucket view | Client + project access | Aanpassen                           |
-| `/projects/[id]/issues/[issueId]` | Issue-detail — uit te breiden met fallbacks     | Client + project access | Aanpassen                           |
-| `/projects/[id]/feedback`         | Feedback-formulier                              | Client + project access | v2 (uitgesteld uit `portal-mvp.md`) |
+| Route                             | Pagina                                                                          | Auth                    | Status    |
+| --------------------------------- | ------------------------------------------------------------------------------- | ----------------------- | --------- |
+| `/login`                          | Email-OTP login                                                                 | Public                  | Bestaand  |
+| `/auth/callback`                  | OTP-callback handler                                                            | Public                  | Bestaand  |
+| `/`                               | Project-overzicht (redirect bij 1 project)                                      | Client                  | Bestaand  |
+| `/projects/[id]`                  | Project-dashboard                                                               | Client + project access | Bestaand  |
+| `/projects/[id]/issues`           | Issue-lijst — uit te breiden naar 4-bucket view + source-switch                 | Client + project access | Aanpassen |
+| `/projects/[id]/issues/[issueId]` | Issue-detail — uit te breiden met `client_title`/`client_description` fallbacks | Client + project access | Aanpassen |
+| `/projects/[id]/feedback`         | Feedback-formulier (`submitFeedback`-action al gebouwd in CP-005)               | Client + project access | Bestaand  |
 
 ## Constraints
 
@@ -45,5 +45,5 @@
 - App-pad: `apps/portal/` (al aanwezig, port 3002 in dev)
 - Hergebruik shared packages uit `packages/database`, `packages/auth`, `packages/ui`
 - `apps/portal/vercel.json` ontbreekt nog — toevoegen voor deploy-pariteit met Cockpit/DevHub
-- Eigen subdomein (TBD: `portal.jouwaipartner.nl` of `klant.jouwaipartner.nl`) — niet `cockpit.*`
+- Productie-URL: `https://portal.jouw-ai-partner.nl/` (let op: hyphens in domein)
 - Geen breaking changes aan DevHub of Cockpit
