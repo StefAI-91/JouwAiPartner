@@ -149,13 +149,10 @@ export async function runActionItemSpecialistStep(
     }
 
     // Productie-save: action_items naar de gedeelde extractions-tabel.
+    // Counts/latency landen in experimental_action_item_extractions hierboven —
+    // dat is de audit trail. Geen extra success-log nodig.
     try {
-      const saveResult = await saveActionItemExtractions(output, meetingId, identifiedProjects);
-      console.info(
-        `ActionItemSpecialist: ${saveResult.extractions_saved} items saved ` +
-          `(${saveResult.extractions_replaced} drafts replaced, ${gated.length} gated), ` +
-          `${metrics.latency_ms}ms`,
-      );
+      await saveActionItemExtractions(output, meetingId, identifiedProjects);
     } catch (saveErr) {
       console.error(
         "ActionItemSpecialist save to extractions failed (non-blocking):",
