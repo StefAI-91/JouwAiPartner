@@ -10,6 +10,7 @@ export interface MeetingDetail {
   party_type: string | null;
   transcript: string | null;
   transcript_elevenlabs: string | null;
+  transcript_elevenlabs_named: string | null;
   summary: string | null;
   raw_fireflies: Record<string, unknown> | null;
   organization_id: string | null;
@@ -38,7 +39,7 @@ export async function getVerifiedMeetingById(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, original_title, date, meeting_type, party_type, transcript, transcript_elevenlabs, summary, raw_fireflies,
+      `id, title, original_title, date, meeting_type, party_type, transcript, transcript_elevenlabs, transcript_elevenlabs_named, summary, raw_fireflies,
        organization_id, verification_status, verified_at,
        verifier:profiles!meetings_verified_by_fkey(full_name),
        organization:organizations(name),
@@ -504,6 +505,7 @@ export interface MeetingForRegenerate {
   summary: string | null;
   transcript: string | null;
   transcript_elevenlabs: string | null;
+  transcript_elevenlabs_named: string | null;
   meeting_participants: { person: { name: string } }[];
 }
 
@@ -523,7 +525,7 @@ export async function getMeetingForRegenerate(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, summary, transcript, transcript_elevenlabs,
+      `id, title, date, meeting_type, party_type, summary, transcript, transcript_elevenlabs, transcript_elevenlabs_named,
        meeting_participants(person:people(name))`,
     )
     .eq("id", meetingId)
@@ -552,7 +554,7 @@ export async function getMeetingForRegenerateRisks(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs,
+      `id, title, date, meeting_type, party_type, transcript, transcript_elevenlabs, transcript_elevenlabs_named,
        raw_fireflies, meeting_participants(person:people(name))`,
     )
     .eq("id", meetingId)
@@ -699,9 +701,13 @@ export interface MeetingByFirefliesIdForReprocess {
   date: string | null;
   meeting_type: string | null;
   party_type: string | null;
+  /** Flat Fireflies-namen op de meetings-row. */
   participants: string[] | null;
   organization_id: string | null;
   raw_fireflies: Record<string, unknown> | null;
+  /** Raw Fireflies-transcript — de reprocess-route geeft dit aan de
+   *  speaker-mapping-stap als hint voor named cross-reference. */
+  transcript: string | null;
 }
 
 /**
@@ -720,11 +726,59 @@ export async function getMeetingByFirefliesIdForReprocess(
   const { data, error } = await db
     .from("meetings")
     .select(
-      "id, title, date, meeting_type, party_type, participants, organization_id, raw_fireflies",
+      "id, title, date, meeting_type, party_type, participants, organization_id, raw_fireflies, transcript",
     )
     .eq("fireflies_id", firefliesId)
     .single();
 
   if (error || !data) return null;
   return data as MeetingByFirefliesIdForReprocess;
+}
+
+export interface SpeakerMappingParticipant {
+  name: string;
+  role: string | null;
+  organization: string | null;
+  organization_type: string | null;
+}
+
+/**
+ * Compacte query voor de speaker-mapping pipeline-stap: alleen rich participant
+ * info (name + role + organization + type) — geen transcript-data, geen
+ * meeting-context. Lijkt op de participant-mapping in `getMeetingForGoldenCoder`
+ * maar zonder flat-Fireflies-fallback want voor speaker-identifier hebben we
+ * alleen de DB-deelnemers nodig.
+ */
+export async function getMeetingParticipantsForSpeakerMapping(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<SpeakerMappingParticipant[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select(
+      `meeting_participants(person:people(name, role, organization:organizations(name, type)))`,
+    )
+    .eq("id", meetingId)
+    .single();
+
+  if (error || !data) return [];
+
+  type RawPerson = {
+    name: string;
+    role: string | null;
+    organization: { name: string | null; type: string | null } | null;
+  };
+  const raw = data as unknown as {
+    meeting_participants: { person: RawPerson | null }[];
+  };
+  return raw.meeting_participants
+    .map((mp) => mp.person)
+    .filter((p): p is RawPerson => p !== null)
+    .map((p) => ({
+      name: p.name,
+      role: p.role,
+      organization: p.organization?.name ?? null,
+      organization_type: p.organization?.type ?? null,
+    }));
 }

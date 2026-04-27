@@ -83,7 +83,7 @@ export interface RunActionItemAgentResult {
     date: string | null;
     meeting_type: string | null;
     transcript_length: number;
-    transcript_source: "elevenlabs" | "fireflies" | null;
+    transcript_source: "elevenlabs_named" | "elevenlabs" | "fireflies" | null;
   };
   agent: {
     model: string;

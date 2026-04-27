@@ -57,6 +57,7 @@ const DEFAULT_MEETING = {
   summary: "We bespraken MCP uitgebreid.",
   transcript: "transcript content",
   transcript_elevenlabs: null,
+  transcript_elevenlabs_named: null,
   meeting_participants: [
     { person: { id: "p1", name: "Stef" } },
     { person: { id: "p2", name: "Wouter" } },

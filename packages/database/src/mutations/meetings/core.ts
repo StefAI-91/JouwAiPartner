@@ -102,6 +102,24 @@ export async function updateMeetingElevenLabs(
   return { success: true };
 }
 
+/**
+ * Slaat de speaker-named versie van het ElevenLabs-transcript op. Cache; mag
+ * te allen tijde leeg gezet worden zonder data-verlies — herbouwbaar uit
+ * `transcript_elevenlabs` via de speaker-identifier.
+ */
+export async function updateMeetingNamedTranscript(
+  meetingId: string,
+  named: string,
+): Promise<{ success: true } | { error: string }> {
+  const { error } = await getAdminClient()
+    .from("meetings")
+    .update({ transcript_elevenlabs_named: named })
+    .eq("id", meetingId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
 export async function updateMeetingType(
   meetingId: string,
   meetingType: string,

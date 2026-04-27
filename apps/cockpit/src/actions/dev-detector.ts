@@ -146,7 +146,11 @@ export async function runDevDetectorAction(
       partyType: meeting.party_type,
       date: meeting.date ?? null,
       summary: meeting.summary ?? null,
-      transcript: meeting.transcript ?? meeting.transcript_elevenlabs ?? null,
+      transcript:
+        meeting.transcript_elevenlabs_named ??
+        meeting.transcript_elevenlabs ??
+        meeting.transcript ??
+        null,
       participants,
     },
     currentMeetingThemes,

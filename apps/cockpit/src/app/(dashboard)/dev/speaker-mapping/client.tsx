@@ -14,7 +14,7 @@ interface Props {
 
 export function SpeakerMappingClient({ meetings }: Props) {
   const [selectedId, setSelectedId] = useState<string>(meetings[0]?.id ?? "");
-  const [perSpeaker, setPerSpeaker] = useState(6);
+  const [perSpeaker, setPerSpeaker] = useState(10);
   const [result, setResult] = useState<RunSpeakerMappingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -61,7 +61,7 @@ export function SpeakerMappingClient({ meetings }: Props) {
               max={20}
               step={1}
               value={perSpeaker}
-              onChange={(e) => setPerSpeaker(parseInt(e.target.value, 10) || 6)}
+              onChange={(e) => setPerSpeaker(parseInt(e.target.value, 10) || 10)}
               className="w-24 rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]"
             />
           </label>

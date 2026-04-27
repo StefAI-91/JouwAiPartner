@@ -13,6 +13,7 @@ import {
 } from "./participant/classifier";
 import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
+import { runSpeakerMappingStep } from "./steps/speaker-mapping";
 import { runSummarizeStep } from "./steps/summarize";
 import { runRiskSpecialistStep } from "./steps/risk-specialist";
 import { runGenerateTitleStep } from "./steps/generate-title";
@@ -203,6 +204,20 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const transcribeResult = await runTranscribeStep(meetingId, input.audio_url);
   if (transcribeResult.error) errors.push(`ElevenLabs: ${transcribeResult.error}`);
 
+  // Step 7b: Speaker-mapping — vervang anonieme `[speaker_X]:`-labels door
+  // deelnemer-namen via Haiku-call. Niet-blokkerend; bij falen valt iedereen
+  // terug op de raw transcript_elevenlabs.
+  let namedTranscript: string | null = null;
+  if (transcribeResult.transcript) {
+    const speakerMappingResult = await runSpeakerMappingStep({
+      meetingId,
+      elevenLabsTranscript: transcribeResult.transcript,
+      firefliesTranscript: input.transcript,
+    });
+    if (speakerMappingResult.error) errors.push(`Speaker-mapping: ${speakerMappingResult.error}`);
+    namedTranscript = speakerMappingResult.named_transcript;
+  }
+
   // Step 7.5 (TH-011): Theme-Detector — blocking, draait na Gatekeeper en
   // vóór Summarizer + RiskSpecialist. Skip onder de relevance-drempel
   // (zelfde drempel als de oude ThemeTagger).
@@ -250,8 +265,12 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     identifiedThemesForSummarizer.map((t) => ({ name: t.name, description: t.description }));
 
   // Step 8: Summarize + extract — structurer of legacy pair
-  const bestTranscript = transcribeResult.transcript ?? input.transcript;
-  const transcriptSource = transcribeResult.transcript ? "elevenlabs" : "fireflies";
+  const bestTranscript = namedTranscript ?? transcribeResult.transcript ?? input.transcript;
+  const transcriptSource = namedTranscript
+    ? "elevenlabs_named"
+    : transcribeResult.transcript
+      ? "elevenlabs"
+      : "fireflies";
 
   const summarizeContext = {
     title: input.title,

@@ -20,7 +20,7 @@ import {
 
 const runSchema = z.object({
   meetingId: z.string().uuid(),
-  perSpeaker: z.number().int().min(1).max(20).default(6),
+  perSpeaker: z.number().int().min(1).max(20).default(10),
 });
 
 export type RunSpeakerMappingInput = z.input<typeof runSchema>;
@@ -38,7 +38,7 @@ export interface RunSpeakerMappingResult {
     title: string;
     date: string | null;
     transcript_length: number;
-    transcript_source: "elevenlabs" | "fireflies" | null;
+    transcript_source: "elevenlabs_named" | "elevenlabs" | "fireflies" | null;
     participants: {
       name: string;
       role: string | null;
@@ -71,10 +71,10 @@ export async function runSpeakerMappingAction(
   const meeting = await getMeetingForGoldenCoder(parsed.data.meetingId);
   if (!meeting) return { error: "Meeting niet gevonden" };
   if (!meeting.transcript) return { error: "Meeting heeft geen transcript" };
-  if (meeting.transcript_source !== "elevenlabs") {
+  if (!meeting.transcript_elevenlabs) {
     return {
       error:
-        "Geen ElevenLabs-transcript beschikbaar — speaker-identifier vereist `transcript_elevenlabs`. Deze meeting heeft alleen Fireflies-text.",
+        "Geen raw ElevenLabs-transcript beschikbaar — speaker-identifier vereist `transcript_elevenlabs` (de raw versie met `[speaker_X]`-labels). Deze meeting heeft alleen Fireflies-text.",
     };
   }
 

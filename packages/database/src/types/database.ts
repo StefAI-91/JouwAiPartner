@@ -1180,6 +1180,7 @@ export type Database = {
           title: string;
           transcript: string | null;
           transcript_elevenlabs: string | null;
+          transcript_elevenlabs_named: string | null;
           unmatched_organization_name: string | null;
           updated_at: string | null;
           verification_status: string;
@@ -1208,6 +1209,7 @@ export type Database = {
           title: string;
           transcript?: string | null;
           transcript_elevenlabs?: string | null;
+          transcript_elevenlabs_named?: string | null;
           unmatched_organization_name?: string | null;
           updated_at?: string | null;
           verification_status?: string;
@@ -1236,6 +1238,7 @@ export type Database = {
           title?: string;
           transcript?: string | null;
           transcript_elevenlabs?: string | null;
+          transcript_elevenlabs_named?: string | null;
           unmatched_organization_name?: string | null;
           updated_at?: string | null;
           verification_status?: string;

@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-26. Do not edit manually.
+> Auto-generated on 2026-04-27. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 470 |
-| Exported functions/constants | 766 |
-| Exported types/interfaces | 305 |
-| Cross-package imports | 515 |
+| Files scanned | 472 |
+| Exported functions/constants | 771 |
+| Exported types/interfaces | 307 |
+| Cross-package imports | 519 |
 | Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
@@ -219,8 +219,9 @@
 - `listMeetingParticipantIds()`
 - `getMeetingForBackfill()`
 - `getMeetingByFirefliesIdForReprocess()`
+- `getMeetingParticipantsForSpeakerMapping()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`, `SpeakerMappingParticipant`
 
 ### `queries/meetings/project-summaries.ts`
 
@@ -588,6 +589,7 @@
 - `insertManualMeeting()`
 - `updateMeetingClassification()`
 - `updateMeetingElevenLabs()`
+- `updateMeetingNamedTranscript()`
 - `updateMeetingType()`
 - `updateMeetingPartyType()`
 - `updateMeetingTitle()`
@@ -912,6 +914,8 @@
 **Exports:**
 - `runSpeakerIdentifier()`
 - `getSpeakerIdentifierPrompt()`
+- `applyMappingToTranscript()`
+- `SPEAKER_MAPPING_APPLY_THRESHOLD`
 
 **Types:** `SpeakerIdentifierParticipant`, `SpeakerIdentifierInput`, `SpeakerIdentifierResult`
 
@@ -1125,6 +1129,7 @@
 - `./participant/classifier` → classifyParticipantsWithCache, determinePartyType, determineRuleBasedMeetingType
 - `./build-raw-fireflies` → buildRawFireflies
 - `./steps/transcribe` → runTranscribeStep
+- `./steps/speaker-mapping` → runSpeakerMappingStep
 - `./steps/summarize` → runSummarizeStep
 - `./steps/risk-specialist` → runRiskSpecialistStep
 - `./steps/generate-title` → runGenerateTitleStep
@@ -1287,6 +1292,20 @@
 - `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_MODEL, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
 - `../save-risk-extractions` → saveRiskExtractions
 - `../../validations/gatekeeper` → IdentifiedProject
+
+### `packages/ai/src/pipeline/steps/speaker-mapping.ts`
+
+**Exports:**
+- `runSpeakerMappingStep()`
+
+**Types:** `SpeakerMappingStepResult`
+
+**Depends on:**
+- `@repo/database/mutations/meetings` → updateMeetingNamedTranscript
+- `@repo/database/queries/meetings/core` → getMeetingParticipantsForSpeakerMapping, type SpeakerMappingParticipant
+
+**Internal deps:**
+- `../../agents/speaker-identifier` → applyMappingToTranscript, runSpeakerIdentifier
 
 ### `packages/ai/src/pipeline/steps/summarize.ts`
 
@@ -2260,6 +2279,7 @@
 - `@repo/ai/fireflies` → fetchFirefliesTranscript
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/ai/pipeline/steps/transcribe` → runTranscribeStep
+- `@repo/ai/pipeline/steps/speaker-mapping` → runSpeakerMappingStep
 - `@repo/ai/pipeline/steps/summarize` → runSummarizeStep
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/embed/pipeline` → embedMeetingWithExtractions
@@ -3618,11 +3638,11 @@ Which layers depend on which packages:
 | Layer | database | ai | auth | ui | mcp | Total |
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
-| AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 55 | - | - | - | - | 55 |
+| AI Core | 11 | - | - | - | - | 11 |
+| AI Pipeline | 57 | - | - | - | - | 57 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 27 | 11 | 13 | - | - | 51 |
-| Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
+| Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 98 | 8 | 8 | 36 | - | 150 |
@@ -3738,6 +3758,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
 | `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
+| `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 | `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
@@ -3948,6 +3969,7 @@ Which queries are used where across the codebase.
 | `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
 | `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `getMeetingParticipantsForSpeakerMapping()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 
 ### queries/meetings/project-summaries.ts
 

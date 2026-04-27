@@ -53,7 +53,10 @@ export interface SpeakerIdentifierInput {
    *  incompleet is (bv. alle utterances naar één naam). */
   firefliesTranscript?: string | null;
   participants: SpeakerIdentifierParticipant[];
-  /** Aantal sample-utterances per speaker. Default 6. */
+  /** Aantal sample-utterances per speaker. Default 10 — sweetspot tussen
+   *  context-rijk (lange anker-zinnen worden meegenomen) en kosten-arm.
+   *  Onder de 6 verliest het model vaak de Fireflies-content-overlap, boven
+   *  de 12 schaalt input zonder dat het de mapping-kwaliteit nog raakt. */
   perSpeaker?: number;
 }
 
@@ -129,13 +132,13 @@ export async function runSpeakerIdentifier(
 ): Promise<SpeakerIdentifierResult> {
   const startedAt = Date.now();
   const utterances = parseElevenLabsUtterances(input.transcript);
-  const samples = sampleUtterancesPerSpeaker(utterances, input.perSpeaker ?? 6);
+  const samples = sampleUtterancesPerSpeaker(utterances, input.perSpeaker ?? 10);
   const speaker_ids = Array.from(samples.keys()).sort();
 
   const firefliesUtterances = input.firefliesTranscript
     ? parseFirefliesUtterances(input.firefliesTranscript)
     : [];
-  const firefliesSamples = sampleUtterancesPerName(firefliesUtterances, input.perSpeaker ?? 6);
+  const firefliesSamples = sampleUtterancesPerName(firefliesUtterances, input.perSpeaker ?? 10);
   const firefliesNames = Array.from(firefliesSamples.keys()).sort();
 
   const userMessage = buildUserMessage(samples, firefliesSamples, input.participants);
@@ -192,4 +195,40 @@ export async function runSpeakerIdentifier(
 
 export function getSpeakerIdentifierPrompt(): string {
   return loadPrompt();
+}
+
+/**
+ * Default-drempel waaronder een mapping niet wordt toegepast: het label blijft
+ * dan staan als `[speaker_X]:` zodat we geen verkeerde naam plakken. 0.6 sluit
+ * aan op de prompt-regels (< 0.6 = "lege person_name" volgens de scoreschaal).
+ */
+export const SPEAKER_MAPPING_APPLY_THRESHOLD = 0.6;
+
+/**
+ * Vervangt `[speaker_X]:` door de gemapte deelnemer-naam in een ElevenLabs-
+ * transcript. Mappings met lege `person_name` of confidence onder de threshold
+ * worden overgeslagen — die labels blijven anoniem en de prompt-regel voor
+ * speaker-identificatie in andere agents (action-item, summarizer) vangt ze.
+ *
+ * Returns een nieuw transcript-string. Idempotent — als geen enkele mapping
+ * confidence haalt, wordt de input ongewijzigd teruggegeven.
+ */
+export function applyMappingToTranscript(
+  transcript: string,
+  mappings: SpeakerMappingOutput["mappings"],
+  threshold: number = SPEAKER_MAPPING_APPLY_THRESHOLD,
+): string {
+  if (!transcript) return transcript;
+  const replacements = new Map<string, string>();
+  for (const m of mappings) {
+    if (!m.person_name) continue;
+    if (m.confidence < threshold) continue;
+    replacements.set(m.speaker_id, m.person_name);
+  }
+  if (replacements.size === 0) return transcript;
+
+  return transcript.replace(/\[(speaker_\d+|unknown)\]:/g, (full, label) => {
+    const name = replacements.get(label);
+    return name ? `[${name}]:` : full;
+  });
 }

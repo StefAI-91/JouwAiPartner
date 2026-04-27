@@ -49,9 +49,9 @@ export interface MeetingForGoldenCoder {
   summary: string | null;
   transcript: string | null;
   /** Welke transcript-bron we daadwerkelijk teruggeven in `transcript`.
-   *  ElevenLabs Scribe v2 wordt verkozen boven Fireflies wanneer beide
-   *  beschikbaar zijn (zelfde voorkeur als gatekeeper-pipeline). */
-  transcript_source: "elevenlabs" | "fireflies" | null;
+   *  Fallback-volgorde: elevenlabs_named (na speaker-mapping) > elevenlabs
+   *  (raw Scribe-output) > fireflies. */
+  transcript_source: "elevenlabs_named" | "elevenlabs" | "fireflies" | null;
   /** Raw Fireflies-transcript (kolom `meetings.transcript`). Apart blootgesteld
    *  zodat tools beide versies tegelijk kunnen vergelijken (bv. speaker-mapping
    *  cross-references named Fireflies-utterances tegen anonieme ElevenLabs). */
@@ -171,7 +171,7 @@ export async function getMeetingForGoldenCoder(
   const { data, error } = await db
     .from("meetings")
     .select(
-      `id, title, date, meeting_type, party_type, summary, transcript, transcript_elevenlabs,
+      `id, title, date, meeting_type, party_type, summary, transcript, transcript_elevenlabs, transcript_elevenlabs_named,
        participants,
        meeting_participants(person:people(id, name, role, organization:organizations(name, type)))`,
     )
@@ -198,6 +198,7 @@ export async function getMeetingForGoldenCoder(
     summary: string | null;
     transcript: string | null;
     transcript_elevenlabs: string | null;
+    transcript_elevenlabs_named: string | null;
     /** Flat Fireflies-namen op het meetings-record zelf. Kan namen bevatten
      *  die nog niet via meeting_participants aan een canonical person zijn gelinkt. */
     participants: string[] | null;
@@ -205,12 +206,16 @@ export async function getMeetingForGoldenCoder(
   };
 
   const raw = data as unknown as Raw;
-  const transcript = raw.transcript_elevenlabs ?? raw.transcript ?? null;
-  const transcript_source: MeetingForGoldenCoder["transcript_source"] = raw.transcript_elevenlabs
-    ? "elevenlabs"
-    : raw.transcript
-      ? "fireflies"
-      : null;
+  const transcript =
+    raw.transcript_elevenlabs_named ?? raw.transcript_elevenlabs ?? raw.transcript ?? null;
+  const transcript_source: MeetingForGoldenCoder["transcript_source"] =
+    raw.transcript_elevenlabs_named
+      ? "elevenlabs_named"
+      : raw.transcript_elevenlabs
+        ? "elevenlabs"
+        : raw.transcript
+          ? "fireflies"
+          : null;
 
   // Structured deelnemers eerst (uit meeting_participants → people → organization).
   const structured: GoldenCoderParticipant[] = raw.meeting_participants
