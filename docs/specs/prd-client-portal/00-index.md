@@ -17,5 +17,6 @@
 3. [Doelgroep & Gebruikers](./03-doelgroep-gebruikers.md)
 4. [Scope](./04-scope.md)
 5. [Functionele Eisen](./05-functionele-eisen.md)
+6. [Data Model](./06-data-model.md)
 
 > Document wordt in batches aangevuld — sectie-bestanden verschijnen zodra de inhoud is aangeleverd.
