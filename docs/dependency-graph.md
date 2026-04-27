@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 472 |
-| Exported functions/constants | 776 |
-| Exported types/interfaces | 313 |
-| Cross-package imports | 520 |
+| Files scanned | 475 |
+| Exported functions/constants | 782 |
+| Exported types/interfaces | 314 |
+| Cross-package imports | 524 |
 | Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
@@ -519,6 +519,7 @@
 **Exports:**
 - `deleteExtractionsByMeetingId()`
 - `deleteExtractionsByMeetingAndType()`
+- `deleteExtractionsByMeetingTypeAndSource()`
 - `getExtractionForCorrection()`
 - `correctExtraction()`
 - `insertExtractions()`
@@ -528,6 +529,13 @@
 - `updateNeedStatus()`
 
 **Types:** `ExtractionInsertRow`, `NeedStatus`
+
+### `mutations/extractions/experimental-action-items.ts`
+
+**Exports:**
+- `insertExperimentalActionItemExtraction()`
+
+**Types:** `ExperimentalActionItemExtractionInput`
 
 ### `mutations/extractions/experimental-risks.ts`
 
@@ -1135,6 +1143,7 @@
 - `./steps/speaker-mapping` → runSpeakerMappingStep
 - `./steps/summarize` → runSummarizeStep
 - `./steps/risk-specialist` → runRiskSpecialistStep
+- `./steps/action-item-specialist` → runActionItemSpecialistStep, buildActionItemParticipants
 - `./steps/generate-title` → runGenerateTitleStep
 - `./steps/tag-and-segment` → runTagAndSegmentStep
 - `./steps/embed` → runEmbedStep
@@ -1190,6 +1199,20 @@
 **Internal deps:**
 - `../speaker-map` → SpeakerMap
 
+### `packages/ai/src/pipeline/save-action-item-extractions.ts`
+
+**Exports:**
+- `saveActionItemExtractions()`
+- `ACTION_ITEM_SPECIALIST_SOURCE`
+
+**Depends on:**
+- `@repo/database/mutations/meetings` → linkAllMeetingProjects
+- `@repo/database/mutations/extractions` → deleteExtractionsByMeetingTypeAndSource, insertExtractions, type ExtractionInsertRow
+
+**Internal deps:**
+- `../validations/gatekeeper` → IdentifiedProject
+- `../validations/action-item-specialist` → ActionItemSpecialistItem, ActionItemSpecialistOutput
+
 ### `packages/ai/src/pipeline/save-risk-extractions.ts`
 
 **Exports:**
@@ -1238,6 +1261,21 @@
 
 **Depends on:**
 - (type) `@repo/database/queries/people` → KnownPerson
+
+### `packages/ai/src/pipeline/steps/action-item-specialist.ts`
+
+**Exports:**
+- `buildActionItemParticipants()`
+- `runActionItemSpecialistStep()`
+
+**Depends on:**
+- `@repo/database/mutations/extractions/experimental-action-items` → insertExperimentalActionItemExtraction
+- (type) `@repo/database/queries/people` → KnownPerson
+
+**Internal deps:**
+- `../../agents/action-item-specialist` → runActionItemSpecialist, ACTION_ITEM_SPECIALIST_MODEL, type ActionItemSpecialistContext, type ActionItemSpecialistParticipant
+- `../save-action-item-extractions` → saveActionItemExtractions
+- `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/embed.ts`
 
@@ -3645,7 +3683,7 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 11 | - | - | - | - | 11 |
-| AI Pipeline | 57 | - | - | - | - | 57 |
+| AI Pipeline | 61 | - | - | - | - | 61 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 27 | 12 | 13 | - | - | 52 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
@@ -3715,10 +3753,17 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `deleteExtractionsByMeetingAndType()` | `packages/ai/src/pipeline/save-risk-extractions.ts` |
+| `deleteExtractionsByMeetingTypeAndSource()` | `packages/ai/src/pipeline/save-action-item-extractions.ts` |
 | `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
-| `insertExtractions()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
+| `insertExtractions()` | `packages/ai/src/pipeline/save-action-item-extractions.ts`, `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
 | `updateNeedStatus()` | `apps/cockpit/src/actions/scan-needs.ts` |
+
+### mutations/extractions/experimental-action-items.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `insertExperimentalActionItemExtraction()` | `packages/ai/src/pipeline/steps/action-item-specialist.ts` |
 
 ### mutations/extractions/experimental-risks.ts
 
@@ -3766,7 +3811,7 @@ Tracing the most important data flows from action → pipeline → database.
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
 | `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 | `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
-| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-action-item-extractions.ts`, `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
 | `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |

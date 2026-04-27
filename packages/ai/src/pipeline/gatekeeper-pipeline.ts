@@ -16,6 +16,10 @@ import { runTranscribeStep } from "./steps/transcribe";
 import { runSpeakerMappingStep } from "./steps/speaker-mapping";
 import { runSummarizeStep } from "./steps/summarize";
 import { runRiskSpecialistStep } from "./steps/risk-specialist";
+import {
+  runActionItemSpecialistStep,
+  buildActionItemParticipants,
+} from "./steps/action-item-specialist";
 import { runGenerateTitleStep } from "./steps/generate-title";
 import { runTagAndSegmentStep } from "./steps/tag-and-segment";
 import { runEmbedStep } from "./steps/embed";
@@ -305,6 +309,26 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     identifiedProjects,
   );
 
+  // ActionItemSpecialist draait parallel aan de hoofdpipeline. Bewust op
+  // input.transcript (Fireflies), NIET bestTranscript — de specialist matcht
+  // op letterlijke source_quote en speaker-mapping introduceert drift in
+  // named-transcripts. Zie sprint 041 + docs/stand-van-zaken.md regels
+  // 95 + 159 + 165. Heroverwegen wanneer speaker-mapping ≥95% naam-
+  // attributie haalt over een grotere batch.
+  const actionItemMeetingDate = new Date(Number(input.date)).toISOString().slice(0, 10);
+  const actionItemSpecialistPromise = runActionItemSpecialistStep(
+    meetingId,
+    input.transcript,
+    {
+      title: input.title,
+      meeting_type: finalMeetingType,
+      party_type: partyType,
+      meeting_date: actionItemMeetingDate,
+      participants: buildActionItemParticipants(input.participants, knownPeople),
+    },
+    identifiedProjects,
+  );
+
   console.info(`Summarizer using ${transcriptSource} transcript`);
   const summarizeResult = await runSummarizeStep(meetingId, bestTranscript, summarizeContext);
   if (summarizeResult.error) errors.push(`Summarizer: ${summarizeResult.error}`);
@@ -345,12 +369,12 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   errors.push(...tagResult.errors);
   const segmentsSaved = tagResult.segmentsSaved;
 
-  // Step 11a (TH-011 FUNC-284): await risk-specialist zodat alle extractions
-  // — inclusief risks — zijn weggeschreven voordat link-themes de
-  // extraction.content parset op [Themes:] annotaties. Zonder deze await
-  // zou link-themes risk-extractions missen die parallel nog aan het saven
-  // zijn.
-  await riskSpecialistPromise;
+  // Step 11a (TH-011 FUNC-284 + sprint 041): await beide specialists zodat
+  // alle extractions — inclusief risks en action_items — zijn weggeschreven
+  // voordat link-themes de extraction.content parset op [Themes:] annotaties
+  // en voordat embed (11c) ze oppikt. Beide steps zijn never-throws, dus
+  // Promise.all is veilig.
+  await Promise.all([riskSpecialistPromise, actionItemSpecialistPromise]);
 
   // Step 11b: link-themes draait parallel aan embed-save. Skip bij lage
   // relevance_score (FUNC-276) — detector is in step 7.5 ook al
