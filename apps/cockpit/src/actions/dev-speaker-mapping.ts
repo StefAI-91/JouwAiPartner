@@ -3,12 +3,18 @@
 import { z } from "zod";
 import { requireAdminInAction } from "@repo/auth/access";
 import { getMeetingForGoldenCoder } from "@repo/database/queries/golden";
-import { listMeetingsWithTranscript } from "@repo/database/queries/meetings/core";
+import {
+  countSpeakerMappingBackfillRemaining,
+  getSpeakerMappingTranscriptCounts,
+  listMeetingsWithTranscript,
+  listSpeakerMappingBackfillCandidates,
+} from "@repo/database/queries/meetings/core";
 import {
   runSpeakerIdentifier,
   getSpeakerIdentifierPrompt,
   type SpeakerIdentifierResult,
 } from "@repo/ai/agents/speaker-identifier";
+import { runSpeakerMappingStep } from "@repo/ai/pipeline/steps/speaker-mapping";
 
 /**
  * Server action voor de speaker-mapping test-pagina.
@@ -112,4 +118,111 @@ export async function runSpeakerMappingAction(
     const msg = err instanceof Error ? err.message : String(err);
     return { error: `Agent crashte: ${msg}` };
   }
+}
+
+// ============================================================================
+// BACKFILL — bulk-mappping van bestaande meetings vanuit de UI
+// ============================================================================
+
+export interface BackfillStatus {
+  with_elevenlabs: number;
+  with_named: number;
+  without_named: number;
+}
+
+export async function getSpeakerMappingBackfillStatus(): Promise<
+  BackfillStatus | { error: string }
+> {
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
+
+  const counts = await getSpeakerMappingTranscriptCounts();
+  if ("error" in counts) return { error: counts.error };
+  return {
+    with_elevenlabs: counts.with_elevenlabs,
+    with_named: counts.with_named,
+    without_named: Math.max(0, counts.with_elevenlabs - counts.with_named),
+  };
+}
+
+const backfillBatchSchema = z.object({
+  limit: z.number().int().min(1).max(20).default(5),
+  force: z.boolean().default(false),
+});
+
+export type RunBackfillBatchInput = z.input<typeof backfillBatchSchema>;
+
+export interface BackfillBatchItem {
+  meeting_id: string;
+  title: string | null;
+  date: string | null;
+  status: "mapped_full" | "mapped_partial" | "no_speakers" | "error";
+  speaker_count: number;
+  mapped_count: number;
+  message: string | null;
+}
+
+export interface RunBackfillBatchResult {
+  processed: number;
+  remaining: number;
+  items: BackfillBatchItem[];
+}
+
+export async function runSpeakerMappingBackfillBatch(
+  input: RunBackfillBatchInput,
+): Promise<RunBackfillBatchResult | { error: string }> {
+  const parsed = backfillBatchSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+
+  const guard = await requireAdminInAction();
+  if ("error" in guard) return { error: guard.error };
+
+  const candidates = await listSpeakerMappingBackfillCandidates(
+    parsed.data.limit,
+    parsed.data.force,
+  );
+  if (candidates.length === 0) {
+    return { processed: 0, remaining: 0, items: [] };
+  }
+
+  const items: BackfillBatchItem[] = [];
+  for (const meeting of candidates) {
+    const result = await runSpeakerMappingStep({
+      meetingId: meeting.id,
+      elevenLabsTranscript: meeting.transcript_elevenlabs,
+      firefliesTranscript: meeting.transcript_fireflies,
+    });
+
+    let status: BackfillBatchItem["status"];
+    let message: string | null = null;
+    if (result.error) {
+      status = "error";
+      message = result.error;
+    } else if (result.speaker_count === 0) {
+      status = "no_speakers";
+      message = "Geen `[speaker_X]`-labels in transcript gevonden.";
+    } else if (result.mapped_count === result.speaker_count) {
+      status = "mapped_full";
+    } else {
+      status = "mapped_partial";
+      message = `${result.speaker_count - result.mapped_count} speaker(s) bleven anoniem.`;
+    }
+
+    items.push({
+      meeting_id: meeting.id,
+      title: meeting.title,
+      date: meeting.date,
+      status,
+      speaker_count: result.speaker_count,
+      mapped_count: result.mapped_count,
+      message,
+    });
+  }
+
+  // Resterende meetings na deze batch (gebruik dezelfde filter — anders krijg
+  // je een misleidend hoge "remaining" wanneer force=true).
+  const remainingResult = await countSpeakerMappingBackfillRemaining(parsed.data.force);
+  const remaining = typeof remainingResult === "number" ? remainingResult : 0;
+
+  return { processed: items.length, remaining, items };
 }

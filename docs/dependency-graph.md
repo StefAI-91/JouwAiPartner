@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 472 |
-| Exported functions/constants | 771 |
-| Exported types/interfaces | 307 |
-| Cross-package imports | 519 |
+| Exported functions/constants | 776 |
+| Exported types/interfaces | 313 |
+| Cross-package imports | 520 |
 | Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
@@ -219,9 +219,12 @@
 - `listMeetingParticipantIds()`
 - `getMeetingForBackfill()`
 - `getMeetingByFirefliesIdForReprocess()`
+- `getSpeakerMappingTranscriptCounts()`
+- `countSpeakerMappingBackfillRemaining()`
+- `listSpeakerMappingBackfillCandidates()`
 - `getMeetingParticipantsForSpeakerMapping()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`, `SpeakerMappingParticipant`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`, `SpeakerMappingParticipant`, `SpeakerMappingTranscriptCounts`, `SpeakerMappingBackfillCandidate`
 
 ### `queries/meetings/project-summaries.ts`
 
@@ -2030,14 +2033,17 @@
 **Exports:**
 - `listSpeakerMappingMeetings()`
 - `runSpeakerMappingAction()`
+- `getSpeakerMappingBackfillStatus()`
+- `runSpeakerMappingBackfillBatch()`
 
-**Types:** `RunSpeakerMappingInput`, `SpeakerMappingMeetingOption`, `RunSpeakerMappingResult`
+**Types:** `RunSpeakerMappingInput`, `SpeakerMappingMeetingOption`, `RunSpeakerMappingResult`, `BackfillStatus`, `RunBackfillBatchInput`, `BackfillBatchItem`, `RunBackfillBatchResult`
 
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder
-- `@repo/database/queries/meetings/core` → listMeetingsWithTranscript
+- `@repo/database/queries/meetings/core` → countSpeakerMappingBackfillRemaining, getSpeakerMappingTranscriptCounts, listMeetingsWithTranscript, listSpeakerMappingBackfillCandidates
 - `@repo/ai/agents/speaker-identifier` → runSpeakerIdentifier, getSpeakerIdentifierPrompt, type SpeakerIdentifierResult
+- `@repo/ai/pipeline/steps/speaker-mapping` → runSpeakerMappingStep
 
 ### `apps/cockpit/src/actions/golden-action-items.ts`
 
@@ -3641,7 +3647,7 @@ Which layers depend on which packages:
 | AI Core | 11 | - | - | - | - | 11 |
 | AI Pipeline | 57 | - | - | - | - | 57 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 27 | 11 | 13 | - | - | 51 |
+| Cockpit Server Actions | 27 | 12 | 13 | - | - | 52 |
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -3969,6 +3975,9 @@ Which queries are used where across the codebase.
 | `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
 | `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `getSpeakerMappingTranscriptCounts()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `countSpeakerMappingBackfillRemaining()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `listSpeakerMappingBackfillCandidates()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
 | `getMeetingParticipantsForSpeakerMapping()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 
 ### queries/meetings/project-summaries.ts

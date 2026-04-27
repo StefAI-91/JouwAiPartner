@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@repo/auth/access";
-import { listSpeakerMappingMeetings } from "@/actions/dev-speaker-mapping";
+import {
+  getSpeakerMappingBackfillStatus,
+  listSpeakerMappingMeetings,
+} from "@/actions/dev-speaker-mapping";
 import { SpeakerMappingClient } from "./client";
 
 export const metadata: Metadata = {
@@ -17,6 +20,7 @@ export default async function SpeakerMappingPage() {
   await requireAdmin();
 
   const meetings = await listSpeakerMappingMeetings();
+  const initialBackfillStatus = await getSpeakerMappingBackfillStatus();
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
@@ -34,7 +38,10 @@ export default async function SpeakerMappingPage() {
           Geen meetings met transcript gevonden.
         </div>
       ) : (
-        <SpeakerMappingClient meetings={meetings} />
+        <SpeakerMappingClient
+          meetings={meetings}
+          initialBackfillStatus={"error" in initialBackfillStatus ? null : initialBackfillStatus}
+        />
       )}
     </div>
   );
