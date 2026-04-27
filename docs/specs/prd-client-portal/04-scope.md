@@ -43,9 +43,15 @@
 
 ## Toekomstige uitbreidingen (v2+)
 
+> Deze v1 dekt alleen het issue-stuk van het portaal. De volledige portal-laag uit
+> [`docs/specs/vision-ai-native-architecture.md`](../vision-ai-native-architecture.md) §2.4 ("trust layer")
+> wordt fasegewijs opgebouwd. De punten hieronder zijn de bouwstenen die daarna volgen.
+
 - **Voting** — Voorwaarde: v1 valideert dat klanten het overzicht waarderen.
 - **Sign-off** — Voorwaarde: v1 toont dat klant de portal actief gebruikt.
 - **Comments** — Voorwaarde: v1 levert engagement; commentstroom vereist notificatie-infrastructuur.
 - **AI-hertaling van `client_title` / `client_description`** — Aparte spec. In v1 vullen JAIP-admins de velden handmatig in via DevHub.
+- **Portal-uitbreiding naar volledige transparantielaag** (vision §2.4) — meeting-summaries (datum + samenvatting, geen transcripts), open action items, decisions en project-milestones. Voorwaarde: v1-bucketview heeft Stefan-validatie gehad én datamodel voor projectfases bestaat.
+- **AI Account Manager-laag** (vision §2.4) — Q&A op verified content (klant stelt vraag, AI drafts antwoord, mens reviewt vóór verzending), weekly status drafts, klant-sentiment-flagging richting team. Vereist verifier-gate analoog aan Cockpit-pipelines (zie `vision-ai-native-architecture.md` §"Verification before truth"). Aparte spec.
 - **Productie-issues sectie** (eindgebruiker error logging zoals Sentry) — Voorwaarde: error logging-koppeling per klant project.
 - **Milestones / timeline** — Voorwaarde: datamodel voor projectfases.
