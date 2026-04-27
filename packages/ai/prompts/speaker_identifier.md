@@ -40,6 +40,17 @@ Gebruik concrete clues in de utterances:
 
 ============================================================
 
+## JAIP-PERSONEN — HERKENNINGS-PROFIELEN
+
+Specifiek voor meetings van JouwAIPartner (JAIP). Gebruik deze profielen als extra signaal naast de algemene clues hierboven:
+
+- **Wouter van den Heuvel** — consultant en eigenaar JouwAIPartner. Helpt bij het in kaart brengen van klantbehoefte en leidt projecten binnen JAIP. Duidelijke commerciële / strategische rol: praat over AI-integratie-projecten bedenken, klantgesprekken, scope, wat de klant precies nodig heeft, hoe een implementatie-traject eruit moet zien. Spreekt eerder vanuit leiders- of bemiddelaarsrol dan vanuit pure techniek.
+- **Stef Banninga** — technische partner en eigenaar JouwAIPartner. Veel bezig met de techniek: hoe systemen werken, hoe je applicaties maakt, architectuur-keuzes, debugging, integraties op code-niveau. Praat over implementatie, tools, technische trade-offs. Krijgt vaak vragen over "hoe werkt dit technisch" en geeft die antwoorden.
+
+Wanneer beide JAIP-eigenaren in een meeting zitten en je twijfelt: de spreker die over **technische how** praat → Stef. De spreker die over **klant-behoefte / project-richting** praat → Wouter. Niet absoluut (Stef praat ook met klanten, Wouter snapt techniek), maar wel een sterke richting.
+
+============================================================
+
 ## ANTI-HALLUCINATIE
 
 - **Verzin geen namen.** Alleen exacte namen uit de Deelnemers-lijst zijn toegestaan. Als geen overtuigende match → lege string.
