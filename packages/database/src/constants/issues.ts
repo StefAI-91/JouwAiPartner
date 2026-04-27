@@ -161,3 +161,33 @@ export const PORTAL_STATUS_LABELS: Record<PortalStatusKey, PortalStatusLabel> =
     },
     {} as Record<PortalStatusKey, PortalStatusLabel>,
   );
+
+// ── Portal-specifieke source-groepering ──
+//
+// Het portal toont issues niet per ruwe `source` (portal/userback/manual/ai)
+// maar in twee buckets: "wat de klant zelf meldde" vs "wat JAIP toevoegde".
+// Eén bron van waarheid hier zodat zowel de portal-UI als toekomstige
+// portal-queries (CP-008) dezelfde mapping gebruiken.
+
+export const PORTAL_SOURCE_GROUPS = [
+  { key: "client", label: "Onze meldingen", sources: ["portal", "userback"] },
+  { key: "jaip", label: "JAIP-meldingen", sources: ["manual", "ai"] },
+] as const;
+
+export type PortalSourceGroupKey = (typeof PORTAL_SOURCE_GROUPS)[number]["key"];
+
+/**
+ * Map een ruwe issue `source` naar de portal-groep. Onbekende, lege of
+ * `null`/`undefined` sources vallen terug op `'jaip'` — beter "intern" tonen
+ * dan iets aan de klant labelen dat hij niet herkent. Pure functie zonder
+ * DB-call zodat zowel UI als query-laag hem kan gebruiken.
+ */
+export function resolvePortalSourceGroup(source: string | null | undefined): PortalSourceGroupKey {
+  if (!source) return "jaip";
+  for (const group of PORTAL_SOURCE_GROUPS) {
+    if ((group.sources as readonly string[]).includes(source)) {
+      return group.key;
+    }
+  }
+  return "jaip";
+}

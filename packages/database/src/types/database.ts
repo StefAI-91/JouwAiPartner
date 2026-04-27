@@ -841,6 +841,8 @@ export type Database = {
           ai_executable: boolean | null;
           ai_result: Json | null;
           assigned_to: string | null;
+          client_description: string | null;
+          client_title: string | null;
           closed_at: string | null;
           component: string | null;
           created_at: string;
@@ -873,6 +875,8 @@ export type Database = {
           ai_executable?: boolean | null;
           ai_result?: Json | null;
           assigned_to?: string | null;
+          client_description?: string | null;
+          client_title?: string | null;
           closed_at?: string | null;
           component?: string | null;
           created_at?: string;
@@ -905,6 +909,8 @@ export type Database = {
           ai_executable?: boolean | null;
           ai_result?: Json | null;
           assigned_to?: string | null;
+          client_description?: string | null;
+          client_title?: string | null;
           closed_at?: string | null;
           component?: string | null;
           created_at?: string;

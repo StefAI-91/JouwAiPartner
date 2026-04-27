@@ -2,11 +2,32 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isAdmin } from "@repo/auth/access";
 import {
   PORTAL_KEY_TO_INTERNAL_STATUSES,
+  PORTAL_SOURCE_GROUPS,
   PORTAL_STATUS_GROUPS,
+  type IssueType,
+  type PortalSourceGroupKey,
   type PortalStatusKey,
 } from "../../constants/issues";
 
 export type PortalStatusFilter = PortalStatusKey;
+
+export interface PortalIssueListFilters {
+  status?: PortalStatusFilter;
+  sourceGroup?: PortalSourceGroupKey;
+  types?: IssueType[];
+  limit?: number;
+  offset?: number;
+}
+
+export type PortalIssueCountFilters = Pick<PortalIssueListFilters, "sourceGroup" | "types">;
+
+const SOURCE_GROUP_TO_SOURCES = PORTAL_SOURCE_GROUPS.reduce(
+  (acc, group) => {
+    acc[group.key] = group.sources;
+    return acc;
+  },
+  {} as Record<PortalSourceGroupKey, readonly string[]>,
+);
 
 export interface PortalProjectWithDetails {
   id: string;
@@ -203,18 +224,30 @@ export type PortalIssueCounts = Record<PortalStatusKey, number>;
 /**
  * Tel issues per portal-statusgroep — via N parallelle DB-counts i.p.v. alle
  * rijen ophalen en in JS tellen. Elke count is een head-only index-lookup.
+ *
+ * `filters` (CP-008) laten de counts dezelfde source/type-filters volgen als
+ * de lijst zelf, zodat de bucket-headers nooit "Ingepland (8)" tonen terwijl
+ * de zichtbare lijst maar 3 cards heeft.
  */
 export async function getProjectIssueCounts(
   projectId: string,
   client: SupabaseClient,
+  filters?: PortalIssueCountFilters,
 ): Promise<PortalIssueCounts> {
+  const sources = filters?.sourceGroup ? SOURCE_GROUP_TO_SOURCES[filters.sourceGroup] : null;
+  const types = filters?.types && filters.types.length > 0 ? filters.types : null;
+
   const entries = await Promise.all(
     PORTAL_STATUS_GROUPS.map(async (group) => {
-      const { count, error } = await client
+      let query = client
         .from("issues")
         .select("id", { count: "exact", head: true })
         .eq("project_id", projectId)
         .in("status", [...group.internalStatuses]);
+      if (sources) query = query.in("source", [...sources]);
+      if (types) query = query.in("type", types);
+
+      const { count, error } = await query;
 
       if (error) {
         console.error(`[getProjectIssueCounts:${group.key}]`, error.message);
@@ -232,15 +265,19 @@ export interface PortalIssue {
   issue_number: number;
   title: string;
   description: string | null;
+  client_title: string | null;
+  client_description: string | null;
   status: string;
   type: string;
   priority: string;
+  source: string;
   created_at: string;
+  updated_at: string;
   closed_at: string | null;
 }
 
 const PORTAL_ISSUE_COLS =
-  "id, issue_number, title, description, status, type, priority, created_at, closed_at";
+  "id, issue_number, title, description, client_title, client_description, status, type, priority, source, created_at, updated_at, closed_at";
 
 const DEFAULT_ISSUES_PAGE_SIZE = 50;
 const MAX_ISSUES_PAGE_SIZE = 200;
@@ -248,13 +285,18 @@ const MAX_ISSUES_PAGE_SIZE = 200;
 /**
  * Portal issue lijst voor een project — alleen klant-relevante velden, geen
  * comments/assignees/interne metadata. Optioneel filteren op vertaalde
- * status-groep (bv. "ingepland" → interne statussen backlog+todo) en
+ * status-groep, source-groep ('client'/'jaip', CP-008) en/of types, plus
  * pagineren zodat een project met honderden issues de request niet opblaast.
+ *
+ * Source-filter mapt via `PORTAL_SOURCE_GROUPS` naar ruwe `source`-waarden;
+ * onbekende sources blijven onzichtbaar onder beide groepen wanneer er
+ * gefilterd wordt — dat is bewust, de UI toont ze in default-view en
+ * resolveert hun groep visueel via `resolvePortalSourceGroup`.
  */
 export async function listPortalIssues(
   projectId: string,
   client: SupabaseClient,
-  filters?: { status?: PortalStatusFilter; limit?: number; offset?: number },
+  filters?: PortalIssueListFilters,
 ): Promise<PortalIssue[]> {
   const limit = Math.min(filters?.limit ?? DEFAULT_ISSUES_PAGE_SIZE, MAX_ISSUES_PAGE_SIZE);
   const offset = Math.max(filters?.offset ?? 0, 0);
@@ -263,12 +305,18 @@ export async function listPortalIssues(
     .from("issues")
     .select(PORTAL_ISSUE_COLS)
     .eq("project_id", projectId)
-    .order("created_at", { ascending: false })
+    .order("updated_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (filters?.status) {
     const internal = PORTAL_KEY_TO_INTERNAL_STATUSES[filters.status];
     query = query.in("status", internal);
+  }
+  if (filters?.sourceGroup) {
+    query = query.in("source", [...SOURCE_GROUP_TO_SOURCES[filters.sourceGroup]]);
+  }
+  if (filters?.types && filters.types.length > 0) {
+    query = query.in("type", filters.types);
   }
 
   const { data, error } = await query;
