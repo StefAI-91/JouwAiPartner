@@ -1,5 +1,10 @@
 # Micro Sprint CP-009: Portal Issue-Detail + Productie-Deploy
 
+> **Status (2026-04-27):** Code-werk afgerond op `claude/start-cp-006-PXtOW`.
+> Deploy/validatie wacht op handmatige stappen door Stef — zie checklist
+> onderaan. Verplaats dit bestand naar `sprints/done/` zodra alle deploy-
+> taken zijn afgerond.
+
 ## Doel
 
 Laatste sprint van portal v1: issue-detailpagina uitbreiden met `client_title`/`client_description`-fallback en source-indicator, `apps/portal/vercel.json` toevoegen voor deploy-pariteit, en de portal live krijgen op `https://portal.jouw-ai-partner.nl/`. Eindigt met validatiesessie waarin Stefan Roevros (CAI) zelf het overzicht doorloopt — daarmee is de "Stefan First"-doelstelling afgerond.
@@ -111,3 +116,59 @@ Laatste sprint van portal v1: issue-detailpagina uitbreiden met `client_title`/`
 - PRD: `docs/specs/prd-client-portal/11-sprint-indicatie.md` week 3
 - Bestaand: `apps/cockpit/vercel.json` als template
 - RLS-bron: `supabase/migrations/20260418110000_issues_rls_client_hardening.sql`
+
+## Voortgang code-deel
+
+| ID           | Status        | Toelichting                                                                                                                      |
+| ------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| DEPLOY-V1-01 | ✅ Code klaar | `apps/portal/src/components/issues/issue-detail.tsx` past `client_title \|\| title` + `client_description \|\| description` toe. |
+| DEPLOY-V1-02 | ✅ Code klaar | Source-icoon (Inbox/Shield) + tekstbadge naast `PortalStatusBadge`; `updated_at` toegevoegd aan meta-rij.                        |
+| DEPLOY-V1-03 | ✅ Code klaar | `getPortalIssue` filtert op `eq("project_id", ...)` + page roept `notFound()` aan; `not-found.tsx` was er al.                    |
+| DEPLOY-V1-04 | ✅ Code klaar | `apps/portal/vercel.json` toegevoegd (leeg `{}` — portal heeft geen crons; build-config blijft via Vercel UI per project).       |
+| DEPLOY-V1-05 | ⏳ Stef       | Vercel-project + custom domain + DNS — handmatige stap.                                                                          |
+| DEPLOY-V1-06 | ⏳ Stef       | RLS-bewijs vereist tweede testaccount in een andere organization; documenteer hieronder.                                         |
+| DEPLOY-V1-07 | ⏳ Stef       | Stefan-account aanmaken in productie Supabase + `portal_project_access`-rij — handmatig.                                         |
+| DEPLOY-V1-08 | ⏳ Stef       | Plannen + uitvoeren validatiesessie; notuleer hieronder onder "Lessons learned".                                                 |
+
+### Verificatie code-deel (geautomatiseerd)
+
+- [x] Type-check slaagt voor alle workspaces
+- [x] Lint slaagt op gewijzigde files (devhub-pre-existende error niet aangeraakt)
+- [x] `npx turbo build --filter=@repo/portal` slaagt lokaal
+- [x] Portal vitest: 30/30 tests groen (incl. 8 nieuwe `issue-detail.test.tsx` voor fallback + source + XSS-defensie)
+
+## Deploy-checklist (Stef)
+
+1. **Vercel project**
+   - [ ] Maak (of update) `portal` project in Vercel, root-dir `apps/portal`, framework Next.js
+   - [ ] Build-command: `cd ../.. && npx turbo build --filter=@repo/portal` (of laat Vercel auto-detect; verifieer build slaagt op preview)
+   - [ ] Env-vars zetten: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_DEVHUB_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+2. **Custom domain**
+   - [ ] Voeg `portal.jouw-ai-partner.nl` toe in Vercel
+   - [ ] DNS bij domeinregistrar wijzigen volgens Vercel-instructies; HTTPS automatisch via Vercel
+3. **RLS-bewijs**
+   - [ ] Maak een tweede testaccount aan in een andere `organizations`-rij
+   - [ ] Geef hem alleen `portal_project_access` op een ander project (NIET het CAI-project)
+   - [ ] Login als testaccount, probeer:
+     - `/` → mag geen CAI-project zien
+     - `/projects/<CAI-project-id>/issues` → 404 of leeg
+     - `/projects/<CAI-project-id>/issues/<issue-id>` → 404
+   - [ ] Documenteer resultaten hieronder onder "RLS-bewijs"
+4. **Stefan-account**
+   - [ ] Maak `profiles`-rij voor Stefan Roevros (`role='client'`, `organization_id` = CAI org)
+   - [ ] Insert `portal_project_access` rij Stefan ↔ CAI-project
+   - [ ] Login-test: Stefan ontvangt OTP via email, kan inloggen, ziet alleen CAI-project
+5. **Validatiesessie**
+   - [ ] 30 min met Stefan inplannen
+   - [ ] Notuleren onder "Lessons learned"
+6. **Sprint afronden**
+   - [ ] PRD-status `docs/specs/prd-client-portal/00-index.md` bijwerken naar "Released v1"
+   - [ ] Verplaats dit bestand naar `sprints/done/`
+
+## RLS-bewijs
+
+_(In te vullen na uitvoeren van deploy-checklist stap 3)_
+
+## Lessons learned
+
+_(In te vullen na validatiesessie met Stefan)_
