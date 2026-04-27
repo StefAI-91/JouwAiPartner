@@ -1,8 +1,8 @@
 # Stand van zaken — Action Item Specialist tuning
 
-**Branch:** `claude/open-stand-van-zaken-docs-Rjd8f`
-**Laatste commit:** `74e4c35` (TIJDELIJK Fireflies-first in dev/action_item flow)
-**Status:** in tuning + speaker-mapping subsysteem in productie. Action-item-specialist nog niet productie-klaar — vier prompts + drie filter-lagen + harness met validator-toggle, deterministische follow_up_date resolver, en nu een named-transcript pipeline die anonieme `[speaker_X]`-labels uit ElevenLabs vervangt door deelnemer-namen.
+**Branch:** `claude/review-branch-hierarchy-BOBKK`
+**Laatste commit:** `68a725e` (regenerate-knoppen op meeting/review pagina)
+**Status:** action-item-specialist staat in productie via gatekeeper-pipeline (sprint-041, commit `0f60d3d`). v5 single-call met action-validator is de productie-default. Speaker-mapping subsysteem ook productie-actief. Tuning gaat door op de golden-set; verdere prompt-iteraties landen via de bestaande versies.
 
 ## Doel
 
@@ -255,7 +255,7 @@ supabase/migrations/
 
 ## Productie-status
 
-**Action-item-specialist:** nog niet productie-klaar. v2 single-call blijft de default voor de gatekeeper-pipeline. Pas mergen na golden-set validatie van v5 + validator versus de huidige v2.
+**Action-item-specialist:** productie. Sprint-041 (`0f60d3d`) integreert de step in de gatekeeper-pipeline; v5 single-call met action-validator is de productie-default. Run-telemetrie landt in `experimental_action_item_extractions`; productie-rijen in `extractions` (type=`action_item`, source-marker `action_item_specialist`). Idempotente save: alleen niet-verified specialist-rijen worden vervangen. Regenerate-knoppen op meeting + review detail (`68a725e`). Tuning + golden-set validatie gaan door als doorlopend werk.
 
 **Speaker-mapping subsysteem:** wél productie-actief — nieuwe meetings krijgen automatisch een named-transcript via de pipeline-stap (niet-blokkerend). Migratie `20260427120000_meeting_named_transcript.sql` moet zijn gedraaid. Bestaande meetings worden via `/dev/speaker-mapping` UI of het CLI-script ge-backfilled. Lezers in de gatekeeper-pipeline + meeting-transcript-panel + reprocess-route hanteren `named ?? elevenlabs ?? fireflies`. Action-item harness + golden-coder UI staan tijdelijk Fireflies-first.
 
