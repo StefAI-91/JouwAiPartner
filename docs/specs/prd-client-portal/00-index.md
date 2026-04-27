@@ -16,5 +16,6 @@
 2. [Probleem & Context](./02-probleem-context.md)
 3. [Doelgroep & Gebruikers](./03-doelgroep-gebruikers.md)
 4. [Scope](./04-scope.md)
+5. [Functionele Eisen](./05-functionele-eisen.md)
 
 > Document wordt in batches aangevuld — sectie-bestanden verschijnen zodra de inhoud is aangeleverd.
