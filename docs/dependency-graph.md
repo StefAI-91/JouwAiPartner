@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 487 |
-| Exported functions/constants | 790 |
-| Exported types/interfaces | 319 |
-| Cross-package imports | 529 |
-| Critical integration points (3+ packages) | 12 |
+| Files scanned | 505 |
+| Exported functions/constants | 833 |
+| Exported types/interfaces | 342 |
+| Cross-package imports | 534 |
+| Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
 
@@ -131,6 +131,46 @@
 - `getUnprocessedEmails()`
 
 **Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`, `EmailForPipelineInput`
+
+### `queries/emails/accounts.ts`
+
+**Exports:**
+- `listActiveGoogleAccountsSafe()`
+- `listActiveGoogleAccounts()`
+- `getGoogleAccountById()`
+- `getGoogleAccountByEmail()`
+
+**Types:** `GoogleAccountSafe`, `GoogleAccountRow`
+
+### `queries/emails/detail.ts`
+
+**Exports:**
+- `getEmailById()`
+- `listDraftEmails()`
+- `getDraftEmailById()`
+
+**Types:** `EmailDetail`, `ReviewEmail`
+
+### `queries/emails/lists.ts`
+
+**Exports:**
+- `listEmails()`
+- `countEmailsByFilterStatus()`
+- `listEmailsByOrganization()`
+- `countEmailsByDirection()`
+
+**Types:** `EmailDirection`, `EmailFilterStatus`, `EmailListItem`
+
+### `queries/emails/pipeline.ts`
+
+**Exports:**
+- `getExistingGmailIds()`
+- `countUnprocessedEmails()`
+- `getEmailForPipelineInput()`
+- `listEmailsForReclassify()`
+- `getUnprocessedEmails()`
+
+**Types:** `EmailForPipelineInput`
 
 ### `queries/extractions.ts`
 
@@ -282,6 +322,42 @@
 
 **Types:** `PersonListItem`, `PersonWithOrg`, `PersonForAssignment`, `PersonDetail`, `KnownPerson`, `PersonForContext`
 
+### `queries/people/detail.ts`
+
+**Exports:**
+- `getPersonById()`
+- `getStalePeople()`
+
+**Types:** `PersonDetail`
+
+### `queries/people/lists.ts`
+
+**Exports:**
+- `listPeople()`
+- `listPeopleByOrganization()`
+- `listPeopleWithOrg()`
+- `listPeopleForAssignment()`
+
+**Types:** `PersonListItem`, `PersonWithOrg`, `PersonForAssignment`
+
+### `queries/people/lookup.ts`
+
+**Exports:**
+- `findPersonIdsByName()`
+- `findProfileIdByName()`
+- `findPeopleByNames()`
+- `findPeopleByEmails()`
+- `findPersonOrgByEmail()`
+
+### `queries/people/pipeline.ts`
+
+**Exports:**
+- `getAllKnownPeople()`
+- `getAdminEmails()`
+- `getPeopleForContext()`
+
+**Types:** `KnownPerson`, `PersonForContext`
+
 ### `queries/portal/access.ts`
 
 **Exports:**
@@ -352,6 +428,31 @@
 - `getProjectContextForReport()`
 
 **Types:** `IssueReportRow`, `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`, `ProjectActivityEvent`, `PaginatedResult`, `ProjectContextReport`
+
+### `queries/reports/internals.ts`
+
+**Exports:**
+- `cutoffIsoFromDaysBack()`
+- `mapIssueRow()`
+- `REPORT_ISSUE_SELECT`
+
+**Types:** `PaginatedResult`, `RawIssueWithAssigned`, `IssueReportRow`
+
+### `queries/reports/issues.ts`
+
+**Exports:**
+- `getProjectIssuesForReport()`
+- `getIssueDetailForReport()`
+
+**Types:** `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`
+
+### `queries/reports/project.ts`
+
+**Exports:**
+- `getProjectActivityForReport()`
+- `getProjectContextForReport()`
+
+**Types:** `ProjectActivityEvent`, `ProjectContextReport`
 
 ### `queries/review.ts`
 
@@ -2323,7 +2424,6 @@
 - `@repo/ai/fireflies` → fetchFirefliesTranscript
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/ai/pipeline/steps/transcribe` → runTranscribeStep
-- `@repo/ai/pipeline/steps/speaker-mapping` → runSpeakerMappingStep
 - `@repo/ai/pipeline/steps/summarize` → runSummarizeStep
 - `@repo/ai/pipeline/steps/risk-specialist` → runRiskSpecialistStep
 - `@repo/ai/pipeline/embed/pipeline` → embedMeetingWithExtractions
@@ -3045,6 +3145,42 @@
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/organizations` → OrganizationListItem
 
+### `apps/cockpit/src/components/agents/activity-feed.tsx`
+
+**Exports:**
+- `ActivityFeed()`
+
+**Depends on:**
+- (type) `@repo/database/queries/agent-runs` → AgentRunRow
+- (type) `@repo/ai/agents/registry` → AgentDefinition
+
+### `apps/cockpit/src/components/agents/agent-card.tsx`
+
+**Exports:**
+- `AgentCard()`
+
+**Depends on:**
+- (type) `@repo/ai/agents/registry` → AgentDefinition
+- (type) `@repo/database/queries/agent-runs` → AgentMetrics
+- `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle
+
+### `apps/cockpit/src/components/agents/quadrant-styles.ts`
+
+**Exports:**
+- `quadrantHeader`
+- `quadrantBadge`
+- `quadrantLabel`
+
+**Depends on:**
+- (type) `@repo/ai/agents/registry` → AgentQuadrant
+
+### `apps/cockpit/src/components/agents/system-overview.tsx`
+
+**Exports:**
+- `SystemOverview()`
+
+**Types:** `SystemStats`
+
 ### `apps/cockpit/src/components/architectuur/embeddings-card.tsx`
 
 **Exports:**
@@ -3726,8 +3862,8 @@ Which layers depend on which packages:
 | AI Pipeline | 61 | - | - | - | - | 61 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 27 | 12 | 13 | - | - | 52 |
-| Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
-| Cockpit Components | 18 | 2 | - | 40 | - | 60 |
+| Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
+| Cockpit Components | 20 | 5 | - | 41 | - | 66 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 100 | 8 | 8 | 39 | - | 155 |
 | Database Queries | - | - | 3 | - | - | 3 |
@@ -3756,6 +3892,7 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx` | auth, ui, database | 3 |
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
 ## Key Dependency Chains
@@ -3994,6 +4131,39 @@ Which queries are used where across the codebase.
 | `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
+### queries/emails/accounts.ts
+
+| Query | Used in |
+|-------|---------|
+| `listActiveGoogleAccountsSafe()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+
+### queries/emails/detail.ts
+
+| Query | Used in |
+|-------|---------|
+| `getEmailById()` | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx` |
+| `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
+| `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+
+### queries/emails/lists.ts
+
+| Query | Used in |
+|-------|---------|
+| `listEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `countEmailsByFilterStatus()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listEmailsByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
+| `countEmailsByDirection()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+
+### queries/emails/pipeline.ts
+
+| Query | Used in |
+|-------|---------|
+| `getExistingGmailIds()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
+| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+
 ### queries/golden.ts
 
 | Query | Used in |
@@ -4110,6 +4280,38 @@ Which queries are used where across the codebase.
 | `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |
 | `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 
+### queries/people/detail.ts
+
+| Query | Used in |
+|-------|---------|
+| `getPersonById()` | `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx` |
+| `getStalePeople()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
+
+### queries/people/lists.ts
+
+| Query | Used in |
+|-------|---------|
+| `listPeople()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listPeopleByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
+| `listPeopleWithOrg()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listPeopleForAssignment()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+
+### queries/people/lookup.ts
+
+| Query | Used in |
+|-------|---------|
+| `findPersonIdsByName()` | `packages/mcp/src/tools/actions.ts` |
+| `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
+| `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |
+| `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
+
+### queries/people/pipeline.ts
+
+| Query | Used in |
+|-------|---------|
+| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `getPeopleForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
+
 ### queries/projects/access.ts
 
 | Query | Used in |
@@ -4142,6 +4344,27 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getProjectIssuesForReport()` | `packages/mcp/src/tools/issues.ts` |
 | `getIssueDetailForReport()` | `packages/mcp/src/tools/issues.ts` |
+| `getProjectActivityForReport()` | `packages/mcp/src/tools/project-report.ts` |
+| `getProjectContextForReport()` | `packages/mcp/src/tools/project-report.ts` |
+
+### queries/reports/internals.ts
+
+| Query | Used in |
+|-------|---------|
+| `cutoffIsoFromDaysBack()` | `packages/database/src/queries/reports/issues.ts`, `packages/database/src/queries/reports/project.ts` |
+| `mapIssueRow()` | `packages/database/src/queries/reports/issues.ts` |
+
+### queries/reports/issues.ts
+
+| Query | Used in |
+|-------|---------|
+| `getProjectIssuesForReport()` | `packages/mcp/src/tools/issues.ts` |
+| `getIssueDetailForReport()` | `packages/mcp/src/tools/issues.ts` |
+
+### queries/reports/project.ts
+
+| Query | Used in |
+|-------|---------|
 | `getProjectActivityForReport()` | `packages/mcp/src/tools/project-report.ts` |
 | `getProjectContextForReport()` | `packages/mcp/src/tools/project-report.ts` |
 

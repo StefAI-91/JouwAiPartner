@@ -71,7 +71,7 @@ describe("attachment actions", () => {
 
   describe("recordIssueAttachmentAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/attachments");
+      const mod = await import("@/features/issues/actions/attachments");
       return mod.recordIssueAttachmentAction;
     }
 
@@ -161,7 +161,7 @@ describe("attachment actions", () => {
 
   describe("createIssueAttachmentUploadUrlAction", () => {
     async function getAction() {
-      const mod = await import("../../src/actions/attachments");
+      const mod = await import("@/features/issues/actions/attachments");
       return mod.createIssueAttachmentUploadUrlAction;
     }
 

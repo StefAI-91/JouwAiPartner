@@ -65,27 +65,27 @@ Huidige regel: _"All completed sprints are in `sprints/done/`. Total: 39 sprints
 
 ### 2.2 `docs/specs/` — 19 files
 
-| File                               | Bytes  | Status / observatie                                                |
-| ---------------------------------- | ------ | ------------------------------------------------------------------ |
-| `vision-ai-native-architecture.md` | 38 kB  | Drift — agent roster klopt niet (zie §4)                           |
-| `platform-spec.md`                 | 43 kB  | Technische bron van waarheid — steekproef Q4b vereist              |
-| `requirements.md`                  | 20 kB  | v1 register, 90 requirements (zie §5)                              |
-| `requirements-v2.md`               | 25 kB  | v2 review/dashboard register, 98 requirements                      |
-| `requirements-devhub.md`           | 61 kB  | DevHub fase 1, 119 requirements — niet bijgewerkt sinds 2026-04-09 |
-| `requirements-portal.md`           | 17 kB  | Portal MVP, 72 requirements                                        |
-| `requirements-testing.md`          | 12 kB  | Testing, 68 requirements                                           |
-| `prd-devhub.md`                    | 76 kB  | PRD fase 1 — steekproef Q4b                                        |
-| `prd-feedback-widget.md`           | 14 kB  | Userback widget specs                                              |
-| `plan-userback-integratie.md`      | 7 kB   | Kan waarschijnlijk naar archive (Userback is live, DH-007 done)    |
-| `portal-mvp.md`                    | 14 kB  | Portal wireframes — alignment met vision vereist                   |
-| `project-segmented-summaries.md`   | 23 kB  | v3 design                                                          |
-| `meeting-extraction-strategy.md`   | 4 kB   | Mogelijk achterhaald na RiskSpecialist-only extractie              |
-| `query-inventory.md`               | 31 kB  | Gegenereerd door Q2a                                               |
-| `test-strategy.md`                 | 22 kB  | Gegenereerd door Q3a — actueel                                     |
-| `style-guide.md`                   | 13 kB  | Design tokens                                                      |
-| `v2-review-dashboard.md`           | 29 kB  | v2-doc — mogelijk archiveerbaar                                    |
-| `revieuw-que.html`                 | 10 kB  | Typo ("revieuw") + HTML — Q4b: verplaats of verwijder              |
-| `sketches/`                        | folder | Design sketches — negeer                                           |
+| File                               | Bytes  | Status / observatie                                                      |
+| ---------------------------------- | ------ | ------------------------------------------------------------------------ |
+| `vision-ai-native-architecture.md` | 38 kB  | Drift — agent roster klopt niet (zie §4)                                 |
+| `platform-spec.md`                 | 43 kB  | Technische bron van waarheid — steekproef Q4b vereist                    |
+| `requirements.md`                  | 20 kB  | v1 register, 90 requirements (zie §5)                                    |
+| `requirements-v2.md`               | 25 kB  | v2 review/dashboard register, 98 requirements                            |
+| `requirements-devhub.md`           | 61 kB  | DevHub fase 1, 119 requirements — niet bijgewerkt sinds 2026-04-09       |
+| `requirements-portal.md`           | 17 kB  | Portal MVP, 72 requirements                                              |
+| `requirements-testing.md`          | 12 kB  | Testing, 68 requirements                                                 |
+| `prd-devhub.md`                    | 76 kB  | PRD fase 1 — steekproef Q4b                                              |
+| `prd-feedback-widget.md`           | 14 kB  | Userback widget specs                                                    |
+| `plan-userback-integratie.md`      | 7 kB   | Kan waarschijnlijk naar archive (Userback is live, DH-007 done)          |
+| `prd-client-portal/`               | folder | Client Portal "Stefan First MVP" — vervangt portal-mvp.md (gearchiveerd) |
+| `project-segmented-summaries.md`   | 23 kB  | v3 design                                                                |
+| `meeting-extraction-strategy.md`   | 4 kB   | Mogelijk achterhaald na RiskSpecialist-only extractie                    |
+| `query-inventory.md`               | 31 kB  | Gegenereerd door Q2a                                                     |
+| `test-strategy.md`                 | 22 kB  | Gegenereerd door Q3a — actueel                                           |
+| `style-guide.md`                   | 13 kB  | Design tokens                                                            |
+| `v2-review-dashboard.md`           | 29 kB  | v2-doc — mogelijk archiveerbaar                                          |
+| `revieuw-que.html`                 | 10 kB  | Typo ("revieuw") + HTML — Q4b: verplaats of verwijder                    |
+| `sketches/`                        | folder | Design sketches — negeer                                                 |
 
 ### 2.3 Twee-locatie-backlog (drift-oorzaak)
 

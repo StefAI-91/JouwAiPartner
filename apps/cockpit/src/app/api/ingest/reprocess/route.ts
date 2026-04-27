@@ -5,7 +5,6 @@ import { z } from "zod";
 import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { runTranscribeStep } from "@repo/ai/pipeline/steps/transcribe";
-import { runSpeakerMappingStep } from "@repo/ai/pipeline/steps/speaker-mapping";
 import { runSummarizeStep } from "@repo/ai/pipeline/steps/summarize";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { embedMeetingWithExtractions } from "@repo/ai/pipeline/embed/pipeline";
@@ -79,32 +78,13 @@ export async function POST(req: NextRequest) {
     ? { success: true }
     : { success: false, error: transcribeResult.error };
 
-  // 3b. Speaker-mapping (named-transcript) — niet-blokkerend.
-  let namedTranscript: string | null = null;
-  if (transcribeResult.transcript) {
-    const speakerMappingResult = await runSpeakerMappingStep({
-      meetingId: meeting.id,
-      elevenLabsTranscript: transcribeResult.transcript,
-      firefliesTranscript: meeting.transcript ?? null,
-    });
-    namedTranscript = speakerMappingResult.named_transcript;
-    results.speaker_mapping = speakerMappingResult.success
-      ? { success: true, mapped_count: speakerMappingResult.mapped_count }
-      : { success: false, error: speakerMappingResult.error };
-  }
-
   // 4. Summarizer
   const summarizerTranscript =
-    namedTranscript ??
     transcribeResult.transcript ??
     chunkTranscript(transcript.sentences)
       .map((c) => c.text)
       .join("\n\n---\n\n");
-  const transcriptSource = namedTranscript
-    ? "elevenlabs_named"
-    : transcribeResult.transcript
-      ? "elevenlabs"
-      : "fireflies";
+  const transcriptSource = transcribeResult.transcript ? "elevenlabs" : "fireflies";
 
   console.info(`Reprocess: Starting Summarizer (${transcriptSource})...`);
   const summarizeResult = await runSummarizeStep(meeting.id, summarizerTranscript, {
