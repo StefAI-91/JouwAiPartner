@@ -18,5 +18,6 @@
 4. [Scope](./04-scope.md)
 5. [Functionele Eisen](./05-functionele-eisen.md)
 6. [Data Model](./06-data-model.md)
+7. [Technische Constraints](./07-technische-constraints.md)
 
 > Document wordt in batches aangevuld — sectie-bestanden verschijnen zodra de inhoud is aangeleverd.
