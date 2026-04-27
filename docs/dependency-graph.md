@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 463 |
 | Exported functions/constants | 715 |
-| Exported types/interfaces | 257 |
+| Exported types/interfaces | 259 |
 | Cross-package imports | 492 |
 | Critical integration points (3+ packages) | 10 |
 
@@ -324,7 +324,7 @@
 - `listPortalIssues()`
 - `getPortalIssue()`
 
-**Types:** `PortalStatusFilter`, `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`, `PortalIssue`
+**Types:** `PortalStatusFilter`, `PortalIssueListFilters`, `PortalIssueCountFilters`, `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`, `PortalIssue`
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin

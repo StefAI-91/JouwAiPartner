@@ -25,6 +25,12 @@ const PROSE_CLASSES = [
 ].join(" ");
 
 export function IssueDetail({ projectId, issue }: IssueDetailProps) {
+  // CP-006/CP-007 fallback: toon klant-vertaling als die er is, anders de
+  // interne tekst. Consistent met de bucket-cards (BUCKET-V1-07) zodat een
+  // klant niet plotseling technisch jargon ziet na klikken.
+  const heading = issue.client_title ?? issue.title;
+  const body = issue.client_description ?? issue.description;
+
   return (
     <article className="flex flex-col gap-5">
       <Link
@@ -41,7 +47,7 @@ export function IssueDetail({ projectId, issue }: IssueDetailProps) {
           <PortalStatusBadge status={issue.status} />
           <IssueTypeBadge type={issue.type} />
         </div>
-        <h1 className="text-2xl font-semibold text-foreground">{issue.title}</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{heading}</h1>
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span>Aangemaakt op {formatDate(issue.created_at)}</span>
           {issue.closed_at ? <span>Afgerond op {formatDate(issue.closed_at)}</span> : null}
@@ -49,9 +55,9 @@ export function IssueDetail({ projectId, issue }: IssueDetailProps) {
       </header>
 
       <section className="rounded-lg border border-border bg-card p-5">
-        {issue.description ? (
+        {body ? (
           <div className={PROSE_CLASSES}>
-            <Markdown remarkPlugins={[remarkGfm]}>{issue.description}</Markdown>
+            <Markdown remarkPlugins={[remarkGfm]}>{body}</Markdown>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">Geen beschrijving beschikbaar.</p>
