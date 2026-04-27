@@ -1,0 +1,499 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { formatDate } from "@repo/ui/format";
+import {
+  getSpeakerMappingBackfillStatus,
+  runSpeakerMappingAction,
+  runSpeakerMappingBackfillBatch,
+  type BackfillBatchItem,
+  type BackfillStatus,
+  type RunSpeakerMappingResult,
+  type SpeakerMappingMeetingOption,
+} from "@/actions/dev-speaker-mapping";
+
+interface Props {
+  meetings: SpeakerMappingMeetingOption[];
+  initialBackfillStatus: BackfillStatus | null;
+}
+
+export function SpeakerMappingClient({ meetings, initialBackfillStatus }: Props) {
+  const [selectedId, setSelectedId] = useState<string>(meetings[0]?.id ?? "");
+  const [perSpeaker, setPerSpeaker] = useState(10);
+  const [result, setResult] = useState<RunSpeakerMappingResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const run = () => {
+    if (!selectedId) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await runSpeakerMappingAction({ meetingId: selectedId, perSpeaker });
+      if ("error" in res) {
+        setError(res.error);
+        setResult(null);
+      } else {
+        setResult(res);
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-xl border border-border/60 bg-card p-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto]">
+          <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
+            Meeting
+            <select
+              value={selectedId}
+              onChange={(e) => setSelectedId(e.target.value)}
+              disabled={isPending}
+              className="rounded-md border border-border/60 bg-background px-3 py-2 text-[13px]"
+            >
+              {meetings.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {formatDate(m.date)} — {m.title ?? "(geen titel)"}
+                  {m.meeting_type ? ` · ${m.meeting_type}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
+            Samples / speaker
+            <input
+              type="number"
+              min={1}
+              max={20}
+              step={1}
+              value={perSpeaker}
+              onChange={(e) => setPerSpeaker(parseInt(e.target.value, 10) || 10)}
+              className="w-24 rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={run}
+            disabled={isPending || !selectedId}
+            className="self-end rounded-md bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {isPending ? "Bezig…" : "Run Haiku"}
+          </button>
+        </div>
+      </section>
+
+      {error && (
+        <section className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+          {error}
+        </section>
+      )}
+
+      {result && <ResultPanel result={result} />}
+
+      <BackfillPanel initialStatus={initialBackfillStatus} />
+    </div>
+  );
+}
+
+function BackfillPanel({ initialStatus }: { initialStatus: BackfillStatus | null }) {
+  const [status, setStatus] = useState<BackfillStatus | null>(initialStatus);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [limit, setLimit] = useState(5);
+  const [force, setForce] = useState(false);
+  const [items, setItems] = useState<BackfillBatchItem[]>([]);
+  const [batchError, setBatchError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const refreshStatus = () => {
+    startTransition(async () => {
+      const res = await getSpeakerMappingBackfillStatus();
+      if ("error" in res) {
+        setStatusError(res.error);
+      } else {
+        setStatus(res);
+        setStatusError(null);
+      }
+    });
+  };
+
+  const runBatch = () => {
+    setBatchError(null);
+    startTransition(async () => {
+      const res = await runSpeakerMappingBackfillBatch({ limit, force });
+      if ("error" in res) {
+        setBatchError(res.error);
+        return;
+      }
+      // Append nieuwe items bovenaan; eerste batch overschrijft eerdere ronde
+      // niet.
+      setItems((prev) => [...res.items, ...prev]);
+      // Refresh status meteen mee zodat counter niet stale blijft.
+      const next = await getSpeakerMappingBackfillStatus();
+      if (!("error" in next)) setStatus(next);
+    });
+  };
+
+  const remaining = status ? status.without_named : null;
+
+  return (
+    <section className="rounded-xl border border-border/60 bg-card p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">Backfill named-transcripten</h2>
+          <p className="mt-1 text-[11.5px] text-muted-foreground">
+            Draai de speaker-mapping in batches over bestaande meetings. Elke batch verwerkt
+            meetings serieel — Haiku-call per meeting. Stop wanneer je tevreden bent over de
+            resultaten boven.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={refreshStatus}
+          disabled={isPending}
+          className="rounded-md border border-border/60 px-2 py-1 text-[11px] hover:bg-muted disabled:opacity-50"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {statusError && <p className="mt-2 text-[12px] text-rose-700">Status fout: {statusError}</p>}
+
+      {status && (
+        <dl className="mt-3 grid grid-cols-3 gap-x-4 text-[12px]">
+          <Stat label="Met ElevenLabs" value={status.with_elevenlabs.toLocaleString("nl-NL")} />
+          <Stat label="Al gemapped" value={status.with_named.toLocaleString("nl-NL")} />
+          <Stat label="Nog te doen" value={status.without_named.toLocaleString("nl-NL")} />
+        </dl>
+      )}
+
+      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[auto_auto_1fr_auto] md:items-end">
+        <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
+          Batch-limit
+          <input
+            type="number"
+            min={1}
+            max={20}
+            step={1}
+            value={limit}
+            onChange={(e) => setLimit(parseInt(e.target.value, 10) || 5)}
+            disabled={isPending}
+            className="w-24 rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-[11px] font-medium text-muted-foreground">
+          Forceer
+          <label className="flex items-center gap-2 rounded-md border border-border/60 bg-background px-2 py-2 text-[13px]">
+            <input
+              type="checkbox"
+              checked={force}
+              onChange={(e) => setForce(e.target.checked)}
+              disabled={isPending}
+            />
+            <span>Ook al gemapped</span>
+          </label>
+        </label>
+        <p className="text-[11px] text-muted-foreground">
+          {remaining !== null && remaining > 0
+            ? `Nog ${remaining.toLocaleString("nl-NL")} meetings te verwerken (zonder force).`
+            : remaining === 0 && !force
+              ? 'Alles is gemapped. Vink "Forceer" aan om opnieuw te mappen.'
+              : null}
+        </p>
+        <button
+          type="button"
+          onClick={runBatch}
+          disabled={isPending || (remaining === 0 && !force)}
+          className="rounded-md bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+        >
+          {isPending ? "Bezig…" : "Volgende batch"}
+        </button>
+      </div>
+
+      {batchError && (
+        <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-2 text-[12px] text-rose-900">
+          {batchError}
+        </p>
+      )}
+
+      {items.length > 0 && (
+        <ul className="mt-4 space-y-1.5 text-[12px]">
+          {items.map((item, i) => (
+            <BackfillResultRow key={`${item.meeting_id}-${i}`} item={item} />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function BackfillResultRow({ item }: { item: BackfillBatchItem }) {
+  const colorClass =
+    item.status === "mapped_full"
+      ? "border-emerald-200 bg-emerald-50"
+      : item.status === "mapped_partial"
+        ? "border-amber-200 bg-amber-50"
+        : item.status === "no_speakers"
+          ? "border-slate-200 bg-slate-50"
+          : "border-rose-200 bg-rose-50";
+  const icon =
+    item.status === "mapped_full"
+      ? "✓"
+      : item.status === "mapped_partial"
+        ? "◐"
+        : item.status === "no_speakers"
+          ? "—"
+          : "✗";
+
+  return (
+    <li className={`rounded-md border p-2 ${colorClass}`}>
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="font-mono font-bold">{icon}</span>
+        <span className="font-medium">{item.title ?? "(geen titel)"}</span>
+        <span className="text-[10.5px] text-muted-foreground">{formatDate(item.date)}</span>
+        {item.speaker_count > 0 && (
+          <span className="ml-auto text-[10.5px] text-muted-foreground">
+            {item.mapped_count}/{item.speaker_count} speakers
+          </span>
+        )}
+      </div>
+      {item.message && <p className="mt-0.5 text-[11px] text-muted-foreground">{item.message}</p>}
+    </li>
+  );
+}
+
+function ResultPanel({ result }: { result: RunSpeakerMappingResult }) {
+  const { meetingContext, mapping, debug, metrics, systemPrompt } = result;
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-xl border border-border/60 bg-card p-4">
+        <h2 className="text-sm font-semibold">Run-info</h2>
+        <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-[12px] md:grid-cols-4">
+          <Stat label="Title" value={meetingContext.title} />
+          <Stat label="Datum" value={meetingContext.date ?? "—"} />
+          <Stat label="Bron" value={meetingContext.transcript_source ?? "—"} />
+          <Stat
+            label="Transcript chars"
+            value={meetingContext.transcript_length.toLocaleString("nl-NL")}
+          />
+          <Stat label="Speakers" value={debug.speaker_ids.length} />
+          <Stat label="Latency" value={`${metrics.latency_ms} ms`} />
+          <Stat label="Input tokens" value={metrics.input_tokens ?? "—"} />
+          <Stat label="Output tokens" value={metrics.output_tokens ?? "—"} />
+        </dl>
+      </section>
+
+      <section className="rounded-xl border border-border/60 bg-card p-4">
+        <h2 className="text-sm font-semibold">Gegroepeerd per persoon</h2>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Diarization-splits (één persoon over meerdere {`speaker_X`}-labels) komen vaak voor.
+          Hieronder zie je welke labels Haiku aan dezelfde deelnemer toeschrijft.
+        </p>
+        <GroupedByPerson mappings={mapping.mappings} />
+      </section>
+
+      <section className="rounded-xl border border-border/60 bg-card p-4">
+        <h2 className="text-sm font-semibold">Mapping per speaker_id</h2>
+        <ul className="mt-3 space-y-2 text-[12.5px]">
+          {mapping.mappings.map((m) => (
+            <li
+              key={m.speaker_id}
+              className={`rounded-md border p-3 ${
+                m.person_name
+                  ? m.confidence >= 0.85
+                    ? "border-emerald-200 bg-emerald-50"
+                    : m.confidence >= 0.6
+                      ? "border-amber-200 bg-amber-50"
+                      : "border-orange-200 bg-orange-50"
+                  : "border-rose-200 bg-rose-50"
+              }`}
+            >
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="font-mono font-semibold">{m.speaker_id}</span>
+                <span className="text-base">→</span>
+                <span className="font-medium">
+                  {m.person_name || <span className="italic text-muted-foreground">(onzeker)</span>}
+                </span>
+                <span className="ml-auto text-[11px] text-muted-foreground">
+                  conf {m.confidence.toFixed(2)}
+                </span>
+              </div>
+              <p className="mt-1 text-[11.5px] italic text-muted-foreground">
+                <span className="font-semibold not-italic">reasoning:</span> {m.reasoning}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="rounded-xl border border-border/60 bg-card p-4">
+        <h2 className="text-sm font-semibold">Deelnemers (DB)</h2>
+        <ul className="mt-2 space-y-1 text-[12px]">
+          {meetingContext.participants.map((p) => (
+            <li key={p.name}>
+              <span className="font-medium">{p.name}</span>
+              {p.organization && (
+                <span className="text-muted-foreground">
+                  {" — "}
+                  {p.organization}
+                  {p.organization_type ? ` (${p.organization_type})` : ""}
+                </span>
+              )}
+              {p.role && <span className="text-muted-foreground"> · {p.role}</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <details className="rounded-xl border border-border/60 bg-card p-4">
+        <summary className="cursor-pointer text-sm font-semibold hover:underline">
+          ElevenLabs-samples ({debug.speaker_ids.length} speakers)
+        </summary>
+        <div className="mt-3 space-y-3">
+          {debug.speaker_ids.map((sid) => (
+            <div key={sid}>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {sid}
+              </p>
+              <ul className="mt-1 space-y-1 text-[11.5px]">
+                {(debug.samples[sid] ?? []).map((u, i) => (
+                  <li key={i} className="rounded-md bg-muted/50 p-2 italic">
+                    &ldquo;{u}&rdquo;
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      {debug.fireflies_names.length > 0 && (
+        <details className="rounded-xl border border-border/60 bg-card p-4">
+          <summary className="cursor-pointer text-sm font-semibold hover:underline">
+            Fireflies-samples ({debug.fireflies_names.length} named speakers)
+          </summary>
+          <div className="mt-3 space-y-3">
+            {debug.fireflies_names.map((name) => (
+              <div key={name}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {name}
+                </p>
+                <ul className="mt-1 space-y-1 text-[11.5px]">
+                  {(debug.fireflies_samples[name] ?? []).map((u, i) => (
+                    <li key={i} className="rounded-md bg-muted/50 p-2 italic">
+                      &ldquo;{u}&rdquo;
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      <details className="rounded-xl border border-border/60 bg-card p-4">
+        <summary className="cursor-pointer text-sm font-semibold hover:underline">
+          User-message (raw input naar model)
+        </summary>
+        <pre className="mt-2 max-h-[400px] overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-[11px] leading-relaxed">
+          {debug.user_message}
+        </pre>
+      </details>
+
+      <details className="rounded-xl border border-border/60 bg-card p-4">
+        <summary className="cursor-pointer text-sm font-semibold hover:underline">
+          System prompt ({systemPrompt.length.toLocaleString("nl-NL")} chars)
+        </summary>
+        <pre className="mt-2 max-h-[500px] overflow-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-[11px] leading-relaxed">
+          {systemPrompt}
+        </pre>
+      </details>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="text-[12.5px]">{value}</dd>
+    </div>
+  );
+}
+
+interface MappingItem {
+  speaker_id: string;
+  person_name: string;
+  confidence: number;
+  reasoning: string;
+}
+
+function GroupedByPerson({ mappings }: { mappings: MappingItem[] }) {
+  // Bucket per person_name; lege person_name komt onder "(onzeker)".
+  const buckets = new Map<string, MappingItem[]>();
+  for (const m of mappings) {
+    const key = m.person_name || "__unmapped__";
+    const list = buckets.get(key) ?? [];
+    list.push(m);
+    buckets.set(key, list);
+  }
+
+  // Sorteer: gemapte personen eerst (op aantal labels aflopend), unmapped onderaan.
+  const entries = Array.from(buckets.entries()).sort((a, b) => {
+    if (a[0] === "__unmapped__") return 1;
+    if (b[0] === "__unmapped__") return -1;
+    return b[1].length - a[1].length;
+  });
+
+  return (
+    <ul className="mt-3 space-y-2 text-[12.5px]">
+      {entries.map(([key, items]) => {
+        const isUnmapped = key === "__unmapped__";
+        const avgConfidence = items.reduce((s, i) => s + i.confidence, 0) / items.length;
+        return (
+          <li
+            key={key}
+            className={`rounded-md border p-3 ${
+              isUnmapped
+                ? "border-rose-200 bg-rose-50"
+                : avgConfidence >= 0.85
+                  ? "border-emerald-200 bg-emerald-50"
+                  : avgConfidence >= 0.6
+                    ? "border-amber-200 bg-amber-50"
+                    : "border-orange-200 bg-orange-50"
+            }`}
+          >
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-semibold">
+                {isUnmapped ? <span className="italic">(onzeker / niet gemapt)</span> : key}
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                {items.length} label{items.length === 1 ? "" : "s"}
+              </span>
+              {!isUnmapped && (
+                <span className="ml-auto text-[11px] text-muted-foreground">
+                  ⌀ conf {avgConfidence.toFixed(2)}
+                </span>
+              )}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {items
+                .sort((a, b) => b.confidence - a.confidence)
+                .map((it) => (
+                  <span
+                    key={it.speaker_id}
+                    className="inline-flex items-center gap-1 rounded-md bg-white/70 px-2 py-0.5 font-mono text-[11px]"
+                    title={it.reasoning}
+                  >
+                    {it.speaker_id}
+                    <span className="text-muted-foreground">{it.confidence.toFixed(2)}</span>
+                  </span>
+                ))}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

@@ -13,8 +13,13 @@ import {
 } from "./participant/classifier";
 import { buildRawFireflies } from "./build-raw-fireflies";
 import { runTranscribeStep } from "./steps/transcribe";
+import { runSpeakerMappingStep } from "./steps/speaker-mapping";
 import { runSummarizeStep } from "./steps/summarize";
 import { runRiskSpecialistStep } from "./steps/risk-specialist";
+import {
+  runActionItemSpecialistStep,
+  buildActionItemParticipants,
+} from "./steps/action-item-specialist";
 import { runGenerateTitleStep } from "./steps/generate-title";
 import { runTagAndSegmentStep } from "./steps/tag-and-segment";
 import { runEmbedStep } from "./steps/embed";
@@ -203,6 +208,20 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   const transcribeResult = await runTranscribeStep(meetingId, input.audio_url);
   if (transcribeResult.error) errors.push(`ElevenLabs: ${transcribeResult.error}`);
 
+  // Step 7b: Speaker-mapping — vervang anonieme `[speaker_X]:`-labels door
+  // deelnemer-namen via Haiku-call. Niet-blokkerend; bij falen valt iedereen
+  // terug op de raw transcript_elevenlabs.
+  let namedTranscript: string | null = null;
+  if (transcribeResult.transcript) {
+    const speakerMappingResult = await runSpeakerMappingStep({
+      meetingId,
+      elevenLabsTranscript: transcribeResult.transcript,
+      firefliesTranscript: input.transcript,
+    });
+    if (speakerMappingResult.error) errors.push(`Speaker-mapping: ${speakerMappingResult.error}`);
+    namedTranscript = speakerMappingResult.named_transcript;
+  }
+
   // Step 7.5 (TH-011): Theme-Detector — blocking, draait na Gatekeeper en
   // vóór Summarizer + RiskSpecialist. Skip onder de relevance-drempel
   // (zelfde drempel als de oude ThemeTagger).
@@ -250,8 +269,12 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
     identifiedThemesForSummarizer.map((t) => ({ name: t.name, description: t.description }));
 
   // Step 8: Summarize + extract — structurer of legacy pair
-  const bestTranscript = transcribeResult.transcript ?? input.transcript;
-  const transcriptSource = transcribeResult.transcript ? "elevenlabs" : "fireflies";
+  const bestTranscript = namedTranscript ?? transcribeResult.transcript ?? input.transcript;
+  const transcriptSource = namedTranscript
+    ? "elevenlabs_named"
+    : transcribeResult.transcript
+      ? "elevenlabs"
+      : "fireflies";
 
   const summarizeContext = {
     title: input.title,
@@ -282,6 +305,26 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
         project_id: p.project_id,
       })),
       identified_themes: identifiedThemesForRisk,
+    },
+    identifiedProjects,
+  );
+
+  // ActionItemSpecialist draait parallel aan de hoofdpipeline. Bewust op
+  // input.transcript (Fireflies), NIET bestTranscript — de specialist matcht
+  // op letterlijke source_quote en speaker-mapping introduceert drift in
+  // named-transcripts. Zie sprint 041 + docs/stand-van-zaken.md regels
+  // 95 + 159 + 165. Heroverwegen wanneer speaker-mapping ≥95% naam-
+  // attributie haalt over een grotere batch.
+  const actionItemMeetingDate = new Date(Number(input.date)).toISOString().slice(0, 10);
+  const actionItemSpecialistPromise = runActionItemSpecialistStep(
+    meetingId,
+    input.transcript,
+    {
+      title: input.title,
+      meeting_type: finalMeetingType,
+      party_type: partyType,
+      meeting_date: actionItemMeetingDate,
+      participants: buildActionItemParticipants(input.participants, knownPeople),
     },
     identifiedProjects,
   );
@@ -326,12 +369,12 @@ export async function processMeeting(input: MeetingInput): Promise<PipelineResul
   errors.push(...tagResult.errors);
   const segmentsSaved = tagResult.segmentsSaved;
 
-  // Step 11a (TH-011 FUNC-284): await risk-specialist zodat alle extractions
-  // — inclusief risks — zijn weggeschreven voordat link-themes de
-  // extraction.content parset op [Themes:] annotaties. Zonder deze await
-  // zou link-themes risk-extractions missen die parallel nog aan het saven
-  // zijn.
-  await riskSpecialistPromise;
+  // Step 11a (TH-011 FUNC-284 + sprint 041): await beide specialists zodat
+  // alle extractions — inclusief risks en action_items — zijn weggeschreven
+  // voordat link-themes de extraction.content parset op [Themes:] annotaties
+  // en voordat embed (11c) ze oppikt. Beide steps zijn never-throws, dus
+  // Promise.all is veilig.
+  await Promise.all([riskSpecialistPromise, actionItemSpecialistPromise]);
 
   // Step 11b: link-themes draait parallel aan embed-save. Skip bij lage
   // relevance_score (FUNC-276) — detector is in step 7.5 ook al

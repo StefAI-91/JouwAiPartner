@@ -29,6 +29,107 @@ export type Database = {
         };
         Relationships: [];
       };
+      action_item_golden_items: {
+        Row: {
+          assignee: string | null;
+          category: string | null;
+          coder_notes: string | null;
+          content: string;
+          created_at: string;
+          deadline: string | null;
+          follow_up_contact: string;
+          id: string;
+          lane: string;
+          meeting_id: string;
+          project_context: string | null;
+          source_quote: string | null;
+          type_werk: string;
+          updated_at: string;
+        };
+        Insert: {
+          assignee?: string | null;
+          category?: string | null;
+          coder_notes?: string | null;
+          content: string;
+          created_at?: string;
+          deadline?: string | null;
+          follow_up_contact: string;
+          id?: string;
+          lane: string;
+          meeting_id: string;
+          project_context?: string | null;
+          source_quote?: string | null;
+          type_werk: string;
+          updated_at?: string;
+        };
+        Update: {
+          assignee?: string | null;
+          category?: string | null;
+          coder_notes?: string | null;
+          content?: string;
+          created_at?: string;
+          deadline?: string | null;
+          follow_up_contact?: string;
+          id?: string;
+          lane?: string;
+          meeting_id?: string;
+          project_context?: string | null;
+          source_quote?: string | null;
+          type_werk?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "action_item_golden_items_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: false;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      action_item_golden_meetings: {
+        Row: {
+          encoded_at: string;
+          encoded_by: string | null;
+          meeting_id: string;
+          notes: string | null;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          encoded_at?: string;
+          encoded_by?: string | null;
+          meeting_id: string;
+          notes?: string | null;
+          status: string;
+          updated_at?: string;
+        };
+        Update: {
+          encoded_at?: string;
+          encoded_by?: string | null;
+          meeting_id?: string;
+          notes?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "action_item_golden_meetings_encoded_by_fkey";
+            columns: ["encoded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "action_item_golden_meetings_meeting_id_fkey";
+            columns: ["meeting_id"];
+            isOneToOne: true;
+            referencedRelation: "meetings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       devhub_project_access: {
         Row: {
           created_at: string;
@@ -1079,6 +1180,7 @@ export type Database = {
           title: string;
           transcript: string | null;
           transcript_elevenlabs: string | null;
+          transcript_elevenlabs_named: string | null;
           unmatched_organization_name: string | null;
           updated_at: string | null;
           verification_status: string;
@@ -1107,6 +1209,7 @@ export type Database = {
           title: string;
           transcript?: string | null;
           transcript_elevenlabs?: string | null;
+          transcript_elevenlabs_named?: string | null;
           unmatched_organization_name?: string | null;
           updated_at?: string | null;
           verification_status?: string;
@@ -1135,6 +1238,7 @@ export type Database = {
           title?: string;
           transcript?: string | null;
           transcript_elevenlabs?: string | null;
+          transcript_elevenlabs_named?: string | null;
           unmatched_organization_name?: string | null;
           updated_at?: string | null;
           verification_status?: string;

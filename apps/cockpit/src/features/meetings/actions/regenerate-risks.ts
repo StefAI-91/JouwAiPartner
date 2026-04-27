@@ -36,7 +36,8 @@ export async function regenerateRisksAction(
     return { error: "Meeting niet gevonden" };
   }
 
-  const transcript = meeting.transcript_elevenlabs || meeting.transcript;
+  const transcript =
+    meeting.transcript_elevenlabs_named || meeting.transcript_elevenlabs || meeting.transcript;
   if (!transcript) {
     return { error: "Geen transcript beschikbaar voor deze meeting" };
   }

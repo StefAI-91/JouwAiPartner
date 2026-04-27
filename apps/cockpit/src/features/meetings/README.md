@@ -61,6 +61,12 @@ Import-pad: `@/features/meetings/actions`
 | ------------------------------ | ---------------------------------------------- |
 | `regenerateRisksAction(input)` | alleen de risk-specialist step opnieuw draaien |
 
+### `regenerate-action-items.ts` — alleen action_items
+
+| Actie                                | Wat hij doet                                          |
+| ------------------------------------ | ----------------------------------------------------- |
+| `regenerateActionItemsAction(input)` | alleen de action-item-specialist step opnieuw draaien |
+
 ### `reprocess-meeting.ts` — full re-ingest
 
 | Actie                           | Wat hij doet                                  |
