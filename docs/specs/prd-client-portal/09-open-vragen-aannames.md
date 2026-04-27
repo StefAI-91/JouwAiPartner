@@ -10,8 +10,11 @@
 
 ## Open vragen — nog niet beantwoord
 
-- [ ] **`client_title` / `client_description` invullen**: wie van het JAIP-team is verantwoordelijk om relevante issues te hertalen, en op welk moment in de workflow?
 - [ ] **Source-indicator op cards**: subtiel icoon (mijn voorstel) of expliciet label naast titel? Design-keuze.
+
+## Buiten scope van deze PRD — apart te specificeren
+
+- **AI-hertaling van `client_title` / `client_description`**: een AI-pipeline wordt verantwoordelijk voor het automatisch genereren van klant-vriendelijke titels en beschrijvingen. Ontwerp (verification-gate, trigger-moment, model-keuze, prompts) volgt in een aparte spec. Voor v1 worden de velden handmatig ingevuld in de DevHub issue-editor.
 
 ## Aannames (na codebase-review bevestigd of weerlegd)
 

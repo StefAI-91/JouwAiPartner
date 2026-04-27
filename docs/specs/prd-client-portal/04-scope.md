@@ -46,5 +46,6 @@
 - **Voting** — Voorwaarde: v1 valideert dat klanten het overzicht waarderen.
 - **Sign-off** — Voorwaarde: v1 toont dat klant de portal actief gebruikt.
 - **Comments** — Voorwaarde: v1 levert engagement; commentstroom vereist notificatie-infrastructuur.
+- **AI-hertaling van `client_title` / `client_description`** — Aparte spec. In v1 vullen JAIP-admins de velden handmatig in via DevHub.
 - **Productie-issues sectie** (eindgebruiker error logging zoals Sentry) — Voorwaarde: error logging-koppeling per klant project.
 - **Milestones / timeline** — Voorwaarde: datamodel voor projectfases.
