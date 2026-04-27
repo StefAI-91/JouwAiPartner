@@ -21,17 +21,18 @@ UI voor issue-lijsten, detail, formulieren, sidebar, attachments, en comments. P
 
 **Issue-UI:**
 
-| File                      | Rol                                                                                                      |
-| ------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `issue-list.tsx`          | Lijst met issue-rows op `/issues`.                                                                       |
-| `issue-row.tsx`           | Rij in de lijst — titel, status, labels, menu.                                                           |
-| `issue-filters.tsx`       | Filter-bar boven de lijst (status, project, type, assignee).                                             |
-| `pagination-controls.tsx` | Paginering onder de lijst.                                                                               |
-| `issue-detail.tsx`        | Volledige detail-pagina op `/issues/[id]` — combineert header, sidebar, attachments, AI-panel, comments. |
-| `issue-header.tsx`        | Titel + status-badge + meta op detail-pagina.                                                            |
-| `issue-form.tsx`          | Formulier voor nieuw issue op `/issues/new`.                                                             |
-| `issue-attachments.tsx`   | Attachments-sectie op detail-pagina (screenshots, videos).                                               |
-| `image-upload.tsx`        | Drag-and-drop / file-picker voor screenshots in `issue-form` (preview + dimensies-detectie).             |
+| File                             | Rol                                                                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `issue-list.tsx`                 | Lijst met issue-rows op `/issues`.                                                                                                                                 |
+| `issue-row.tsx`                  | Rij in de lijst — titel, status, labels, menu.                                                                                                                     |
+| `issue-filters.tsx`              | Filter-bar boven de lijst (status, project, type, assignee).                                                                                                       |
+| `pagination-controls.tsx`        | Paginering onder de lijst.                                                                                                                                         |
+| `issue-detail.tsx`               | Volledige detail-pagina op `/issues/[id]` — combineert header, sidebar, attachments, AI-panel, comments.                                                           |
+| `issue-header.tsx`               | Titel + status-badge + meta op detail-pagina.                                                                                                                      |
+| `issue-form.tsx`                 | Formulier voor nieuw issue op `/issues/new`.                                                                                                                       |
+| `issue-attachments.tsx`          | Attachments-sectie op detail-pagina (screenshots, videos).                                                                                                         |
+| `image-upload.tsx`               | Drag-and-drop / file-picker voor screenshots in `issue-form` (preview + dimensies-detectie).                                                                       |
+| `client-translation-section.tsx` | Optionele klant-titel + klant-beschrijving editor op detail-pagina (CP-007). Save via `updateIssueAction`; leeg = portal valt terug op interne titel/beschrijving. |
 
 **Sidebar (gebruikt binnen `issue-detail`):**
 
