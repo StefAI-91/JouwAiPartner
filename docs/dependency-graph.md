@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 481 |
-| Exported functions/constants | 782 |
-| Exported types/interfaces | 314 |
-| Cross-package imports | 527 |
+| Files scanned | 487 |
+| Exported functions/constants | 790 |
+| Exported types/interfaces | 319 |
+| Cross-package imports | 529 |
 | Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
@@ -2573,6 +2573,46 @@
 **Depends on:**
 - (type) `@repo/database/queries/golden` → GoldenItemRow, GoldenMeetingState
 
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-item-card.tsx`
+
+**Exports:**
+- `CoderItemCard()`
+
+**Depends on:**
+- (type) `@repo/database/queries/golden` → GoldenItemRow
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-item-form.tsx`
+
+**Exports:**
+- `CoderItemForm()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-skip-dialog.tsx`
+
+**Exports:**
+- `CoderSkipDialog()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-status-panel.tsx`
+
+**Exports:**
+- `CoderStatusPanel()`
+
+**Depends on:**
+- (type) `@repo/database/queries/golden` → GoldenMeetingState
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-transcript-pane.tsx`
+
+**Exports:**
+- `CoderTranscriptPane`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-types.ts`
+
+**Exports:**
+- `EMPTY_DRAFT`
+- `TYPE_WERK_LABELS`
+- `LANE_LABELS`
+
+**Types:** `Lane`, `TypeWerk`, `Category`, `FormDraft`, `Participant`
+
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx`
 
 **Exports:**
@@ -3689,7 +3729,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 98 | 8 | 8 | 39 | - | 153 |
+| Cockpit Pages | 100 | 8 | 8 | 39 | - | 155 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
