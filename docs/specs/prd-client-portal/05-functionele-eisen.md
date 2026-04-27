@@ -47,7 +47,7 @@
 
 ## 5.2 Vier-Bucket Dashboard met Source-Switch
 
-**Beschrijving**: Hoofdpagina van het portaal. Toont alle issues van projecten waar de klant toegang toe heeft, gegroepeerd in vier buckets. Een source-switch laat de klant kiezen tussen "Onze meldingen", "JAIP-meldingen" of "Alles". Geen verborgen issues — transparantie is het ontwerpprincipe. Bucket-namen en mapping zijn bron-van-waarheid in `packages/database/src/constants/issues.ts` (`PORTAL_STATUS_GROUPS`).
+**Beschrijving**: De issue-overzichtspagina van het portaal op route `/projects/[id]/issues`. Vervangt de bestaande enkel-status `IssueStatusFilter`-view door een vier-koloms bucketweergave (desktop) / verticaal gestapeld (mobiel). Toont alle issues van het geselecteerde project, gegroepeerd in vier buckets. Een source-switch laat de klant kiezen tussen "Onze meldingen", "JAIP-meldingen" of "Alles". Geen verborgen issues — transparantie is het ontwerpprincipe. Bucket-namen en mapping zijn bron-van-waarheid in `packages/database/src/constants/issues.ts` (`PORTAL_STATUS_GROUPS`).
 
 **Gebruiker**: Klant PM, klant-collega
 
@@ -70,7 +70,18 @@
 | Onze meldingen | `source IN ('portal','userback')` | Door klant zelf gemeld                         |
 | JAIP-meldingen | `source IN ('manual','ai')`       | Door JAIP-team gemeld of AI-pipeline ingelezen |
 
-> Bron-van-waarheid voor source-mapping wordt vastgelegd als constant in `packages/database/src/constants/issues.ts` (bijv. `PORTAL_SOURCE_GROUPS`) — niet in client-side code dupliceren.
+> Bron-van-waarheid voor source-mapping wordt vastgelegd als constant `PORTAL_SOURCE_GROUPS` in `packages/database/src/constants/issues.ts` — niet in client-side code dupliceren. Onbekende `source`-waarden vallen via een helper (bijv. `resolvePortalSourceGroup`) default onder `jaip`, zodat een nieuwe source-waarde niet stilletjes uit beide tabs verdwijnt.
+
+**Type-filter**:
+
+| Tab      | Filter                     |
+| -------- | -------------------------- |
+| Alles    | _geen filter_              |
+| Bugs     | `type = 'bug'`             |
+| Features | `type = 'feature_request'` |
+| Vragen   | `type = 'question'`        |
+
+> Dekt het volledige `ISSUE_TYPES`-enum (`bug | feature_request | question`). Type-filter werkt orthogonaal aan de source-switch.
 
 **Gedrag**:
 
@@ -79,7 +90,7 @@
 3. Issues worden in vier buckets verdeeld o.b.v. `INTERNAL_STATUS_TO_PORTAL_KEY`
 4. Per bucket: telling (bijv. "In behandeling (4)")
 5. Source-switch (Alles / Onze meldingen / JAIP-meldingen) — default Alles
-6. Type-filter (Alles / Bugs / Features) — default Alles, orthogonaal aan source-switch
+6. Type-filter (Alles / Bugs / Features / Vragen) — default Alles, orthogonaal aan source-switch
 7. Klik op issue → navigeert naar bestaande detail-route (`/projects/[id]/issues/[issueId]`)
 
 **Velden/Data per issue-card in lijst**:
@@ -111,7 +122,8 @@
 - [ ] Default-view toont vier buckets met juiste tellingen op basis van álle issues van het project
 - [ ] Source-switch `Onze meldingen` toont alleen issues met `source IN ('portal','userback')`
 - [ ] Source-switch `JAIP-meldingen` toont alleen issues met `source IN ('manual','ai')`
-- [ ] Type-filter werkt orthogonaal aan source-switch (combinaties geven verwacht resultaat)
+- [ ] Onbekende `source`-waarden vallen onder `JAIP-meldingen` (defensieve fallback via `resolvePortalSourceGroup`)
+- [ ] Type-filter Bugs / Features / Vragen filtert op de juiste `type`-waarde en werkt orthogonaal aan de source-switch (combinaties geven verwacht resultaat)
 - [ ] `client_title` wordt getoond als gevuld, anders fallback naar `title`
 - [ ] Klant van CAI ziet alleen CAI-issues (RLS-test met testaccount andere klant)
 - [ ] Mobiele weergave is leesbaar zonder horizontaal scrollen
