@@ -49,8 +49,8 @@ export interface MeetingForGoldenCoder {
   summary: string | null;
   transcript: string | null;
   /** Welke transcript-bron we daadwerkelijk teruggeven in `transcript`.
-   *  Fallback-volgorde: elevenlabs_named (na speaker-mapping) > elevenlabs
-   *  (raw Scribe-output) > fireflies. */
+   *  Fallback-volgorde voor dev/action_item: fireflies > elevenlabs_named >
+   *  elevenlabs. Tijdelijke voorkeur — zie comment in implementatie. */
   transcript_source: "elevenlabs_named" | "elevenlabs" | "fireflies" | null;
   /** Raw Fireflies-transcript (kolom `meetings.transcript`). Apart blootgesteld
    *  zodat tools beide versies tegelijk kunnen vergelijken (bv. speaker-mapping
@@ -206,16 +206,21 @@ export async function getMeetingForGoldenCoder(
   };
 
   const raw = data as unknown as Raw;
+  // TIJDELIJK: Fireflies-first voor de dev/action_item flow (golden coder +
+  // harness). De ElevenLabs-mapping is nog niet betrouwbaar genoeg voor het
+  // letterlijke source_quote-werk waar de action-item-specialist op tunet,
+  // dus we gaan terug naar de Fireflies-tekst tot de mapping verbetert.
+  // Productie-pipeline (gatekeeper-pipeline.ts) blijft named-first gebruiken
+  // voor Summarizer/Risk — die hebben minder last van letterlijkheid.
   const transcript =
-    raw.transcript_elevenlabs_named ?? raw.transcript_elevenlabs ?? raw.transcript ?? null;
-  const transcript_source: MeetingForGoldenCoder["transcript_source"] =
-    raw.transcript_elevenlabs_named
+    raw.transcript ?? raw.transcript_elevenlabs_named ?? raw.transcript_elevenlabs ?? null;
+  const transcript_source: MeetingForGoldenCoder["transcript_source"] = raw.transcript
+    ? "fireflies"
+    : raw.transcript_elevenlabs_named
       ? "elevenlabs_named"
       : raw.transcript_elevenlabs
         ? "elevenlabs"
-        : raw.transcript
-          ? "fireflies"
-          : null;
+        : null;
 
   // Structured deelnemers eerst (uit meeting_participants → people → organization).
   const structured: GoldenCoderParticipant[] = raw.meeting_participants
