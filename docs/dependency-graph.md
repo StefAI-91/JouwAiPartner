@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 475 |
+| Files scanned | 481 |
 | Exported functions/constants | 782 |
 | Exported types/interfaces | 314 |
-| Cross-package imports | 524 |
+| Cross-package imports | 527 |
 | Critical integration points (3+ packages) | 12 |
 
 ## Package Dependency Flow
@@ -3689,7 +3689,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 37 | 2 | - | 1 | 67 |
 | Cockpit Components | 18 | 2 | - | 40 | - | 60 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 98 | 8 | 8 | 36 | - | 150 |
+| Cockpit Pages | 98 | 8 | 8 | 39 | - | 153 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
