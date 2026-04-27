@@ -79,7 +79,7 @@ Een feedbackformulier bouwen waarmee klanten bugs, wensen of vragen kunnen indie
 
 ## Bronverwijzingen
 
-- PRD: `docs/specs/portal-mvp.md` sectie 3 (FEED) en sectie 8 (Feedbackloop)
+- PRD: `docs/archive/portal-mvp.md` sectie 3 (FEED) en sectie 8 (Feedbackloop)
 - insertIssue() mutation: `packages/database/src/mutations/issues.ts`
 - Zod validatie patronen: `packages/ai/src/validations/` als referentie
 - DevHub issue types/statussen: check migraties voor constraints

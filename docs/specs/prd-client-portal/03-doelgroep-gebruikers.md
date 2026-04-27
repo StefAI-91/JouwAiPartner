@@ -20,16 +20,16 @@
 ## 3.3 JAIP Team (admin)
 
 - **Wie**: Stef, Wouter, Kenji, Myrrh, Ege
-- **Toegang**: Via bestaande Cockpit-app, niet via deze portal
-- **Primaire taken in relatie tot portal**: Bepalen welke issues `client_visible` zijn (manuele override + automatische regels)
+- **Toegang**: Via bestaande DevHub-app voor issue-beheer (Cockpit blijft voor knowledge/projecten/themes); niet via deze portal
+- **Primaire taken in relatie tot portal**: Bepalen welke issues `client_visible` zijn (manuele override + automatische regels). Toggle wordt toegevoegd aan de bestaande issue-editor in DevHub (`apps/devhub/src/features/issues/`)
 
 ## Rechtenmatrix
 
-| Actie                                     | Klant PM | Klant-collega | JAIP Admin       |
-| ----------------------------------------- | -------- | ------------- | ---------------- |
-| Issues bekijken (alleen `client_visible`) | ✅       | ✅            | ✅               |
-| Issues van andere klanten bekijken        | ❌       | ❌            | ✅               |
-| Issue als `client_visible` markeren       | ❌       | ❌            | ✅ (via Cockpit) |
-| Comments plaatsen                         | v2       | v2            | v2               |
-| Voting                                    | v2       | v2            | v2               |
-| Sign-off geven                            | v2       | ❌            | v2               |
+| Actie                                     | Klant PM | Klant-collega | JAIP Admin      |
+| ----------------------------------------- | -------- | ------------- | --------------- |
+| Issues bekijken (alleen `client_visible`) | ✅       | ✅            | ✅              |
+| Issues van andere klanten bekijken        | ❌       | ❌            | ✅              |
+| Issue als `client_visible` markeren       | ❌       | ❌            | ✅ (via DevHub) |
+| Comments plaatsen                         | v2       | v2            | v2              |
+| Voting                                    | v2       | v2            | v2              |
+| Sign-off geven                            | v2       | ❌            | v2              |

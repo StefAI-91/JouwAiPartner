@@ -1,9 +1,13 @@
-# Portal MVP — Product Requirements Document
+# Portal MVP — Product Requirements Document (GEARCHIVEERD)
 
-> **Status:** Active
-> **Date:** 2026-04-17
+> **Status:** Archived — vervangen door `docs/specs/prd-client-portal/` (Stefan First MVP)
+> **Date:** 2026-04-17 (origineel) / 2026-04-27 (gearchiveerd)
 > **Owner:** Stef Banninga
 > **Version:** 1.0
+>
+> Dit document is op 2026-04-27 vervangen door de "Stefan First MVP"-PRD in `docs/specs/prd-client-portal/`. De portal-MVP zoals hier beschreven (auth, RLS, project-overzicht, app-scaffolding) is grotendeels al opgeleverd in sprints CP-001 t/m CP-002 — zie traceability matrix onderaan. De FEED-features (klant maakt issues aan) zijn verschoven naar v2 in de nieuwe PRD om eerst het read-only `client_visible`-overzicht met Stefan te valideren.
+>
+> Bewaard voor: traceability matrix, sprint-historie en feedbackloop-diagram.
 
 ---
 
