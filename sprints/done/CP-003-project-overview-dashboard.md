@@ -81,7 +81,7 @@ De eerste echte klantpagina's bouwen: een overzicht van alle projecten waar de k
 
 ## Bronverwijzingen
 
-- PRD: `docs/specs/portal-mvp.md` sectie 3 (PROJ, DASH) en sectie 6 (Status Mapping)
+- PRD: `docs/archive/portal-mvp.md` sectie 3 (PROJ, DASH) en sectie 6 (Status Mapping)
 - Summaries query referentie: `packages/database/src/queries/` (zoek naar summaries)
 - Dashboard referentie: `apps/cockpit/src/app/(app)/(dashboard)/` voor layout inspiratie
 - Issue status mapping: PRD sectie 6
