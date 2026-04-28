@@ -341,13 +341,30 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
     [router, searchParams],
   );
 
+  const ungroupedActive = searchParams.get("ungrouped") === "1";
+
   const hasAnyFilter =
     searchParams.has("status") ||
     searchParams.has("priority") ||
     searchParams.has("type") ||
     searchParams.has("component") ||
     searchParams.has("assignee") ||
-    searchParams.has("topic");
+    searchParams.has("topic") ||
+    ungroupedActive;
+
+  const toggleUngrouped = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (ungroupedActive) {
+      params.delete("ungrouped");
+    } else {
+      params.set("ungrouped", "1");
+      // Mutually exclusive met topic-filter — een issue kan niet tegelijk
+      // ongegroepeerd én aan een topic gekoppeld zijn.
+      params.delete("topic");
+    }
+    params.delete("page");
+    router.push(`/issues?${params.toString()}`);
+  }, [router, searchParams, ungroupedActive]);
 
   const clearAll = useCallback(() => {
     const params = new URLSearchParams();
@@ -399,10 +416,24 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
           label="Topic"
           paramKey="topic"
           options={TOPIC_OPTIONS}
-          selected={getValues("topic")}
-          onToggle={toggleFilter}
+          selected={ungroupedActive ? [] : getValues("topic")}
+          onToggle={ungroupedActive ? () => {} : toggleFilter}
         />
       )}
+      <button
+        type="button"
+        onClick={toggleUngrouped}
+        aria-pressed={ungroupedActive}
+        className={cn(
+          "flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm transition-colors",
+          ungroupedActive
+            ? "border-primary/30 bg-primary/5 text-primary"
+            : "border-border hover:bg-muted",
+        )}
+        title="Toon alleen issues die nog geen topic hebben"
+      >
+        Niet gegroepeerd
+      </button>
 
       {hasAnyFilter && (
         <button

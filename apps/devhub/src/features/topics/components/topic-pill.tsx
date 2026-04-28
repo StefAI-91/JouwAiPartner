@@ -122,12 +122,12 @@ export function TopicPill({
                   stopBubble(e);
                   router.push(`/topics/${current.id}?project=${projectId}`);
                 }}
-                className="text-xs"
+                className="cursor-pointer text-xs"
               >
                 <ExternalLink className="size-3.5" />
                 Open topic
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => apply(null, e)} className="text-xs">
+              <DropdownMenuItem onClick={(e) => apply(null, e)} className="cursor-pointer text-xs">
                 <X className="size-3.5" />
                 Geen topic
               </DropdownMenuItem>
@@ -146,7 +146,7 @@ export function TopicPill({
                 <DropdownMenuItem
                   key={t.id}
                   onClick={(e) => apply(t.id, e)}
-                  className="text-xs"
+                  className="cursor-pointer text-xs"
                   disabled={isCurrent}
                 >
                   <span className="truncate">{t.title}</span>

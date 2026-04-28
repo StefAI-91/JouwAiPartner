@@ -50,6 +50,12 @@ export const issueListFilterSchema = z.object({
   component: csvListSchema(z.enum(ISSUE_COMPONENTS)),
   assignee: csvListSchema(assigneeItemSchema),
   topic: csvListSchema(z.string().uuid()),
+  // "1" → true, alles anders → false. Strikt zodat een knullig `?ungrouped=0`
+  // niet ongewenst als truthy wordt geïnterpreteerd.
+  ungrouped: z
+    .string()
+    .optional()
+    .transform((v) => v === "1"),
 });
 
 export type IssueListFilterParams = z.infer<typeof issueListFilterSchema>;

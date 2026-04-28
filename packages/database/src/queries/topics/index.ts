@@ -25,6 +25,7 @@ export {
   countIssuesPerTopic,
   getIssuesForTopic,
   getIssueIdsForTopics,
+  getLinkedIssueIdsInProject,
   getTopicMembershipForIssues,
   type IssueTopicMembership,
 } from "./linked-issues";

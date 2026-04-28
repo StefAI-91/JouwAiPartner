@@ -1,7 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../../supabase/admin";
 import { PRIORITY_ORDER, UNASSIGNED_SENTINEL } from "../../constants/issues";
-import { getIssueIdsForTopics } from "../topics/linked-issues";
+import { getIssueIdsForTopics, getLinkedIssueIdsInProject } from "../topics/linked-issues";
+
+// UUID-regex hergebruikt voor het quoten van pre-fetched id-lijsten in
+// `.not('id','in', ...)` — al zijn ids uit de DB, we filteren defensief.
+const UUID_LIST_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Re-export so existing callers that import from queries/issues keep working.
 export { UNASSIGNED_SENTINEL };
@@ -100,6 +104,7 @@ export async function listIssues(
     component?: string[];
     assignedTo?: string[];
     topicIds?: string[];
+    ungroupedOnly?: boolean;
     search?: string;
     issueNumber?: number;
     sort?: IssueSort;
@@ -115,12 +120,15 @@ export async function listIssues(
 
   if (params.projectIds && params.projectIds.length === 0) return [];
 
-  // Topic-filter is een tweetraps query: eerst issue-ids ophalen uit
-  // `topic_issues`, dan `.in('id', ...)` op issues. Geen embed-truc — die
-  // gedraagt zich anders in prod (zie TH-914). Lege topic-set ná pre-fetch
-  // betekent simpelweg geen matches.
+  // `ungroupedOnly` wint van topic-filter — als beide gezet zijn negeren we
+  // de topic-ids (UI moet de combinatie blokkeren, server is defensief).
+  // Tweetraps query: pre-fetch ids, dan `.in()` of `.not('id','in', ...)`.
   let topicIssueIds: string[] | null = null;
-  if (params.topicIds && params.topicIds.length > 0) {
+  let excludeIssueIds: string[] | null = null;
+
+  if (params.ungroupedOnly && params.projectId) {
+    excludeIssueIds = await getLinkedIssueIdsInProject(params.projectId, db);
+  } else if (params.topicIds && params.topicIds.length > 0) {
     topicIssueIds = await getIssueIdsForTopics(params.topicIds, db);
     if (topicIssueIds.length === 0) return [];
   }
@@ -136,6 +144,11 @@ export async function listIssues(
 
   if (topicIssueIds !== null) {
     query = query.in("id", topicIssueIds);
+  }
+  if (excludeIssueIds !== null && excludeIssueIds.length > 0) {
+    const safe = excludeIssueIds.filter((id) => UUID_LIST_RE.test(id));
+    const inList = safe.map((u) => `"${u}"`).join(",");
+    query = query.not("id", "in", `(${inList})`);
   }
 
   if (params.status && params.status.length > 0) {
@@ -230,6 +243,7 @@ export async function countFilteredIssues(
     component?: string[];
     assignedTo?: string[];
     topicIds?: string[];
+    ungroupedOnly?: boolean;
     search?: string;
     issueNumber?: number;
   },
@@ -241,7 +255,10 @@ export async function countFilteredIssues(
 
   // Zelfde tweetraps logica als listIssues — zie comment daar.
   let topicIssueIds: string[] | null = null;
-  if (params.topicIds && params.topicIds.length > 0) {
+  let excludeIssueIds: string[] | null = null;
+  if (params.ungroupedOnly && params.projectId) {
+    excludeIssueIds = await getLinkedIssueIdsInProject(params.projectId, db);
+  } else if (params.topicIds && params.topicIds.length > 0) {
     topicIssueIds = await getIssueIdsForTopics(params.topicIds, db);
     if (topicIssueIds.length === 0) return 0;
   }
@@ -257,6 +274,11 @@ export async function countFilteredIssues(
 
   if (topicIssueIds !== null) {
     query = query.in("id", topicIssueIds);
+  }
+  if (excludeIssueIds !== null && excludeIssueIds.length > 0) {
+    const safe = excludeIssueIds.filter((id) => UUID_LIST_RE.test(id));
+    const inList = safe.map((u) => `"${u}"`).join(",");
+    query = query.not("id", "in", `(${inList})`);
   }
 
   if (params.status && params.status.length > 0) {

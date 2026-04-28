@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 518 |
-| Exported functions/constants | 815 |
+| Exported functions/constants | 816 |
 | Exported types/interfaces | 335 |
 | Cross-package imports | 549 |
 | Critical integration points (3+ packages) | 13 |
@@ -527,6 +527,7 @@
 **Exports:**
 - `countIssuesPerTopic()`
 - `getTopicMembershipForIssues()`
+- `getLinkedIssueIdsInProject()`
 - `getIssueIdsForTopics()`
 - `getIssuesForTopic()`
 
@@ -4420,6 +4421,7 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `getTopicMembershipForIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getLinkedIssueIdsInProject()` | `packages/database/src/queries/issues/core.ts` |
 | `getIssueIdsForTopics()` | `packages/database/src/queries/issues/core.ts` |
 
 ### queries/topics/list.ts

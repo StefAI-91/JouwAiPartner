@@ -73,6 +73,34 @@ export async function getTopicMembershipForIssues(
 }
 
 /**
+ * Alle issue-ids die binnen een project aan een topic gekoppeld zijn.
+ * Gebruikt door `listIssues`/`countFilteredIssues` voor de "ungrouped only"
+ * toggle: filter `id NOT IN (deze lijst)`.
+ *
+ * Twee calls, geen embed-truc: eerst topic-ids van het project, dan
+ * issue-ids uit `topic_issues`. Vermijdt de PostgREST-embed-quirks die
+ * in TH-914 prod-only stuk gingen.
+ */
+export async function getLinkedIssueIdsInProject(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+
+  const { data: topicRows, error: topicErr } = await db
+    .from("topics")
+    .select("id")
+    .eq("project_id", projectId);
+  if (topicErr) throw new Error(`getLinkedIssueIdsInProject (topics) failed: ${topicErr.message}`);
+  const topicIds = ((topicRows ?? []) as { id: string }[]).map((r) => r.id);
+  if (topicIds.length === 0) return [];
+
+  const { data, error } = await db.from("topic_issues").select("issue_id").in("topic_id", topicIds);
+  if (error) throw new Error(`getLinkedIssueIdsInProject (issues) failed: ${error.message}`);
+  return ((data ?? []) as { issue_id: string }[]).map((r) => r.issue_id);
+}
+
+/**
  * Resolve één of meer topic-ids naar de issue-ids die eronder gekoppeld zijn.
  * Gebruikt door `listIssues`/`countFilteredIssues` om `?topic=<id>` te
  * filteren — eerst hier de issue-ids ophalen, dan via `id IN (...)` op issues
