@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 505 |
-| Exported functions/constants | 833 |
-| Exported types/interfaces | 344 |
+| Files scanned | 513 |
+| Exported functions/constants | 846 |
+| Exported types/interfaces | 355 |
 | Cross-package imports | 534 |
 | Critical integration points (3+ packages) | 13 |
 
@@ -566,6 +566,29 @@
 
 **Types:** `EmergingThemeProposalMeeting`, `EmergingThemeRow`
 
+### `queries/topics/detail.ts`
+
+**Exports:**
+- `getTopicById()`
+- `getTopicWithIssues()`
+
+**Types:** `TopicDetailRow`, `LinkedIssueRow`, `TopicWithIssues`
+
+### `queries/topics/linked-issues.ts`
+
+**Exports:**
+- `countIssuesPerTopic()`
+- `getIssuesForTopic()`
+
+### `queries/topics/list.ts`
+
+**Exports:**
+- `listTopics()`
+- `listTopicsByBucket()`
+- `TOPIC_LIST_COLS`
+
+**Types:** `TopicListRow`, `ListTopicsFilters`
+
 ### `queries/userback-issues.ts`
 
 **Exports:**
@@ -843,6 +866,30 @@
 - `archiveTheme()`
 
 **Types:** `InsertThemeInput`, `UpdateThemeInput`, `EmergingThemeProposal`, `UpsertThemeNarrativeInput`
+
+### `mutations/topics/crud.ts`
+
+**Exports:**
+- `insertTopic()`
+- `updateTopic()`
+- `deleteTopic()`
+
+**Types:** `InsertTopicData`, `UpdateTopicData`, `MutationResult`
+
+### `mutations/topics/linking.ts`
+
+**Exports:**
+- `linkIssueToTopic()`
+- `unlinkIssueFromTopic()`
+
+**Types:** `LinkVia`, `LinkIssueResult`
+
+### `mutations/topics/status.ts`
+
+**Exports:**
+- `updateTopicStatus()`
+
+**Types:** `UpdateTopicStatusOpts`
 
 ## AI Agents
 
@@ -4452,6 +4499,12 @@ Which queries are used where across the codebase.
 | `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `listRejectedThemePairsForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `listProposedThemesForMeeting()` | `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+
+### queries/topics/detail.ts
+
+| Query | Used in |
+|-------|---------|
+| `getTopicById()` | `packages/database/src/mutations/topics/crud.ts` |
 
 ### queries/userback-issues.ts
 

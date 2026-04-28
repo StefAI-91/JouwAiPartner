@@ -17,6 +17,11 @@ export const TEST_IDS = {
   issue: "00000000-0000-0000-0000-000000000009",
   task2: "00000000-0000-0000-0000-000000000016",
   project2: "00000000-0000-0000-0000-000000000012",
+  // PR-002: topics + extra issues for junction tests
+  topic: "00000000-0000-0000-0000-000000000020",
+  topic2: "00000000-0000-0000-0000-000000000021",
+  issue2: "00000000-0000-0000-0000-000000000022",
+  issue3: "00000000-0000-0000-0000-000000000023",
 } as const;
 
 export async function seedOrganization(overrides: Record<string, unknown> = {}) {
@@ -252,6 +257,30 @@ export async function seedIssue(overrides: Record<string, unknown> = {}) {
     .select()
     .single();
   if (error) throw new Error(`seedIssue failed: ${error.message}`);
+  return result;
+}
+
+/**
+ * Seed a topic. Caller bepaalt zelf welke profile_id `created_by` is — die
+ * is FK naar profiles, dus geef de id van een eerder geseede profile mee.
+ */
+export async function seedTopic(createdBy: string, overrides: Record<string, unknown> = {}) {
+  const supabase = getTestClient();
+  const data = {
+    id: TEST_IDS.topic,
+    project_id: TEST_IDS.project,
+    title: "Test Topic",
+    type: "bug",
+    status: "clustering",
+    created_by: createdBy,
+    ...overrides,
+  };
+  const { data: result, error } = await supabase
+    .from("topics")
+    .upsert(data, { onConflict: "id" })
+    .select()
+    .single();
+  if (error) throw new Error(`seedTopic failed: ${error.message}`);
   return result;
 }
 
