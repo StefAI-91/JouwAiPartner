@@ -12,6 +12,18 @@ const eslintConfig = defineConfig([
     plugins: { prettier: prettierPlugin },
     rules: {
       "prettier/prettier": "warn",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/cockpit/src/**", "**/portal/src/**"],
+              message:
+                "Cross-app imports zijn verboden. Deel code via packages/* in plaats van rechtstreeks uit een andere app te importeren.",
+            },
+          ],
+        },
+      ],
     },
   },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
