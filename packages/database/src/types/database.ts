@@ -1753,6 +1753,124 @@ export type Database = {
           },
         ];
       };
+      topic_issues: {
+        Row: {
+          issue_id: string;
+          linked_at: string;
+          linked_by: string;
+          linked_via: string;
+          topic_id: string;
+        };
+        Insert: {
+          issue_id: string;
+          linked_at?: string;
+          linked_by: string;
+          linked_via?: string;
+          topic_id: string;
+        };
+        Update: {
+          issue_id?: string;
+          linked_at?: string;
+          linked_by?: string;
+          linked_via?: string;
+          topic_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "topic_issues_issue_id_fkey";
+            columns: ["issue_id"];
+            isOneToOne: true;
+            referencedRelation: "issues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "topic_issues_linked_by_fkey";
+            columns: ["linked_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "topic_issues_topic_id_fkey";
+            columns: ["topic_id"];
+            isOneToOne: false;
+            referencedRelation: "topics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      topics: {
+        Row: {
+          client_description: string | null;
+          client_title: string | null;
+          closed_at: string | null;
+          created_at: string;
+          created_by: string;
+          description: string | null;
+          id: string;
+          priority: string | null;
+          project_id: string;
+          status: string;
+          status_overridden: boolean;
+          target_sprint_id: string | null;
+          title: string;
+          type: string;
+          updated_at: string;
+          wont_do_reason: string | null;
+        };
+        Insert: {
+          client_description?: string | null;
+          client_title?: string | null;
+          closed_at?: string | null;
+          created_at?: string;
+          created_by: string;
+          description?: string | null;
+          id?: string;
+          priority?: string | null;
+          project_id: string;
+          status?: string;
+          status_overridden?: boolean;
+          target_sprint_id?: string | null;
+          title: string;
+          type: string;
+          updated_at?: string;
+          wont_do_reason?: string | null;
+        };
+        Update: {
+          client_description?: string | null;
+          client_title?: string | null;
+          closed_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          description?: string | null;
+          id?: string;
+          priority?: string | null;
+          project_id?: string;
+          status?: string;
+          status_overridden?: boolean;
+          target_sprint_id?: string | null;
+          title?: string;
+          type?: string;
+          updated_at?: string;
+          wont_do_reason?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "topics_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "topics_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       update_suggestions: {
         Row: {
           created_at: string | null;
