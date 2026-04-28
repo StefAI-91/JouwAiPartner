@@ -1,4 +1,4 @@
-import { Sparkles, Mail, Send, Bell, FileText, Moon, Edit3 } from "lucide-react";
+import { Sparkles, Mail, Send, Bell, FileText, Moon, Edit3, Check } from "lucide-react";
 import type { InboxItem } from "./mock-inbox";
 
 const ACTION_ICONS = {
@@ -14,15 +14,19 @@ interface InboxCardProps {
 }
 
 export function InboxCard({ item, variant }: InboxCardProps) {
-  const Icon = ACTION_ICONS[item.primaryAction.kind];
   const compact = variant === "mobile";
+  const isReminder = item.kind === "reminder";
 
   return (
-    <article className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+    <article
+      className={`overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md ${
+        isReminder ? "border-border/60 bg-muted/20" : "border-border"
+      }`}
+    >
       <div className={`flex items-start gap-3 ${compact ? "p-3.5" : "p-4"}`}>
-        <AiAvatar compact={compact} />
+        <Avatar compact={compact} kind={item.kind} />
         <div className="min-w-0 flex-1 space-y-2">
-          {/* Context-row */}
+          {/* Context-row + kind chip */}
           <div
             className={`flex flex-wrap items-center gap-1.5 ${
               compact ? "text-[10px]" : "text-[11px]"
@@ -31,6 +35,14 @@ export function InboxCard({ item, variant }: InboxCardProps) {
             <span className="font-medium text-foreground/70">{item.context}</span>
             <span>·</span>
             <span>{item.age}</span>
+            {isReminder && (
+              <>
+                <span>·</span>
+                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  reminder
+                </span>
+              </>
+            )}
           </div>
 
           {/* AI message */}
@@ -45,7 +57,7 @@ export function InboxCard({ item, variant }: InboxCardProps) {
             </p>
           </div>
 
-          {/* Optional preview */}
+          {/* Optional preview (only voor actionable + desktop) */}
           {item.preview && !compact && (
             <details className="group/preview">
               <summary className="flex cursor-pointer items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
@@ -59,49 +71,85 @@ export function InboxCard({ item, variant }: InboxCardProps) {
           )}
 
           {/* Actions row */}
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <button
-              className={`inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1.5 ${
-                compact ? "text-[11px]" : "text-xs"
-              } font-medium text-primary-foreground hover:opacity-90`}
-            >
-              <Icon className="size-3.5" />
-              {item.primaryAction.label}
-            </button>
-            <button
-              className={`inline-flex items-center gap-1 rounded-md px-2 py-1.5 ${
-                compact ? "text-[11px]" : "text-xs"
-              } text-muted-foreground hover:bg-muted hover:text-foreground`}
-              title="Wijzig aanpak voor AI"
-            >
-              <Edit3 className="size-3.5" />
-              Wijzig
-            </button>
-            <button
-              className={`ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1.5 ${
-                compact ? "text-[11px]" : "text-xs"
-              } text-muted-foreground hover:bg-muted hover:text-foreground`}
-              title="Niet nu — AI vraagt later opnieuw, data blijft bewaard"
-            >
-              <Moon className="size-3.5" />
-              {compact ? "" : "Niet nu"}
-            </button>
-          </div>
+          {isReminder ? (
+            <ReminderActions compact={compact} />
+          ) : (
+            <ActionableActions item={item} compact={compact} />
+          )}
         </div>
       </div>
     </article>
   );
 }
 
-function AiAvatar({ compact }: { compact: boolean }) {
+function ActionableActions({ item, compact }: { item: InboxItem; compact: boolean }) {
+  if (!item.primaryAction) return null;
+  const Icon = ACTION_ICONS[item.primaryAction.kind];
+  const textSize = compact ? "text-[11px]" : "text-xs";
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 pt-1">
+      <button
+        className={`inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1.5 ${textSize} font-medium text-primary-foreground hover:opacity-90`}
+      >
+        <Icon className="size-3.5" />
+        {item.primaryAction.label}
+      </button>
+      <button
+        className={`inline-flex items-center gap-1 rounded-md px-2 py-1.5 ${textSize} text-muted-foreground hover:bg-muted hover:text-foreground`}
+        title="Wijzig aanpak voor AI"
+      >
+        <Edit3 className="size-3.5" />
+        Wijzig
+      </button>
+      <button
+        className={`ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1.5 ${textSize} text-muted-foreground hover:bg-muted hover:text-foreground`}
+        title="Niet nu — AI vraagt later opnieuw, data blijft bewaard"
+      >
+        <Moon className="size-3.5" />
+        {compact ? "" : "Niet nu"}
+      </button>
+    </div>
+  );
+}
+
+function ReminderActions({ compact }: { compact: boolean }) {
+  const textSize = compact ? "text-[11px]" : "text-xs";
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 pt-1">
+      <button
+        className={`inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1.5 ${textSize} font-medium text-primary hover:bg-primary/10`}
+        title="Ik pak het op — verdwijnt uit lijst"
+      >
+        <Check className="size-3.5" />
+        Ik pak het op
+      </button>
+      <button
+        className={`ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1.5 ${textSize} text-muted-foreground hover:bg-muted hover:text-foreground`}
+        title="Herinner me later opnieuw"
+      >
+        <Moon className="size-3.5" />
+        {compact ? "" : "Herinner later"}
+      </button>
+    </div>
+  );
+}
+
+function Avatar({ compact, kind }: { compact: boolean; kind: InboxItem["kind"] }) {
+  const isReminder = kind === "reminder";
+  const cls = isReminder ? "bg-amber-100 text-amber-700" : "bg-primary/15 text-primary";
+  const Icon = isReminder ? Bell : Sparkles;
+  const title = isReminder ? "Reminder — vraagt jouw aandacht" : "AI-coach";
+
   return (
     <div
-      className={`flex flex-shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary ${
+      className={`flex flex-shrink-0 items-center justify-center rounded-lg ${cls} ${
         compact ? "size-7" : "size-9"
       }`}
-      title="AI-coach"
+      title={title}
     >
-      <Sparkles className={compact ? "size-3.5" : "size-4"} />
+      <Icon className={compact ? "size-3.5" : "size-4"} />
     </div>
   );
 }

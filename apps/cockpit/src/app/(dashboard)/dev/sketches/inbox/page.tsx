@@ -18,10 +18,19 @@ export default function InboxSketchPage() {
         <h1 className="text-2xl font-semibold">AI-coach inbox</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
           AI maakt conversational voorstellen voor opvolging — naar klanten of intern naar het team.
-          Gebruiker bevestigt het voorstel, wijzigt het, of snoozed. Twee tabs:{" "}
-          <strong>Klanten</strong> (mailing/communicatie naar buiten) en <strong>Team</strong>{" "}
-          (interne pings, herinneringen, overzichten).
+          Twee soorten items zitten in dezelfde lijst:
         </p>
+        <ul className="ml-4 max-w-3xl list-disc space-y-1 text-sm text-muted-foreground">
+          <li>
+            <strong className="text-foreground">AI doet voorzet</strong> (sparkles-icoon) — concrete
+            mail/ping/overzicht met primary CTA, &quot;Wijzig&quot; en &quot;Niet nu&quot;.
+          </li>
+          <li>
+            <strong className="text-foreground">Reminder</strong> (bell-icoon, gedempte achtergrond)
+            — vraagt jouw aandacht maar AI kan geen voorzet maken (creatief / strategisch werk).
+            Knoppen: &quot;Ik pak het op&quot; en &quot;Herinner later&quot;.
+          </li>
+        </ul>
       </header>
 
       <section className="space-y-4">
