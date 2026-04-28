@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 import { SidebarContent } from "./preview-sidebar";
+
+const subscribeNoop = () => () => {};
+const getSnapshotClient = () => true;
+const getSnapshotServer = () => false;
 
 /**
  * Mobile nav: hamburger-trigger + slide-in drawer met dezelfde inhoud
@@ -17,12 +21,9 @@ import { SidebarContent } from "./preview-sidebar";
  */
 export function PreviewMobileNav() {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  // Portal mount-flag — voorkom SSR mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Hydration-flag via useSyncExternalStore — voorkomt SSR mismatch
+  // zonder setState in een effect (zie React 19 lint-rule).
+  const mounted = useSyncExternalStore(subscribeNoop, getSnapshotClient, getSnapshotServer);
 
   // Body scroll lock terwijl drawer open is
   useEffect(() => {
