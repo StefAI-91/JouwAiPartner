@@ -1,12 +1,5 @@
-import { Sparkles, Mail, Send, Bell, FileText, Moon, Edit3, Check } from "lucide-react";
+import { Sparkles, Mail, Bell, Moon, Edit3, Check } from "lucide-react";
 import type { InboxItem } from "./mock-inbox";
-
-const ACTION_ICONS = {
-  "draft-mail": Mail,
-  "send-ping": Send,
-  remind: Bell,
-  summarise: FileText,
-} as const;
 
 interface InboxCardProps {
   item: InboxItem;
@@ -15,7 +8,7 @@ interface InboxCardProps {
 
 export function InboxCard({ item, variant }: InboxCardProps) {
   const compact = variant === "mobile";
-  const isReminder = item.kind === "reminder";
+  const isReminder = item.bucket === "intern";
 
   return (
     <article
@@ -24,9 +17,8 @@ export function InboxCard({ item, variant }: InboxCardProps) {
       }`}
     >
       <div className={`flex items-start gap-3 ${compact ? "p-3.5" : "p-4"}`}>
-        <Avatar compact={compact} kind={item.kind} />
+        <Avatar compact={compact} isReminder={isReminder} />
         <div className="min-w-0 flex-1 space-y-2">
-          {/* Context-row + kind chip */}
           <div
             className={`flex flex-wrap items-center gap-1.5 ${
               compact ? "text-[10px]" : "text-[11px]"
@@ -35,17 +27,8 @@ export function InboxCard({ item, variant }: InboxCardProps) {
             <span className="font-medium text-foreground/70">{item.context}</span>
             <span>·</span>
             <span>{item.age}</span>
-            {isReminder && (
-              <>
-                <span>·</span>
-                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                  reminder
-                </span>
-              </>
-            )}
           </div>
 
-          {/* AI message */}
           <div>
             <p className={`${compact ? "text-[13px]" : "text-sm"} font-medium text-foreground`}>
               {item.greeting}
@@ -57,7 +40,7 @@ export function InboxCard({ item, variant }: InboxCardProps) {
             </p>
           </div>
 
-          {/* Optional preview (only voor actionable + desktop) */}
+          {/* Mail-preview alleen bij klant + desktop */}
           {item.preview && !compact && (
             <details className="group/preview">
               <summary className="flex cursor-pointer items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground">
@@ -70,11 +53,10 @@ export function InboxCard({ item, variant }: InboxCardProps) {
             </details>
           )}
 
-          {/* Actions row */}
           {isReminder ? (
             <ReminderActions compact={compact} />
           ) : (
-            <ActionableActions item={item} compact={compact} />
+            <ClientMailActions item={item} compact={compact} />
           )}
         </div>
       </div>
@@ -82,9 +64,7 @@ export function InboxCard({ item, variant }: InboxCardProps) {
   );
 }
 
-function ActionableActions({ item, compact }: { item: InboxItem; compact: boolean }) {
-  if (!item.primaryAction) return null;
-  const Icon = ACTION_ICONS[item.primaryAction.kind];
+function ClientMailActions({ item, compact }: { item: InboxItem; compact: boolean }) {
   const textSize = compact ? "text-[11px]" : "text-xs";
 
   return (
@@ -92,8 +72,8 @@ function ActionableActions({ item, compact }: { item: InboxItem; compact: boolea
       <button
         className={`inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1.5 ${textSize} font-medium text-primary-foreground hover:opacity-90`}
       >
-        <Icon className="size-3.5" />
-        {item.primaryAction.label}
+        <Mail className="size-3.5" />
+        {item.mailLabel ?? "Draft mail"}
       </button>
       <button
         className={`inline-flex items-center gap-1 rounded-md px-2 py-1.5 ${textSize} text-muted-foreground hover:bg-muted hover:text-foreground`}
@@ -136,11 +116,10 @@ function ReminderActions({ compact }: { compact: boolean }) {
   );
 }
 
-function Avatar({ compact, kind }: { compact: boolean; kind: InboxItem["kind"] }) {
-  const isReminder = kind === "reminder";
+function Avatar({ compact, isReminder }: { compact: boolean; isReminder: boolean }) {
   const cls = isReminder ? "bg-amber-100 text-amber-700" : "bg-primary/15 text-primary";
   const Icon = isReminder ? Bell : Sparkles;
-  const title = isReminder ? "Reminder — vraagt jouw aandacht" : "AI-coach";
+  const title = isReminder ? "Reminder — vraagt jouw aandacht" : "AI-coach — kan dit voor je doen";
 
   return (
     <div

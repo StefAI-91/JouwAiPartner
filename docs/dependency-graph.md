@@ -9,7 +9,7 @@
 |--------|-------|
 | Files scanned | 517 |
 | Exported functions/constants | 848 |
-| Exported types/interfaces | 350 |
+| Exported types/interfaces | 349 |
 | Cross-package imports | 534 |
 | Critical integration points (3+ packages) | 13 |
 
@@ -2835,7 +2835,7 @@
 - `countByBucket()`
 - `MOCK_INBOX`
 
-**Types:** `InboxBucket`, `InboxKind`, `InboxItem`
+**Types:** `InboxBucket`, `InboxItem`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
 

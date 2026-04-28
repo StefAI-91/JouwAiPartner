@@ -17,18 +17,17 @@ export default function InboxSketchPage() {
         </div>
         <h1 className="text-2xl font-semibold">AI-coach inbox</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          AI maakt conversational voorstellen voor opvolging — naar klanten of intern naar het team.
-          Twee soorten items zitten in dezelfde lijst:
+          Twee strikt gescheiden stromen — verschil per tab, geen mengvormen:
         </p>
         <ul className="ml-4 max-w-3xl list-disc space-y-1 text-sm text-muted-foreground">
           <li>
-            <strong className="text-foreground">AI doet voorzet</strong> (sparkles-icoon) — concrete
-            mail/ping/overzicht met primary CTA, &quot;Wijzig&quot; en &quot;Niet nu&quot;.
+            <strong className="text-foreground">Klanten</strong> (sparkles, primary card) — AI draft
+            een follow-up mail. Knoppen: <em>Draft mail</em>, <em>Wijzig</em>, <em>Niet nu</em>.
           </li>
           <li>
-            <strong className="text-foreground">Reminder</strong> (bell-icoon, gedempte achtergrond)
-            — vraagt jouw aandacht maar AI kan geen voorzet maken (creatief / strategisch werk).
-            Knoppen: &quot;Ik pak het op&quot; en &quot;Herinner later&quot;.
+            <strong className="text-foreground">Intern</strong> (bell, gedempte card) — AI herinnert
+            je aan werk dat AI niet kan voorzetten (design, planning, strategie). Knoppen:{" "}
+            <em>Ik pak het op</em>, <em>Herinner later</em>.
           </li>
         </ul>
       </header>
