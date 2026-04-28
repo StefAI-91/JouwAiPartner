@@ -158,3 +158,128 @@
       0 0 60px rgb(0 107 63 / 5%);
   }
 }
+
+/* --- Design Preview: Editorial scope --- */
+/*
+ * These tokens are scoped to the /design-preview routes via the
+ * `.preview-editorial` class on the layout wrapper. The rest of the
+ * portal keeps the existing token system untouched.
+ */
+
+.preview-editorial {
+  /* Editorial fonts: serif display + grotesk body + mono details */
+  --font-editorial-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
+  --font-editorial-body: var(--font-geist), -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-editorial-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Paper-toned background — warmer than #fafafa, not stark white */
+  --paper: oklch(0.985 0.005 75);
+  --paper-elevated: oklch(0.995 0.003 75);
+  --paper-deep: oklch(0.96 0.008 75);
+  --paper-cream: oklch(0.97 0.018 78);
+
+  /* Ink — richer than pure black, slight warmth */
+  --ink: oklch(0.18 0.014 60);
+  --ink-soft: oklch(0.32 0.012 60);
+  --ink-muted: oklch(0.52 0.008 60);
+  --ink-faint: oklch(0.72 0.006 60);
+
+  /* Hairline rules — almost invisible but present */
+  --rule-hairline: oklch(0.88 0.005 75);
+  --rule-soft: oklch(0.93 0.005 75);
+
+  /* Brand accent — used sparingly */
+  --accent-brand: #006b3f;
+  --accent-brand-soft: oklch(0.94 0.04 155);
+  --accent-brand-deep: oklch(0.32 0.08 155);
+
+  /* Bucket hues — desaturated, paper-tinted, NOT screaming */
+  --bucket-fixed-bg: oklch(0.96 0.018 145);
+  --bucket-fixed-rule: oklch(0.84 0.04 145);
+  --bucket-fixed-ink: oklch(0.36 0.06 145);
+
+  --bucket-soon-bg: oklch(0.97 0.025 75);
+  --bucket-soon-rule: oklch(0.86 0.05 75);
+  --bucket-soon-ink: oklch(0.4 0.07 65);
+
+  --bucket-priority-bg: oklch(0.96 0.015 250);
+  --bucket-priority-rule: oklch(0.84 0.035 250);
+  --bucket-priority-ink: oklch(0.38 0.06 250);
+
+  --bucket-unprio-bg: oklch(0.97 0.012 25);
+  --bucket-unprio-rule: oklch(0.86 0.03 25);
+  --bucket-unprio-ink: oklch(0.4 0.055 25);
+
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-editorial-body);
+  font-feature-settings: "ss01", "ss02", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.preview-editorial .font-display {
+  font-family: var(--font-editorial-display);
+  font-feature-settings: "kern", "liga", "calt";
+  letter-spacing: -0.018em;
+}
+
+.preview-editorial .font-mono {
+  font-family: var(--font-editorial-mono);
+  font-feature-settings: "tnum", "ss01";
+}
+
+.preview-editorial .num-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Section number marker: "§ 01" style */
+.preview-editorial .section-marker {
+  font-family: var(--font-editorial-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Hairline divider */
+.preview-editorial .hairline {
+  border-color: var(--rule-hairline);
+}
+
+/* Drop cap for editorial narrative */
+.preview-editorial .drop-cap::first-letter {
+  font-family: var(--font-editorial-display);
+  font-weight: 500;
+  font-size: 4.2em;
+  line-height: 0.85;
+  float: left;
+  margin: 0.08em 0.08em 0 -0.04em;
+  color: var(--ink);
+}
+
+/* Editorial body prose — used inside report-detail */
+.preview-editorial .prose-editorial {
+  font-family: var(--font-editorial-display);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-width: 62ch;
+}
+
+.preview-editorial .prose-editorial p + p {
+  margin-top: 1.1em;
+}
+
+/* Subtle paper grain — barely perceptible texture */
+.preview-editorial .paper-grain {
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    transparent 0,
+    transparent 1px,
+    rgba(0, 0, 0, 0.012) 1px,
+    transparent 2px
+  );
+  background-size: 4px 4px;
+}
