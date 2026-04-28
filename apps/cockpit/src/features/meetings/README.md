@@ -178,8 +178,8 @@ toekomstige apps:
 | `@repo/ai/pipeline/steps/risk-specialist`             | risk-detector step                     |
 | `@repo/ai/pipeline/steps/theme-detector`              | theme-link step                        |
 | `@repo/ai/pipeline/steps/link-themes`                 | theme-link writer                      |
-| `@repo/ai/pipeline/context-injection`                 | entity-context voor prompts            |
-| `@repo/ai/pipeline/segment-builder`                   | transcript → segmenten                 |
+| `@repo/ai/pipeline/lib/context-injection`             | entity-context voor prompts            |
+| `@repo/ai/pipeline/lib/segment-builder`               | transcript → segmenten                 |
 | `@repo/ai/embeddings`                                 | Cohere embed-batch                     |
 
 Als je een query/mutation toevoegt voor meetings: plaats hem in packages/,

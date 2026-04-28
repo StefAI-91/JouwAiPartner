@@ -44,7 +44,7 @@ vi.mock("../../src/agents/needs-scanner", () => ({
   runNeedsScanner: vi.fn(),
 }));
 
-import { scanMeetingNeeds, scanAllUnscannedMeetings } from "../../src/pipeline/scan-needs";
+import { scanMeetingNeeds, scanAllUnscannedMeetings } from "../../src/scan-needs";
 import { insertExtractions } from "@repo/database/mutations/extractions";
 import { runNeedsScanner } from "../../src/agents/needs-scanner";
 

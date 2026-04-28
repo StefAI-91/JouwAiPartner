@@ -1,5 +1,5 @@
 import { MEETING_TYPE_PREFIX } from "@repo/database/constants/meetings";
-import { generateMeetingSubject } from "../agents/title-generator";
+import { generateMeetingSubject } from "../../agents/title-generator";
 
 export interface TitleContext {
   meetingType: string;

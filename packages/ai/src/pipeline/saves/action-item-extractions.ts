@@ -4,11 +4,11 @@ import {
   insertExtractions,
   type ExtractionInsertRow,
 } from "@repo/database/mutations/extractions";
-import type { IdentifiedProject } from "../validations/gatekeeper";
+import type { IdentifiedProject } from "../../validations/gatekeeper";
 import type {
   ActionItemSpecialistItem,
   ActionItemSpecialistOutput,
-} from "../validations/action-item-specialist";
+} from "../../validations/action-item-specialist";
 
 /**
  * Source-marker waarmee specialist-rijen onderscheiden worden van handmatig

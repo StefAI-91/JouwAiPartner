@@ -11,7 +11,7 @@ vi.mock("@repo/database/queries/people", () => ({
   getPeopleForContext: vi.fn(),
 }));
 
-import { buildEntityContext } from "../../src/pipeline/context-injection";
+import { buildEntityContext } from "../../src/pipeline/lib/context-injection";
 import { getActiveProjectsForContext } from "@repo/database/queries/projects";
 import { getAllOrganizations } from "@repo/database/queries/organizations";
 import { getPeopleForContext } from "@repo/database/queries/people";

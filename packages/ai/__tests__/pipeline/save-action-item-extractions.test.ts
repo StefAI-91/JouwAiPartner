@@ -13,7 +13,7 @@ vi.mock("@repo/database/mutations/extractions", () => ({
 import {
   saveActionItemExtractions,
   ACTION_ITEM_SPECIALIST_SOURCE,
-} from "../../src/pipeline/save-action-item-extractions";
+} from "../../src/pipeline/saves/action-item-extractions";
 import { linkAllMeetingProjects } from "@repo/database/mutations/meetings";
 import {
   deleteExtractionsByMeetingTypeAndSource,

@@ -96,7 +96,7 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     quadrant: "cockpit",
     status: "live",
     promptFile: "needs-scanner.md",
-    entrypoint: "packages/ai/src/pipeline/scan-needs.ts",
+    entrypoint: "packages/ai/src/scan-needs.ts",
   },
   {
     id: "management-insights",

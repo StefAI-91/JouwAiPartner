@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildMeetingTitle } from "../../src/pipeline/generate-title";
+import { buildMeetingTitle } from "../../src/pipeline/lib/title-builder";
 
 describe("buildMeetingTitle", () => {
   it("internal board → (Management): subject", () => {

@@ -14,20 +14,13 @@ import {
   runActionItemSpecialistStep,
   buildActionItemParticipants,
 } from "@repo/ai/pipeline/steps/action-item-specialist";
+import { runTagAndSegmentStep } from "@repo/ai/pipeline/steps/tag-and-segment";
 import { getAllKnownPeople } from "@repo/database/queries/people";
-import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
+import { buildEntityContext } from "@repo/ai/pipeline/lib/context-injection";
 import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
-import { runTagger } from "@repo/ai/pipeline/tagger";
-import { buildSegments } from "@repo/ai/pipeline/segment-builder";
-import { embedBatch } from "@repo/ai/embeddings";
 import { runThemeDetectorStep } from "@repo/ai/pipeline/steps/theme-detector";
 import { runLinkThemesStep } from "@repo/ai/pipeline/steps/link-themes";
-import {
-  insertMeetingProjectSummaries,
-  updateSegmentEmbedding,
-  deleteSegmentsByMeetingId,
-} from "@repo/database/mutations/meetings/project-summaries";
-import { getIgnoredEntityNames } from "@repo/database/queries/ignored-entities";
+import { deleteSegmentsByMeetingId } from "@repo/database/mutations/meetings/project-summaries";
 import { regenerateSchema } from "@repo/database/validations/meetings";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
@@ -136,7 +129,7 @@ export async function regenerateMeetingAction(
 
     // Step 4b: Regenerate title based on new summary
     try {
-      const { generateMeetingTitle } = await import("@repo/ai/pipeline/generate-title");
+      const { generateMeetingTitle } = await import("@repo/ai/pipeline/lib/title-builder");
       const { getMeetingForTitleGeneration } = await import("@repo/database/queries/meetings");
       const meetingContext = await getMeetingForTitleGeneration(meetingId);
 
@@ -203,60 +196,28 @@ export async function regenerateMeetingAction(
       ),
     ]);
 
-    // Step 6: Tagger + segment-bouw (delete old segments first, then rebuild)
+    // Step 6: Tagger + segment-bouw — delegeert naar runTagAndSegmentStep
+    // (zelfde step die de gatekeeper-pipeline gebruikt). De step doet zelf
+    // ignored-entities lookup, tagger, segment-bouw, insert + embed.
     const meetingOrganizationId = await getMeetingOrganizationId(meetingId);
 
-    // Delete existing segments for this meeting
+    // Delete existing segments first; runTagAndSegmentStep doet alleen insert.
     await deleteSegmentsByMeetingId(meetingId);
 
-    if (summarizerOutput.kernpunten.length > 0 || summarizerOutput.vervolgstappen.length > 0) {
-      try {
-        const ignoredNames = meetingOrganizationId
-          ? await getIgnoredEntityNames(meetingOrganizationId, "project")
-          : new Set<string>();
-
-        const taggerOutput = runTagger({
-          kernpunten: summarizerOutput.kernpunten,
-          vervolgstappen: summarizerOutput.vervolgstappen,
-          identified_projects: identifiedProjects,
-          knownProjects: entityContext.projects.map((p) => ({
-            id: p.id,
-            name: p.name,
-            aliases: p.aliases,
-          })),
-          ignoredNames,
-        });
-
-        const segments = buildSegments(taggerOutput);
-
-        if (segments.length > 0) {
-          const segmentRows = segments.map((s) => ({
-            meeting_id: meetingId,
-            project_id: s.project_id,
-            project_name_raw: s.project_name_raw,
-            kernpunten: s.kernpunten,
-            vervolgstappen: s.vervolgstappen,
-            summary_text: s.summary_text,
-          }));
-
-          const insertSegResult = await insertMeetingProjectSummaries(segmentRows);
-          if (!("error" in insertSegResult)) {
-            // Embed segments
-            try {
-              const texts = segments.map((s) => s.summary_text);
-              const embeddings = await embedBatch(texts);
-              await Promise.all(
-                insertSegResult.ids.map((id, i) => updateSegmentEmbedding(id, embeddings[i])),
-              );
-            } catch (embedErr) {
-              console.error("Segment embedding failed (non-blocking):", embedErr);
-            }
-          }
-        }
-      } catch (taggerErr) {
-        // Graceful degradation: log error, continue
-        console.error("Tagger failed during regeneration (non-blocking):", taggerErr);
-      }
+    const tagResult = await runTagAndSegmentStep({
+      meetingId,
+      organizationId: meetingOrganizationId,
+      kernpunten: summarizerOutput.kernpunten,
+      vervolgstappen: summarizerOutput.vervolgstappen,
+      identifiedProjects,
+      knownProjects: entityContext.projects.map((p) => ({
+        id: p.id,
+        name: p.name,
+        aliases: p.aliases,
+      })),
+    });
+    if (tagResult.errors.length > 0) {
+      console.error("Tag-and-segment errors during regeneration (non-blocking):", tagResult.errors);
     }
 
     // Step 7 (TH-013): link-themes met replace=true + Summarizer's rich

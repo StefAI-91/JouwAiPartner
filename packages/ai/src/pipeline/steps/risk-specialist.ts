@@ -5,7 +5,7 @@ import {
   type RiskSpecialistContext,
 } from "../../agents/risk-specialist";
 import { insertExperimentalRiskExtraction } from "@repo/database/mutations/extractions/experimental-risks";
-import { saveRiskExtractions } from "../save-risk-extractions";
+import { saveRiskExtractions } from "../saves/risk-extractions";
 import type { IdentifiedProject } from "../../validations/gatekeeper";
 
 /**

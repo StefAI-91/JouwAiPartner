@@ -4,8 +4,8 @@ import {
   insertExtractions,
   type ExtractionInsertRow,
 } from "@repo/database/mutations/extractions";
-import type { IdentifiedProject } from "../validations/gatekeeper";
-import type { RiskSpecialistItem, RiskSpecialistOutput } from "../validations/risk-specialist";
+import type { IdentifiedProject } from "../../validations/gatekeeper";
+import type { RiskSpecialistItem, RiskSpecialistOutput } from "../../validations/risk-specialist";
 
 /**
  * Schrijft RiskSpecialist-output naar de gedeelde `extractions`-tabel met
