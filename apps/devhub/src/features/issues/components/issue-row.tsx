@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Trash2 } from "lucide-react";
 import type { IssueRow } from "@repo/database/queries/issues";
+import type { IssueTopicMembership } from "@repo/database/queries/topics";
 import { PriorityDot } from "@/components/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
 import { Avatar } from "@/components/shared/avatar";
 import { timeAgo } from "@/components/shared/time-ago";
+import { TopicPill } from "@/features/topics/components/topic-pill";
 import { cn } from "@repo/ui/utils";
 import {
   DropdownMenu,
@@ -68,10 +70,14 @@ function IssueRowActions({
 export function IssueRowItem({
   issue,
   thumbnailPath,
+  topic,
+  topics,
   className,
 }: {
   issue: IssueRow;
   thumbnailPath?: string;
+  topic?: IssueTopicMembership;
+  topics: { id: string; title: string }[];
   className?: string;
 }) {
   const router = useRouter();
@@ -153,6 +159,12 @@ export function IssueRowItem({
             <TypeBadge type={issue.type} />
             <StatusBadge status={issue.status} />
             <ComponentBadge component={issue.component} />
+            <TopicPill
+              issueId={issue.id}
+              projectId={issue.project_id}
+              current={topic ? { id: topic.id, title: topic.title } : null}
+              topics={topics}
+            />
             {issue.assigned_person ? (
               <Avatar name={issue.assigned_person.full_name} />
             ) : (

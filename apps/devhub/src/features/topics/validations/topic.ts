@@ -4,6 +4,7 @@ import {
   updateTopicSchema,
   topicStatusSchema,
   linkIssueSchema,
+  setIssueTopicSchema,
 } from "@repo/database/validations/topics";
 
 /**
@@ -11,7 +12,13 @@ import {
  * één import-pad hebben. Aangevuld met DevHub-specifieke wrappers waar de
  * Server Action een `id` of identificatie-payload nodig heeft.
  */
-export { createTopicSchema, updateTopicSchema, topicStatusSchema, linkIssueSchema };
+export {
+  createTopicSchema,
+  updateTopicSchema,
+  topicStatusSchema,
+  linkIssueSchema,
+  setIssueTopicSchema,
+};
 
 /**
  * `updateTopic` Server Action wraps `updateTopicSchema` met een `id` veld

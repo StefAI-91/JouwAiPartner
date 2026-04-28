@@ -277,15 +277,17 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
 
 interface IssueFiltersProps {
   people: { id: string; name: string }[];
+  topics: { id: string; label: string }[];
 }
 
-export function IssueFilters({ people }: IssueFiltersProps) {
+export function IssueFilters({ people, topics }: IssueFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ASSIGNEE_OPTIONS = [
     { value: UNASSIGNED_SENTINEL, label: "Niet toegewezen" },
     ...people.map((p) => ({ value: p.id, label: p.name })),
   ];
+  const TOPIC_OPTIONS = topics.map((t) => ({ value: t.id, label: t.label }));
 
   const getValues = useCallback(
     (key: string): string[] => {
@@ -344,7 +346,8 @@ export function IssueFilters({ people }: IssueFiltersProps) {
     searchParams.has("priority") ||
     searchParams.has("type") ||
     searchParams.has("component") ||
-    searchParams.has("assignee");
+    searchParams.has("assignee") ||
+    searchParams.has("topic");
 
   const clearAll = useCallback(() => {
     const params = new URLSearchParams();
@@ -391,6 +394,15 @@ export function IssueFilters({ people }: IssueFiltersProps) {
         selected={getValues("assignee")}
         onToggle={toggleFilter}
       />
+      {TOPIC_OPTIONS.length > 0 && (
+        <FilterDropdown
+          label="Topic"
+          paramKey="topic"
+          options={TOPIC_OPTIONS}
+          selected={getValues("topic")}
+          onToggle={toggleFilter}
+        />
+      )}
 
       {hasAnyFilter && (
         <button

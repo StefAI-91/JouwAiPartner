@@ -1,12 +1,17 @@
 import type { IssueRow } from "@repo/database/queries/issues";
+import type { IssueTopicMembership } from "@repo/database/queries/topics";
 import { IssueRowItem } from "./issue-row";
 
 export function IssueList({
   issues,
   thumbnails,
+  topicMembership,
+  topics,
 }: {
   issues: IssueRow[];
   thumbnails?: Map<string, string>;
+  topicMembership?: Map<string, IssueTopicMembership>;
+  topics: { id: string; title: string }[];
 }) {
   if (issues.length === 0) {
     return (
@@ -22,7 +27,13 @@ export function IssueList({
   return (
     <div className="divide-y-0">
       {issues.map((issue) => (
-        <IssueRowItem key={issue.id} issue={issue} thumbnailPath={thumbnails?.get(issue.id)} />
+        <IssueRowItem
+          key={issue.id}
+          issue={issue}
+          thumbnailPath={thumbnails?.get(issue.id)}
+          topic={topicMembership?.get(issue.id)}
+          topics={topics}
+        />
       ))}
     </div>
   );

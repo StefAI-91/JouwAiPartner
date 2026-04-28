@@ -78,3 +78,13 @@ export const linkIssueSchema = z.object({
   issue_id: z.string().uuid(),
 });
 export type LinkIssueInput = z.infer<typeof linkIssueSchema>;
+
+/**
+ * Issue-centric variant: zet (of wis) het topic van een issue. Gebruikt
+ * door de inline TopicPill in de issue-overzicht en -detail.
+ */
+export const setIssueTopicSchema = z.object({
+  issue_id: z.string().uuid(),
+  topic_id: z.string().uuid().nullable(),
+});
+export type SetIssueTopicInput = z.infer<typeof setIssueTopicSchema>;

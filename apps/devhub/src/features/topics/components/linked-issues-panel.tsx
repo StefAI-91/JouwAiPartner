@@ -109,7 +109,7 @@ export function LinkedIssuesPanel({ topicId, projectId, initialLinked }: LinkedI
           {initialLinked.map((issue) => (
             <li key={issue.id} className="flex items-center gap-3 py-2">
               <Link
-                href={`/issues/${issue.id}`}
+                href={`/issues/${issue.id}?project=${projectId}`}
                 className="min-w-0 flex-1 truncate text-sm text-foreground hover:underline"
               >
                 {issue.title}

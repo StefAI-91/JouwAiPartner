@@ -52,6 +52,55 @@ export async function linkIssueToTopic(
 }
 
 /**
+ * Issue-centric topic-toewijzing: zet (of wis) het topic van een issue in
+ * één call. Gebruikt de UNIQUE-constraint op `topic_issues.issue_id` voor
+ * een upsert met `onConflict: "issue_id"` — Postgres-atomair: bestaande
+ * koppeling wordt vervangen, geen race tussen delete + insert.
+ *
+ * `topicId === null` → ontkoppel (idempotent, zelfde regel als
+ * `unlinkIssueFromTopic`).
+ *
+ * Returnt de nieuwe (of verwijderde) koppeling zodat de caller weet welk
+ * topic eraan hing — handig voor revalidatePath van zowel oude als nieuwe
+ * topic-pagina's.
+ */
+export async function setTopicForIssue(
+  issueId: string,
+  topicId: string | null,
+  linkedBy: string,
+  linkedVia: LinkVia = "manual",
+  client?: SupabaseClient,
+): Promise<MutationResult<{ issue_id: string; topic_id: string | null }>> {
+  const db = client ?? getAdminClient();
+
+  if (topicId === null) {
+    const { error } = await db.from("topic_issues").delete().eq("issue_id", issueId);
+    if (error) return { error: `setTopicForIssue (clear) failed: ${error.message}` };
+    return { success: true, data: { issue_id: issueId, topic_id: null } };
+  }
+
+  const { data, error } = await db
+    .from("topic_issues")
+    .upsert(
+      {
+        topic_id: topicId,
+        issue_id: issueId,
+        linked_by: linkedBy,
+        linked_via: linkedVia,
+      },
+      { onConflict: "issue_id" },
+    )
+    .select("topic_id, issue_id")
+    .single();
+
+  if (error) return { error: `setTopicForIssue failed: ${error.message}` };
+  return {
+    success: true,
+    data: { issue_id: (data as { issue_id: string }).issue_id, topic_id: topicId },
+  };
+}
+
+/**
  * Ontkoppel een issue van een topic. Idempotent: als de koppeling niet
  * (meer) bestaat is dat geen fout — de UX-regel is "het is gewoon weg".
  */

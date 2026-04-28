@@ -38,7 +38,7 @@ interface TopicCardProps {
 export function TopicCard({ topic, linkedCount }: TopicCardProps) {
   return (
     <Link
-      href={`/topics/${topic.id}`}
+      href={`/topics/${topic.id}?project=${topic.project_id}`}
       className="group flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 transition-colors hover:bg-muted"
     >
       <span

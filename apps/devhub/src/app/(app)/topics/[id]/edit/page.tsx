@@ -5,8 +5,15 @@ import { getTopicById } from "@repo/database/queries/topics";
 import type { TopicType } from "@repo/database/constants/topics";
 import { TopicForm } from "@/features/topics/components/topic-form";
 
-export default async function EditTopicPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditTopicPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const { id } = await params;
+  const sp = await searchParams;
 
   const user = await getAuthenticatedUser();
   if (!user) redirect("/login");
@@ -17,6 +24,11 @@ export default async function EditTopicPage({ params }: { params: Promise<{ id: 
 
   const accessibleIds = await listAccessibleProjectIds(user.id, supabase);
   if (!accessibleIds.includes(topic.project_id)) notFound();
+
+  // Houd `?project=` consistent — zie comment in /topics/[id]/page.tsx.
+  if (sp.project !== topic.project_id) {
+    redirect(`/topics/${id}/edit?project=${topic.project_id}`);
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6">

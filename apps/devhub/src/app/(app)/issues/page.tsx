@@ -11,6 +11,7 @@ import {
 } from "@repo/database/queries/issues";
 import { getIssueThumbnails } from "@repo/database/queries/issues/attachments";
 import { listTeamMembers } from "@repo/database/queries/team";
+import { getTopicMembershipForIssues, listTopics } from "@repo/database/queries/topics";
 import { issueListFilterSchema } from "@repo/database/validations/issues";
 import { IssueList } from "@/features/issues/components/issue-list";
 import { IssueFilters } from "@/features/issues/components/issue-filters";
@@ -87,36 +88,49 @@ export default async function IssuesPage({
     type: params.type,
     component: params.component,
     assignedTo: params.assignee,
+    topicIds: params.topic,
     issueNumber,
     search,
   };
 
-  const [issues, totalCount, sidebarCounts, members] = await Promise.all([
+  const [issues, totalCount, sidebarCounts, members, projectTopics] = await Promise.all([
     listIssues({ ...filterParams, sort: params.sort, limit: PAGE_SIZE, offset }, supabase),
     countFilteredIssues(filterParams, supabase),
     getIssueCounts(projectId, supabase),
     listTeamMembers(supabase),
+    listTopics(projectId, {}, supabase),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const thumbnails = await getIssueThumbnails(
-    issues.map((i) => i.id),
-    supabase,
-  );
+  const issueIds = issues.map((i) => i.id);
+  const [thumbnails, topicMembership] = await Promise.all([
+    getIssueThumbnails(issueIds, supabase),
+    getTopicMembershipForIssues(issueIds, supabase),
+  ]);
 
   const people = members.map((m) => ({
     id: m.id,
     name: m.full_name?.trim() || m.email,
   }));
 
+  // De filter-dropdown heeft `{value,label}`, de TopicPill heeft `{id,title}` —
+  // verschillende vormen voor verschillende consumers maar één bron.
+  const topicsForPill = projectTopics.map((t) => ({ id: t.id, title: t.title }));
+  const topicFilterOptions = projectTopics.map((t) => ({ id: t.id, label: t.title }));
+
   return (
     <div className="flex flex-1 flex-col px-4 sm:px-6 lg:px-8">
       {/* Seed the sidebar badges from the server so they're correct on first
           paint — avoids the "numbers pop in a second later" lag. */}
       <CountSeeder projectId={projectId} counts={sidebarCounts} />
-      <IssueFilters people={people} />
-      <IssueList issues={issues} thumbnails={thumbnails} />
+      <IssueFilters people={people} topics={topicFilterOptions} />
+      <IssueList
+        issues={issues}
+        thumbnails={thumbnails}
+        topicMembership={topicMembership}
+        topics={topicsForPill}
+      />
       <PaginationControls currentPage={currentPage} totalPages={totalPages} />
     </div>
   );

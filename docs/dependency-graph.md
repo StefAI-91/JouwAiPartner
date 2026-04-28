@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 518 |
-| Exported functions/constants | 814 |
+| Exported functions/constants | 815 |
 | Exported types/interfaces | 335 |
-| Cross-package imports | 547 |
+| Cross-package imports | 549 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -832,6 +832,7 @@
 
 **Exports:**
 - `linkIssueToTopic()`
+- `setTopicForIssue()`
 - `unlinkIssueFromTopic()`
 
 **Types:** `LinkVia`, `LinkIssueResult`
@@ -3870,7 +3871,7 @@ Which layers depend on which packages:
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | - | - | - | 12 | - | 12 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 23 | - | 20 | 11 | - | 54 |
+| DevHub Pages | 25 | - | 20 | 11 | - | 56 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points
@@ -4412,20 +4413,20 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getTopicById()` | `packages/database/src/mutations/topics/crud.ts`, `apps/devhub/src/app/(app)/topics/[id]/edit/page.tsx` |
+| `getTopicById()` | `packages/database/src/mutations/topics/crud.ts`, `apps/devhub/src/app/(app)/topics/[id]/edit/page.tsx`, `apps/devhub/src/app/(app)/topics/[id]/page.tsx` |
 
 ### queries/topics/linked-issues.ts
 
 | Query | Used in |
 |-------|---------|
-| `getTopicMembershipForIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `getTopicMembershipForIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueIdsForTopics()` | `packages/database/src/queries/issues/core.ts` |
 
 ### queries/topics/list.ts
 
 | Query | Used in |
 |-------|---------|
-| `listTopics()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listTopics()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 
 ### queries/userback-issues.ts
 

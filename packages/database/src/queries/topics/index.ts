@@ -21,4 +21,10 @@ export {
   type TopicWithIssues,
 } from "./detail";
 
-export { countIssuesPerTopic, getIssuesForTopic } from "./linked-issues";
+export {
+  countIssuesPerTopic,
+  getIssuesForTopic,
+  getIssueIdsForTopics,
+  getTopicMembershipForIssues,
+  type IssueTopicMembership,
+} from "./linked-issues";

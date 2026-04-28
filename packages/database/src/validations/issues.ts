@@ -49,6 +49,7 @@ export const issueListFilterSchema = z.object({
   type: csvListSchema(z.enum(ISSUE_TYPES)),
   component: csvListSchema(z.enum(ISSUE_COMPONENTS)),
   assignee: csvListSchema(assigneeItemSchema),
+  topic: csvListSchema(z.string().uuid()),
 });
 
 export type IssueListFilterParams = z.infer<typeof issueListFilterSchema>;

@@ -17,6 +17,7 @@ export { updateTopicStatus, type UpdateTopicStatusOpts } from "./status";
 
 export {
   linkIssueToTopic,
+  setTopicForIssue,
   unlinkIssueFromTopic,
   type LinkIssueResult,
   type LinkVia,
