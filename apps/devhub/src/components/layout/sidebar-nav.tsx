@@ -104,6 +104,7 @@ export function SidebarNav({
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const count = counts[item.status as keyof typeof counts] ?? 0;
+          const isActive = pathname === "/issues" && searchParams.get("status") === item.status;
           return (
             <Link
               key={item.status}
@@ -112,9 +113,10 @@ export function SidebarNav({
               className={cn(
                 "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 linkClassName,
+                isActive && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
               )}
             >
-              <Icon className={iconSize} />
+              <Icon className={cn(iconSize, isActive && item.activeIconClass)} />
               <span className="flex-1">{item.label}</span>
               {count > 0 && (
                 <span

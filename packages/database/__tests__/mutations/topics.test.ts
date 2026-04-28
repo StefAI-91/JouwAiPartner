@@ -16,6 +16,7 @@ import {
   deleteTopic,
   updateTopicStatus,
   linkIssueToTopic,
+  setTopicForIssue,
   unlinkIssueFromTopic,
 } from "../../src/mutations/topics";
 
@@ -174,6 +175,65 @@ describeWithDb("mutations/topics", () => {
       await seedTopic(profileId, { id: TEST_IDS.topic });
       const result = await unlinkIssueFromTopic(TEST_IDS.topic, TEST_IDS.issue, db);
       expect(result).toMatchObject({ success: true });
+    });
+  });
+
+  describe("setTopicForIssue", () => {
+    it("UPSERT-pad: reassign van topic A naar topic B laat exact één rij over", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic, title: "Topic A" });
+      await seedTopic(profileId, { id: TEST_IDS.topic2, title: "Topic B" });
+      await seedIssue({ id: TEST_IDS.issue, title: "Issue X" });
+
+      // Koppel eerst aan topic A
+      const first = await setTopicForIssue(TEST_IDS.issue, TEST_IDS.topic, profileId, "manual", db);
+      expect(first).toMatchObject({ success: true });
+
+      // Herken naar topic B
+      const second = await setTopicForIssue(
+        TEST_IDS.issue,
+        TEST_IDS.topic2,
+        profileId,
+        "manual",
+        db,
+      );
+      expect(second).toMatchObject({ success: true });
+
+      // Exact één rij in topic_issues, gekoppeld aan topic B
+      const { data: rows } = await db
+        .from("topic_issues")
+        .select("topic_id")
+        .eq("issue_id", TEST_IDS.issue);
+      expect(rows).toHaveLength(1);
+      expect((rows as { topic_id: string }[])[0].topic_id).toBe(TEST_IDS.topic2);
+    });
+
+    it("clear-pad is idempotent: setTopicForIssue(id, null) op issue zonder koppeling geeft success", async () => {
+      await seedIssue({ id: TEST_IDS.issue, title: "Issue zonder topic" });
+
+      const result = await setTopicForIssue(TEST_IDS.issue, null, profileId, "manual", db);
+      expect(result).toMatchObject({
+        success: true,
+        data: { issue_id: TEST_IDS.issue, topic_id: null },
+      });
+    });
+
+    it("set + clear flow: na clear is de rij in topic_issues weg", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic, title: "Topic A" });
+      await seedIssue({ id: TEST_IDS.issue, title: "Issue Y" });
+
+      // Koppelen
+      await setTopicForIssue(TEST_IDS.issue, TEST_IDS.topic, profileId, "manual", db);
+
+      // Ontkoppelen via null
+      const clearResult = await setTopicForIssue(TEST_IDS.issue, null, profileId, "manual", db);
+      expect(clearResult).toMatchObject({ success: true });
+
+      // Rij is weg
+      const { data: rows } = await db
+        .from("topic_issues")
+        .select("issue_id")
+        .eq("issue_id", TEST_IDS.issue);
+      expect(rows).toHaveLength(0);
     });
   });
 });

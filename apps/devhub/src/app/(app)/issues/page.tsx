@@ -76,8 +76,19 @@ export default async function IssuesPage({
     );
   }
 
-  const currentPage = params.page ?? 1;
-  const offset = (currentPage - 1) * PAGE_SIZE;
+  // Group-by-topic is default — topics zijn de georganiseerde view, flat
+  // is de uitzondering. `?group=flat` schakelt het expliciet uit. Als het
+  // project nog geen topics heeft is grouped zinloos, dus dan flat.
+  // We hebben de topic-lijst nodig vóór we kunnen beslissen, dus die query
+  // staat los — kleine call, weegt niet op tegen de UX-winst.
+  const projectTopics = await listTopics(projectId, {}, supabase);
+  const isGrouped = params.group !== "flat" && projectTopics.length > 0;
+
+  // Pagination werkt slecht in grouped mode (groepen afgekapt over pagina's).
+  // Daar laden we tot 500 issues in één keer; voor jullie schaal voldoende.
+  const PAGE_LIMIT = isGrouped ? 500 : PAGE_SIZE;
+  const currentPage = isGrouped ? 1 : (params.page ?? 1);
+  const offset = isGrouped ? 0 : (currentPage - 1) * PAGE_SIZE;
 
   const { issueNumber, search } = parseSearchQuery(params.q);
 
@@ -94,12 +105,11 @@ export default async function IssuesPage({
     search,
   };
 
-  const [issues, totalCount, sidebarCounts, members, projectTopics] = await Promise.all([
-    listIssues({ ...filterParams, sort: params.sort, limit: PAGE_SIZE, offset }, supabase),
+  const [issues, totalCount, sidebarCounts, members] = await Promise.all([
+    listIssues({ ...filterParams, sort: params.sort, limit: PAGE_LIMIT, offset }, supabase),
     countFilteredIssues(filterParams, supabase),
     getIssueCounts(projectId, supabase),
     listTeamMembers(supabase),
-    listTopics(projectId, {}, supabase),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -117,7 +127,12 @@ export default async function IssuesPage({
 
   // De filter-dropdown heeft `{value,label}`, de TopicPill heeft `{id,title}` —
   // verschillende vormen voor verschillende consumers maar één bron.
-  const topicsForPill = projectTopics.map((t) => ({ id: t.id, title: t.title }));
+  // `type` is optioneel — alleen de section-header in group-by mode gebruikt het.
+  const topicsForPill = projectTopics.map((t) => ({
+    id: t.id,
+    title: t.title,
+    type: t.type,
+  }));
   const topicFilterOptions = projectTopics.map((t) => ({ id: t.id, label: t.title }));
 
   return (
@@ -131,8 +146,10 @@ export default async function IssuesPage({
         thumbnails={thumbnails}
         topicMembership={topicMembership}
         topics={topicsForPill}
+        groupedByTopic={isGrouped}
+        projectId={projectId}
       />
-      <PaginationControls currentPage={currentPage} totalPages={totalPages} />
+      {!isGrouped && <PaginationControls currentPage={currentPage} totalPages={totalPages} />}
     </div>
   );
 }

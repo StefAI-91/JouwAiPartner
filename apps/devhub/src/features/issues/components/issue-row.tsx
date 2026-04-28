@@ -72,12 +72,19 @@ export function IssueRowItem({
   thumbnailPath,
   topic,
   topics,
+  compact,
   className,
 }: {
   issue: IssueRow;
   thumbnailPath?: string;
   topic?: IssueTopicMembership;
-  topics: { id: string; title: string }[];
+  topics: { id: string; title: string; type?: string }[];
+  /**
+   * Compact-mode: minder padding, geen description-regel. Gebruikt in
+   * "Niet gegroepeerd" sectie zodat de gecureerde topic-secties meer
+   * visueel gewicht krijgen.
+   */
+  compact?: boolean;
   className?: string;
 }) {
   const router = useRouter();
@@ -112,7 +119,8 @@ export function IssueRowItem({
   return (
     <div
       className={cn(
-        "group relative border-b border-border px-4 py-3.5 transition-colors hover:bg-muted/50",
+        "group relative border-b border-border px-4 transition-colors hover:bg-muted/50",
+        compact ? "py-2" : "py-3.5",
         isPending && "opacity-50 pointer-events-none",
         className,
       )}
@@ -149,7 +157,7 @@ export function IssueRowItem({
             </span>
           </div>
 
-          {issue.description && issue.description !== issue.title && (
+          {!compact && issue.description && issue.description !== issue.title && (
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2 pl-8">
               {issue.description}
             </p>

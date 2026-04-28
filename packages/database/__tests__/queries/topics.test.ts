@@ -17,6 +17,9 @@ import {
   getTopicWithIssues,
   listTopics,
   listTopicsByBucket,
+  getTopicMembershipForIssues,
+  getLinkedIssueIdsInProject,
+  getIssueIdsForTopics,
 } from "../../src/queries/topics";
 
 let db: ReturnType<typeof getTestClient>;
@@ -161,6 +164,120 @@ describeWithDb("queries/topics", () => {
 
       const issues = await getIssuesForTopic(TEST_IDS.topic, db);
       expect(issues.map((i) => i.id)).toEqual([TEST_IDS.issue]);
+    });
+  });
+
+  describe("getTopicMembershipForIssues()", () => {
+    it("cross-project isolation: geeft de juiste topic-info per issue, geen kruisbestuiving", async () => {
+      // Project A: topic + issue A
+      await seedTopic(profileId, { id: TEST_IDS.topic, title: "Topic Proj A" });
+      await seedIssue({ id: TEST_IDS.issue, title: "Issue Proj A" });
+      await db.from("topic_issues").insert({
+        topic_id: TEST_IDS.topic,
+        issue_id: TEST_IDS.issue,
+        linked_by: profileId,
+      });
+
+      // Project B: eigen project + topic + issue
+      await seedProject({ id: TEST_IDS.project2, name: "Project B" });
+      await seedTopic(profileId, {
+        id: TEST_IDS.topic2,
+        title: "Topic Proj B",
+        project_id: TEST_IDS.project2,
+      });
+      await seedIssue({
+        id: TEST_IDS.issue2,
+        title: "Issue Proj B",
+        project_id: TEST_IDS.project2,
+      });
+      await db.from("topic_issues").insert({
+        topic_id: TEST_IDS.topic2,
+        issue_id: TEST_IDS.issue2,
+        linked_by: profileId,
+      });
+
+      const map = await getTopicMembershipForIssues([TEST_IDS.issue, TEST_IDS.issue2], db);
+
+      expect(map.get(TEST_IDS.issue)).toMatchObject({
+        id: TEST_IDS.topic,
+        title: "Topic Proj A",
+      });
+      expect(map.get(TEST_IDS.issue2)).toMatchObject({
+        id: TEST_IDS.topic2,
+        title: "Topic Proj B",
+      });
+
+      // Cleanup extra project
+      await db.from("projects").delete().eq("id", TEST_IDS.project2);
+    });
+
+    it("issues zonder topic staan niet in de result-Map", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic });
+      await seedIssue({ id: TEST_IDS.issue, title: "Met topic" });
+      await seedIssue({ id: TEST_IDS.issue2, title: "Zonder topic" });
+
+      await db.from("topic_issues").insert({
+        topic_id: TEST_IDS.topic,
+        issue_id: TEST_IDS.issue,
+        linked_by: profileId,
+      });
+
+      const map = await getTopicMembershipForIssues([TEST_IDS.issue, TEST_IDS.issue2], db);
+
+      expect(map.has(TEST_IDS.issue)).toBe(true);
+      expect(map.has(TEST_IDS.issue2)).toBe(false);
+    });
+  });
+
+  describe("getLinkedIssueIdsInProject()", () => {
+    it("geeft alleen de issue-ids van het gevraagde project, niet van een ander project", async () => {
+      // Project A: topic met issues X en Y
+      await seedTopic(profileId, { id: TEST_IDS.topic, title: "Topic A" });
+      await seedIssue({ id: TEST_IDS.issue, title: "X" });
+      await seedIssue({ id: TEST_IDS.issue2, title: "Y" });
+      await db.from("topic_issues").insert([
+        { topic_id: TEST_IDS.topic, issue_id: TEST_IDS.issue, linked_by: profileId },
+        { topic_id: TEST_IDS.topic, issue_id: TEST_IDS.issue2, linked_by: profileId },
+      ]);
+
+      // Project B: eigen topic + issue Z
+      await seedProject({ id: TEST_IDS.project2, name: "Project B" });
+      await seedTopic(profileId, {
+        id: TEST_IDS.topic2,
+        title: "Topic B",
+        project_id: TEST_IDS.project2,
+      });
+      await seedIssue({ id: TEST_IDS.issue3, title: "Z", project_id: TEST_IDS.project2 });
+      await db.from("topic_issues").insert({
+        topic_id: TEST_IDS.topic2,
+        issue_id: TEST_IDS.issue3,
+        linked_by: profileId,
+      });
+
+      const idsA = await getLinkedIssueIdsInProject(TEST_IDS.project, db);
+      expect(idsA.sort()).toEqual([TEST_IDS.issue, TEST_IDS.issue2].sort());
+      expect(idsA).not.toContain(TEST_IDS.issue3);
+
+      // Cleanup extra project
+      await db.from("projects").delete().eq("id", TEST_IDS.project2);
+    });
+
+    it("lege state: project zonder topics geeft lege array", async () => {
+      const ids = await getLinkedIssueIdsInProject(TEST_IDS.project, db);
+      expect(ids).toEqual([]);
+    });
+
+    it("lege state: project met topics maar zonder koppelingen geeft lege array", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic });
+      const ids = await getLinkedIssueIdsInProject(TEST_IDS.project, db);
+      expect(ids).toEqual([]);
+    });
+  });
+
+  describe("getIssueIdsForTopics()", () => {
+    it("empty-input early-return: roep aan met [] → returns [] zonder error", async () => {
+      const ids = await getIssueIdsForTopics([], db);
+      expect(ids).toEqual([]);
     });
   });
 });

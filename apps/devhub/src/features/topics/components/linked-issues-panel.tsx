@@ -107,14 +107,14 @@ export function LinkedIssuesPanel({ topicId, projectId, initialLinked }: LinkedI
       ) : (
         <ul className="flex flex-col divide-y divide-border">
           {initialLinked.map((issue) => (
-            <li key={issue.id} className="flex items-center gap-3 py-2">
+            <li key={issue.id} className="flex min-w-0 items-center gap-3 py-2">
               <Link
                 href={`/issues/${issue.id}?project=${projectId}`}
                 className="min-w-0 flex-1 truncate text-sm text-foreground hover:underline"
               >
                 {issue.title}
               </Link>
-              <span className="text-xs text-muted-foreground">{issue.status}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">{issue.status}</span>
               <button
                 type="button"
                 onClick={() => onUnlink(issue.id)}
@@ -148,13 +148,13 @@ export function LinkedIssuesPanel({ topicId, projectId, initialLinked }: LinkedI
             {results.map((issue) => (
               <li
                 key={issue.id}
-                className="flex items-center gap-2 rounded-md border border-border px-3 py-2"
+                className="flex min-w-0 items-center gap-2 rounded-md border border-border px-3 py-2"
               >
-                <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+                <span className="shrink-0 font-mono text-[11px] text-muted-foreground tabular-nums">
                   #{issue.issue_number}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm">{issue.title}</span>
-                <span className="text-xs text-muted-foreground">{issue.status}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">{issue.status}</span>
                 <button
                   type="button"
                   onClick={() => onLink(issue.id)}

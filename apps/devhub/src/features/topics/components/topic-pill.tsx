@@ -22,7 +22,7 @@ export interface TopicPillProps {
    */
   projectId: string;
   current: { id: string; title: string } | null;
-  topics: { id: string; title: string }[];
+  topics: { id: string; title: string; type?: string }[];
   /**
    * "row" — compact pill voor in een lijst (issue-row).
    * "field" — fullwidth control voor in de issue-detail-sidebar.

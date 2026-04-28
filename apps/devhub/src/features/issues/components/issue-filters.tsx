@@ -341,7 +341,10 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
     [router, searchParams],
   );
 
-  const ungroupedActive = searchParams.get("ungrouped") === "1";
+  // Group-by-topic is default; `?group=flat` schakelt het uit. De toggle
+  // is dus "default aan" en flippen voegt `flat` toe i.p.v. `topic`.
+  const groupOverridden = searchParams.get("group") === "flat";
+  const groupActive = !groupOverridden;
 
   const hasAnyFilter =
     searchParams.has("status") ||
@@ -350,21 +353,18 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
     searchParams.has("component") ||
     searchParams.has("assignee") ||
     searchParams.has("topic") ||
-    ungroupedActive;
+    groupOverridden;
 
-  const toggleUngrouped = useCallback(() => {
+  const toggleGroup = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
-    if (ungroupedActive) {
-      params.delete("ungrouped");
+    if (groupOverridden) {
+      params.delete("group");
     } else {
-      params.set("ungrouped", "1");
-      // Mutually exclusive met topic-filter — een issue kan niet tegelijk
-      // ongegroepeerd én aan een topic gekoppeld zijn.
-      params.delete("topic");
+      params.set("group", "flat");
     }
     params.delete("page");
     router.push(`/issues?${params.toString()}`);
-  }, [router, searchParams, ungroupedActive]);
+  }, [router, searchParams, groupOverridden]);
 
   const clearAll = useCallback(() => {
     const params = new URLSearchParams();
@@ -416,24 +416,26 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
           label="Topic"
           paramKey="topic"
           options={TOPIC_OPTIONS}
-          selected={ungroupedActive ? [] : getValues("topic")}
-          onToggle={ungroupedActive ? () => {} : toggleFilter}
+          selected={getValues("topic")}
+          onToggle={toggleFilter}
         />
       )}
-      <button
-        type="button"
-        onClick={toggleUngrouped}
-        aria-pressed={ungroupedActive}
-        className={cn(
-          "flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm transition-colors",
-          ungroupedActive
-            ? "border-primary/30 bg-primary/5 text-primary"
-            : "border-border hover:bg-muted",
-        )}
-        title="Toon alleen issues die nog geen topic hebben"
-      >
-        Niet gegroepeerd
-      </button>
+      {TOPIC_OPTIONS.length > 0 && (
+        <button
+          type="button"
+          onClick={toggleGroup}
+          aria-pressed={groupActive}
+          className={cn(
+            "flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm transition-colors",
+            groupActive
+              ? "border-primary/30 bg-primary/5 text-primary"
+              : "border-border hover:bg-muted",
+          )}
+          title="Cluster issues per topic"
+        >
+          Groep op topic
+        </button>
+      )}
 
       {hasAnyFilter && (
         <button

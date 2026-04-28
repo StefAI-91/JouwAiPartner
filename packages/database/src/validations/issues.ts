@@ -56,6 +56,10 @@ export const issueListFilterSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === "1"),
+  // Display-mode. Default = "topic" (groep-by-topic), `?group=flat` zet uit.
+  // Enum zodat we later "priority"/"status"/etc. zonder breaking change
+  // kunnen toevoegen.
+  group: z.enum(["topic", "flat"]).optional(),
 });
 
 export type IssueListFilterParams = z.infer<typeof issueListFilterSchema>;

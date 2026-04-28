@@ -31,7 +31,9 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
         </nav>
 
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{topic.title}</h1>
+          <h1 className="min-w-0 break-words text-2xl font-semibold tracking-tight text-foreground">
+            {topic.title}
+          </h1>
           <Link
             href={`/topics/${topic.id}/edit`}
             className="inline-flex h-9 items-center rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted"
@@ -49,7 +51,7 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-        <div className="flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6">
           {topic.client_title || topic.client_description ? (
             <section className="flex flex-col gap-2 rounded-md border border-dashed border-border p-4">
               <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -59,7 +61,7 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
                 <p className="text-base font-medium">{topic.client_title}</p>
               ) : null}
               {topic.client_description ? (
-                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
                   {topic.client_description}
                 </p>
               ) : null}
@@ -71,7 +73,7 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
               <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Interne beschrijving
               </h2>
-              <p className="whitespace-pre-wrap text-sm">{topic.description}</p>
+              <p className="whitespace-pre-wrap break-words text-sm">{topic.description}</p>
             </section>
           ) : null}
 
@@ -82,7 +84,7 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
           />
         </div>
 
-        <aside className="flex flex-col gap-4">
+        <aside className="flex min-w-0 flex-col gap-4">
           <section className="flex flex-col gap-2 rounded-md border border-border p-4">
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Status
