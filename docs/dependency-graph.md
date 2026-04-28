@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 512 |
-| Exported functions/constants | 843 |
-| Exported types/interfaces | 346 |
+| Files scanned | 513 |
+| Exported functions/constants | 844 |
+| Exported types/interfaces | 347 |
 | Cross-package imports | 534 |
 | Critical integration points (3+ packages) | 13 |
 
@@ -2782,6 +2782,13 @@
 - `DeviceMobile()`
 - `DeviceDesktop()`
 - `DeviceRow()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/followup-suggestions/_components/editable-deadline-chip.tsx`
+
+**Exports:**
+- `EditableDeadlineChip()`
+
+**Types:** `DeadlineValue`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/sketches/followup-suggestions/_components/mock-data.ts`
 

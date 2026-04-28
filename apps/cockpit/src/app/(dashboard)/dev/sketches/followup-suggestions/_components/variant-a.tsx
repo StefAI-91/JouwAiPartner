@@ -1,7 +1,13 @@
-import { Clock, Moon, Pencil, ChevronRight } from "lucide-react";
+import { Moon, Pencil, ChevronRight } from "lucide-react";
 import { DeviceMobile, DeviceDesktop, DeviceRow } from "./device";
 import { TabHeader, MobileSubHeader } from "./tab-header";
 import { MOCK_ACTIVE, MOCK_SNOOZED, type MockSuggestion } from "./mock-data";
+import { EditableDeadlineChip, type DeadlineValue } from "./editable-deadline-chip";
+
+function toDeadlineValue(d: MockSuggestion["deadline"]): DeadlineValue {
+  if (d.label === "deze week") return { kind: "label", label: "deze week" };
+  return { kind: "none" };
+}
 
 /**
  * Variant A — card-stijl met linker accent-balk, actor-chip en
@@ -62,7 +68,7 @@ function CardCompact({ suggestion }: { suggestion: MockSuggestion }) {
               {suggestion.actorNameShort}
             </span>
             <span className="text-[10px] text-muted-foreground">·</span>
-            <DeadlineChip deadline={suggestion.deadline} />
+            <EditableDeadlineChip value={toDeadlineValue(suggestion.deadline)} />
           </div>
           <button
             className="-mr-1 p-1 text-muted-foreground/40 hover:text-foreground"
@@ -88,7 +94,7 @@ function CardWide({ suggestion }: { suggestion: MockSuggestion }) {
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex items-center gap-2">
             <span className="text-xs font-medium text-foreground">{suggestion.actorName}</span>
-            <DeadlineChip deadline={suggestion.deadline} />
+            <EditableDeadlineChip value={toDeadlineValue(suggestion.deadline)} />
             <span className="text-[10px] text-muted-foreground">· {suggestion.source}</span>
           </div>
           <p className="text-sm leading-snug text-foreground">{suggestion.text}</p>
@@ -122,19 +128,6 @@ function Avatar({ initial, small }: { initial: string; small?: boolean }) {
     >
       {initial}
     </div>
-  );
-}
-
-function DeadlineChip({ deadline }: { deadline: MockSuggestion["deadline"] }) {
-  const cls =
-    deadline.tone === "amber" ? "bg-amber-50 text-amber-700" : "bg-muted text-muted-foreground";
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${cls}`}
-    >
-      {deadline.tone === "amber" && <Clock className="size-2.5" />}
-      {deadline.label}
-    </span>
   );
 }
 
