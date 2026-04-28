@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 517 |
-| Exported functions/constants | 848 |
+| Exported functions/constants | 851 |
 | Exported types/interfaces | 349 |
 | Cross-package imports | 534 |
 | Critical integration points (3+ packages) | 13 |
@@ -490,6 +490,7 @@
 
 **Exports:**
 - `listActiveTasks()`
+- `listSnoozedTasks()`
 - `hasTaskForExtraction()`
 - `getPromotedExtractionIds()`
 - `listAllTasks()`
@@ -820,6 +821,8 @@
 - `updateTask()`
 - `completeTask()`
 - `dismissTask()`
+- `snoozeTask()`
+- `unsnoozeTask()`
 
 ### `mutations/team.ts`
 

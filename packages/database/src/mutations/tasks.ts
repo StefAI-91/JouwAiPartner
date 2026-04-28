@@ -97,3 +97,51 @@ export async function dismissTask(
   if (error) return { error: error.message };
   return { success: true };
 }
+
+/**
+ * Snooze a task — verberg uit de actieve inbox tot `snoozed_until`.
+ * Reason wordt opgeslagen als training-signaal voor Action Item Specialist
+ * tuning (zie vision-doc §3.1 amendment 2026-04-28).
+ */
+export async function snoozeTask(
+  taskId: string,
+  input: {
+    snoozed_until: string;
+    snoozed_reason?: string | null;
+  },
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db
+    .from("tasks")
+    .update({
+      snoozed_until: input.snoozed_until,
+      snoozed_reason: input.snoozed_reason ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", taskId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
+ * Unsnooze: maak de task direct weer actief.
+ */
+export async function unsnoozeTask(
+  taskId: string,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db
+    .from("tasks")
+    .update({
+      snoozed_until: null,
+      snoozed_reason: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", taskId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}

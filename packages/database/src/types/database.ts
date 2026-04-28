@@ -1591,6 +1591,8 @@ export type Database = {
           due_date: string | null;
           extraction_id: string | null;
           id: string;
+          snoozed_reason: string | null;
+          snoozed_until: string | null;
           status: string;
           title: string;
           updated_at: string | null;
@@ -1603,6 +1605,8 @@ export type Database = {
           due_date?: string | null;
           extraction_id?: string | null;
           id?: string;
+          snoozed_reason?: string | null;
+          snoozed_until?: string | null;
           status?: string;
           title: string;
           updated_at?: string | null;
@@ -1615,6 +1619,8 @@ export type Database = {
           due_date?: string | null;
           extraction_id?: string | null;
           id?: string;
+          snoozed_reason?: string | null;
+          snoozed_until?: string | null;
           status?: string;
           title?: string;
           updated_at?: string | null;

@@ -16,26 +16,53 @@ export interface TaskRow {
   } | null;
   created_at: string;
   completed_at: string | null;
+  snoozed_until: string | null;
+  snoozed_reason: string | null;
 }
 
+const TASK_SELECT = `id, title, status, due_date, assigned_to, extraction_id, created_at, completed_at, snoozed_until, snoozed_reason,
+       assigned_person:assigned_to (id, name, team),
+       extraction:extraction_id (meeting_id, project_id, project:project_id (name))`;
+
 /**
- * List active tasks with their assigned person.
+ * List active tasks with their assigned person. Excludes tasks die nog
+ * gesnoozed zijn (snoozed_until > now()).
  */
 export async function listActiveTasks(
   limit: number = 20,
   client?: SupabaseClient,
 ): Promise<TaskRow[]> {
   const db = client ?? getAdminClient();
+  const nowIso = new Date().toISOString();
   const { data, error } = await db
     .from("tasks")
-    .select(
-      `id, title, status, due_date, assigned_to, extraction_id, created_at, completed_at,
-       assigned_person:assigned_to (id, name, team),
-       extraction:extraction_id (meeting_id, project_id, project:project_id (name))`,
-    )
+    .select(TASK_SELECT)
     .eq("status", "active")
+    .or(`snoozed_until.is.null,snoozed_until.lt.${nowIso}`)
     .order("due_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+  return data as unknown as TaskRow[];
+}
+
+/**
+ * List currently snoozed tasks (snoozed_until > now()). Voor de
+ * "Gesnoozed (n)"-collapsible in de inbox.
+ */
+export async function listSnoozedTasks(
+  limit: number = 50,
+  client?: SupabaseClient,
+): Promise<TaskRow[]> {
+  const db = client ?? getAdminClient();
+  const nowIso = new Date().toISOString();
+  const { data, error } = await db
+    .from("tasks")
+    .select(TASK_SELECT)
+    .eq("status", "active")
+    .gte("snoozed_until", nowIso)
+    .order("snoozed_until", { ascending: true })
     .limit(limit);
 
   if (error || !data) return [];
@@ -89,11 +116,7 @@ export async function listAllTasks(
   const db = client ?? getAdminClient();
   const { data, error } = await db
     .from("tasks")
-    .select(
-      `id, title, status, due_date, assigned_to, extraction_id, created_at, completed_at,
-       assigned_person:assigned_to (id, name, team),
-       extraction:extraction_id (meeting_id, project_id, project:project_id (name))`,
-    )
+    .select(TASK_SELECT)
     .in("status", ["active", "done"])
     .order("status", { ascending: true }) // active first
     .order("due_date", { ascending: true, nullsFirst: false })
