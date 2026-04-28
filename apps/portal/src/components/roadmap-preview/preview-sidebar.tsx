@@ -1,3 +1,5 @@
+"use client";
+
 import { FolderKanban, Settings, MessageSquare, FileText } from "lucide-react";
 import { SECTIONS } from "./mock-data";
 
