@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 506 |
-| Exported functions/constants | 833 |
-| Exported types/interfaces | 344 |
+| Files scanned | 511 |
+| Exported functions/constants | 842 |
+| Exported types/interfaces | 346 |
 | Cross-package imports | 534 |
 | Critical integration points (3+ packages) | 13 |
 
@@ -2775,6 +2775,37 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdmin
 - `@repo/database/queries/meetings` → listVerifiedMeetings
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/followup-suggestions/_components/device.tsx`
+
+**Exports:**
+- `DeviceMobile()`
+- `DeviceDesktop()`
+- `DeviceRow()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/followup-suggestions/_components/mock-data.ts`
+
+**Exports:**
+- `MOCK_ACTIVE`
+- `MOCK_SNOOZED`
+
+**Types:** `MockSuggestion`, `MockSnoozed`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/followup-suggestions/_components/tab-header.tsx`
+
+**Exports:**
+- `TabHeader()`
+- `MobileSubHeader()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/followup-suggestions/_components/variant-a.tsx`
+
+**Exports:**
+- `VariantA()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/followup-suggestions/_components/variant-b.tsx`
+
+**Exports:**
+- `VariantB()`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
 
