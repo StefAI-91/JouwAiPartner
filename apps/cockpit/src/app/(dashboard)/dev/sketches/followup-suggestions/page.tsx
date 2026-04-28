@@ -1,5 +1,6 @@
 import { VariantA } from "./_components/variant-a";
 import { VariantB } from "./_components/variant-b";
+import { VariantC } from "./_components/variant-c";
 
 /**
  * Sketch — opvolgsuggesties redesign · varianten A, B (en C volgt).
@@ -25,10 +26,7 @@ export default function FollowUpSuggestionsSketchPage() {
 
       <VariantA />
       <VariantB />
-
-      <section className="rounded-xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-        Variant C (Compacte checklist met checkbox-as-snooze) volgt na deze batch.
-      </section>
+      <VariantC />
     </div>
   );
 }

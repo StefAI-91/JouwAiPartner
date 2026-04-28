@@ -7,8 +7,8 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 511 |
-| Exported functions/constants | 842 |
+| Files scanned | 512 |
+| Exported functions/constants | 843 |
 | Exported types/interfaces | 346 |
 | Cross-package imports | 534 |
 | Critical integration points (3+ packages) | 13 |
@@ -2806,6 +2806,11 @@
 
 **Exports:**
 - `VariantB()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/followup-suggestions/_components/variant-c.tsx`
+
+**Exports:**
+- `VariantC()`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
 
