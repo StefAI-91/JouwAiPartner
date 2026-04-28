@@ -8,5 +8,5 @@ const COPY: Record<PortalBucketKey, string> = {
 };
 
 export function EmptyState({ bucket }: { bucket: PortalBucketKey }) {
-  return <p className="px-1 py-3 text-[13px] italic text-[var(--ink-muted)]">{COPY[bucket]}</p>;
+  return <p className="px-1 py-3 text-sm italic text-muted-foreground">{COPY[bucket]}</p>;
 }

@@ -20,8 +20,8 @@ export default async function ProjectRoadmapPage({ params }: { params: Promise<{
   return (
     <div className="flex flex-1 flex-col gap-5 px-6 py-8">
       <div>
-        <h2 className="font-display text-[1.5rem] tracking-tight text-[var(--ink)]">Roadmap</h2>
-        <p className="text-[14px] text-[var(--ink-muted)]">
+        <h2 className="text-lg font-semibold text-foreground">Roadmap</h2>
+        <p className="text-sm text-muted-foreground">
           Wat we recent hebben opgeleverd en wat eraan zit te komen.
         </p>
       </div>

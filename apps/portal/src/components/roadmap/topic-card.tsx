@@ -20,28 +20,20 @@ export function TopicCard({ topic, projectId, linkedIssuesCount }: TopicCardProp
       href={`/projects/${projectId}/roadmap/${topic.id}`}
       className="group block rounded-md no-underline"
     >
-      <article
-        className="flex flex-col gap-3 rounded-md border bg-[var(--paper-elevated)] p-5 transition-colors hover:bg-white"
-        style={{ borderColor: "var(--rule-hairline)" }}
-      >
-        <div className="flex flex-wrap items-center gap-3">
+      <article className="flex flex-col gap-3 rounded-md border border-border bg-card p-4 transition-colors hover:bg-muted/40">
+        <div className="flex flex-wrap items-center gap-2">
           <TypeBadge type={topic.type} />
           <PriorityBadge priority={topic.priority} />
         </div>
 
-        <h3 className="font-display text-[1.35rem] leading-[1.2] tracking-tight text-[var(--ink)]">
-          {heading}
-        </h3>
+        <h3 className="text-sm font-semibold leading-snug text-foreground">{heading}</h3>
 
-        <div
-          className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-dashed"
-          style={{ borderColor: "var(--rule-soft)" }}
-        >
+        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-dashed border-border pt-2">
           <MetaItem prefix="Onderwerpen">
-            <span className="text-[var(--ink-soft)]">{linkedIssuesCount}</span>
+            <span className="text-foreground">{linkedIssuesCount}</span>
           </MetaItem>
           <MetaItem prefix={dateLabel}>
-            <span className="text-[var(--ink-soft)]">{dateValue}</span>
+            <span className="text-foreground">{dateValue}</span>
           </MetaItem>
         </div>
       </article>
