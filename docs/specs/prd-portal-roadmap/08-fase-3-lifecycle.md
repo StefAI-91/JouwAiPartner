@@ -89,6 +89,8 @@ Elk event heeft: `topic_id`, `event_type`, `actor_profile_id`, `payload jsonb`, 
 
 ### 8.3.5 Audit-timeline op topic-detail
 
+> **Visuele spec**: verticale rule met dots (laatste = brand-groen + soft-glow ring), datum in mono uppercase, tekst in body. Zie [§ 14 Design-keuzes](./14-design-keuzes.md) en `/design-preview/roadmap` § 06.
+
 Topic-detail in DevHub toont event-timeline:
 
 ```

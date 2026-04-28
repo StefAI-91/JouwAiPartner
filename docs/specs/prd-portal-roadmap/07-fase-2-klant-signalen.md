@@ -18,6 +18,8 @@ Klant kan per topic in "Niet geprioritiseerd"-bucket een signaal afgeven (🔥�
 
 ## 7.3 Functionele scope
 
+> **Visuele spec**: pill-stijl met emoji + label, single-select, undo-toast bij 👎. Zie [§ 14 Design-keuzes](./14-design-keuzes.md) en `/design-preview/roadmap` § 03.
+
 ### 7.3.1 Portal: drie signaal-knoppen per topic
 
 In de "Niet geprioritiseerd"-bucket krijgt elk topic-card drie knoppen:
