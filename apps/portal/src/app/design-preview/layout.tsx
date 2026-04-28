@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader, Geist, Geist_Mono } from "next/font/google";
+import { PreviewSidebar } from "@/components/roadmap-preview/preview-sidebar";
+import { PreviewTopbar } from "@/components/roadmap-preview/preview-topbar";
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
@@ -42,7 +44,31 @@ export default function DesignPreviewLayout({
       className={`preview-editorial paper-grain min-h-screen ${newsreader.variable} ${geist.variable} ${geistMono.variable}`}
       style={{ fontFamily: "var(--font-editorial-body)" }}
     >
-      {children}
+      {/* Preview-only banner above the chrome */}
+      <div
+        className="border-b px-6 py-2 text-center"
+        style={{
+          backgroundColor: "var(--paper-cream)",
+          borderColor: "var(--rule-hairline)",
+        }}
+      >
+        <p className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-[var(--ink-muted)]">
+          <span
+            aria-hidden
+            className="inline-block size-1 rounded-full mr-2 align-middle"
+            style={{ backgroundColor: "var(--accent-brand)" }}
+          />
+          Design preview · prd-portal-roadmap · mock data, geen DB-verbinding
+        </p>
+      </div>
+
+      <div className="flex min-h-[calc(100vh-2.25rem)]">
+        <PreviewSidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <PreviewTopbar />
+          <main className="flex flex-1 flex-col">{children}</main>
+        </div>
+      </div>
     </div>
   );
 }
