@@ -1,15 +1,6 @@
 import { FolderKanban, Settings, MessageSquare, FileText } from "lucide-react";
 import { SECTIONS } from "./mock-data";
 
-/**
- * Preview-sidebar — mimicked van apps/portal/src/components/layout/app-sidebar-client.tsx,
- * maar met editorial fonts en hardgecodeerde mock-projecten zodat de roadmap
- * in zijn natuurlijke Portal-context te bekijken is.
- *
- * Inclusief een tweede sectie "Preview-secties" met § anchor-links zodat
- * Stef tussen de mock-views kan navigeren binnen de preview-zelf.
- */
-
 const MOCK_PROJECTS = [
   { id: "p-cai", name: "CAI Studio", active: true },
   { id: "p-mendel", name: "Mendel Online", active: false },
@@ -28,18 +19,23 @@ const NAV_PROJECT = [
   { href: "#feedback", label: "Feedback", active: false, marker: null },
 ];
 
-export function PreviewSidebar() {
+/**
+ * Sidebar-inhoud — gedeeld tussen desktop-aside (PreviewSidebar)
+ * en mobile drawer (PreviewMobileNav).
+ *
+ * onLinkClick wordt door de drawer gebruikt om bij navigatie de drawer
+ * te sluiten. Op desktop is het een no-op.
+ */
+export function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
+  const handleClick = () => {
+    if (onLinkClick) onLinkClick();
+  };
+
   return (
-    <aside
-      className="hidden w-60 flex-col border-r lg:sticky lg:top-0 lg:flex lg:h-screen"
-      style={{
-        backgroundColor: "var(--paper-deep)",
-        borderColor: "var(--rule-hairline)",
-      }}
-    >
+    <div className="flex h-full min-h-0 flex-col" style={{ backgroundColor: "var(--paper-deep)" }}>
       {/* Logo / brand */}
       <div
-        className="flex h-14 items-center gap-2.5 px-5 border-b"
+        className="flex h-14 shrink-0 items-center gap-2.5 px-5 border-b"
         style={{ borderColor: "var(--rule-hairline)" }}
       >
         <span
@@ -63,7 +59,7 @@ export function PreviewSidebar() {
       </div>
 
       {/* Workspace tag */}
-      <div className="px-3 py-3 border-b" style={{ borderColor: "var(--rule-hairline)" }}>
+      <div className="px-3 py-3 border-b shrink-0" style={{ borderColor: "var(--rule-hairline)" }}>
         <button
           type="button"
           className="group flex w-full items-center justify-between rounded-md border bg-[var(--paper-elevated)] px-3 py-2 text-left transition-colors hover:bg-white"
@@ -93,6 +89,7 @@ export function PreviewSidebar() {
             <li key={item.label}>
               <a
                 href={item.href}
+                onClick={handleClick}
                 className={`group flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] transition-colors ${
                   item.active
                     ? "bg-[var(--accent-brand-soft)] text-[var(--accent-brand-deep)]"
@@ -116,6 +113,7 @@ export function PreviewSidebar() {
               <li key={p.id}>
                 <a
                   href="#"
+                  onClick={handleClick}
                   className={`flex items-center justify-between rounded-md px-3 py-1.5 text-[13px] transition-colors ${
                     p.active
                       ? "bg-[var(--accent-brand-soft)] text-[var(--accent-brand-deep)]"
@@ -146,6 +144,7 @@ export function PreviewSidebar() {
               <li key={item.label}>
                 <a
                   href={item.href}
+                  onClick={handleClick}
                   className={`flex items-center justify-between rounded-md px-3 py-1.5 text-[13px] transition-colors ${
                     item.active
                       ? "bg-[var(--paper-elevated)] text-[var(--ink)] border"
@@ -186,6 +185,7 @@ export function PreviewSidebar() {
               <li key={s.id}>
                 <a
                   href={`#${s.id}`}
+                  onClick={handleClick}
                   className="group flex items-baseline gap-2.5 rounded-md px-3 py-1 text-[12px] text-[var(--ink-muted)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink)]"
                 >
                   <span className="font-mono num-tabular text-[9px] tabular-nums uppercase tracking-[0.14em] text-[var(--ink-faint)] group-hover:text-[var(--accent-brand-deep)] w-5 shrink-0">
@@ -200,7 +200,7 @@ export function PreviewSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t px-4 py-3" style={{ borderColor: "var(--rule-hairline)" }}>
+      <div className="border-t px-4 py-3 shrink-0" style={{ borderColor: "var(--rule-hairline)" }}>
         <button
           type="button"
           className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-[var(--ink-muted)] hover:bg-[var(--paper-cream)] hover:text-[var(--ink-soft)]"
@@ -209,6 +209,20 @@ export function PreviewSidebar() {
           <span>Instellingen</span>
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Desktop-only sidebar (≥lg). Op kleinere schermen wordt PreviewMobileNav gebruikt.
+ */
+export function PreviewSidebar() {
+  return (
+    <aside
+      className="hidden w-60 shrink-0 border-r lg:sticky lg:top-0 lg:flex lg:h-screen"
+      style={{ borderColor: "var(--rule-hairline)" }}
+    >
+      <SidebarContent />
     </aside>
   );
 }
