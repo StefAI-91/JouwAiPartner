@@ -245,6 +245,18 @@ The cockpit↔devhub bridge evolves in three phases:
 
 The manual phase is not wasted — it produces the labeled dataset the AI needs to learn what "worth a ticket" means for this team.
 
+#### Decision: Action item → task is auto-created, snooze captures the rejection signal (2026-04-28)
+
+The Meeting → Ticket bridge above is intentionally manual-first. The Action item → task bridge (within cockpit, feeding the AI-coach inbox) takes a different shape and is **explicitly auto-first**:
+
+1. **Now (auto):** When the Action Item Specialist extracts a verified action_item, a corresponding `tasks` row is created automatically (status='active'). The action lands in the AI-coach inbox immediately — opt-out, not opt-in.
+2. **Human steers via snooze:** Items the user does not want to act on are snoozed (not deleted). `tasks.snoozed_until` hides them from the active inbox; `tasks.snoozed_reason` captures _why_.
+3. **Snooze is the labeled-rejection signal:** snoozed_reason replaces the "manual decisions" the Meeting→Ticket bridge needs. Same labelled-data principle, different data shape — instead of "did this become a task?" we capture "was this task worth surfacing?"
+
+**Why the deviation from manual-first:** the cockpit inbox is itself the review surface. Snoozing is a one-click action embedded in the workflow, not a separate review queue. Forcing an explicit "promote" step before the inbox shows the item would add friction without adding signal — the snooze captures the same rejection data downstream. Future Analyst agent can mine `tasks.snoozed_reason` patterns to inform Action Item Specialist prompt tuning, identical role to the labeled dataset described in the manual-first bridge above.
+
+This is a deliberate amendment to the manual-first principle — limited to within-cockpit auto-task creation. The cockpit↔devhub bridge stays manual.
+
 ### 3.2 Data Sources — Knowledge Ingestion Paths
 
 The platform ingests knowledge from multiple sources. Each follows the same pattern: ingest → AI classifies → AI extracts → human reviews → verified knowledge. New sources can be added by following this pattern.
@@ -292,11 +304,12 @@ All agents share the same principles:
 | **Issue Reviewer**      | Sonnet 4.5 | DevHub   | Project health analysis: score (0-100), patterns, risks, recommendations                                    |
 | **Risk Specialist**     | Sonnet 4.6 | Cockpit  | Dedicated risk-extractor (high-effort, cross-turn patroon-detectie) — enige extractie-bron sinds 2026-04-18 |
 
-**Planned agents (7):**
+**Planned agents (8):**
 
 | Agent               | Model        | Quadrant | Purpose                                                                                                                                     |
 | ------------------- | ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Email Extractor** | Sonnet       | Cockpit  | Agent-file bestaat in `packages/ai/src/agents/email-extractor.ts` maar heeft geen call-site. Activeren zodra email-extracties gewenst zijn. |
+| **Mail Drafter**    | Sonnet       | Cockpit  | Drafts klant follow-up mails voor de AI-coach inbox uit `extractions.follow_up_context` + project-context. Mens reviewt, mens verstuurt.    |
 | **Issue Executor**  | Sonnet       | DevHub   | Agent-file bestaat (`issue-executor.ts`) maar is geparkeerd tot Phase C (AI execution).                                                     |
 | **Planner**         | Sonnet       | DevHub   | Turn decisions/needs into implementation plans and ticket specs                                                                             |
 | **Curator**         | Sonnet       | Cockpit  | Nightly: dedupe, detect staleness, resolve contradictions across knowledge                                                                  |
@@ -340,6 +353,7 @@ TODAY (Built — 12 agents)
 
 NEXT (Near-term — Phase A/B)
 ├── Email Extractor: activeer bestaande agent-file voor email-insights
+├── Mail Drafter: drafts klant follow-up mails voor AI-coach inbox
 ├── Planner: turns decisions/needs into ticket specs
 ├── Curator: nightly knowledge hygiene (dedupe, staleness, contradictions)
 └── Communicator: drafts client-facing answers for portal
