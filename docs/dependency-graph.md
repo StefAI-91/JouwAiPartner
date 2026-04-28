@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 513 |
-| Exported functions/constants | 844 |
-| Exported types/interfaces | 347 |
+| Files scanned | 517 |
+| Exported functions/constants | 848 |
+| Exported types/interfaces | 349 |
 | Cross-package imports | 534 |
 | Critical integration points (3+ packages) | 13 |
 
@@ -2818,6 +2818,24 @@
 
 **Exports:**
 - `VariantC()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/inbox/_components/inbox-card.tsx`
+
+**Exports:**
+- `InboxCard()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/inbox/_components/inbox-page-frame.tsx`
+
+**Exports:**
+- `InboxPageFrame()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/sketches/inbox/_components/mock-inbox.ts`
+
+**Exports:**
+- `countByBucket()`
+- `MOCK_INBOX`
+
+**Types:** `InboxBucket`, `InboxItem`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
 
