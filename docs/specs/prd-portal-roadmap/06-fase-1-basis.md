@@ -59,6 +59,8 @@ Topics in `clustering` of `wont_do` zijn niet zichtbaar in fase 1.
 
 ### 6.3.4 Portal: topic-card
 
+> **Visueel referentie**: zie [§ 14 Design-keuzes](./14-design-keuzes.md) en de live preview op `/design-preview/roadmap`. De topic-card-stijl, badges, hairline borders en bucket-hues zijn daar vastgelegd.
+
 Per topic in de bucket toon:
 
 | Veld                | Format                       | Bron                                                        |

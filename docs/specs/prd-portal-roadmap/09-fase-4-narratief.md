@@ -106,6 +106,8 @@ Toont:
 
 Route: `apps/portal/src/app/(app)/projects/[id]/reports/[reportId]/page.tsx`
 
+> **Editorial typografie is hier de hoogste design-stake.** Drop cap op de kritische noot, romeinse cijfers per bucket-sectie, leeswijdte ~62ch, masthead in `--paper-cream`. Volledige spec: [§ 14 Design-keuzes](./14-design-keuzes.md), live referentie: `/design-preview/roadmap` § 08.
+
 Layout (gebaseerd op CAI's Notion-doc):
 
 ```

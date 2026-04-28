@@ -27,6 +27,7 @@
 11. [Data Model — Cross-fase](./11-data-model.md)
 12. [DevHub Workflow — Hoe Devs Topics Volgen](./12-devhub-workflow.md)
 13. [Validatie & Open Vragen](./13-validatie-en-open-vragen.md)
+14. [Design-keuzes](./14-design-keuzes.md)
 
 ---
 
@@ -42,4 +43,4 @@ Klant ziet topics in 4 buckets (Recent gefixt / Komende week / Hoge prio / Niet 
 
 We bouwen dit in **5 fases**, elk standalone shippable. Fase 1 (basis topics + buckets) is direct bruikbaar; fase 5 (AI-clustering) komt pas als de patronen handmatig zijn geleerd.
 
-> Volledige reasoning per fase in sectie 6-10. Marktvergelijking in sectie 3. Open vragen in sectie 13.
+> Volledige reasoning per fase in sectie 6-10. Marktvergelijking in sectie 3. Open vragen in sectie 13. Visuele identiteit + lessen uit de design-preview in sectie 14.
