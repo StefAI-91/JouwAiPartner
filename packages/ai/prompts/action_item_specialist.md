@@ -13,15 +13,26 @@ Voor je iets extracteert: als de quote in één van onderstaande categorieën va
 
 **❌ Anti-patroon A: 1-op-1 / overleg plannen tussen aanwezigen**
 
-Quote-vorm: "ik vind het goed om weer eens samen te zitten", "laten we even één op één", "we moeten een plan uitwerken samen", "even bijpraten".
+Quote-vorm: "ik vind het goed om weer eens samen te zitten", "laten we even één op één", "we moeten een plan uitwerken samen", "even bijpraten", "laten we deze week er eens even voor zitten", "even een momentje prikken", "een keer afspreken", "samen even kijken naar".
 
 → NIET EXTRAHEREN. Verzin geen derde partij (zoals Tibor of Dion) als degene die moet "navragen" of "inplannen". Als de naam Tibor niet letterlijk in de quote staat, mag Tibor NIET als follow_up_contact verschijnen — punt.
 
-**❌ Anti-patroon B: voorwaardelijke aanwezigheid**
+**❌ Anti-patroon B: Voorwaardelijke commitments**
 
-Quote-vorm: "als jij X kan aanleveren, dan kom ik volgende keer mee", "als we erover praten, dan zit ik erbij".
+Quote-vorm: "als jij X kan aanleveren, dan kom ik volgende keer mee", "als X gebeurt, dan beantwoord ik Y", "als het met Z te maken heeft, dan zal ik ze beantwoorden", "als jij het hebt geüpdate, dan maak ik er een mail van".
 
-→ NIET EXTRAHEREN. Bijwoning is geen handeling. Combineer NIET met termen uit elders in het transcript ("AI-scan analyse", "shortlist") om er alsnog een levering van te maken.
+→ NIET EXTRAHEREN. Een commitment dat afhangt van een ongetriggerde voorwaarde is geen action_item — ook niet als de leveringsintentie helder is en de actor groundbaar. De voorwaarde moet vervuld zijn of expliciet getriggerd worden door een andere geëxtraheerde actie voordat dit een action_item wordt.
+
+Combineer NIET met termen uit elders in het transcript om er alsnog een onvoorwaardelijke levering van te maken. De voorwaardelijkheid zit in de quote zelf.
+
+**BELANGRIJK — onderscheid voorwaardelijk vs gepland:**
+
+Een commitment met datum, deadline of agenda-prik ("in de week van X", "op maandag", "voor sprint Y", "deze vrijdag") is GEEN voorwaardelijk commitment, ook al gebruikt de spreker toekomstige tijdvorm ("ik zal", "ik ga"). Datum-commitments zijn juist sterke action_items.
+
+- **Voorwaardelijk** = voorwaarde over een ander persoon/feit dat eerst moet gebeuren ("als jij X levert, dan ik Y").
+- **Gepland** = datum of deadline waarop de spreker zelf gaat leveren ("ik lever Y in week 18").
+
+**Toets:** hangt de levering af van een ander persoon of een ongetriggerde gebeurtenis? Als het antwoord nee is en alleen een datum genoemd wordt → WEL extraheren.
 
 **❌ Anti-patroon C: Tibor als default-actor**
 
@@ -31,11 +42,27 @@ Tibor mag ALLEEN als follow_up_contact verschijnen als zijn naam letterlijk in `
 
 **Het content-template "[Naam] navragen of [iets] is [iets]" is GEEN default.** Als je dat template wilt gebruiken, moet [Naam] groundbaar zijn in de quote zelf, anders niet extraheren.
 
-**❌ Anti-patroon D: Externe meldt eigen werk zonder JAIP-afhankelijkheid**
+**❌ Anti-patroon D: Extern werk zonder groundbare JAIP-afhankelijkheid**
 
-Een externe die in eerste persoon eigen werk-voortgang meldt ("ik ga X afronden", "ik werk morgen aan Y", "ik pak Z op") is geen type-C-levering, ook niet als JAIP eerder input heeft geleverd of elders in de meeting genoemd wordt. Type C vereist dat JAIP de ontvanger of directe afhankelijke is van de output: er moet een concrete JAIP-vervolgstap zijn die geblokkeerd is zonder deze levering. Eerder JAIP-werk leveren upstream (mailtje, export, antwoord, document) maakt JAIP NIET tot afhankelijke partij van wat downstream daarmee gebeurt — dat is afgesloten werk, geen openstaande afhankelijkheid.
+Werk dat door een externe wordt uitgevoerd is GEEN type-C-levering, ook niet als JAIP-medewerkers in de meeting aanwezig zijn, ook niet als het project tot een JAIP-portfolio behoort, en ook niet als JAIP-medewerkers eerder input hebben geleverd.
 
-**Toets:** kun je in één zin benoemen welke JAIP-actie wacht op deze deliverable? Zo nee → niet extraheren.
+Vormen waarin dit voorkomt:
+
+- Externe meldt eigen voortgang in eerste persoon ("ik ga X afronden")
+- JAIP-medewerker wijst werk toe aan externe ("jij gaat X doen")
+- Externe stelt voor te helpen met iets ("misschien kan ik X oppakken")
+- Voorwaardelijke leveringen die afhangen van externe condities ("als X klopt, dan doe ik Y")
+- Externe kondigt zelf iets aan dat hij sowieso zou doen
+
+In al deze gevallen geldt:
+
+- De externe doet zijn eigen werk
+- JAIP heeft geen wachtende vervolgstap die hierop afhangt
+- Het werk gaat sowieso door zonder JAIP
+
+**Toets:** kun je een JAIP-deliverable benoemen die geblokkeerd is zonder deze externe levering, en is die JAIP-deliverable groundbaar in het transcript zelf? Zo nee → niet extraheren.
+
+Het feit dat JAIP-medewerkers eerder input hebben geleverd (mailtje, document, antwoord) maakt JAIP NIET tot afhankelijke partij van wat downstream daarmee gebeurt — dat is afgesloten upstream-werk.
 
 **❌ Anti-patroon E: Micro-handelingen en terloopse doorzet-acties**
 
@@ -43,7 +70,30 @@ Een toezegging om iets snel te delen, door te sturen, even te checken of een lin
 
 **Toets:** vraagt deze handeling werk, of is het alleen een doorzet-actie waarbij iets dat al bestaat naar iemand anders gaat? Als het tweede → niet extraheren. Een action_item vereist substantieel werk of een concrete deliverable die gemaakt moet worden, niet een handgreep van enkele minuten.
 
-**❌ Anti-patroon F: Externe belooft opvolging buiten JAIP om**
+**BELANGRIJK — onderscheid micro-handeling vs substantiële levering:**
+
+"Delen", "sturen", "doorzetten" zijn alleen micro-handelingen als het ding dat gedeeld wordt al bestaat en geen werk vereist:
+
+- "Ik deel even die overeenkomst" → micro (overeenkomst bestaat al)
+- "Ik stuur je die link" → micro (link bestaat al)
+
+Maar als het te delen ding eerst gemaakt of opgeleverd moet worden, is het GEEN micro-handeling:
+
+- "Ik deel de eerste versie in week X" → wél action_item (versie moet eerst gemaakt worden)
+- "Ik stuur je het rapport volgende week" → wél action_item (rapport moet eerst af)
+- "Ik presenteer de oplevering maandag" → wél action_item
+
+**Toets:** bestaat het te delen ding al, of moet het eerst gemaakt worden? Als het laatste → wél extraheren.
+
+**❌ Anti-patroon F: Aanspreker is niet de leverancier**
+
+Wanneer een JAIP-medewerker (Stef/Wouter) iemand aanspreekt en hen werk toebedeelt — "Robert, jij doet X", "Sandra, jij regelt Y", "Tom, kijk jij naar Z" — is dit GEEN type_werk B (JAIP levert). Het is een instructie of bevestiging dat de aangesprokene (de externe) iets doet.
+
+Type B vereist dat een JAIP-medewerker zelf de uitvoerder is van de levering. Iemand anders aansporen, instrueren of aanwijzen om iets te doen is geen JAIP-levering — het is op zijn best een type C (externe levert aan JAIP) als JAIP echt op de uitkomst wacht, en zelfs dan: alleen als de drie-eis wordt gehaald.
+
+**Test:** wie pakt het werk fysiek op? Als dat niet Stef of Wouter is → geen type B. Twijfel over of het type C is → toets de JAIP-afhankelijkheid (sectie 0, anti-patroon D): wat is de JAIP-vervolgstap die wacht op deze uitkomst?
+
+**❌ Anti-patroon G: Externe belooft opvolging buiten JAIP om**
 
 Quote-vorm: "ik zal Monique opvolgen", "ik bel hem nog wel even", "ik regel het met X", "ik neem nog contact op met Y" — gezegd door een niet-JAIP-medewerker, waarbij de actie buiten JAIP om plaatsvindt (extern → extern of extern → derde partij).
 
@@ -63,7 +113,7 @@ In dat geval:
 
 **Toets:** als de uitspraak "ik regel X met Y" niet vergezeld gaat van een verzoek aan JAIP om iets te doen of te onthouden → NIET extraheren. Pas wanneer JAIP een rol krijgt (reminder sturen, status checken) wordt het een actiepunt.
 
-**❌ Anti-patroon G: Externen onderling agenderen of een momentje prikken**
+**❌ Anti-patroon H: Externen onderling agenderen of een momentje prikken**
 
 Quote-vorm: "deze week kijken of er nog ergens een gaatje is", "laten we even een momentje prikken", "ik bel je nog wel even voor een datum", "we kijken samen in de agenda", "ik stuur je mijn beschikbaarheid", "we vinden wel een moment".
 
@@ -77,9 +127,9 @@ Wanneer twee of meer personen die GEEN JAIP-medewerker zijn (geen Stef, Wouter o
 
 **Uitzondering 2:** de afspraak gaat over een concrete JAIP-deliverable (review-sessie van JAIP-werk, handover aan klant, demo van JAIP-output). DAN wel extraheren als type_werk B met JAIP als leverancier.
 
-**Uitzondering 3:** JAIP wordt expliciet om reminder gevraagd ("herinner ons als jullie nog niks gepland hebben"). Zie uitzondering anti-patroon F.
+**Uitzondering 3:** JAIP wordt expliciet om reminder gevraagd ("herinner ons als jullie nog niks gepland hebben"). Zie uitzondering anti-patroon G.
 
-**❌ Anti-patroon H: Bevestiging van een gemaakte afspraak**
+**❌ Anti-patroon I: Bevestiging van een gemaakte afspraak**
 
 Quote-vorm: "een mei om acht uur, tot dan!", "afgesproken", "deal, ik zie je daar", "spreken we zo af", "akkoord, ik zet het in m'n agenda".
 
@@ -89,7 +139,7 @@ Een bevestiging dat een afspraak vastligt — datum/tijd/locatie wordt herhaald 
 
 **Toets:** is er na deze uitspraak nog werk dat iemand moet uitvoeren, of is alleen "kalender vastleggen" wat overblijft? Als het laatste → niet extraheren.
 
-**❌ Anti-patroon I: Voorwaardelijke vervolgactie afhankelijk van anders' werk**
+**❌ Anti-patroon J: Voorwaardelijke vervolgactie afhankelijk van anders' werk**
 
 Quote-vorm: "wanneer jij X hebt ingevuld, dan zal ik Y doen", "zodra jullie klaar zijn met A, dan pak ik B op", "als ik je input heb, ga ik er pas aan beginnen".
 
@@ -105,7 +155,7 @@ Als de spreker zelf de eerste handeling toezegt en het effect alleen naderhand b
 
 **Onderscheid — wel extraheren bij tijdsgebonden deadline-framing:**
 
-Niet alle "als/wanneer ... dan ..." structuren zijn voorwaardelijk in de zin van anti-patroon I. Cruciaal onderscheid: wat is de TRIGGER in de voorwaarde?
+Niet alle "als/wanneer ... dan ..." structuren zijn voorwaardelijk in de zin van anti-patroon J. Cruciaal onderscheid: wat is de TRIGGER in de voorwaarde?
 
 - **Trigger = iemand anders' werk/input/actie** → voorwaardelijk, NIET extraheren
 - **Trigger = een tijdsmoment, kalenderpunt of geplande gebeurtenis** (volgende call, eind van de week, volgende sprint, deadline) → de "als" is alleen een tijdsanker; de spreker committeert zelfstandig tot eigen werk vóór dat moment → WÉL extraheren
@@ -147,7 +197,21 @@ Een action_item is een opvolgbare actie waarbij JAIP een concrete persoon kan ma
 
 1. **JAIP-betrokkenheid** — één van twee:
    - **1a. JAIP-actor**: een JAIP-medewerker (Stef/Wouter, of Tibor/Dion namens JAIP) is de uitvoerder, OF
-   - **1b. JAIP-afhankelijkheid**: JAIP heeft een directe vervolgstap die afhangt van de uitkomst (we wachten op iets dat we nodig hebben — type_werk C, D, E)
+   - **1b. JAIP-afhankelijkheid (HARD getoetst)**: JAIP heeft een concrete, groundbare vervolgstap die afhangt van deze uitkomst.
+
+     Drie eisen samen:
+     - Wat is de JAIP-vervolgstap? (in één zin benoembaar)
+     - Wie bij JAIP voert die uit? (Stef of Wouter, met naam)
+     - Wat is geblokkeerd zonder deze levering? (concreet werk, niet alleen "informatie hebben")
+
+     Een JAIP-medewerker moet groundbaar in het transcript wachten op deze specifieke uitkomst om iets concreets te kunnen doen. Aanwezigheid van JAIP-medewerkers in de meeting waar de externe spreekt is GEEN bewijs van afhankelijkheid. Het project tot JAIP-portfolio behoren is GEEN bewijs van afhankelijkheid.
+
+     **Toets — driestappen:**
+     1. Welke concrete deliverable van JAIP wacht op deze uitkomst?
+     2. Wordt die JAIP-deliverable elders in het transcript ook genoemd?
+     3. Zo niet → er is geen groundbare JAIP-afhankelijkheid → niet extraheren.
+
+     Als je geen JAIP-vervolgstap kunt benoemen die in het transcript zelf groundbaar is: type C komt vrijwel zeker neer op het volgen van extern werk waar JAIP geen rol in heeft → niet extraheren.
 
    Afspraken tussen twee externen — klant ↔ partner, prospect ↔ tussenpersoon, partner ↔ partner — waarbij JAIP géén actor en géén directe afhankelijke is, worden NIET geëxtraheerd. Dat is context of signaal, geen actiepunt.
 
@@ -161,15 +225,15 @@ Voorbeelden van wat hierdoor wegvalt:
 - "Tibor gaat met Guido een 1-op-1 doen" — twee externen plannen overleg, JAIP staat erbuiten → NIET extraheren (faalt eis 1)
 - "Ik vind het goed om weer eens samen te zitten" — wens/bereidheid, geen handeling → NIET extraheren (faalt eis 2)
 - "Als de klant terugkomt, dan plannen we" — voorwaardelijk zonder agency over de trigger → NIET extraheren (faalt eis 3)
-- "Ja ik zal Monique opvolgen" (externe belooft eigen opvolging) — taak van die externe, geen JAIP-vervolgstap → NIET extraheren (faalt eis 1, anti-patroon F)
-- "Tibor en Guido prikken samen een momentje" — twee externen plannen onderling, JAIP staat erbuiten → NIET extraheren (faalt eis 1, anti-patroon G)
-- "Laten we deze week kijken of er nog ergens een gaatje is" (gezegd tussen klant en partner) — externen onderling agenderen → NIET extraheren (anti-patroon G)
-- "Een mei om acht uur, tot dan!" — afspraak-bevestiging, geen action_item maar decision → NIET extraheren (anti-patroon H)
-- "Wanneer jij de vragen hebt ingevuld, dan zal ik dit mededelen met de testgroep" — voorwaardelijke vervolgactie, spreker wacht passief → NIET extraheren op spreker (anti-patroon I)
-- WEL extraheren: "Ik zal de vragen aanleveren, zodat we de testgroep op de hoogte kunnen brengen" — directe commitment door spreker, "zodat Y" is rationale (uitzondering anti-patroon I)
-- WEL extraheren: "Als wij volgende week bellen, dan heb ik die vragen beantwoord" — "als we bellen" is tijdsanker/deadline, geen voorwaarde over andermans werk; spreker committeert zelfstandig (uitzondering anti-patroon I)
+- "Ja ik zal Monique opvolgen" (externe belooft eigen opvolging) — taak van die externe, geen JAIP-vervolgstap → NIET extraheren (faalt eis 1, anti-patroon G)
+- "Tibor en Guido prikken samen een momentje" — twee externen plannen onderling, JAIP staat erbuiten → NIET extraheren (faalt eis 1, anti-patroon H)
+- "Laten we deze week kijken of er nog ergens een gaatje is" (gezegd tussen klant en partner) — externen onderling agenderen → NIET extraheren (anti-patroon H)
+- "Een mei om acht uur, tot dan!" — afspraak-bevestiging, geen action_item maar decision → NIET extraheren (anti-patroon I)
+- "Wanneer jij de vragen hebt ingevuld, dan zal ik dit mededelen met de testgroep" — voorwaardelijke vervolgactie, spreker wacht passief → NIET extraheren op spreker (anti-patroon J)
+- WEL extraheren: "Ik zal de vragen aanleveren, zodat we de testgroep op de hoogte kunnen brengen" — directe commitment door spreker, "zodat Y" is rationale (uitzondering anti-patroon J)
+- WEL extraheren: "Als wij volgende week bellen, dan heb ik die vragen beantwoord" — "als we bellen" is tijdsanker/deadline, geen voorwaarde over andermans werk; spreker committeert zelfstandig (uitzondering anti-patroon J)
 - WEL extraheren: "Tibor levert marketingplan aan JAIP" — JAIP is afhankelijk van levering, concrete handeling, Tibor heeft eigen agency
-- WEL extraheren: "Ik zal Monique opvolgen, herinner me hier volgende week aan" — externe vraagt JAIP om reminder → JAIP wordt actor (uitzondering anti-patroon F)
+- WEL extraheren: "Ik zal Monique opvolgen, herinner me hier volgende week aan" — externe vraagt JAIP om reminder → JAIP wordt actor (uitzondering anti-patroon G)
 
 **KERNVRAAG (na de drie eisen):** Kunnen wij over twee weken iemand benaderen met "hoe staat het ermee"? Als het antwoord niet duidelijk "ja" is → geen action_item.
 
@@ -260,6 +324,11 @@ Niet alle action_items staan in één zin. Scan transcript twee keer:
 4. **Multi-stap leveringen**
    - "Chloe levert FAQ-vragen → JAIP beantwoordt → Chloe bouwt FAQ-pagina" = drie aparte action_items
    - Elk item heeft eigen follow_up_contact en deadline
+
+5. **Multi-quote leveringen met versterkende context**
+   - Twee of drie quotes binnen 5 turns die samen één commitment vormen, mogen worden samengevoegd tot één action_item
+   - Voorbeeld: "ik lever in week 18" + "we presenteren op maandag" = één action_item met beide datums in source_quote (concat met " + ")
+   - Voorwaarde: beide quotes moeten van dezelfde spreker zijn en over dezelfde deliverable gaan
 
 ============================================================
 ## 5. DEADLINE-REGELS
@@ -384,6 +453,34 @@ Reden:
 - De spreker levert niets — hij kondigt alleen aan dat hij ergens "bij zit" (faalt eis 2: aanwezigheid is geen handeling)
 - Dubbel-voorwaardelijk "als X EN als Y, dan ik Z" zonder dat X of Y bevestigd is (faalt eis 3: geen agency over de trigger)
 - Verzin GEEN actie voor de spreker ("Wouter levert AI-scan analyse") door termen uit elders in het transcript te plakken aan deze voorwaardelijke quote. Source_quote bevat de handeling niet.
+
+**VOORBEELD 11 — Externe doet eigen werk in eigen project (NIET extraheren)**
+Quote: "Ja, ik zal er nog een keer naar kijken. Als het met X en Y te maken heeft, dan zal ik ze beantwoorden."
+Context: Externe contact werkt aan zijn eigen project waar JAIP ondersteuning biedt; hij gaat eigen vragen beantwoorden.
+Output: NIET EXTRAHEREN.
+Reden:
+- Geen groundbare JAIP-vervolgstap die op deze beantwoording wacht
+- Externe pakt zelf zijn eigen content op
+- Voorwaardelijk ("als X, dan Y") zonder bevestigde voorwaarde
+
+**VOORBEELD 12 — JAIP-medewerker wijst werk toe aan externe (NIET extraheren)**
+Quote: "Marleen, jij gaat de introductiemail opstellen en de stakeholders informeren."
+Context: Stef bespreekt taakverdeling binnen klant-organisatie. Marleen organiseert dit zelf, JAIP heeft hier geen vervolgstap.
+Output: NIET EXTRAHEREN.
+Reden:
+- Niet type B: Stef levert niet, Marleen is uitvoerder
+- Niet type C: geen groundbare JAIP-vervolgstap die wacht op de introductiemail — JAIP doet niets met die mail
+- Werk gaat sowieso door zonder JAIP-actie
+
+**VOORBEELD 13 — Suggestie zonder commitment (NIET extraheren)**
+Quote: "Marleen, misschien is dit een goeie voor jou om eens aan te haken welke succescriteria we gaan bijhouden."
+Context: Stef oppert dat Marleen succescriteria-werk kan oppakken.
+Output: NIET EXTRAHEREN.
+Reden:
+- "Misschien is dit een goeie" + "om eens aan te haken" = suggestie, geen commitment
+- Geen toezegging van Marleen
+- Geen leveringsintentie ("ik zal", "ik regel")
+- Faalt eis 2: geen concrete handeling toegezegd
 
 ============================================================
 ## 8. CONFIDENCE-CALIBRATIE
