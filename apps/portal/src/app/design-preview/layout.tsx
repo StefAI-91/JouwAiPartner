@@ -41,7 +41,7 @@ export default function DesignPreviewLayout({
 }>) {
   return (
     <div
-      className={`preview-editorial paper-grain min-h-screen ${newsreader.variable} ${geist.variable} ${geistMono.variable}`}
+      className={`editorial paper-grain min-h-screen ${newsreader.variable} ${geist.variable} ${geistMono.variable}`}
       style={{ fontFamily: "var(--font-editorial-body)" }}
     >
       {/* Preview-only banner above the chrome */}

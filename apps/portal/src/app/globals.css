@@ -172,14 +172,14 @@
   }
 }
 
-/* --- Design Preview: Editorial scope --- */
+/* --- Editorial scope (roadmap routes + design-preview) --- */
 /*
- * These tokens are scoped to the /design-preview routes via the
- * `.preview-editorial` class on the layout wrapper. The rest of the
+ * These tokens are scoped to routes that opt-in via the
+ * `.editorial` class on a layout wrapper. The rest of the
  * portal keeps the existing token system untouched.
  */
 
-.preview-editorial {
+.editorial {
   /* Editorial fonts: serif display + grotesk body + mono details */
   --font-editorial-display: var(--font-newsreader), Georgia, "Times New Roman", serif;
   --font-editorial-body: var(--font-geist), -apple-system, BlinkMacSystemFont, sans-serif;
@@ -231,23 +231,23 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.preview-editorial .font-display {
+.editorial .font-display {
   font-family: var(--font-editorial-display);
   font-feature-settings: "kern", "liga", "calt";
   letter-spacing: -0.018em;
 }
 
-.preview-editorial .font-mono {
+.editorial .font-mono {
   font-family: var(--font-editorial-mono);
   font-feature-settings: "tnum", "ss01";
 }
 
-.preview-editorial .num-tabular {
+.editorial .num-tabular {
   font-variant-numeric: tabular-nums;
 }
 
 /* Section number marker: "§ 01" style */
-.preview-editorial .section-marker {
+.editorial .section-marker {
   font-family: var(--font-editorial-mono);
   font-size: 0.7rem;
   font-weight: 500;
@@ -257,12 +257,12 @@
 }
 
 /* Hairline divider */
-.preview-editorial .hairline {
+.editorial .hairline {
   border-color: var(--rule-hairline);
 }
 
 /* Drop cap for editorial narrative */
-.preview-editorial .drop-cap::first-letter {
+.editorial .drop-cap::first-letter {
   font-family: var(--font-editorial-display);
   font-weight: 500;
   font-size: 4.2em;
@@ -273,7 +273,7 @@
 }
 
 /* Editorial body prose — used inside report-detail */
-.preview-editorial .prose-editorial {
+.editorial .prose-editorial {
   font-family: var(--font-editorial-display);
   font-size: 1.125rem;
   line-height: 1.7;
@@ -281,12 +281,12 @@
   max-width: 62ch;
 }
 
-.preview-editorial .prose-editorial p + p {
+.editorial .prose-editorial p + p {
   margin-top: 1.1em;
 }
 
 /* Subtle paper grain — barely perceptible texture */
-.preview-editorial .paper-grain {
+.editorial .paper-grain {
   background-image: radial-gradient(
     circle at 50% 50%,
     transparent 0,
