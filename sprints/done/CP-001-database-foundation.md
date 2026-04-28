@@ -65,7 +65,7 @@ Het database-fundament leggen voor het klantportaal. Na deze sprint bestaat de `
 
 ## Bronverwijzingen
 
-- PRD: `docs/specs/portal-mvp.md` sectie 3 (AUTH, RLS) en sectie 5 (Datamodel)
+- PRD: `docs/archive/portal-mvp.md` sectie 3 (AUTH, RLS) en sectie 5 (Datamodel)
 - Vision: `docs/specs/vision-ai-native-architecture.md` sectie 2.4 en beslissing "Single Supabase instance"
 - Voorbeeld: `devhub_project_access` tabel in `supabase/migrations/20260409100002_devhub_project_access.sql`
 - Bestaande role constraint: `supabase/migrations/20260413103037_access_control_foundation.sql`

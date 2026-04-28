@@ -69,7 +69,7 @@ Een read-only issue tracker bouwen waar klanten de status van alle issues voor h
 
 ## Bronverwijzingen
 
-- PRD: `docs/specs/portal-mvp.md` sectie 3 (ISSUE) en sectie 6 (Status Mapping)
+- PRD: `docs/archive/portal-mvp.md` sectie 3 (ISSUE) en sectie 6 (Status Mapping)
 - Issues tabel: `supabase/migrations/20260409100005_devhub_quality_fixes.sql` (status constraint)
 - DevHub issue lijst als referentie: `apps/devhub/src/components/` (voor layout inspiratie, maar portal is simpeler)
 

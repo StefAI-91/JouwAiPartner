@@ -10,6 +10,11 @@ import {
 import { getMeetingForRegenerate, getMeetingOrganizationId } from "@repo/database/queries/meetings";
 import { runSummarizer, formatSummary, formatThemeSummary } from "@repo/ai/agents/summarizer";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
+import {
+  runActionItemSpecialistStep,
+  buildActionItemParticipants,
+} from "@repo/ai/pipeline/steps/action-item-specialist";
+import { getAllKnownPeople } from "@repo/database/queries/people";
 import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
 import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
 import { runTagger } from "@repo/ai/pipeline/tagger";
@@ -44,7 +49,8 @@ export async function regenerateMeetingAction(
     return { error: "Meeting niet gevonden" };
   }
 
-  const transcript = meeting.transcript_elevenlabs || meeting.transcript;
+  const transcript =
+    meeting.transcript_elevenlabs_named || meeting.transcript_elevenlabs || meeting.transcript;
   if (!transcript) {
     return { error: "Geen transcript beschikbaar voor deze meeting" };
   }
@@ -148,28 +154,54 @@ export async function regenerateMeetingAction(
       console.error("Title generation failed during regeneration (non-blocking):", titleErr);
     }
 
-    // Step 5: RiskSpecialist — vervangt de legacy Extractor. Draait ook
-    // de audit-insert naar `experimental_risk_extractions` en is per meeting
-    // idempotent (alleen type='risk' rijen worden vervangen). Action_items
-    // uit historische runs blijven staan tot ze handmatig gewist worden.
-    await runRiskSpecialistStep(
-      meetingId,
-      transcript,
-      {
-        title: context.title,
-        meeting_type: context.meeting_type,
-        party_type: context.party_type,
-        participants: context.participants,
-        speakerContext: null,
-        entityContext: entityContext.contextString,
-        meeting_date: meeting.date || new Date().toISOString().split("T")[0],
-        identified_projects: identifiedProjects.map((p) => ({
-          project_name: p.project_name,
-          project_id: p.project_id,
-        })),
-      },
-      identifiedProjects,
-    );
+    // Step 5: RiskSpecialist + ActionItemSpecialist — parallel, beide
+    // never-throws. Risks gebruiken named-first transcript (`transcript`),
+    // action-items bewust Fireflies-first (`firefliesTranscript`) want
+    // matchen op letterlijke source_quote. Zie sprint 041.
+    // Fireflies-first met fallback op `transcript` (al non-null gevalideerd
+    // bovenin) zodat TypeScript de narrowing oppakt en we niet alsnog null
+    // kunnen passen aan de step.
+    const firefliesTranscript: string =
+      meeting.transcript ||
+      meeting.transcript_elevenlabs_named ||
+      meeting.transcript_elevenlabs ||
+      transcript;
+    const knownPeople = await getAllKnownPeople();
+    const richParticipants = buildActionItemParticipants(context.participants, knownPeople);
+    const meetingDateIso = meeting.date || new Date().toISOString().split("T")[0];
+
+    await Promise.all([
+      runRiskSpecialistStep(
+        meetingId,
+        transcript,
+        {
+          title: context.title,
+          meeting_type: context.meeting_type,
+          party_type: context.party_type,
+          participants: context.participants,
+          speakerContext: null,
+          entityContext: entityContext.contextString,
+          meeting_date: meetingDateIso,
+          identified_projects: identifiedProjects.map((p) => ({
+            project_name: p.project_name,
+            project_id: p.project_id,
+          })),
+        },
+        identifiedProjects,
+      ),
+      runActionItemSpecialistStep(
+        meetingId,
+        firefliesTranscript,
+        {
+          title: context.title,
+          meeting_type: context.meeting_type,
+          party_type: context.party_type,
+          meeting_date: meetingDateIso,
+          participants: richParticipants,
+        },
+        identifiedProjects,
+      ),
+    ]);
 
     // Step 6: Tagger + segment-bouw (delete old segments first, then rebuild)
     const meetingOrganizationId = await getMeetingOrganizationId(meetingId);

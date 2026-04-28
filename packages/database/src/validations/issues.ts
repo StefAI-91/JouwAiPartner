@@ -53,10 +53,25 @@ export const issueListFilterSchema = z.object({
 
 export type IssueListFilterParams = z.infer<typeof issueListFilterSchema>;
 
+// CP-007 — lege strings normaliseren naar `null` zodat "leeg = fallback naar
+// internal title/description" eenduidig blijft. Trim eerst om whitespace-only
+// invoer ook als leeg te behandelen. Output is altijd `string | null`.
+const emptyToNull = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .nullish()
+    .transform((v) => {
+      if (v == null) return null;
+      return v.trim() === "" ? null : v;
+    });
+
 export const createIssueSchema = z.object({
   project_id: z.string().uuid(),
   title: z.string().min(1, "Titel is verplicht").max(500),
   description: z.string().max(10000).nullish(),
+  client_title: emptyToNull(200),
+  client_description: emptyToNull(5000),
   type: z.enum(ISSUE_TYPES).default("bug"),
   status: z.enum(ISSUE_STATUSES).default("triage"),
   priority: z.enum(ISSUE_PRIORITIES).default("medium"),
@@ -72,6 +87,8 @@ export const updateIssueSchema = z.object({
   id: z.string().uuid(),
   title: z.string().min(1).max(500).optional(),
   description: z.string().max(10000).nullish(),
+  client_title: emptyToNull(200),
+  client_description: emptyToNull(5000),
   type: z.enum(ISSUE_TYPES).optional(),
   status: z.enum(ISSUE_STATUSES).optional(),
   priority: z.enum(ISSUE_PRIORITIES).optional(),

@@ -162,13 +162,13 @@ Drie categorieën in `apps/[app]/src/`. Kies één **vóór** je schrijft. Drift
 
 Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen view-code? → compositiepagina.
 
-**Registry (2026-04-24, bindend — update bij elke wijziging):**
+**Registry (2026-04-27, bindend — update bij elke wijziging):**
 
-| Type                                      | Cockpit                                                                                                                   | DevHub                               |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`, `agents`                                               | `issues`                             |
-| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`                                                    | `dashboard`, `review`                |
-| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review` |
+| Type                                      | Cockpit                                                                                                                   | DevHub                               | Portal                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------- |
+| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`                                                         | `issues`                             | _(geen — portal is read-only)_   |
+| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                          | `dashboard`, `review`                | `issues`, `projects`, `feedback` |
+| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review` | `auth`, `feedback`               |
 
 **Regels:**
 
@@ -181,6 +181,14 @@ Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen 
 - **Geen `select('*')`.** Selecteer alleen kolommen die je nodig hebt.
 - **Geen queries in loops (N+1).** Gebruik Supabase joins voor relaties.
 - **Centraliseer queries in `packages/database/src/queries/`.** Eén plek per domein. Mutations in `packages/database/src/mutations/`.
+- **Cluster of flat? Hard criterium om drift te voorkomen:**
+  - **Cluster** (`queries/<naam>/` met submap + README) als één geldt:
+    1. > 300 regels of >15 exports in één file (te groot om te overzien)
+    2. ≥2 sub-domeinen die elk ≥3 functies hebben (splitsbaar op naamgeving)
+    3. domein heeft een corresponderende `features/<naam>/` in cockpit/devhub
+  - **Flat** (`queries/<naam>.ts`) als <200 regels EN <8 exports EN één coherent sub-domein.
+  - **Twijfelzone (200–300 regels, 8–15 exports):** flat tenzij criterium 2 of 3 geldt. Vraag bij twijfel — verkeerd gokken = migratie-sprint later.
+  - Zelfde regel geldt voor `mutations/` en `packages/ai/src/pipeline/`.
 - **Geen directe `.from()` in `apps/*/actions` of `apps/*/app/api`.** Gebruik een helper uit `@repo/database/queries/*` of `@repo/database/mutations/*`. Check via `npm run check:queries`; de pre-commit hook blokkeert overtredingen.
 - **Client-scope beleid:** helpers accepteren een optionele `client?: SupabaseClient`; default is admin (service-role). Zie [`packages/database/README.md`](packages/database/README.md) voor signatuur-voorbeelden en uitzonderingen.
 - **Filter op de database.** Niet ophalen en dan in JS filteren.

@@ -19,8 +19,15 @@ export interface ComparableItem {
   follow_up_contact: string;
   type_werk?: string | null;
   deadline?: string | null;
+  follow_up_date?: string | null;
   source_quote?: string | null;
   category?: string | null;
+  /** Alleen gevuld voor agent-output (niet voor golden). Toont per-item
+   *  reasoning in de tuning-UI zodat false positives terug te vertalen zijn
+   *  naar prompt-fixes. */
+  reasoning?: string | null;
+  /** Alleen gevuld voor agent-output. Voor sortering/inspectie in de UI. */
+  confidence?: number;
 }
 
 export type DiffStatus = "match" | "extra" | "missed";

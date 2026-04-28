@@ -122,6 +122,7 @@ describe("POST /api/ingest/reprocess", () => {
       participants: ["Stef"],
       organization_id: null,
       raw_fireflies: null,
+      transcript: null,
     };
 
     vi.mocked(getMeetingByFirefliesIdForReprocess).mockResolvedValue(mockMeeting);
@@ -174,6 +175,7 @@ describe("POST /api/ingest/reprocess", () => {
       participants: null,
       organization_id: null,
       raw_fireflies: null,
+      transcript: null,
     });
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue(null);
 
@@ -192,6 +194,7 @@ describe("POST /api/ingest/reprocess", () => {
       participants: null,
       organization_id: null,
       raw_fireflies: null,
+      transcript: null,
     });
     vi.mocked(fetchFirefliesTranscript).mockResolvedValue({
       id: "ff-1",

@@ -18,7 +18,7 @@ import {
  */
 
 const laneSchema = z.enum(["A", "B", "none"]);
-const typeWerkSchema = z.enum(["A", "B", "C", "D", "E"]);
+const typeWerkSchema = z.enum(["A", "B", "C", "D"]);
 const categorySchema = z.enum(["wachten_op_extern", "wachten_op_beslissing"]).nullable();
 
 const itemBaseSchema = z.object({

@@ -29,6 +29,41 @@ export async function deleteExtractionsByMeetingAndType(
   return { success: true };
 }
 
+/**
+ * Delete extractions van één meeting voor een specifiek type + source-marker
+ * in metadata. Gebruikt door de Action Item Specialist save-step zodat een
+ * re-run alleen specialist-eigen rijen vervangt — handmatig toegevoegde
+ * action_items (zonder source-marker) en al-verified rijen blijven staan.
+ *
+ * `excludeVerified=true` (default) zorgt dat verified extractions nooit
+ * door een AI-re-run overschreven worden. Verification = waarheid; AI mag
+ * waarheid niet overschrijven.
+ */
+export async function deleteExtractionsByMeetingTypeAndSource(
+  meetingId: string,
+  type: string,
+  source: string,
+  options: { excludeVerified?: boolean } = {},
+): Promise<{ success: true; count: number } | { error: string }> {
+  const excludeVerified = options.excludeVerified ?? true;
+
+  let query = getAdminClient()
+    .from("extractions")
+    .delete({ count: "exact" })
+    .eq("meeting_id", meetingId)
+    .eq("type", type)
+    .eq("metadata->>source", source);
+
+  if (excludeVerified) {
+    query = query.neq("verification_status", "verified");
+  }
+
+  const { error, count } = await query;
+
+  if (error) return { error: error.message };
+  return { success: true, count: count ?? 0 };
+}
+
 export async function getExtractionForCorrection(extractionId: string): Promise<{
   id: string;
   content: string;

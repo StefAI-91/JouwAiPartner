@@ -8,11 +8,12 @@ Tickets/issues — het hart van DevHub. Bevat issue-CRUD, AI-classificatie, atta
 
 Server actions voor CRUD, AI-classificatie en comments.
 
-| File          | Exports                                                                               | Gebruikt door                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `issues.ts`   | `createIssueAction`, `updateIssueAction`, `deleteIssueAction`, `getIssueCountsAction` | `issue-form`, `issue-detail`, `issue-row`, `sidebar-delete`, `components/layout/issue-count-store` |
-| `classify.ts` | `classifyIssueAction`, `classifyIssueBackground`, `bulkReclassifyAction`              | `sidebar-ai-classification`, `app/api/ingest/userback/route`, de horizontale import-action         |
-| `comments.ts` | `createCommentAction`, `updateCommentAction`, `deleteCommentAction`                   | `comment-form`                                                                                     |
+| File             | Exports                                                                               | Gebruikt door                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `issues.ts`      | `createIssueAction`, `updateIssueAction`, `deleteIssueAction`, `getIssueCountsAction` | `issue-form`, `issue-detail`, `issue-row`, `sidebar-delete`, `components/layout/issue-count-store` |
+| `classify.ts`    | `classifyIssueAction`, `classifyIssueBackground`, `bulkReclassifyAction`              | `sidebar-ai-classification`, `app/api/ingest/userback/route`, de horizontale import-action         |
+| `comments.ts`    | `createCommentAction`, `updateCommentAction`, `deleteCommentAction`                   | `comment-form`                                                                                     |
+| `attachments.ts` | `createIssueAttachmentUploadUrlAction`, `recordIssueAttachmentAction`                 | `issue-form` (signed-upload-flow naar Supabase Storage)                                            |
 
 ### `components/`
 
@@ -20,16 +21,18 @@ UI voor issue-lijsten, detail, formulieren, sidebar, attachments, en comments. P
 
 **Issue-UI:**
 
-| File                      | Rol                                                                                                      |
-| ------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `issue-list.tsx`          | Lijst met issue-rows op `/issues`.                                                                       |
-| `issue-row.tsx`           | Rij in de lijst — titel, status, labels, menu.                                                           |
-| `issue-filters.tsx`       | Filter-bar boven de lijst (status, project, type, assignee).                                             |
-| `pagination-controls.tsx` | Paginering onder de lijst.                                                                               |
-| `issue-detail.tsx`        | Volledige detail-pagina op `/issues/[id]` — combineert header, sidebar, attachments, AI-panel, comments. |
-| `issue-header.tsx`        | Titel + status-badge + meta op detail-pagina.                                                            |
-| `issue-form.tsx`          | Formulier voor nieuw issue op `/issues/new`.                                                             |
-| `issue-attachments.tsx`   | Attachments-sectie op detail-pagina (screenshots, videos).                                               |
+| File                             | Rol                                                                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `issue-list.tsx`                 | Lijst met issue-rows op `/issues`.                                                                                                                                 |
+| `issue-row.tsx`                  | Rij in de lijst — titel, status, labels, menu.                                                                                                                     |
+| `issue-filters.tsx`              | Filter-bar boven de lijst (status, project, type, assignee).                                                                                                       |
+| `pagination-controls.tsx`        | Paginering onder de lijst.                                                                                                                                         |
+| `issue-detail.tsx`               | Volledige detail-pagina op `/issues/[id]` — combineert header, sidebar, attachments, AI-panel, comments.                                                           |
+| `issue-header.tsx`               | Titel + status-badge + meta op detail-pagina.                                                                                                                      |
+| `issue-form.tsx`                 | Formulier voor nieuw issue op `/issues/new`.                                                                                                                       |
+| `issue-attachments.tsx`          | Attachments-sectie op detail-pagina (screenshots, videos).                                                                                                         |
+| `image-upload.tsx`               | Drag-and-drop / file-picker voor screenshots in `issue-form` (preview + dimensies-detectie).                                                                       |
+| `client-translation-section.tsx` | Optionele klant-titel + klant-beschrijving editor op detail-pagina (CP-007). Save via `updateIssueAction`; leeg = portal valt terug op interne titel/beschrijving. |
 
 **Sidebar (gebruikt binnen `issue-detail`):**
 

@@ -841,6 +841,8 @@ export type Database = {
           ai_executable: boolean | null;
           ai_result: Json | null;
           assigned_to: string | null;
+          client_description: string | null;
+          client_title: string | null;
           closed_at: string | null;
           component: string | null;
           created_at: string;
@@ -873,6 +875,8 @@ export type Database = {
           ai_executable?: boolean | null;
           ai_result?: Json | null;
           assigned_to?: string | null;
+          client_description?: string | null;
+          client_title?: string | null;
           closed_at?: string | null;
           component?: string | null;
           created_at?: string;
@@ -905,6 +909,8 @@ export type Database = {
           ai_executable?: boolean | null;
           ai_result?: Json | null;
           assigned_to?: string | null;
+          client_description?: string | null;
+          client_title?: string | null;
           closed_at?: string | null;
           component?: string | null;
           created_at?: string;
@@ -1180,6 +1186,7 @@ export type Database = {
           title: string;
           transcript: string | null;
           transcript_elevenlabs: string | null;
+          transcript_elevenlabs_named: string | null;
           unmatched_organization_name: string | null;
           updated_at: string | null;
           verification_status: string;
@@ -1208,6 +1215,7 @@ export type Database = {
           title: string;
           transcript?: string | null;
           transcript_elevenlabs?: string | null;
+          transcript_elevenlabs_named?: string | null;
           unmatched_organization_name?: string | null;
           updated_at?: string | null;
           verification_status?: string;
@@ -1236,6 +1244,7 @@ export type Database = {
           title?: string;
           transcript?: string | null;
           transcript_elevenlabs?: string | null;
+          transcript_elevenlabs_named?: string | null;
           unmatched_organization_name?: string | null;
           updated_at?: string | null;
           verification_status?: string;

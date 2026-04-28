@@ -1,17 +1,17 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-25. Do not edit manually.
+> Auto-generated on 2026-04-28. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 461 |
-| Exported functions/constants | 736 |
-| Exported types/interfaces | 273 |
-| Cross-package imports | 508 |
-| Critical integration points (3+ packages) | 11 |
+| Files scanned | 505 |
+| Exported functions/constants | 833 |
+| Exported types/interfaces | 344 |
+| Cross-package imports | 534 |
+| Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
 
@@ -132,6 +132,46 @@
 
 **Types:** `GoogleAccountSafe`, `GoogleAccountRow`, `EmailDirection`, `EmailFilterStatus`, `EmailListItem`, `EmailDetail`, `ReviewEmail`, `EmailForPipelineInput`
 
+### `queries/emails/accounts.ts`
+
+**Exports:**
+- `listActiveGoogleAccountsSafe()`
+- `listActiveGoogleAccounts()`
+- `getGoogleAccountById()`
+- `getGoogleAccountByEmail()`
+
+**Types:** `GoogleAccountSafe`, `GoogleAccountRow`
+
+### `queries/emails/detail.ts`
+
+**Exports:**
+- `getEmailById()`
+- `listDraftEmails()`
+- `getDraftEmailById()`
+
+**Types:** `EmailDetail`, `ReviewEmail`
+
+### `queries/emails/lists.ts`
+
+**Exports:**
+- `listEmails()`
+- `countEmailsByFilterStatus()`
+- `listEmailsByOrganization()`
+- `countEmailsByDirection()`
+
+**Types:** `EmailDirection`, `EmailFilterStatus`, `EmailListItem`
+
+### `queries/emails/pipeline.ts`
+
+**Exports:**
+- `getExistingGmailIds()`
+- `countUnprocessedEmails()`
+- `getEmailForPipelineInput()`
+- `listEmailsForReclassify()`
+- `getUnprocessedEmails()`
+
+**Types:** `EmailForPipelineInput`
+
 ### `queries/extractions.ts`
 
 **Exports:**
@@ -146,7 +186,7 @@
 - `getMeetingForGoldenCoder()`
 - `getGoldenForMeeting()`
 
-**Types:** `MeetingWithGoldenStatus`, `MeetingForGoldenCoder`, `GoldenItemRow`, `GoldenMeetingState`
+**Types:** `MeetingWithGoldenStatus`, `GoldenCoderParticipant`, `MeetingForGoldenCoder`, `GoldenItemRow`, `GoldenMeetingState`
 
 ### `queries/ignored-entities.ts`
 
@@ -219,8 +259,12 @@
 - `listMeetingParticipantIds()`
 - `getMeetingForBackfill()`
 - `getMeetingByFirefliesIdForReprocess()`
+- `getSpeakerMappingTranscriptCounts()`
+- `countSpeakerMappingBackfillRemaining()`
+- `listSpeakerMappingBackfillCandidates()`
+- `getMeetingParticipantsForSpeakerMapping()`
 
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`, `SpeakerMappingParticipant`, `SpeakerMappingTranscriptCounts`, `SpeakerMappingBackfillCandidate`
 
 ### `queries/meetings/project-summaries.ts`
 
@@ -278,6 +322,42 @@
 
 **Types:** `PersonListItem`, `PersonWithOrg`, `PersonForAssignment`, `PersonDetail`, `KnownPerson`, `PersonForContext`
 
+### `queries/people/detail.ts`
+
+**Exports:**
+- `getPersonById()`
+- `getStalePeople()`
+
+**Types:** `PersonDetail`
+
+### `queries/people/lists.ts`
+
+**Exports:**
+- `listPeople()`
+- `listPeopleByOrganization()`
+- `listPeopleWithOrg()`
+- `listPeopleForAssignment()`
+
+**Types:** `PersonListItem`, `PersonWithOrg`, `PersonForAssignment`
+
+### `queries/people/lookup.ts`
+
+**Exports:**
+- `findPersonIdsByName()`
+- `findProfileIdByName()`
+- `findPeopleByNames()`
+- `findPeopleByEmails()`
+- `findPersonOrgByEmail()`
+
+### `queries/people/pipeline.ts`
+
+**Exports:**
+- `getAllKnownPeople()`
+- `getAdminEmails()`
+- `getPeopleForContext()`
+
+**Types:** `KnownPerson`, `PersonForContext`
+
 ### `queries/portal/access.ts`
 
 **Exports:**
@@ -299,7 +379,7 @@
 - `listPortalIssues()`
 - `getPortalIssue()`
 
-**Types:** `PortalStatusFilter`, `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`, `PortalIssue`
+**Types:** `PortalStatusFilter`, `PortalIssueListFilters`, `PortalIssueCountFilters`, `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`, `PortalIssue`
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin
@@ -348,6 +428,31 @@
 - `getProjectContextForReport()`
 
 **Types:** `IssueReportRow`, `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`, `ProjectActivityEvent`, `PaginatedResult`, `ProjectContextReport`
+
+### `queries/reports/internals.ts`
+
+**Exports:**
+- `cutoffIsoFromDaysBack()`
+- `mapIssueRow()`
+- `REPORT_ISSUE_SELECT`
+
+**Types:** `PaginatedResult`, `RawIssueWithAssigned`, `IssueReportRow`
+
+### `queries/reports/issues.ts`
+
+**Exports:**
+- `getProjectIssuesForReport()`
+- `getIssueDetailForReport()`
+
+**Types:** `IssueCommentReport`, `IssueActivityReport`, `IssueDetailReport`
+
+### `queries/reports/project.ts`
+
+**Exports:**
+- `getProjectActivityForReport()`
+- `getProjectContextForReport()`
+
+**Types:** `ProjectActivityEvent`, `ProjectContextReport`
 
 ### `queries/review.ts`
 
@@ -515,6 +620,7 @@
 **Exports:**
 - `deleteExtractionsByMeetingId()`
 - `deleteExtractionsByMeetingAndType()`
+- `deleteExtractionsByMeetingTypeAndSource()`
 - `getExtractionForCorrection()`
 - `correctExtraction()`
 - `insertExtractions()`
@@ -524,6 +630,13 @@
 - `updateNeedStatus()`
 
 **Types:** `ExtractionInsertRow`, `NeedStatus`
+
+### `mutations/extractions/experimental-action-items.ts`
+
+**Exports:**
+- `insertExperimentalActionItemExtraction()`
+
+**Types:** `ExperimentalActionItemExtractionInput`
 
 ### `mutations/extractions/experimental-risks.ts`
 
@@ -588,6 +701,7 @@
 - `insertManualMeeting()`
 - `updateMeetingClassification()`
 - `updateMeetingElevenLabs()`
+- `updateMeetingNamedTranscript()`
 - `updateMeetingType()`
 - `updateMeetingPartyType()`
 - `updateMeetingTitle()`
@@ -732,19 +846,40 @@
 
 ## AI Agents
 
+### `packages/ai/src/agents/action-item-follow-up.ts`
+
+**Exports:**
+- `addWorkdays()`
+- `resolveFollowUpDate()`
+- `TYPE_C_FALLBACK_WORKDAYS`
+
+**Types:** `ResolveFollowUpInput`
+
 ### `packages/ai/src/agents/action-item-specialist.ts`
 
 **Exports:**
 - `runActionItemSpecialist()`
+- `checkActionItemGate()`
 - `getActionItemSpecialistSystemPrompt()`
-- `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
+- `runActionItemCandidateSpotter()`
+- `runActionItemSpecialistTwoStage()`
+- `getActionItemCandidateSpotterPrompt()`
+- `getActionItemJudgePrompt()`
+- `getActionItemActionValidatorPrompt()`
+- `validateFollowupAction()`
+- `extractTranscriptContext()`
+- `ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION`
 - `ACTION_ITEM_SPECIALIST_MODEL`
+- `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
-**Types:** `ActionItemSpecialistContext`, `ActionItemSpecialistRunMetrics`, `ActionItemSpecialistRunResult`
+**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistParticipant`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemTwoStageRunOptions`, `ActionItemSpotterRunResult`, `ActionItemActionValidatorInput`, `ActionItemActionValidatorResult`
 
 **Internal deps:**
-- `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
+- `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemFollowupAction, type ActionItemRecipientPerQuote, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
+- `../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemCandidate, type ActionItemJudgement
+- `../validations/action-item-action-validator` → ActionItemActionValidatorOutputSchema, type ActionItemActionValidatorOutput
 - `../utils/normalise` → emptyToNull, sentinelToNull
+- `./action-item-follow-up` → resolveFollowUpDate
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/email-classifier.ts`
@@ -875,6 +1010,31 @@
 
 **Depends on:**
 - `@repo/database/mutations/agent-runs` → insertAgentRun, type AgentRunInput
+
+### `packages/ai/src/agents/speaker-identifier-sampling.ts`
+
+**Exports:**
+- `parseElevenLabsUtterances()`
+- `parseFirefliesUtterances()`
+- `sampleUtterancesPerName()`
+- `sampleUtterancesPerSpeaker()`
+
+**Types:** `SpeakerUtterance`, `NamedUtterance`
+
+### `packages/ai/src/agents/speaker-identifier.ts`
+
+**Exports:**
+- `runSpeakerIdentifier()`
+- `getSpeakerIdentifierPrompt()`
+- `applyMappingToTranscript()`
+- `SPEAKER_MAPPING_APPLY_THRESHOLD`
+
+**Types:** `SpeakerIdentifierParticipant`, `SpeakerIdentifierInput`, `SpeakerIdentifierResult`
+
+**Internal deps:**
+- `../validations/speaker-identifier` → SpeakerMappingOutputSchema, type SpeakerMappingOutput
+- `./speaker-identifier-sampling` → parseElevenLabsUtterances, parseFirefliesUtterances, sampleUtterancesPerName, sampleUtterancesPerSpeaker
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/summarizer.ts`
 
@@ -1081,8 +1241,10 @@
 - `./participant/classifier` → classifyParticipantsWithCache, determinePartyType, determineRuleBasedMeetingType
 - `./build-raw-fireflies` → buildRawFireflies
 - `./steps/transcribe` → runTranscribeStep
+- `./steps/speaker-mapping` → runSpeakerMappingStep
 - `./steps/summarize` → runSummarizeStep
 - `./steps/risk-specialist` → runRiskSpecialistStep
+- `./steps/action-item-specialist` → runActionItemSpecialistStep, buildActionItemParticipants
 - `./steps/generate-title` → runGenerateTitleStep
 - `./steps/tag-and-segment` → runTagAndSegmentStep
 - `./steps/embed` → runEmbedStep
@@ -1138,6 +1300,20 @@
 **Internal deps:**
 - `../speaker-map` → SpeakerMap
 
+### `packages/ai/src/pipeline/save-action-item-extractions.ts`
+
+**Exports:**
+- `saveActionItemExtractions()`
+- `ACTION_ITEM_SPECIALIST_SOURCE`
+
+**Depends on:**
+- `@repo/database/mutations/meetings` → linkAllMeetingProjects
+- `@repo/database/mutations/extractions` → deleteExtractionsByMeetingTypeAndSource, insertExtractions, type ExtractionInsertRow
+
+**Internal deps:**
+- `../validations/gatekeeper` → IdentifiedProject
+- `../validations/action-item-specialist` → ActionItemSpecialistItem, ActionItemSpecialistOutput
+
 ### `packages/ai/src/pipeline/save-risk-extractions.ts`
 
 **Exports:**
@@ -1186,6 +1362,21 @@
 
 **Depends on:**
 - (type) `@repo/database/queries/people` → KnownPerson
+
+### `packages/ai/src/pipeline/steps/action-item-specialist.ts`
+
+**Exports:**
+- `buildActionItemParticipants()`
+- `runActionItemSpecialistStep()`
+
+**Depends on:**
+- `@repo/database/mutations/extractions/experimental-action-items` → insertExperimentalActionItemExtraction
+- (type) `@repo/database/queries/people` → KnownPerson
+
+**Internal deps:**
+- `../../agents/action-item-specialist` → runActionItemSpecialist, ACTION_ITEM_SPECIALIST_MODEL, type ActionItemSpecialistContext, type ActionItemSpecialistParticipant
+- `../save-action-item-extractions` → saveActionItemExtractions
+- `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/embed.ts`
 
@@ -1243,6 +1434,20 @@
 - `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_MODEL, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
 - `../save-risk-extractions` → saveRiskExtractions
 - `../../validations/gatekeeper` → IdentifiedProject
+
+### `packages/ai/src/pipeline/steps/speaker-mapping.ts`
+
+**Exports:**
+- `runSpeakerMappingStep()`
+
+**Types:** `SpeakerMappingStepResult`
+
+**Depends on:**
+- `@repo/database/mutations/meetings` → updateMeetingNamedTranscript
+- `@repo/database/queries/meetings/core` → getMeetingParticipantsForSpeakerMapping, type SpeakerMappingParticipant
+
+**Internal deps:**
+- `../../agents/speaker-identifier` → applyMappingToTranscript, runSpeakerIdentifier
 
 ### `packages/ai/src/pipeline/steps/summarize.ts`
 
@@ -1454,13 +1659,34 @@
 
 ## AI Validations
 
+### `packages/ai/src/validations/action-item-action-validator.ts`
+
+**Exports:**
+- `ActionItemActionValidatorOutputSchema`
+
+**Types:** `ActionItemActionValidatorOutput`
+
 ### `packages/ai/src/validations/action-item-specialist.ts`
 
 **Exports:**
 - `ActionItemSpecialistRawItemSchema`
 - `ActionItemSpecialistRawOutputSchema`
 
-**Types:** `RawActionItemSpecialistOutput`, `ActionItemSpecialistItem`, `ActionItemSpecialistOutput`
+**Types:** `RawActionItemSpecialistOutput`, `ActionItemRecipientPerQuote`, `ActionItemFollowupAction`, `ActionItemSpecialistItem`, `ActionItemSpecialistOutput`
+
+### `packages/ai/src/validations/action-item-two-stage.ts`
+
+**Exports:**
+- `ActionItemCandidateSchema`
+- `ActionItemCandidatesSchema`
+- `ActionItemAcceptedSchema`
+- `ActionItemRejectedSchema`
+- `ActionItemJudgementsSchema`
+
+**Types:** `ActionItemCandidate`, `ActionItemCandidatesOutput`, `ActionItemAccepted`, `ActionItemRejected`, `ActionItemJudgementsOutput`, `ActionItemJudgement`
+
+**Internal deps:**
+- `./action-item-specialist` → ActionItemSpecialistRawItemSchema
 
 ### `packages/ai/src/validations/communication.ts`
 
@@ -1571,6 +1797,14 @@
 - `RiskSpecialistRawOutputSchema`
 
 **Types:** `RawRiskSpecialistOutput`, `RiskSpecialistItem`, `RiskSpecialistOutput`
+
+### `packages/ai/src/validations/speaker-identifier.ts`
+
+**Exports:**
+- `SpeakerMappingItemSchema`
+- `SpeakerMappingOutputSchema`
+
+**Types:** `SpeakerMappingItem`, `SpeakerMappingOutput`
 
 ### `packages/ai/src/validations/summarizer.ts`
 
@@ -1908,14 +2142,15 @@
 **Exports:**
 - `runActionItemAgentAction()`
 
-**Types:** `RunActionItemAgentInput`, `RunActionItemAgentResult`
+**Types:** `RunActionItemAgentInput`, `TwoStageDebug`, `RunActionItemAgentResult`
 
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
-- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_PROMPT_VERSION, getActionItemSpecialistSystemPrompt
+- `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, runActionItemSpecialistTwoStage, runActionItemCandidateSpotter, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, getActionItemCandidateSpotterPrompt, getActionItemJudgePrompt, type ActionItemPromptVersion, type ActionItemGatedItem
 - `@repo/ai/lib/golden-comparison` → comparePrecisionRecall, type ComparisonResult, type ComparableItem
 - (type) `@repo/ai/validations/action-item-specialist` → ActionItemSpecialistItem
+- (type) `@repo/ai/validations/action-item-two-stage` → ActionItemCandidate, ActionItemJudgement
 
 ### `apps/cockpit/src/actions/dev-detector.ts`
 
@@ -1931,6 +2166,23 @@
 - `@repo/database/queries/meetings` → getVerifiedMeetingById
 - `@repo/database/queries/themes` → listVerifiedThemes
 - `@repo/database/queries/dev-detector` → getMeetingThemesForDevDetector, getExtractionThemesForDevDetector, type DevDetectorMeetingThemeRow, type DevDetectorExtractionThemeRow
+
+### `apps/cockpit/src/actions/dev-speaker-mapping.ts`
+
+**Exports:**
+- `listSpeakerMappingMeetings()`
+- `runSpeakerMappingAction()`
+- `getSpeakerMappingBackfillStatus()`
+- `runSpeakerMappingBackfillBatch()`
+
+**Types:** `RunSpeakerMappingInput`, `SpeakerMappingMeetingOption`, `RunSpeakerMappingResult`, `BackfillStatus`, `RunBackfillBatchInput`, `BackfillBatchItem`, `RunBackfillBatchResult`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdminInAction
+- `@repo/database/queries/golden` → getMeetingForGoldenCoder
+- `@repo/database/queries/meetings/core` → countSpeakerMappingBackfillRemaining, getSpeakerMappingTranscriptCounts, listMeetingsWithTranscript, listSpeakerMappingBackfillCandidates
+- `@repo/ai/agents/speaker-identifier` → runSpeakerIdentifier, getSpeakerIdentifierPrompt, type SpeakerIdentifierResult
+- `@repo/ai/pipeline/steps/speaker-mapping` → runSpeakerMappingStep
 
 ### `apps/cockpit/src/actions/golden-action-items.ts`
 
@@ -2421,6 +2673,46 @@
 **Depends on:**
 - (type) `@repo/database/queries/golden` → GoldenItemRow, GoldenMeetingState
 
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-item-card.tsx`
+
+**Exports:**
+- `CoderItemCard()`
+
+**Depends on:**
+- (type) `@repo/database/queries/golden` → GoldenItemRow
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-item-form.tsx`
+
+**Exports:**
+- `CoderItemForm()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-skip-dialog.tsx`
+
+**Exports:**
+- `CoderSkipDialog()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-status-panel.tsx`
+
+**Exports:**
+- `CoderStatusPanel()`
+
+**Depends on:**
+- (type) `@repo/database/queries/golden` → GoldenMeetingState
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-transcript-pane.tsx`
+
+**Exports:**
+- `CoderTranscriptPane`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-types.ts`
+
+**Exports:**
+- `EMPTY_DRAFT`
+- `TYPE_WERK_LABELS`
+- `LANE_LABELS`
+
+**Types:** `Lane`, `TypeWerk`, `Category`, `FormDraft`, `Participant`
+
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx`
 
 **Exports:**
@@ -2483,6 +2775,22 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdmin
 - `@repo/database/queries/meetings` → listVerifiedMeetings
+
+### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
+
+**Exports:**
+- `SpeakerMappingClient()`
+
+**Depends on:**
+- `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/page.tsx`
+
+**Exports:**
+- `metadata`
+
+**Depends on:**
+- `@repo/auth/access` → requireAdmin
 
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
@@ -2836,6 +3144,42 @@
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/organizations` → OrganizationListItem
+
+### `apps/cockpit/src/components/agents/activity-feed.tsx`
+
+**Exports:**
+- `ActivityFeed()`
+
+**Depends on:**
+- (type) `@repo/database/queries/agent-runs` → AgentRunRow
+- (type) `@repo/ai/agents/registry` → AgentDefinition
+
+### `apps/cockpit/src/components/agents/agent-card.tsx`
+
+**Exports:**
+- `AgentCard()`
+
+**Depends on:**
+- (type) `@repo/ai/agents/registry` → AgentDefinition
+- (type) `@repo/database/queries/agent-runs` → AgentMetrics
+- `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle
+
+### `apps/cockpit/src/components/agents/quadrant-styles.ts`
+
+**Exports:**
+- `quadrantHeader`
+- `quadrantBadge`
+- `quadrantLabel`
+
+**Depends on:**
+- (type) `@repo/ai/agents/registry` → AgentQuadrant
+
+### `apps/cockpit/src/components/agents/system-overview.tsx`
+
+**Exports:**
+- `SystemOverview()`
+
+**Types:** `SystemStats`
 
 ### `apps/cockpit/src/components/architectuur/embeddings-card.tsx`
 
@@ -3514,14 +3858,14 @@ Which layers depend on which packages:
 | Layer | database | ai | auth | ui | mcp | Total |
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
-| AI Core | 10 | - | - | - | - | 10 |
-| AI Pipeline | 55 | - | - | - | - | 55 |
+| AI Core | 11 | - | - | - | - | 11 |
+| AI Pipeline | 61 | - | - | - | - | 61 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 25 | 9 | 12 | - | - | 46 |
+| Cockpit Server Actions | 27 | 12 | 13 | - | - | 52 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 18 | 2 | - | 40 | - | 60 |
+| Cockpit Components | 20 | 5 | - | 41 | - | 66 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 98 | 8 | 7 | 35 | - | 148 |
+| Cockpit Pages | 100 | 8 | 8 | 39 | - | 155 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
@@ -3539,6 +3883,7 @@ parts of the codebase — changes here have the widest blast radius.
 |------|----------|-------|
 | `apps/cockpit/src/actions/dev-action-item-runner.ts` | auth, database, ai | 3 |
 | `apps/cockpit/src/actions/dev-detector.ts` | ai, auth, database | 3 |
+| `apps/cockpit/src/actions/dev-speaker-mapping.ts` | auth, database, ai | 3 |
 | `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
 | `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
@@ -3547,6 +3892,7 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx` | auth, ui, database | 3 |
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
 ## Key Dependency Chains
@@ -3584,10 +3930,17 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `deleteExtractionsByMeetingAndType()` | `packages/ai/src/pipeline/save-risk-extractions.ts` |
+| `deleteExtractionsByMeetingTypeAndSource()` | `packages/ai/src/pipeline/save-action-item-extractions.ts` |
 | `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
 | `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
-| `insertExtractions()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
+| `insertExtractions()` | `packages/ai/src/pipeline/save-action-item-extractions.ts`, `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/pipeline/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
 | `updateNeedStatus()` | `apps/cockpit/src/actions/scan-needs.ts` |
+
+### mutations/extractions/experimental-action-items.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `insertExperimentalActionItemExtraction()` | `packages/ai/src/pipeline/steps/action-item-specialist.ts` |
 
 ### mutations/extractions/experimental-risks.ts
 
@@ -3633,8 +3986,9 @@ Tracing the most important data flows from action → pipeline → database.
 | `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
 | `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
+| `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 | `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
-| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/save-action-item-extractions.ts`, `packages/ai/src/pipeline/save-risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
 | `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
 | `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
@@ -3777,12 +4131,45 @@ Which queries are used where across the codebase.
 | `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
 | `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
+### queries/emails/accounts.ts
+
+| Query | Used in |
+|-------|---------|
+| `listActiveGoogleAccountsSafe()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+
+### queries/emails/detail.ts
+
+| Query | Used in |
+|-------|---------|
+| `getEmailById()` | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx` |
+| `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
+| `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+
+### queries/emails/lists.ts
+
+| Query | Used in |
+|-------|---------|
+| `listEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `countEmailsByFilterStatus()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listEmailsByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
+| `countEmailsByDirection()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+
+### queries/emails/pipeline.ts
+
+| Query | Used in |
+|-------|---------|
+| `getExistingGmailIds()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
+| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+
 ### queries/golden.ts
 
 | Query | Used in |
 |-------|---------|
 | `listMeetingsWithGoldenStatus()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx`, `apps/cockpit/src/app/(dashboard)/dev/action-items/run/page.tsx` |
-| `getMeetingForGoldenCoder()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
+| `getMeetingForGoldenCoder()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/actions/dev-speaker-mapping.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
 | `getGoldenForMeeting()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
 
 ### queries/ignored-entities.ts
@@ -3834,6 +4221,7 @@ Which queries are used where across the codebase.
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getMeetingByTitleAndDate()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `listMeetingsWithTranscript()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
 | `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
 | `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
@@ -3842,6 +4230,10 @@ Which queries are used where across the codebase.
 | `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
 | `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
 | `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `getSpeakerMappingTranscriptCounts()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `countSpeakerMappingBackfillRemaining()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `listSpeakerMappingBackfillCandidates()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `getMeetingParticipantsForSpeakerMapping()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 
 ### queries/meetings/project-summaries.ts
 
@@ -3888,6 +4280,38 @@ Which queries are used where across the codebase.
 | `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |
 | `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 
+### queries/people/detail.ts
+
+| Query | Used in |
+|-------|---------|
+| `getPersonById()` | `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx` |
+| `getStalePeople()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
+
+### queries/people/lists.ts
+
+| Query | Used in |
+|-------|---------|
+| `listPeople()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listPeopleByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
+| `listPeopleWithOrg()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listPeopleForAssignment()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+
+### queries/people/lookup.ts
+
+| Query | Used in |
+|-------|---------|
+| `findPersonIdsByName()` | `packages/mcp/src/tools/actions.ts` |
+| `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
+| `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |
+| `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
+
+### queries/people/pipeline.ts
+
+| Query | Used in |
+|-------|---------|
+| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `getPeopleForContext()` | `packages/ai/src/pipeline/context-injection.ts` |
+
 ### queries/projects/access.ts
 
 | Query | Used in |
@@ -3920,6 +4344,27 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getProjectIssuesForReport()` | `packages/mcp/src/tools/issues.ts` |
 | `getIssueDetailForReport()` | `packages/mcp/src/tools/issues.ts` |
+| `getProjectActivityForReport()` | `packages/mcp/src/tools/project-report.ts` |
+| `getProjectContextForReport()` | `packages/mcp/src/tools/project-report.ts` |
+
+### queries/reports/internals.ts
+
+| Query | Used in |
+|-------|---------|
+| `cutoffIsoFromDaysBack()` | `packages/database/src/queries/reports/issues.ts`, `packages/database/src/queries/reports/project.ts` |
+| `mapIssueRow()` | `packages/database/src/queries/reports/issues.ts` |
+
+### queries/reports/issues.ts
+
+| Query | Used in |
+|-------|---------|
+| `getProjectIssuesForReport()` | `packages/mcp/src/tools/issues.ts` |
+| `getIssueDetailForReport()` | `packages/mcp/src/tools/issues.ts` |
+
+### queries/reports/project.ts
+
+| Query | Used in |
+|-------|---------|
 | `getProjectActivityForReport()` | `packages/mcp/src/tools/project-report.ts` |
 | `getProjectContextForReport()` | `packages/mcp/src/tools/project-report.ts` |
 

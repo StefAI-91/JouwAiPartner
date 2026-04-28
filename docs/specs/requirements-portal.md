@@ -1,10 +1,11 @@
 # Requirements Register — Portal MVP
 
-Gegenereerd uit `docs/specs/portal-mvp.md` op 2026-04-17.
+Gegenereerd uit `docs/archive/portal-mvp.md` (gearchiveerd 2026-04-27, oorspronkelijk 2026-04-17).
 Totaal: 72 requirements.
 
 > **Last verified:** 2026-04-20 (Q4b, steekproef-strategie per Q4a-5).
 > **Bekende drift:** laag — CP-001..005 done, MVP-scope klopt. Portal-app nog niet gedeployed, launch is "Next" in vision-roadmap.
+> **Opvolger:** `docs/specs/prd-client-portal/` (Stefan First MVP) breidt deze register uit met `client_visible`-laag, vier-bucket dashboard en DevHub admin-toggle. Regelnummer-verwijzingen hieronder slaan op de oorspronkelijke layout van `portal-mvp.md` (regels +5 t.o.v. gearchiveerde versie door toegevoegde header).
 
 ---
 

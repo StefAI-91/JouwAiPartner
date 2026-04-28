@@ -43,15 +43,20 @@ export const ActionItemSpecialistRawItemSchema = z.object({
     .describe(
       "ISO YYYY-MM-DD. Lege string als geen deadline-cue benoemd is (NIET een fake default invullen).",
     ),
-  type_werk: z
-    .enum(["A", "B", "C", "D", "E"])
+  follow_up_date: z
+    .string()
     .describe(
-      "A=intern JAIP, B=JAIP levert aan extern, C=extern levert aan JAIP, D=beslissing afwachten, E=partner-levering (Tibor/Dion).",
+      "ISO YYYY-MM-DD. Wanneer JAIP intern moet pingen of extern moet opvolgen. ALLEEN invullen als deadline leeg is én er een aparte ping-cue in transcript staat ('stuur me over een week reminder', 'ping me eind volgende maand'). Bij gevulde deadline → laat dit leeg, code leidt het deterministisch af. Bij geen ping-cue → leeg laten.",
+    ),
+  type_werk: z
+    .enum(["A", "B", "C", "D"])
+    .describe(
+      "A=intern JAIP, B=JAIP levert aan extern, C=extern levert aan JAIP, D=beslissing afwachten. Tibor en Dion zijn gewone externen — hun leveringen aan JAIP vallen onder C.",
     ),
   category: z
     .enum(["wachten_op_extern", "wachten_op_beslissing", "n/a"])
     .describe(
-      "wachten_op_extern voor type_werk C/E. wachten_op_beslissing voor type_werk D. n/a voor intern werk (A/B).",
+      "wachten_op_extern voor type_werk C. wachten_op_beslissing voor type_werk D. n/a voor intern werk (A/B).",
     ),
   confidence: z
     .number()
@@ -61,7 +66,22 @@ export const ActionItemSpecialistRawItemSchema = z.object({
   reasoning: z
     .string()
     .describe(
-      "1-3 NL zinnen: waarom dit een action_item is, confidence-drivers, overwogen alternatieven. Voor calibratie/debug, niet voor UI.",
+      "1-2 korte NL zinnen: welke eis (rol/toezegging/concreet/agency) het sterkst hit, welk type_werk en waarom, eventuele twijfelpunten. Wordt in tuning-UI getoond zodat false positives terug te vertalen zijn naar prompt-fixes.",
+    ),
+  recipient_per_quote: z
+    .enum(["stef_wouter", "third_party", "own_sphere", "from_jaip", "unclear"])
+    .describe(
+      "Wie is volgens de quote zelf de ontvanger van de levering? stef_wouter = JAIP-medewerker. third_party = andere externe (bv. Tibor → klant). own_sphere = eigen kring van de externe (eigen team, eigen panel, eigen klanten, eigen tooling). from_jaip = JAIP is uitvoerder (type A/B). unclear = niet eenduidig uit quote af te leiden. Voor type_werk C of D MOET dit 'stef_wouter' zijn — anders auto-reject.",
+    ),
+  jaip_followup_quote: z
+    .string()
+    .describe(
+      "Letterlijke zin uit transcript waar Stef of Wouter zelf hun eigen vervolgstap uitspreken (eerste persoon: 'dan ga ik X', 'ik wacht hierop omdat ik Y') of waar de spreker hen direct aanspreekt ('als jij dat hebt, dan kun jij Z'). Lege string als geen citaat te vinden. Voor type_werk C of D MOET deze gevuld zijn — anders auto-reject. Voor type A/B mag leeg.",
+    ),
+  jaip_followup_action: z
+    .enum(["productive", "consumptive", "n/a"])
+    .describe(
+      "Wat doet JAIP in de vervolgstap die in jaip_followup_quote staat? productive = JAIP produceert iets eigens (offerte schrijven, document maken, mail sturen, beslissing nemen, feedback formuleren, correcties geven). consumptive = JAIP consumeert/luistert/sluit aan zonder eigen output (langskomen, bijwonen, mee-luisteren, kijken naar wat externen hebben uitgewerkt). n/a = geen JAIP-vervolgstap (type A puur intern of geen action). Voor type_werk C of D MOET dit 'productive' zijn — anders auto-reject. Een 'kom-luisteren'-vervolgstap rechtvaardigt geen type C; dan is het externen-overleg met JAIP als toehoorder.",
     ),
 });
 
@@ -71,6 +91,15 @@ export const ActionItemSpecialistRawOutputSchema = z.object({
 
 export type RawActionItemSpecialistOutput = z.infer<typeof ActionItemSpecialistRawOutputSchema>;
 
+export type ActionItemRecipientPerQuote =
+  | "stef_wouter"
+  | "third_party"
+  | "own_sphere"
+  | "from_jaip"
+  | "unclear";
+
+export type ActionItemFollowupAction = "productive" | "consumptive" | "n/a";
+
 export type ActionItemSpecialistItem = {
   content: string;
   follow_up_contact: string;
@@ -78,10 +107,14 @@ export type ActionItemSpecialistItem = {
   source_quote: string | null;
   project_context: string | null;
   deadline: string | null;
-  type_werk: "A" | "B" | "C" | "D" | "E";
+  follow_up_date: string | null;
+  type_werk: "A" | "B" | "C" | "D";
   category: "wachten_op_extern" | "wachten_op_beslissing" | null;
   confidence: number;
   reasoning: string | null;
+  recipient_per_quote: ActionItemRecipientPerQuote;
+  jaip_followup_quote: string | null;
+  jaip_followup_action: ActionItemFollowupAction;
 };
 
 export type ActionItemSpecialistOutput = {

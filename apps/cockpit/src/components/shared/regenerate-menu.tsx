@@ -14,6 +14,7 @@ import {
 import {
   regenerateMeetingAction,
   regenerateRisksAction,
+  regenerateActionItemsAction,
   reprocessMeetingAction,
   regenerateMeetingTitleAction,
 } from "@/features/meetings/actions";
@@ -23,7 +24,14 @@ interface RegenerateMenuProps {
   meetingId: string;
 }
 
-type LoadingState = "regenerate" | "risks" | "reprocess" | "title" | "themes" | null;
+type LoadingState =
+  | "regenerate"
+  | "risks"
+  | "action-items"
+  | "reprocess"
+  | "title"
+  | "themes"
+  | null;
 
 export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
   const router = useRouter();
@@ -49,6 +57,20 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
     setError(null);
 
     const result = await regenerateRisksAction({ meetingId });
+    if ("error" in result) {
+      setError(result.error);
+      setLoading(null);
+      return;
+    }
+    router.refresh();
+    setLoading(null);
+  }
+
+  async function handleRegenerateActionItems() {
+    setLoading("action-items");
+    setError(null);
+
+    const result = await regenerateActionItemsAction({ meetingId });
     if ("error" in result) {
       setError(result.error);
       setLoading(null);
@@ -118,13 +140,15 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
                 ? "Regenereren..."
                 : loading === "risks"
                   ? "Risico's regenereren..."
-                  : loading === "reprocess"
-                    ? "Herverwerken..."
-                    : loading === "title"
-                      ? "Titel genereren..."
-                      : loading === "themes"
-                        ? "Thema's taggen..."
-                        : "Regenereer"}
+                  : loading === "action-items"
+                    ? "Action items regenereren..."
+                    : loading === "reprocess"
+                      ? "Herverwerken..."
+                      : loading === "title"
+                        ? "Titel genereren..."
+                        : loading === "themes"
+                          ? "Thema's taggen..."
+                          : "Regenereer"}
             </Button>
           }
         />
@@ -145,7 +169,7 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
             <div className="flex flex-col gap-0.5">
               <span className="font-medium">Regenereer</span>
               <span className="text-xs text-muted-foreground">
-                Summary + thema-samenvattingen + risks opnieuw
+                Summary + thema-samenvattingen + risks + action items opnieuw
               </span>
             </div>
           </DropdownMenuItem>
@@ -154,6 +178,14 @@ export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
               <span className="font-medium">Alleen risico&apos;s regenereren</span>
               <span className="text-xs text-muted-foreground">
                 RiskSpecialist opnieuw; summary blijft
+              </span>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleRegenerateActionItems}>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium">Alleen action items regenereren</span>
+              <span className="text-xs text-muted-foreground">
+                ActionItemSpecialist opnieuw; summary blijft
               </span>
             </div>
           </DropdownMenuItem>

@@ -84,7 +84,7 @@ De Next.js portal app opzetten in `apps/portal/` met werkende authenticatie. Na 
 
 ## Bronverwijzingen
 
-- PRD: `docs/specs/portal-mvp.md` sectie 3 (AUTH, APP, UI) en sectie 7 (Routes)
+- PRD: `docs/archive/portal-mvp.md` sectie 3 (AUTH, APP, UI) en sectie 7 (Routes)
 - DevHub app als referentie: `apps/devhub/` (package.json, next.config.ts, middleware.ts, layout)
 - Auth middleware factory: `packages/auth/src/middleware.ts`
 - Workspace switcher: `packages/ui/src/workspace-switcher.tsx`
