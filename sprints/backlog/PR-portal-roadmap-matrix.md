@@ -108,10 +108,121 @@ De roadmap-PRD dekt het topic + signaal + rapport-stuk; project-fases en meeting
 
 ## 6. Open punten — verwijzing naar chunk 2
 
-Sectie 5 (per-sprint requirement-bron mapping), sectie 6 (PRD §-sectie → sprint mapping inverse) en sectie 7 (open-vragen tracking) volgen in een vervolg-edit. Tot die tijd geldt:
+> Chunk 2 hieronder vult sectie 5–7 in. Update bij sprint-revisie of PRD-wijziging.
 
-- Per-sprint requirement-IDs en rationale: zie de individuele sprint-bestanden (bv. `PR-001-topics-database-foundation.md` § Requirements)
-- Open vragen O-1 t/m O-4 en I-1 t/m I-6: gemarkeerd in elke sprint onder § Afhankelijkheden / § Risico's
+## 5. Sprint → PRD-bron-mapping
+
+Per sprint: range van requirement-IDs + bron-secties in de PRD + welke open vragen blokkerend zijn. Voor de individuele requirements zelf: zie het sprint-bestand.
+
+| Sprint | Requirement-ID-prefixen       | PRD-secties                                                                                    | Open vragen die geblokkeerd zijn                        |
+| ------ | ----------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| PR-000 | REQ-001..007, DESIGN-001..002 | §14.6 (mobile-strategie), §14.7 (valkuilen), bestaand `apps/portal/src/components/layout/`     | —                                                       |
+| PR-001 | DATA-001..010, RULE-001..002  | §11.1–11.3 (data-model), §11.7 (lifecycle-status), §11.10–11.11 (RLS + migratie-volgorde)      | I-3 (junction), I-5 (sprint-FK)                         |
+| PR-002 | REQ-010..022                  | §6.6 (code-organisatie), §11.2 (topics-velden), CLAUDE.md "Database & Queries"                 | —                                                       |
+| PR-003 | REQ-030..039, DESIGN-005..006 | §6.3.1–6.3.2 (DevHub topic-CRUD + status), §12.3.2–12.3.3 (board + detail)                     | I-6 (detail vs issue-detail)                            |
+| PR-004 | REQ-040..051, DESIGN-007..009 | §6.3.3–6.3.5 (4-bucket portal), §14 (volledige visuele spec)                                   | —                                                       |
+| PR-005 | DATA-020..024, REQ-050..055   | §7.5 (data-model signalen), §11.4–11.5 (signaal-tabellen), §4.8 (per-org keuze)                | I-2 (model A/B), O-3 (multi-stakeholder)                |
+| PR-006 | REQ-060..068, DESIGN-010..011 | §7.3.1–7.3.5 (UI-flows), §14.4 (signal-pills + undo-toast)                                     | O-1 (klant-prio-model), O-2 (bugs in loop)              |
+| PR-007 | REQ-070..080, RULE-010        | §8.3.1 (rollup-regel), §8.3.2 (override-flag), §12.5 (rollup-regels)                           | I-1 (trigger vs server-side), I-4 (transitie-validatie) |
+| PR-008 | REQ-080..089, DESIGN-012      | §8.3.3 (triage-queue), §12.3.1 (triage UX)                                                     | —                                                       |
+| PR-009 | DATA-030..035, REQ-090..099   | §8.3.4–8.3.5 (audit-events + timelines), §11.6 (topic_events tabel)                            | I-4 (transitie-validatie)                               |
+| PR-010 | RULE-020..022, REQ-100..109   | §4.7 (`wont_do` verplicht expliciet), §8.3.6–8.3.7 (`wont_do` flow + klant-`wont_do_proposed`) | —                                                       |
+| PR-011 | DATA-040..047, REQ-110..115   | §9.5 (rapport-tabel), §11.8 (`topic_status_reports`)                                           | O-4 (snapshots vs live)                                 |
+| PR-012 | REQ-120..130                  | §9.3.1–9.3.3 (rapport-creatie + templates), §9.3.7 (patterns-sectie handmatig)                 | —                                                       |
+| PR-013 | REQ-130..145, DESIGN-020..025 | §9.3.4–9.3.6 (archief + detail + nav-CTA), §14.4 editorial details                             | —                                                       |
+| PR-014 | AI-001..010, REQ-150..158     | §10.3.1 (`topic-curator` agent), §10.5 (`agent_suggestions`-velden)                            | —                                                       |
+| PR-015 | AI-011..018, REQ-160..165     | §10.3.2 (`topic-narrator` agent), §10.7 acceptance-criteria narrator                           | —                                                       |
+| PR-016 | AI-019..025, REQ-170..175     | §10.3.3 (`pattern-detector` agent)                                                             | —                                                       |
+| PR-017 | REQ-180..189, DESIGN-030      | §10.3.4 (merge/split UI), §3.9 (re-clustering harder dan eerste clustering)                    | —                                                       |
+| PR-018 | DATA-050..055, REQ-190..195   | §10.5 (`agent_suggestions` tabel + acceptance-tracking), §10.10 risico-mitigatie               | —                                                       |
+
+> Exacte requirement-IDs en hun één-zin-omschrijvingen: zie de Requirements-tabel in het betreffende sprint-bestand. Deze mapping is op id-prefix-niveau om de matrix leesbaar te houden bij ~224 individuele requirements.
+
+## 6. PRD-§ → sprint inverse-mapping
+
+Voor reviewers die vanuit een PRD-sectie willen zien welke sprint hem implementeert:
+
+| PRD-sectie                          | Onderwerp                                | Sprint(s)                                                              |
+| ----------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------- |
+| §1 Samenvatting                     | Scope-overzicht                          | — (geen sprint nodig)                                                  |
+| §2 Probleem & Context               | Rationale                                | — (geen sprint nodig)                                                  |
+| §3 Marktonderzoek                   | Build-vs-buy + lessen                    | — (geen sprint nodig)                                                  |
+| §4 Conceptueel Model                | Drie lagen + lifecycle                   | PR-001, PR-007, PR-009                                                 |
+| §4.5 Klant signaleert, team beslist | Optie C — pill-knoppen + tooltip         | PR-006                                                                 |
+| §4.6 Bug vs Feature defaults        | Lifecycle-startpunten                    | PR-005, PR-007                                                         |
+| §4.7 `wont_do` verplicht expliciet  | Reden + klant-zichtbaarheid              | PR-010                                                                 |
+| §4.8 Multi-stakeholder per klantorg | Per-org model in v1                      | PR-005                                                                 |
+| §4.9 Snapshot vs live-view          | Beide (fase 4)                           | PR-011, PR-013                                                         |
+| §4.10 Audit als waarheid            | `topic_events` log                       | PR-009                                                                 |
+| §5 Fase-strategie                   | Validatie-gates                          | Zie matrix §4                                                          |
+| §6 Fase 1 — Basis                   | Topics + 4-bucket + read-only            | PR-001..PR-004                                                         |
+| §7 Fase 2 — Klant-signalen          | Pills + undo + tooltip + DevHub-zicht    | PR-005, PR-006                                                         |
+| §8 Fase 3 — Lifecycle automation    | Auto-rollup + triage + audit + `wont_do` | PR-007..PR-010                                                         |
+| §9 Fase 4 — Narratieve snapshots    | Reports DB + editor + archief + detail   | PR-011..PR-013                                                         |
+| §10 Fase 5 — AI-acceleratie         | Drie agents + merge/split + suggestions  | PR-014..PR-018                                                         |
+| §11 Data-model                      | Tabellen + RLS + migratie-volgorde       | PR-001, PR-005, PR-009, PR-011, PR-018                                 |
+| §12 DevHub Workflow                 | Triage + topic-board + breadcrumb        | PR-003, PR-008, PR-017                                                 |
+| §13 Validatie & Open Vragen         | Gates + blockers                         | Zie matrix §4 + §7                                                     |
+| §14 Design-keuzes                   | Visuele spec — referentie voor alle UI   | PR-000, PR-003, PR-004, PR-006, PR-008, PR-010, PR-012, PR-013, PR-017 |
+| §14.7 Valkuilen                     | use-client + portal-fix                  | PR-000 (primaire), elke client-component                               |
+
+## 7. Open vragen — tracking en blocker-status
+
+Open vragen uit PRD §13. Status is "open" tenzij anders aangegeven.
+
+### 7.1 Pre-fase 1 vragen
+
+| ID  | Vraag                                   | Status | Blokkeert sprint(s) | Voorlopige aanname in PRD              |
+| --- | --------------------------------------- | ------ | ------------------- | -------------------------------------- |
+| O-1 | Welk model voor klant-prioritering?     | Open   | PR-006              | Optie C (signaal, team beslist) — §4.5 |
+| O-2 | Bugs ook door klant-loop?               | Open   | PR-006              | Alleen features — §4.6                 |
+| O-3 | Multi-stakeholder per klantorganisatie? | Open   | PR-005              | Per-org één signaal — §4.8             |
+| O-4 | Snapshots erbij of alleen live-view?    | Open   | PR-011..PR-013      | Beide (fase 4) — §4.9                  |
+
+### 7.2 Implementatie-vragen (technisch)
+
+| ID  | Vraag                                                  | Status | Blokkeert sprint(s) | Voorlopige aanname in PRD                   |
+| --- | ------------------------------------------------------ | ------ | ------------------- | ------------------------------------------- |
+| I-1 | Auto-rollup via Postgres-trigger of server-side?       | Open   | PR-007              | Server-side mutation — §8.3.1               |
+| I-2 | `topic_client_signals` model — optie A of B?           | Open   | PR-005              | Optie A (één rij + history-tabel) — §11.4   |
+| I-3 | Junction-tabel of directe `topic_id` op issues?        | Open   | PR-001              | Junction in v1 — §11.3                      |
+| I-4 | Status-transitie-regels — check-constraint of trigger? | Open   | PR-001, PR-009      | Server-side + DB CHECK enum — §11.7         |
+| I-5 | Sprint-tabel of text-veld voor `target_sprint_id`?     | Open   | PR-001              | Text-veld tot sprints-tabel bestaat — §11.2 |
+| I-6 | DevHub topic-detail vs issue-detail — apart of merge?  | Open   | PR-003              | Twee aparte pagina's — §12.3                |
+
+### 7.3 Strategische vragen
+
+| ID  | Vraag                                                     | Status | Eigenaar |
+| --- | --------------------------------------------------------- | ------ | -------- |
+| S-1 | Bouwen of kopen?                                          | Open   | Stef     |
+| S-2 | Wie is verantwoordelijk voor topic-curatie?               | Open   | Stef     |
+| S-3 | Hoe communiceren we de wijziging aan bestaande klanten?   | Open   | Stef     |
+| S-4 | Welke metrics meten we structureel?                       | Open   | Stef     |
+| S-5 | Hoe verhouden topics zich tot meeting-extracties / tasks? | Open   | Team     |
+
+### 7.4 Aanvullende risico's (PRD §13.7)
+
+| ID  | Risico                                            | Sprint waar het opduikt | Mitigatie in sprint                                                  |
+| --- | ------------------------------------------------- | ----------------------- | -------------------------------------------------------------------- |
+| R-1 | Klanten met meerdere projecten                    | PR-001                  | Niet ondersteunen in v1 — aparte topics per project                  |
+| R-2 | GDPR / data-export                                | Buiten scope            | Toevoegen aan bestaande GDPR-flow (apart traject)                    |
+| R-3 | Klant verlaat platform                            | Buiten scope            | Archiveer-flow analoog aan bestaande project-archive                 |
+| R-4 | Wijziging in DevHub-issue-statussen breekt rollup | PR-007                  | Rollup-regels documenteren als constants, type-error forceert update |
+| R-5 | AI-budget overschrijding fase 5                   | PR-014, PR-015, PR-016  | Budget-cap per project per maand in `packages/ai/src/agents/`        |
+
+### 7.5 Beslis-volgorde — chronologisch
+
+Adviesvolgorde om vragen te beantwoorden, op basis van welke sprints ze blokkeren:
+
+1. **Vóór PR-001 begint**: I-3, I-4, I-5 (alle DB-fundamenten)
+2. **Vóór PR-003 begint**: I-6
+3. **Vóór PR-005 begint**: I-2, O-3
+4. **Vóór PR-006 begint**: O-1, O-2
+5. **Vóór PR-007 begint**: I-1
+6. **Vóór PR-011 begint**: O-4 (kan ook later — pas relevant in fase 4)
+7. **Vóór go-live van fase 1 (na PR-004)**: S-2 (curatie-eigenaar), S-3 (klantcommunicatie)
+
+> Strategische vragen S-1 (bouwen/kopen) en S-4 (metrics) zijn niet sprint-blokkerend maar bepalen of de hele roadmap doorgaat. Beantwoord vóór PR-001 start.
 
 ## 7. Onderhouds-instructies
 
