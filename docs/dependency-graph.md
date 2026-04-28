@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 513 |
+| Files scanned | 521 |
 | Exported functions/constants | 846 |
 | Exported types/interfaces | 355 |
-| Cross-package imports | 534 |
+| Cross-package imports | 546 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -3918,7 +3918,7 @@ Which layers depend on which packages:
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | - | - | - | 12 | - | 12 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 19 | - | 13 | 9 | - | 41 |
+| DevHub Pages | 22 | - | 20 | 11 | - | 53 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points
@@ -4504,7 +4504,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getTopicById()` | `packages/database/src/mutations/topics/crud.ts` |
+| `getTopicById()` | `packages/database/src/mutations/topics/crud.ts`, `apps/devhub/src/app/(app)/topics/[id]/edit/page.tsx` |
 
 ### queries/userback-issues.ts
 

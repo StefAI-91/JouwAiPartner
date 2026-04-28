@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, LayoutList, Settings } from "lucide-react";
+import { LayoutDashboard, LayoutList, Layers, Settings } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import { useEffect, useSyncExternalStore } from "react";
 import { NAV_ITEMS, issueHref } from "./sidebar-constants";
@@ -80,6 +80,19 @@ export function SidebarNav({
         >
           <LayoutList className={iconSize} />
           Alle issues
+        </Link>
+        <Link
+          href={projectId ? `/topics?project=${projectId}` : "/topics"}
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            linkClassName,
+            pathname.startsWith("/topics") &&
+              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+          )}
+        >
+          <Layers className={iconSize} />
+          Topics
         </Link>
 
         <div className="pt-3 pb-1 px-2">
