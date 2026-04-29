@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 548 |
-| Exported functions/constants | 848 |
-| Exported types/interfaces | 350 |
+| Files scanned | 552 |
+| Exported functions/constants | 851 |
+| Exported types/interfaces | 351 |
 | Cross-package imports | 569 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -1691,19 +1691,45 @@
 **Internal deps:**
 - `../../agents/weekly-summarizer` → runWeeklySummarizer
 
-### `packages/ai/src/pipeline/tagger.ts`
+### `packages/ai/src/pipeline/tagger/projects.ts`
+
+**Exports:**
+- `parsePrefix()`
+- `resolvePrefixProject()`
+- `ruleBasedMatch()`
+- `CONFIDENCE_THRESHOLD`
+
+**Types:** `PrefixResolution`
+
+**Internal deps:**
+- `../../validations/gatekeeper` → IdentifiedProject
+- `./types` → normalize, type KnownProject, type TaggedItem
+
+### `packages/ai/src/pipeline/tagger/tag.ts`
+
+**Exports:**
+- `runTagger()`
+
+**Internal deps:**
+- `../../validations/gatekeeper` → IdentifiedProject
+- `./projects` → parsePrefix, resolvePrefixProject, ruleBasedMatch, type PrefixResolution
+- `./types` → KnownProject, TaggedItem, TaggerInput, TaggerOutput
+
+### `packages/ai/src/pipeline/tagger/themes.ts`
 
 **Exports:**
 - `parseThemesAnnotation()`
 - `resolveThemeRefs()`
-- `parsePrefix()`
-- `resolvePrefixProject()`
-- `runTagger()`
-
-**Types:** `TaggedItem`, `KnownProject`, `TaggerInput`, `TaggerOutput`, `ThemeRef`
 
 **Internal deps:**
-- `../validations/gatekeeper` → IdentifiedProject
+- `./types` → normalize, type ThemeRef
+
+### `packages/ai/src/pipeline/tagger/types.ts`
+
+**Exports:**
+- `normalize()`
+
+**Types:** `TaggedItem`, `KnownProject`, `ThemeRef`, `TaggerInput`, `TaggerOutput`
 
 ## AI Core
 
