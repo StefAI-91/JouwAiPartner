@@ -17,6 +17,7 @@ import {
   listTopics,
 } from "@repo/database/queries/topics";
 import { issueListFilterSchema } from "@repo/database/validations/issues";
+import { CLOSED_STATUSES } from "@repo/database/constants/issues";
 import { IssueList } from "@/features/issues/components/issue-list";
 import { IssueFilters } from "@/features/issues/components/issue-filters";
 import { PaginationControls } from "@/features/issues/components/pagination-controls";
@@ -143,7 +144,12 @@ export default async function IssuesPage({
   // view zit (daar werkt de cluster-tool zelf al cross-status). Filters die
   // niets met status te maken hebben (priority, type, component, assignee,
   // search) blijven respecteren — anders verandert de inbox-scope te veel.
-  const showCrossStatusUngrouped = isGrouped && Boolean(params.status?.length) && !params.ungrouped;
+  // Bij een gesloten status (done/cancelled) in de filter is de premise weg
+  // — de gebruiker bekijkt afgerond werk, geen actieve clustering — dus dan
+  // de pool helemaal uit, anders verschijnen open issues onder "Afgerond".
+  const filteringClosed = params.status?.some((s) => CLOSED_STATUSES.has(s)) ?? false;
+  const showCrossStatusUngrouped =
+    isGrouped && Boolean(params.status?.length) && !params.ungrouped && !filteringClosed;
 
   const [issues, totalCount, sidebarCounts, members, crossStatusUngrouped] = await Promise.all([
     listIssues({ ...filterParams, sort: params.sort, limit: PAGE_LIMIT, offset }, supabase),
@@ -229,7 +235,7 @@ export default async function IssuesPage({
         groupedByTopic={isGrouped}
         projectId={projectId}
         crossStatusUngrouped={showCrossStatusUngrouped ? crossStatusUngrouped : undefined}
-        topicOpenCounts={topicOpenCounts}
+        topicOpenCounts={filteringClosed ? undefined : topicOpenCounts}
       />
       {!isGrouped && <PaginationControls currentPage={currentPage} totalPages={totalPages} />}
     </div>
