@@ -6,19 +6,21 @@ De data-laag en het ingest-endpoint klaarzetten waar de eigen feedback-widget st
 
 ## Requirements
 
-| ID         | Beschrijving                                                                                                                                                                                                                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WG-REQ-001 | Tabel `widget_allowed_projects` met `(project_id uuid, domain text, created_at timestamptz)`, PK `(project_id, domain)`, FK naar `projects.id ON DELETE CASCADE`                                                                 |
-| WG-REQ-002 | Seed-rij voor `(<jaip_platform_project_id>, 'cockpit.jouw-ai-partner.nl')` zodat cockpit-feedback geaccepteerd wordt; idempotent via `ON CONFLICT DO NOTHING`                                                                    |
-| WG-REQ-003 | Migratie maakt 1 projects-rij `name='JAIP Platform'` aan (of hergebruikt bestaande) met een vaste UUID die als env-var beschikbaar wordt — alleen als hij nog niet bestaat                                                       |
-| WG-REQ-004 | Query-helper `getAllowedDomainsForProject(projectId)` in `packages/database/src/queries/widget/access.ts`                                                                                                                        |
-| WG-REQ-005 | Mutation-helper `insertWidgetIssue(input)` in `packages/database/src/mutations/widget/feedback.ts` — wrapper rond bestaande `insertIssue` met `source='jaip_widget'`                                                             |
-| WG-REQ-006 | Zod-schema `widgetIngestSchema` in `packages/database/src/validations/widget.ts` — velden: `project_id` (uuid), `type` (`bug`/`idea`/`question`), `description` (10-10000 tekens), `context` (object met url/viewport/userAgent) |
-| WG-REQ-007 | Route `apps/devhub/src/app/api/ingest/widget/route.ts` (POST): valideer Origin tegen whitelist, valideer body via Zod, insert via `insertWidgetIssue`, return `{ success, issue_id }` of `{ error }`                             |
-| WG-REQ-008 | CORS-headers op de route: `Access-Control-Allow-Origin` dynamisch gespiegeld vanaf de Origin header **alleen als** die in whitelist voorkomt; anders 403                                                                         |
-| WG-REQ-009 | Rate-limit per Origin: max 30 req/uur (in-memory voor V0, Redis later); overschrijding → 429                                                                                                                                     |
-| WG-REQ-010 | Test-submissies (description matcht zelfde patronen als `isTestSubmission` uit userback.ts) krijgen `status='triage'` maar `labels: ['test']` zodat ze filterbaar zijn                                                           |
-| WG-REQ-011 | RLS op `widget_allowed_projects`: alleen authenticated admins (jaip_admin) kunnen rijen toevoegen/verwijderen                                                                                                                    |
+| ID         | Beschrijving                                                                                                                                                                                                                               |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| WG-REQ-001 | Tabel `widget_allowed_projects` met `(project_id uuid, domain text, created_at timestamptz)`, PK `(project_id, domain)`, FK naar `projects.id ON DELETE CASCADE`                                                                           |
+| WG-REQ-002 | Seed-rij voor `(<jaip_platform_project_id>, 'cockpit.jouw-ai-partner.nl')` zodat cockpit-feedback geaccepteerd wordt; idempotent via `ON CONFLICT DO NOTHING`                                                                              |
+| WG-REQ-003 | Migratie maakt 1 projects-rij `name='JAIP Platform'` aan (of hergebruikt bestaande) met een vaste UUID die als env-var beschikbaar wordt — alleen als hij nog niet bestaat                                                                 |
+| WG-REQ-004 | Query-helper `getAllowedDomainsForProject(projectId)` in `packages/database/src/queries/widget/access.ts`                                                                                                                                  |
+| WG-REQ-005 | Mutation-helper `insertWidgetIssue(input)` in `packages/database/src/mutations/widget/feedback.ts` — wrapper rond bestaande `insertIssue` met `source='jaip_widget'`                                                                       |
+| WG-REQ-006 | Zod-schema `widgetIngestSchema` in `packages/database/src/validations/widget.ts` — velden: `project_id` (uuid), `type` (`bug`/`idea`/`question`), `description` (10-10000 tekens), `context` (object met url/viewport/userAgent)           |
+| WG-REQ-007 | Route `apps/devhub/src/app/api/ingest/widget/route.ts` (POST): valideer Origin tegen whitelist, valideer body via Zod, insert via `insertWidgetIssue`, return `{ success, issue_id }` of `{ error }`                                       |
+| WG-REQ-008 | CORS-headers op de route: `Access-Control-Allow-Origin` dynamisch gespiegeld vanaf de Origin header **alleen als** die in whitelist voorkomt; anders 403                                                                                   |
+| WG-REQ-009 | **Geen rate-limit voor MVP** — bewust geaccepteerd risico voor cockpit-only rollout (3 gebruikers, whitelist beperkt Origin tot bekende domeinen, low-stakes payload). Follow-up = WG-005, te activeren vóór eerste klant-rollout (WG-004) |
+| WG-REQ-010 | Test-submissies (description matcht zelfde patronen als `isTestSubmission` uit userback.ts) krijgen `status='triage'` maar `labels: ['test']` zodat ze filterbaar zijn                                                                     |
+| WG-REQ-011 | RLS op `widget_allowed_projects`: alleen authenticated admins (jaip_admin) kunnen rijen toevoegen/verwijderen                                                                                                                              |
+| WG-REQ-012 | Observability: elke POST (success én fail) logt `{ project_id, origin, status, error_code? }` naar console (Vercel logs); count-metric voorbereid voor latere dashboard-uitbreiding                                                        |
+| WG-REQ-013 | CSRF / Origin-spoof: expliciet geaccepteerd risico — Origin-header is spoofbaar via curl. Mitigatie is whitelist + low-stakes payload (geen auth-state). Documenteer in route-comment en `docs/security/audit-report.md`                   |
 
 ## Afhankelijkheden
 
@@ -28,9 +30,9 @@ De data-laag en het ingest-endpoint klaarzetten waar de eigen feedback-widget st
 
 ### Open vragen die VÓÓR deze sprint beantwoord moeten zijn
 
-- **Q1: Hergebruiken we een bestaande `projects`-rij voor "JAIP Platform" of maken we 'm vers aan?** Aanbeveling: vers aan, met `slug='jaip-platform'`, organisatie = Jouw AI Partner (intern). Bevestigen vóór migratie.
+- **Q1: Hergebruiken we een bestaande `projects`-rij voor "JAIP Platform" of maken we 'm vers aan?** Aanbeveling: vers aan, met `slug='jaip-platform'`, organisatie = Jouw AI Partner (intern). Conflict-handling op `slug` (niet alleen `id`) zodat re-runs in andere envs niet stuk gaan. Bevestigen vóór migratie.
 - **Q2: Mag `project_id` in de script-tag een UUID zijn, of willen we een slug ervoor?** UUID is simpelst (direct match met `projects.id`), slug is human-friendly maar vraagt extra mapping-tabel. Aanbeveling V0: **UUID**.
-- **Q3: Rate-limit per IP, per Origin of per project?** Aanbeveling: **per Origin** (= host-domein), want dat correleert met "één klant" en je wilt niet dat één gebruiker een andere klant over de drempel duwt.
+- **Q3: Rate-limit ontbreekt — risico aanvaardbaar?** MVP-rollout is cockpit-only (3 gebruikers), Origin-whitelist beperkt actieve domeinen tot interne app. Risico: scriptkid die Origin spoofed kan endpoint floodden → spam in triage-queue (geen data-leak, alleen lawaai). Mitigatie als 't gebeurt: Origin-whitelist tijdelijk legen via admin-UI. Follow-up = WG-005 (Postgres-counter) vóór eerste klant-rollout.
 
 ## Taken
 
@@ -40,15 +42,18 @@ De data-laag en het ingest-endpoint klaarzetten waar de eigen feedback-widget st
 
 ```sql
 -- 1. JAIP Platform project (zelf-feedback target voor cockpit/devhub/portal)
+-- Conflict-handling op `slug` zodat re-runs in andere envs geen UUID-collision veroorzaken.
+-- Als de slug al bestaat met een ander UUID, valt insert stil terug — env-var moet dan
+-- gesynchroniseerd worden met het bestaande UUID (zie deployment.md).
 INSERT INTO projects (id, name, slug, organization_id, status)
 VALUES (
-  '00000000-0000-0000-0000-00000000aa01'::uuid,
+  '00000000-0000-4000-8000-00000000aa01'::uuid,
   'JAIP Platform',
   'jaip-platform',
   (SELECT id FROM organizations WHERE name = 'Jouw AI Partner'),
   'active'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (slug) DO NOTHING;
 
 -- 2. Whitelist-tabel
 CREATE TABLE widget_allowed_projects (
@@ -62,7 +67,7 @@ CREATE INDEX idx_widget_allowed_domain ON widget_allowed_projects(domain);
 
 -- 3. Seed cockpit-domein
 INSERT INTO widget_allowed_projects (project_id, domain)
-VALUES ('00000000-0000-0000-0000-00000000aa01'::uuid, 'cockpit.jouw-ai-partner.nl')
+VALUES ('00000000-0000-4000-8000-00000000aa01'::uuid, 'cockpit.jouw-ai-partner.nl')
 ON CONFLICT (project_id, domain) DO NOTHING;
 
 -- 4. RLS
@@ -163,8 +168,9 @@ import { NextResponse } from "next/server";
 import { widgetIngestSchema } from "@repo/database/validations/widget";
 import { isOriginAllowedForProject } from "@repo/database/queries/widget/access";
 import { insertWidgetIssue } from "@repo/database/mutations/widget/feedback";
-import { rateLimitOrigin } from "@/lib/rate-limit";
 
+// MVP: geen rate-limit. Bewust geaccepteerd risico (zie WG-REQ-009/013).
+// Rate-limit komt in WG-005 vóór eerste klant-rollout.
 export async function POST(req: Request) {
   const origin = req.headers.get("origin");
   if (!origin) return NextResponse.json({ error: "no_origin" }, { status: 403 });
@@ -180,10 +186,6 @@ export async function POST(req: Request) {
 
   const allowed = await isOriginAllowedForProject(parsed.data.project_id, origin);
   if (!allowed) return NextResponse.json({ error: "origin_not_allowed" }, { status: 403 });
-
-  if (!rateLimitOrigin(origin)) {
-    return NextResponse.json({ error: "rate_limit" }, { status: 429 });
-  }
 
   const issue = await insertWidgetIssue(parsed.data);
   return NextResponse.json(
@@ -211,9 +213,24 @@ export async function OPTIONS(req: Request) {
 
 > Let op: de OPTIONS-handler spiegelt `origin` ongefilterd terug — niet erg voor preflight zelf, maar de échte authorisatie zit in de POST. Documenteer dit zodat security review later niet schrikt.
 
-### 5. Rate-limit util
+### 5. Observability
 
-`apps/devhub/src/lib/rate-limit.ts` — in-memory Map, 30 req/uur per Origin, V0. Redis-versie later.
+In de POST-handler na elke afhandeling:
+
+```ts
+console.log(
+  JSON.stringify({
+    type: "widget_ingest",
+    project_id: parsed.data?.project_id ?? null,
+    origin,
+    status: response.status,
+    error_code: errorCode ?? null,
+    ts: new Date().toISOString(),
+  }),
+);
+```
+
+Vercel logs zijn doorzoekbaar; later wordt dit een metric in een agent-dashboard. Geen losse infra nodig voor V0.
 
 ### 6. CLAUDE.md update
 
@@ -225,20 +242,23 @@ Voeg `widget` toe aan platform-actions-rij van DevHub in de feature-registry (se
 - [ ] WG-REQ-004..006: queries, mutations, validation hebben elk een unit-test
 - [ ] WG-REQ-007: POST met geldige body + whitelisted Origin → 200 + nieuwe issue-rij in DB
 - [ ] WG-REQ-008: POST vanaf niet-whitelisted Origin → 403, geen DB-write
-- [ ] WG-REQ-009: 31e POST binnen een uur → 429
+- [ ] WG-REQ-009: route bevat een comment dat rate-limit bewust ontbreekt voor MVP, met verwijzing naar WG-005
 - [ ] WG-REQ-010: description matcht test-pattern → label `'test'` op issue
 - [ ] WG-REQ-011: RLS-policy: niet-admin profile kan geen rij in whitelist toevoegen
+- [ ] WG-REQ-012: Vercel-logs tonen één JSON-regel per POST (success én fail), doorzoekbaar op `widget_ingest`
+- [ ] WG-REQ-013: route-comment + `docs/security/audit-report.md` documenteert Origin-spoof én ontbrekende rate-limit als geaccepteerd MVP-risico
+- [ ] Migratie draait twee keer schoon (idempotency-test) zonder UUID-collision
 - [ ] `npm run check:queries` blijft groen (geen directe `.from()` in actions/api)
 - [ ] Type-check + lint slagen
 
 ## Risico's
 
-| Risico                                                       | Mitigatie                                                                                                                   |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| In-memory rate-limit reset bij elke deploy → bypass mogelijk | Acceptabel voor V0 (intern domein). Redis-rate-limit als ticket WG-V1                                                       |
-| `JAIP Platform`-project kruipt door als gewoon klant-project | Filter `slug = 'jaip-platform'` overal waar projecten in klant-UI komen — toevoegen aan portal/devhub queries als follow-up |
-| CORS dynamisch spiegelen lijkt op `*` voor verkeerde Origins | Spiegelen alleen na whitelist-check; preflight is intentioneel permissief                                                   |
-| `userback`-rate-limit-pattern niet hergebruikt (drift)       | In WG-V1 de twee endpoints harmoniseren naar gedeelde util                                                                  |
+| Risico                                                       | Mitigatie                                                                                                                                                  |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Geen rate-limit → flood mogelijk via Origin-spoof            | Geaccepteerd MVP-risico (WG-REQ-009). Mitigatie als 't gebeurt: Origin-whitelist leegmaken via admin-UI. WG-005 lost het structureel op vóór klant-rollout |
+| `JAIP Platform`-project kruipt door als gewoon klant-project | Filter `slug = 'jaip-platform'` overal waar projecten in klant-UI komen — toevoegen aan portal/devhub queries als follow-up                                |
+| CORS dynamisch spiegelen lijkt op `*` voor verkeerde Origins | Spiegelen alleen na whitelist-check; preflight is intentioneel permissief                                                                                  |
+| Origin-header spoofbaar via curl                             | Geaccepteerd risico (WG-REQ-013) — payload is low-stakes, geen auth-state. Mitigatie zit in whitelist; rate-limit erbij in WG-005                          |
 
 ## Bronverwijzingen
 

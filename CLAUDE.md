@@ -164,11 +164,11 @@ Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen 
 
 **Registry (2026-04-28, bindend — update bij elke wijziging):**
 
-| Type                                      | Cockpit                                                                                                                   | DevHub                               | Portal                           |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------- |
-| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`                                                         | `issues`, `topics`                   | _(geen — portal is read-only)_   |
-| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                          | `dashboard`, `review`                | `issues`, `projects`, `feedback` |
-| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review` | `auth`, `feedback`               |
+| Type                                      | Cockpit                                                                                                                   | DevHub                                                                    | Portal                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------- |
+| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`                                                         | `issues`, `topics`                                                        | _(geen — portal is read-only)_   |
+| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                          | `dashboard`, `review`                                                     | `issues`, `projects`, `feedback` |
+| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review`, `widget` (route-only, geen actions) | `auth`, `feedback`               |
 
 **Regels:**
 
