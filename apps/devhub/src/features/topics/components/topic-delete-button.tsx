@@ -6,6 +6,12 @@ import { deleteTopicAction } from "../actions/topics";
 
 interface TopicDeleteButtonProps {
   topicId: string;
+  /**
+   * Project waar het topic onder valt — bepaalt de redirect na succesvolle
+   * delete. Zonder dit zou /topics zonder ?project= geladen worden en
+   * forceert de ProjectSwitcher een reset naar het eerste project.
+   */
+  projectId: string;
   /** Aantal gekoppelde issues — als > 0 toont de knop een waarschuwing. */
   linkedCount: number;
 }
@@ -16,7 +22,7 @@ interface TopicDeleteButtonProps {
  * tonen de error gewoon aan de gebruiker zodat duidelijk is waarom delete
  * geweigerd wordt.
  */
-export function TopicDeleteButton({ topicId, linkedCount }: TopicDeleteButtonProps) {
+export function TopicDeleteButton({ topicId, projectId, linkedCount }: TopicDeleteButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
@@ -31,7 +37,7 @@ export function TopicDeleteButton({ topicId, linkedCount }: TopicDeleteButtonPro
         setConfirming(false);
         return;
       }
-      router.push("/topics");
+      router.push(`/topics?project=${projectId}`);
       router.refresh();
     });
   }

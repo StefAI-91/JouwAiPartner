@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 523 |
-| Exported functions/constants | 825 |
+| Exported functions/constants | 826 |
 | Exported types/interfaces | 346 |
 | Cross-package imports | 561 |
 | Critical integration points (3+ packages) | 14 |
@@ -538,6 +538,7 @@
 **Exports:**
 - `listTopics()`
 - `listOpenTopicsForCluster()`
+- `listTopicSampleIssues()`
 - `listTopicsByBucket()`
 - `TOPIC_LIST_COLS`
 
@@ -3623,7 +3624,7 @@
 - `@repo/auth/helpers` → getAuthenticatedUser, createPageClient
 - `@repo/auth/access` → listAccessibleProjectIds
 - `@repo/database/queries/issues` → listIssues
-- `@repo/database/queries/topics` → listOpenTopicsForCluster
+- `@repo/database/queries/topics` → listOpenTopicsForCluster, listTopicSampleIssues
 - `@repo/ai/agents/bulk-cluster-cleanup` → runBulkClusterCleanup
 - (type) `@repo/ai/validations/bulk-cluster-cleanup` → BulkClusterOutput
 - `@repo/database/constants/topics` → TOPIC_TYPES
@@ -4495,6 +4496,7 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `listTopics()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `listOpenTopicsForCluster()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
+| `listTopicSampleIssues()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
 
 ### queries/userback-issues.ts
 

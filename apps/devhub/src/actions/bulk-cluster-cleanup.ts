@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getAuthenticatedUser, createPageClient } from "@repo/auth/helpers";
 import { listAccessibleProjectIds } from "@repo/auth/access";
 import { listIssues } from "@repo/database/queries/issues";
-import { listOpenTopicsForCluster } from "@repo/database/queries/topics";
+import { listOpenTopicsForCluster, listTopicSampleIssues } from "@repo/database/queries/topics";
 import { runBulkClusterCleanup } from "@repo/ai/agents/bulk-cluster-cleanup";
 import type { BulkClusterOutput } from "@repo/ai/validations/bulk-cluster-cleanup";
 import { TOPIC_TYPES } from "@repo/database/constants/topics";
@@ -108,6 +108,15 @@ export async function runBulkClusterCleanupAction(input: {
 
   const topics = await listOpenTopicsForCluster(parsed.data.projectId, supabase);
 
+  // Fingerprint per topic: tot 5 al-gekoppelde issue-titels. Voorkomt drift
+  // waar Haiku alleen op de abstracte description matchte (PR-019 v2).
+  const sampleIssueTitlesByTopic = topics.length
+    ? await listTopicSampleIssues(
+        topics.map((t) => t.id),
+        supabase,
+      )
+    : new Map<string, string[]>();
+
   const result = await runBulkClusterCleanup({
     issues: issues.map((i) => ({
       id: i.id,
@@ -122,6 +131,7 @@ export async function runBulkClusterCleanupAction(input: {
       description: t.description,
       type: t.type,
       status: t.status,
+      sampleIssueTitles: sampleIssueTitlesByTopic.get(t.id) ?? [],
     })),
   });
 

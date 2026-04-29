@@ -58,9 +58,11 @@ vi.mock("@repo/database/queries/issues", () => ({
 }));
 
 const mockListOpenTopicsForCluster = vi.fn();
+const mockListTopicSampleIssues = vi.fn();
 const mockGetTopicById = vi.fn();
 vi.mock("@repo/database/queries/topics", () => ({
   listOpenTopicsForCluster: (...args: unknown[]) => mockListOpenTopicsForCluster(...args),
+  listTopicSampleIssues: (...args: unknown[]) => mockListTopicSampleIssues(...args),
   getTopicById: (...args: unknown[]) => mockGetTopicById(...args),
   getTopicMembershipForIssues: vi.fn(),
 }));
@@ -95,6 +97,8 @@ beforeEach(async () => {
   mockAssertProjectAccess.mockReset();
   mockListIssues.mockReset();
   mockListOpenTopicsForCluster.mockReset();
+  mockListTopicSampleIssues.mockReset();
+  mockListTopicSampleIssues.mockResolvedValue(new Map<string, string[]>());
   mockGetTopicById.mockReset();
   mockInsertTopic.mockReset();
   mockLinkIssueToTopic.mockReset();
@@ -196,6 +200,79 @@ describe("runBulkClusterCleanupAction — happy & negative paths", () => {
       issues: Array<{ description: string | null }>;
     };
     expect(agentCall.issues[0].description).toHaveLength(400);
+  });
+
+  it("haalt sample-issue-titels op voor de topics en geeft ze door aan de agent", async () => {
+    mockListAccessibleProjectIds.mockResolvedValue([IDS.project]);
+    mockListIssues.mockResolvedValue([
+      {
+        id: IDS.issueA,
+        title: "Nieuwe ungrouped",
+        description: null,
+        issue_number: 1,
+        ai_classification: null,
+      },
+    ]);
+    mockListOpenTopicsForCluster.mockResolvedValue([
+      {
+        id: IDS.topic,
+        title: "Wit scherm",
+        description: "Verzameling wit-scherm reports",
+        type: "bug",
+        status: "prioritized",
+      },
+    ]);
+    mockListTopicSampleIssues.mockResolvedValue(
+      new Map<string, string[]>([
+        [IDS.topic, ["Wit scherm na uploaden", "Wit scherm bij OAuth-callback"]],
+      ]),
+    );
+    mockRunBulkClusterCleanup.mockResolvedValue({ clusters: [] });
+
+    const { runBulkClusterCleanupAction } = await getActions();
+    await runBulkClusterCleanupAction({ projectId: IDS.project });
+
+    expect(mockListTopicSampleIssues).toHaveBeenCalledWith([IDS.topic], expect.anything());
+
+    const agentCall = mockRunBulkClusterCleanup.mock.calls[0][0] as {
+      topics: Array<{ id: string; sampleIssueTitles: string[] }>;
+    };
+    expect(agentCall.topics[0]).toMatchObject({
+      id: IDS.topic,
+      sampleIssueTitles: ["Wit scherm na uploaden", "Wit scherm bij OAuth-callback"],
+    });
+  });
+
+  it("topics zonder sample-issues krijgen een lege sampleIssueTitles array", async () => {
+    mockListAccessibleProjectIds.mockResolvedValue([IDS.project]);
+    mockListIssues.mockResolvedValue([
+      {
+        id: IDS.issueA,
+        title: "x",
+        description: null,
+        issue_number: 1,
+        ai_classification: null,
+      },
+    ]);
+    mockListOpenTopicsForCluster.mockResolvedValue([
+      {
+        id: IDS.topic,
+        title: "Vers topic",
+        description: null,
+        type: "bug",
+        status: "clustering",
+      },
+    ]);
+    // Default mock retourneert lege Map — topic mag niet missen, sampleIssueTitles=[].
+    mockRunBulkClusterCleanup.mockResolvedValue({ clusters: [] });
+
+    const { runBulkClusterCleanupAction } = await getActions();
+    await runBulkClusterCleanupAction({ projectId: IDS.project });
+
+    const agentCall = mockRunBulkClusterCleanup.mock.calls[0][0] as {
+      topics: Array<{ id: string; sampleIssueTitles: string[] }>;
+    };
+    expect(agentCall.topics[0].sampleIssueTitles).toEqual([]);
   });
 
   it("filtert match-clusters waarvan target-topic verdwenen is en telt droppedExpired", async () => {

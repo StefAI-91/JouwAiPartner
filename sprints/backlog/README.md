@@ -37,6 +37,9 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | TH-7     | Cleanup blockers (CI lint, N+1, double-fetch, userId guard)  | Themes QA     | `sprints/backlog/` | Backlog       |
 | TH-8     | Cleanup majors (DRY, SRP, query-efficiency, file-splits)     | Themes QA     | `sprints/backlog/` | Backlog       |
 | TH-9     | Cleanup minors (conventies, tokens, hygiëne)                 | Themes QA     | `sprints/backlog/` | Backlog       |
+| WG-001   | Widget ingest foundation (DB whitelist + DevHub endpoint)    | Widget V0     | `sprints/backlog/` | Backlog       |
+| WG-002   | Widget app scaffold + loader.js (apps/widget/, Vercel)       | Widget V0     | `sprints/backlog/` | Backlog       |
+| WG-003   | Widget UI + cockpit rollout (modal + script-tag)             | Widget V0     | `sprints/backlog/` | Backlog       |
 
 ## Completed Sprints Summary
 
