@@ -10,8 +10,16 @@ const IDS = {
 
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createServerMock());
+
+// `isAdmin` volgt hetzelfde pattern als de andere mocks in dit bestand:
+// top-level `vi.fn()` zodat we 'm in `beforeEach` kunnen resetten en de
+// default opnieuw kunnen zetten. Voorkomt mock-pollution wanneer een
+// vorige test de `mockResolvedValueOnce`-queue heeft aangeraakt of door
+// een time-out mid-execution gecancelled is (zie pre-push flakiness onder
+// parallel turbo-load, sprint-doc 2026-04-29).
+const mockIsAdmin = vi.fn();
 vi.mock("@repo/auth/access", () => ({
-  isAdmin: vi.fn().mockResolvedValue(true),
+  isAdmin: (...args: unknown[]) => mockIsAdmin(...args),
 }));
 
 // Q3b §3b: alleen externe grenzen mocken — de step + DB-queries.
@@ -66,6 +74,8 @@ describe("regenerateActionItemsAction", () => {
     mockGetMeeting.mockReset();
     mockGetKnownPeople.mockReset();
     mockRunStep.mockReset();
+    mockIsAdmin.mockReset();
+    mockIsAdmin.mockResolvedValue(true); // default: admin, individuele tests overrulen
   });
 
   async function getAction() {
@@ -84,8 +94,7 @@ describe("regenerateActionItemsAction", () => {
   });
 
   it("blokkeert non-admins", async () => {
-    const access = await import("@repo/auth/access");
-    vi.mocked(access.isAdmin).mockResolvedValueOnce(false);
+    mockIsAdmin.mockResolvedValueOnce(false);
     const action = await getAction();
 
     const result = await action({ meetingId: IDS.meetingId });
