@@ -29,7 +29,7 @@ export function BucketStack({ buckets, issueCounts, projectId }: BucketStackProp
             key={bucket.key}
             className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-soft"
           >
-            <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-border/60 bg-muted/30 px-5 py-3">
+            <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-border/60 px-5 py-3">
               <div>
                 <h3 className="text-base font-semibold text-foreground">{bucket.label}</h3>
                 <p className="text-xs text-muted-foreground">{BUCKET_BLURB[bucket.key]}</p>

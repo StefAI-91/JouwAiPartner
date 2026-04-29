@@ -49,7 +49,7 @@
 /* --- Light Theme --- */
 
 :root {
-  --background: #fafafa;
+  --background: #faf7f0;
   --foreground: oklch(0.15 0.01 75);
 
   --card: oklch(1 0 0);
@@ -96,9 +96,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground text-[15px];
-    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-    background-attachment: fixed;
+    @apply bg-background text-foreground text-[15px];
   }
   html {
     @apply font-sans;
