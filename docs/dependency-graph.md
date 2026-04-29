@@ -5,13 +5,13 @@
 
 ## Overview
 
-| Metric                                    | Count |
-| ----------------------------------------- | ----- |
-| Files scanned                             | 540   |
-| Exported functions/constants              | 840   |
-| Exported types/interfaces                 | 348   |
-| Cross-package imports                     | 564   |
-| Critical integration points (3+ packages) | 14    |
+| Metric | Count |
+|--------|-------|
+| Files scanned | 545 |
+| Exported functions/constants | 845 |
+| Exported types/interfaces | 348 |
+| Cross-package imports | 564 |
+| Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
 
@@ -45,19 +45,16 @@
 ### `supabase/admin.ts`
 
 **Exports:**
-
 - `getAdminClient()`
 
 ### `supabase/client.ts`
 
 **Exports:**
-
 - `createClient()`
 
 ### `supabase/server.ts`
 
 **Exports:**
-
 - `createClient()`
 
 ## Database Queries
@@ -65,7 +62,6 @@
 ### `queries/action-items.ts`
 
 **Exports:**
-
 - `listVerifiedActionItems()`
 
 **Types:** `ActionItemRow`
@@ -73,7 +69,6 @@
 ### `queries/agent-runs.ts`
 
 **Exports:**
-
 - `getAgentMetrics()`
 - `listRecentAgentRuns()`
 
@@ -82,7 +77,6 @@
 ### `queries/content.ts`
 
 **Exports:**
-
 - `searchAllContent()`
 - `getStaleRows()`
 
@@ -91,7 +85,6 @@
 ### `queries/dashboard.ts`
 
 **Exports:**
-
 - `getReviewQueueCount()`
 - `listRecentVerifiedMeetings()`
 - `listBriefingMeetings()`
@@ -104,7 +97,6 @@
 ### `queries/decisions.ts`
 
 **Exports:**
-
 - `matchDecisions()`
 - `matchMeetings()`
 
@@ -113,7 +105,6 @@
 ### `queries/dev-detector.ts`
 
 **Exports:**
-
 - `getMeetingThemesForDevDetector()`
 - `getExtractionThemesForDevDetector()`
 
@@ -122,7 +113,6 @@
 ### `queries/emails/accounts.ts`
 
 **Exports:**
-
 - `listActiveGoogleAccountsSafe()`
 - `listActiveGoogleAccounts()`
 - `getGoogleAccountById()`
@@ -133,7 +123,6 @@
 ### `queries/emails/detail.ts`
 
 **Exports:**
-
 - `getEmailById()`
 - `listDraftEmails()`
 - `getDraftEmailById()`
@@ -143,7 +132,6 @@
 ### `queries/emails/lists.ts`
 
 **Exports:**
-
 - `listEmails()`
 - `countEmailsByFilterStatus()`
 - `listEmailsByOrganization()`
@@ -154,7 +142,6 @@
 ### `queries/emails/pipeline.ts`
 
 **Exports:**
-
 - `getExistingGmailIds()`
 - `countUnprocessedEmails()`
 - `getEmailForPipelineInput()`
@@ -166,7 +153,6 @@
 ### `queries/extractions.ts`
 
 **Exports:**
-
 - `getExtractionsForMeetingByType()`
 
 **Types:** `ExtractionForHarness`
@@ -174,7 +160,6 @@
 ### `queries/golden.ts`
 
 **Exports:**
-
 - `listMeetingsWithGoldenStatus()`
 - `getMeetingForGoldenCoder()`
 - `getGoldenForMeeting()`
@@ -184,13 +169,11 @@
 ### `queries/ignored-entities.ts`
 
 **Exports:**
-
 - `getIgnoredEntityNames()`
 
 ### `queries/issues/activity.ts`
 
 **Exports:**
-
 - `listIssueActivity()`
 
 **Types:** `IssueActivityRow`
@@ -198,7 +181,6 @@
 ### `queries/issues/attachments.ts`
 
 **Exports:**
-
 - `getIssueThumbnails()`
 - `listIssueAttachments()`
 - `getIssueIdsWithAttachments()`
@@ -208,7 +190,6 @@
 ### `queries/issues/comments.ts`
 
 **Exports:**
-
 - `getCommentById()`
 - `listIssueComments()`
 
@@ -217,7 +198,6 @@
 ### `queries/issues/core.ts`
 
 **Exports:**
-
 - `parseSearchQuery()`
 - `listIssues()`
 - `countFilteredIssues()`
@@ -232,7 +212,6 @@
 ### `queries/meetings/core.ts`
 
 **Exports:**
-
 - `getVerifiedMeetingById()`
 - `listVerifiedMeetings()`
 - `listVerifiedMeetingIdsOrderedByDate()`
@@ -243,7 +222,6 @@
 ### `queries/meetings/lookup.ts`
 
 **Exports:**
-
 - `getMeetingByFirefliesId()`
 - `getExistingFirefliesIds()`
 - `getExistingMeetingsByTitleDates()`
@@ -252,7 +230,6 @@
 ### `queries/meetings/metadata.ts`
 
 **Exports:**
-
 - `getMeetingOrganizationId()`
 - `listMeetingProjectIds()`
 - `listMeetingParticipantIds()`
@@ -260,7 +237,6 @@
 ### `queries/meetings/pipeline-fetches.ts`
 
 **Exports:**
-
 - `listMeetingsForReclassify()`
 - `listMeetingsWithTranscript()`
 - `getMeetingForDevExtractor()`
@@ -276,7 +252,6 @@
 ### `queries/meetings/project-summaries.ts`
 
 **Exports:**
-
 - `getSegmentsByMeetingId()`
 - `getSegmentsByMeetingIds()`
 - `getSegmentCountsByMeetingIds()`
@@ -289,7 +264,6 @@
 ### `queries/meetings/regenerate.ts`
 
 **Exports:**
-
 - `getMeetingForRegenerate()`
 - `getMeetingForRegenerateRisks()`
 - `getMeetingForReprocess()`
@@ -301,7 +275,6 @@
 ### `queries/meetings/speaker-mapping.ts`
 
 **Exports:**
-
 - `getSpeakerMappingTranscriptCounts()`
 - `countSpeakerMappingBackfillRemaining()`
 - `listSpeakerMappingBackfillCandidates()`
@@ -312,13 +285,11 @@
 ### `queries/meetings/themes.ts`
 
 **Exports:**
-
 - `listTaggedMeetingIds()`
 
 ### `queries/needs.ts`
 
 **Exports:**
-
 - `listNeedsGroupedByCategory()`
 - `countNeeds()`
 
@@ -327,7 +298,6 @@
 ### `queries/organizations.ts`
 
 **Exports:**
-
 - `listOrganizations()`
 - `getOrganizationById()`
 - `getAllOrganizations()`
@@ -339,7 +309,6 @@
 ### `queries/people/detail.ts`
 
 **Exports:**
-
 - `getPersonById()`
 - `getStalePeople()`
 
@@ -348,7 +317,6 @@
 ### `queries/people/lists.ts`
 
 **Exports:**
-
 - `listPeople()`
 - `listPeopleByOrganization()`
 - `listPeopleWithOrg()`
@@ -359,7 +327,6 @@
 ### `queries/people/lookup.ts`
 
 **Exports:**
-
 - `findPersonIdsByName()`
 - `findProfileIdByName()`
 - `findPeopleByNames()`
@@ -369,7 +336,6 @@
 ### `queries/people/pipeline.ts`
 
 **Exports:**
-
 - `getAllKnownPeople()`
 - `getAdminEmails()`
 - `getPeopleForContext()`
@@ -379,20 +345,17 @@
 ### `queries/portal/access.ts`
 
 **Exports:**
-
 - `listPortalProjects()`
 - `hasPortalProjectAccess()`
 
 **Types:** `PortalProject`
 
 **Depends on:**
-
 - `@repo/auth/access` → isAdmin
 
 ### `queries/portal/core.ts`
 
 **Exports:**
-
 - `listPortalProjectsWithDetails()`
 - `getPortalProjectDashboard()`
 - `listRecentProjectIssues()`
@@ -403,13 +366,11 @@
 **Types:** `PortalStatusFilter`, `PortalIssueListFilters`, `PortalIssueCountFilters`, `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`, `PortalIssue`
 
 **Depends on:**
-
 - `@repo/auth/access` → isAdmin
 
 ### `queries/portal/meetings.ts`
 
 **Exports:**
-
 - `listClientMeetingSegments()`
 - `getClientMeetingSegment()`
 
@@ -418,19 +379,16 @@
 ### `queries/projects/access.ts`
 
 **Exports:**
-
 - `listAccessibleProjects()`
 
 **Types:** `AccessibleProject`
 
 **Depends on:**
-
 - `@repo/auth/access` → listAccessibleProjectIds
 
 ### `queries/projects/core.ts`
 
 **Exports:**
-
 - `listProjects()`
 - `getProjectById()`
 - `listFocusProjects()`
@@ -447,7 +405,6 @@
 ### `queries/projects/reviews.ts`
 
 **Exports:**
-
 - `getLatestProjectReview()`
 - `listProjectReviews()`
 - `getHealthTrend()`
@@ -457,7 +414,6 @@
 ### `queries/reports/internals.ts`
 
 **Exports:**
-
 - `cutoffIsoFromDaysBack()`
 - `mapIssueRow()`
 - `REPORT_ISSUE_SELECT`
@@ -467,7 +423,6 @@
 ### `queries/reports/issues.ts`
 
 **Exports:**
-
 - `getProjectIssuesForReport()`
 - `getIssueDetailForReport()`
 
@@ -476,7 +431,6 @@
 ### `queries/reports/project.ts`
 
 **Exports:**
-
 - `getProjectActivityForReport()`
 - `getProjectContextForReport()`
 
@@ -485,7 +439,6 @@
 ### `queries/review.ts`
 
 **Exports:**
-
 - `listDraftMeetings()`
 - `getDraftMeetingById()`
 - `getReviewStats()`
@@ -495,7 +448,6 @@
 ### `queries/summaries/core.ts`
 
 **Exports:**
-
 - `getLatestSummary()`
 - `getSummaryHistory()`
 
@@ -504,14 +456,12 @@
 ### `queries/summaries/management-insights.ts`
 
 **Exports:**
-
 - `getManagementInsights()`
 - `getDismissedInsightKeys()`
 
 ### `queries/summaries/weekly.ts`
 
 **Exports:**
-
 - `getWeeklyProjectData()`
 - `getLatestWeeklySummary()`
 - `listWeeklySummaries()`
@@ -521,7 +471,6 @@
 ### `queries/tasks.ts`
 
 **Exports:**
-
 - `listActiveTasks()`
 - `hasTaskForExtraction()`
 - `getPromotedExtractionIds()`
@@ -532,7 +481,6 @@
 ### `queries/team.ts`
 
 **Exports:**
-
 - `listTeamMembers()`
 - `getUserWithAccess()`
 - `countAdmins()`
@@ -544,7 +492,6 @@
 ### `queries/themes/core.ts`
 
 **Exports:**
-
 - `listVerifiedThemes()`
 - `listVerifiedThemes()`
 - `listVerifiedThemes()`
@@ -555,7 +502,6 @@
 ### `queries/themes/dashboard.ts`
 
 **Exports:**
-
 - `listTopActiveThemes()`
 - `getThemeShareDistribution()`
 
@@ -564,7 +510,6 @@
 ### `queries/themes/detail.ts`
 
 **Exports:**
-
 - `getThemeRecentActivity()`
 - `getThemeMeetings()`
 - `getThemeDecisions()`
@@ -575,7 +520,6 @@
 ### `queries/themes/internals.ts`
 
 **Exports:**
-
 - `windowStartIso()`
 - `fetchWindowAggregation()`
 - `THEME_COLUMNS_BASIC`
@@ -589,7 +533,6 @@
 ### `queries/themes/narrative.ts`
 
 **Exports:**
-
 - `getThemeNarrative()`
 - `listThemeMeetingSummaries()`
 - `INSUFFICIENT_MEETINGS_SENTINEL`
@@ -599,7 +542,6 @@
 ### `queries/themes/review.ts`
 
 **Exports:**
-
 - `listEmergingThemes()`
 - `listRejectedThemePairsForMeeting()`
 - `listProposedThemesForMeeting()`
@@ -609,7 +551,6 @@
 ### `queries/topics/detail.ts`
 
 **Exports:**
-
 - `getTopicById()`
 - `getTopicWithIssues()`
 
@@ -618,7 +559,6 @@
 ### `queries/topics/linked-issues.ts`
 
 **Exports:**
-
 - `countIssuesPerTopic()`
 - `countOpenIssuesPerTopic()`
 - `getTopicMembershipForIssues()`
@@ -631,7 +571,6 @@
 ### `queries/topics/list.ts`
 
 **Exports:**
-
 - `listTopics()`
 - `listOpenTopicsForCluster()`
 - `listTopicSampleIssues()`
@@ -643,7 +582,6 @@
 ### `queries/userback-issues.ts`
 
 **Exports:**
-
 - `getUserbackSyncCursor()`
 - `getExistingUserbackIds()`
 - `countUserbackIssues()`
@@ -652,7 +590,6 @@
 ### `queries/widget/access.ts`
 
 **Exports:**
-
 - `getAllowedDomainsForProject()`
 - `isOriginAllowedForProject()`
 
@@ -661,7 +598,6 @@
 ### `mutations/agent-runs.ts`
 
 **Exports:**
-
 - `insertAgentRun()`
 
 **Types:** `AgentRunInput`
@@ -669,13 +605,11 @@
 ### `mutations/decisions.ts`
 
 **Exports:**
-
 - `insertDecision()`
 
 ### `mutations/emails.ts`
 
 **Exports:**
-
 - `upsertGoogleAccount()`
 - `updateGoogleAccountTokens()`
 - `updateGoogleAccountLastSync()`
@@ -697,14 +631,12 @@
 ### `mutations/embeddings.ts`
 
 **Exports:**
-
 - `updateRowEmbedding()`
 - `batchUpdateEmbeddings()`
 
 ### `mutations/extractions/core.ts`
 
 **Exports:**
-
 - `deleteExtractionsByMeetingId()`
 - `deleteExtractionsByMeetingAndType()`
 - `deleteExtractionsByMeetingTypeAndSource()`
@@ -721,7 +653,6 @@
 ### `mutations/extractions/experimental-action-items.ts`
 
 **Exports:**
-
 - `insertExperimentalActionItemExtraction()`
 
 **Types:** `ExperimentalActionItemExtractionInput`
@@ -729,7 +660,6 @@
 ### `mutations/extractions/experimental-risks.ts`
 
 **Exports:**
-
 - `insertExperimentalRiskExtraction()`
 
 **Types:** `ExperimentalRiskExtractionInput`
@@ -737,7 +667,6 @@
 ### `mutations/extractions/themes.ts`
 
 **Exports:**
-
 - `linkExtractionsToThemes()`
 - `clearExtractionThemesForMeeting()`
 - `clearExtractionThemesForThemeInMeeting()`
@@ -747,7 +676,6 @@
 ### `mutations/golden.ts`
 
 **Exports:**
-
 - `upsertGoldenMeeting()`
 - `insertGoldenItem()`
 - `updateGoldenItem()`
@@ -759,13 +687,11 @@
 ### `mutations/ignored-entities.ts`
 
 **Exports:**
-
 - `addIgnoredEntity()`
 
 ### `mutations/issues/attachments.ts`
 
 **Exports:**
-
 - `downloadAndUpload()`
 - `getAttachmentPublicUrl()`
 - `insertAttachment()`
@@ -776,7 +702,6 @@
 ### `mutations/issues/core.ts`
 
 **Exports:**
-
 - `insertIssue()`
 - `updateIssue()`
 - `upsertUserbackIssues()`
@@ -791,7 +716,6 @@
 ### `mutations/meetings/core.ts`
 
 **Exports:**
-
 - `insertMeeting()`
 - `insertManualMeeting()`
 - `updateMeetingClassification()`
@@ -815,7 +739,6 @@
 ### `mutations/meetings/participants.ts`
 
 **Exports:**
-
 - `linkMeetingParticipants()`
 - `linkMeetingParticipant()`
 - `unlinkMeetingParticipant()`
@@ -823,7 +746,6 @@
 ### `mutations/meetings/project-summaries.ts`
 
 **Exports:**
-
 - `insertMeetingProjectSummaries()`
 - `linkSegmentToProject()`
 - `removeSegmentTag()`
@@ -833,7 +755,6 @@
 ### `mutations/meetings/themes.ts`
 
 **Exports:**
-
 - `linkMeetingToThemes()`
 - `clearMeetingThemes()`
 - `recalculateThemeStats()`
@@ -845,7 +766,6 @@
 ### `mutations/organizations.ts`
 
 **Exports:**
-
 - `createOrganization()`
 - `updateOrganization()`
 - `normalizeEmailDomains()`
@@ -854,7 +774,6 @@
 ### `mutations/people.ts`
 
 **Exports:**
-
 - `createPerson()`
 - `updatePerson()`
 - `deletePerson()`
@@ -862,7 +781,6 @@
 ### `mutations/portal-access.ts`
 
 **Exports:**
-
 - `grantPortalAccess()`
 - `revokePortalAccess()`
 
@@ -871,13 +789,11 @@
 ### `mutations/profiles.ts`
 
 **Exports:**
-
 - `upsertProfile()`
 
 ### `mutations/projects/core.ts`
 
 **Exports:**
-
 - `createProject()`
 - `updateProjectAliases()`
 - `updateProject()`
@@ -886,7 +802,6 @@
 ### `mutations/projects/reviews.ts`
 
 **Exports:**
-
 - `saveProjectReview()`
 
 **Types:** `InsertProjectReviewData`
@@ -894,7 +809,6 @@
 ### `mutations/review.ts`
 
 **Exports:**
-
 - `verifyMeeting()`
 - `verifyMeetingWithEdits()`
 - `rejectMeeting()`
@@ -902,7 +816,6 @@
 ### `mutations/slack-config.ts`
 
 **Exports:**
-
 - `upsertSlackConfig()`
 - `deleteSlackConfig()`
 
@@ -911,20 +824,17 @@
 ### `mutations/summaries/core.ts`
 
 **Exports:**
-
 - `createSummaryVersion()`
 
 ### `mutations/summaries/management-insights.ts`
 
 **Exports:**
-
 - `saveManagementInsights()`
 - `dismissInsight()`
 
 ### `mutations/tasks.ts`
 
 **Exports:**
-
 - `createTaskFromExtraction()`
 - `updateTask()`
 - `completeTask()`
@@ -933,7 +843,6 @@
 ### `mutations/team.ts`
 
 **Exports:**
-
 - `upsertProfile()`
 - `ensureProfileExists()`
 - `updateProfileRole()`
@@ -945,7 +854,6 @@
 ### `mutations/themes.ts`
 
 **Exports:**
-
 - `insertTheme()`
 - `updateTheme()`
 - `createEmergingTheme()`
@@ -958,7 +866,6 @@
 ### `mutations/topics/crud.ts`
 
 **Exports:**
-
 - `insertTopic()`
 - `updateTopic()`
 - `deleteTopic()`
@@ -968,7 +875,6 @@
 ### `mutations/topics/linking.ts`
 
 **Exports:**
-
 - `linkIssueToTopic()`
 - `setTopicForIssue()`
 - `unlinkIssueFromTopic()`
@@ -978,7 +884,6 @@
 ### `mutations/topics/status.ts`
 
 **Exports:**
-
 - `updateTopicStatus()`
 
 **Types:** `UpdateTopicStatusOpts`
@@ -986,7 +891,6 @@
 ### `mutations/widget/feedback.ts`
 
 **Exports:**
-
 - `insertWidgetIssue()`
 
 ## AI Agents
@@ -994,7 +898,6 @@
 ### `packages/ai/src/agents/action-item-follow-up.ts`
 
 **Exports:**
-
 - `addWorkdays()`
 - `resolveFollowUpDate()`
 - `TYPE_C_FALLBACK_WORKDAYS`
@@ -1004,7 +907,6 @@
 ### `packages/ai/src/agents/action-item-specialist/shared.ts`
 
 **Exports:**
-
 - `formatParticipantBlock()`
 - `buildContextPrefix()`
 - `applyFollowUpResolver()`
@@ -1014,7 +916,6 @@
 - `PROMPT_DIR`
 
 **Internal deps:**
-
 - `../../validations/action-item-specialist` → ActionItemFollowupAction, ActionItemRecipientPerQuote, ActionItemSpecialistItem, ActionItemSpecialistOutput, RawActionItemSpecialistOutput
 - `../../utils/normalise` → emptyToNull, sentinelToNull
 - `../action-item-follow-up` → resolveFollowUpDate
@@ -1023,7 +924,6 @@
 ### `packages/ai/src/agents/action-item-specialist/single-stage.ts`
 
 **Exports:**
-
 - `runActionItemSpecialist()`
 - `getActionItemSpecialistSystemPrompt()`
 - `ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION`
@@ -1031,7 +931,6 @@
 - `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
 **Internal deps:**
-
 - `../../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemSpecialistItem
 - `../run-logger` → withAgentRun
 - `./shared` → PROMPT_DIR, applyFollowUpResolver, buildContextPrefix, checkActionItemGate, extractTranscriptContext, normaliseActionItemSpecialistOutput
@@ -1041,14 +940,12 @@
 ### `packages/ai/src/agents/action-item-specialist/two-stage.ts`
 
 **Exports:**
-
 - `runActionItemCandidateSpotter()`
 - `runActionItemSpecialistTwoStage()`
 - `getActionItemCandidateSpotterPrompt()`
 - `getActionItemJudgePrompt()`
 
 **Internal deps:**
-
 - `../../validations/action-item-specialist` → type RawActionItemSpecialistOutput
 - `../../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemAccepted, type ActionItemCandidate, type ActionItemJudgement
 - `../../utils/normalise` → emptyToNull
@@ -1063,21 +960,18 @@
 **Types:** `ActionItemPromptVersion`, `ActionItemSpecialistParticipant`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemTwoStageRunOptions`, `ActionItemSpotterRunResult`
 
 **Internal deps:**
-
 - `../../validations/action-item-specialist` → ActionItemSpecialistItem, ActionItemSpecialistOutput
 - `../../validations/action-item-two-stage` → ActionItemCandidate, ActionItemJudgement
 
 ### `packages/ai/src/agents/action-item-specialist/validator.ts`
 
 **Exports:**
-
 - `getActionItemActionValidatorPrompt()`
 - `validateFollowupAction()`
 
 **Types:** `ActionItemActionValidatorInput`, `ActionItemActionValidatorResult`
 
 **Internal deps:**
-
 - `../../validations/action-item-action-validator` → ActionItemActionValidatorOutputSchema, type ActionItemActionValidatorOutput
 - `../run-logger` → withAgentRun
 - `./shared` → PROMPT_DIR
@@ -1085,113 +979,94 @@
 ### `packages/ai/src/agents/bulk-cluster-cleanup.ts`
 
 **Exports:**
-
 - `runBulkClusterCleanup()`
 - `BULK_CLUSTER_CLEANUP_MODEL`
 
 **Types:** `BulkClusterIssueInput`, `BulkClusterTopicInput`, `BulkClusterInput`
 
 **Internal deps:**
-
 - `../validations/bulk-cluster-cleanup` → bulkClusterModelSchema, type BulkClusterOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/email-classifier.ts`
 
 **Exports:**
-
 - `runEmailClassifier()`
 
 **Internal deps:**
-
 - `../validations/email-classifier` → EmailClassifierSchema, EmailClassifierOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/email-extractor.ts`
 
 **Exports:**
-
 - `runEmailExtractor()`
 
 **Internal deps:**
-
 - `../validations/email-extractor` → EmailExtractorOutputSchema, EmailExtractorOutput
 
 ### `packages/ai/src/agents/gatekeeper.ts`
 
 **Exports:**
-
 - `runGatekeeper()`
 
 **Types:** `ParticipantInfo`
 
 **Internal deps:**
-
 - `../validations/gatekeeper` → GatekeeperSchema, GatekeeperOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/issue-classifier.ts`
 
 **Exports:**
-
 - `runIssueClassifier()`
 
 **Internal deps:**
-
 - `../validations/issue-classification` → IssueClassifierSchema, type IssueClassifierOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/issue-executor.ts`
 
 **Exports:**
-
 - `runIssueExecutor()`
 
 **Internal deps:**
-
 - `../validations/issue-executor` → IssueExecutorSchema, type IssueExecutorOutput
 
 ### `packages/ai/src/agents/issue-reviewer.ts`
 
 **Exports:**
-
 - `runIssueReviewer()`
 
 **Types:** `IssueForReview`
 
 **Internal deps:**
-
 - `../validations/issue-review` → IssueReviewSchema, type IssueReviewOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/management-insights.ts`
 
 **Exports:**
-
 - `runManagementInsightsAgent()`
 
 **Types:** `ManagementMeetingInput`
 
 **Internal deps:**
-
 - `../validations/management-insights` → ManagementInsightsOutputSchema, type ManagementInsightsOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/needs-scanner.ts`
 
 **Exports:**
-
 - `runNeedsScanner()`
 
 **Internal deps:**
-
 - `../validations/needs-scanner` → NeedsScannerOutputSchema, NeedsScannerOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/pricing.ts`
 
 **Exports:**
-
 - `estimateRunCostUsd()`
 
 **Types:** `ModelPricing`
@@ -1199,21 +1074,18 @@
 ### `packages/ai/src/agents/project-summarizer.ts`
 
 **Exports:**
-
 - `runProjectSummarizer()`
 - `runOrgSummarizer()`
 
 **Types:** `MeetingInput`, `EmailInput`, `SegmentInput`
 
 **Internal deps:**
-
 - `../validations/project-summary` → ProjectSummaryOutputSchema, OrgSummaryOutputSchema, type ProjectSummaryOutput, type OrgSummaryOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/registry.ts`
 
 **Exports:**
-
 - `readAgentPrompt()`
 - `getAgentById()`
 - `AGENT_REGISTRY`
@@ -1223,7 +1095,6 @@
 ### `packages/ai/src/agents/risk-specialist.ts`
 
 **Exports:**
-
 - `runRiskSpecialist()`
 - `RISK_SPECIALIST_PROMPT_VERSION`
 - `RISK_SPECIALIST_MODEL`
@@ -1232,7 +1103,6 @@
 **Types:** `RiskSpecialistContext`, `RiskSpecialistRunMetrics`, `RiskSpecialistRunResult`
 
 **Internal deps:**
-
 - `../validations/risk-specialist` → RiskSpecialistRawOutputSchema, type RiskSpecialistItem, type RiskSpecialistOutput, type RawRiskSpecialistOutput
 - `../utils/normalise` → emptyToNull, sentinelToNull
 - `./run-logger` → withAgentRun
@@ -1240,19 +1110,16 @@
 ### `packages/ai/src/agents/run-logger.ts`
 
 **Exports:**
-
 - `withAgentRun()`
 
 **Types:** `AgentUsage`, `AgentRunLogContext`
 
 **Depends on:**
-
 - `@repo/database/mutations/agent-runs` → insertAgentRun, type AgentRunInput
 
 ### `packages/ai/src/agents/speaker-identifier-sampling.ts`
 
 **Exports:**
-
 - `parseElevenLabsUtterances()`
 - `parseFirefliesUtterances()`
 - `sampleUtterancesPerName()`
@@ -1263,7 +1130,6 @@
 ### `packages/ai/src/agents/speaker-identifier.ts`
 
 **Exports:**
-
 - `runSpeakerIdentifier()`
 - `getSpeakerIdentifierPrompt()`
 - `applyMappingToTranscript()`
@@ -1272,7 +1138,6 @@
 **Types:** `SpeakerIdentifierParticipant`, `SpeakerIdentifierInput`, `SpeakerIdentifierResult`
 
 **Internal deps:**
-
 - `../validations/speaker-identifier` → SpeakerMappingOutputSchema, type SpeakerMappingOutput
 - `./speaker-identifier-sampling` → parseElevenLabsUtterances, parseFirefliesUtterances, sampleUtterancesPerName, sampleUtterancesPerSpeaker
 - `./run-logger` → withAgentRun
@@ -1280,7 +1145,6 @@
 ### `packages/ai/src/agents/summarizer.ts`
 
 **Exports:**
-
 - `runSummarizer()`
 - `formatSummary()`
 - `formatThemeSummary()`
@@ -1292,14 +1156,12 @@
 **Types:** `SummarizerIdentifiedTheme`
 
 **Internal deps:**
-
 - `../validations/summarizer` → SummarizerOutputSchema, SummarizerOutput, type ThemeSummary
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/theme-detector.ts`
 
 **Exports:**
-
 - `runThemeDetector()`
 - `THEME_DETECTOR_PROMPT_VERSION`
 - `THEME_DETECTOR_MODEL`
@@ -1308,7 +1170,6 @@
 **Types:** `ThemeCatalogEntry`, `ThemeDetectorNegativeExample`, `ThemeDetectorIdentifiedProject`, `ThemeDetectorMeetingContext`, `RunThemeDetectorInput`
 
 **Internal deps:**
-
 - `../validations/theme-detector` → ThemeDetectorOutputSchema, MATCHES_HARD_CAP, PROPOSALS_HARD_CAP, type ThemeDetectorOutput
 - `./theme-emojis` → THEME_EMOJIS, THEME_EMOJI_FALLBACK
 - `./run-logger` → withAgentRun
@@ -1316,7 +1177,6 @@
 ### `packages/ai/src/agents/theme-emojis.ts`
 
 **Exports:**
-
 - `THEME_EMOJIS`
 - `THEME_EMOJI_FALLBACK`
 - `ALL_THEME_EMOJIS`
@@ -1326,7 +1186,6 @@
 ### `packages/ai/src/agents/theme-narrator.ts`
 
 **Exports:**
-
 - `runThemeNarrator()`
 - `THEME_NARRATOR_PROMPT_VERSION`
 - `THEME_NARRATOR_MODEL`
@@ -1335,32 +1194,27 @@
 **Types:** `ThemeNarratorThemeInput`, `ThemeNarratorMeetingInput`, `RunThemeNarratorInput`
 
 **Internal deps:**
-
 - `../validations/theme-narrator` → ThemeNarratorOutputSchema, NARRATIVE_TOTAL_CHAR_CAP, type ThemeNarratorOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/title-generator.ts`
 
 **Exports:**
-
 - `generateMeetingSubject()`
 
 **Types:** `TitleSubjectOutput`
 
 **Internal deps:**
-
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/weekly-summarizer.ts`
 
 **Exports:**
-
 - `runWeeklySummarizer()`
 
 **Types:** `WeeklyProjectInput`
 
 **Internal deps:**
-
 - `../validations/weekly-summary` → WeeklySummaryOutputSchema, type WeeklySummaryOutput
 - `./run-logger` → withAgentRun
 
@@ -1369,7 +1223,6 @@
 ### `packages/ai/src/pipeline/email/core.ts`
 
 **Exports:**
-
 - `resolveEmailOrganization()`
 - `processEmail()`
 - `processEmailBatch()`
@@ -1377,14 +1230,12 @@
 **Types:** `EmailOrganizationResolution`
 
 **Depends on:**
-
 - `@repo/database/mutations/emails` → updateEmailClassification, updateEmailFilterStatus, updateEmailSenderPerson, linkEmailProject
 - `@repo/database/queries/people` → findPersonOrgByEmail
 - `@repo/database/queries/organizations` → findOrganizationIdByEmailDomain
 - `@repo/database/supabase/admin` → getAdminClient
 
 **Internal deps:**
-
 - `../../agents/email-classifier` → runEmailClassifier
 - `../../agents/email-classifier` → EmailClassifierOutput
 - `../lib/context-injection` → buildEntityContext
@@ -1396,7 +1247,6 @@
 ### `packages/ai/src/pipeline/email/filter-gatekeeper.ts`
 
 **Exports:**
-
 - `decideEmailFilter()`
 
 **Types:** `FilterReason`, `FilterDecision`
@@ -1404,7 +1254,6 @@
 ### `packages/ai/src/pipeline/email/pre-classifier.ts`
 
 **Exports:**
-
 - `preClassifyEmail()`
 
 **Types:** `PreClassifiedType`, `PreClassifierOutput`
@@ -1412,56 +1261,46 @@
 ### `packages/ai/src/pipeline/embed/pipeline.ts`
 
 **Exports:**
-
 - `embedMeetingWithExtractions()`
 
 **Depends on:**
-
 - `@repo/database/mutations/embeddings` → updateRowEmbedding, batchUpdateEmbeddings
 - `@repo/database/queries/meetings` → getMeetingExtractions, getMeetingForEmbedding, getExtractionIdsAndContent
 
 **Internal deps:**
-
 - `../../embeddings` → embedText, embedBatch
 - `./text` → buildMeetingEmbedText
 
 ### `packages/ai/src/pipeline/embed/re-embed-worker.ts`
 
 **Exports:**
-
 - `runReEmbedWorker()`
 
 **Depends on:**
-
 - `@repo/database/queries/content` → getStaleRows
 - `@repo/database/queries/meetings` → getMeetingExtractionsBatch
 - `@repo/database/queries/people` → getStalePeople
 - `@repo/database/mutations/embeddings` → batchUpdateEmbeddings
 
 **Internal deps:**
-
 - `../../embeddings` → embedBatch
 - `./text` → buildMeetingEmbedText
 
 ### `packages/ai/src/pipeline/embed/text.ts`
 
 **Exports:**
-
 - `buildMeetingEmbedText()`
 
 ### `packages/ai/src/pipeline/gatekeeper-pipeline.ts`
 
 **Exports:**
-
 - `processMeeting()`
 
 **Depends on:**
-
 - `@repo/database/mutations/meetings` → insertMeeting
 - `@repo/database/queries/people` → getAllKnownPeople
 
 **Internal deps:**
-
 - `../agents/gatekeeper` → runGatekeeper
 - `../agents/gatekeeper` → ParticipantInfo
 - `../validations/gatekeeper` → GatekeeperOutput
@@ -1486,24 +1325,20 @@
 ### `packages/ai/src/pipeline/lib/build-raw-fireflies.ts`
 
 **Exports:**
-
 - `buildRawFireflies()`
 
 **Internal deps:**
-
 - `../../agents/gatekeeper` → ParticipantInfo
 - `../../validations/gatekeeper` → GatekeeperOutput
 
 ### `packages/ai/src/pipeline/lib/context-injection.ts`
 
 **Exports:**
-
 - `buildEntityContext()`
 
 **Types:** `EntityContext`
 
 **Depends on:**
-
 - `@repo/database/queries/projects` → getActiveProjectsForContext
 - `@repo/database/queries/organizations` → getAllOrganizations
 - `@repo/database/queries/people` → getPeopleForContext
@@ -1512,37 +1347,31 @@
 ### `packages/ai/src/pipeline/lib/entity-resolution.ts`
 
 **Exports:**
-
 - `resolveProject()`
 - `resolveClientEntities()`
 - `resolveOrganization()`
 
 **Depends on:**
-
 - `@repo/database/queries/projects` → getAllProjects, matchProjectsByEmbedding
 - `@repo/database/mutations/projects` → updateProjectAliases
 - `@repo/database/queries/organizations` → getAllOrganizations
 
 **Internal deps:**
-
 - `../../embeddings` → embedText
 
 ### `packages/ai/src/pipeline/lib/segment-builder.ts`
 
 **Exports:**
-
 - `buildSegments()`
 
 **Types:** `Segment`
 
 **Internal deps:**
-
 - `../tagger` → TaggerOutput
 
 ### `packages/ai/src/pipeline/lib/speaker-map.ts`
 
 **Exports:**
-
 - `extractSpeakerNames()`
 - `buildSpeakerMap()`
 - `formatSpeakerContext()`
@@ -1550,30 +1379,25 @@
 **Types:** `SpeakerInfo`, `SpeakerMap`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/people` → KnownPerson
 
 ### `packages/ai/src/pipeline/lib/title-builder.ts`
 
 **Exports:**
-
 - `buildMeetingTitle()`
 - `generateMeetingTitle()`
 
 **Types:** `TitleContext`
 
 **Depends on:**
-
 - `@repo/database/constants/meetings` → MEETING_TYPE_PREFIX
 
 **Internal deps:**
-
 - `../../agents/title-generator` → generateMeetingSubject
 
 ### `packages/ai/src/pipeline/participant/classifier.ts`
 
 **Exports:**
-
 - `classifyParticipants()`
 - `classifyParticipantsWithCache()`
 - `isBoardMeeting()`
@@ -1581,19 +1405,16 @@
 - `determinePartyType()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/people` → KnownPerson
 - `@repo/database/queries/people` → getAllKnownPeople
 
 **Internal deps:**
-
 - `../../agents/gatekeeper` → ParticipantInfo
 - `../../validations/gatekeeper` → MeetingType, PartyType
 
 ### `packages/ai/src/pipeline/participant/helpers.ts`
 
 **Exports:**
-
 - `collectParticipantEmails()`
 - `matchParticipants()`
 - `mergeParticipantSources()`
@@ -1601,61 +1422,50 @@
 **Types:** `MeetingAttendee`
 
 **Depends on:**
-
 - `@repo/database/queries/people` → findPeopleByEmails
 - `@repo/database/mutations/meetings/participants` → linkMeetingParticipants
 
 **Internal deps:**
-
 - `../lib/speaker-map` → SpeakerMap
 
 ### `packages/ai/src/pipeline/saves/action-item-extractions.ts`
 
 **Exports:**
-
 - `saveActionItemExtractions()`
 - `ACTION_ITEM_SPECIALIST_SOURCE`
 
 **Depends on:**
-
 - `@repo/database/mutations/meetings` → linkAllMeetingProjects
 - `@repo/database/mutations/extractions` → deleteExtractionsByMeetingTypeAndSource, insertExtractions, type ExtractionInsertRow
 
 **Internal deps:**
-
 - `../../validations/gatekeeper` → IdentifiedProject
 - `../../validations/action-item-specialist` → ActionItemSpecialistItem, ActionItemSpecialistOutput
 
 ### `packages/ai/src/pipeline/saves/risk-extractions.ts`
 
 **Exports:**
-
 - `saveRiskExtractions()`
 
 **Depends on:**
-
 - `@repo/database/mutations/meetings` → linkAllMeetingProjects
 - `@repo/database/mutations/extractions` → deleteExtractionsByMeetingAndType, insertExtractions, type ExtractionInsertRow
 
 **Internal deps:**
-
 - `../../validations/gatekeeper` → IdentifiedProject
 - `../../validations/risk-specialist` → RiskSpecialistItem, RiskSpecialistOutput
 
 ### `packages/ai/src/pipeline/steps/action-item-specialist.ts`
 
 **Exports:**
-
 - `buildActionItemParticipants()`
 - `runActionItemSpecialistStep()`
 
 **Depends on:**
-
 - `@repo/database/mutations/extractions/experimental-action-items` → insertExperimentalActionItemExtraction
 - (type) `@repo/database/queries/people` → KnownPerson
 
 **Internal deps:**
-
 - `../../agents/action-item-specialist` → runActionItemSpecialist, ACTION_ITEM_SPECIALIST_MODEL, type ActionItemSpecialistContext, type ActionItemSpecialistParticipant
 - `../saves/action-item-extractions` → saveActionItemExtractions
 - `../../validations/gatekeeper` → IdentifiedProject
@@ -1663,42 +1473,35 @@
 ### `packages/ai/src/pipeline/steps/embed.ts`
 
 **Exports:**
-
 - `runEmbedStep()`
 
 **Types:** `EmbedStepResult`
 
 **Internal deps:**
-
 - `../embed/pipeline` → embedMeetingWithExtractions
 
 ### `packages/ai/src/pipeline/steps/generate-title.ts`
 
 **Exports:**
-
 - `runGenerateTitleStep()`
 
 **Types:** `GenerateTitleStepInput`, `GenerateTitleStepResult`
 
 **Depends on:**
-
 - `@repo/database/mutations/meetings` → updateMeetingTitle
 
 **Internal deps:**
-
 - `../lib/title-builder` → generateMeetingTitle
 - `../../validations/gatekeeper` → IdentifiedProject
 
 ### `packages/ai/src/pipeline/steps/link-themes.ts`
 
 **Exports:**
-
 - `runLinkThemesStep()`
 
 **Types:** `LinkThemesStepInput`, `MeetingThemeToWrite`, `ProposalToCreate`, `SkippedDueToRejection`, `PreviewResult`, `LinkThemesResult`
 
 **Depends on:**
-
 - `@repo/database/queries/meetings` → getMeetingExtractions
 - `@repo/database/queries/themes` → listVerifiedThemes, type ThemeRow, type ThemeWithNegativeExamples
 - `@repo/database/queries/themes/review` → listRejectedThemePairsForMeeting
@@ -1707,7 +1510,6 @@
 - `@repo/database/mutations/themes` → createEmergingTheme
 
 **Internal deps:**
-
 - `../../validations/theme-detector` → ThemeDetectorOutput
 - `../tagger` → parseThemesAnnotation, resolveThemeRefs, type ThemeRef
 - `./synthesize-theme-narrative` → runThemeNarrativeSynthesis
@@ -1715,15 +1517,12 @@
 ### `packages/ai/src/pipeline/steps/risk-specialist.ts`
 
 **Exports:**
-
 - `runRiskSpecialistStep()`
 
 **Depends on:**
-
 - `@repo/database/mutations/extractions/experimental-risks` → insertExperimentalRiskExtraction
 
 **Internal deps:**
-
 - `../../agents/risk-specialist` → runRiskSpecialist, RISK_SPECIALIST_MODEL, RISK_SPECIALIST_PROMPT_VERSION, type RiskSpecialistContext
 - `../saves/risk-extractions` → saveRiskExtractions
 - `../../validations/gatekeeper` → IdentifiedProject
@@ -1731,70 +1530,58 @@
 ### `packages/ai/src/pipeline/steps/speaker-mapping.ts`
 
 **Exports:**
-
 - `runSpeakerMappingStep()`
 
 **Types:** `SpeakerMappingStepResult`
 
 **Depends on:**
-
 - `@repo/database/mutations/meetings` → updateMeetingNamedTranscript
 - `@repo/database/queries/meetings/speaker-mapping` → getMeetingParticipantsForSpeakerMapping, type SpeakerMappingParticipant
 
 **Internal deps:**
-
 - `../../agents/speaker-identifier` → applyMappingToTranscript, runSpeakerIdentifier
 
 ### `packages/ai/src/pipeline/steps/summarize.ts`
 
 **Exports:**
-
 - `runSummarizeStep()`
 
 **Types:** `SummarizeResult`
 
 **Depends on:**
-
 - `@repo/database/mutations/meetings` → updateMeetingSummary
 
 **Internal deps:**
-
 - `../../agents/summarizer` → runSummarizer, formatSummary, formatThemeSummary, type SummarizerIdentifiedTheme
 
 ### `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts`
 
 **Exports:**
-
 - `runThemeNarrativeSynthesis()`
 
 **Types:** `ThemeNarrativeSynthesisResult`
 
 **Depends on:**
-
 - `@repo/database/queries/themes` → listThemeMeetingSummaries, INSUFFICIENT_MEETINGS_SENTINEL
 - `@repo/database/mutations/themes` → upsertThemeNarrative
 - `@repo/database/supabase/admin` → getAdminClient
 
 **Internal deps:**
-
 - `../../agents/theme-narrator` → runThemeNarrator
 - `../../validations/theme-narrator` → ThemeNarratorOutput
 
 ### `packages/ai/src/pipeline/steps/tag-and-segment.ts`
 
 **Exports:**
-
 - `runTagAndSegmentStep()`
 
 **Types:** `TagAndSegmentInput`, `TagAndSegmentResult`
 
 **Depends on:**
-
 - `@repo/database/queries/ignored-entities` → getIgnoredEntityNames
 - `@repo/database/mutations/meetings/project-summaries` → insertMeetingProjectSummaries, updateSegmentEmbedding
 
 **Internal deps:**
-
 - `../tagger` → runTagger
 - `../lib/segment-builder` → buildSegments
 - `../../embeddings` → embedBatch
@@ -1803,92 +1590,76 @@
 ### `packages/ai/src/pipeline/steps/theme-detector.ts`
 
 **Exports:**
-
 - `runThemeDetectorStep()`
 
 **Types:** `ThemeDetectorStepInput`, `ThemeDetectorStepResult`
 
 **Depends on:**
-
 - `@repo/database/queries/themes` → listVerifiedThemes, type ThemeWithNegativeExamples
 
 **Internal deps:**
-
 - `../../agents/theme-detector` → runThemeDetector, type ThemeDetectorMeetingContext, type ThemeDetectorIdentifiedProject
 - `../../validations/theme-detector` → ThemeDetectorOutput
 
 ### `packages/ai/src/pipeline/steps/transcribe.ts`
 
 **Exports:**
-
 - `runTranscribeStep()`
 
 **Types:** `TranscribeResult`
 
 **Depends on:**
-
 - `@repo/database/mutations/meetings` → updateMeetingElevenLabs
 
 **Internal deps:**
-
 - `../../transcribe-elevenlabs` → transcribeWithElevenLabs, formatScribeTranscript
 
 ### `packages/ai/src/pipeline/summary/core.ts`
 
 **Exports:**
-
 - `generateProjectSummaries()`
 - `generateOrgSummaries()`
 - `triggerSummariesForMeeting()`
 - `triggerSummariesForEmail()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/summaries` → getLatestSummary
 - `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
 - `@repo/database/mutations/summaries` → createSummaryVersion
 
 **Internal deps:**
-
 - `../../agents/project-summarizer` → runProjectSummarizer, runOrgSummarizer
 
 ### `packages/ai/src/pipeline/summary/management-insights.ts`
 
 **Exports:**
-
 - `generateManagementInsights()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/meetings` → listBoardMeetings
 - `@repo/database/mutations/summaries/management-insights` → saveManagementInsights
 
 **Internal deps:**
-
 - `../../agents/management-insights` → runManagementInsightsAgent
 
 ### `packages/ai/src/pipeline/summary/weekly.ts`
 
 **Exports:**
-
 - `generateWeeklySummary()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/summaries/weekly` → getWeeklyProjectData
 - `@repo/database/mutations/summaries` → createSummaryVersion
 
 **Internal deps:**
-
 - `../../agents/weekly-summarizer` → runWeeklySummarizer
 
 ### `packages/ai/src/pipeline/tagger.ts`
 
 **Exports:**
-
 - `parseThemesAnnotation()`
 - `resolveThemeRefs()`
 - `parsePrefix()`
@@ -1898,7 +1669,6 @@
 **Types:** `TaggedItem`, `KnownProject`, `TaggerInput`, `TaggerOutput`, `ThemeRef`
 
 **Internal deps:**
-
 - `../validations/gatekeeper` → IdentifiedProject
 
 ## AI Core
@@ -1906,14 +1676,12 @@
 ### `packages/ai/src/embeddings.ts`
 
 **Exports:**
-
 - `embedText()`
 - `embedBatch()`
 
 ### `packages/ai/src/fireflies.ts`
 
 **Exports:**
-
 - `fetchFirefliesTranscript()`
 - `listFirefliesTranscripts()`
 
@@ -1922,20 +1690,17 @@
 ### `packages/ai/src/gmail.ts`
 
 **Exports:**
-
 - `fetchEmails()`
 - `fetchEmailById()`
 
 **Types:** `GmailMessage`
 
 **Internal deps:**
-
 - `./google-oauth` → createAuthenticatedClient
 
 ### `packages/ai/src/google-oauth.ts`
 
 **Exports:**
-
 - `getGoogleAuthUrl()`
 - `exchangeCodeForTokens()`
 - `createAuthenticatedClient()`
@@ -1944,7 +1709,6 @@
 ### `packages/ai/src/lib/golden-comparison.ts`
 
 **Exports:**
-
 - `contentSimilarity()`
 - `comparePrecisionRecall()`
 - `aggregateComparisons()`
@@ -1954,24 +1718,20 @@
 ### `packages/ai/src/scan-needs.ts`
 
 **Exports:**
-
 - `scanMeetingNeeds()`
 - `scanAllUnscannedMeetings()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/mutations/extractions` → insertExtractions
 
 **Internal deps:**
-
 - `./agents/needs-scanner` → runNeedsScanner
 - `./validations/needs-scanner` → NeedItem
 
 ### `packages/ai/src/transcribe-elevenlabs.ts`
 
 **Exports:**
-
 - `transcribeWithElevenLabs()`
 - `formatScribeTranscript()`
 
@@ -1980,19 +1740,16 @@
 ### `packages/ai/src/transcript-processor.ts`
 
 **Exports:**
-
 - `chunkTranscript()`
 
 **Types:** `TranscriptChunk`
 
 **Internal deps:**
-
 - `./fireflies` → FirefliesTranscript
 
 ### `packages/ai/src/utils/normalise.ts`
 
 **Exports:**
-
 - `normaliseForQuoteMatch()`
 - `emptyToNull()`
 - `sentinelToNull()`
@@ -2000,7 +1757,6 @@
 ### `packages/ai/src/utils/summary-markdown-parser.ts`
 
 **Exports:**
-
 - `parseMarkdownExtractions()`
 - `filterByType()`
 - `PARSED_EXTRACTION_TYPES`
@@ -2012,7 +1768,6 @@
 ### `packages/ai/src/validations/action-item-action-validator.ts`
 
 **Exports:**
-
 - `ActionItemActionValidatorOutputSchema`
 
 **Types:** `ActionItemActionValidatorOutput`
@@ -2020,7 +1775,6 @@
 ### `packages/ai/src/validations/action-item-specialist.ts`
 
 **Exports:**
-
 - `ActionItemSpecialistRawItemSchema`
 - `ActionItemSpecialistRawOutputSchema`
 
@@ -2029,7 +1783,6 @@
 ### `packages/ai/src/validations/action-item-two-stage.ts`
 
 **Exports:**
-
 - `ActionItemCandidateSchema`
 - `ActionItemCandidatesSchema`
 - `ActionItemAcceptedSchema`
@@ -2039,25 +1792,21 @@
 **Types:** `ActionItemCandidate`, `ActionItemCandidatesOutput`, `ActionItemAccepted`, `ActionItemRejected`, `ActionItemJudgementsOutput`, `ActionItemJudgement`
 
 **Internal deps:**
-
 - `./action-item-specialist` → ActionItemSpecialistRawItemSchema
 
 ### `packages/ai/src/validations/bulk-cluster-cleanup.ts`
 
 **Exports:**
-
 - `bulkClusterModelSchema`
 
 **Types:** `BulkClusterModelOutput`, `BulkCluster`, `BulkClusterOutput`
 
 **Depends on:**
-
 - `@repo/database/constants/topics` → TOPIC_TYPES
 
 ### `packages/ai/src/validations/communication.ts`
 
 **Exports:**
-
 - `PARTY_TYPES`
 - `PartyTypeSchema`
 
@@ -2066,19 +1815,16 @@
 ### `packages/ai/src/validations/email-classifier.ts`
 
 **Exports:**
-
 - `EmailClassifierSchema`
 
 **Types:** `EmailClassifierOutput`
 
 **Internal deps:**
-
 - `./communication` → PartyTypeSchema
 
 ### `packages/ai/src/validations/email-extractor.ts`
 
 **Exports:**
-
 - `EmailExtractionItemSchema`
 - `EmailExtractorOutputSchema`
 
@@ -2087,14 +1833,12 @@
 ### `packages/ai/src/validations/fireflies.ts`
 
 **Exports:**
-
 - `isValidDuration()`
 - `hasParticipants()`
 
 ### `packages/ai/src/validations/gatekeeper.ts`
 
 **Exports:**
-
 - `MEETING_TYPES`
 - `IdentifiedProjectSchema`
 - `GatekeeperSchema`
@@ -2102,13 +1846,11 @@
 **Types:** `MeetingType`, `IdentifiedProject`, `GatekeeperOutput`
 
 **Internal deps:**
-
 - `./communication` → PARTY_TYPES, type PartyType
 
 ### `packages/ai/src/validations/issue-classification.ts`
 
 **Exports:**
-
 - `ISSUE_TYPES`
 - `COMPONENTS`
 - `SEVERITIES`
@@ -2119,7 +1861,6 @@
 ### `packages/ai/src/validations/issue-executor.ts`
 
 **Exports:**
-
 - `ExecutionStepSchema`
 - `IssueExecutorSchema`
 
@@ -2128,7 +1869,6 @@
 ### `packages/ai/src/validations/issue-review.ts`
 
 **Exports:**
-
 - `PatternSchema`
 - `RiskSchema`
 - `ActionItemSchema`
@@ -2139,7 +1879,6 @@
 ### `packages/ai/src/validations/management-insights.ts`
 
 **Exports:**
-
 - `MogelijkeOpvolgingSchema`
 - `KlantPipelineSchema`
 - `TerugkerendThemaSchema`
@@ -2150,7 +1889,6 @@
 ### `packages/ai/src/validations/needs-scanner.ts`
 
 **Exports:**
-
 - `NeedItemSchema`
 - `NeedsScannerOutputSchema`
 
@@ -2159,7 +1897,6 @@
 ### `packages/ai/src/validations/project-summary.ts`
 
 **Exports:**
-
 - `extractOrgTimeline()`
 - `extractProjectTimeline()`
 - `TimelineEntrySchema`
@@ -2172,7 +1909,6 @@
 ### `packages/ai/src/validations/risk-specialist.ts`
 
 **Exports:**
-
 - `RiskSpecialistRawItemSchema`
 - `RiskSpecialistRawOutputSchema`
 
@@ -2181,7 +1917,6 @@
 ### `packages/ai/src/validations/speaker-identifier.ts`
 
 **Exports:**
-
 - `SpeakerMappingItemSchema`
 - `SpeakerMappingOutputSchema`
 
@@ -2190,7 +1925,6 @@
 ### `packages/ai/src/validations/summarizer.ts`
 
 **Exports:**
-
 - `ParticipantProfileSchema`
 - `ThemeSummarySchema`
 - `SummarizerOutputSchema`
@@ -2200,7 +1934,6 @@
 ### `packages/ai/src/validations/theme-detector.ts`
 
 **Exports:**
-
 - `MATCHES_HARD_CAP`
 - `PROPOSALS_HARD_CAP`
 - `IdentifiedThemeSchema`
@@ -2210,13 +1943,11 @@
 **Types:** `IdentifiedTheme`, `ProposedTheme`, `ThemeDetectorOutput`
 
 **Internal deps:**
-
 - `../agents/theme-emojis` → ALL_THEME_EMOJIS
 
 ### `packages/ai/src/validations/theme-narrator.ts`
 
 **Exports:**
-
 - `ThemeNarratorOutputSchema`
 - `NARRATIVE_TOTAL_CHAR_CAP`
 
@@ -2225,7 +1956,6 @@
 ### `packages/ai/src/validations/weekly-summary.ts`
 
 **Exports:**
-
 - `ProjectHealthSchema`
 - `WeeklySummaryOutputSchema`
 
@@ -2236,7 +1966,6 @@
 ### `packages/auth/src/access.ts`
 
 **Exports:**
-
 - `isAdmin()`
 - `getCurrentProfile()`
 - `requireAdmin()`
@@ -2247,28 +1976,24 @@
 **Types:** `ProfileRole`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/supabase/server` → createClient
 
 ### `packages/auth/src/helpers.ts`
 
 **Exports:**
-
 - `isAuthBypassed()`
 - `getAuthenticatedUser()`
 - `getAuthenticatedUserId()`
 - `createPageClient()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/supabase/admin` → getAdminClient
 
 ### `packages/auth/src/middleware.ts`
 
 **Exports:**
-
 - `createAuthMiddleware()`
 
 ## Shared UI Components
@@ -2276,7 +2001,6 @@
 ### `packages/ui/src/format.ts`
 
 **Exports:**
-
 - `formatDate()`
 - `formatDateShort()`
 - `formatDateLong()`
@@ -2288,19 +2012,16 @@
 ### `packages/ui/src/utils.ts`
 
 **Exports:**
-
 - `cn()`
 
 ### `packages/ui/src/workspace-switcher.tsx`
 
 **Exports:**
-
 - `WorkspaceSwitcher()`
 
 ### `packages/ui/src/workspaces.ts`
 
 **Exports:**
-
 - `getWorkspaces()`
 - `getWorkspace()`
 
@@ -2311,11 +2032,9 @@
 ### `packages/mcp/src/server.ts`
 
 **Exports:**
-
 - `createMcpServer()`
 
 **Internal deps:**
-
 - `./tools/search` → registerSearchTools
 - `./tools/meetings` → registerMeetingTools
 - `./tools/actions` → registerActionTools
@@ -2334,200 +2053,162 @@
 ### `packages/mcp/src/tools/actions.ts`
 
 **Exports:**
-
 - `registerActionTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/people` → findPersonIdsByName
 
 **Internal deps:**
-
 - `./utils` → formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds, resolveProjectIds
 - `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/correct-extraction.ts`
 
 **Exports:**
-
 - `registerCorrectExtractionTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/mutations/extractions` → getExtractionForCorrection, correctExtraction
 - `@repo/database/queries/people` → findProfileIdByName
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/decisions.ts`
 
 **Exports:**
-
 - `registerDecisionTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 
 **Internal deps:**
-
 - `./utils` → formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds, resolveProjectIds
 - `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/get-organization-overview.ts`
 
 **Exports:**
-
 - `registerOrganizationOverviewTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike, sanitizeForContains, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds
 
 ### `packages/mcp/src/tools/issues.ts`
 
 **Exports:**
-
 - `registerIssueTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/constants/issues` → ISSUE_PRIORITY_LABELS, ISSUE_STATUSES, ISSUE_STATUS_LABELS, ISSUE_TYPE_LABELS, ISSUE_TYPES, type IssueStatus, type IssueType
 - `@repo/database/queries/reports` → getIssueDetailForReport, getProjectIssuesForReport, type IssueActivityReport, type IssueReportRow
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/list-meetings.ts`
 
 **Exports:**
-
 - `registerListMeetingsTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/meetings/project-summaries` → getSegmentCountsByMeetingIds
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike, resolveProjectIds, resolveOrganizationIds, resolveMeetingIdsByParticipant
 
 ### `packages/mcp/src/tools/meetings.ts`
 
 **Exports:**
-
 - `registerMeetingTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/meetings/project-summaries` → getSegmentsByMeetingIds
 
 **Internal deps:**
-
 - `./utils` → escapeLike, formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds
 - `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/organizations.ts`
 
 **Exports:**
-
 - `registerOrganizationTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike, sanitizeForContains
 
 ### `packages/mcp/src/tools/people.ts`
 
 **Exports:**
-
 - `registerPeopleTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike
 
 ### `packages/mcp/src/tools/project-report.ts`
 
 **Exports:**
-
 - `registerProjectReportTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/reports` → getProjectActivityForReport, getProjectContextForReport, type ProjectActivityEvent
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/projects.ts`
 
 **Exports:**
-
 - `registerProjectTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/meetings/project-summaries` → getSegmentCountsByProjectIds
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 - `./utils` → escapeLike, sanitizeForContains
 
 ### `packages/mcp/src/tools/search.ts`
 
 **Exports:**
-
 - `registerSearchTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/ai/embeddings` → embedText
 
 **Internal deps:**
-
 - `./utils` → formatVerificatieStatus, lookupProfileNames, collectVerifiedByIds
 - `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/usage-tracking.ts`
 
 **Exports:**
-
 - `trackMcpQuery()`
 
 ### `packages/mcp/src/tools/utils.ts`
 
 **Exports:**
-
 - `escapeLike()`
 - `sanitizeForContains()`
 - `resolveProjectIds()`
@@ -2540,35 +2221,29 @@
 ### `packages/mcp/src/tools/write-client-updates.ts`
 
 **Exports:**
-
 - `registerWriteClientUpdateTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/mutations/meetings` → insertManualMeeting
 - `@repo/database/mutations/extractions` → insertExtractions
 - `@repo/database/queries/people` → findProfileIdByName
 
 **Internal deps:**
-
 - `./utils` → resolveOrganizationIds
 - `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/write-tasks.ts`
 
 **Exports:**
-
 - `registerWriteTaskTools()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/mutations/tasks` → createTaskFromExtraction, updateTask, completeTask, dismissTask
 - `@repo/database/queries/people` → findProfileIdByName
 
 **Internal deps:**
-
 - `./usage-tracking` → trackMcpQuery
 
 ## Cockpit Server Actions
@@ -2576,19 +2251,16 @@
 ### `apps/cockpit/src/actions/_utils.ts`
 
 **Exports:**
-
 - `cleanInput()`
 
 ### `apps/cockpit/src/actions/dev-action-item-runner.ts`
 
 **Exports:**
-
 - `runActionItemAgentAction()`
 
 **Types:** `RunActionItemAgentInput`, `TwoStageDebug`, `RunActionItemAgentResult`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
 - `@repo/ai/agents/action-item-specialist` → runActionItemSpecialist, runActionItemSpecialistTwoStage, runActionItemCandidateSpotter, ACTION_ITEM_SPECIALIST_MODEL, ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION, getActionItemSpecialistSystemPrompt, getActionItemCandidateSpotterPrompt, getActionItemJudgePrompt, type ActionItemPromptVersion, type ActionItemGatedItem
@@ -2599,13 +2271,11 @@
 ### `apps/cockpit/src/actions/dev-detector.ts`
 
 **Exports:**
-
 - `runDevDetectorAction()`
 
 **Types:** `DevDetectorThemeLookup`, `DevDetectorMeetingContext`, `DevDetectorResult`
 
 **Depends on:**
-
 - `@repo/ai/agents/theme-detector` → runThemeDetector, THEME_DETECTOR_SYSTEM_PROMPT, THEME_DETECTOR_PROMPT_VERSION, THEME_DETECTOR_MODEL, type ThemeCatalogEntry, type ThemeDetectorNegativeExample
 - (type) `@repo/ai/validations/theme-detector` → ThemeDetectorOutput
 - `@repo/auth/access` → requireAdminInAction
@@ -2616,7 +2286,6 @@
 ### `apps/cockpit/src/actions/dev-speaker-mapping.ts`
 
 **Exports:**
-
 - `listSpeakerMappingMeetings()`
 - `runSpeakerMappingAction()`
 - `getSpeakerMappingBackfillStatus()`
@@ -2625,7 +2294,6 @@
 **Types:** `RunSpeakerMappingInput`, `SpeakerMappingMeetingOption`, `RunSpeakerMappingResult`, `BackfillStatus`, `RunBackfillBatchInput`, `BackfillBatchItem`, `RunBackfillBatchResult`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder
 - `@repo/database/queries/meetings/pipeline-fetches` → listMeetingsWithTranscript
@@ -2636,7 +2304,6 @@
 ### `apps/cockpit/src/actions/golden-action-items.ts`
 
 **Exports:**
-
 - `upsertGoldenMeetingAction()`
 - `insertGoldenItemAction()`
 - `updateGoldenItemAction()`
@@ -2644,19 +2311,16 @@
 - `resetGoldenForMeetingAction()`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/mutations/golden` → upsertGoldenMeeting, insertGoldenItem, updateGoldenItem, deleteGoldenItem, resetGoldenForMeeting, type GoldenItemInput
 
 ### `apps/cockpit/src/actions/management-insights.ts`
 
 **Exports:**
-
 - `generateManagementInsightsAction()`
 - `dismissInsightAction()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
 - `@repo/ai/pipeline/summary/management-insights` → generateManagementInsights
@@ -2665,12 +2329,10 @@
 ### `apps/cockpit/src/actions/scan-needs.ts`
 
 **Exports:**
-
 - `scanTeamNeedsAction()`
 - `updateNeedStatusAction()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
 - `@repo/ai/scan-needs` → scanAllUnscannedMeetings
@@ -2679,12 +2341,10 @@
 ### `apps/cockpit/src/actions/segments.ts`
 
 **Exports:**
-
 - `linkSegmentToProjectAction()`
 - `removeSegmentTagAction()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
 - `@repo/database/mutations/meetings/project-summaries` → linkSegmentToProject, removeSegmentTag
@@ -2697,11 +2357,9 @@
 ### `apps/cockpit/src/actions/summaries.ts`
 
 **Exports:**
-
 - `regenerateSummaryAction()`
 
 **Depends on:**
-
 - `@repo/ai/pipeline/summary/core` → generateProjectSummaries, generateOrgSummaries
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
@@ -2709,14 +2367,12 @@
 ### `apps/cockpit/src/actions/tasks.ts`
 
 **Exports:**
-
 - `promoteToTaskAction()`
 - `updateTaskAction()`
 - `completeTaskAction()`
 - `dismissTaskAction()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/mutations/tasks` → createTaskFromExtraction, updateTask, completeTask, dismissTask
 - `@repo/database/queries/tasks` → hasTaskForExtraction
@@ -2727,13 +2383,11 @@
 ### `apps/cockpit/src/actions/team.ts`
 
 **Exports:**
-
 - `inviteUserAction()`
 - `updateUserAccessAction()`
 - `deactivateUserAction()`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/team` → countAdmins, getProfileRole, getUserWithAccess
@@ -2743,11 +2397,9 @@
 ### `apps/cockpit/src/actions/weekly-summary.ts`
 
 **Exports:**
-
 - `generateWeeklySummaryAction()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/auth/access` → isAdmin
 - `@repo/ai/pipeline/summary/weekly` → generateWeeklySummary
@@ -2757,13 +2409,11 @@
 ### `apps/cockpit/src/app/api/cron/email-sync/route.ts`
 
 **Exports:**
-
 - `maxDuration`
 - `GET`
 - `POST`
 
 **Depends on:**
-
 - `@repo/database/queries/emails` → listActiveGoogleAccounts, getExistingGmailIds, getUnprocessedEmails
 - `@repo/database/mutations/emails` → insertEmails, updateGoogleAccountTokens, updateGoogleAccountLastSync
 - `@repo/ai/gmail` → fetchEmails
@@ -2772,21 +2422,17 @@
 ### `apps/cockpit/src/app/api/cron/re-embed/route.ts`
 
 **Exports:**
-
 - `POST()`
 
 **Depends on:**
-
 - `@repo/ai/pipeline/embed/re-embed-worker` → runReEmbedWorker
 
 ### `apps/cockpit/src/app/api/cron/reclassify/route.ts`
 
 **Exports:**
-
 - `POST()`
 
 **Depends on:**
-
 - `@repo/ai/agents/gatekeeper` → runGatekeeper
 - `@repo/database/queries/people` → getAllKnownPeople
 - `@repo/database/queries/meetings` → listMeetingsForReclassify
@@ -2797,21 +2443,17 @@
 ### `apps/cockpit/src/app/api/debug/fireflies/route.ts`
 
 **Exports:**
-
 - `POST()`
 
 **Depends on:**
-
 - `@repo/ai/fireflies` → listFirefliesTranscripts
 
 ### `apps/cockpit/src/app/api/email/auth/callback/route.ts`
 
 **Exports:**
-
 - `GET()`
 
 **Depends on:**
-
 - `@repo/ai/google-oauth` → exchangeCodeForTokens, getAuthenticatedEmail
 - `@repo/database/mutations/emails` → upsertGoogleAccount
 - `@repo/database/supabase/server` → createClient
@@ -2819,23 +2461,19 @@
 ### `apps/cockpit/src/app/api/email/auth/route.ts`
 
 **Exports:**
-
 - `GET()`
 
 **Depends on:**
-
 - `@repo/ai/google-oauth` → getGoogleAuthUrl
 - `@repo/database/supabase/server` → createClient
 
 ### `apps/cockpit/src/app/api/email/process-pending/route.ts`
 
 **Exports:**
-
 - `POST()`
 - `maxDuration`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → getUnprocessedEmails
 - `@repo/ai/pipeline/email/core` → processEmailBatch
@@ -2844,12 +2482,10 @@
 ### `apps/cockpit/src/app/api/email/reclassify/route.ts`
 
 **Exports:**
-
 - `POST()`
 - `maxDuration`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → listEmailsForReclassify
 - `@repo/ai/pipeline/email/core` → processEmail
@@ -2859,12 +2495,10 @@
 ### `apps/cockpit/src/app/api/email/sync/route.ts`
 
 **Exports:**
-
 - `POST()`
 - `maxDuration`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → listActiveGoogleAccounts
 - `@repo/database/queries/emails` → getExistingGmailIds, getUnprocessedEmails
@@ -2875,11 +2509,9 @@
 ### `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts`
 
 **Exports:**
-
 - `POST()`
 
 **Depends on:**
-
 - `@repo/ai/fireflies` → fetchFirefliesTranscript
 - `@repo/database/queries/meetings` → getMeetingForBackfill
 - `@repo/database/mutations/meetings` → updateMeetingRawFireflies
@@ -2887,13 +2519,11 @@
 ### `apps/cockpit/src/app/api/ingest/fireflies/route.ts`
 
 **Exports:**
-
 - `GET()`
 - `POST()`
 - `maxDuration`
 
 **Depends on:**
-
 - `@repo/ai/fireflies` → listFirefliesTranscripts, fetchFirefliesTranscript
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/database/queries/meetings` → getExistingFirefliesIds, getExistingMeetingsByTitleDates
@@ -2904,12 +2534,10 @@
 ### `apps/cockpit/src/app/api/ingest/reprocess/route.ts`
 
 **Exports:**
-
 - `POST()`
 - `maxDuration`
 
 **Depends on:**
-
 - `@repo/ai/fireflies` → fetchFirefliesTranscript
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/ai/pipeline/steps/transcribe` → runTranscribeStep
@@ -2929,67 +2557,55 @@
 ### `apps/cockpit/src/app/api/management-insights/generate/route.ts`
 
 **Exports:**
-
 - `POST()`
 - `maxDuration`
 
 **Depends on:**
-
 - `@repo/ai/pipeline/summary/management-insights` → generateManagementInsights
 
 ### `apps/cockpit/src/app/api/mcp/route.ts`
 
 **Exports:**
-
 - `POST()`
 - `GET()`
 - `DELETE()`
 
 **Depends on:**
-
 - `@repo/mcp/server` → createMcpServer
 - `@repo/database/supabase/server` → createClient
 
 ### `apps/cockpit/src/app/api/oauth/authorize/route.ts`
 
 **Exports:**
-
 - `GET()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 
 ### `apps/cockpit/src/app/api/oauth/register/route.ts`
 
 **Exports:**
-
 - `POST()`
 
 ### `apps/cockpit/src/app/api/oauth/token/route.ts`
 
 **Exports:**
-
 - `POST()`
 
 ### `apps/cockpit/src/app/api/scan-needs/route.ts`
 
 **Exports:**
-
 - `POST()`
 
 **Depends on:**
-
 - `@repo/ai/scan-needs` → scanAllUnscannedMeetings
 
 ### `apps/cockpit/src/app/api/webhooks/fireflies/route.ts`
 
 **Exports:**
-
 - `POST()`
 
 **Depends on:**
-
 - `@repo/ai/fireflies` → fetchFirefliesTranscript
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/database/queries/meetings` → getMeetingByFirefliesId, getMeetingByTitleAndDate
@@ -3001,23 +2617,19 @@
 ### `apps/cockpit/src/app/.well-known/oauth-authorization-server/route.ts`
 
 **Exports:**
-
 - `GET()`
 
 ### `apps/cockpit/src/app/(dashboard)/admin/team/invite-dialog.tsx`
 
 **Exports:**
-
 - `InviteDialog()`
 
 ### `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/queries/team` → listTeamMembers, countAdmins
 - `@repo/database/queries/projects` → listProjects
 - `@repo/database/supabase/admin` → getAdminClient
@@ -3025,7 +2637,6 @@
 ### `apps/cockpit/src/app/(dashboard)/admin/team/team-list.tsx`
 
 **Exports:**
-
 - `TeamList()`
 
 **Types:** `TeamMemberView`, `ProjectOption`
@@ -3033,27 +2644,22 @@
 ### `apps/cockpit/src/app/(dashboard)/admin/team/user-edit-dialog.tsx`
 
 **Exports:**
-
 - `UserEditDialog()`
 
 ### `apps/cockpit/src/app/(dashboard)/admin/team/user-row.tsx`
 
 **Exports:**
-
 - `UserRow()`
 
 **Depends on:**
-
 - `@repo/ui/badge` → Badge
 
 ### `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/organizations` → getOrganizationById
 - `@repo/database/queries/people` → listPeopleByOrganization
@@ -3065,22 +2671,18 @@
 ### `apps/cockpit/src/app/(dashboard)/administratie/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/organizations` → listOrganizationsByType
 
 ### `apps/cockpit/src/app/(dashboard)/agents/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/ai/agents/registry` → AGENT_REGISTRY, readAgentPrompt
 - `@repo/ai/agents/pricing` → estimateRunCostUsd
 - `@repo/database/queries/agent-runs` → getAgentMetrics, listRecentAgentRuns, type AgentMetrics
@@ -3088,13 +2690,11 @@
 ### `apps/cockpit/src/app/(dashboard)/architectuur/_data/embeddings.ts`
 
 **Exports:**
-
 - `embedSection`
 
 ### `apps/cockpit/src/app/(dashboard)/architectuur/_data/layers.ts`
 
 **Exports:**
-
 - `layers`
 
 **Types:** `LayerProps`
@@ -3102,7 +2702,6 @@
 ### `apps/cockpit/src/app/(dashboard)/architectuur/_data/mcp-tools.ts`
 
 **Exports:**
-
 - `mcpTools`
 
 **Types:** `ToolInfo`
@@ -3110,7 +2709,6 @@
 ### `apps/cockpit/src/app/(dashboard)/architectuur/_data/roadmap.ts`
 
 **Exports:**
-
 - `roadmapItems`
 
 **Types:** `RoadmapItem`
@@ -3118,13 +2716,11 @@
 ### `apps/cockpit/src/app/(dashboard)/architectuur/_data/seed.ts`
 
 **Exports:**
-
 - `seedSection`
 
 ### `apps/cockpit/src/app/(dashboard)/architectuur/_data/test-results.ts`
 
 **Exports:**
-
 - `testResults`
 
 **Types:** `TestResult`
@@ -3132,7 +2728,6 @@
 ### `apps/cockpit/src/app/(dashboard)/architectuur/security/_data/action-items.ts`
 
 **Exports:**
-
 - `actionItems`
 
 **Types:** `ActionItem`
@@ -3140,13 +2735,11 @@
 ### `apps/cockpit/src/app/(dashboard)/architectuur/security/_data/completed-items.ts`
 
 **Exports:**
-
 - `completedItems`
 
 ### `apps/cockpit/src/app/(dashboard)/architectuur/security/_data/credentials.ts`
 
 **Exports:**
-
 - `allCredentials`
 
 **Types:** `CredentialEntry`
@@ -3154,7 +2747,6 @@
 ### `apps/cockpit/src/app/(dashboard)/architectuur/security/_data/integrations.ts`
 
 **Exports:**
-
 - `integrations`
 
 **Types:** `DataField`, `IntegrationFlow`
@@ -3162,7 +2754,6 @@
 ### `apps/cockpit/src/app/(dashboard)/architectuur/security/_data/stored-data.ts`
 
 **Exports:**
-
 - `storedDataTables`
 
 **Types:** `StoredDataTable`
@@ -3170,11 +2761,9 @@
 ### `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/organizations` → getOrganizationById
 - `@repo/ui/badge` → Badge
@@ -3185,11 +2774,9 @@
 ### `apps/cockpit/src/app/(dashboard)/clients/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/organizations` → listOrganizationsByType
 - `@repo/ui/badge` → Badge
@@ -3198,55 +2785,45 @@
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-client.tsx`
 
 **Exports:**
-
 - `GoldenCoderClient()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/golden` → GoldenItemRow, GoldenMeetingState
 
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-item-card.tsx`
 
 **Exports:**
-
 - `CoderItemCard()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/golden` → GoldenItemRow
 
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-item-form.tsx`
 
 **Exports:**
-
 - `CoderItemForm()`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-skip-dialog.tsx`
 
 **Exports:**
-
 - `CoderSkipDialog()`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-status-panel.tsx`
 
 **Exports:**
-
 - `CoderStatusPanel()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/golden` → GoldenMeetingState
 
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-transcript-pane.tsx`
 
 **Exports:**
-
 - `CoderTranscriptPane`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/coder-types.ts`
 
 **Exports:**
-
 - `EMPTY_DRAFT`
 - `TYPE_WERK_LABELS`
 - `LANE_LABELS`
@@ -3256,108 +2833,113 @@
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx`
 
 **Exports:**
-
 - `metadata`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdmin
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder, getGoldenForMeeting
 
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx`
 
 **Exports:**
-
 - `metadata`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdmin
 - `@repo/ui/format` → formatDate
 - `@repo/database/queries/golden` → listMeetingsWithGoldenStatus
 - (type) `@repo/database/queries/golden` → MeetingWithGoldenStatus
 
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/diff-entry-card.tsx`
+
+**Exports:**
+- `DiffEntryCard()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/gated-panel.tsx`
+
+**Exports:**
+- `GatedPanel()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/result-panel.tsx`
+
+**Exports:**
+- `ResultPanel()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/stat.tsx`
+
+**Exports:**
+- `Stat()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/two-stage-panel.tsx`
+
+**Exports:**
+- `TwoStagePanel()`
+
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/client.tsx`
 
 **Exports:**
-
 - `RunActionItemHarnessClient()`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDate
 
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/page.tsx`
 
 **Exports:**
-
 - `metadata`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdmin
 - `@repo/database/queries/golden` → listMeetingsWithGoldenStatus
 
 ### `apps/cockpit/src/app/(dashboard)/dev/detector/client.tsx`
 
 **Exports:**
-
 - `DevDetectorClient()`
 
 **Depends on:**
-
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
 
 ### `apps/cockpit/src/app/(dashboard)/dev/detector/create-theme-form.tsx`
 
 **Exports:**
-
 - `CreateThemeForm()`
 
 **Depends on:**
-
 - `@repo/ai/agents/theme-emojis` → ALL_THEME_EMOJIS
 
 ### `apps/cockpit/src/app/(dashboard)/dev/detector/page.tsx`
 
 **Exports:**
-
 - `metadata`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdmin
 - `@repo/database/queries/meetings` → listVerifiedMeetings
 
 ### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
 
 **Exports:**
-
 - `SpeakerMappingClient()`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDate
 
 ### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/page.tsx`
 
 **Exports:**
-
 - `metadata`
 
 **Depends on:**
-
 - `@repo/auth/access` → requireAdmin
 
 ### `apps/cockpit/src/app/(dashboard)/directory/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/database/queries/people` → listPeople
@@ -3365,11 +2947,9 @@
 ### `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → getEmailById
 - `@repo/database/queries/organizations` → listOrganizations
@@ -3380,22 +2960,18 @@
 ### `apps/cockpit/src/app/(dashboard)/emails/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, countEmailsByFilterStatus, countUnprocessedEmails, type EmailDirection, type EmailFilterStatus
 
 ### `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/meetings` → listBoardMeetings
 - `@repo/database/queries/summaries/management-insights` → getManagementInsights, getDismissedInsightKeys
@@ -3404,44 +2980,36 @@
 ### `apps/cockpit/src/app/(dashboard)/intelligence/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/needs` → countNeeds
 
 ### `apps/cockpit/src/app/(dashboard)/intelligence/team/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/needs` → listNeedsGroupedByCategory
 
 ### `apps/cockpit/src/app/(dashboard)/intelligence/weekly/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/summaries/weekly` → getLatestWeeklySummary
 
 ### `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/meetings` → getVerifiedMeetingById
 - `@repo/database/queries/people` → listPeopleWithOrg, listPeopleForAssignment
@@ -3453,18 +3021,15 @@
 ### `apps/cockpit/src/app/(dashboard)/meetings/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/meetings` → listVerifiedMeetings
 
 ### `apps/cockpit/src/app/(dashboard)/navigatie-test/mock-data.ts`
 
 **Exports:**
-
 - `focusProjectsMvp`
 - `productionQuery`
 - `signals`
@@ -3475,23 +3040,19 @@
 ### `apps/cockpit/src/app/(dashboard)/navigatie-test/navigatie-playground.tsx`
 
 **Exports:**
-
 - `NavigatiePlayground()`
 
 ### `apps/cockpit/src/app/(dashboard)/navigatie-test/page.tsx`
 
 **Exports:**
-
 - `metadata`
 
 ### `apps/cockpit/src/app/(dashboard)/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/dashboard` → listRecentVerifiedMeetings, listTodaysBriefingMeetings, getExtractionCountsByMeetingIds
 - `@repo/database/queries/tasks` → listAllTasks
@@ -3503,11 +3064,9 @@
 ### `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/people` → getPersonById
 - `@repo/database/queries/organizations` → listOrganizations
@@ -3516,11 +3075,9 @@
 ### `apps/cockpit/src/app/(dashboard)/people/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/people` → listPeople
 - `@repo/database/queries/organizations` → listOrganizations
@@ -3529,11 +3086,9 @@
 ### `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/projects` → getProjectById
 - `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
@@ -3544,11 +3099,9 @@
 ### `apps/cockpit/src/app/(dashboard)/projects/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/projects` → listProjects
 - `@repo/database/queries/organizations` → listOrganizations
@@ -3556,11 +3109,9 @@
 ### `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/review` → getDraftMeetingById
 - `@repo/database/queries/people` → listPeopleWithOrg, listPeopleForAssignment
@@ -3573,11 +3124,9 @@
 ### `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → getDraftEmailById
 - `@repo/database/queries/organizations` → listOrganizations
@@ -3587,11 +3136,9 @@
 ### `apps/cockpit/src/app/(dashboard)/review/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/review` → listDraftMeetings, getReviewStats
 - `@repo/database/queries/emails` → listDraftEmails
@@ -3600,11 +3147,9 @@
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 **Depends on:**
-
 - `@repo/database/queries/themes` → getThemeBySlug, getThemeRecentActivity, getThemeMeetings, getThemeDecisions, getThemeParticipants, getThemeNarrative
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
@@ -3612,26 +3157,22 @@
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/decisions-tab.tsx`
 
 **Exports:**
-
 - `DecisionsTab()`
 
 **Types:** `DecisionsTabProps`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/themes` → ThemeDecisionEntry
 
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/meetings-tab.tsx`
 
 **Exports:**
-
 - `MeetingsTab()`
 
 **Types:** `MeetingsTabProps`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDate
 - `@repo/ui/badge` → Badge
 - (type) `@repo/database/queries/themes` → ThemeMeetingEntry
@@ -3639,85 +3180,71 @@
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/narrative-tab.tsx`
 
 **Exports:**
-
 - `NarrativeTab()`
 
 **Types:** `NarrativeTabProps`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/themes` → ThemeRow
 - (type) `@repo/database/queries/themes` → ThemeNarrativeWithStaleness
 
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/overview-tab.tsx`
 
 **Exports:**
-
 - `OverviewTab()`
 
 **Types:** `OverviewTabProps`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/themes` → ThemeMeetingEntry, ThemeDecisionEntry
 
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/people-tab.tsx`
 
 **Exports:**
-
 - `PeopleTab()`
 
 **Types:** `PeopleTabProps`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/themes` → ThemeParticipantEntry
 
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/tabs/questions-tab.tsx`
 
 **Exports:**
-
 - `QuestionsTab()`
 
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/theme-detail-view.tsx`
 
 **Exports:**
-
 - `ThemeDetailView()`
 
 **Types:** `ThemeDetailViewProps`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/themes` → ThemeRow
 - `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
 
 ### `apps/cockpit/src/app/auth/callback/route.ts`
 
 **Exports:**
-
 - `GET()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 
 ### `apps/cockpit/src/app/layout.tsx`
 
 **Exports:**
-
 - `viewport`
 - `metadata`
 
 ### `apps/cockpit/src/app/login/login-form.tsx`
 
 **Exports:**
-
 - `LoginForm()`
 
 **Depends on:**
-
 - `@repo/database/supabase/client` → createClient
 - `@repo/ui/button` → Button
 
@@ -3726,33 +3253,27 @@
 ### `apps/cockpit/src/components/administratie/administratie-emails.tsx`
 
 **Exports:**
-
 - `AdministratieEmails()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
 - (type) `@repo/database/queries/emails` → EmailListItem
 
 ### `apps/cockpit/src/components/administratie/administratie-tabs.tsx`
 
 **Exports:**
-
 - `AdministratieTabs()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/organizations` → OrganizationListItem
 - `@repo/ui/tabs` → Tabs, TabsList, TabsTrigger, TabsContent
 
 ### `apps/cockpit/src/components/administratie/organization-card.tsx`
 
 **Exports:**
-
 - `OrganizationCard()`
 
 **Depends on:**
-
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDate
 - (type) `@repo/database/queries/organizations` → OrganizationListItem
@@ -3760,22 +3281,18 @@
 ### `apps/cockpit/src/components/agents/activity-feed.tsx`
 
 **Exports:**
-
 - `ActivityFeed()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/agent-runs` → AgentRunRow
 - (type) `@repo/ai/agents/registry` → AgentDefinition
 
 ### `apps/cockpit/src/components/agents/agent-card.tsx`
 
 **Exports:**
-
 - `AgentCard()`
 
 **Depends on:**
-
 - (type) `@repo/ai/agents/registry` → AgentDefinition
 - (type) `@repo/database/queries/agent-runs` → AgentMetrics
 - `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle
@@ -3783,19 +3300,16 @@
 ### `apps/cockpit/src/components/agents/quadrant-styles.ts`
 
 **Exports:**
-
 - `quadrantHeader`
 - `quadrantBadge`
 - `quadrantLabel`
 
 **Depends on:**
-
 - (type) `@repo/ai/agents/registry` → AgentQuadrant
 
 ### `apps/cockpit/src/components/agents/system-overview.tsx`
 
 **Exports:**
-
 - `SystemOverview()`
 
 **Types:** `SystemStats`
@@ -3803,39 +3317,32 @@
 ### `apps/cockpit/src/components/architectuur/embeddings-card.tsx`
 
 **Exports:**
-
 - `EmbeddingsCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 - `@repo/ui/accordion` → Accordion, AccordionContent, AccordionItem, AccordionTrigger
 
 ### `apps/cockpit/src/components/architectuur/flow-arrow.tsx`
 
 **Exports:**
-
 - `FlowArrow()`
 
 ### `apps/cockpit/src/components/architectuur/layer-card.tsx`
 
 **Exports:**
-
 - `LayerCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 - `@repo/ui/accordion` → Accordion, AccordionContent, AccordionItem, AccordionTrigger
 
 ### `apps/cockpit/src/components/architectuur/mcp-section.tsx`
 
 **Exports:**
-
 - `McpSection()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 - `@repo/ui/badge` → Badge
 - `@repo/ui/accordion` → Accordion, AccordionContent, AccordionItem, AccordionTrigger
@@ -3843,57 +3350,46 @@
 ### `apps/cockpit/src/components/architectuur/roadmap-card.tsx`
 
 **Exports:**
-
 - `RoadmapCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 
 ### `apps/cockpit/src/components/architectuur/security/action-items-card.tsx`
 
 **Exports:**
-
 - `ActionItemsCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 
 ### `apps/cockpit/src/components/architectuur/security/completed-card.tsx`
 
 **Exports:**
-
 - `CompletedCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 
 ### `apps/cockpit/src/components/architectuur/security/credentials-section.tsx`
 
 **Exports:**
-
 - `CredentialsSection()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent
 
 ### `apps/cockpit/src/components/architectuur/security/data-flow-table.tsx`
 
 **Exports:**
-
 - `DataFlowTable()`
 
 ### `apps/cockpit/src/components/architectuur/security/integration-card.tsx`
 
 **Exports:**
-
 - `IntegrationCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 - `@repo/ui/badge` → Badge
 - `@repo/ui/accordion` → Accordion, AccordionContent, AccordionItem, AccordionTrigger
@@ -3901,74 +3397,60 @@
 ### `apps/cockpit/src/components/architectuur/security/sensitivity-badge.tsx`
 
 **Exports:**
-
 - `SensitivityBadge()`
 
 ### `apps/cockpit/src/components/architectuur/security/stored-data-section.tsx`
 
 **Exports:**
-
 - `StoredDataSection()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent
 - `@repo/ui/badge` → Badge
 
 ### `apps/cockpit/src/components/architectuur/seed-card.tsx`
 
 **Exports:**
-
 - `SeedCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 
 ### `apps/cockpit/src/components/architectuur/status-badge.tsx`
 
 **Exports:**
-
 - `StatusBadge()`
 
 **Depends on:**
-
 - `@repo/ui/badge` → Badge
 
 ### `apps/cockpit/src/components/architectuur/test-results-card.tsx`
 
 **Exports:**
-
 - `TestResultsCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle, CardDescription
 
 ### `apps/cockpit/src/components/dashboard/greeting.tsx`
 
 **Exports:**
-
 - `Greeting()`
 
 ### `apps/cockpit/src/components/dashboard/management-insights-strip.tsx`
 
 **Exports:**
-
 - `ManagementInsightsStrip()`
 
 **Depends on:**
-
 - (type) `@repo/ai/agents/management-insights` → ManagementInsightsOutput
 
 ### `apps/cockpit/src/components/dashboard/meeting-carousel.tsx`
 
 **Exports:**
-
 - `MeetingCarousel()`
 
 **Depends on:**
-
 - `@repo/ui/button` → Button
 - `@repo/ui/badge` → Badge
 - `@repo/ui/format` → formatDateShort
@@ -3977,11 +3459,9 @@
 ### `apps/cockpit/src/components/dashboard/recent-verified-meetings.tsx`
 
 **Exports:**
-
 - `RecentVerifiedMeetings()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
 - (type) `@repo/database/queries/dashboard` → RecentVerifiedMeeting
 - `@repo/ui/format` → formatDateShort
@@ -3989,11 +3469,9 @@
 ### `apps/cockpit/src/components/dashboard/task-item.tsx`
 
 **Exports:**
-
 - `TaskItem()`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDateShort
 - (type) `@repo/database/queries/tasks` → TaskRow
 - (type) `@repo/database/queries/people` → PersonForAssignment
@@ -4001,11 +3479,9 @@
 ### `apps/cockpit/src/components/dashboard/tasks-card.tsx`
 
 **Exports:**
-
 - `TasksCard()`
 
 **Depends on:**
-
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
 - (type) `@repo/database/queries/tasks` → TaskRow
 - (type) `@repo/database/queries/people` → PersonForAssignment
@@ -4013,23 +3489,19 @@
 ### `apps/cockpit/src/components/intelligence/board-meeting-card.tsx`
 
 **Exports:**
-
 - `BoardMeetingCard()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/meetings` → BoardMeetingListItem
 
 ### `apps/cockpit/src/components/intelligence/generate-insights-button.tsx`
 
 **Exports:**
-
 - `GenerateInsightsButton()`
 
 ### `apps/cockpit/src/components/intelligence/management-insight-card.tsx`
 
 **Exports:**
-
 - `OpvolgingItem()`
 - `PipelineItem()`
 - `ThemaItem()`
@@ -4037,81 +3509,66 @@
 ### `apps/cockpit/src/components/intelligence/management-insights-panel.tsx`
 
 **Exports:**
-
 - `ManagementInsightsPanel()`
 
 **Depends on:**
-
 - (type) `@repo/ai/agents/management-insights` → ManagementInsightsOutput
 
 ### `apps/cockpit/src/components/intelligence/needs-category-list.tsx`
 
 **Exports:**
-
 - `NeedsCategoryList()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/needs` → NeedsByCategory, NeedRow, NeedStatus
 
 ### `apps/cockpit/src/components/intelligence/scan-needs-button.tsx`
 
 **Exports:**
-
 - `ScanNeedsButton()`
 
 ### `apps/cockpit/src/components/layout/desktop-sidebar.tsx`
 
 **Exports:**
-
 - `DesktopSidebar()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
 ### `apps/cockpit/src/components/layout/side-menu.tsx`
 
 **Exports:**
-
 - `SideMenu()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
 ### `apps/cockpit/src/components/shared/confidence-bar.tsx`
 
 **Exports:**
-
 - `ConfidenceBar()`
 
 ### `apps/cockpit/src/components/shared/confirm-dialog.tsx`
 
 **Exports:**
-
 - `ConfirmDialog()`
 
 **Depends on:**
-
 - `@repo/ui/alert-dialog` → AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel
 
 ### `apps/cockpit/src/components/shared/extraction-card.tsx`
 
 **Exports:**
-
 - `ExtractionCard()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/people` → PersonForAssignment
 
 ### `apps/cockpit/src/components/shared/extraction-constants.ts`
 
 **Exports:**
-
 - `EXTRACTION_TYPE_ORDER`
 - `EXTRACTION_TYPE_LABELS`
 - `EXTRACTION_TYPE_ICONS`
@@ -4124,142 +3581,116 @@
 ### `apps/cockpit/src/components/shared/extraction-dots.tsx`
 
 **Exports:**
-
 - `ExtractionDots()`
 
 ### `apps/cockpit/src/components/shared/follow-up-checklist.tsx`
 
 **Exports:**
-
 - `FollowUpChecklist()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/people` → PersonForAssignment
 
 ### `apps/cockpit/src/components/shared/markdown-summary.tsx`
 
 **Exports:**
-
 - `MarkdownSummary()`
 
 ### `apps/cockpit/src/components/shared/meeting-transcript-panel.tsx`
 
 **Exports:**
-
 - `MeetingTranscriptPanel()`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDateLong
 
 ### `apps/cockpit/src/components/shared/meeting-type-badge.tsx`
 
 **Exports:**
-
 - `MeetingTypeBadge()`
 
 **Depends on:**
-
 - `@repo/database/constants/meetings` → formatMeetingType
 
 ### `apps/cockpit/src/components/shared/modal.tsx`
 
 **Exports:**
-
 - `Modal()`
 
 **Depends on:**
-
 - `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle
 - `@repo/ui/utils` → cn
 
 ### `apps/cockpit/src/components/shared/org-type-labels.ts`
 
 **Exports:**
-
 - `ORG_TYPE_LABELS`
 
 ### `apps/cockpit/src/components/shared/organization-colors.ts`
 
 **Exports:**
-
 - `ORG_TYPE_COLORS`
 - `ORG_STATUS_COLORS`
 
 ### `apps/cockpit/src/components/shared/pipeline-info.tsx`
 
 **Exports:**
-
 - `PipelineInfo()`
 
 ### `apps/cockpit/src/components/shared/promote-task-form.tsx`
 
 **Exports:**
-
 - `PromoteTaskForm()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/people` → PersonForAssignment
 
 ### `apps/cockpit/src/components/shared/regenerate-menu.tsx`
 
 **Exports:**
-
 - `RegenerateMenu()`
 
 **Depends on:**
-
 - `@repo/ui/button` → Button
 - `@repo/ui/dropdown-menu` → DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator
 
 ### `apps/cockpit/src/components/shared/segment-list.tsx`
 
 **Exports:**
-
 - `SegmentList()`
 
 **Depends on:**
-
 - (type) `@repo/database/queries/meetings/project-summaries` → MeetingSegment
 
 ### `apps/cockpit/src/components/shared/structured-transcript.tsx`
 
 **Exports:**
-
 - `StructuredTranscript()`
 
 ### `apps/cockpit/src/components/shared/userback-provider.tsx`
 
 **Exports:**
-
 - `UserbackProvider()`
 
 ### `apps/cockpit/src/components/shared/verification-badge.tsx`
 
 **Exports:**
-
 - `VerificationBadge()`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDateLong
 
 ### `apps/cockpit/src/components/weekly/generate-weekly-button.tsx`
 
 **Exports:**
-
 - `GenerateWeeklyButton()`
 
 ### `apps/cockpit/src/components/weekly/weekly-summary-view.tsx`
 
 **Exports:**
-
 - `WeeklySummaryView()`
 
 **Depends on:**
-
 - `@repo/ui/format` → formatDate
 
 ## Cockpit Middleware
@@ -4267,12 +3698,10 @@
 ### `apps/cockpit/src/middleware.ts`
 
 **Exports:**
-
 - `middleware`
 - `config`
 
 **Depends on:**
-
 - `@repo/auth/middleware` → createAuthMiddleware
 
 ## DevHub Server Actions
@@ -4280,12 +3709,10 @@
 ### `apps/devhub/src/actions/attachments.ts`
 
 **Exports:**
-
 - `createIssueAttachmentUploadUrlAction()`
 - `recordIssueAttachmentAction()`
 
 **Depends on:**
-
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
 - `@repo/database/supabase/admin` → getAdminClient
@@ -4295,7 +3722,6 @@
 ### `apps/devhub/src/actions/bulk-cluster-cleanup.ts`
 
 **Exports:**
-
 - `runBulkClusterCleanupAction()`
 - `acceptClusterToExistingAction()`
 - `acceptClusterAsNewAction()`
@@ -4303,7 +3729,6 @@
 **Types:** `BulkClusterRunResult`
 
 **Depends on:**
-
 - `@repo/auth/helpers` → getAuthenticatedUser, createPageClient
 - `@repo/auth/access` → listAccessibleProjectIds
 - `@repo/database/queries/issues` → listIssues
@@ -4315,13 +3740,11 @@
 ### `apps/devhub/src/actions/import.ts`
 
 **Exports:**
-
 - `syncUserback()`
 - `getSyncStatus()`
 - `backfillMedia()`
 
 **Depends on:**
-
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin, assertProjectAccess, NotAuthorizedError
@@ -4334,11 +3757,9 @@
 ### `apps/devhub/src/actions/review.ts`
 
 **Exports:**
-
 - `generateProjectReview()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/issues` → listIssues
@@ -4352,12 +3773,10 @@
 ### `apps/devhub/src/actions/slack-settings.ts`
 
 **Exports:**
-
 - `updateSlackConfigAction()`
 - `testSlackWebhookAction()`
 
 **Depends on:**
-
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 - `@repo/database/integrations/slack` → SLACK_NOTIFY_EVENTS
@@ -4368,13 +3787,11 @@
 ### `apps/devhub/src/app/api/ingest/userback/route.ts`
 
 **Exports:**
-
 - `GET()`
 - `POST()`
 - `maxDuration`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/queries/projects` → getProjectByUserbackProjectId
@@ -4384,12 +3801,10 @@
 ### `apps/devhub/src/app/api/ingest/widget/route.ts`
 
 **Exports:**
-
 - `POST()`
 - `OPTIONS()`
 
 **Depends on:**
-
 - `@repo/database/validations/widget` → widgetIngestSchema
 - `@repo/database/queries/widget` → isOriginAllowedForProject
 - `@repo/database/mutations/widget` → insertWidgetIssue
@@ -4399,7 +3814,6 @@
 ### `apps/devhub/src/app/(app)/changelog/changelog-data.ts`
 
 **Exports:**
-
 - `CHANGELOG`
 
 **Types:** `ChangelogBatch`
@@ -4407,63 +3821,52 @@
 ### `apps/devhub/src/app/(app)/changelog/page.tsx`
 
 **Exports:**
-
 - `metadata`
 
 ### `apps/devhub/src/app/(app)/settings/import/sync-card.tsx`
 
 **Exports:**
-
 - `SyncCard()`
 
 **Depends on:**
-
 - `@repo/ui/button` → Button
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/app/(app)/settings/slack/slack-config-card.tsx`
 
 **Exports:**
-
 - `SlackConfigCard()`
 
 **Depends on:**
-
 - `@repo/ui/button` → Button
 - (type) `@repo/database/integrations/slack` → SlackNotifyEvent
 
 ### `apps/devhub/src/app/auth/callback/route.ts`
 
 **Exports:**
-
 - `GET()`
 
 **Depends on:**
-
 - `@repo/database/supabase/server` → createClient
 
 ### `apps/devhub/src/app/layout.tsx`
 
 **Exports:**
-
 - `viewport`
 - `metadata`
 
 ### `apps/devhub/src/app/login/login-form.tsx`
 
 **Exports:**
-
 - `LoginForm()`
 
 **Depends on:**
-
 - `@repo/database/supabase/client` → createClient
 - `@repo/ui/button` → Button
 
 ### `apps/devhub/src/app/login/page.tsx`
 
 **Exports:**
-
 - `dynamic`
 
 ## DevHub Components
@@ -4471,85 +3874,70 @@
 ### `apps/devhub/src/components/cluster-suggestions/cluster-suggestion-card.tsx`
 
 **Exports:**
-
 - `ClusterSuggestionCard()`
 
 **Types:** `AcceptedNotice`, `ClusterSuggestionCardProps`
 
 **Depends on:**
-
 - (type) `@repo/ai/validations/bulk-cluster-cleanup` → BulkCluster
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/cluster-suggestions/cluster-suggestions-panel.tsx`
 
 **Exports:**
-
 - `ClusterSuggestionsPanel()`
 
 **Types:** `ClusterSuggestionsPanelProps`
 
 **Depends on:**
-
 - (type) `@repo/ai/validations/bulk-cluster-cleanup` → BulkClusterOutput
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/dashboard/area-summaries.tsx`
 
 **Exports:**
-
 - `AreaSummaries()`
 
 ### `apps/devhub/src/components/dashboard/dashboard-header.tsx`
 
 **Exports:**
-
 - `DashboardHeader()`
 
 **Depends on:**
-
 - `@repo/ui/button` → Button
 
 ### `apps/devhub/src/components/dashboard/dashboard-metrics.tsx`
 
 **Exports:**
-
 - `DashboardMetrics()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/dashboard/health-hero.tsx`
 
 **Exports:**
-
 - `HealthHero()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/layout/app-sidebar.tsx`
 
 **Exports:**
-
 - `AppSidebar()`
 
 **Depends on:**
-
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
 ### `apps/devhub/src/components/layout/count-seeder.tsx`
 
 **Exports:**
-
 - `CountSeeder()`
 
 ### `apps/devhub/src/components/layout/issue-count-store.ts`
 
 **Exports:**
-
 - `EMPTY_COUNTS`
 - `issueCountStore`
 
@@ -4558,33 +3946,27 @@
 ### `apps/devhub/src/components/layout/mobile-sidebar.tsx`
 
 **Exports:**
-
 - `MobileSidebar()`
 
 **Depends on:**
-
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
 
 ### `apps/devhub/src/components/layout/project-switcher.tsx`
 
 **Exports:**
-
 - `ProjectSwitcher()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/layout/search-input.tsx`
 
 **Exports:**
-
 - `SearchInput()`
 
 ### `apps/devhub/src/components/layout/sidebar-constants.ts`
 
 **Exports:**
-
 - `issueHref()`
 - `NAV_ITEMS`
 
@@ -4593,80 +3975,65 @@
 ### `apps/devhub/src/components/layout/sidebar-nav.tsx`
 
 **Exports:**
-
 - `SidebarNav()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/layout/top-bar.tsx`
 
 **Exports:**
-
 - `TopBar()`
 
 ### `apps/devhub/src/components/review/action-items-list.tsx`
 
 **Exports:**
-
 - `ActionItemsList()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/shared/avatar.tsx`
 
 **Exports:**
-
 - `Avatar()`
 
 ### `apps/devhub/src/components/shared/component-badge.tsx`
 
 **Exports:**
-
 - `ComponentBadge()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/shared/priority-badge.tsx`
 
 **Exports:**
-
 - `PriorityBadge()`
 - `PriorityDot()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/shared/status-badge.tsx`
 
 **Exports:**
-
 - `StatusBadge()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/shared/time-ago.ts`
 
 **Exports:**
-
 - `timeAgo()`
 
 ### `apps/devhub/src/components/shared/type-badge.tsx`
 
 **Exports:**
-
 - `TypeBadge()`
 
 **Depends on:**
-
 - `@repo/ui/utils` → cn
 
 ## DevHub Middleware
@@ -4674,59 +4041,57 @@
 ### `apps/devhub/src/middleware.ts`
 
 **Exports:**
-
 - `middleware`
 - `config`
 
 **Depends on:**
-
 - `@repo/auth/middleware` → createAuthMiddleware
 
 ## Cross-Package Dependency Matrix
 
 Which layers depend on which packages:
 
-| Layer                  | database | ai  | auth | ui  | mcp | Total |
-| ---------------------- | -------- | --- | ---- | --- | --- | ----- |
-| AI Agents              | 1        | -   | -    | -   | -   | 1     |
-| AI Core                | 13       | -   | -    | -   | -   | 13    |
-| AI Pipeline            | 59       | -   | -    | -   | -   | 59    |
-| AI Validations         | 1        | -   | -    | -   | -   | 1     |
-| Auth                   | 4        | -   | -    | -   | -   | 4     |
-| Cockpit Server Actions | 28       | 12  | 13   | -   | -   | 53    |
-| Cockpit API Routes     | 27       | 36  | 2    | -   | 1   | 66    |
-| Cockpit Components     | 20       | 5   | -    | 41  | -   | 66    |
-| Cockpit Middleware     | -        | -   | 1    | -   | -   | 1     |
-| Cockpit Pages          | 100      | 8   | 8    | 37  | -   | 153   |
-| Database Queries       | -        | -   | 3    | -   | -   | 3     |
-| DevHub Server Actions  | 20       | 3   | 10   | -   | -   | 33    |
-| DevHub API Routes      | 7        | -   | 1    | -   | -   | 8     |
-| DevHub Components      | -        | 2   | -    | 14  | -   | 16    |
-| DevHub Middleware      | -        | -   | 1    | -   | -   | 1     |
-| DevHub Pages           | 26       | -   | 20   | 11  | -   | 57    |
-| MCP Server             | 28       | 1   | -    | -   | -   | 29    |
+| Layer | database | ai | auth | ui | mcp | Total |
+|-------|---|---|---|---|---|-------|
+| AI Agents | 1 | - | - | - | - | 1 |
+| AI Core | 13 | - | - | - | - | 13 |
+| AI Pipeline | 59 | - | - | - | - | 59 |
+| AI Validations | 1 | - | - | - | - | 1 |
+| Auth | 4 | - | - | - | - | 4 |
+| Cockpit Server Actions | 28 | 12 | 13 | - | - | 53 |
+| Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
+| Cockpit Components | 20 | 5 | - | 41 | - | 66 |
+| Cockpit Middleware | - | - | 1 | - | - | 1 |
+| Cockpit Pages | 100 | 8 | 8 | 37 | - | 153 |
+| Database Queries | - | - | 3 | - | - | 3 |
+| DevHub Server Actions | 20 | 3 | 10 | - | - | 33 |
+| DevHub API Routes | 7 | - | 1 | - | - | 8 |
+| DevHub Components | - | 2 | - | 14 | - | 16 |
+| DevHub Middleware | - | - | 1 | - | - | 1 |
+| DevHub Pages | 26 | - | 20 | 11 | - | 57 |
+| MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points
 
 Files that import from 3+ shared packages. These are the most interconnected
 parts of the codebase — changes here have the widest blast radius.
 
-| File                                                                | Packages           | Count |
-| ------------------------------------------------------------------- | ------------------ | ----- |
-| `apps/cockpit/src/actions/dev-action-item-runner.ts`                | auth, database, ai | 3     |
-| `apps/cockpit/src/actions/dev-detector.ts`                          | ai, auth, database | 3     |
-| `apps/cockpit/src/actions/dev-speaker-mapping.ts`                   | auth, database, ai | 3     |
-| `apps/cockpit/src/actions/management-insights.ts`                   | database, auth, ai | 3     |
-| `apps/cockpit/src/actions/scan-needs.ts`                            | database, auth, ai | 3     |
-| `apps/cockpit/src/actions/weekly-summary.ts`                        | database, auth, ai | 3     |
-| `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`      | database, ui, ai   | 3     |
-| `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx`            | database, ui, ai   | 3     |
-| `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx` | auth, ui, database | 3     |
-| `apps/cockpit/src/app/api/email/process-pending/route.ts`           | database, ai, auth | 3     |
-| `apps/cockpit/src/app/api/email/reclassify/route.ts`                | database, ai, auth | 3     |
-| `apps/cockpit/src/components/agents/agent-card.tsx`                 | ai, database, ui   | 3     |
-| `apps/devhub/src/actions/bulk-cluster-cleanup.ts`                   | auth, database, ai | 3     |
-| `apps/devhub/src/actions/review.ts`                                 | database, ai, auth | 3     |
+| File | Packages | Count |
+|------|----------|-------|
+| `apps/cockpit/src/actions/dev-action-item-runner.ts` | auth, database, ai | 3 |
+| `apps/cockpit/src/actions/dev-detector.ts` | ai, auth, database | 3 |
+| `apps/cockpit/src/actions/dev-speaker-mapping.ts` | auth, database, ai | 3 |
+| `apps/cockpit/src/actions/management-insights.ts` | database, auth, ai | 3 |
+| `apps/cockpit/src/actions/scan-needs.ts` | database, auth, ai | 3 |
+| `apps/cockpit/src/actions/weekly-summary.ts` | database, auth, ai | 3 |
+| `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` | database, ui, ai | 3 |
+| `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` | database, ui, ai | 3 |
+| `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx` | auth, ui, database | 3 |
+| `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
+| `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
+| `apps/devhub/src/actions/bulk-cluster-cleanup.ts` | auth, database, ai | 3 |
+| `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
 ## Key Dependency Chains
 
@@ -4734,189 +4099,189 @@ Tracing the most important data flows from action → pipeline → database.
 
 ### mutations/agent-runs.ts
 
-| Mutation           | Called from                            |
-| ------------------ | -------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `insertAgentRun()` | `packages/ai/src/agents/run-logger.ts` |
 
 ### mutations/emails.ts
 
-| Mutation                        | Called from                                                                                         |
-| ------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `upsertGoogleAccount()`         | `apps/cockpit/src/app/api/email/auth/callback/route.ts`                                             |
-| `updateGoogleAccountTokens()`   | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| Mutation | Called from |
+|----------|------------|
+| `upsertGoogleAccount()` | `apps/cockpit/src/app/api/email/auth/callback/route.ts` |
+| `updateGoogleAccountTokens()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
-| `insertEmails()`                | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
-| `updateEmailClassification()`   | `packages/ai/src/pipeline/email/core.ts`                                                            |
-| `updateEmailFilterStatus()`     | `packages/ai/src/pipeline/email/core.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts`      |
-| `linkEmailProject()`            | `packages/ai/src/pipeline/email/core.ts`                                                            |
-| `updateEmailSenderPerson()`     | `packages/ai/src/pipeline/email/core.ts`                                                            |
+| `insertEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `updateEmailClassification()` | `packages/ai/src/pipeline/email/core.ts` |
+| `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email/core.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
+| `linkEmailProject()` | `packages/ai/src/pipeline/email/core.ts` |
+| `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email/core.ts` |
 
 ### mutations/embeddings.ts
 
-| Mutation                  | Called from                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------------------- |
-| `updateRowEmbedding()`    | `packages/ai/src/pipeline/embed/pipeline.ts`                                                      |
+| Mutation | Called from |
+|----------|------------|
+| `updateRowEmbedding()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
 | `batchUpdateEmbeddings()` | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 
 ### mutations/extractions/core.ts
 
-| Mutation                                    | Called from                                                                                                                                                                                          |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `deleteExtractionsByMeetingAndType()`       | `packages/ai/src/pipeline/saves/risk-extractions.ts`                                                                                                                                                 |
-| `deleteExtractionsByMeetingTypeAndSource()` | `packages/ai/src/pipeline/saves/action-item-extractions.ts`                                                                                                                                          |
-| `getExtractionForCorrection()`              | `packages/mcp/src/tools/correct-extraction.ts`                                                                                                                                                       |
-| `correctExtraction()`                       | `packages/mcp/src/tools/correct-extraction.ts`                                                                                                                                                       |
-| `insertExtractions()`                       | `packages/ai/src/pipeline/saves/action-item-extractions.ts`, `packages/ai/src/pipeline/saves/risk-extractions.ts`, `packages/ai/src/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
-| `updateNeedStatus()`                        | `apps/cockpit/src/actions/scan-needs.ts`                                                                                                                                                             |
+| Mutation | Called from |
+|----------|------------|
+| `deleteExtractionsByMeetingAndType()` | `packages/ai/src/pipeline/saves/risk-extractions.ts` |
+| `deleteExtractionsByMeetingTypeAndSource()` | `packages/ai/src/pipeline/saves/action-item-extractions.ts` |
+| `getExtractionForCorrection()` | `packages/mcp/src/tools/correct-extraction.ts` |
+| `correctExtraction()` | `packages/mcp/src/tools/correct-extraction.ts` |
+| `insertExtractions()` | `packages/ai/src/pipeline/saves/action-item-extractions.ts`, `packages/ai/src/pipeline/saves/risk-extractions.ts`, `packages/ai/src/scan-needs.ts`, `packages/mcp/src/tools/write-client-updates.ts` |
+| `updateNeedStatus()` | `apps/cockpit/src/actions/scan-needs.ts` |
 
 ### mutations/extractions/experimental-action-items.ts
 
-| Mutation                                   | Called from                                                |
-| ------------------------------------------ | ---------------------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `insertExperimentalActionItemExtraction()` | `packages/ai/src/pipeline/steps/action-item-specialist.ts` |
 
 ### mutations/extractions/experimental-risks.ts
 
-| Mutation                             | Called from                                         |
-| ------------------------------------ | --------------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `insertExperimentalRiskExtraction()` | `packages/ai/src/pipeline/steps/risk-specialist.ts` |
 
 ### mutations/extractions/themes.ts
 
-| Mutation                            | Called from                                     |
-| ----------------------------------- | ----------------------------------------------- |
-| `linkExtractionsToThemes()`         | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| Mutation | Called from |
+|----------|------------|
+| `linkExtractionsToThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `clearExtractionThemesForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 
 ### mutations/golden.ts
 
-| Mutation                  | Called from                                       |
-| ------------------------- | ------------------------------------------------- |
-| `upsertGoldenMeeting()`   | `apps/cockpit/src/actions/golden-action-items.ts` |
-| `insertGoldenItem()`      | `apps/cockpit/src/actions/golden-action-items.ts` |
-| `updateGoldenItem()`      | `apps/cockpit/src/actions/golden-action-items.ts` |
-| `deleteGoldenItem()`      | `apps/cockpit/src/actions/golden-action-items.ts` |
+| Mutation | Called from |
+|----------|------------|
+| `upsertGoldenMeeting()` | `apps/cockpit/src/actions/golden-action-items.ts` |
+| `insertGoldenItem()` | `apps/cockpit/src/actions/golden-action-items.ts` |
+| `updateGoldenItem()` | `apps/cockpit/src/actions/golden-action-items.ts` |
+| `deleteGoldenItem()` | `apps/cockpit/src/actions/golden-action-items.ts` |
 | `resetGoldenForMeeting()` | `apps/cockpit/src/actions/golden-action-items.ts` |
 
 ### mutations/ignored-entities.ts
 
-| Mutation             | Called from                            |
-| -------------------- | -------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `addIgnoredEntity()` | `apps/cockpit/src/actions/segments.ts` |
 
 ### mutations/issues/attachments.ts
 
-| Mutation             | Called from                              |
-| -------------------- | ---------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `insertAttachment()` | `apps/devhub/src/actions/attachments.ts` |
-| `storeIssueMedia()`  | `apps/devhub/src/actions/import.ts`      |
+| `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
 ### mutations/meetings/core.ts
 
-| Mutation                         | Called from                                                                                                                                                             |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `insertMeeting()`                | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`                                                                                                                       |
-| `insertManualMeeting()`          | `packages/mcp/src/tools/write-client-updates.ts`                                                                                                                        |
-| `updateMeetingClassification()`  | `apps/cockpit/src/app/api/cron/reclassify/route.ts`                                                                                                                     |
-| `updateMeetingElevenLabs()`      | `packages/ai/src/pipeline/steps/transcribe.ts`                                                                                                                          |
-| `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts`                                                                                                                     |
-| `updateMeetingTitle()`           | `packages/ai/src/pipeline/steps/generate-title.ts`                                                                                                                      |
-| `linkAllMeetingProjects()`       | `packages/ai/src/pipeline/saves/action-item-extractions.ts`, `packages/ai/src/pipeline/saves/risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
-| `updateMeetingSummary()`         | `packages/ai/src/pipeline/steps/summarize.ts`                                                                                                                           |
-| `updateMeetingRawFireflies()`    | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts`                                                                                                           |
-| `markMeetingEmbeddingStale()`    | `apps/cockpit/src/app/api/ingest/reprocess/route.ts`                                                                                                                    |
+| Mutation | Called from |
+|----------|------------|
+| `insertMeeting()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts` |
+| `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
+| `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
+| `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
+| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
+| `linkAllMeetingProjects()` | `packages/ai/src/pipeline/saves/action-item-extractions.ts`, `packages/ai/src/pipeline/saves/risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
+| `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
+| `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meetings/participants.ts
 
-| Mutation                    | Called from                                       |
-| --------------------------- | ------------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant/helpers.ts` |
 
 ### mutations/meetings/project-summaries.ts
 
-| Mutation                          | Called from                                                                                                                                                     |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `insertMeetingProjectSummaries()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-| `linkSegmentToProject()`          | `apps/cockpit/src/actions/segments.ts`                                                                                                                          |
-| `removeSegmentTag()`              | `apps/cockpit/src/actions/segments.ts`                                                                                                                          |
-| `updateSegmentEmbedding()`        | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `linkSegmentToProject()` | `apps/cockpit/src/actions/segments.ts` |
+| `removeSegmentTag()` | `apps/cockpit/src/actions/segments.ts` |
+| `updateSegmentEmbedding()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meetings/themes.ts
 
-| Mutation                  | Called from                                     |
-| ------------------------- | ----------------------------------------------- |
-| `linkMeetingToThemes()`   | `packages/ai/src/pipeline/steps/link-themes.ts` |
-| `clearMeetingThemes()`    | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| Mutation | Called from |
+|----------|------------|
+| `linkMeetingToThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `clearMeetingThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `recalculateThemeStats()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 
 ### mutations/profiles.ts
 
-| Mutation          | Called from                        |
-| ----------------- | ---------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
 
 ### mutations/projects/core.ts
 
-| Mutation                 | Called from                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `updateProjectAliases()` | `packages/ai/src/pipeline/lib/entity-resolution.ts`, `apps/cockpit/src/actions/segments.ts` |
 
 ### mutations/projects/reviews.ts
 
-| Mutation              | Called from                         |
-| --------------------- | ----------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `saveProjectReview()` | `apps/devhub/src/actions/review.ts` |
 
 ### mutations/slack-config.ts
 
-| Mutation              | Called from                                 |
-| --------------------- | ------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `upsertSlackConfig()` | `apps/devhub/src/actions/slack-settings.ts` |
 | `deleteSlackConfig()` | `apps/devhub/src/actions/slack-settings.ts` |
 
 ### mutations/summaries/core.ts
 
-| Mutation                 | Called from                                                                              |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `createSummaryVersion()` | `packages/ai/src/pipeline/summary/core.ts`, `packages/ai/src/pipeline/summary/weekly.ts` |
 
 ### mutations/summaries/management-insights.ts
 
-| Mutation                   | Called from                                               |
-| -------------------------- | --------------------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `saveManagementInsights()` | `packages/ai/src/pipeline/summary/management-insights.ts` |
-| `dismissInsight()`         | `apps/cockpit/src/actions/management-insights.ts`         |
+| `dismissInsight()` | `apps/cockpit/src/actions/management-insights.ts` |
 
 ### mutations/tasks.ts
 
-| Mutation                     | Called from                                                                  |
-| ---------------------------- | ---------------------------------------------------------------------------- |
+| Mutation | Called from |
+|----------|------------|
 | `createTaskFromExtraction()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
-| `updateTask()`               | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
-| `completeTask()`             | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
-| `dismissTask()`              | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
+| `updateTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
+| `completeTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
+| `dismissTask()` | `packages/mcp/src/tools/write-tasks.ts`, `apps/cockpit/src/actions/tasks.ts` |
 
 ### mutations/team.ts
 
-| Mutation                | Called from                         |
-| ----------------------- | ----------------------------------- |
-| `upsertProfile()`       | `apps/cockpit/src/actions/team.ts`  |
+| Mutation | Called from |
+|----------|------------|
+| `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
 | `ensureProfileExists()` | `apps/devhub/src/actions/review.ts` |
-| `updateProfileRole()`   | `apps/cockpit/src/actions/team.ts`  |
-| `clearProjectAccess()`  | `apps/cockpit/src/actions/team.ts`  |
-| `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts`  |
+| `updateProfileRole()` | `apps/cockpit/src/actions/team.ts` |
+| `clearProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
+| `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
 
 ### mutations/themes.ts
 
-| Mutation                 | Called from                                                    |
-| ------------------------ | -------------------------------------------------------------- |
-| `createEmergingTheme()`  | `packages/ai/src/pipeline/steps/link-themes.ts`                |
+| Mutation | Called from |
+|----------|------------|
+| `createEmergingTheme()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `upsertThemeNarrative()` | `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts` |
 
 ### mutations/widget/feedback.ts
 
-| Mutation              | Called from                                      |
-| --------------------- | ------------------------------------------------ |
+| Mutation | Called from |
+|----------|------------|
 | `insertWidgetIssue()` | `apps/devhub/src/app/api/ingest/widget/route.ts` |
 
 ## Query Usage Map
@@ -4925,387 +4290,387 @@ Which queries are used where across the codebase.
 
 ### queries/agent-runs.ts
 
-| Query                   | Used in                                            |
-| ----------------------- | -------------------------------------------------- |
-| `getAgentMetrics()`     | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
+| Query | Used in |
+|-------|---------|
+| `getAgentMetrics()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
 | `listRecentAgentRuns()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
 
 ### queries/content.ts
 
-| Query            | Used in                                             |
-| ---------------- | --------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `getStaleRows()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 
 ### queries/dashboard.ts
 
-| Query                               | Used in                                       |
-| ----------------------------------- | --------------------------------------------- |
-| `getReviewQueueCount()`             | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
-| `listRecentVerifiedMeetings()`      | `apps/cockpit/src/app/(dashboard)/page.tsx`   |
-| `listTodaysBriefingMeetings()`      | `apps/cockpit/src/app/(dashboard)/page.tsx`   |
-| `getExtractionCountsByMeetingIds()` | `apps/cockpit/src/app/(dashboard)/page.tsx`   |
+| Query | Used in |
+|-------|---------|
+| `getReviewQueueCount()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
+| `listRecentVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/page.tsx` |
+| `listTodaysBriefingMeetings()` | `apps/cockpit/src/app/(dashboard)/page.tsx` |
+| `getExtractionCountsByMeetingIds()` | `apps/cockpit/src/app/(dashboard)/page.tsx` |
 
 ### queries/dev-detector.ts
 
-| Query                                 | Used in                                    |
-| ------------------------------------- | ------------------------------------------ |
-| `getMeetingThemesForDevDetector()`    | `apps/cockpit/src/actions/dev-detector.ts` |
+| Query | Used in |
+|-------|---------|
+| `getMeetingThemesForDevDetector()` | `apps/cockpit/src/actions/dev-detector.ts` |
 | `getExtractionThemesForDevDetector()` | `apps/cockpit/src/actions/dev-detector.ts` |
 
 ### queries/emails/accounts.ts
 
-| Query                            | Used in                                                                                             |
-| -------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `listActiveGoogleAccountsSafe()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx`                                                  |
-| `listActiveGoogleAccounts()`     | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| Query | Used in |
+|-------|---------|
+| `listActiveGoogleAccountsSafe()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listActiveGoogleAccounts()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
 ### queries/emails/detail.ts
 
-| Query                 | Used in                                                       |
-| --------------------- | ------------------------------------------------------------- |
-| `getEmailById()`      | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`       |
-| `listDraftEmails()`   | `apps/cockpit/src/app/(dashboard)/review/page.tsx`            |
+| Query | Used in |
+|-------|---------|
+| `getEmailById()` | `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx` |
+| `listDraftEmails()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftEmailById()` | `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 
 ### queries/emails/lists.ts
 
-| Query                         | Used in                                                        |
-| ----------------------------- | -------------------------------------------------------------- |
-| `listEmails()`                | `apps/cockpit/src/app/(dashboard)/emails/page.tsx`             |
-| `countEmailsByFilterStatus()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx`             |
-| `listEmailsByOrganization()`  | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
-| `countEmailsByDirection()`    | `apps/cockpit/src/app/(dashboard)/emails/page.tsx`             |
+| Query | Used in |
+|-------|---------|
+| `listEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `countEmailsByFilterStatus()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listEmailsByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
+| `countEmailsByDirection()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
 
 ### queries/emails/pipeline.ts
 
-| Query                       | Used in                                                                                                                                                        |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getExistingGmailIds()`     | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts`                                                            |
-| `countUnprocessedEmails()`  | `apps/cockpit/src/app/(dashboard)/emails/page.tsx`                                                                                                             |
-| `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts`                                                                                                           |
-| `getUnprocessedEmails()`    | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| Query | Used in |
+|-------|---------|
+| `getExistingGmailIds()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+| `countUnprocessedEmails()` | `apps/cockpit/src/app/(dashboard)/emails/page.tsx` |
+| `listEmailsForReclassify()` | `apps/cockpit/src/app/api/email/reclassify/route.ts` |
+| `getUnprocessedEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/process-pending/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 
 ### queries/golden.ts
 
-| Query                            | Used in                                                                                                                                                                                  |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `listMeetingsWithGoldenStatus()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx`, `apps/cockpit/src/app/(dashboard)/dev/action-items/run/page.tsx`                                                    |
-| `getMeetingForGoldenCoder()`     | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/actions/dev-speaker-mapping.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
-| `getGoldenForMeeting()`          | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx`                                                    |
+| Query | Used in |
+|-------|---------|
+| `listMeetingsWithGoldenStatus()` | `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/page.tsx`, `apps/cockpit/src/app/(dashboard)/dev/action-items/run/page.tsx` |
+| `getMeetingForGoldenCoder()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/actions/dev-speaker-mapping.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
+| `getGoldenForMeeting()` | `apps/cockpit/src/actions/dev-action-item-runner.ts`, `apps/cockpit/src/app/(dashboard)/dev/action-items/golden/[meetingId]/page.tsx` |
 
 ### queries/ignored-entities.ts
 
-| Query                     | Used in                                                                                                                                                         |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `getIgnoredEntityNames()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### queries/issues/activity.ts
 
-| Query                 | Used in                                          |
-| --------------------- | ------------------------------------------------ |
+| Query | Used in |
+|-------|---------|
 | `listIssueActivity()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 
 ### queries/issues/attachments.ts
 
-| Query                          | Used in                                          |
-| ------------------------------ | ------------------------------------------------ |
-| `getIssueThumbnails()`         | `apps/devhub/src/app/(app)/issues/page.tsx`      |
-| `listIssueAttachments()`       | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
-| `getIssueIdsWithAttachments()` | `apps/devhub/src/actions/import.ts`              |
+| Query | Used in |
+|-------|---------|
+| `getIssueThumbnails()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssueAttachments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getIssueIdsWithAttachments()` | `apps/devhub/src/actions/import.ts` |
 
 ### queries/issues/comments.ts
 
-| Query                 | Used in                                          |
-| --------------------- | ------------------------------------------------ |
+| Query | Used in |
+|-------|---------|
 | `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 
 ### queries/issues/core.ts
 
-| Query                       | Used in                                                                                                                             |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `parseSearchQuery()`        | `apps/devhub/src/app/(app)/issues/page.tsx`                                                                                         |
-| `listIssues()`              | `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `countFilteredIssues()`     | `apps/devhub/src/app/(app)/issues/page.tsx`                                                                                         |
-| `getIssueById()`            | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`                                          |
-| `getIssueCounts()`          | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx`                                                   |
-| `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx`                                                                                                |
+| Query | Used in |
+|-------|---------|
+| `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssues()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getIssueCounts()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
+| `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/meetings/core.ts
 
-| Query                      | Used in                                                                                                                        |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `getVerifiedMeetingById()` | `apps/cockpit/src/actions/dev-detector.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`                          |
-| `listVerifiedMeetings()`   | `apps/cockpit/src/app/(dashboard)/dev/detector/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/page.tsx`                 |
-| `listBoardMeetings()`      | `packages/ai/src/pipeline/summary/management-insights.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
+| Query | Used in |
+|-------|---------|
+| `getVerifiedMeetingById()` | `apps/cockpit/src/actions/dev-detector.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
+| `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/dev/detector/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
+| `listBoardMeetings()` | `packages/ai/src/pipeline/summary/management-insights.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
 
 ### queries/meetings/lookup.ts
 
-| Query                               | Used in                                                |
-| ----------------------------------- | ------------------------------------------------------ |
-| `getMeetingByFirefliesId()`         | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
-| `getExistingFirefliesIds()`         | `apps/cockpit/src/app/api/ingest/fireflies/route.ts`   |
-| `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts`   |
-| `getMeetingByTitleAndDate()`        | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
+| Query | Used in |
+|-------|---------|
+| `getMeetingByFirefliesId()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
+| `getExistingFirefliesIds()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
+| `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
+| `getMeetingByTitleAndDate()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 
 ### queries/meetings/metadata.ts
 
-| Query                        | Used in                                |
-| ---------------------------- | -------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
 
 ### queries/meetings/pipeline-fetches.ts
 
-| Query                                  | Used in                                                                                       |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `listMeetingsForReclassify()`          | `apps/cockpit/src/app/api/cron/reclassify/route.ts`                                           |
-| `listMeetingsWithTranscript()`         | `apps/cockpit/src/actions/dev-speaker-mapping.ts`                                             |
-| `getMeetingForEmbedding()`             | `packages/ai/src/pipeline/embed/pipeline.ts`                                                  |
-| `getExtractionIdsAndContent()`         | `packages/ai/src/pipeline/embed/pipeline.ts`                                                  |
-| `getMeetingExtractions()`              | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
-| `getMeetingExtractionsBatch()`         | `packages/ai/src/pipeline/embed/re-embed-worker.ts`                                           |
-| `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts`                                          |
+| Query | Used in |
+|-------|---------|
+| `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `listMeetingsWithTranscript()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
+| `getExtractionIdsAndContent()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
+| `getMeetingExtractions()` | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
+| `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
 
 ### queries/meetings/project-summaries.ts
 
-| Query                            | Used in                                                                                                            |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `getSegmentsByMeetingId()`       | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
-| `getSegmentsByMeetingIds()`      | `packages/mcp/src/tools/meetings.ts`                                                                               |
-| `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts`                                                                          |
-| `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts`                                                                               |
-| `getSegmentNameRaw()`            | `apps/cockpit/src/actions/segments.ts`                                                                             |
-| `getSegmentsByProjectId()`       | `packages/ai/src/pipeline/summary/core.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`              |
+| Query | Used in |
+|-------|---------|
+| `getSegmentsByMeetingId()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `getSegmentsByMeetingIds()` | `packages/mcp/src/tools/meetings.ts` |
+| `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
+| `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
+| `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
+| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/core.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/meetings/regenerate.ts
 
-| Query                                   | Used in                                                       |
-| --------------------------------------- | ------------------------------------------------------------- |
-| `getMeetingForBackfill()`               | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
-| `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts`          |
+| Query | Used in |
+|-------|---------|
+| `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
+| `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### queries/meetings/speaker-mapping.ts
 
-| Query                                       | Used in                                             |
-| ------------------------------------------- | --------------------------------------------------- |
-| `getSpeakerMappingTranscriptCounts()`       | `apps/cockpit/src/actions/dev-speaker-mapping.ts`   |
-| `countSpeakerMappingBackfillRemaining()`    | `apps/cockpit/src/actions/dev-speaker-mapping.ts`   |
-| `listSpeakerMappingBackfillCandidates()`    | `apps/cockpit/src/actions/dev-speaker-mapping.ts`   |
+| Query | Used in |
+|-------|---------|
+| `getSpeakerMappingTranscriptCounts()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `countSpeakerMappingBackfillRemaining()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `listSpeakerMappingBackfillCandidates()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
 | `getMeetingParticipantsForSpeakerMapping()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 
 ### queries/needs.ts
 
-| Query                          | Used in                                                       |
-| ------------------------------ | ------------------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `listNeedsGroupedByCategory()` | `apps/cockpit/src/app/(dashboard)/intelligence/team/page.tsx` |
-| `countNeeds()`                 | `apps/cockpit/src/app/(dashboard)/intelligence/page.tsx`      |
+| `countNeeds()` | `apps/cockpit/src/app/(dashboard)/intelligence/page.tsx` |
 
 ### queries/organizations.ts
 
-| Query                               | Used in                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `listOrganizations()`               | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
-| `getOrganizationById()`             | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx`                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `getAllOrganizations()`             | `packages/ai/src/pipeline/lib/context-injection.ts`, `packages/ai/src/pipeline/lib/entity-resolution.ts`                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts`                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `listOrganizationsByType()`         | `apps/cockpit/src/app/(dashboard)/administratie/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/page.tsx`                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Query | Used in |
+|-------|---------|
+| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
+| `getAllOrganizations()` | `packages/ai/src/pipeline/lib/context-injection.ts`, `packages/ai/src/pipeline/lib/entity-resolution.ts` |
+| `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
+| `listOrganizationsByType()` | `apps/cockpit/src/app/(dashboard)/administratie/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/page.tsx` |
 
 ### queries/people/detail.ts
 
-| Query              | Used in                                                 |
-| ------------------ | ------------------------------------------------------- |
-| `getPersonById()`  | `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx` |
-| `getStalePeople()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts`     |
+| Query | Used in |
+|-------|---------|
+| `getPersonById()` | `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx` |
+| `getStalePeople()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 
 ### queries/people/lists.ts
 
-| Query                        | Used in                                                                                                                                                                                                                                                                                      |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `listPeople()`               | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
-| `listPeopleByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`                                                                                                                                                                                                                               |
-| `listPeopleWithOrg()`        | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`                                                                                                                                                                           |
-| `listPeopleForAssignment()`  | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`                                                                                                                              |
+| Query | Used in |
+|-------|---------|
+| `listPeople()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listPeopleByOrganization()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx` |
+| `listPeopleWithOrg()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listPeopleForAssignment()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 
 ### queries/people/lookup.ts
 
-| Query                    | Used in                                                                                                                                   |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `findPersonIdsByName()`  | `packages/mcp/src/tools/actions.ts`                                                                                                       |
-| `findProfileIdByName()`  | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
-| `findPeopleByEmails()`   | `packages/ai/src/pipeline/participant/helpers.ts`                                                                                         |
-| `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts`                                       |
+| Query | Used in |
+|-------|---------|
+| `findPersonIdsByName()` | `packages/mcp/src/tools/actions.ts` |
+| `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
+| `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |
+| `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 
 ### queries/people/pipeline.ts
 
-| Query                   | Used in                                                                                                                                                                                                              |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getAllKnownPeople()`   | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
-| `getPeopleForContext()` | `packages/ai/src/pipeline/lib/context-injection.ts`                                                                                                                                                                  |
+| Query | Used in |
+|-------|---------|
+| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `getPeopleForContext()` | `packages/ai/src/pipeline/lib/context-injection.ts` |
 
 ### queries/projects/access.ts
 
-| Query                      | Used in                                                                                                                           |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `listAccessibleProjects()` | `apps/devhub/src/app/(app)/layout.tsx`, `apps/devhub/src/app/(app)/page.tsx`, `apps/devhub/src/app/(app)/settings/slack/page.tsx` |
 
 ### queries/projects/core.ts
 
-| Query                             | Used in                                                                                                                                                                                                                                                                                                                                                  |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `listProjects()`                  | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
-| `getProjectById()`                | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts`                                                                                                                                                                                                                                                           |
-| `listFocusProjects()`             | `apps/cockpit/src/app/(dashboard)/layout.tsx`                                                                                                                                                                                                                                                                                                            |
-| `getProjectAliases()`             | `apps/cockpit/src/actions/segments.ts`                                                                                                                                                                                                                                                                                                                   |
-| `getAllProjects()`                | `packages/ai/src/pipeline/lib/entity-resolution.ts`                                                                                                                                                                                                                                                                                                      |
-| `getActiveProjectsForContext()`   | `packages/ai/src/pipeline/lib/context-injection.ts`                                                                                                                                                                                                                                                                                                      |
-| `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts`                                                                                                                                                                                                                                                                                                       |
-| `matchProjectsByEmbedding()`      | `packages/ai/src/pipeline/lib/entity-resolution.ts`                                                                                                                                                                                                                                                                                                      |
+| Query | Used in |
+|-------|---------|
+| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
+| `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
+| `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
+| `getAllProjects()` | `packages/ai/src/pipeline/lib/entity-resolution.ts` |
+| `getActiveProjectsForContext()` | `packages/ai/src/pipeline/lib/context-injection.ts` |
+| `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
+| `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/lib/entity-resolution.ts` |
 
 ### queries/projects/reviews.ts
 
-| Query                      | Used in                              |
-| -------------------------- | ------------------------------------ |
+| Query | Used in |
+|-------|---------|
 | `getLatestProjectReview()` | `apps/devhub/src/app/(app)/page.tsx` |
-| `getHealthTrend()`         | `apps/devhub/src/app/(app)/page.tsx` |
+| `getHealthTrend()` | `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/reports/internals.ts
 
-| Query                     | Used in                                                                                               |
-| ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `cutoffIsoFromDaysBack()` | `packages/database/src/queries/reports/issues.ts`, `packages/database/src/queries/reports/project.ts` |
-| `mapIssueRow()`           | `packages/database/src/queries/reports/issues.ts`                                                     |
+| `mapIssueRow()` | `packages/database/src/queries/reports/issues.ts` |
 
 ### queries/reports/issues.ts
 
-| Query                         | Used in                            |
-| ----------------------------- | ---------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `getProjectIssuesForReport()` | `packages/mcp/src/tools/issues.ts` |
-| `getIssueDetailForReport()`   | `packages/mcp/src/tools/issues.ts` |
+| `getIssueDetailForReport()` | `packages/mcp/src/tools/issues.ts` |
 
 ### queries/reports/project.ts
 
-| Query                           | Used in                                    |
-| ------------------------------- | ------------------------------------------ |
+| Query | Used in |
+|-------|---------|
 | `getProjectActivityForReport()` | `packages/mcp/src/tools/project-report.ts` |
-| `getProjectContextForReport()`  | `packages/mcp/src/tools/project-report.ts` |
+| `getProjectContextForReport()` | `packages/mcp/src/tools/project-report.ts` |
 
 ### queries/review.ts
 
-| Query                   | Used in                                                 |
-| ----------------------- | ------------------------------------------------------- |
-| `listDraftMeetings()`   | `apps/cockpit/src/app/(dashboard)/review/page.tsx`      |
+| Query | Used in |
+|-------|---------|
+| `listDraftMeetings()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 | `getDraftMeetingById()` | `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
-| `getReviewStats()`      | `apps/cockpit/src/app/(dashboard)/review/page.tsx`      |
+| `getReviewStats()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 
 ### queries/summaries/core.ts
 
-| Query                | Used in                                                                                                                                                                                                                                                               |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary/core.ts` |
 
 ### queries/summaries/management-insights.ts
 
-| Query                       | Used in                                                                                                          |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `getManagementInsights()`   | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
-| `getDismissedInsightKeys()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`                                              |
+| Query | Used in |
+|-------|---------|
+| `getManagementInsights()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
+| `getDismissedInsightKeys()` | `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
 
 ### queries/summaries/weekly.ts
 
-| Query                      | Used in                                                         |
-| -------------------------- | --------------------------------------------------------------- |
-| `getWeeklyProjectData()`   | `packages/ai/src/pipeline/summary/weekly.ts`                    |
+| Query | Used in |
+|-------|---------|
+| `getWeeklyProjectData()` | `packages/ai/src/pipeline/summary/weekly.ts` |
 | `getLatestWeeklySummary()` | `apps/cockpit/src/app/(dashboard)/intelligence/weekly/page.tsx` |
 
 ### queries/tasks.ts
 
-| Query                        | Used in                                                                                                            |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `hasTaskForExtraction()`     | `apps/cockpit/src/actions/tasks.ts`                                                                                |
+| Query | Used in |
+|-------|---------|
+| `hasTaskForExtraction()` | `apps/cockpit/src/actions/tasks.ts` |
 | `getPromotedExtractionIds()` | `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
-| `listAllTasks()`             | `apps/cockpit/src/app/(dashboard)/page.tsx`                                                                        |
+| `listAllTasks()` | `apps/cockpit/src/app/(dashboard)/page.tsx` |
 
 ### queries/team.ts
 
-| Query                 | Used in                                                                                                                                                                                                |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `listTeamMembers()`   | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts`                                                                                                                                                                     |
-| `countAdmins()`       | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`                                                                                                             |
-| `getProfileRole()`    | `apps/cockpit/src/actions/team.ts`                                                                                                                                                                     |
+| Query | Used in |
+|-------|---------|
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
+| `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
+| `getProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 
 ### queries/themes/core.ts
 
-| Query                  | Used in                                                                                                                                         |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
 | `listVerifiedThemes()` | `packages/ai/src/pipeline/steps/link-themes.ts`, `packages/ai/src/pipeline/steps/theme-detector.ts`, `apps/cockpit/src/actions/dev-detector.ts` |
-| `getThemeBySlug()`     | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx`                                                                                       |
+| `getThemeBySlug()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/themes/detail.ts
 
-| Query                      | Used in                                                   |
-| -------------------------- | --------------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `getThemeRecentActivity()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
-| `getThemeMeetings()`       | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
-| `getThemeDecisions()`      | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
-| `getThemeParticipants()`   | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeMeetings()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeDecisions()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
+| `getThemeParticipants()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 
 ### queries/themes/internals.ts
 
-| Query                      | Used in                                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------ |
-| `windowStartIso()`         | `packages/database/src/queries/themes/detail.ts`                                                 |
+| Query | Used in |
+|-------|---------|
+| `windowStartIso()` | `packages/database/src/queries/themes/detail.ts` |
 | `fetchWindowAggregation()` | `packages/database/src/queries/themes/dashboard.ts`, `apps/cockpit/src/app/(dashboard)/page.tsx` |
 
 ### queries/themes/narrative.ts
 
-| Query                         | Used in                                                        |
-| ----------------------------- | -------------------------------------------------------------- |
-| `getThemeNarrative()`         | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx`      |
+| Query | Used in |
+|-------|---------|
+| `getThemeNarrative()` | `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx` |
 | `listThemeMeetingSummaries()` | `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts` |
 
 ### queries/themes/review.ts
 
-| Query                                | Used in                                                 |
-| ------------------------------------ | ------------------------------------------------------- |
-| `listEmergingThemes()`               | `apps/cockpit/src/app/(dashboard)/review/page.tsx`      |
-| `listRejectedThemePairsForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts`         |
-| `listProposedThemesForMeeting()`     | `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| Query | Used in |
+|-------|---------|
+| `listEmergingThemes()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
+| `listRejectedThemePairsForMeeting()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
+| `listProposedThemesForMeeting()` | `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 
 ### queries/topics/detail.ts
 
-| Query            | Used in                                                                                                                                                   |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Query | Used in |
+|-------|---------|
 | `getTopicById()` | `packages/database/src/mutations/topics/crud.ts`, `apps/devhub/src/app/(app)/topics/[id]/edit/page.tsx`, `apps/devhub/src/app/(app)/topics/[id]/page.tsx` |
 
 ### queries/topics/linked-issues.ts
 
-| Query                           | Used in                                                                                       |
-| ------------------------------- | --------------------------------------------------------------------------------------------- |
-| `countOpenIssuesPerTopic()`     | `apps/devhub/src/app/(app)/issues/page.tsx`                                                   |
+| Query | Used in |
+|-------|---------|
+| `countOpenIssuesPerTopic()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getTopicMembershipForIssues()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getLinkedIssueIdsInProject()`  | `packages/database/src/queries/issues/core.ts`                                                |
-| `getIssueIdsForTopics()`        | `packages/database/src/queries/issues/core.ts`                                                |
+| `getLinkedIssueIdsInProject()` | `packages/database/src/queries/issues/core.ts` |
+| `getIssueIdsForTopics()` | `packages/database/src/queries/issues/core.ts` |
 
 ### queries/topics/list.ts
 
-| Query                        | Used in                                                                                       |
-| ---------------------------- | --------------------------------------------------------------------------------------------- |
-| `listTopics()`               | `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `listOpenTopicsForCluster()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts`                                             |
-| `listTopicSampleIssues()`    | `apps/devhub/src/actions/bulk-cluster-cleanup.ts`                                             |
+| Query | Used in |
+|-------|---------|
+| `listTopics()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listOpenTopicsForCluster()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
+| `listTopicSampleIssues()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
 
 ### queries/userback-issues.ts
 
-| Query                             | Used in                             |
-| --------------------------------- | ----------------------------------- |
-| `getUserbackSyncCursor()`         | `apps/devhub/src/actions/import.ts` |
-| `countUserbackIssues()`           | `apps/devhub/src/actions/import.ts` |
+| Query | Used in |
+|-------|---------|
+| `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
+| `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |
 | `listUserbackIssuesForBackfill()` | `apps/devhub/src/actions/import.ts` |
 
 ### queries/widget/access.ts
 
-| Query                         | Used in                                          |
-| ----------------------------- | ------------------------------------------------ |
+| Query | Used in |
+|-------|---------|
 | `isOriginAllowedForProject()` | `apps/devhub/src/app/api/ingest/widget/route.ts` |
