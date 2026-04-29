@@ -309,22 +309,30 @@ return a.length === b.length && timingSafeEqual(a, b);
 
 ## Geaccepteerde MVP-risico's
 
-### WG-MVP-001: Widget-ingest zonder rate-limit
+### WG-MVP-001: Widget-ingest zonder rate-limit ✅ Opgelost (WG-005)
 
-**Ernst:** Midden (tijdelijk geaccepteerd)
+**Status:** Opgelost in WG-005 (commit-hash zie git log).
 **Bestanden:**
 
 - `apps/devhub/src/app/api/ingest/widget/route.ts`
+- `apps/devhub/src/lib/rate-limit.ts`
+- `packages/database/src/mutations/widget/rate-limit.ts`
+- `supabase/migrations/20260429130000_widget_rate_limits.sql`
 
-**Beschrijving:** De `/api/ingest/widget`-route heeft bewust geen rate-limit voor de MVP-rollout (cockpit-only, 3 gebruikers, whitelist beperkt Origin tot bekende interne domeinen). De `Origin`-header is spoofbaar via curl, dus een scriptkid kan in theorie de triage-queue floodden. Risico is data-leak-vrij (geen auth-state in payload), alleen lawaai in triage.
+**Eindresultaat:** 30 POST's/uur per Origin via een Postgres-counter
+(`widget_rate_limits`-tabel + atomische `increment_rate_limit`-RPC). 31e
+request krijgt `429` met `Retry-After`. Cleanup via `pg_cron` elk uur.
 
-**Mitigatie nu:**
+**Bewust geaccepteerd restrisico:** **fail-open** bij DB-uitval —
+Postgres-fout op de RPC = request doorlaten (zie WG-REQ-096). Argumentatie:
+30 minuten extra spam in triage is hersteldbaar; alle feedback per ongeluk
+weggooien is dat niet. Origin-spoofing blijft daarnaast theoretisch mogelijk
+maar vraagt een dedicated payload-signing-sprint; voor V0 is whitelist +
+rate-limit het pragmatische maximum.
 
-- Whitelist `widget_allowed_projects` beperkt geldige `project_id × Origin`-combinaties; vreemde Origins → 403
-- Bij flood: Origin tijdelijk uit whitelist verwijderen via DevHub admin-UI (komt in WG-004)
-- Submissions blijven low-stakes (geen file-uploads, max 10KB description)
-
-**Fix:** WG-005 (Postgres-counter) — draait vóór de eerste klant-rollout (WG-004), want zodra externe Origins op de whitelist komen verandert het dreigingsmodel.
+**`/api/ingest/userback`** is admin-only (cron + admin-session, geen public
+Origin) en heeft daarom geen rate-limit nodig — util ondersteunt de
+`userback_ingest`-prefix voor een hypothetische public-mode in de toekomst.
 
 ---
 

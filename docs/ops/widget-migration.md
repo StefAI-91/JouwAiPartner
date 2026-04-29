@@ -75,11 +75,36 @@ DevHub-ingest faalt):
 
 ## Bekende gaps
 
-| Gap                            | Impact                                                                                                                    | Follow-up                                                                                                                       |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Geen annotated screenshots** | Userback laat gebruikers tekenen op een screenshot. JAIP V0 niet — alleen URL + viewport in de payload.                   | **WG-006** (gepland): `html2canvas` + draw-overlay. Cutover gaat nu door zonder als team akkoord is dat ze 'm tijdelijk missen. |
-| **Geen rate-limit op ingest**  | Origin-whitelist beperkt waar requests vandaan mogen, maar geen per-IP/per-project limiet. Bij flood = DevHub-issues vol. | **WG-005** (vóór klant-rollout): Postgres-counter rate-limit.                                                                   |
-| **Geen replay/recordings**     | Userback heeft session-replay bij feedback. Nice-to-have, niet kritiek voor team-dogfood.                                 | Geen plan; opnemen in v2-overweging als team het écht mist.                                                                     |
+| Gap                            | Impact                                                                                                  | Follow-up                                                                                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Geen annotated screenshots** | Userback laat gebruikers tekenen op een screenshot. JAIP V0 niet — alleen URL + viewport in de payload. | **WG-006** (gepland): `html2canvas` + draw-overlay. Cutover gaat nu door zonder als team akkoord is dat ze 'm tijdelijk missen. |
+| **Geen replay/recordings**     | Userback heeft session-replay bij feedback. Nice-to-have, niet kritiek voor team-dogfood.               | Geen plan; opnemen in v2-overweging als team het écht mist.                                                                     |
+
+## Rate-limit (WG-005)
+
+`/api/ingest/widget` rate-limit'd op **30 POST's per uur per Origin-host**
+via een Postgres-counter (`widget_rate_limits`-tabel + atomische
+`increment_rate_limit`-RPC). De 31e request binnen het uur krijgt `429`
+met `Retry-After`-header tot de volgende uur-grens. Counter reset op
+`date_trunc('hour', now())`.
+
+- **Per-Origin, niet per project_id** (WG-005 §Q1) — één klant heeft
+  typisch één Origin; per-Origin is makkelijker te triagen.
+- **Fail-open bij DB-uitval** (WG-REQ-096) — Postgres-fout = request
+  doorlaten. 30 minuten extra spam in triage is hersteldbaar; alle
+  feedback per ongeluk weggooien is dat niet.
+- **Cleanup** — `pg_cron`-job `cleanup-widget-rate-limits` verwijdert
+  rijen ouder dan 24u, draait elk uur. Zonder cleanup groeit de tabel
+  lineair.
+
+**Limiet aanpassen:** edit `WIDGET_RATE_LIMIT_PER_HOUR` in
+`packages/database/src/constants/widget.ts` en redeploy. Wijziging is
+één regel — geen DB-migratie nodig.
+
+**`/api/ingest/userback`** is admin-only (cron + admin-session, geen
+public Origin) en draagt om die reden geen rate-limit. Util ondersteunt
+de `userback_ingest`-prefix wel zodat een toekomstige public-mode (mocht
+die ooit nodig zijn) erop kan plug-en-playen.
 
 ## Vergelijkingsperiode-log
 

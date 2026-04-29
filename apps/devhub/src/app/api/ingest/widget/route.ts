@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { widgetIngestSchema } from "@repo/database/validations/widget";
 import { isOriginAllowedForProject } from "@repo/database/queries/widget";
 import { insertWidgetIssue } from "@repo/database/mutations/widget";
+import { rateLimitOrigin } from "@/lib/rate-limit";
+import { WIDGET_RATE_LIMIT_PREFIXES } from "@repo/database/constants/widget";
 
-// MVP: geen rate-limit. Bewust geaccepteerd risico voor cockpit-only rollout
-// (3 gebruikers, whitelist beperkt Origin tot bekende domeinen, low-stakes
-// payload). Origin-header is spoofbaar via curl — mitigatie zit in de
-// whitelist + de payload bevat geen auth-state. Postgres-counter komt in
-// WG-005, vóór de eerste klant-rollout (WG-004).
+// WG-005: rate-limit per Origin via Postgres-counter. Whitelist + rate-limit
+// tezamen sluiten het flood-risico — Origin spoof-resistant zou een nieuwe
+// sprint vragen (mTLS / signed payloads), maar in V0 is hostname-binding
+// genoeg voor goedwillende klanten.
 
 // Placeholder-status-page (WG-REQ-077). Echte status-page is aparte sprint.
 // Bij 5xx krijgt de klant een link zodat hij weet of het aan ons ligt.
@@ -19,6 +20,8 @@ interface IngestLog {
   origin: string | null;
   status: number;
   error_code: string | null;
+  /** Aantal requests in de huidige uur-bucket (post-increment). -1 = fail-open. */
+  rate_count?: number;
   ts: string;
 }
 
@@ -32,6 +35,17 @@ function corsHeaders(origin: string): Headers {
   headers.set("Access-Control-Allow-Origin", origin);
   headers.set("Vary", "Origin");
   return headers;
+}
+
+/**
+ * Seconds tot het volgende hele uur. Geeft de caller een Retry-After zonder
+ * dat hij zelf de uur-grens hoeft te berekenen.
+ */
+function secondsUntilNextHour(): number {
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(now.getHours() + 1, 0, 0, 0);
+  return Math.ceil((next.getTime() - now.getTime()) / 1000);
 }
 
 export async function POST(req: Request) {
@@ -60,6 +74,37 @@ export async function POST(req: Request) {
       error_code: "origin_not_allowed",
     });
     return NextResponse.json({ error: "origin_not_allowed" }, { status: 403 });
+  }
+
+  // Rate-limit pas ná de whitelist-check zodat we niet onbedoeld counters
+  // ophogen voor random Origins die er sowieso niet door komen.
+  const originHost = new URL(origin).hostname;
+  const rate = await rateLimitOrigin(originHost, WIDGET_RATE_LIMIT_PREFIXES.widget_ingest);
+  if (!rate.success) {
+    logIngest({
+      project_id: parsed.data.project_id,
+      origin,
+      status: 429,
+      error_code: "rate_limited",
+      rate_count: rate.count,
+    });
+    return NextResponse.json(
+      {
+        error: "rate_limited",
+        retry_after_seconds: secondsUntilNextHour(),
+        limit_per_hour: rate.limit,
+      },
+      {
+        status: 429,
+        headers: (() => {
+          const h = corsHeaders(origin);
+          h.set("Retry-After", String(secondsUntilNextHour()));
+          h.set("X-RateLimit-Limit", String(rate.limit));
+          h.set("X-RateLimit-Remaining", "0");
+          return h;
+        })(),
+      },
+    );
   }
 
   const result = await insertWidgetIssue(parsed.data);

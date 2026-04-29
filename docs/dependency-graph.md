@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 536 |
-| Exported functions/constants | 841 |
+| Files scanned | 537 |
+| Exported functions/constants | 842 |
 | Exported types/interfaces | 349 |
-| Cross-package imports | 573 |
+| Cross-package imports | 574 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -878,6 +878,11 @@
 
 **Exports:**
 - `insertWidgetIssue()`
+
+### `mutations/widget/rate-limit.ts`
+
+**Exports:**
+- `incrementRateLimit()`
 
 ## AI Agents
 
@@ -3744,6 +3749,7 @@
 - `@repo/database/validations/widget` → widgetIngestSchema
 - `@repo/database/queries/widget` → isOriginAllowedForProject
 - `@repo/database/mutations/widget` → insertWidgetIssue
+- `@repo/database/constants/widget` → WIDGET_RATE_LIMIT_PREFIXES
 
 ## DevHub Pages
 
@@ -4009,7 +4015,7 @@ Which layers depend on which packages:
 | Cockpit Pages | 100 | 8 | 8 | 37 | - | 153 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 23 | 3 | 12 | - | - | 38 |
-| DevHub API Routes | 7 | - | 1 | - | - | 8 |
+| DevHub API Routes | 8 | - | 1 | - | - | 9 |
 | DevHub Components | - | 2 | - | 14 | - | 16 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 27 | - | 22 | 12 | - | 61 |
