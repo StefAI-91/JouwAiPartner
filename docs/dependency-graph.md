@@ -9,8 +9,8 @@
 |--------|-------|
 | Files scanned | 523 |
 | Exported functions/constants | 825 |
-| Exported types/interfaces | 345 |
-| Cross-package imports | 560 |
+| Exported types/interfaces | 346 |
+| Cross-package imports | 561 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -3744,7 +3744,7 @@
 **Exports:**
 - `ClusterSuggestionCard()`
 
-**Types:** `ClusterSuggestionCardProps`
+**Types:** `AcceptedNotice`, `ClusterSuggestionCardProps`
 
 **Depends on:**
 - (type) `@repo/ai/validations/bulk-cluster-cleanup` → BulkCluster
@@ -3759,6 +3759,7 @@
 
 **Depends on:**
 - (type) `@repo/ai/validations/bulk-cluster-cleanup` → BulkClusterOutput
+- `@repo/ui/utils` → cn
 
 ### `apps/devhub/src/components/dashboard/area-summaries.tsx`
 
@@ -3933,7 +3934,7 @@ Which layers depend on which packages:
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 20 | 3 | 10 | - | - | 33 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
-| DevHub Components | - | 2 | - | 13 | - | 15 |
+| DevHub Components | - | 2 | - | 14 | - | 16 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 25 | - | 20 | 11 | - | 56 |
 | MCP Server | 28 | 1 | - | - | - | 29 |

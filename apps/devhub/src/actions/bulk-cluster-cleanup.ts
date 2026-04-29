@@ -21,7 +21,23 @@ import { linkIssueAction } from "@/features/topics/actions/linking";
  * Hergebruik is letterlijk: geen duplicate Zod, geen duplicate revalidate.
  */
 
-const projectIdSchema = z.object({ projectId: z.string().uuid() });
+/**
+ * Twee modi voor de bulk-cleanup tool:
+ *  - "open"  → ungrouped issues in triage/backlog/todo/in_progress
+ *  - "done"  → ungrouped issues met status `done` (retroactief opruimen)
+ *
+ * Cancelled valt bewust buiten beide — dat is "afgewezen" werk dat geen
+ * topic-koppeling hoort te krijgen.
+ */
+const runInputSchema = z.object({
+  projectId: z.string().uuid(),
+  mode: z.enum(["open", "done"]).default("open"),
+});
+
+const STATUS_BY_MODE = {
+  open: ["triage", "backlog", "todo", "in_progress"],
+  done: ["done"],
+} as const;
 
 const acceptToExistingSchema = z.object({
   topicId: z.string().uuid(),
@@ -66,8 +82,9 @@ async function checkProjectAccess(
 
 export async function runBulkClusterCleanupAction(input: {
   projectId: string;
+  mode?: "open" | "done";
 }): Promise<BulkClusterRunResult> {
-  const parsed = projectIdSchema.safeParse(input);
+  const parsed = runInputSchema.safeParse(input);
   if (!parsed.success) return { error: "Ongeldige invoer" };
 
   const access = await checkProjectAccess(parsed.data.projectId);
@@ -75,12 +92,12 @@ export async function runBulkClusterCleanupAction(input: {
   const { supabase } = access;
 
   // Hardgecodeerd filter — onafhankelijk van wat de UI in de filters heeft
-  // staan. Ungrouped + open. Cap op 200 issues per run; voor jullie schaal
-  // genoeg, en het Haiku-context-budget blijft veilig.
+  // staan. ungrouped + status volgens mode. Cap op 200 issues per run;
+  // voor jullie schaal genoeg, en het Haiku-context-budget blijft veilig.
   const issues = await listIssues(
     {
       projectId: parsed.data.projectId,
-      status: ["triage", "backlog", "todo", "in_progress"],
+      status: Array.from(STATUS_BY_MODE[parsed.data.mode]),
       ungroupedOnly: true,
       limit: RUN_RESULT_LIMIT,
       offset: 0,

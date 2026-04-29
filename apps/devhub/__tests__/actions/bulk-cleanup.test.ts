@@ -147,6 +147,23 @@ describe("runBulkClusterCleanupAction — happy & negative paths", () => {
     expect(mockRunBulkClusterCleanup).not.toHaveBeenCalled();
   });
 
+  it("done-mode: filtert op status='done' i.p.v. open statuses", async () => {
+    mockListAccessibleProjectIds.mockResolvedValue([IDS.project]);
+    mockListIssues.mockResolvedValue([]);
+
+    const { runBulkClusterCleanupAction } = await getActions();
+    await runBulkClusterCleanupAction({ projectId: IDS.project, mode: "done" });
+
+    expect(mockListIssues).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId: IDS.project,
+        status: ["done"],
+        ungroupedOnly: true,
+      }),
+      expect.anything(),
+    );
+  });
+
   it("filtert ungrouped+open status hardgecodeerd, ongeacht meegegeven extra params", async () => {
     mockListAccessibleProjectIds.mockResolvedValue([IDS.project]);
     mockListIssues.mockResolvedValue([

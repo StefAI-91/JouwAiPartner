@@ -10,12 +10,19 @@ import {
 import type { BulkCluster } from "@repo/ai/validations/bulk-cluster-cleanup";
 import { cn } from "@repo/ui/utils";
 
+export interface AcceptedNotice {
+  kind: "match" | "new";
+  topicId: string;
+  topicTitle: string;
+  linked: number;
+}
+
 export interface ClusterSuggestionCardProps {
   cluster: BulkCluster;
   projectId: string;
   /** Titel van het bestaande topic bij `kind: "match"`. Null als verdwenen. */
   matchTitle: string | null;
-  onAccepted: () => void;
+  onAccepted: (notice: AcceptedNotice) => void;
   onIgnored: () => void;
 }
 
@@ -69,6 +76,12 @@ export function ClusterSuggestionCard({
           setError(result.error);
           return;
         }
+        onAccepted({
+          kind: "match",
+          topicId: cluster.match_topic_id,
+          topicTitle: matchTitle ?? "topic",
+          linked: result.linked,
+        });
       } else {
         const result = await acceptClusterAsNewAction({
           projectId,
@@ -79,8 +92,13 @@ export function ClusterSuggestionCard({
           setError(result.error);
           return;
         }
+        onAccepted({
+          kind: "new",
+          topicId: result.topicId,
+          topicTitle: cluster.new_topic.title,
+          linked: result.linked,
+        });
       }
-      onAccepted();
     });
   };
 

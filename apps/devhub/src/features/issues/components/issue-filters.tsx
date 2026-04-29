@@ -371,12 +371,18 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
 
   // PR-019 — toggle naar de ungrouped-only view die het cluster-paneel
   // triggert. Bij activeren forceren we group=flat zodat de IssueList plat
-  // is (gegroepeerd-met-alleen-ungrouped is geen zinvolle weergave).
+  // is (gegroepeerd-met-alleen-ungrouped is geen zinvolle weergave). De
+  // open/afgerond keuze leeft binnen het paneel zelf.
   const toggleUngrouped = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
     if (ungroupedActive) {
       params.delete("ungrouped");
       params.delete("group");
+      // Done-mode wordt door het paneel via `?status=done` geactiveerd; bij
+      // afsluiten van de cleanup-view ruimen we die ook op.
+      if (params.get("status") === "done") {
+        params.delete("status");
+      }
     } else {
       params.set("ungrouped", "1");
       params.set("group", "flat");

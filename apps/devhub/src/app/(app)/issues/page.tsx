@@ -19,9 +19,10 @@ import { PaginationControls } from "@/features/issues/components/pagination-cont
 import { CountSeeder } from "@/components/layout/count-seeder";
 import { ClusterSuggestionsPanel } from "@/components/cluster-suggestions/cluster-suggestions-panel";
 
-// PR-019 — default-filter voor de ungrouped-view: open-only. User kan via
-// expliciete `?status=...` done/cancelled toevoegen.
-const UNGROUPED_DEFAULT_STATUSES = ["triage", "backlog", "todo", "in_progress"] as const;
+// PR-019 — default-filter voor de ungrouped-view per cleanup-modus. User
+// kan via expliciete `?status=...` deze defaults overrulen.
+const UNGROUPED_DEFAULT_OPEN = ["triage", "backlog", "todo", "in_progress"] as const;
+const UNGROUPED_DEFAULT_DONE = ["done"] as const;
 
 const PAGE_SIZE = 25;
 
@@ -97,11 +98,21 @@ export default async function IssuesPage({
 
   const { issueNumber, search } = parseSearchQuery(params.q);
 
-  // Ungrouped-view default: alleen open issues. Done/cancelled blijven via
-  // expliciete `?status=...` zichtbaar (verandert URL-shape niet — bestaande
-  // deeplinks met expliciete status werken ongewijzigd).
-  const effectiveStatus =
-    params.ungrouped && !params.status ? Array.from(UNGROUPED_DEFAULT_STATUSES) : params.status;
+  // PR-019 — `cleanupMode` is een aparte URL-param (`?cleanupMode=done`) en
+  // ontkoppelt de tool-modus van de status-filter. Bij mixed status-filter
+  // (bv. `?status=done,backlog`) blijft de tab-state stabiel en consistent
+  // met wat de user expliciet heeft gekozen.
+  const cleanupMode: "open" | "done" = raw.cleanupMode === "done" ? "done" : "open";
+
+  // Ungrouped-view default: hangt af van cleanup-mode. Bij expliciete
+  // `?status=...` wint die — bestaande deeplinks blijven werken.
+  const effectiveStatus = params.status
+    ? params.status
+    : params.ungrouped
+      ? cleanupMode === "done"
+        ? Array.from(UNGROUPED_DEFAULT_DONE)
+        : Array.from(UNGROUPED_DEFAULT_OPEN)
+      : undefined;
 
   const filterParams = {
     projectId,
@@ -146,9 +157,9 @@ export default async function IssuesPage({
   }));
   const topicFilterOptions = projectTopics.map((t) => ({ id: t.id, label: t.title }));
 
-  // PR-019 — paneel verschijnt alleen op `?ungrouped=true` met >=1 open
-  // ungrouped issue. `totalCount` geldt na het hard-coded open-status default
-  // (zie `effectiveStatus` boven), dus dat is de juiste teller.
+  // PR-019 — paneel verschijnt alleen op `?ungrouped=true` met >=1 ungrouped
+  // issue. `totalCount` geldt na de status-defaults, dus is het de juiste
+  // teller voor zowel open- als done-mode.
   const showClusterPanel = Boolean(params.ungrouped) && totalCount > 0;
 
   return (
@@ -163,6 +174,7 @@ export default async function IssuesPage({
             projectId={projectId}
             topics={topicsForPill.map((t) => ({ id: t.id, title: t.title }))}
             ungroupedOpenCount={totalCount}
+            mode={cleanupMode}
           />
         </div>
       )}
