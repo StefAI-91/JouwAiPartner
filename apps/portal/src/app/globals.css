@@ -49,7 +49,7 @@
 /* --- Light Theme --- */
 
 :root {
-  --background: #faf7f0;
+  --background: #ffffff;
   --foreground: oklch(0.15 0.01 75);
 
   --card: oklch(1 0 0);
