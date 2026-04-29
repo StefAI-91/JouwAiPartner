@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Layers } from "lucide-react";
+import { ChevronRight, ExternalLink, Layers } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import type { IssueRow } from "@repo/database/queries/issues";
 import type { IssueTopicMembership } from "@repo/database/queries/topics";
@@ -144,48 +144,61 @@ function GroupedByTopic({
         // kan in theorie achterlopen op live state — geen 'negatief' tonen).
         const totalOpen = topicOpenCounts?.get(topicId) ?? sectionIssues.length;
         const extraOutsideFilter = Math.max(0, totalOpen - sectionIssues.length);
+        const topicHref = projectId
+          ? `/topics/${topicId}?project=${projectId}`
+          : `/topics/${topicId}`;
+        // <details>/<summary> mag spec-rechtelijk geen interactive descendants
+        // bevatten (HTML 4.10.10). Daarom leeft de "open topic"-Link als
+        // sibling van <details>, absoluut gepositioneerd over de summary-bar
+        // — dan blijft hij altijd zichtbaar (ook als de groep ingeklapt is)
+        // en triggert klikken niet de toggle. Title in summary is plain text.
         return (
-          <section
+          <div
             key={topicId}
-            className="overflow-hidden rounded-lg border border-border bg-card shadow-md"
+            className="relative overflow-hidden rounded-lg border border-border bg-card shadow-md"
           >
-            <header className="flex items-baseline justify-between gap-2 border-b border-zinc-700 bg-zinc-700 px-4 py-2.5 text-white">
-              <div className="flex min-w-0 items-center gap-2">
-                <TopicTypePill type={meta?.type} />
-                <Link
-                  href={
-                    projectId ? `/topics/${topicId}?project=${projectId}` : `/topics/${topicId}`
-                  }
-                  className="inline-flex min-w-0 items-center gap-1.5 text-sm font-semibold text-white hover:underline"
-                >
-                  <Layers className="size-3.5 shrink-0 text-white/70" />
-                  <span className="truncate">{title}</span>
-                </Link>
-              </div>
-              <div className="flex shrink-0 items-baseline gap-2">
-                {extraOutsideFilter > 0 && (
-                  <span
-                    className="text-xs font-medium text-amber-300"
-                    title="Onder dit topic zitten ook open issues in andere stadia (bv. triage of in_progress) die buiten je actieve filter vallen. Open het topic om alles te zien."
-                  >
-                    +{extraOutsideFilter} buiten je filter
+            <details className="group/topic [&_summary::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-zinc-700 bg-zinc-700 px-4 py-2.5 pr-12 text-white">
+                <div className="flex min-w-0 items-center gap-2">
+                  <ChevronRight className="size-4 shrink-0 text-white/70 transition-transform group-open/topic:rotate-90" />
+                  <TopicTypePill type={meta?.type} />
+                  <span className="inline-flex min-w-0 items-center gap-1.5 text-sm font-semibold text-white">
+                    <Layers className="size-3.5 shrink-0 text-white/70" />
+                    <span className="truncate">{title}</span>
                   </span>
-                )}
-                <span className="text-xs tabular-nums text-white/70">{sectionIssues.length}</span>
+                </div>
+                <div className="flex shrink-0 items-baseline gap-2">
+                  {extraOutsideFilter > 0 && (
+                    <span
+                      className="text-xs font-medium text-amber-300"
+                      title="Onder dit topic zitten ook open issues in andere stadia (bv. triage of in_progress) die buiten je actieve filter vallen. Open het topic om alles te zien."
+                    >
+                      +{extraOutsideFilter} buiten je filter
+                    </span>
+                  )}
+                  <span className="text-xs tabular-nums text-white/70">{sectionIssues.length}</span>
+                </div>
+              </summary>
+              <div className="divide-y-0">
+                {sectionIssues.map((issue) => (
+                  <IssueRowItem
+                    key={issue.id}
+                    issue={issue}
+                    thumbnailPath={thumbnails?.get(issue.id)}
+                    topic={topicMembership?.get(issue.id)}
+                    topics={topics}
+                  />
+                ))}
               </div>
-            </header>
-            <div className="divide-y-0">
-              {sectionIssues.map((issue) => (
-                <IssueRowItem
-                  key={issue.id}
-                  issue={issue}
-                  thumbnailPath={thumbnails?.get(issue.id)}
-                  topic={topicMembership?.get(issue.id)}
-                  topics={topics}
-                />
-              ))}
-            </div>
-          </section>
+            </details>
+            <Link
+              href={topicHref}
+              aria-label={`Open topic ${title}`}
+              className="absolute right-3 top-2.5 inline-flex size-7 items-center justify-center rounded text-white/70 transition-colors hover:bg-zinc-600 hover:text-white"
+            >
+              <ExternalLink className="size-4" />
+            </Link>
+          </div>
         );
       })}
 
