@@ -81,20 +81,20 @@ function TypeColumn({
     tone === "bug" ? "text-rose-700 dark:text-rose-300" : "text-emerald-700 dark:text-emerald-300";
 
   return (
-    <div className="bg-muted/25 p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <Icon className={`size-3.5 ${accent}`} />
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="bg-muted/25 p-3">
+      <div className="mb-2 flex items-center gap-1.5">
+        <Icon className={`size-3 ${accent}`} />
+        <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground/80">
           {title}
         </span>
-        <span className="ml-auto text-[11px] text-muted-foreground">{items.length}</span>
+        <span className="ml-auto text-[10.5px] text-muted-foreground/70">{items.length}</span>
       </div>
       {items.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border/70 bg-background/40 py-4 text-center text-xs text-muted-foreground">
+        <p className="rounded-md border border-dashed border-border/70 bg-background/40 py-3 text-center text-[11.5px] text-muted-foreground">
           Geen {tone === "bug" ? "bugs" : "wensen"} in deze fase.
         </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-1.5">
           {items.map((topic) => (
             <li key={topic.id}>
               <TopicCard
