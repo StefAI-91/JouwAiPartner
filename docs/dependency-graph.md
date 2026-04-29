@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 534 |
-| Exported functions/constants | 833 |
-| Exported types/interfaces | 347 |
-| Cross-package imports | 564 |
+| Files scanned | 526 |
+| Exported functions/constants | 831 |
+| Exported types/interfaces | 348 |
+| Cross-package imports | 562 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -216,27 +216,10 @@
 - `listVerifiedMeetings()`
 - `listVerifiedMeetingIdsOrderedByDate()`
 - `listBoardMeetings()`
-
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`
-
-### `queries/meetings/lookup.ts`
-
-**Exports:**
 - `getMeetingByFirefliesId()`
 - `getExistingFirefliesIds()`
 - `getExistingMeetingsByTitleDates()`
 - `getMeetingByTitleAndDate()`
-
-### `queries/meetings/metadata.ts`
-
-**Exports:**
-- `getMeetingOrganizationId()`
-- `listMeetingProjectIds()`
-- `listMeetingParticipantIds()`
-
-### `queries/meetings/pipeline-fetches.ts`
-
-**Exports:**
 - `listMeetingsForReclassify()`
 - `listMeetingsWithTranscript()`
 - `getMeetingForDevExtractor()`
@@ -246,8 +229,20 @@
 - `getMeetingExtractionsBatch()`
 - `getVerifiedMeetingsWithoutSegments()`
 - `getMeetingForTitleGeneration()`
+- `getMeetingForRegenerate()`
+- `getMeetingForRegenerateRisks()`
+- `getMeetingForReprocess()`
+- `getMeetingOrganizationId()`
+- `listMeetingProjectIds()`
+- `listMeetingParticipantIds()`
+- `getMeetingForBackfill()`
+- `getMeetingByFirefliesIdForReprocess()`
+- `getSpeakerMappingTranscriptCounts()`
+- `countSpeakerMappingBackfillRemaining()`
+- `listSpeakerMappingBackfillCandidates()`
+- `getMeetingParticipantsForSpeakerMapping()`
 
-**Types:** `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`, `SpeakerMappingParticipant`, `SpeakerMappingTranscriptCounts`, `SpeakerMappingBackfillCandidate`
 
 ### `queries/meetings/project-summaries.ts`
 
@@ -260,27 +255,6 @@
 - `getSegmentsByProjectId()`
 
 **Types:** `MeetingSegment`, `ProjectSegment`
-
-### `queries/meetings/regenerate.ts`
-
-**Exports:**
-- `getMeetingForRegenerate()`
-- `getMeetingForRegenerateRisks()`
-- `getMeetingForReprocess()`
-- `getMeetingForBackfill()`
-- `getMeetingByFirefliesIdForReprocess()`
-
-**Types:** `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
-
-### `queries/meetings/speaker-mapping.ts`
-
-**Exports:**
-- `getSpeakerMappingTranscriptCounts()`
-- `countSpeakerMappingBackfillRemaining()`
-- `listSpeakerMappingBackfillCandidates()`
-- `getMeetingParticipantsForSpeakerMapping()`
-
-**Types:** `SpeakerMappingParticipant`, `SpeakerMappingTranscriptCounts`, `SpeakerMappingBackfillCandidate`
 
 ### `queries/meetings/themes.ts`
 
@@ -367,6 +341,14 @@
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin
+
+### `queries/portal/meetings.ts`
+
+**Exports:**
+- `listClientMeetingSegments()`
+- `getClientMeetingSegment()`
+
+**Types:** `PortalMeetingSegment`
 
 ### `queries/projects/access.ts`
 
@@ -578,12 +560,6 @@
 - `getExistingUserbackIds()`
 - `countUserbackIssues()`
 - `listUserbackIssuesForBackfill()`
-
-### `queries/widget/access.ts`
-
-**Exports:**
-- `getAllowedDomainsForProject()`
-- `isOriginAllowedForProject()`
 
 ## Database Mutations
 
@@ -879,11 +855,6 @@
 - `updateTopicStatus()`
 
 **Types:** `UpdateTopicStatusOpts`
-
-### `mutations/widget/feedback.ts`
-
-**Exports:**
-- `insertWidgetIssue()`
 
 ## AI Agents
 
@@ -1483,7 +1454,7 @@
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → updateMeetingNamedTranscript
-- `@repo/database/queries/meetings/speaker-mapping` → getMeetingParticipantsForSpeakerMapping, type SpeakerMappingParticipant
+- `@repo/database/queries/meetings/core` → getMeetingParticipantsForSpeakerMapping, type SpeakerMappingParticipant
 
 **Internal deps:**
 - `../../agents/speaker-identifier` → applyMappingToTranscript, runSpeakerIdentifier
@@ -2243,8 +2214,7 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder
-- `@repo/database/queries/meetings/pipeline-fetches` → listMeetingsWithTranscript
-- `@repo/database/queries/meetings/speaker-mapping` → countSpeakerMappingBackfillRemaining, getSpeakerMappingTranscriptCounts, listSpeakerMappingBackfillCandidates
+- `@repo/database/queries/meetings/core` → countSpeakerMappingBackfillRemaining, getSpeakerMappingTranscriptCounts, listMeetingsWithTranscript, listSpeakerMappingBackfillCandidates
 - `@repo/ai/agents/speaker-identifier` → runSpeakerIdentifier, getSpeakerIdentifierPrompt, type SpeakerIdentifierResult
 - `@repo/ai/pipeline/steps/speaker-mapping` → runSpeakerMappingStep
 
@@ -3066,6 +3036,15 @@
 - `@repo/database/queries/emails` → listDraftEmails
 - `@repo/database/queries/themes` → listEmergingThemes
 
+### `apps/cockpit/src/app/(dashboard)/shift/page.tsx`
+
+**Exports:**
+- `dynamic`
+
+**Depends on:**
+- `@repo/ui/badge` → Badge
+- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
+
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx`
 
 **Exports:**
@@ -3720,17 +3699,6 @@
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/auth/access` → isAdmin
 
-### `apps/devhub/src/app/api/ingest/widget/route.ts`
-
-**Exports:**
-- `POST()`
-- `OPTIONS()`
-
-**Depends on:**
-- `@repo/database/validations/widget` → widgetIngestSchema
-- `@repo/database/queries/widget` → isOriginAllowedForProject
-- `@repo/database/mutations/widget` → insertWidgetIssue
-
 ## DevHub Pages
 
 ### `apps/devhub/src/app/(app)/changelog/changelog-data.ts`
@@ -3980,14 +3948,14 @@ Which layers depend on which packages:
 | AI Pipeline | 59 | - | - | - | - | 59 |
 | AI Validations | 1 | - | - | - | - | 1 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 28 | 12 | 13 | - | - | 53 |
+| Cockpit Server Actions | 27 | 12 | 13 | - | - | 52 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 20 | 5 | - | 41 | - | 66 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 100 | 8 | 8 | 37 | - | 153 |
+| Cockpit Pages | 100 | 8 | 8 | 39 | - | 155 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 20 | 3 | 10 | - | - | 33 |
-| DevHub API Routes | 7 | - | 1 | - | - | 8 |
+| DevHub API Routes | 4 | - | 1 | - | - | 5 |
 | DevHub Components | - | 2 | - | 14 | - | 16 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 26 | - | 20 | 11 | - | 57 |
@@ -4200,12 +4168,6 @@ Tracing the most important data flows from action → pipeline → database.
 | `createEmergingTheme()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `upsertThemeNarrative()` | `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts` |
 
-### mutations/widget/feedback.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `insertWidgetIssue()` | `apps/devhub/src/app/api/ingest/widget/route.ts` |
-
 ## Query Usage Map
 
 Which queries are used where across the codebase.
@@ -4324,26 +4286,10 @@ Which queries are used where across the codebase.
 | `getVerifiedMeetingById()` | `apps/cockpit/src/actions/dev-detector.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
 | `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/dev/detector/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
 | `listBoardMeetings()` | `packages/ai/src/pipeline/summary/management-insights.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
-
-### queries/meetings/lookup.ts
-
-| Query | Used in |
-|-------|---------|
 | `getMeetingByFirefliesId()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `getExistingFirefliesIds()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getMeetingByTitleAndDate()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
-
-### queries/meetings/metadata.ts
-
-| Query | Used in |
-|-------|---------|
-| `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
-
-### queries/meetings/pipeline-fetches.ts
-
-| Query | Used in |
-|-------|---------|
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `listMeetingsWithTranscript()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
 | `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
@@ -4351,6 +4297,13 @@ Which queries are used where across the codebase.
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 | `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
+| `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
+| `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `getSpeakerMappingTranscriptCounts()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `countSpeakerMappingBackfillRemaining()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `listSpeakerMappingBackfillCandidates()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `getMeetingParticipantsForSpeakerMapping()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 
 ### queries/meetings/project-summaries.ts
 
@@ -4362,22 +4315,6 @@ Which queries are used where across the codebase.
 | `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
 | `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
 | `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/core.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
-
-### queries/meetings/regenerate.ts
-
-| Query | Used in |
-|-------|---------|
-| `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
-| `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-
-### queries/meetings/speaker-mapping.ts
-
-| Query | Used in |
-|-------|---------|
-| `getSpeakerMappingTranscriptCounts()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
-| `countSpeakerMappingBackfillRemaining()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
-| `listSpeakerMappingBackfillCandidates()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
-| `getMeetingParticipantsForSpeakerMapping()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 
 ### queries/needs.ts
 
@@ -4590,9 +4527,3 @@ Which queries are used where across the codebase.
 | `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
 | `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |
 | `listUserbackIssuesForBackfill()` | `apps/devhub/src/actions/import.ts` |
-
-### queries/widget/access.ts
-
-| Query | Used in |
-|-------|---------|
-| `isOriginAllowedForProject()` | `apps/devhub/src/app/api/ingest/widget/route.ts` |

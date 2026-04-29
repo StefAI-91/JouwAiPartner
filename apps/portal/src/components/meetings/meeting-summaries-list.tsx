@@ -1,8 +1,10 @@
-import { CalendarDays, CheckCircle2, ListChecks } from "lucide-react";
-import type { ProjectSegment } from "@repo/database/queries/meetings";
+import Link from "next/link";
+import { CalendarDays, ChevronRight, ListChecks, CheckCircle2 } from "lucide-react";
+import type { PortalMeetingSegment } from "@repo/database/queries/portal";
 
 interface MeetingSummariesListProps {
-  segments: ProjectSegment[];
+  segments: PortalMeetingSegment[];
+  projectId: string;
 }
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("nl-NL", {
@@ -19,52 +21,51 @@ function formatDate(value: string | null): string | null {
   return DATE_FORMATTER.format(date);
 }
 
-export function MeetingSummariesList({ segments }: MeetingSummariesListProps) {
+export function MeetingSummariesList({ segments, projectId }: MeetingSummariesListProps) {
   if (segments.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-card/40 p-8 text-center">
         <CalendarDays className="mx-auto mb-3 size-6 text-muted-foreground" />
-        <p className="text-sm font-medium text-foreground">Nog geen meeting-samenvattingen</p>
+        <p className="text-sm font-medium text-foreground">Nog geen klant-meetings</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Zodra er een meeting is geverifieerd verschijnt hier de samenvatting.
+          Zodra er een meeting met jullie geverifieerd is, verschijnt de samenvatting hier.
         </p>
       </div>
     );
   }
 
   return (
-    <ol className="flex flex-col gap-4">
-      {segments.map((segment) => {
+    <ol className="overflow-hidden rounded-lg border border-border bg-card">
+      {segments.map((segment, index) => {
         const dateLabel = formatDate(segment.meeting_date);
         const heading = segment.meeting_title?.trim() || "Meeting";
+        const isLast = index === segments.length - 1;
 
         return (
-          <li key={segment.id} className="overflow-hidden rounded-lg border border-border bg-card">
-            <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-border bg-muted/20 px-5 py-3">
-              <h3 className="text-base font-semibold text-foreground">{heading}</h3>
-              {dateLabel ? (
-                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <CalendarDays className="size-3.5" />
-                  {dateLabel}
-                </span>
-              ) : null}
-            </header>
-
-            <div className="grid gap-px bg-border md:grid-cols-2">
-              <SummarySection
-                icon={ListChecks}
-                title="Kernpunten"
-                items={segment.kernpunten}
-                emptyText="Geen kernpunten vastgelegd."
-              />
-              <SummarySection
-                icon={CheckCircle2}
-                title="Vervolgstappen"
-                items={segment.vervolgstappen}
-                emptyText="Geen vervolgstappen vastgelegd."
-                accent="text-primary"
-              />
-            </div>
+          <li key={segment.id} className={isLast ? "" : "border-b border-border"}>
+            <Link
+              href={`/projects/${projectId}/meetings/${segment.id}`}
+              className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
+            >
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold text-foreground">{heading}</h3>
+                {dateLabel ? (
+                  <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CalendarDays className="size-3.5" />
+                    {dateLabel}
+                  </p>
+                ) : null}
+              </div>
+              <div className="hidden shrink-0 items-center gap-4 text-xs text-muted-foreground sm:flex">
+                <CountChip icon={ListChecks} count={segment.kernpunten.length} label="kernpunten" />
+                <CountChip
+                  icon={CheckCircle2}
+                  count={segment.vervolgstappen.length}
+                  label="vervolgstappen"
+                />
+              </div>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </Link>
           </li>
         );
       })}
@@ -72,43 +73,20 @@ export function MeetingSummariesList({ segments }: MeetingSummariesListProps) {
   );
 }
 
-function SummarySection({
+function CountChip({
   icon: Icon,
-  title,
-  items,
-  emptyText,
-  accent = "text-muted-foreground",
+  count,
+  label,
 }: {
   icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  items: string[];
-  emptyText: string;
-  accent?: string;
+  count: number;
+  label: string;
 }) {
   return (
-    <section className="bg-card p-5">
-      <div className="mb-3 flex items-center gap-2">
-        <Icon className={`size-4 ${accent}`} />
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </span>
-        <span className="ml-auto text-[11px] text-muted-foreground">{items.length}</span>
-      </div>
-      {items.length === 0 ? (
-        <p className="text-xs italic text-muted-foreground">{emptyText}</p>
-      ) : (
-        <ul className="space-y-2 text-sm leading-relaxed text-foreground/90">
-          {items.map((item, index) => (
-            <li key={index} className="flex gap-2">
-              <span
-                aria-hidden
-                className="mt-[7px] size-1.5 shrink-0 rounded-full bg-foreground/30"
-              />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <span className="inline-flex items-center gap-1.5">
+      <Icon className="size-3.5" />
+      <span className="font-medium text-foreground">{count}</span>
+      <span>{label}</span>
+    </span>
   );
 }
