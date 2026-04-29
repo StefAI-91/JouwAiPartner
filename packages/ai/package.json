@@ -7,6 +7,7 @@
     "test": "vitest run"
   },
   "exports": {
+    "./agents/action-item-specialist": "./src/agents/action-item-specialist/index.ts",
     "./agents/*": "./src/agents/*.ts",
     "./pipeline/participant": "./src/pipeline/participant/index.ts",
     "./pipeline/participant/*": "./src/pipeline/participant/*.ts",
