@@ -47,7 +47,7 @@ De data-laag en het ingest-endpoint klaarzetten waar de eigen feedback-widget st
 -- gesynchroniseerd worden met het bestaande UUID (zie deployment.md).
 INSERT INTO projects (id, name, slug, organization_id, status)
 VALUES (
-  '00000000-0000-0000-0000-00000000aa01'::uuid,
+  '00000000-0000-4000-8000-00000000aa01'::uuid,
   'JAIP Platform',
   'jaip-platform',
   (SELECT id FROM organizations WHERE name = 'Jouw AI Partner'),
@@ -67,7 +67,7 @@ CREATE INDEX idx_widget_allowed_domain ON widget_allowed_projects(domain);
 
 -- 3. Seed cockpit-domein
 INSERT INTO widget_allowed_projects (project_id, domain)
-VALUES ('00000000-0000-0000-0000-00000000aa01'::uuid, 'cockpit.jouw-ai-partner.nl')
+VALUES ('00000000-0000-4000-8000-00000000aa01'::uuid, 'cockpit.jouw-ai-partner.nl')
 ON CONFLICT (project_id, domain) DO NOTHING;
 
 -- 4. RLS

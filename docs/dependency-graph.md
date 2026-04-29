@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 524 |
-| Exported functions/constants | 828 |
+| Files scanned | 530 |
+| Exported functions/constants | 834 |
 | Exported types/interfaces | 347 |
-| Cross-package imports | 560 |
+| Cross-package imports | 565 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -553,6 +553,12 @@
 - `countUserbackIssues()`
 - `listUserbackIssuesForBackfill()`
 
+### `queries/widget/access.ts`
+
+**Exports:**
+- `getAllowedDomainsForProject()`
+- `isOriginAllowedForProject()`
+
 ## Database Mutations
 
 ### `mutations/agent-runs.ts`
@@ -847,6 +853,11 @@
 - `updateTopicStatus()`
 
 **Types:** `UpdateTopicStatusOpts`
+
+### `mutations/widget/feedback.ts`
+
+**Exports:**
+- `insertWidgetIssue()`
 
 ## AI Agents
 
@@ -3028,6 +3039,15 @@
 - `@repo/database/queries/emails` → listDraftEmails
 - `@repo/database/queries/themes` → listEmergingThemes
 
+### `apps/cockpit/src/app/(dashboard)/shift/page.tsx`
+
+**Exports:**
+- `dynamic`
+
+**Depends on:**
+- `@repo/ui/badge` → Badge
+- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
+
 ### `apps/cockpit/src/app/(dashboard)/themes/[slug]/page.tsx`
 
 **Exports:**
@@ -3682,6 +3702,17 @@
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/auth/access` → isAdmin
 
+### `apps/devhub/src/app/api/ingest/widget/route.ts`
+
+**Exports:**
+- `POST()`
+- `OPTIONS()`
+
+**Depends on:**
+- `@repo/database/validations/widget` → widgetIngestSchema
+- `@repo/database/queries/widget` → isOriginAllowedForProject
+- `@repo/database/mutations/widget` → insertWidgetIssue
+
 ## DevHub Pages
 
 ### `apps/devhub/src/app/(app)/changelog/changelog-data.ts`
@@ -3935,10 +3966,10 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 20 | 5 | - | 41 | - | 66 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 100 | 8 | 8 | 37 | - | 153 |
+| Cockpit Pages | 100 | 8 | 8 | 39 | - | 155 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 20 | 3 | 10 | - | - | 33 |
-| DevHub API Routes | 4 | - | 1 | - | - | 5 |
+| DevHub API Routes | 7 | - | 1 | - | - | 8 |
 | DevHub Components | - | 2 | - | 14 | - | 16 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 26 | - | 20 | 11 | - | 57 |
@@ -4150,6 +4181,12 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `createEmergingTheme()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `upsertThemeNarrative()` | `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts` |
+
+### mutations/widget/feedback.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `insertWidgetIssue()` | `apps/devhub/src/app/api/ingest/widget/route.ts` |
 
 ## Query Usage Map
 
@@ -4510,3 +4547,9 @@ Which queries are used where across the codebase.
 | `getUserbackSyncCursor()` | `apps/devhub/src/actions/import.ts` |
 | `countUserbackIssues()` | `apps/devhub/src/actions/import.ts` |
 | `listUserbackIssuesForBackfill()` | `apps/devhub/src/actions/import.ts` |
+
+### queries/widget/access.ts
+
+| Query | Used in |
+|-------|---------|
+| `isOriginAllowedForProject()` | `apps/devhub/src/app/api/ingest/widget/route.ts` |

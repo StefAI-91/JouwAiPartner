@@ -307,6 +307,27 @@ return a.length === b.length && timingSafeEqual(a, b);
 
 ---
 
+## Geaccepteerde MVP-risico's
+
+### WG-MVP-001: Widget-ingest zonder rate-limit
+
+**Ernst:** Midden (tijdelijk geaccepteerd)
+**Bestanden:**
+
+- `apps/devhub/src/app/api/ingest/widget/route.ts`
+
+**Beschrijving:** De `/api/ingest/widget`-route heeft bewust geen rate-limit voor de MVP-rollout (cockpit-only, 3 gebruikers, whitelist beperkt Origin tot bekende interne domeinen). De `Origin`-header is spoofbaar via curl, dus een scriptkid kan in theorie de triage-queue floodden. Risico is data-leak-vrij (geen auth-state in payload), alleen lawaai in triage.
+
+**Mitigatie nu:**
+
+- Whitelist `widget_allowed_projects` beperkt geldige `project_id × Origin`-combinaties; vreemde Origins → 403
+- Bij flood: Origin tijdelijk uit whitelist verwijderen via DevHub admin-UI (komt in WG-004)
+- Submissions blijven low-stakes (geen file-uploads, max 10KB description)
+
+**Fix:** WG-005 (Postgres-counter) — draait vóór de eerste klant-rollout (WG-004), want zodra externe Origins op de whitelist komen verandert het dreigingsmodel.
+
+---
+
 ## Wat goed gaat
 
 | Maatregel                                  | Status |

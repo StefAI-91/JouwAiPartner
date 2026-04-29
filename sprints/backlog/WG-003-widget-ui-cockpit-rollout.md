@@ -188,7 +188,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 ### 6. Env-var
 
-- `apps/cockpit/.env.example` krijgt `NEXT_PUBLIC_JAIP_PLATFORM_PROJECT_ID=00000000-0000-0000-0000-00000000aa01`
+- `apps/cockpit/.env.example` krijgt `NEXT_PUBLIC_JAIP_PLATFORM_PROJECT_ID=00000000-0000-4000-8000-00000000aa01`
 - Vercel cockpit-project: idem (production + preview)
 
 ### 7. Documentatie
