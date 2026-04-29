@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Layers } from "lucide-react";
+import { ChevronRight, Layers } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import type { IssueRow } from "@repo/database/queries/issues";
 import type { IssueTopicMembership } from "@repo/database/queries/topics";
@@ -145,12 +145,13 @@ function GroupedByTopic({
         const totalOpen = topicOpenCounts?.get(topicId) ?? sectionIssues.length;
         const extraOutsideFilter = Math.max(0, totalOpen - sectionIssues.length);
         return (
-          <section
+          <details
             key={topicId}
-            className="overflow-hidden rounded-lg border border-border bg-card shadow-md"
+            className="group/topic overflow-hidden rounded-lg border border-border bg-card shadow-md [&_summary::-webkit-details-marker]:hidden"
           >
-            <header className="flex items-baseline justify-between gap-2 border-b border-zinc-700 bg-zinc-700 px-4 py-2.5 text-white">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 border-b border-zinc-700 bg-zinc-700 px-4 py-2.5 text-white">
               <div className="flex min-w-0 items-center gap-2">
+                <ChevronRight className="size-4 shrink-0 text-white/70 transition-transform group-open/topic:rotate-90" />
                 <TopicTypePill type={meta?.type} />
                 <Link
                   href={
@@ -173,7 +174,7 @@ function GroupedByTopic({
                 )}
                 <span className="text-xs tabular-nums text-white/70">{sectionIssues.length}</span>
               </div>
-            </header>
+            </summary>
             <div className="divide-y-0">
               {sectionIssues.map((issue) => (
                 <IssueRowItem
@@ -185,7 +186,7 @@ function GroupedByTopic({
                 />
               ))}
             </div>
-          </section>
+          </details>
         );
       })}
 
