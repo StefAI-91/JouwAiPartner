@@ -1,6 +1,6 @@
 import { createPageClient } from "@repo/auth/helpers";
 import { listTopicsByBucket, countIssuesPerTopic } from "@repo/database/queries/topics";
-import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
+import { BucketStack } from "@/components/roadmap/bucket-stack";
 
 export default async function ProjectRoadmapPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,12 +20,13 @@ export default async function ProjectRoadmapPage({ params }: { params: Promise<{
   return (
     <div className="flex flex-1 flex-col gap-5 px-6 py-8">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Roadmap</h2>
+        <h2 className="text-lg font-semibold text-foreground">Wat &amp; wanneer</h2>
         <p className="text-sm text-muted-foreground">
-          Wat we recent hebben opgeleverd en wat eraan zit te komen.
+          Wat is er gefixed, wat staat op de planning, wat heeft daarna prioriteit en wat is nog
+          niet geprioriteerd. Per fase gesplitst in bugs en functionaliteit.
         </p>
       </div>
-      <RoadmapBoard buckets={buckets} issueCounts={issueCounts} projectId={id} />
+      <BucketStack buckets={buckets} issueCounts={issueCounts} projectId={id} />
     </div>
   );
 }
