@@ -46,12 +46,12 @@ vi.mock("../../src/agents/project-summarizer", () => ({
   runOrgSummarizer: vi.fn(),
 }));
 
+import { generateProjectSummaries } from "../../src/pipeline/summary/project";
+import { generateOrgSummaries } from "../../src/pipeline/summary/org";
 import {
-  generateProjectSummaries,
-  generateOrgSummaries,
   triggerSummariesForMeeting,
   triggerSummariesForEmail,
-} from "../../src/pipeline/summary/core";
+} from "../../src/pipeline/summary/triggers";
 import { getLatestSummary } from "@repo/database/queries/summaries";
 import { getSegmentsByProjectId } from "@repo/database/queries/meetings/project-summaries";
 import { createSummaryVersion } from "@repo/database/mutations/summaries";

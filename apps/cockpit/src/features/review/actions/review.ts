@@ -8,7 +8,7 @@ import {
   rejectMeeting,
 } from "@repo/database/mutations/review";
 import { updateMeetingSummaryOnly } from "@repo/database/mutations/meetings";
-import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary/core";
+import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary/triggers";
 import { scanMeetingNeeds } from "@repo/ai/scan-needs";
 import {
   verifyMeetingSchema,

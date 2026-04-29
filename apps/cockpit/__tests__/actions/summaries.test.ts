@@ -16,8 +16,10 @@ vi.mock("@repo/auth/access", () => ({
 
 const mockGenerateProjectSummaries = vi.fn();
 const mockGenerateOrgSummaries = vi.fn();
-vi.mock("@repo/ai/pipeline/summary/core", () => ({
+vi.mock("@repo/ai/pipeline/summary/project", () => ({
   generateProjectSummaries: (...args: unknown[]) => mockGenerateProjectSummaries(...args),
+}));
+vi.mock("@repo/ai/pipeline/summary/org", () => ({
   generateOrgSummaries: (...args: unknown[]) => mockGenerateOrgSummaries(...args),
 }));
 
