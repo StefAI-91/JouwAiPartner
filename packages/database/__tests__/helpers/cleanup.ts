@@ -21,7 +21,17 @@ export async function cleanupTestData() {
   await supabase.from("meetings").delete().eq("id", TEST_IDS.meeting2);
   await supabase.from("issue_activity").delete().eq("issue_id", TEST_IDS.issue);
   await supabase.from("issue_comments").delete().eq("issue_id", TEST_IDS.issue);
-  await supabase.from("issues").delete().eq("id", TEST_IDS.issue);
+  // PR-002: topic_issues hangt aan issues + topics; eerst leegmaken op alle
+  // gebruikte test-id's, daarna pas de issues/topics zelf droppen.
+  await supabase
+    .from("topic_issues")
+    .delete()
+    .in("issue_id", [TEST_IDS.issue, TEST_IDS.issue2, TEST_IDS.issue3]);
+  await supabase.from("topics").delete().in("id", [TEST_IDS.topic, TEST_IDS.topic2]);
+  await supabase
+    .from("issues")
+    .delete()
+    .in("id", [TEST_IDS.issue, TEST_IDS.issue2, TEST_IDS.issue3]);
   await supabase.from("email_extractions").delete().eq("email_id", TEST_IDS.email);
   await supabase.from("email_projects").delete().eq("email_id", TEST_IDS.email);
   await supabase.from("emails").delete().eq("id", TEST_IDS.email);
@@ -45,6 +55,9 @@ export async function cleanupAllTestData(additionalIds: string[] = []) {
   await supabase.from("email_projects").delete().in("email_id", allIds);
   await supabase.from("issue_activity").delete().in("issue_id", allIds);
   await supabase.from("issue_comments").delete().in("issue_id", allIds);
+  await supabase.from("topic_issues").delete().in("issue_id", allIds);
+  await supabase.from("topic_issues").delete().in("topic_id", allIds);
+  await supabase.from("topics").delete().in("id", allIds);
   await supabase.from("extractions").delete().in("id", allIds);
   await supabase.from("extractions").delete().in("meeting_id", allIds);
   await supabase.from("meeting_projects").delete().in("meeting_id", allIds);

@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, Trash2 } from "lucide-react";
 import type { IssueRow } from "@repo/database/queries/issues";
+import type { IssueTopicMembership } from "@repo/database/queries/topics";
 import { PriorityDot } from "@/components/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
 import { Avatar } from "@/components/shared/avatar";
 import { timeAgo } from "@/components/shared/time-ago";
+import { TopicPill } from "@/features/topics/components/topic-pill";
 import { cn } from "@repo/ui/utils";
 import {
   DropdownMenu,
@@ -68,10 +70,21 @@ function IssueRowActions({
 export function IssueRowItem({
   issue,
   thumbnailPath,
+  topic,
+  topics,
+  compact,
   className,
 }: {
   issue: IssueRow;
   thumbnailPath?: string;
+  topic?: IssueTopicMembership;
+  topics: { id: string; title: string; type?: string }[];
+  /**
+   * Compact-mode: minder padding, geen description-regel. Gebruikt in
+   * "Niet gegroepeerd" sectie zodat de gecureerde topic-secties meer
+   * visueel gewicht krijgen.
+   */
+  compact?: boolean;
   className?: string;
 }) {
   const router = useRouter();
@@ -106,7 +119,8 @@ export function IssueRowItem({
   return (
     <div
       className={cn(
-        "group relative border-b border-border px-4 py-3.5 transition-colors hover:bg-muted/50",
+        "group relative border-b border-border px-4 transition-colors hover:bg-muted/50",
+        compact ? "py-2" : "py-3.5",
         isPending && "opacity-50 pointer-events-none",
         className,
       )}
@@ -143,7 +157,7 @@ export function IssueRowItem({
             </span>
           </div>
 
-          {issue.description && issue.description !== issue.title && (
+          {!compact && issue.description && issue.description !== issue.title && (
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2 pl-8">
               {issue.description}
             </p>
@@ -153,12 +167,21 @@ export function IssueRowItem({
             <TypeBadge type={issue.type} />
             <StatusBadge status={issue.status} />
             <ComponentBadge component={issue.component} />
+            <TopicPill
+              issueId={issue.id}
+              projectId={issue.project_id}
+              current={topic ? { id: topic.id, title: topic.title } : null}
+              topics={topics}
+            />
             {issue.assigned_person ? (
               <Avatar name={issue.assigned_person.full_name} />
             ) : (
               <span className="size-7" />
             )}
-            <span className="ml-auto text-xs sm:text-sm text-muted-foreground">
+            <span
+              className="ml-auto text-xs sm:text-sm text-muted-foreground"
+              suppressHydrationWarning
+            >
               {timeAgo(issue.created_at)}
             </span>
           </div>

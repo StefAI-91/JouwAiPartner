@@ -277,15 +277,17 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
 
 interface IssueFiltersProps {
   people: { id: string; name: string }[];
+  topics: { id: string; label: string }[];
 }
 
-export function IssueFilters({ people }: IssueFiltersProps) {
+export function IssueFilters({ people, topics }: IssueFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ASSIGNEE_OPTIONS = [
     { value: UNASSIGNED_SENTINEL, label: "Niet toegewezen" },
     ...people.map((p) => ({ value: p.id, label: p.name })),
   ];
+  const TOPIC_OPTIONS = topics.map((t) => ({ value: t.id, label: t.label }));
 
   const getValues = useCallback(
     (key: string): string[] => {
@@ -339,12 +341,55 @@ export function IssueFilters({ people }: IssueFiltersProps) {
     [router, searchParams],
   );
 
+  // Group-by-topic is default; `?group=flat` schakelt het uit. De toggle
+  // is dus "default aan" en flippen voegt `flat` toe i.p.v. `topic`.
+  const groupOverridden = searchParams.get("group") === "flat";
+  const groupActive = !groupOverridden;
+
+  const ungroupedActive = searchParams.get("ungrouped") === "1";
+
   const hasAnyFilter =
     searchParams.has("status") ||
     searchParams.has("priority") ||
     searchParams.has("type") ||
     searchParams.has("component") ||
-    searchParams.has("assignee");
+    searchParams.has("assignee") ||
+    searchParams.has("topic") ||
+    searchParams.has("ungrouped") ||
+    groupOverridden;
+
+  const toggleGroup = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (groupOverridden) {
+      params.delete("group");
+    } else {
+      params.set("group", "flat");
+    }
+    params.delete("page");
+    router.push(`/issues?${params.toString()}`);
+  }, [router, searchParams, groupOverridden]);
+
+  // PR-019 — toggle naar de ungrouped-only view die het cluster-paneel
+  // triggert. Bij activeren forceren we group=flat zodat de IssueList plat
+  // is (gegroepeerd-met-alleen-ungrouped is geen zinvolle weergave). De
+  // open/afgerond keuze leeft binnen het paneel zelf.
+  const toggleUngrouped = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (ungroupedActive) {
+      params.delete("ungrouped");
+      params.delete("group");
+      // Done-mode wordt door het paneel via `?status=done` geactiveerd; bij
+      // afsluiten van de cleanup-view ruimen we die ook op.
+      if (params.get("status") === "done") {
+        params.delete("status");
+      }
+    } else {
+      params.set("ungrouped", "1");
+      params.set("group", "flat");
+    }
+    params.delete("page");
+    router.push(`/issues?${params.toString()}`);
+  }, [router, searchParams, ungroupedActive]);
 
   const clearAll = useCallback(() => {
     const params = new URLSearchParams();
@@ -391,6 +436,45 @@ export function IssueFilters({ people }: IssueFiltersProps) {
         selected={getValues("assignee")}
         onToggle={toggleFilter}
       />
+      {TOPIC_OPTIONS.length > 0 && (
+        <FilterDropdown
+          label="Topic"
+          paramKey="topic"
+          options={TOPIC_OPTIONS}
+          selected={getValues("topic")}
+          onToggle={toggleFilter}
+        />
+      )}
+      {TOPIC_OPTIONS.length > 0 && (
+        <button
+          type="button"
+          onClick={toggleGroup}
+          aria-pressed={groupActive}
+          className={cn(
+            "flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm transition-colors",
+            groupActive
+              ? "border-primary/30 bg-primary/5 text-primary"
+              : "border-border hover:bg-muted",
+          )}
+          title="Cluster issues per topic"
+        >
+          Groep op topic
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={toggleUngrouped}
+        aria-pressed={ungroupedActive}
+        className={cn(
+          "flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm transition-colors",
+          ungroupedActive
+            ? "border-primary/30 bg-primary/5 text-primary"
+            : "border-border hover:bg-muted",
+        )}
+        title="Toon alleen issues zonder topic — activeert het cluster-suggestie-paneel"
+      >
+        Alleen ungrouped
+      </button>
 
       {hasAnyFilter && (
         <button

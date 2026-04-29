@@ -14,6 +14,7 @@ export function ProjectSubnav({ projectId }: ProjectSubnavProps) {
 
   const items = [
     { href: base, label: "Dashboard" },
+    { href: `${base}/roadmap`, label: "Roadmap" },
     { href: `${base}/issues`, label: "Issues" },
     { href: `${base}/feedback`, label: "Feedback" },
   ];

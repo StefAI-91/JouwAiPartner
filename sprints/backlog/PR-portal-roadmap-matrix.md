@@ -1,7 +1,7 @@
 # Portal Roadmap — Traceability Matrix
 
 PRD: [`docs/specs/prd-portal-roadmap/`](../../docs/specs/prd-portal-roadmap/) (versie 1.0, 2026-04-27)
-Sprints: PR-000 t/m PR-018 (19 sprints, ~224 requirements)
+Sprints: PR-000 t/m PR-018 + PR-019 (incident-tool, off-roadmap) (20 sprints, ~244 requirements)
 
 > Deze matrix borgt dat elke PRD-requirement minstens één keer in een sprint terugkomt en dat elke sprint-requirement traceerbaar is naar een PRD-sectie. Update bij elke PRD-wijziging of sprint-revisie.
 >
@@ -30,8 +30,11 @@ Sprints: PR-000 t/m PR-018 (19 sprints, ~224 requirements)
 | PR-016 | Pattern-detector agent                     | 5     | AI + UI             | PR-012, PR-014           |
 | PR-017 | Topic merge/split UI                       | 5     | DevHub UI           | PR-008                   |
 | PR-018 | agent_suggestions + acceptance-tracking    | 5     | Database + UI       | PR-014/15/16             |
+| PR-019 | Bulk cluster cleanup (ungrouped issues)    | Off   | DevHub UI + AI      | PR-001/2/3 (alleen)      |
 
 **Aanname**: nummering is implementatie-volgorde, niet hardgekoppelde dependency. Zie sectie 3 voor parallelle paden.
+
+> **PR-019 (off-roadmap)**: incident-/opruim-tool, geen onderdeel van fase 1–5 sequentie. Geen schema-changes, geen embeddings. Hergebruikt PR-003-actions; mag los gebouwd worden zodra PR-001/2/3 in productie zijn. Naast PR-014 (per-issue, at-intake), niet in plaats van.
 
 ## 2. PRD-fase → sprint-mapping
 
@@ -114,27 +117,28 @@ De roadmap-PRD dekt het topic + signaal + rapport-stuk; project-fases en meeting
 
 Per sprint: range van requirement-IDs + bron-secties in de PRD + welke open vragen blokkerend zijn. Voor de individuele requirements zelf: zie het sprint-bestand.
 
-| Sprint | Requirement-ID-prefixen       | PRD-secties                                                                                    | Open vragen die geblokkeerd zijn                        |
-| ------ | ----------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| PR-000 | REQ-001..007, DESIGN-001..002 | §14.6 (mobile-strategie), §14.7 (valkuilen), bestaand `apps/portal/src/components/layout/`     | —                                                       |
-| PR-001 | DATA-001..010, RULE-001..002  | §11.1–11.3 (data-model), §11.7 (lifecycle-status), §11.10–11.11 (RLS + migratie-volgorde)      | I-3 (junction), I-5 (sprint-FK)                         |
-| PR-002 | REQ-010..022                  | §6.6 (code-organisatie), §11.2 (topics-velden), CLAUDE.md "Database & Queries"                 | —                                                       |
-| PR-003 | REQ-030..039, DESIGN-005..006 | §6.3.1–6.3.2 (DevHub topic-CRUD + status), §12.3.2–12.3.3 (board + detail)                     | I-6 (detail vs issue-detail)                            |
-| PR-004 | REQ-040..051, DESIGN-007..009 | §6.3.3–6.3.5 (4-bucket portal), §14 (volledige visuele spec)                                   | —                                                       |
-| PR-005 | DATA-020..024, REQ-050..055   | §7.5 (data-model signalen), §11.4–11.5 (signaal-tabellen), §4.8 (per-org keuze)                | I-2 (model A/B), O-3 (multi-stakeholder)                |
-| PR-006 | REQ-060..068, DESIGN-010..011 | §7.3.1–7.3.5 (UI-flows), §14.4 (signal-pills + undo-toast)                                     | O-1 (klant-prio-model), O-2 (bugs in loop)              |
-| PR-007 | REQ-070..080, RULE-010        | §8.3.1 (rollup-regel), §8.3.2 (override-flag), §12.5 (rollup-regels)                           | I-1 (trigger vs server-side), I-4 (transitie-validatie) |
-| PR-008 | REQ-080..089, DESIGN-012      | §8.3.3 (triage-queue), §12.3.1 (triage UX)                                                     | —                                                       |
-| PR-009 | DATA-030..035, REQ-090..099   | §8.3.4–8.3.5 (audit-events + timelines), §11.6 (topic_events tabel)                            | I-4 (transitie-validatie)                               |
-| PR-010 | RULE-020..022, REQ-100..109   | §4.7 (`wont_do` verplicht expliciet), §8.3.6–8.3.7 (`wont_do` flow + klant-`wont_do_proposed`) | —                                                       |
-| PR-011 | DATA-040..047, REQ-110..115   | §9.5 (rapport-tabel), §11.8 (`topic_status_reports`)                                           | O-4 (snapshots vs live)                                 |
-| PR-012 | REQ-120..130                  | §9.3.1–9.3.3 (rapport-creatie + templates), §9.3.7 (patterns-sectie handmatig)                 | —                                                       |
-| PR-013 | REQ-130..145, DESIGN-020..025 | §9.3.4–9.3.6 (archief + detail + nav-CTA), §14.4 editorial details                             | —                                                       |
-| PR-014 | AI-001..010, REQ-150..158     | §10.3.1 (`topic-curator` agent), §10.5 (`agent_suggestions`-velden)                            | —                                                       |
-| PR-015 | AI-011..018, REQ-160..165     | §10.3.2 (`topic-narrator` agent), §10.7 acceptance-criteria narrator                           | —                                                       |
-| PR-016 | AI-019..025, REQ-170..175     | §10.3.3 (`pattern-detector` agent)                                                             | —                                                       |
-| PR-017 | REQ-180..189, DESIGN-030      | §10.3.4 (merge/split UI), §3.9 (re-clustering harder dan eerste clustering)                    | —                                                       |
-| PR-018 | DATA-050..055, REQ-190..195   | §10.5 (`agent_suggestions` tabel + acceptance-tracking), §10.10 risico-mitigatie               | —                                                       |
+| Sprint | Requirement-ID-prefixen                           | PRD-secties                                                                                      | Open vragen die geblokkeerd zijn                        |
+| ------ | ------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| PR-000 | REQ-001..007, DESIGN-001..002                     | §14.6 (mobile-strategie), §14.7 (valkuilen), bestaand `apps/portal/src/components/layout/`       | —                                                       |
+| PR-001 | DATA-001..010, RULE-001..002                      | §11.1–11.3 (data-model), §11.7 (lifecycle-status), §11.10–11.11 (RLS + migratie-volgorde)        | I-3 (junction), I-5 (sprint-FK)                         |
+| PR-002 | REQ-010..022                                      | §6.6 (code-organisatie), §11.2 (topics-velden), CLAUDE.md "Database & Queries"                   | —                                                       |
+| PR-003 | REQ-030..039, DESIGN-005..006                     | §6.3.1–6.3.2 (DevHub topic-CRUD + status), §12.3.2–12.3.3 (board + detail)                       | I-6 (detail vs issue-detail)                            |
+| PR-004 | REQ-040..051, DESIGN-007..009                     | §6.3.3–6.3.5 (4-bucket portal), §14 (volledige visuele spec)                                     | —                                                       |
+| PR-005 | DATA-020..024, REQ-050..055                       | §7.5 (data-model signalen), §11.4–11.5 (signaal-tabellen), §4.8 (per-org keuze)                  | I-2 (model A/B), O-3 (multi-stakeholder)                |
+| PR-006 | REQ-060..068, DESIGN-010..011                     | §7.3.1–7.3.5 (UI-flows), §14.4 (signal-pills + undo-toast)                                       | O-1 (klant-prio-model), O-2 (bugs in loop)              |
+| PR-007 | REQ-070..080, RULE-010                            | §8.3.1 (rollup-regel), §8.3.2 (override-flag), §12.5 (rollup-regels)                             | I-1 (trigger vs server-side), I-4 (transitie-validatie) |
+| PR-008 | REQ-080..089, DESIGN-012                          | §8.3.3 (triage-queue), §12.3.1 (triage UX)                                                       | —                                                       |
+| PR-009 | DATA-030..035, REQ-090..099                       | §8.3.4–8.3.5 (audit-events + timelines), §11.6 (topic_events tabel)                              | I-4 (transitie-validatie)                               |
+| PR-010 | RULE-020..022, REQ-100..109                       | §4.7 (`wont_do` verplicht expliciet), §8.3.6–8.3.7 (`wont_do` flow + klant-`wont_do_proposed`)   | —                                                       |
+| PR-011 | DATA-040..047, REQ-110..115                       | §9.5 (rapport-tabel), §11.8 (`topic_status_reports`)                                             | O-4 (snapshots vs live)                                 |
+| PR-012 | REQ-120..130                                      | §9.3.1–9.3.3 (rapport-creatie + templates), §9.3.7 (patterns-sectie handmatig)                   | —                                                       |
+| PR-013 | REQ-130..145, DESIGN-020..025                     | §9.3.4–9.3.6 (archief + detail + nav-CTA), §14.4 editorial details                               | —                                                       |
+| PR-014 | AI-001..010, REQ-150..158                         | §10.3.1 (`topic-curator` agent), §10.5 (`agent_suggestions`-velden)                              | —                                                       |
+| PR-015 | AI-011..018, REQ-160..165                         | §10.3.2 (`topic-narrator` agent), §10.7 acceptance-criteria narrator                             | —                                                       |
+| PR-016 | AI-019..025, REQ-170..175                         | §10.3.3 (`pattern-detector` agent)                                                               | —                                                       |
+| PR-017 | REQ-180..189, DESIGN-030                          | §10.3.4 (merge/split UI), §3.9 (re-clustering harder dan eerste clustering)                      | —                                                       |
+| PR-018 | DATA-050..055, REQ-190..195                       | §10.5 (`agent_suggestions` tabel + acceptance-tracking), §10.10 risico-mitigatie                 | —                                                       |
+| PR-019 | AI-100..106, REQ-200..210, RULE-100..102, SEC-100 | Off-roadmap — geen PRD-bron. Aanleiding: productie-incident Cai Studio 67 ungrouped (2026-04-28) | —                                                       |
 
 > Exacte requirement-IDs en hun één-zin-omschrijvingen: zie de Requirements-tabel in het betreffende sprint-bestand. Deze mapping is op id-prefix-niveau om de matrix leesbaar te houden bij ~224 individuele requirements.
 

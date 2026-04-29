@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, LayoutList, Settings } from "lucide-react";
+import { LayoutDashboard, LayoutList, Layers, Settings, Sparkles } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import { useEffect, useSyncExternalStore } from "react";
 import { NAV_ITEMS, issueHref } from "./sidebar-constants";
@@ -81,6 +81,19 @@ export function SidebarNav({
           <LayoutList className={iconSize} />
           Alle issues
         </Link>
+        <Link
+          href={projectId ? `/topics?project=${projectId}` : "/topics"}
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            linkClassName,
+            pathname.startsWith("/topics") &&
+              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+          )}
+        >
+          <Layers className={iconSize} />
+          Topics
+        </Link>
 
         <div className="pt-3 pb-1 px-2">
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -91,6 +104,7 @@ export function SidebarNav({
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const count = counts[item.status as keyof typeof counts] ?? 0;
+          const isActive = pathname === "/issues" && searchParams.get("status") === item.status;
           return (
             <Link
               key={item.status}
@@ -99,9 +113,10 @@ export function SidebarNav({
               className={cn(
                 "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 linkClassName,
+                isActive && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
               )}
             >
-              <Icon className={iconSize} />
+              <Icon className={cn(iconSize, isActive && item.activeIconClass)} />
               <span className="flex-1">{item.label}</span>
               {count > 0 && (
                 <span
@@ -123,11 +138,26 @@ export function SidebarNav({
       {/* Bottom nav */}
       <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
         <Link
+          href="/changelog"
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            linkClassName,
+            pathname === "/changelog" &&
+              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+          )}
+        >
+          <Sparkles className={iconSize} />
+          Wat is er nieuw
+        </Link>
+        <Link
           href="/settings"
           onClick={onNavigate}
           className={cn(
             "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             linkClassName,
+            pathname === "/settings" &&
+              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
           )}
         >
           <Settings className={iconSize} />

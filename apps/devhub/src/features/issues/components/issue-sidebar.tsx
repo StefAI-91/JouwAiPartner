@@ -14,6 +14,7 @@ import {
 import { SidebarSelect, SidebarAssignee } from "./sidebar-fields";
 import { SidebarAiClassification } from "./sidebar-ai-classification";
 import { SidebarDelete } from "./sidebar-delete";
+import { TopicPill } from "@/features/topics/components/topic-pill";
 
 interface Person {
   id: string;
@@ -25,9 +26,18 @@ interface IssueSidebarProps {
   people: Person[];
   onFieldChange: (field: string, value: string | null) => void;
   isPending: boolean;
+  currentTopic: { id: string; title: string } | null;
+  topics: { id: string; title: string }[];
 }
 
-export function IssueSidebar({ issue, people, onFieldChange, isPending }: IssueSidebarProps) {
+export function IssueSidebar({
+  issue,
+  people,
+  onFieldChange,
+  isPending,
+  currentTopic,
+  topics,
+}: IssueSidebarProps) {
   const rawClassification = issue.ai_classification as Record<string, unknown> | undefined;
   const aiClassification =
     rawClassification && Object.keys(rawClassification).length > 0 ? rawClassification : null;
@@ -73,6 +83,17 @@ export function IssueSidebar({ issue, people, onFieldChange, isPending }: IssueS
             <p className="text-sm capitalize">{issue.severity}</p>
           </div>
         )}
+
+        <div className="space-y-1">
+          <span className="text-xs font-medium text-muted-foreground">Topic</span>
+          <TopicPill
+            issueId={issue.id}
+            projectId={issue.project_id}
+            current={currentTopic}
+            topics={topics}
+            variant="field"
+          />
+        </div>
 
         <SidebarAssignee
           value={issue.assigned_to}

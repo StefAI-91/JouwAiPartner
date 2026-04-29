@@ -49,6 +49,17 @@ export const issueListFilterSchema = z.object({
   type: csvListSchema(z.enum(ISSUE_TYPES)),
   component: csvListSchema(z.enum(ISSUE_COMPONENTS)),
   assignee: csvListSchema(assigneeItemSchema),
+  topic: csvListSchema(z.string().uuid()),
+  // "1" → true, alles anders → false. Strikt zodat een knullig `?ungrouped=0`
+  // niet ongewenst als truthy wordt geïnterpreteerd.
+  ungrouped: z
+    .string()
+    .optional()
+    .transform((v) => v === "1"),
+  // Display-mode. Default = "topic" (groep-by-topic), `?group=flat` zet uit.
+  // Enum zodat we later "priority"/"status"/etc. zonder breaking change
+  // kunnen toevoegen.
+  group: z.enum(["topic", "flat"]).optional(),
 });
 
 export type IssueListFilterParams = z.infer<typeof issueListFilterSchema>;

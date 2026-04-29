@@ -27,6 +27,8 @@ interface IssueDetailProps {
   people: Person[];
   attachments?: IssueAttachmentRow[];
   currentUser?: CurrentUser | null;
+  currentTopic?: { id: string; title: string } | null;
+  topics: { id: string; title: string }[];
 }
 
 export function IssueDetail({
@@ -36,6 +38,8 @@ export function IssueDetail({
   people,
   attachments,
   currentUser,
+  currentTopic,
+  topics,
 }: IssueDetailProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -151,6 +155,8 @@ export function IssueDetail({
         people={people}
         onFieldChange={handleFieldChange}
         isPending={isPending}
+        currentTopic={currentTopic ?? null}
+        topics={topics}
       />
     </div>
   );
