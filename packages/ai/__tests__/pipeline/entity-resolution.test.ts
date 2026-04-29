@@ -18,7 +18,7 @@ import {
   resolveProject,
   resolveOrganization,
   resolveClientEntities,
-} from "../../src/pipeline/entity-resolution";
+} from "../../src/pipeline/lib/entity-resolution";
 import { getAllProjects, matchProjectsByEmbedding } from "@repo/database/queries/projects";
 import { getAllOrganizations } from "@repo/database/queries/organizations";
 import { updateProjectAliases } from "@repo/database/mutations/projects";

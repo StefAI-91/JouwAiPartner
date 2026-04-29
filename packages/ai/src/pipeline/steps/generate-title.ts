@@ -1,4 +1,4 @@
-import { generateMeetingTitle } from "../generate-title";
+import { generateMeetingTitle } from "../lib/title-builder";
 import { updateMeetingTitle } from "@repo/database/mutations/meetings";
 import type { IdentifiedProject } from "../../validations/gatekeeper";
 

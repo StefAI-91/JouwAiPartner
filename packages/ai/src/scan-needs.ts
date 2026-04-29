@@ -1,7 +1,7 @@
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { insertExtractions } from "@repo/database/mutations/extractions";
-import { runNeedsScanner } from "../agents/needs-scanner";
-import type { NeedItem } from "../validations/needs-scanner";
+import { runNeedsScanner } from "./agents/needs-scanner";
+import type { NeedItem } from "./validations/needs-scanner";
 
 interface MeetingForScan {
   id: string;

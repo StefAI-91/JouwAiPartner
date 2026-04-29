@@ -1,7 +1,7 @@
 import { runEmailClassifier } from "../../agents/email-classifier";
 import type { EmailClassifierOutput } from "../../agents/email-classifier";
-import { buildEntityContext } from "../context-injection";
-import { resolveOrganization } from "../entity-resolution";
+import { buildEntityContext } from "../lib/context-injection";
+import { resolveOrganization } from "../lib/entity-resolution";
 import { decideEmailFilter, type FilterReason } from "./filter-gatekeeper";
 import { preClassifyEmail } from "./pre-classifier";
 import {

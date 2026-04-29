@@ -16,7 +16,7 @@ vi.mock("@repo/database/mutations/meetings", () => ({
   updateMeetingClassification: vi.fn(),
 }));
 
-vi.mock("@repo/ai/pipeline/entity-resolution", () => ({
+vi.mock("@repo/ai/pipeline/lib/entity-resolution", () => ({
   resolveOrganization: vi.fn(),
 }));
 
@@ -29,7 +29,7 @@ import { runGatekeeper } from "@repo/ai/agents/gatekeeper";
 import { getAllKnownPeople } from "@repo/database/queries/people";
 import { listMeetingsForReclassify } from "@repo/database/queries/meetings";
 import { updateMeetingClassification } from "@repo/database/mutations/meetings";
-import { resolveOrganization } from "@repo/ai/pipeline/entity-resolution";
+import { resolveOrganization } from "@repo/ai/pipeline/lib/entity-resolution";
 import {
   classifyParticipantsWithCache,
   determinePartyType,

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getMeetingForRegenerateRisks } from "@repo/database/queries/meetings";
 import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
-import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
+import { buildEntityContext } from "@repo/ai/pipeline/lib/context-injection";
 import { regenerateSchema } from "@repo/database/validations/meetings";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";

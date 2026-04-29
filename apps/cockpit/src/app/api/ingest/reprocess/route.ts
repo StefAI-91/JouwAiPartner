@@ -10,9 +10,9 @@ import { runRiskSpecialistStep } from "@repo/ai/pipeline/steps/risk-specialist";
 import { embedMeetingWithExtractions } from "@repo/ai/pipeline/embed/pipeline";
 import { markMeetingEmbeddingStale } from "@repo/database/mutations/meetings";
 import { getMeetingByFirefliesIdForReprocess } from "@repo/database/queries/meetings";
-import { buildEntityContext } from "@repo/ai/pipeline/context-injection";
+import { buildEntityContext } from "@repo/ai/pipeline/lib/context-injection";
 import { runTagger } from "@repo/ai/pipeline/tagger";
-import { buildSegments } from "@repo/ai/pipeline/segment-builder";
+import { buildSegments } from "@repo/ai/pipeline/lib/segment-builder";
 import {
   insertMeetingProjectSummaries,
   updateSegmentEmbedding,

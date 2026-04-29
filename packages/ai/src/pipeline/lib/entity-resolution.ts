@@ -1,4 +1,4 @@
-import { embedText } from "../embeddings";
+import { embedText } from "../../embeddings";
 import { getAllProjects, matchProjectsByEmbedding } from "@repo/database/queries/projects";
 import { updateProjectAliases } from "@repo/database/mutations/projects";
 import { getAllOrganizations } from "@repo/database/queries/organizations";

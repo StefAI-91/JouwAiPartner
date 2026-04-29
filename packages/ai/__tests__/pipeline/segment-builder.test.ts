@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSegments } from "../../src/pipeline/segment-builder";
+import { buildSegments } from "../../src/pipeline/lib/segment-builder";
 import type { TaggerOutput } from "../../src/pipeline/tagger";
 
 describe("buildSegments", () => {
