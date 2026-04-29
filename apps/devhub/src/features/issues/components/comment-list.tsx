@@ -115,7 +115,9 @@ export function CommentActivityFeed({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{c.author?.full_name ?? "Onbekend"}</span>
-                  <span className="text-xs text-muted-foreground">{timeAgo(c.created_at)}</span>
+                  <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+                    {timeAgo(c.created_at)}
+                  </span>
                 </div>
                 <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{c.body}</p>
               </div>
@@ -136,7 +138,9 @@ export function CommentActivityFeed({
             <span className="flex-1">
               <ActivityDescription activity={a} />
             </span>
-            <span className="shrink-0 text-[0.65rem]">{timeAgo(a.created_at)}</span>
+            <span className="shrink-0 text-[0.65rem]" suppressHydrationWarning>
+              {timeAgo(a.created_at)}
+            </span>
           </div>
         );
       })}

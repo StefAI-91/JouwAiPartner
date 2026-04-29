@@ -178,7 +178,10 @@ export function IssueRowItem({
             ) : (
               <span className="size-7" />
             )}
-            <span className="ml-auto text-xs sm:text-sm text-muted-foreground">
+            <span
+              className="ml-auto text-xs sm:text-sm text-muted-foreground"
+              suppressHydrationWarning
+            >
               {timeAgo(issue.created_at)}
             </span>
           </div>
