@@ -47,12 +47,7 @@ Je bepaalt:
 
    VUISTREGEL SEVERITY: als een gebruiker iets beschrijft dat hen BLOKKEERT in hun werk (niet verder kunnen, niet kunnen opslaan, niet kunnen inloggen) → critical. Als iets vervelend is maar ze kunnen er omheen werken → medium. Bij twijfel tussen critical en high → kies critical (liever een extra melding dan een gemiste blocker).
 
-4. REPRO_STEPS: genereer concrete reproductiestappen in het Nederlands.
-   - Baseer op de beschrijving en pageUrl
-   - Als er te weinig informatie is: beschrijf wat je WEL weet en geef aan welke info ontbreekt
-   - Formaat: genummerde stappen (1. Ga naar... 2. Klik op... 3. Verwacht: ... Actueel: ...)
-
-5. CONFIDENCE: hoe zeker ben je? (0.0-1.0)
+4. CONFIDENCE: hoe zeker ben je? (0.0-1.0)
    - 0.9+: duidelijke beschrijving, type en component zijn evident
    - 0.6-0.8: redelijk duidelijk maar enige ambiguiteit
    - <0.6: vage beschrijving, moeilijk te classificeren (bijv. "Test" of "dit moet beter")

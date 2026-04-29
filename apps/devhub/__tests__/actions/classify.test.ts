@@ -41,7 +41,6 @@ const mockClassifyResult = {
   type: "bug",
   component: "frontend",
   severity: "high",
-  repro_steps: "1. Open page\n2. Click button",
   confidence: 0.92,
 };
 

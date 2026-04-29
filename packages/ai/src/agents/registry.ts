@@ -172,8 +172,7 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     id: "issue-classifier",
     name: "Issue Classifier",
     role: "De triage-assistent",
-    description:
-      "Classificeert binnenkomende Userback-feedback: type, component, severity + reproductiestappen.",
+    description: "Classificeert binnenkomende Userback-feedback: type, component en severity.",
     mascot: "🗂️",
     model: "claude-haiku-4-5-20251001",
     modelLabel: "Haiku 4.5",
