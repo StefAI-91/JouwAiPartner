@@ -81,7 +81,7 @@ function TypeColumn({
     tone === "bug" ? "text-rose-700 dark:text-rose-300" : "text-emerald-700 dark:text-emerald-300";
 
   return (
-    <div className="bg-muted/25 p-3">
+    <div className="bg-card p-3">
       <div className="mb-2 flex items-center gap-1.5">
         <Icon className={`size-3 ${accent}`} />
         <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground/80">
