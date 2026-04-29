@@ -61,8 +61,8 @@ describe("BucketStack", () => {
     render(<BucketStack buckets={emptyBuckets()} issueCounts={new Map()} projectId="p1" />);
 
     // Vier buckets × twee types = acht empty-states (vier per tekst).
-    expect(screen.getAllByText("Geen bugs in deze fase.")).toHaveLength(4);
-    expect(screen.getAllByText("Geen wensen in deze fase.")).toHaveLength(4);
+    expect(screen.getAllByText("Geen bugs in deze fase — fijn.")).toHaveLength(4);
+    expect(screen.getAllByText("Geen openstaande wensen in deze fase.")).toHaveLength(4);
   });
 
   it("gebruikt client_title wanneer aanwezig, anders interne title", () => {
