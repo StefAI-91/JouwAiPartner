@@ -29,13 +29,6 @@ import { ClusterSuggestionsPanel } from "@/components/cluster-suggestions/cluste
 const UNGROUPED_DEFAULT_OPEN = ["triage", "backlog", "todo", "in_progress"] as const;
 const UNGROUPED_DEFAULT_DONE = ["done"] as const;
 
-// PR-020 — cross-status ungrouped pool voor de "Niet gegroepeerd"-sectie.
-// Doel: een actief status-filter mag niet verbergen dat er soortgelijke
-// ongegroepeerde issues in andere stadia bestaan (bv. 3× "afbeelding-upload"
-// in todo + 1× in triage). Topic-secties respecteren het filter; de inbox
-// niet, anders mis je verbanden tussen stadia.
-const CROSS_STATUS_UNGROUPED_OPEN = ["triage", "backlog", "todo", "in_progress"] as const;
-
 const PAGE_SIZE = 25;
 
 const issueSearchParamsSchema = issueListFilterSchema.extend({
@@ -139,52 +132,29 @@ export default async function IssuesPage({
     search,
   };
 
-  // Cross-status ungrouped pool: alleen relevant in grouped-mode wanneer de
-  // user een status-filter heeft gezet en niet al expliciet op de ungrouped-
-  // view zit (daar werkt de cluster-tool zelf al cross-status). Filters die
-  // niets met status te maken hebben (priority, type, component, assignee,
-  // search) blijven respecteren — anders verandert de inbox-scope te veel.
-  // Bij een gesloten status (done/cancelled) in de filter is de premise weg
-  // — de gebruiker bekijkt afgerond werk, geen actieve clustering — dus dan
-  // de pool helemaal uit, anders verschijnen open issues onder "Afgerond".
+  // Status-filter wordt overal strikt toegepast — ook in de "Niet
+  // gegroepeerd"-sectie. Voor cross-status clustering bestaat de dedicated
+  // cleanup-view (`?ungrouped=1`); we tonen geen impliciete cross-status
+  // pool in de gewone lijst, want dat verraste users (zie PR-020 revert).
   const filteringClosed = params.status?.some((s) => CLOSED_STATUSES.has(s)) ?? false;
-  const showCrossStatusUngrouped =
-    isGrouped && Boolean(params.status?.length) && !params.ungrouped && !filteringClosed;
 
-  const [issues, totalCount, sidebarCounts, members, crossStatusUngrouped] = await Promise.all([
+  const [issues, totalCount, sidebarCounts, members] = await Promise.all([
     listIssues({ ...filterParams, sort: params.sort, limit: PAGE_LIMIT, offset }, supabase),
     countFilteredIssues(filterParams, supabase),
     getIssueCounts(projectId, supabase),
     listTeamMembers(supabase),
-    showCrossStatusUngrouped
-      ? listIssues(
-          {
-            ...filterParams,
-            status: Array.from(CROSS_STATUS_UNGROUPED_OPEN),
-            ungroupedOnly: true,
-            limit: 200,
-            offset: 0,
-          },
-          supabase,
-        )
-      : Promise.resolve([]),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  // Combineer ids voor thumbnails + topicMembership zodat ook cross-status
-  // rows hun thumbnail krijgen. topicMembership is voor cross-status per
-  // definitie leeg (allemaal ungrouped) maar de query-cost is verwaarloosbaar.
-  const combinedIds = Array.from(
-    new Set([...issues.map((i) => i.id), ...crossStatusUngrouped.map((i) => i.id)]),
-  );
+  const issueIds = issues.map((i) => i.id);
   // PR-020 — open-issue-count per topic, voor de "+N buiten je filter"-hint
   // op topic-section-headers. Telt issues in open-statussen ongeacht de
   // huidige UI-filters; verschil met de gerenderde count = wat de developer
   // door zijn filter mist. Cap op project-niveau, parallel met thumbnails.
   const [thumbnails, topicMembership, topicOpenCounts] = await Promise.all([
-    getIssueThumbnails(combinedIds, supabase),
-    getTopicMembershipForIssues(combinedIds, supabase),
+    getIssueThumbnails(issueIds, supabase),
+    getTopicMembershipForIssues(issueIds, supabase),
     countOpenIssuesPerTopic(
       projectTopics.map((t) => t.id),
       supabase,
@@ -234,7 +204,6 @@ export default async function IssuesPage({
         topics={topicsForPill}
         groupedByTopic={isGrouped}
         projectId={projectId}
-        crossStatusUngrouped={showCrossStatusUngrouped ? crossStatusUngrouped : undefined}
         topicOpenCounts={filteringClosed ? undefined : topicOpenCounts}
       />
       {!isGrouped && <PaginationControls currentPage={currentPage} totalPages={totalPages} />}

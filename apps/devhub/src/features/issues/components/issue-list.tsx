@@ -44,13 +44,6 @@ interface IssueListProps {
   /** Vereist als groupedByTopic — voor de "Open topic"-link in section-headers. */
   projectId?: string;
   /**
-   * PR-020 — Override voor de "Niet gegroepeerd"-sectie. Bevat alle
-   * ongegroepeerde open issues (cross-status), zodat een actief status-
-   * filter geen verbanden tussen stadia verbergt. Topic-secties blijven
-   * het filter respecteren — alleen de inbox is breder.
-   */
-  crossStatusUngrouped?: IssueRow[];
-  /**
    * PR-020 — Aantal open-status issues per topic, ongeacht de huidige
    * UI-filters. Verschil met de gerenderde count toont een "+N buiten
    * je filter"-hint op de topic-section-header zodat de developer ziet
@@ -66,7 +59,6 @@ export function IssueList({
   topics,
   groupedByTopic,
   projectId,
-  crossStatusUngrouped,
   topicOpenCounts,
 }: IssueListProps) {
   if (issues.length === 0) {
@@ -88,7 +80,6 @@ export function IssueList({
         topicMembership={topicMembership}
         topics={topics}
         projectId={projectId}
-        crossStatusUngrouped={crossStatusUngrouped}
         topicOpenCounts={topicOpenCounts}
       />
     );
@@ -121,7 +112,6 @@ function GroupedByTopic({
   topicMembership,
   topics,
   projectId,
-  crossStatusUngrouped,
   topicOpenCounts,
 }: Omit<IssueListProps, "groupedByTopic">) {
   // Bucket per topic-id (null voor ungrouped). Map preserveert insertion-order.
@@ -140,16 +130,7 @@ function GroupedByTopic({
       const tb = topicById.get(b)?.title ?? "";
       return ta.localeCompare(tb, "nl");
     });
-  // PR-020 — als de page een cross-status-pool meegaf, vervangt die de
-  // in-filter ungrouped pool helemaal. De in-filter set is een subset van
-  // de cross-status set (zelfde overige filters, alleen status weggelaten),
-  // dus geen risico op dubbele rendering. `extraOutsideFilter` is wat de
-  // user normaal niet zou hebben gezien — dat triggert de header-hint.
-  const inFilterUngrouped = grouped.get(null) ?? [];
-  const ungroupedIssues = crossStatusUngrouped ?? inFilterUngrouped;
-  const extraOutsideFilter = crossStatusUngrouped
-    ? Math.max(0, crossStatusUngrouped.length - inFilterUngrouped.length)
-    : 0;
+  const ungroupedIssues = grouped.get(null) ?? [];
 
   return (
     <div className="flex flex-col gap-4 py-3">
@@ -212,19 +193,9 @@ function GroupedByTopic({
         <section className="overflow-hidden rounded-lg border border-dashed border-border bg-card shadow-md">
           <header className="flex items-baseline justify-between gap-2 border-b border-dashed border-border bg-muted/20 px-4 py-2.5">
             <span className="text-sm font-semibold text-muted-foreground">Niet gegroepeerd</span>
-            <div className="flex shrink-0 items-baseline gap-2">
-              {extraOutsideFilter > 0 && (
-                <span
-                  className="text-xs font-medium text-amber-700"
-                  title="Deze ongegroepeerde issues vallen buiten je actieve status-filter, maar worden hier getoond zodat je verbanden tussen stadia kunt herkennen."
-                >
-                  +{extraOutsideFilter} buiten je filter
-                </span>
-              )}
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {ungroupedIssues.length}
-              </span>
-            </div>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {ungroupedIssues.length}
+            </span>
           </header>
           <div className="divide-y-0">
             {ungroupedIssues.map((issue) => (
