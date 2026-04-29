@@ -8,10 +8,14 @@ JAIP-eigen feedback-widget. Gedeployed als pure-static bundle op
 
 Twee bundles, bewust gesplitst:
 
-| Bundle      | Inhoud                             | Budget (gzip) | Wanneer geladen      |
-| ----------- | ---------------------------------- | ------------- | -------------------- |
-| `loader.js` | Vanilla JS, Shadow-DOM-host + knop | < 5 KB        | Elke pageload (sync) |
-| `widget.js` | Preact-modal (UI)                  | < 30 KB       | Lazy bij eerste klik |
+| Bundle      | Inhoud                                       | Budget (gzip) | Wanneer geladen      |
+| ----------- | -------------------------------------------- | ------------- | -------------------- |
+| `loader.js` | Vanilla JS, Shadow-DOM-host + knop           | < 5 KB        | Elke pageload (sync) |
+| `widget.js` | Preact-modal (UI) + Shadow-scoped CSS inline | < 30 KB       | Lazy bij eerste klik |
+
+`widget.js` bundelt de CSS uit `src/widget/styles.css` als string en
+injecteert 'm via een `<style>`-tag in de Shadow Root. Geen aparte
+`widget.css` — host-styling kan nooit binnen de shadow boundary lekken.
 
 Loader injecteert een floating button in een Shadow Host. Pas zodra de
 gebruiker klikt wordt `widget.js` opgehaald (cross-origin script-tag) en
@@ -58,13 +62,26 @@ budget. Past op drift: voeg een 100KB-lib toe en de build stopt.
 - iOS Safari 16+
 - Geen IE11 (Shadow DOM + ES2020 features)
 
+## E2E test
+
+`tests/e2e/submit.spec.ts` — Playwright test die tegen staging draait:
+loader.js inladen, knop klikken, modal invullen, submit, succes-toast
+asserten. Geen DB-mocks; resulterende DevHub-issue draagt label `'test'`
+zodat triage 'm kan filteren.
+
+```bash
+npm run test:e2e          # tegen staging-API
+```
+
+CI moet eerst `npx playwright install --with-deps chromium` runnen voor
+een schone runner. Lokaal: idem als je 'm voor het eerst draait.
+
 ## Volgende sprints
 
-- **WG-003** vervangt de dummy modal door echte feedback-modal (type-keuze,
-  textarea, submit naar `/api/ingest/widget`) en rolt de widget uit op
-  cockpit voor dogfooding.
-- **WG-005** voegt rate-limit toe aan het ingest-endpoint vóór klant-rollout.
 - **WG-004** rolt de widget uit op de eerste klant-app.
+- **WG-005** voegt rate-limit toe aan het ingest-endpoint vóór klant-rollout.
+- **WG-006** (gepland) voegt annotated screenshots toe — zie
+  `docs/ops/widget-migration.md` voor de gap-analyse.
 
 ## Installatie op een JAIP-app
 
@@ -80,3 +97,9 @@ budget. Past op drift: voeg een 100KB-lib toe en de build stopt.
 `data-user-email` is optioneel — laat 'm weg voor anonieme submissions
 (klant-apps zonder login). Voor SPA's na auth: `window.__JAIPWidgetIdentify({ email })`
 runtime call (komt in WG-004).
+
+Voor cockpit / Next.js Server Component-installatie: gebruik het
+`JaipWidgetScript`-component uit
+`apps/cockpit/src/components/shared/jaip-widget-script.tsx` als
+referentie. Het haalt het ingelogde user-email server-side op zodat dit
+nooit in een client bundle terechtkomt.

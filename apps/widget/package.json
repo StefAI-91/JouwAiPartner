@@ -7,12 +7,14 @@
     "build": "node esbuild.config.mjs && node scripts/generate-health.mjs && node scripts/check-bundle-size.mjs",
     "type-check": "tsc --noEmit",
     "lint": "echo 'no lint configured (esbuild bundle, geen Next.js)'",
-    "test": "echo 'no tests yet (V0 scaffold + dummy modal)'"
+    "test": "echo 'unit tests N/A — bundle-only; e2e via test:e2e'",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "preact": "^10.27.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
     "@types/node": "^20",
     "esbuild": "^0.24.0",
     "typescript": "^5"

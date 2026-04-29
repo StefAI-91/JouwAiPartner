@@ -1,0 +1,368 @@
+/*
+ * JAIP feedback widget — Shadow-scoped styles. Bundled via esbuild's CSS
+ * loader en geïnjecteerd in de Shadow DOM (zie index.tsx). Tokens als CSS-
+ * variabelen zodat host-apps later kleuren kunnen overriden zonder
+ * shadow-piercing.
+ */
+:host,
+.jaip-overlay {
+  --jaip-color-bg: #ffffff;
+  --jaip-color-fg: #0f172a;
+  --jaip-color-muted: #64748b;
+  --jaip-color-border: #e2e8f0;
+  --jaip-color-surface: #f8fafc;
+  --jaip-color-surface-hover: #f1f5f9;
+  --jaip-color-primary: #0f172a;
+  --jaip-color-primary-fg: #ffffff;
+  --jaip-color-accent: #6366f1;
+  --jaip-color-success: #16a34a;
+  --jaip-color-error: #dc2626;
+  --jaip-radius-sm: 8px;
+  --jaip-radius-md: 12px;
+  --jaip-radius-lg: 16px;
+  --jaip-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+  --jaip-font:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.jaip-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+  font-family: var(--jaip-font);
+  color: var(--jaip-color-fg);
+  -webkit-font-smoothing: antialiased;
+  animation: jaip-fade-in 120ms ease-out;
+}
+
+.jaip-dialog {
+  background: var(--jaip-color-bg);
+  border-radius: var(--jaip-radius-lg);
+  box-shadow: var(--jaip-shadow);
+  width: 100%;
+  max-width: 460px;
+  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: jaip-slide-up 160ms ease-out;
+}
+
+.jaip-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 20px 12px;
+}
+
+.jaip-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.jaip-subtitle {
+  font-size: 13px;
+  color: var(--jaip-color-muted);
+  margin: 4px 0 0;
+}
+
+.jaip-close {
+  background: transparent;
+  border: 0;
+  color: var(--jaip-color-muted);
+  padding: 6px;
+  border-radius: var(--jaip-radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jaip-close:hover:not(:disabled) {
+  background: var(--jaip-color-surface);
+  color: var(--jaip-color-fg);
+}
+
+.jaip-close:focus-visible {
+  outline: 2px solid var(--jaip-color-accent);
+  outline-offset: 2px;
+}
+
+.jaip-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 20px 20px;
+  overflow-y: auto;
+}
+
+.jaip-types {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jaip-types[disabled] .jaip-type {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jaip-types-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.jaip-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--jaip-color-fg);
+  display: block;
+  padding: 0;
+}
+
+.jaip-type {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px;
+  background: var(--jaip-color-surface);
+  border: 1.5px solid var(--jaip-color-border);
+  border-radius: var(--jaip-radius-md);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--jaip-color-fg);
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
+  min-height: 88px;
+}
+
+.jaip-type:hover {
+  background: var(--jaip-color-surface-hover);
+  border-color: #cbd5e1;
+}
+
+.jaip-type:focus-visible {
+  outline: 2px solid var(--jaip-color-accent);
+  outline-offset: 2px;
+}
+
+.jaip-type[aria-pressed="true"] {
+  background: var(--jaip-color-bg);
+  border-color: var(--jaip-color-primary);
+  box-shadow: 0 0 0 1px var(--jaip-color-primary) inset;
+}
+
+.jaip-type-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.jaip-type-desc {
+  font-size: 11px;
+  color: var(--jaip-color-muted);
+  line-height: 1.3;
+}
+
+.jaip-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jaip-textarea {
+  width: 100%;
+  border: 1.5px solid var(--jaip-color-border);
+  border-radius: var(--jaip-radius-md);
+  background: var(--jaip-color-bg);
+  color: var(--jaip-color-fg);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 96px;
+  max-height: 240px;
+  box-sizing: border-box;
+}
+
+.jaip-textarea::placeholder {
+  color: var(--jaip-color-muted);
+}
+
+.jaip-textarea:focus {
+  outline: 2px solid var(--jaip-color-accent);
+  outline-offset: 0;
+  border-color: var(--jaip-color-accent);
+}
+
+.jaip-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jaip-hint {
+  font-size: 12px;
+  color: var(--jaip-color-muted);
+  margin: 0;
+}
+
+.jaip-error {
+  background: #fee2e2;
+  color: var(--jaip-color-error);
+  border-radius: var(--jaip-radius-md);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.jaip-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.jaip-btn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: var(--jaip-radius-md);
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition:
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+.jaip-btn:focus-visible {
+  outline: 2px solid var(--jaip-color-accent);
+  outline-offset: 2px;
+}
+
+.jaip-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jaip-btn-ghost {
+  background: transparent;
+  color: var(--jaip-color-fg);
+  border-color: var(--jaip-color-border);
+}
+
+.jaip-btn-ghost:hover:not(:disabled) {
+  background: var(--jaip-color-surface);
+}
+
+.jaip-btn-primary {
+  background: var(--jaip-color-primary);
+  color: var(--jaip-color-primary-fg);
+}
+
+.jaip-btn-primary:hover:not(:disabled) {
+  background: #1e293b;
+}
+
+.jaip-btn-primary[aria-busy="true"] {
+  background: #1e293b;
+}
+
+.jaip-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 20px 28px;
+  color: var(--jaip-color-success);
+  text-align: center;
+}
+
+.jaip-success-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--jaip-color-fg);
+  margin: 0;
+}
+
+@keyframes jaip-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes jaip-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jaip-overlay,
+  .jaip-dialog {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .jaip-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .jaip-dialog {
+    max-width: 100%;
+    max-height: 92dvh;
+    border-radius: var(--jaip-radius-lg) var(--jaip-radius-lg) 0 0;
+    animation: jaip-sheet-up 200ms ease-out;
+  }
+
+  .jaip-types-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .jaip-type {
+    flex-direction: row;
+    align-items: center;
+    min-height: 0;
+    gap: 12px;
+  }
+
+  .jaip-type-desc {
+    margin-left: auto;
+    text-align: right;
+  }
+}
+
+@keyframes jaip-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

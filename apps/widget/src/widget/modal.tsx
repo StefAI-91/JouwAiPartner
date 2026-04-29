@@ -1,69 +1,329 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+
 interface MountConfig {
   projectId: string;
   apiUrl: string;
   userEmail: string | null;
 }
 
-interface DummyModalProps {
+interface ModalProps {
   config: MountConfig;
   onClose: () => void;
 }
 
+type FeedbackType = "bug" | "idea" | "question";
+type Status = "idle" | "submitting" | "success" | "error";
+
+const TYPE_OPTIONS: ReadonlyArray<{
+  value: FeedbackType;
+  label: string;
+  description: string;
+  icon: string;
+}> = [
+  { value: "bug", label: "Bug", description: "Iets werkt niet zoals verwacht", icon: "bug" },
+  { value: "idea", label: "Idee", description: "Suggestie of verbetering", icon: "idea" },
+  { value: "question", label: "Vraag", description: "Hulp of uitleg nodig", icon: "question" },
+];
+
+const MIN_DESCRIPTION_LENGTH = 10;
+const SUCCESS_AUTOCLOSE_MS = 2000;
+
 /**
- * V0 dummy modal. Toont alleen de geconfigureerde projectId zodat we kunnen
- * verifiëren dat loader → widget bundle → mount-flow werkt. WG-003 vervangt
- * dit door de echte feedback-modal (type-keuze, textarea, submit).
+ * WG-003 feedback modal. Mountt in een Shadow DOM zodat host-styling niet
+ * lekt. Alle interactieve elementen zijn keyboard-accessible (focus-trap,
+ * Escape sluit, ARIA-labels). Bij submit POST naar het ingest-endpoint met
+ * auto-context (URL, viewport, userAgent).
  */
-export function DummyModal({ config, onClose }: DummyModalProps) {
+export function Modal({ config, onClose }: ModalProps) {
+  const [type, setType] = useState<FeedbackType | null>(null);
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  const safeClose = useCallback(() => {
+    if (status === "submitting") return;
+    onClose();
+  }, [onClose, status]);
+
+  // A11y: onthoud welk element focus had vóór open en restore bij close.
+  useEffect(() => {
+    triggerRef.current = (document.activeElement as HTMLElement | null) ?? null;
+    const firstButton = dialogRef.current?.querySelector<HTMLElement>("button:not([disabled])");
+    firstButton?.focus();
+    return () => {
+      triggerRef.current?.focus?.();
+    };
+  }, []);
+
+  // A11y: Escape sluit modal, Tab loopt rond binnen modal.
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        safeClose();
+        return;
+      }
+      if (event.key === "Tab" && dialogRef.current) {
+        trapFocus(event, dialogRef.current);
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [safeClose]);
+
+  const trimmedLength = description.trim().length;
+  const canSubmit = type !== null && trimmedLength >= MIN_DESCRIPTION_LENGTH && status === "idle";
+
+  async function handleSubmit(event: Event) {
+    event.preventDefault();
+    if (!canSubmit || type === null) return;
+    setStatus("submitting");
+    setErrorMessage("");
+    try {
+      const response = await fetch(config.apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project_id: config.projectId,
+          type,
+          description: description.trim(),
+          context: {
+            url: window.location.href,
+            viewport: {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            },
+            user_agent: navigator.userAgent,
+          },
+          reporter_email: config.userEmail ?? null,
+        }),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(body?.error ?? `HTTP ${response.status}`);
+      }
+      setStatus("success");
+      window.setTimeout(onClose, SUCCESS_AUTOCLOSE_MS);
+    } catch (error) {
+      setStatus("error");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Versturen mislukt — probeer opnieuw.",
+      );
+    }
+  }
+
+  function handleOverlayClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      safeClose();
+    }
+  }
+
+  const isSubmitting = status === "submitting";
+  const isSuccess = status === "success";
+  const isError = status === "error";
+  const submitLabel = isSubmitting ? "Versturen…" : "Versturen";
+
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="jaip-widget-dummy-title"
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(15,23,42,0.4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-      }}
-    >
+    <div class="jaip-overlay" onClick={handleOverlayClick} data-status={status}>
       <div
-        style={{
-          background: "#fff",
-          padding: 24,
-          borderRadius: 12,
-          maxWidth: 360,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
-        }}
+        ref={dialogRef}
+        class="jaip-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="jaip-widget-title"
+        aria-describedby="jaip-widget-subtitle"
       >
-        <h2
-          id="jaip-widget-dummy-title"
-          style={{ fontSize: 16, fontWeight: 600, margin: "0 0 12px" }}
-        >
-          Hello widget
-        </h2>
-        <p style={{ fontSize: 14, color: "#475569", margin: "0 0 16px" }}>
-          Project: <code>{config.projectId}</code>
-        </p>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 8,
-            background: "#0f172a",
-            color: "#fff",
-            border: 0,
-            cursor: "pointer",
-            font: "500 14px system-ui",
-          }}
-        >
-          Sluiten
-        </button>
+        <div class="jaip-header">
+          <div>
+            <h2 id="jaip-widget-title" class="jaip-title">
+              Stuur feedback
+            </h2>
+            <p id="jaip-widget-subtitle" class="jaip-subtitle">
+              We lezen elke melding mee — dank je wel.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="jaip-close"
+            aria-label="Sluiten"
+            onClick={safeClose}
+            disabled={isSubmitting}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        {isSuccess ? (
+          <div class="jaip-success" role="status" aria-live="polite">
+            <CheckIcon />
+            <p class="jaip-success-text">Bedankt! Je feedback is ontvangen.</p>
+          </div>
+        ) : (
+          <form class="jaip-form" onSubmit={handleSubmit}>
+            <fieldset class="jaip-types" disabled={isSubmitting}>
+              <legend class="jaip-label">Wat wil je melden?</legend>
+              <div class="jaip-types-grid">
+                {TYPE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    class="jaip-type"
+                    aria-label={`${option.label}: ${option.description}`}
+                    aria-pressed={type === option.value}
+                    onClick={() => setType(option.value)}
+                  >
+                    <TypeIcon name={option.icon} />
+                    <span class="jaip-type-label">{option.label}</span>
+                    <span class="jaip-type-desc">{option.description}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <div class="jaip-field">
+              <label class="jaip-label" htmlFor="jaip-widget-description">
+                Beschrijving
+              </label>
+              <textarea
+                id="jaip-widget-description"
+                class="jaip-textarea"
+                rows={5}
+                value={description}
+                onInput={(event) =>
+                  setDescription((event.currentTarget as HTMLTextAreaElement).value)
+                }
+                placeholder="Wat is er aan de hand? Wees zo specifiek mogelijk."
+                aria-describedby="jaip-widget-description-hint"
+                disabled={isSubmitting}
+                required
+              />
+              <p id="jaip-widget-description-hint" class="jaip-hint">
+                Minimaal {MIN_DESCRIPTION_LENGTH} tekens (
+                {Math.min(trimmedLength, MIN_DESCRIPTION_LENGTH)}/{MIN_DESCRIPTION_LENGTH}).
+              </p>
+            </div>
+
+            {isError ? (
+              <div class="jaip-error" role="alert">
+                Er ging iets mis: {errorMessage || "onbekende fout"}.
+              </div>
+            ) : null}
+
+            <div class="jaip-actions">
+              <button
+                type="button"
+                class="jaip-btn jaip-btn-ghost"
+                onClick={safeClose}
+                disabled={isSubmitting}
+              >
+                Annuleren
+              </button>
+              <button
+                type="submit"
+                class="jaip-btn jaip-btn-primary"
+                disabled={!canSubmit}
+                aria-busy={isSubmitting}
+              >
+                {submitLabel}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
+  );
+}
+
+function trapFocus(event: KeyboardEvent, container: HTMLElement) {
+  const focusables = Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  );
+  if (focusables.length === 0) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  const active =
+    container.getRootNode() instanceof ShadowRoot
+      ? (container.getRootNode() as ShadowRoot).activeElement
+      : document.activeElement;
+  if (event.shiftKey && active === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M6 6l12 12M18 6L6 18"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5 12.5l4.5 4.5L19 7.5"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+function TypeIcon({ name }: { name: string }) {
+  if (name === "bug") {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+        <path
+          d="M9 4l1.5 2h3L15 4M6 9h12M6 9v6a6 6 0 0 0 12 0V9M3 12h3m12 0h3M5 18l2-1m12 1l-2-1M5 6l2 1m12-1l-2 1"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
+      </svg>
+    );
+  }
+  if (name === "idea") {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+        <path
+          d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1.2 1.6 1.4 2.5h5.2c.2-.9.7-1.8 1.4-2.5A6 6 0 0 0 12 3z"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+      <path
+        d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.5 1.1-1.5 2.2v.5M12 17.5h.01"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      />
+      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+    </svg>
   );
 }

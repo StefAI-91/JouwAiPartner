@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-30. Do not edit manually.
+> Auto-generated on 2026-04-29. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 556 |
-| Exported functions/constants | 855 |
-| Exported types/interfaces | 351 |
-| Cross-package imports | 570 |
+| Files scanned | 530 |
+| Exported functions/constants | 834 |
+| Exported types/interfaces | 347 |
+| Cross-package imports | 564 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -216,27 +216,10 @@
 - `listVerifiedMeetings()`
 - `listVerifiedMeetingIdsOrderedByDate()`
 - `listBoardMeetings()`
-
-**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`
-
-### `queries/meetings/lookup.ts`
-
-**Exports:**
 - `getMeetingByFirefliesId()`
 - `getExistingFirefliesIds()`
 - `getExistingMeetingsByTitleDates()`
 - `getMeetingByTitleAndDate()`
-
-### `queries/meetings/metadata.ts`
-
-**Exports:**
-- `getMeetingOrganizationId()`
-- `listMeetingProjectIds()`
-- `listMeetingParticipantIds()`
-
-### `queries/meetings/pipeline-fetches.ts`
-
-**Exports:**
 - `listMeetingsForReclassify()`
 - `listMeetingsWithTranscript()`
 - `getMeetingForDevExtractor()`
@@ -246,8 +229,20 @@
 - `getMeetingExtractionsBatch()`
 - `getVerifiedMeetingsWithoutSegments()`
 - `getMeetingForTitleGeneration()`
+- `getMeetingForRegenerate()`
+- `getMeetingForRegenerateRisks()`
+- `getMeetingForReprocess()`
+- `getMeetingOrganizationId()`
+- `listMeetingProjectIds()`
+- `listMeetingParticipantIds()`
+- `getMeetingForBackfill()`
+- `getMeetingByFirefliesIdForReprocess()`
+- `getSpeakerMappingTranscriptCounts()`
+- `countSpeakerMappingBackfillRemaining()`
+- `listSpeakerMappingBackfillCandidates()`
+- `getMeetingParticipantsForSpeakerMapping()`
 
-**Types:** `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`
+**Types:** `MeetingDetail`, `RecentMeeting`, `VerifiedMeetingListItem`, `VerifiedMeetingIdRow`, `BoardMeetingListItem`, `MeetingForReclassify`, `DevExtractorMeetingOption`, `MeetingForDevExtractor`, `MeetingForBatchSegmentation`, `MeetingForTitleGeneration`, `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`, `SpeakerMappingParticipant`, `SpeakerMappingTranscriptCounts`, `SpeakerMappingBackfillCandidate`
 
 ### `queries/meetings/project-summaries.ts`
 
@@ -260,27 +255,6 @@
 - `getSegmentsByProjectId()`
 
 **Types:** `MeetingSegment`, `ProjectSegment`
-
-### `queries/meetings/regenerate.ts`
-
-**Exports:**
-- `getMeetingForRegenerate()`
-- `getMeetingForRegenerateRisks()`
-- `getMeetingForReprocess()`
-- `getMeetingForBackfill()`
-- `getMeetingByFirefliesIdForReprocess()`
-
-**Types:** `MeetingForRegenerate`, `MeetingForRegenerateRisks`, `MeetingForReprocess`, `MeetingForBackfill`, `MeetingByFirefliesIdForReprocess`
-
-### `queries/meetings/speaker-mapping.ts`
-
-**Exports:**
-- `getSpeakerMappingTranscriptCounts()`
-- `countSpeakerMappingBackfillRemaining()`
-- `listSpeakerMappingBackfillCandidates()`
-- `getMeetingParticipantsForSpeakerMapping()`
-
-**Types:** `SpeakerMappingParticipant`, `SpeakerMappingTranscriptCounts`, `SpeakerMappingBackfillCandidate`
 
 ### `queries/meetings/themes.ts`
 
@@ -367,14 +341,6 @@
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin
-
-### `queries/portal/meetings.ts`
-
-**Exports:**
-- `listClientMeetingSegments()`
-- `getClientMeetingSegment()`
-
-**Types:** `PortalMeetingSegment`
 
 ### `queries/projects/access.ts`
 
@@ -904,77 +870,32 @@
 
 **Types:** `ResolveFollowUpInput`
 
-### `packages/ai/src/agents/action-item-specialist/shared.ts`
-
-**Exports:**
-- `formatParticipantBlock()`
-- `buildContextPrefix()`
-- `applyFollowUpResolver()`
-- `normaliseActionItemSpecialistOutput()`
-- `checkActionItemGate()`
-- `extractTranscriptContext()`
-- `PROMPT_DIR`
-
-**Internal deps:**
-- `../../validations/action-item-specialist` → ActionItemFollowupAction, ActionItemRecipientPerQuote, ActionItemSpecialistItem, ActionItemSpecialistOutput, RawActionItemSpecialistOutput
-- `../../utils/normalise` → emptyToNull, sentinelToNull
-- `../action-item-follow-up` → resolveFollowUpDate
-- `./types` → ActionItemSpecialistParticipant
-
-### `packages/ai/src/agents/action-item-specialist/single-stage.ts`
+### `packages/ai/src/agents/action-item-specialist.ts`
 
 **Exports:**
 - `runActionItemSpecialist()`
+- `checkActionItemGate()`
 - `getActionItemSpecialistSystemPrompt()`
-- `ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION`
-- `ACTION_ITEM_SPECIALIST_MODEL`
-- `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
-
-**Internal deps:**
-- `../../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemSpecialistItem
-- `../run-logger` → withAgentRun
-- `./shared` → PROMPT_DIR, applyFollowUpResolver, buildContextPrefix, checkActionItemGate, extractTranscriptContext, normaliseActionItemSpecialistOutput
-- `./validator` → validateFollowupAction
-- `./types` → ActionItemGatedItem, ActionItemPromptVersion, ActionItemSpecialistContext, ActionItemSpecialistRunOptions, ActionItemSpecialistRunResult
-
-### `packages/ai/src/agents/action-item-specialist/two-stage.ts`
-
-**Exports:**
 - `runActionItemCandidateSpotter()`
 - `runActionItemSpecialistTwoStage()`
 - `getActionItemCandidateSpotterPrompt()`
 - `getActionItemJudgePrompt()`
-
-**Internal deps:**
-- `../../validations/action-item-specialist` → type RawActionItemSpecialistOutput
-- `../../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemAccepted, type ActionItemCandidate, type ActionItemJudgement
-- `../../utils/normalise` → emptyToNull
-- `../run-logger` → withAgentRun
-- `../action-item-follow-up` → resolveFollowUpDate
-- `./shared` → PROMPT_DIR, applyFollowUpResolver, buildContextPrefix, checkActionItemGate, extractTranscriptContext, normaliseActionItemSpecialistOutput
-- `./validator` → validateFollowupAction
-- `./types` → ActionItemSpecialistContext, ActionItemSpotterRunResult, ActionItemTwoStageRunOptions, ActionItemTwoStageRunResult
-
-### `packages/ai/src/agents/action-item-specialist/types.ts`
-
-**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistParticipant`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemTwoStageRunOptions`, `ActionItemSpotterRunResult`
-
-**Internal deps:**
-- `../../validations/action-item-specialist` → ActionItemSpecialistItem, ActionItemSpecialistOutput
-- `../../validations/action-item-two-stage` → ActionItemCandidate, ActionItemJudgement
-
-### `packages/ai/src/agents/action-item-specialist/validator.ts`
-
-**Exports:**
 - `getActionItemActionValidatorPrompt()`
 - `validateFollowupAction()`
+- `extractTranscriptContext()`
+- `ACTION_ITEM_SPECIALIST_DEFAULT_PROMPT_VERSION`
+- `ACTION_ITEM_SPECIALIST_MODEL`
+- `ACTION_ITEM_SPECIALIST_PROMPT_VERSION`
 
-**Types:** `ActionItemActionValidatorInput`, `ActionItemActionValidatorResult`
+**Types:** `ActionItemPromptVersion`, `ActionItemSpecialistParticipant`, `ActionItemSpecialistContext`, `ActionItemSpecialistRunOptions`, `ActionItemSpecialistRunMetrics`, `ActionItemGatedItem`, `ActionItemSpecialistRunResult`, `ActionItemTwoStageRunMetrics`, `ActionItemTwoStageRunResult`, `ActionItemTwoStageRunOptions`, `ActionItemSpotterRunResult`, `ActionItemActionValidatorInput`, `ActionItemActionValidatorResult`
 
 **Internal deps:**
-- `../../validations/action-item-action-validator` → ActionItemActionValidatorOutputSchema, type ActionItemActionValidatorOutput
-- `../run-logger` → withAgentRun
-- `./shared` → PROMPT_DIR
+- `../validations/action-item-specialist` → ActionItemSpecialistRawOutputSchema, type ActionItemFollowupAction, type ActionItemRecipientPerQuote, type ActionItemSpecialistItem, type ActionItemSpecialistOutput, type RawActionItemSpecialistOutput
+- `../validations/action-item-two-stage` → ActionItemCandidatesSchema, ActionItemJudgementsSchema, type ActionItemCandidate, type ActionItemJudgement
+- `../validations/action-item-action-validator` → ActionItemActionValidatorOutputSchema, type ActionItemActionValidatorOutput
+- `../utils/normalise` → emptyToNull, sentinelToNull
+- `./action-item-follow-up` → resolveFollowUpDate
+- `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/bulk-cluster-cleanup.ts`
 
@@ -1536,7 +1457,7 @@
 
 **Depends on:**
 - `@repo/database/mutations/meetings` → updateMeetingNamedTranscript
-- `@repo/database/queries/meetings/speaker-mapping` → getMeetingParticipantsForSpeakerMapping, type SpeakerMappingParticipant
+- `@repo/database/queries/meetings/core` → getMeetingParticipantsForSpeakerMapping, type SpeakerMappingParticipant
 
 **Internal deps:**
 - `../../agents/speaker-identifier` → applyMappingToTranscript, runSpeakerIdentifier
@@ -1617,11 +1538,19 @@
 ### `packages/ai/src/pipeline/summary/core.ts`
 
 **Exports:**
-- `formatMeetingForSummary()`
-- `formatEmailForSummary()`
-- `buildTimelineStructuredContent()`
+- `generateProjectSummaries()`
+- `generateOrgSummaries()`
+- `triggerSummariesForMeeting()`
+- `triggerSummariesForEmail()`
 
-**Types:** `FormattedMeetingForSummary`, `FormattedEmailForSummary`
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/summaries` → getLatestSummary
+- `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
+- `@repo/database/mutations/summaries` → createSummaryVersion
+
+**Internal deps:**
+- `../../agents/project-summarizer` → runProjectSummarizer, runOrgSummarizer
 
 ### `packages/ai/src/pipeline/summary/management-insights.ts`
 
@@ -1636,48 +1565,6 @@
 **Internal deps:**
 - `../../agents/management-insights` → runManagementInsightsAgent
 
-### `packages/ai/src/pipeline/summary/org.ts`
-
-**Exports:**
-- `generateOrgSummaries()`
-
-**Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/summaries` → getLatestSummary
-- `@repo/database/mutations/summaries` → createSummaryVersion
-
-**Internal deps:**
-- `../../agents/project-summarizer` → runOrgSummarizer
-- `./core` → formatMeetingForSummary, formatEmailForSummary, buildTimelineStructuredContent
-
-### `packages/ai/src/pipeline/summary/project.ts`
-
-**Exports:**
-- `generateProjectSummaries()`
-
-**Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/summaries` → getLatestSummary
-- `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
-- `@repo/database/mutations/summaries` → createSummaryVersion
-
-**Internal deps:**
-- `../../agents/project-summarizer` → runProjectSummarizer
-- `./core` → formatMeetingForSummary, formatEmailForSummary, buildTimelineStructuredContent
-
-### `packages/ai/src/pipeline/summary/triggers.ts`
-
-**Exports:**
-- `triggerSummariesForMeeting()`
-- `triggerSummariesForEmail()`
-
-**Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
-
-**Internal deps:**
-- `./project` → generateProjectSummaries
-- `./org` → generateOrgSummaries
-
 ### `packages/ai/src/pipeline/summary/weekly.ts`
 
 **Exports:**
@@ -1691,45 +1578,19 @@
 **Internal deps:**
 - `../../agents/weekly-summarizer` → runWeeklySummarizer
 
-### `packages/ai/src/pipeline/tagger/projects.ts`
-
-**Exports:**
-- `parsePrefix()`
-- `resolvePrefixProject()`
-- `ruleBasedMatch()`
-- `CONFIDENCE_THRESHOLD`
-
-**Types:** `PrefixResolution`
-
-**Internal deps:**
-- `../../validations/gatekeeper` → IdentifiedProject
-- `./types` → normalize, type KnownProject, type TaggedItem
-
-### `packages/ai/src/pipeline/tagger/tag.ts`
-
-**Exports:**
-- `runTagger()`
-
-**Internal deps:**
-- `../../validations/gatekeeper` → IdentifiedProject
-- `./projects` → parsePrefix, resolvePrefixProject, ruleBasedMatch, type PrefixResolution
-- `./types` → KnownProject, TaggedItem, TaggerInput, TaggerOutput
-
-### `packages/ai/src/pipeline/tagger/themes.ts`
+### `packages/ai/src/pipeline/tagger.ts`
 
 **Exports:**
 - `parseThemesAnnotation()`
 - `resolveThemeRefs()`
+- `parsePrefix()`
+- `resolvePrefixProject()`
+- `runTagger()`
+
+**Types:** `TaggedItem`, `KnownProject`, `TaggerInput`, `TaggerOutput`, `ThemeRef`
 
 **Internal deps:**
-- `./types` → normalize, type ThemeRef
-
-### `packages/ai/src/pipeline/tagger/types.ts`
-
-**Exports:**
-- `normalize()`
-
-**Types:** `TaggedItem`, `KnownProject`, `ThemeRef`, `TaggerInput`, `TaggerOutput`
+- `../validations/gatekeeper` → IdentifiedProject
 
 ## AI Core
 
@@ -2356,8 +2217,7 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdminInAction
 - `@repo/database/queries/golden` → getMeetingForGoldenCoder
-- `@repo/database/queries/meetings/pipeline-fetches` → listMeetingsWithTranscript
-- `@repo/database/queries/meetings/speaker-mapping` → countSpeakerMappingBackfillRemaining, getSpeakerMappingTranscriptCounts, listSpeakerMappingBackfillCandidates
+- `@repo/database/queries/meetings/core` → countSpeakerMappingBackfillRemaining, getSpeakerMappingTranscriptCounts, listMeetingsWithTranscript, listSpeakerMappingBackfillCandidates
 - `@repo/ai/agents/speaker-identifier` → runSpeakerIdentifier, getSpeakerIdentifierPrompt, type SpeakerIdentifierResult
 - `@repo/ai/pipeline/steps/speaker-mapping` → runSpeakerMappingStep
 
@@ -2420,8 +2280,7 @@
 - `regenerateSummaryAction()`
 
 **Depends on:**
-- `@repo/ai/pipeline/summary/project` → generateProjectSummaries
-- `@repo/ai/pipeline/summary/org` → generateOrgSummaries
+- `@repo/ai/pipeline/summary/core` → generateProjectSummaries, generateOrgSummaries
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -2911,31 +2770,6 @@
 - `@repo/database/queries/golden` → listMeetingsWithGoldenStatus
 - (type) `@repo/database/queries/golden` → MeetingWithGoldenStatus
 
-### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/diff-entry-card.tsx`
-
-**Exports:**
-- `DiffEntryCard()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/gated-panel.tsx`
-
-**Exports:**
-- `GatedPanel()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/result-panel.tsx`
-
-**Exports:**
-- `ResultPanel()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/stat.tsx`
-
-**Exports:**
-- `Stat()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/_components/two-stage-panel.tsx`
-
-**Exports:**
-- `TwoStagePanel()`
-
 ### `apps/cockpit/src/app/(dashboard)/dev/action-items/run/client.tsx`
 
 **Exports:**
@@ -2978,29 +2812,6 @@
 **Depends on:**
 - `@repo/auth/access` → requireAdmin
 - `@repo/database/queries/meetings` → listVerifiedMeetings
-
-### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/_components/backfill-panel.tsx`
-
-**Exports:**
-- `BackfillPanel()`
-
-**Depends on:**
-- `@repo/ui/format` → formatDate
-
-### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/_components/grouped-by-person.tsx`
-
-**Exports:**
-- `GroupedByPerson()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/_components/result-panel.tsx`
-
-**Exports:**
-- `ResultPanel()`
-
-### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/_components/stat.tsx`
-
-**Exports:**
-- `Stat()`
 
 ### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
 
@@ -3675,6 +3486,14 @@
 **Depends on:**
 - (type) `@repo/database/queries/people` → PersonForAssignment
 
+### `apps/cockpit/src/components/shared/jaip-widget-script.tsx`
+
+**Exports:**
+- `JaipWidgetScript()`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+
 ### `apps/cockpit/src/components/shared/markdown-summary.tsx`
 
 **Exports:**
@@ -4139,14 +3958,14 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 13 | - | - | - | - | 13 |
-| AI Pipeline | 63 | - | - | - | - | 63 |
+| AI Pipeline | 59 | - | - | - | - | 59 |
 | AI Validations | 1 | - | - | - | - | 1 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
+| Cockpit Server Actions | 27 | 12 | 13 | - | - | 52 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 20 | 5 | - | 41 | - | 66 |
+| Cockpit Components | 21 | 5 | - | 41 | - | 67 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 100 | 8 | 8 | 38 | - | 154 |
+| Cockpit Pages | 100 | 8 | 8 | 37 | - | 153 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 20 | 3 | 10 | - | - | 33 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
@@ -4327,7 +4146,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `createSummaryVersion()` | `packages/ai/src/pipeline/summary/org.ts`, `packages/ai/src/pipeline/summary/project.ts`, `packages/ai/src/pipeline/summary/weekly.ts` |
+| `createSummaryVersion()` | `packages/ai/src/pipeline/summary/core.ts`, `packages/ai/src/pipeline/summary/weekly.ts` |
 
 ### mutations/summaries/management-insights.ts
 
@@ -4486,26 +4305,10 @@ Which queries are used where across the codebase.
 | `getVerifiedMeetingById()` | `apps/cockpit/src/actions/dev-detector.ts`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx` |
 | `listVerifiedMeetings()` | `apps/cockpit/src/app/(dashboard)/dev/detector/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/page.tsx` |
 | `listBoardMeetings()` | `packages/ai/src/pipeline/summary/management-insights.ts`, `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx` |
-
-### queries/meetings/lookup.ts
-
-| Query | Used in |
-|-------|---------|
 | `getMeetingByFirefliesId()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
 | `getExistingFirefliesIds()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getExistingMeetingsByTitleDates()` | `apps/cockpit/src/app/api/ingest/fireflies/route.ts` |
 | `getMeetingByTitleAndDate()` | `apps/cockpit/src/app/api/webhooks/fireflies/route.ts` |
-
-### queries/meetings/metadata.ts
-
-| Query | Used in |
-|-------|---------|
-| `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
-
-### queries/meetings/pipeline-fetches.ts
-
-| Query | Used in |
-|-------|---------|
 | `listMeetingsForReclassify()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `listMeetingsWithTranscript()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
 | `getMeetingForEmbedding()` | `packages/ai/src/pipeline/embed/pipeline.ts` |
@@ -4513,6 +4316,13 @@ Which queries are used where across the codebase.
 | `getMeetingExtractions()` | `packages/ai/src/pipeline/embed/pipeline.ts`, `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `getMeetingExtractionsBatch()` | `packages/ai/src/pipeline/embed/re-embed-worker.ts` |
 | `getVerifiedMeetingsWithoutSegments()` | `packages/ai/src/scripts/batch-segment-migration.ts` |
+| `getMeetingOrganizationId()` | `apps/cockpit/src/actions/segments.ts` |
+| `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
+| `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+| `getSpeakerMappingTranscriptCounts()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `countSpeakerMappingBackfillRemaining()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `listSpeakerMappingBackfillCandidates()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
+| `getMeetingParticipantsForSpeakerMapping()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
 
 ### queries/meetings/project-summaries.ts
 
@@ -4523,23 +4333,7 @@ Which queries are used where across the codebase.
 | `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
 | `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
 | `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
-| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/project.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
-
-### queries/meetings/regenerate.ts
-
-| Query | Used in |
-|-------|---------|
-| `getMeetingForBackfill()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
-| `getMeetingByFirefliesIdForReprocess()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
-
-### queries/meetings/speaker-mapping.ts
-
-| Query | Used in |
-|-------|---------|
-| `getSpeakerMappingTranscriptCounts()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
-| `countSpeakerMappingBackfillRemaining()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
-| `listSpeakerMappingBackfillCandidates()` | `apps/cockpit/src/actions/dev-speaker-mapping.ts` |
-| `getMeetingParticipantsForSpeakerMapping()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
+| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/core.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/needs.ts
 
@@ -4649,7 +4443,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary/org.ts`, `packages/ai/src/pipeline/summary/project.ts` |
+| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary/core.ts` |
 
 ### queries/summaries/management-insights.ts
 
