@@ -2,24 +2,27 @@
 
 ## Doel
 
-Eigen feedback-widget uitrollen op de eerste klant-app. Vision §Delivery is _juist_ de klant-app — cockpit-dogfooding (WG-003) was fase 1, dit is de échte test. Sprint dekt: admin-UI om whitelist-domains te beheren, klant-onboarding-flow (project_id + script-tag genereren), Userback-route harmoniseren met dezelfde Upstash-util (drift-fix), en cutover-decision op basis van WG-003-data.
+Eigen feedback-widget uitrollen op de eerste klant-app. Vision §Delivery is _juist_ de klant-app — cockpit-dogfooding (WG-003) was fase 1, dit is de échte test. Sprint dekt: admin-UI om whitelist-domains te beheren, klant-onboarding-flow (project_id + script-tag genereren), en cutover-decision op basis van WG-003-data.
+
+**Blokkeert op WG-005** — rate-limit moet live zijn vóór een externe klant het endpoint kan raken. WG-005 wordt parallel of net voor WG-004 opgepakt.
 
 ## Requirements
 
-| ID         | Beschrijving                                                                                                                                                                                                                            |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| WG-REQ-070 | Admin-UI in DevHub: pagina `/admin/widget-domains` waar jaip_admin per project domains kan toevoegen/verwijderen via `widget_allowed_projects`-tabel                                                                                    |
-| WG-REQ-071 | Snippet-generator: per project een copy-paste-`<script>`-tag met juiste `data-project={uuid}` en optionele `data-user-email`-instructie. Toon in de admin-UI                                                                            |
-| WG-REQ-072 | Klant-onboarding-doc in `docs/ops/widget-installation-clients.md`: stappenplan voor klant om script-tag te plaatsen, hoe email/identify werkt, wat klant-zijdig nodig is (geen build-stap, alleen `<script>`)                           |
-| WG-REQ-073 | Eerste klant-pilot: kies één live klant-app, voeg domein toe aan whitelist, plaats script-tag in samenwerking met klant. Documenteer welke klant in `docs/ops/widget-migration.md`                                                      |
-| WG-REQ-074 | **Userback-route harmoniseren**: `apps/devhub/src/app/api/ingest/userback/route.ts` gebruikt nu in-memory rate-limit. Vervang door dezelfde Upstash-util uit WG-001 (drift-fix). Beide routes delen `apps/devhub/src/lib/rate-limit.ts` |
-| WG-REQ-075 | **Cutover-beslissing op cockpit**: na 14+ dagen parallel-run (WG-REQ-055), evalueer cutover-criteria uit WG-REQ-056. Als groen: verwijder Userback-script uit `apps/cockpit/src/app/layout.tsx` en stop polling-job van DH-007          |
-| WG-REQ-076 | Audit-trail op whitelist-mutaties: insert/delete in `widget_allowed_projects` schrijft naar bestaande `audit_events` tabel (wie, wanneer, welk domein toegevoegd)                                                                       |
-| WG-REQ-077 | Status-page-link: als Upstash of ingest-endpoint down is, geeft de error-response een link naar `https://status.jouw-ai-partner.nl` (placeholder URL — apart sprint voor echte status-page)                                             |
+| ID         | Beschrijving                                                                                                                                                                                                                                                          |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WG-REQ-070 | Admin-UI in DevHub: pagina `/admin/widget-domains` waar jaip_admin per project domains kan toevoegen/verwijderen via `widget_allowed_projects`-tabel                                                                                                                  |
+| WG-REQ-071 | Snippet-generator: per project een copy-paste-`<script>`-tag met juiste `data-project={uuid}` en optionele `data-user-email`-instructie. Toon in de admin-UI                                                                                                          |
+| WG-REQ-072 | Klant-onboarding-doc in `docs/ops/widget-installation-clients.md`: stappenplan voor klant om script-tag te plaatsen, hoe email/identify werkt, wat klant-zijdig nodig is (geen build-stap, alleen `<script>`)                                                         |
+| WG-REQ-073 | Eerste klant-pilot: kies één live klant-app, voeg domein toe aan whitelist, plaats script-tag in samenwerking met klant. Documenteer welke klant in `docs/ops/widget-migration.md`                                                                                    |
+| WG-REQ-074 | **Userback-route harmoniseren met WG-005-rate-limit-util**: `apps/devhub/src/app/api/ingest/userback/route.ts` gebruikt nu in-memory rate-limit (gebroken op Vercel). Migreer naar dezelfde util uit WG-005 zodat beide ingest-routes hetzelfde counter-pattern delen |
+| WG-REQ-075 | **Cutover-beslissing op cockpit**: na 14+ dagen parallel-run (WG-REQ-055), evalueer cutover-criteria uit WG-REQ-056. Als groen: verwijder Userback-script uit `apps/cockpit/src/app/layout.tsx` en stop polling-job van DH-007                                        |
+| WG-REQ-076 | Audit-trail op whitelist-mutaties: insert/delete in `widget_allowed_projects` schrijft naar bestaande `audit_events` tabel (wie, wanneer, welk domein toegevoegd)                                                                                                     |
+| WG-REQ-077 | Status-page-link: bij 5xx van ingest-endpoint geef error-response een link naar `https://status.jouw-ai-partner.nl` (placeholder URL — apart sprint voor echte status-page)                                                                                           |
 
 ## Afhankelijkheden
 
 - **WG-001** + **WG-002** + **WG-003** moeten af zijn én cockpit-dogfooding ≥ 14 dagen schoon
+- **WG-005** (rate-limit) moet live zijn vóór klant-rollout — externe Origin = abuse-vector
 - Bestaand: `audit_events`-tabel
 - Bestaand: jaip_admin-rol in `profiles`
 
@@ -63,9 +66,9 @@ Met copy-button en uitleg: "Voor ingelogde gebruikers: voeg `data-user-email='�
 };
 ```
 
-### 4. Userback-route harmoniseren
+### 4. Userback-route harmoniseren met WG-005-util
 
-- Verplaats Upstash-util uit `apps/devhub/src/lib/rate-limit.ts` naar gedeelde signature
+- WG-005 levert `apps/devhub/src/lib/rate-limit.ts` op (Postgres-counter)
 - `apps/devhub/src/app/api/ingest/userback/route.ts` gebruikt zelfde `rateLimitOrigin()` — alleen prefix-key verschilt (`userback_ingest` vs `widget_ingest`)
 - Verwijder oude in-memory rate-limit code uit userback-route
 
