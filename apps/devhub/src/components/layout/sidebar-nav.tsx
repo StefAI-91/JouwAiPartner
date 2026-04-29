@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { LayoutDashboard, LayoutList, Layers, Settings } from "lucide-react";
+import { LayoutDashboard, LayoutList, Layers, Settings, Sparkles } from "lucide-react";
 import { cn } from "@repo/ui/utils";
 import { useEffect, useSyncExternalStore } from "react";
 import { NAV_ITEMS, issueHref } from "./sidebar-constants";
@@ -138,11 +138,26 @@ export function SidebarNav({
       {/* Bottom nav */}
       <div className="border-t border-sidebar-border px-2 py-2 space-y-0.5">
         <Link
+          href="/changelog"
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            linkClassName,
+            pathname === "/changelog" &&
+              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+          )}
+        >
+          <Sparkles className={iconSize} />
+          Wat is er nieuw
+        </Link>
+        <Link
           href="/settings"
           onClick={onNavigate}
           className={cn(
             "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             linkClassName,
+            pathname === "/settings" &&
+              "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
           )}
         >
           <Settings className={iconSize} />

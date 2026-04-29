@@ -12,11 +12,13 @@ import {
 import { cleanupTestData, cleanupTestProfile } from "../helpers/cleanup";
 import {
   countIssuesPerTopic,
+  countOpenIssuesPerTopic,
   getIssuesForTopic,
   getTopicById,
   getTopicWithIssues,
   listTopics,
   listTopicsByBucket,
+  listTopicSampleIssues,
   getTopicMembershipForIssues,
   getLinkedIssueIdsInProject,
   getIssueIdsForTopics,
@@ -278,6 +280,108 @@ describeWithDb("queries/topics", () => {
     it("empty-input early-return: roep aan met [] → returns [] zonder error", async () => {
       const ids = await getIssueIdsForTopics([], db);
       expect(ids).toEqual([]);
+    });
+  });
+
+  describe("countOpenIssuesPerTopic()", () => {
+    it("telt alleen open-status issues per topic, sluit done en cancelled uit", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic });
+      await seedIssue({ id: TEST_IDS.issue, title: "todo issue", status: "todo" });
+      await seedIssue({ id: TEST_IDS.issue2, title: "done issue", status: "done" });
+      await seedIssue({ id: TEST_IDS.issue3, title: "triage issue", status: "triage" });
+      await db.from("topic_issues").insert([
+        { topic_id: TEST_IDS.topic, issue_id: TEST_IDS.issue, linked_by: profileId },
+        { topic_id: TEST_IDS.topic, issue_id: TEST_IDS.issue2, linked_by: profileId },
+        { topic_id: TEST_IDS.topic, issue_id: TEST_IDS.issue3, linked_by: profileId },
+      ]);
+
+      const counts = await countOpenIssuesPerTopic([TEST_IDS.topic], db);
+      // todo + triage = 2 open; done valt buiten.
+      expect(counts.get(TEST_IDS.topic)).toBe(2);
+    });
+
+    it("retourneert 0 voor een topic zonder open-status koppelingen", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic });
+      await seedIssue({ id: TEST_IDS.issue, title: "done", status: "done" });
+      await db.from("topic_issues").insert({
+        topic_id: TEST_IDS.topic,
+        issue_id: TEST_IDS.issue,
+        linked_by: profileId,
+      });
+
+      const counts = await countOpenIssuesPerTopic([TEST_IDS.topic], db);
+      expect(counts.get(TEST_IDS.topic)).toBe(0);
+    });
+
+    it("empty-input early-return: geeft lege Map zonder error", async () => {
+      const counts = await countOpenIssuesPerTopic([], db);
+      expect(counts.size).toBe(0);
+    });
+  });
+
+  describe("listTopicSampleIssues()", () => {
+    it("retourneert max 5 issue-titels per topic, meest recent gekoppeld eerst", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic });
+      await seedIssue({ id: TEST_IDS.issue, title: "Oudste" });
+      await seedIssue({ id: TEST_IDS.issue2, title: "Midden" });
+      await seedIssue({ id: TEST_IDS.issue3, title: "Nieuwste" });
+
+      // Insert in chronologische volgorde met expliciete linked_at zodat de
+      // sortering deterministisch is (dezelfde-millisecond inserts kunnen
+      // anders willekeurig terugkomen).
+      const t0 = "2026-04-01T10:00:00Z";
+      const t1 = "2026-04-01T11:00:00Z";
+      const t2 = "2026-04-01T12:00:00Z";
+      await db.from("topic_issues").insert([
+        {
+          topic_id: TEST_IDS.topic,
+          issue_id: TEST_IDS.issue,
+          linked_by: profileId,
+          linked_at: t0,
+        },
+        {
+          topic_id: TEST_IDS.topic,
+          issue_id: TEST_IDS.issue2,
+          linked_by: profileId,
+          linked_at: t1,
+        },
+        {
+          topic_id: TEST_IDS.topic,
+          issue_id: TEST_IDS.issue3,
+          linked_by: profileId,
+          linked_at: t2,
+        },
+      ]);
+
+      const result = await listTopicSampleIssues([TEST_IDS.topic], db);
+      expect(result.get(TEST_IDS.topic)).toEqual(["Nieuwste", "Midden", "Oudste"]);
+    });
+
+    it("groepeert per topic en isoleert tussen topics", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic });
+      await seedTopic(profileId, { id: TEST_IDS.topic2 });
+      await seedIssue({ id: TEST_IDS.issue, title: "A" });
+      await seedIssue({ id: TEST_IDS.issue2, title: "B" });
+      await db.from("topic_issues").insert([
+        { topic_id: TEST_IDS.topic, issue_id: TEST_IDS.issue, linked_by: profileId },
+        { topic_id: TEST_IDS.topic2, issue_id: TEST_IDS.issue2, linked_by: profileId },
+      ]);
+
+      const result = await listTopicSampleIssues([TEST_IDS.topic, TEST_IDS.topic2], db);
+      expect(result.get(TEST_IDS.topic)).toEqual(["A"]);
+      expect(result.get(TEST_IDS.topic2)).toEqual(["B"]);
+    });
+
+    it("empty-input early-return: roep aan met [] → returns lege Map zonder error", async () => {
+      const result = await listTopicSampleIssues([], db);
+      expect(result.size).toBe(0);
+    });
+
+    it("topic zonder gekoppelde issues staat niet in de Map", async () => {
+      await seedTopic(profileId, { id: TEST_IDS.topic });
+
+      const result = await listTopicSampleIssues([TEST_IDS.topic], db);
+      expect(result.has(TEST_IDS.topic)).toBe(false);
     });
   });
 });

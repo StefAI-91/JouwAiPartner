@@ -41,6 +41,13 @@ export interface BulkClusterTopicInput {
   description: string | null;
   type: "bug" | "feature";
   status: string;
+  /**
+   * Tot 5 al-gekoppelde issue-titels, meest recent eerst. Functioneert als
+   * fingerprint: een nieuwe issue past pas écht bij het topic als hij ook
+   * thematisch bij deze voorbeelden hoort. Lege array → topic heeft nog
+   * geen geschiedenis; Haiku valt terug op title+description.
+   */
+  sampleIssueTitles: string[];
 }
 
 export interface BulkClusterInput {
@@ -51,11 +58,17 @@ export interface BulkClusterInput {
 function buildUserPrompt(input: BulkClusterInput): string {
   const topicsBlock = input.topics.length
     ? input.topics
-        .map(
-          (t) =>
-            `- ${t.id} | ${t.type} | ${t.status} | ${t.title}` +
-            (t.description ? `\n    ${t.description}` : ""),
-        )
+        .map((t) => {
+          const lines = [`- ${t.id} | ${t.type} | ${t.status} | ${t.title}`];
+          if (t.description) lines.push(`    ${t.description}`);
+          if (t.sampleIssueTitles.length > 0) {
+            lines.push(`    eerder gekoppeld:`);
+            for (const title of t.sampleIssueTitles) {
+              lines.push(`      • ${title}`);
+            }
+          }
+          return lines.join("\n");
+        })
         .join("\n")
     : "(geen bestaande open topics in dit project)";
 
@@ -107,10 +120,25 @@ export async function runBulkClusterCleanup(input: BulkClusterInput): Promise<Bu
       // Map de twee arrays naar de publieke discriminated-union vorm. Volgorde:
       // matches eerst, dan new — bewust deterministisch zodat UI-rendering en
       // tests reproduceerbaar zijn.
+      //
+      // Dedupe `issue_ids` binnen één cluster: het schema borgt vorm maar geen
+      // uniqueness, en Haiku herhaalt incidenteel dezelfde id binnen een
+      // cluster. Door hier op te schonen krijgt de UI nooit dubbele React-keys
+      // én slaat de accept-actie geen issue dubbel op.
+      const dedupe = <T>(xs: T[]): T[] => Array.from(new Set(xs));
+
       const result: BulkClusterOutput = {
         clusters: [
-          ...object.matches.map((m) => ({ kind: "match" as const, ...m })),
-          ...object.new_topics.map((n) => ({ kind: "new" as const, ...n })),
+          ...object.matches.map((m) => ({
+            kind: "match" as const,
+            ...m,
+            issue_ids: dedupe(m.issue_ids),
+          })),
+          ...object.new_topics.map((n) => ({
+            kind: "new" as const,
+            ...n,
+            issue_ids: dedupe(n.issue_ids),
+          })),
         ],
       };
 

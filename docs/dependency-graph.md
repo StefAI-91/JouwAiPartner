@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 523 |
-| Exported functions/constants | 826 |
-| Exported types/interfaces | 346 |
+| Files scanned | 525 |
+| Exported functions/constants | 829 |
+| Exported types/interfaces | 347 |
 | Cross-package imports | 561 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -526,6 +526,7 @@
 
 **Exports:**
 - `countIssuesPerTopic()`
+- `countOpenIssuesPerTopic()`
 - `getTopicMembershipForIssues()`
 - `getLinkedIssueIdsInProject()`
 - `getIssueIdsForTopics()`
@@ -3692,6 +3693,18 @@
 
 ## DevHub Pages
 
+### `apps/devhub/src/app/(app)/changelog/changelog-data.ts`
+
+**Exports:**
+- `CHANGELOG`
+
+**Types:** `ChangelogBatch`
+
+### `apps/devhub/src/app/(app)/changelog/page.tsx`
+
+**Exports:**
+- `metadata`
+
 ### `apps/devhub/src/app/(app)/settings/import/sync-card.tsx`
 
 **Exports:**
@@ -4486,6 +4499,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
+| `countOpenIssuesPerTopic()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getTopicMembershipForIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getLinkedIssueIdsInProject()` | `packages/database/src/queries/issues/core.ts` |
 | `getIssueIdsForTopics()` | `packages/database/src/queries/issues/core.ts` |

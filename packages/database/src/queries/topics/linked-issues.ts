@@ -41,6 +41,42 @@ export async function countIssuesPerTopic(
 }
 
 /**
+ * PR-020 — Tellen hoeveel issues per topic in open-statussen vallen
+ * (triage/backlog/todo/in_progress). Voor de "+N buiten je filter"-hint
+ * op topic-section-headers: filter is actief op de issue-list, maar we
+ * willen tonen hoeveel open werk onder dit topic in andere stadia ligt.
+ *
+ * Eén PostgREST-call: `topic_issues` met `!inner`-join naar `issues` zodat
+ * we op `issues.status` kunnen filteren. Daarna in JS aggregeren — zelfde
+ * patroon als `countIssuesPerTopic`. `done`/`cancelled` worden niet
+ * meegeteld; die zijn niet relevant voor "wat ligt er nog".
+ */
+const OPEN_ISSUE_STATUSES_FOR_TOPIC_COUNT = ["triage", "backlog", "todo", "in_progress"] as const;
+
+export async function countOpenIssuesPerTopic(
+  topicIds: string[],
+  client?: SupabaseClient,
+): Promise<Map<string, number>> {
+  const result = new Map<string, number>();
+  if (topicIds.length === 0) return result;
+
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("topic_issues")
+    .select("topic_id, issues!inner(status)")
+    .in("topic_id", topicIds)
+    .in("issues.status", Array.from(OPEN_ISSUE_STATUSES_FOR_TOPIC_COUNT));
+
+  if (error) throw new Error(`countOpenIssuesPerTopic failed: ${error.message}`);
+
+  for (const id of topicIds) result.set(id, 0);
+  for (const row of (data ?? []) as { topic_id: string }[]) {
+    result.set(row.topic_id, (result.get(row.topic_id) ?? 0) + 1);
+  }
+  return result;
+}
+
+/**
  * Voor een set issue-ids ophalen welk topic (indien aanwezig) eraan gekoppeld is.
  * Eén PostgREST-call met embed naar `topics`, geen N+1. Issues zonder topic
  * staan simpelweg niet in de result-Map. UNIQUE-constraint op `topic_issues.issue_id`

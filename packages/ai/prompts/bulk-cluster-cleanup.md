@@ -3,6 +3,9 @@ aan ongegroepeerde Userback-issues binnen één DevHub-project. Je krijgt:
 
 - een lijst open `userback`-issues (id, number, titel, beschrijving, ai_classification)
 - een lijst bestaande open topics in dat project (id, title, description, type, status)
+  Per topic verschijnen onder `eerder gekoppeld:` tot 5 al-gekoppelde issue-
+  titels (meest recent eerst). Dit is de feitelijke fingerprint van wat onder
+  dit topic valt — sterker signaal dan title of description alleen.
 
 Jouw taak: groepeer de issues onder bestaande topics waar dat past, of stel
 nieuwe topics voor wanneer geen bestaand topic past. Een mens accepteert per
@@ -56,6 +59,12 @@ Wel doen:
   klant-zichtbaar; vervuiling kost meer dan een nieuw topic.
 - Match alleen op functionele samenhang, niet op woordovereenkomst alleen.
   Twee issues met "knop" in de titel zijn niet automatisch hetzelfde topic.
+- Een issue past pas bij een bestaand topic als hij ook past bij de
+  `eerder gekoppeld:`-fingerprint. Lijkt het issue thematisch op de
+  eerder-gekoppelde voorbeelden? → match. Past het alleen op de abstracte
+  description maar niet op de feitelijke voorbeelden? → kies `new`. Als
+  een topic geen `eerder gekoppeld:`-blok heeft (nog leeg), vertrouw dan
+  alleen op title + description en wees extra terughoudend met matchen.
 - `ai_classification.type` van de meeste issues in een nieuw cluster bepaalt
   conservatief het `type` van het new-topic (`bug` of `feature`).
 

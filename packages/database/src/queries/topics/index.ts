@@ -10,6 +10,7 @@ export {
   listTopics,
   listTopicsByBucket,
   listOpenTopicsForCluster,
+  listTopicSampleIssues,
   type ListTopicsFilters,
   type TopicListRow,
   type TopicForClusterRow,
@@ -25,6 +26,7 @@ export {
 
 export {
   countIssuesPerTopic,
+  countOpenIssuesPerTopic,
   getIssuesForTopic,
   getIssueIdsForTopics,
   getLinkedIssueIdsInProject,

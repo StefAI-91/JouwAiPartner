@@ -57,6 +57,7 @@ function baseInput(): BulkClusterInput {
         description: "Verzameling van wit-scherm reports",
         type: "bug",
         status: "prioritized",
+        sampleIssueTitles: ["Wit scherm na uploaden", "Wit scherm bij OAuth-callback"],
       },
     ],
   };
@@ -149,6 +150,52 @@ describe("runBulkClusterCleanup — input-shape", () => {
     // ai_classification velden komen door als platte k=v string
     expect(userContent).toContain("type=bug");
     expect(userContent).toContain("severity=high");
+  });
+
+  it("rendert sample-issue-titels per topic onder 'eerder gekoppeld:'", async () => {
+    mockGenerateObject.mockResolvedValue({
+      object: { matches: [], new_topics: [] },
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+
+    await runBulkClusterCleanup(baseInput());
+
+    const callArg = mockGenerateObject.mock.calls[0][0] as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    const userContent = callArg.messages.find((m) => m.role === "user")!.content;
+
+    expect(userContent).toContain("eerder gekoppeld:");
+    expect(userContent).toContain("Wit scherm na uploaden");
+    expect(userContent).toContain("Wit scherm bij OAuth-callback");
+  });
+
+  it("laat 'eerder gekoppeld:'-blok weg voor topics zonder sample-issues", async () => {
+    mockGenerateObject.mockResolvedValue({
+      object: { matches: [], new_topics: [] },
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+
+    await runBulkClusterCleanup({
+      issues: baseInput().issues,
+      topics: [
+        {
+          id: TOPIC_ID,
+          title: "Vers topic",
+          description: "Nog geen koppelingen",
+          type: "bug",
+          status: "clustering",
+          sampleIssueTitles: [],
+        },
+      ],
+    });
+
+    const callArg = mockGenerateObject.mock.calls[0][0] as {
+      messages: Array<{ role: string; content: string }>;
+    };
+    const userContent = callArg.messages.find((m) => m.role === "user")!.content;
+
+    expect(userContent).not.toContain("eerder gekoppeld:");
   });
 
   it("rendert correct met lege topic-lijst", async () => {

@@ -105,6 +105,49 @@ export async function listOpenTopicsForCluster(
 }
 
 /**
+ * Per topic max 5 al-gekoppelde issue-titels, meest recent gekoppeld eerst.
+ * Voor de bulk-cluster-cleanup-agent: een topic-titel + abstracte description
+ * is een zwakke fingerprint; al-gekoppelde issues laten zien wát er feitelijk
+ * onder dit topic valt en helpen Haiku om alleen écht-passende ungrouped
+ * issues toe te voegen i.p.v. te driften op woord-overlap.
+ *
+ * Eén PostgREST-call met embed van `topic_issues → issues(title)`. Sorteren
+ * gebeurt op `linked_at desc`; cap op 5 in JS (PostgREST kent geen `LIMIT N
+ * per group`). Bij <100 topics × paar honderd koppelingen ruim binnen budget.
+ */
+const SAMPLE_ISSUES_PER_TOPIC = 5;
+
+export async function listTopicSampleIssues(
+  topicIds: string[],
+  client?: SupabaseClient,
+): Promise<Map<string, string[]>> {
+  if (topicIds.length === 0) return new Map();
+  const db = client ?? getAdminClient();
+
+  const { data, error } = await db
+    .from("topic_issues")
+    .select("topic_id, linked_at, issues (title)")
+    .in("topic_id", topicIds)
+    .order("linked_at", { ascending: false });
+
+  if (error) throw new Error(`listTopicSampleIssues failed: ${error.message}`);
+
+  type Row = { topic_id: string; issues: { title: string } | null };
+  const byTopic = new Map<string, string[]>();
+  for (const row of (data ?? []) as unknown as Row[]) {
+    if (!row.issues) continue;
+    const titles = byTopic.get(row.topic_id);
+    if (titles) {
+      if (titles.length >= SAMPLE_ISSUES_PER_TOPIC) continue;
+      titles.push(row.issues.title);
+    } else {
+      byTopic.set(row.topic_id, [row.issues.title]);
+    }
+  }
+  return byTopic;
+}
+
+/**
  * Topics gegroepeerd per portal-bucket. Alleen statuses die voor de klant
  * zichtbaar zijn worden meegenomen — `clustering`, `wont_do` en
  * `wont_do_proposed_by_client` vallen er sowieso uit door
