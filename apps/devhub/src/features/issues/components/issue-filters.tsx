@@ -346,6 +346,8 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
   const groupOverridden = searchParams.get("group") === "flat";
   const groupActive = !groupOverridden;
 
+  const ungroupedActive = searchParams.get("ungrouped") === "1";
+
   const hasAnyFilter =
     searchParams.has("status") ||
     searchParams.has("priority") ||
@@ -353,6 +355,7 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
     searchParams.has("component") ||
     searchParams.has("assignee") ||
     searchParams.has("topic") ||
+    searchParams.has("ungrouped") ||
     groupOverridden;
 
   const toggleGroup = useCallback(() => {
@@ -365,6 +368,22 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
     params.delete("page");
     router.push(`/issues?${params.toString()}`);
   }, [router, searchParams, groupOverridden]);
+
+  // PR-019 — toggle naar de ungrouped-only view die het cluster-paneel
+  // triggert. Bij activeren forceren we group=flat zodat de IssueList plat
+  // is (gegroepeerd-met-alleen-ungrouped is geen zinvolle weergave).
+  const toggleUngrouped = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (ungroupedActive) {
+      params.delete("ungrouped");
+      params.delete("group");
+    } else {
+      params.set("ungrouped", "1");
+      params.set("group", "flat");
+    }
+    params.delete("page");
+    router.push(`/issues?${params.toString()}`);
+  }, [router, searchParams, ungroupedActive]);
 
   const clearAll = useCallback(() => {
     const params = new URLSearchParams();
@@ -436,6 +455,20 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
           Groep op topic
         </button>
       )}
+      <button
+        type="button"
+        onClick={toggleUngrouped}
+        aria-pressed={ungroupedActive}
+        className={cn(
+          "flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 py-1.5 text-sm transition-colors",
+          ungroupedActive
+            ? "border-primary/30 bg-primary/5 text-primary"
+            : "border-border hover:bg-muted",
+        )}
+        title="Toon alleen issues zonder topic — activeert het cluster-suggestie-paneel"
+      >
+        Alleen ungrouped
+      </button>
 
       {hasAnyFilter && (
         <button

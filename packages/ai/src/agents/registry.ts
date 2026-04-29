@@ -183,6 +183,20 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     entrypoint: "apps/devhub/src/actions/classify.ts",
   },
   {
+    id: "bulk-cluster-cleanup",
+    name: "Bulk Cluster Cleanup",
+    role: "De opruim-coach",
+    description:
+      "On-demand batch-agent die open ungrouped Userback-issues per project clustert. Stelt matches voor met bestaande topics of nieuwe topics; mens accepteert per cluster. Niet-persistent — voor het ruimen van achterstand.",
+    mascot: "🧹",
+    model: "claude-haiku-4-5-20251001",
+    modelLabel: "Haiku 4.5",
+    quadrant: "devhub",
+    status: "live",
+    promptFile: "bulk-cluster-cleanup.md",
+    entrypoint: "apps/devhub/src/actions/bulk-cluster-cleanup.ts",
+  },
+  {
     id: "issue-reviewer",
     name: "Issue Reviewer",
     role: "De health-analist",

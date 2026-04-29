@@ -66,6 +66,45 @@ export async function listTopics(
 }
 
 /**
+ * Open topics inclusief `description`, voor de bulk-cluster-cleanup-agent.
+ * Filter: status is geen `done`, `cancelled`, `wont_do` of `wont_do_proposed_by_client`.
+ * Description heeft de bestaande lijst-query bewust niet (payload-bloat in
+ * `/topics`-views) — daarom een aparte helper. Geen N+1: één call.
+ */
+export interface TopicForClusterRow {
+  id: string;
+  title: string;
+  description: string | null;
+  type: TopicType;
+  status: TopicLifecycleStatus;
+}
+
+const OPEN_TOPIC_STATUSES_FOR_CLUSTER: TopicLifecycleStatus[] = [
+  "clustering",
+  "awaiting_client_input",
+  "prioritized",
+  "scheduled",
+  "in_progress",
+];
+
+export async function listOpenTopicsForCluster(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<TopicForClusterRow[]> {
+  const db = client ?? getAdminClient();
+
+  const { data, error } = await db
+    .from("topics")
+    .select("id, title, description, type, status")
+    .eq("project_id", projectId)
+    .in("status", OPEN_TOPIC_STATUSES_FOR_CLUSTER)
+    .order("updated_at", { ascending: false });
+
+  if (error) throw new Error(`listOpenTopicsForCluster failed: ${error.message}`);
+  return (data ?? []) as unknown as TopicForClusterRow[];
+}
+
+/**
  * Topics gegroepeerd per portal-bucket. Alleen statuses die voor de klant
  * zichtbaar zijn worden meegenomen — `clustering`, `wont_do` en
  * `wont_do_proposed_by_client` vallen er sowieso uit door

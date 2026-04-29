@@ -9,8 +9,10 @@ export {
   TOPIC_LIST_COLS,
   listTopics,
   listTopicsByBucket,
+  listOpenTopicsForCluster,
   type ListTopicsFilters,
   type TopicListRow,
+  type TopicForClusterRow,
 } from "./list";
 
 export {

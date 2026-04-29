@@ -1,17 +1,17 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-28. Do not edit manually.
+> Auto-generated on 2026-04-29. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 518 |
-| Exported functions/constants | 816 |
-| Exported types/interfaces | 335 |
-| Cross-package imports | 549 |
-| Critical integration points (3+ packages) | 13 |
+| Files scanned | 523 |
+| Exported functions/constants | 825 |
+| Exported types/interfaces | 345 |
+| Cross-package imports | 560 |
+| Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
 
@@ -537,10 +537,11 @@
 
 **Exports:**
 - `listTopics()`
+- `listOpenTopicsForCluster()`
 - `listTopicsByBucket()`
 - `TOPIC_LIST_COLS`
 
-**Types:** `TopicListRow`, `ListTopicsFilters`
+**Types:** `TopicListRow`, `ListTopicsFilters`, `TopicForClusterRow`
 
 ### `queries/userback-issues.ts`
 
@@ -881,6 +882,18 @@
 - `../validations/action-item-action-validator` → ActionItemActionValidatorOutputSchema, type ActionItemActionValidatorOutput
 - `../utils/normalise` → emptyToNull, sentinelToNull
 - `./action-item-follow-up` → resolveFollowUpDate
+- `./run-logger` → withAgentRun
+
+### `packages/ai/src/agents/bulk-cluster-cleanup.ts`
+
+**Exports:**
+- `runBulkClusterCleanup()`
+- `BULK_CLUSTER_CLEANUP_MODEL`
+
+**Types:** `BulkClusterIssueInput`, `BulkClusterTopicInput`, `BulkClusterInput`
+
+**Internal deps:**
+- `../validations/bulk-cluster-cleanup` → bulkClusterModelSchema, type BulkClusterOutput
 - `./run-logger` → withAgentRun
 
 ### `packages/ai/src/agents/email-classifier.ts`
@@ -1688,6 +1701,16 @@
 
 **Internal deps:**
 - `./action-item-specialist` → ActionItemSpecialistRawItemSchema
+
+### `packages/ai/src/validations/bulk-cluster-cleanup.ts`
+
+**Exports:**
+- `bulkClusterModelSchema`
+
+**Types:** `BulkClusterModelOutput`, `BulkCluster`, `BulkClusterOutput`
+
+**Depends on:**
+- `@repo/database/constants/topics` → TOPIC_TYPES
 
 ### `packages/ai/src/validations/communication.ts`
 
@@ -3587,6 +3610,24 @@
 - `@repo/database/queries/issues` → getIssueById
 - `@repo/database/mutations/issues/attachments` → insertAttachment
 
+### `apps/devhub/src/actions/bulk-cluster-cleanup.ts`
+
+**Exports:**
+- `runBulkClusterCleanupAction()`
+- `acceptClusterToExistingAction()`
+- `acceptClusterAsNewAction()`
+
+**Types:** `BulkClusterRunResult`
+
+**Depends on:**
+- `@repo/auth/helpers` → getAuthenticatedUser, createPageClient
+- `@repo/auth/access` → listAccessibleProjectIds
+- `@repo/database/queries/issues` → listIssues
+- `@repo/database/queries/topics` → listOpenTopicsForCluster
+- `@repo/ai/agents/bulk-cluster-cleanup` → runBulkClusterCleanup
+- (type) `@repo/ai/validations/bulk-cluster-cleanup` → BulkClusterOutput
+- `@repo/database/constants/topics` → TOPIC_TYPES
+
 ### `apps/devhub/src/actions/import.ts`
 
 **Exports:**
@@ -3697,6 +3738,27 @@
 - `dynamic`
 
 ## DevHub Components
+
+### `apps/devhub/src/components/cluster-suggestions/cluster-suggestion-card.tsx`
+
+**Exports:**
+- `ClusterSuggestionCard()`
+
+**Types:** `ClusterSuggestionCardProps`
+
+**Depends on:**
+- (type) `@repo/ai/validations/bulk-cluster-cleanup` → BulkCluster
+- `@repo/ui/utils` → cn
+
+### `apps/devhub/src/components/cluster-suggestions/cluster-suggestions-panel.tsx`
+
+**Exports:**
+- `ClusterSuggestionsPanel()`
+
+**Types:** `ClusterSuggestionsPanelProps`
+
+**Depends on:**
+- (type) `@repo/ai/validations/bulk-cluster-cleanup` → BulkClusterOutput
 
 ### `apps/devhub/src/components/dashboard/area-summaries.tsx`
 
@@ -3861,6 +3923,7 @@ Which layers depend on which packages:
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 11 | - | - | - | - | 11 |
 | AI Pipeline | 61 | - | - | - | - | 61 |
+| AI Validations | 1 | - | - | - | - | 1 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 27 | 12 | 13 | - | - | 52 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
@@ -3868,9 +3931,9 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 100 | 8 | 8 | 39 | - | 155 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 17 | 1 | 8 | - | - | 26 |
+| DevHub Server Actions | 20 | 3 | 10 | - | - | 33 |
 | DevHub API Routes | 4 | - | 1 | - | - | 5 |
-| DevHub Components | - | - | - | 12 | - | 12 |
+| DevHub Components | - | 2 | - | 13 | - | 15 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 25 | - | 20 | 11 | - | 56 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
@@ -3894,6 +3957,7 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/api/email/process-pending/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
+| `apps/devhub/src/actions/bulk-cluster-cleanup.ts` | auth, database, ai | 3 |
 | `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
 ## Key Dependency Chains
@@ -4186,7 +4250,7 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `listIssues()` | `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssues()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueCounts()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
@@ -4429,6 +4493,7 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `listTopics()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `listOpenTopicsForCluster()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
 
 ### queries/userback-issues.ts
 

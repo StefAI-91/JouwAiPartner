@@ -17,6 +17,11 @@ import { IssueList } from "@/features/issues/components/issue-list";
 import { IssueFilters } from "@/features/issues/components/issue-filters";
 import { PaginationControls } from "@/features/issues/components/pagination-controls";
 import { CountSeeder } from "@/components/layout/count-seeder";
+import { ClusterSuggestionsPanel } from "@/components/cluster-suggestions/cluster-suggestions-panel";
+
+// PR-019 — default-filter voor de ungrouped-view: open-only. User kan via
+// expliciete `?status=...` done/cancelled toevoegen.
+const UNGROUPED_DEFAULT_STATUSES = ["triage", "backlog", "todo", "in_progress"] as const;
 
 const PAGE_SIZE = 25;
 
@@ -92,9 +97,15 @@ export default async function IssuesPage({
 
   const { issueNumber, search } = parseSearchQuery(params.q);
 
+  // Ungrouped-view default: alleen open issues. Done/cancelled blijven via
+  // expliciete `?status=...` zichtbaar (verandert URL-shape niet — bestaande
+  // deeplinks met expliciete status werken ongewijzigd).
+  const effectiveStatus =
+    params.ungrouped && !params.status ? Array.from(UNGROUPED_DEFAULT_STATUSES) : params.status;
+
   const filterParams = {
     projectId,
-    status: params.status,
+    status: effectiveStatus,
     priority: params.priority,
     type: params.type,
     component: params.component,
@@ -135,12 +146,26 @@ export default async function IssuesPage({
   }));
   const topicFilterOptions = projectTopics.map((t) => ({ id: t.id, label: t.title }));
 
+  // PR-019 — paneel verschijnt alleen op `?ungrouped=true` met >=1 open
+  // ungrouped issue. `totalCount` geldt na het hard-coded open-status default
+  // (zie `effectiveStatus` boven), dus dat is de juiste teller.
+  const showClusterPanel = Boolean(params.ungrouped) && totalCount > 0;
+
   return (
     <div className="flex flex-1 flex-col px-4 sm:px-6 lg:px-8">
       {/* Seed the sidebar badges from the server so they're correct on first
           paint — avoids the "numbers pop in a second later" lag. */}
       <CountSeeder projectId={projectId} counts={sidebarCounts} />
       <IssueFilters people={people} topics={topicFilterOptions} />
+      {showClusterPanel && (
+        <div className="px-4 pt-3 sm:px-0">
+          <ClusterSuggestionsPanel
+            projectId={projectId}
+            topics={topicsForPill.map((t) => ({ id: t.id, title: t.title }))}
+            ungroupedOpenCount={totalCount}
+          />
+        </div>
+      )}
       <IssueList
         issues={issues}
         thumbnails={thumbnails}
