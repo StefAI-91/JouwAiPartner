@@ -9,6 +9,10 @@ import { insertWidgetIssue } from "@repo/database/mutations/widget";
 // whitelist + de payload bevat geen auth-state. Postgres-counter komt in
 // WG-005, vóór de eerste klant-rollout (WG-004).
 
+// Placeholder-status-page (WG-REQ-077). Echte status-page is aparte sprint.
+// Bij 5xx krijgt de klant een link zodat hij weet of het aan ons ligt.
+const STATUS_PAGE_URL = "https://status.jouw-ai-partner.nl";
+
 interface IngestLog {
   type: "widget_ingest";
   project_id: string | null;
@@ -67,7 +71,7 @@ export async function POST(req: Request) {
       error_code: "insert_failed",
     });
     return NextResponse.json(
-      { error: "insert_failed", message: result.error },
+      { error: "insert_failed", message: result.error, status_page: STATUS_PAGE_URL },
       { status: 500, headers: corsHeaders(origin) },
     );
   }

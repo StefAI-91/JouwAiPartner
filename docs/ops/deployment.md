@@ -37,8 +37,8 @@ matchende origin krijgt de POST 403. Zie WG-001 §1 voor de query.
 
 **Installatie op een nieuwe JAIP-app (handmatig):**
 
-1. UUID kiezen of nieuw project aanmaken in `widget_projects` (Supabase).
-2. App-domeinen toevoegen aan `widget_project_origins`.
+1. UUID kiezen of nieuw project aanmaken in `projects` (Supabase).
+2. App-domein toevoegen via DevHub `/settings/widget` (admin-only).
 3. Env-var `NEXT_PUBLIC_JAIP_PLATFORM_PROJECT_ID=<uuid>` zetten op het
    Vercel-project (production + preview).
 4. Loader-script in de root layout van de app — voor Next.js Server
@@ -48,6 +48,10 @@ matchende origin krijgt de POST 403. Zie WG-001 §1 voor de query.
 5. Smoke-test: klik op de feedback-knop, stuur "Test bug — dit is een
    test", verifieer dat de issue in DevHub triage verschijnt met label
    `'test'`.
+
+Voor klant-apps (niet-JAIP-eigen): zie
+[`widget-installation-clients.md`](widget-installation-clients.md) voor de
+korte versie die je naar de klant-developer kan sturen.
 
 ## Supabase dashboard (handmatig, DH-018)
 

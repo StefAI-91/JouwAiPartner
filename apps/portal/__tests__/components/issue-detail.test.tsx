@@ -69,6 +69,14 @@ describe("IssueDetail", () => {
     expect(screen.getAllByLabelText("Onze melding").length).toBeGreaterThan(0);
   });
 
+  it("toont 'Onze melding' source-badge voor source='jaip_widget' (WG-004)", () => {
+    // WG-REQ-078: feedback via de eigen widget-knop hoort visueel bij 'Onze
+    // meldingen' — niet bij 'JAIP-meldingen'. Bewaakt de source-mapping in
+    // PORTAL_SOURCE_GROUPS.
+    render(<IssueDetail projectId="p1" issue={makeIssue({ source: "jaip_widget" })} />);
+    expect(screen.getAllByLabelText("Onze melding").length).toBeGreaterThan(0);
+  });
+
   it("toont 'JAIP-melding' source-badge voor source='manual'", () => {
     render(<IssueDetail projectId="p1" issue={makeIssue({ source: "manual" })} />);
     expect(screen.getAllByLabelText("JAIP-melding").length).toBeGreaterThan(0);

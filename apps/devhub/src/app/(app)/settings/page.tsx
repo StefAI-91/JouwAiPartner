@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Download, MessageSquare } from "lucide-react";
+import { ArrowRight, Download, Globe, MessageSquare } from "lucide-react";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 
@@ -28,19 +28,37 @@ export default async function SettingsPage() {
         </Link>
 
         {admin && (
-          <Link
-            href="/settings/slack"
-            className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
-          >
-            <div className="flex items-center gap-3">
-              <MessageSquare className="size-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Slack notificaties</p>
-                <p className="text-xs text-muted-foreground">Meldingen bij urgente bugs</p>
+          <>
+            <Link
+              href="/settings/widget"
+              className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+            >
+              <div className="flex items-center gap-3">
+                <Globe className="size-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Widget-domeinen</p>
+                  <p className="text-xs text-muted-foreground">
+                    Whitelist welke sites feedback mogen sturen
+                  </p>
+                </div>
               </div>
-            </div>
-            <ArrowRight className="size-4 text-muted-foreground" />
-          </Link>
+              <ArrowRight className="size-4 text-muted-foreground" />
+            </Link>
+
+            <Link
+              href="/settings/slack"
+              className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare className="size-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Slack notificaties</p>
+                  <p className="text-xs text-muted-foreground">Meldingen bij urgente bugs</p>
+                </div>
+              </div>
+              <ArrowRight className="size-4 text-muted-foreground" />
+            </Link>
+          </>
         )}
       </div>
     </div>

@@ -88,3 +88,9 @@ Houd hier per week bij:
 | Week | JAIP-submissions | Userback-submissions | Notities                             |
 | ---- | ---------------- | -------------------- | ------------------------------------ |
 | —    | —                | —                    | start parallel-run bij WG-003-deploy |
+
+## Klant-rollout-log (WG-004)
+
+| Datum | Klant | Domein | Eerste-feedback-issue | Notities                                        |
+| ----- | ----- | ------ | --------------------- | ----------------------------------------------- |
+| —     | —     | —      | —                     | wachten op WG-005 (rate-limit) en go-beslissing |

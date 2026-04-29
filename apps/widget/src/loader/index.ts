@@ -27,9 +27,19 @@ interface JAIPWidgetGlobal {
   mount: (root: ShadowRoot, config: MountConfig) => void;
 }
 
+interface JAIPWidgetIdentifyInfo {
+  email: string;
+}
+
 declare global {
   interface Window {
     __JAIPWidget?: JAIPWidgetGlobal;
+    /**
+     * Runtime-API voor SPA's die het ingelogde email pas na hydration weten
+     * (bijv. na een `/me`-fetch). Volgende keer dat de modal mountt gebruikt
+     * hij de nieuwe email. WG-004 (klant-rollout).
+     */
+    __JAIPWidgetIdentify?: (info: JAIPWidgetIdentifyInfo) => void;
   }
 }
 
@@ -52,7 +62,16 @@ declare global {
     (window as unknown as { __JAIPWidgetApiUrl?: string }).__JAIPWidgetApiUrl ??
     "https://devhub.jouw-ai-partner.nl/api/ingest/widget";
 
-  const userEmail = script.dataset.userEmail ?? null;
+  let userEmail = script.dataset.userEmail ?? null;
+
+  // Runtime-identify voor klant-SPA's. Triage gebruikt dit email als hint,
+  // niet als bewijs — een browser kan altijd spoofen, maar de origin-
+  // whitelist blijft als hek staan. Cap op 320 chars (RFC-max e-mail).
+  window.__JAIPWidgetIdentify = (info) => {
+    if (info && typeof info.email === "string" && info.email.length <= 320) {
+      userEmail = info.email;
+    }
+  };
 
   const host = document.createElement("div");
   host.id = "__jaip-widget-host";

@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 530 |
-| Exported functions/constants | 834 |
-| Exported types/interfaces | 347 |
-| Cross-package imports | 564 |
+| Files scanned | 536 |
+| Exported functions/constants | 841 |
+| Exported types/interfaces | 349 |
+| Cross-package imports | 573 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -559,6 +559,13 @@
 - `getAllowedDomainsForProject()`
 - `isOriginAllowedForProject()`
 
+### `queries/widget/admin.ts`
+
+**Exports:**
+- `listWidgetProjectsWithDomains()`
+
+**Types:** `WidgetProjectWithDomains`
+
 ## Database Mutations
 
 ### `mutations/agent-runs.ts`
@@ -567,6 +574,13 @@
 - `insertAgentRun()`
 
 **Types:** `AgentRunInput`
+
+### `mutations/audit-events.ts`
+
+**Exports:**
+- `recordAuditEvent()`
+
+**Types:** `AuditEventInput`
 
 ### `mutations/decisions.ts`
 
@@ -853,6 +867,12 @@
 - `updateTopicStatus()`
 
 **Types:** `UpdateTopicStatusOpts`
+
+### `mutations/widget/admin.ts`
+
+**Exports:**
+- `addWidgetDomain()`
+- `removeWidgetDomain()`
 
 ### `mutations/widget/feedback.ts`
 
@@ -3685,6 +3705,19 @@
 - `@repo/database/integrations/slack` → SLACK_NOTIFY_EVENTS
 - `@repo/database/mutations/slack-config` → upsertSlackConfig, deleteSlackConfig
 
+### `apps/devhub/src/actions/widget-domains.ts`
+
+**Exports:**
+- `addWidgetDomainAction()`
+- `removeWidgetDomainAction()`
+
+**Depends on:**
+- `@repo/auth/helpers` → getAuthenticatedUser
+- `@repo/auth/access` → isAdmin
+- `@repo/database/validations/widget-domain` → addWidgetDomainSchema, removeWidgetDomainSchema, type AddWidgetDomainInput, type RemoveWidgetDomainInput
+- `@repo/database/mutations/widget` → addWidgetDomain, removeWidgetDomain
+- `@repo/database/mutations/audit-events` → recordAuditEvent
+
 ## DevHub API Routes
 
 ### `apps/devhub/src/app/api/ingest/userback/route.ts`
@@ -3743,6 +3776,14 @@
 **Depends on:**
 - `@repo/ui/button` → Button
 - (type) `@repo/database/integrations/slack` → SlackNotifyEvent
+
+### `apps/devhub/src/app/(app)/settings/widget/widget-domains-card.tsx`
+
+**Exports:**
+- `WidgetDomainsCard()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
 
 ### `apps/devhub/src/app/auth/callback/route.ts`
 
@@ -3967,11 +4008,11 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 100 | 8 | 8 | 37 | - | 153 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 20 | 3 | 10 | - | - | 33 |
+| DevHub Server Actions | 23 | 3 | 12 | - | - | 38 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
 | DevHub Components | - | 2 | - | 14 | - | 16 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 26 | - | 20 | 11 | - | 57 |
+| DevHub Pages | 27 | - | 22 | 12 | - | 61 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
 
 ## Critical Integration Points
@@ -4005,6 +4046,12 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `insertAgentRun()` | `packages/ai/src/agents/run-logger.ts` |
+
+### mutations/audit-events.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `recordAuditEvent()` | `apps/devhub/src/actions/widget-domains.ts` |
 
 ### mutations/emails.ts
 
@@ -4180,6 +4227,13 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `createEmergingTheme()` | `packages/ai/src/pipeline/steps/link-themes.ts` |
 | `upsertThemeNarrative()` | `packages/ai/src/pipeline/steps/synthesize-theme-narrative.ts` |
+
+### mutations/widget/admin.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `addWidgetDomain()` | `apps/devhub/src/actions/widget-domains.ts` |
+| `removeWidgetDomain()` | `apps/devhub/src/actions/widget-domains.ts` |
 
 ### mutations/widget/feedback.ts
 
@@ -4552,3 +4606,9 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `isOriginAllowedForProject()` | `apps/devhub/src/app/api/ingest/widget/route.ts` |
+
+### queries/widget/admin.ts
+
+| Query | Used in |
+|-------|---------|
+| `listWidgetProjectsWithDomains()` | `apps/devhub/src/app/(app)/settings/widget/page.tsx` |
