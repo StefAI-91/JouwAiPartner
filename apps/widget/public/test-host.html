@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JAIP Widget — test host</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 640px;
+        margin: 48px auto;
+        padding: 0 24px;
+        color: #0f172a;
+      }
+      code {
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JAIP Widget — test host</h1>
+    <p>
+      Deze pagina laadt <code>loader.js</code> met een test-project_id en stuurt naar de
+      lokale DevHub. De zwarte "Feedback"-knop verschijnt rechtsonder.
+    </p>
+    <p>Klik om de dummy-modal te openen — V0 toont alleen "Hello widget".</p>
+
+    <script>
+      // Override naar lokale DevHub voor dev. In productie laadt de loader
+      // dit niet; daar wordt de hardcoded https://devhub.jouw-ai-partner.nl
+      // gebruikt.
+      window.__JAIPWidgetApiUrl = "http://localhost:3001/api/ingest/widget";
+    </script>
+    <script
+      src="/loader.js"
+      data-project="00000000-0000-4000-8000-00000000aa01"
+      data-user-email="dev@jouw-ai-partner.nl"
+      async
+    ></script>
+  </body>
+</html>
