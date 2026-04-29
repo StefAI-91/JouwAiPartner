@@ -7,11 +7,12 @@ Drempels:
 - Queries / Mutations / Pipeline-modules: >300 regels of >15 exports = cluster-trigger (CLAUDE.md §Database & Queries)
 - Functies: >2× zo lang als nodig = signaal voor opsplitsing
 
+> **SRP-001 vervallen (2026-04-29):** `shift/page.tsx` (828 r) was een ongelinkte mockup-pagina ("vertrekpunt voor het gesprek", commit `c1d798f`, 18 april). Geen refactor uitgevoerd — de file is **verwijderd** omdat hij geen functie had en niet in navigatie / hrefs zat. Inhoud blijft beschikbaar via git history.
+
 ## Sprints
 
 | Sprint  | File                                                           | Regels | Type             | Categorie | Sub-domeinen / Concerns                                     |
 | ------- | -------------------------------------------------------------- | ------ | ---------------- | --------- | ----------------------------------------------------------- |
-| SRP-001 | `apps/cockpit/.../shift/page.tsx`                              | 828    | Page             | Kritiek   | Hero, before/after, pipeline, current-state, future         |
 | SRP-002 | `packages/database/src/queries/meetings/core.ts`               | 892    | Query-cluster    | Kritiek   | Base, lookup, pipeline-fetch, regenerate, metadata, mapping |
 | SRP-003 | `packages/ai/src/agents/action-item-specialist.ts`             | 851    | Agent            | Kritiek   | Single-stage, two-stage, validator, shared helpers          |
 | SRP-004 | `apps/cockpit/.../dev/action-items/run/client.tsx`             | 597    | Component (dev)  | Serieus   | 5 inline subcomponenten                                     |
@@ -26,7 +27,7 @@ Drempels:
 
 ## Categorieën
 
-**Kritiek (3 sprints, ~2.571 regels):** SRP-001, SRP-002, SRP-003. De drie grootste overtreders. Refactor levert direct veel waarde op want het zijn de meest aangeraakte files (page, meeting-queries, action-item-pipeline).
+**Kritiek (2 sprints, ~1.743 regels):** SRP-002, SRP-003. De twee grootste resterende overtreders — beide veelgebruikt en in productie. Refactor levert direct veel waarde op (meeting-queries worden door bijna elke pipeline aangeraakt; action-item-specialist is drie pipelines in één file).
 
 **Serieus (9 sprints):** SRP-004 t/m SRP-012. Twee zinvolle clusterings:
 
@@ -53,16 +54,15 @@ Geen harde dependencies tussen de sprints — kunnen in elke volgorde. Wel pragm
 ```
 1. SRP-002 (queries/meetings)        ← veel callers, refactor-effect breed
 2. SRP-003 (action-item-specialist)  ← isolated, makkelijk te valideren
-3. SRP-001 (shift page)              ← visueel verifieerbaar
-4. SRP-006 (tagger)                  ← prerequisite-feel voor SRP-009/SRP-011
-5. SRP-009 (link-themes step)
-6. SRP-011 (gatekeeper-pipeline)     ← orchestreert tagger + link-themes
-7. SRP-005 (summary pipeline)        ← onafhankelijk
-8. SRP-010 (queries/projects)        ← onafhankelijk
-9. SRP-012 (queries/issues)          ← onafhankelijk
-10. SRP-008 (issue-filters)          ← devhub UI
-11. SRP-004 (dev/action-items/run)   ← lage prio, dev-tool
-12. SRP-007 (dev/speaker-mapping)    ← lage prio, dev-tool
+3. SRP-006 (tagger)                  ← prerequisite-feel voor SRP-009/SRP-011
+4. SRP-009 (link-themes step)
+5. SRP-011 (gatekeeper-pipeline)     ← orchestreert tagger + link-themes
+6. SRP-005 (summary pipeline)        ← onafhankelijk
+7. SRP-010 (queries/projects)        ← onafhankelijk
+8. SRP-012 (queries/issues)          ← onafhankelijk
+9. SRP-008 (issue-filters)           ← devhub UI
+10. SRP-004 (dev/action-items/run)   ← lage prio, dev-tool
+11. SRP-007 (dev/speaker-mapping)    ← lage prio, dev-tool
 ```
 
 **Kritisch pad voor AI-pipeline:** SRP-006 → SRP-009 → SRP-011 (in die volgorde). Tagger wordt door beide andere geconsumeerd.
@@ -73,7 +73,6 @@ Ruwe schatting op basis van bestaande TH/sprint-NNN sprints:
 
 | Sprint  | Inschatting | Reden                                            |
 | ------- | ----------- | ------------------------------------------------ |
-| SRP-001 | S (1 dag)   | Pure UI-decompositie, geen logica                |
 | SRP-002 | M (2 dagen) | Veel callers, re-export discipline nodig         |
 | SRP-003 | M (2 dagen) | 3 pipelines, voorzichtig met test-mocks          |
 | SRP-004 | S (0.5 dag) | Dev-tool, beperkte test-druk                     |
@@ -86,7 +85,7 @@ Ruwe schatting op basis van bestaande TH/sprint-NNN sprints:
 | SRP-011 | M (2 dagen) | Megafunctie + pipeline-orchestratie              |
 | SRP-012 | S (1 dag)   | Standaard cluster-split                          |
 
-**Totaal:** ~15.5 dagen. Met cluster-aanpak (AI-pipeline + dev-tools) mogelijk te comprimeren naar ~12 dagen.
+**Totaal:** ~14.5 dagen. Met cluster-aanpak (AI-pipeline + dev-tools) mogelijk te comprimeren naar ~11 dagen.
 
 ## Acceptance globaal
 
