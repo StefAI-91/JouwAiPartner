@@ -39,14 +39,12 @@ export async function runIssueExecutor(issue: {
   type: string;
   component: string | null;
   severity: string | null;
-  repro_steps: string | null;
 }): Promise<IssueExecutorOutput> {
   const issueInfo = [
     `Titel: ${issue.title}`,
     `Type: ${issue.type}`,
     issue.component ? `Component: ${issue.component}` : null,
     issue.severity ? `Severity: ${issue.severity}` : null,
-    issue.repro_steps ? `\nReproductiestappen:\n${issue.repro_steps}` : null,
   ]
     .filter(Boolean)
     .join("\n");

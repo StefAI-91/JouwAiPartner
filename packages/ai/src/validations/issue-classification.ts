@@ -27,11 +27,6 @@ export const IssueClassifierSchema = z.object({
     .describe(
       "critical = app onbruikbaar/dataverlies, high = belangrijke functie broken, medium = bug met workaround, low = cosmetisch/nice-to-have",
     ),
-  repro_steps: z
-    .string()
-    .describe(
-      "Concrete reproductiestappen in het Nederlands. Als info ontbreekt, geef aan wat er mist",
-    ),
   confidence: z.number().describe("Hoe zeker ben je van deze classificatie (0.0-1.0)"),
 });
 

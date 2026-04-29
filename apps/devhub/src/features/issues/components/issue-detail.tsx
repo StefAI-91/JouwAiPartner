@@ -84,15 +84,6 @@ export function IssueDetail({
     });
   }
 
-  const rawReproSteps = (optimisticIssue.ai_classification as Record<string, unknown> | undefined)
-    ?.repro_steps;
-  const reproSteps: string | null =
-    typeof rawReproSteps === "string"
-      ? rawReproSteps
-      : Array.isArray(rawReproSteps)
-        ? (rawReproSteps as string[]).join("\n")
-        : null;
-
   return (
     <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:flex-row">
       {/* Main content */}
@@ -131,15 +122,6 @@ export function IssueDetail({
         />
 
         <IssueAttachments attachments={attachments ?? []} />
-
-        {reproSteps && (
-          <section className="mb-6">
-            <h2 className="mb-2">AI Reproductiestappen</h2>
-            <div className="rounded-md border border-border bg-card p-4 text-sm whitespace-pre-wrap">
-              {reproSteps}
-            </div>
-          </section>
-        )}
 
         <CommentSection
           issueId={issue.id}
