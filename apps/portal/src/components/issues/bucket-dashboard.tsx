@@ -44,7 +44,7 @@ export function BucketDashboard({ projectId, issues, counts }: BucketDashboardPr
         return (
           <section
             key={group.key}
-            className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3"
+            className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/30 p-3 shadow-soft-sm"
             aria-labelledby={`bucket-${group.key}-heading`}
           >
             <header className="flex items-center justify-between gap-2 px-1">

@@ -96,7 +96,9 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground text-[15px];
+    @apply text-foreground text-[15px];
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;
@@ -150,6 +152,23 @@
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Warm, soft shadows — card-elevation hierarchy zonder grijze SaaS-look */
+  .shadow-soft {
+    box-shadow:
+      0 1px 2px rgb(20 17 11 / 4%),
+      0 8px 24px -8px rgb(20 17 11 / 6%);
+  }
+  .shadow-soft-sm {
+    box-shadow:
+      0 1px 2px rgb(20 17 11 / 3%),
+      0 2px 6px -2px rgb(20 17 11 / 4%);
+  }
+  .shadow-soft-md {
+    box-shadow:
+      0 1px 3px rgb(20 17 11 / 5%),
+      0 12px 32px -8px rgb(20 17 11 / 8%);
   }
 
   .glow-primary {

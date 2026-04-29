@@ -35,14 +35,14 @@ export function MeetingSummariesList({ segments, projectId }: MeetingSummariesLi
   }
 
   return (
-    <ol className="overflow-hidden rounded-lg border border-border bg-card">
+    <ol className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-soft">
       {segments.map((segment, index) => {
         const dateLabel = formatDate(segment.meeting_date);
         const heading = segment.meeting_title?.trim() || "Meeting";
         const isLast = index === segments.length - 1;
 
         return (
-          <li key={segment.id} className={isLast ? "" : "border-b border-border"}>
+          <li key={segment.id} className={isLast ? "" : "border-b border-border/60"}>
             <Link
               href={`/projects/${projectId}/meetings/${segment.id}`}
               className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"

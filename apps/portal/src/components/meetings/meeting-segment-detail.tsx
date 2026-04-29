@@ -78,8 +78,8 @@ function SummarySection({
   accent?: string;
 }) {
   return (
-    <section className="overflow-hidden rounded-lg border border-border bg-card">
-      <header className="flex items-center gap-2 border-b border-border bg-muted/20 px-5 py-3">
+    <section className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-soft">
+      <header className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-5 py-3">
         <Icon className={`size-4 ${accent}`} />
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {title}

@@ -20,7 +20,7 @@ export function TopicCard({ topic, projectId, linkedIssuesCount }: TopicCardProp
       href={`/projects/${projectId}/roadmap/${topic.id}`}
       className="group block rounded-md no-underline"
     >
-      <article className="flex flex-col gap-3 rounded-md border border-border bg-card p-4 transition-colors hover:bg-muted/40">
+      <article className="flex flex-col gap-3 rounded-md border border-border/60 bg-card p-4 shadow-soft-sm transition-all duration-200 hover:-translate-y-px hover:border-border hover:shadow-soft">
         <div className="flex flex-wrap items-center gap-2">
           <TypeBadge type={topic.type} />
           <PriorityBadge priority={topic.priority} />
@@ -28,7 +28,7 @@ export function TopicCard({ topic, projectId, linkedIssuesCount }: TopicCardProp
 
         <h3 className="text-sm font-semibold leading-snug text-foreground">{heading}</h3>
 
-        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-dashed border-border pt-2">
+        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-dashed border-border/70 pt-2">
           <MetaItem prefix="Onderwerpen">
             <span className="text-foreground">{linkedIssuesCount}</span>
           </MetaItem>

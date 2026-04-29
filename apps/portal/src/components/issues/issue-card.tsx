@@ -34,7 +34,7 @@ export function IssueCard({ projectId, issue }: IssueCardProps) {
   return (
     <Link
       href={`/projects/${projectId}/issues/${issue.id}`}
-      className="group flex flex-col gap-2 rounded-md border border-border bg-card p-3 text-sm transition-colors hover:border-foreground/40 hover:bg-accent/30"
+      className="group flex flex-col gap-2 rounded-md border border-border/60 bg-card p-3 text-sm shadow-soft-sm transition-all duration-200 hover:-translate-y-px hover:border-foreground/40 hover:shadow-soft"
     >
       <div className="flex items-start gap-2">
         <span
