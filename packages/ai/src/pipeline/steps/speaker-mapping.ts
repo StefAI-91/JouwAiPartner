@@ -3,7 +3,7 @@ import { updateMeetingNamedTranscript } from "@repo/database/mutations/meetings"
 import {
   getMeetingParticipantsForSpeakerMapping,
   type SpeakerMappingParticipant,
-} from "@repo/database/queries/meetings/core";
+} from "@repo/database/queries/meetings/speaker-mapping";
 
 export interface SpeakerMappingStepResult {
   /** True wanneer een named-versie is opgeslagen, ook als sommige speakers
