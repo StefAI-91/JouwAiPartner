@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, within } from "@testing-library/react";
-import { RoadmapBoard } from "@/components/roadmap/roadmap-board";
+import { BucketStack } from "@/components/roadmap/bucket-stack";
 import type { TopicListRow } from "@repo/database/queries/topics";
 import type { PortalBucketKey } from "@repo/database/constants/topics";
 
@@ -23,9 +23,9 @@ function emptyBuckets(): Record<PortalBucketKey, TopicListRow[]> {
   return { recent_done: [], upcoming: [], high_prio: [], awaiting_input: [] };
 }
 
-describe("RoadmapBoard", () => {
+describe("BucketStack", () => {
   it("rendert de vier bucket-labels", () => {
-    render(<RoadmapBoard buckets={emptyBuckets()} issueCounts={new Map()} projectId="p1" />);
+    render(<BucketStack buckets={emptyBuckets()} issueCounts={new Map()} projectId="p1" />);
 
     for (const label of [
       "Recent gefixt",
@@ -37,37 +37,42 @@ describe("RoadmapBoard", () => {
     }
   });
 
-  it("toont count met padding ('03') in de header", () => {
+  it("splitst topics binnen een bucket per type (bug vs feature)", () => {
     const buckets = emptyBuckets();
     buckets.upcoming = [
-      makeTopic({ id: "t1", title: "A" }),
-      makeTopic({ id: "t2", title: "B" }),
-      makeTopic({ id: "t3", title: "C" }),
+      makeTopic({ id: "t1", title: "Bug A", type: "bug" }),
+      makeTopic({ id: "t2", title: "Bug B", type: "bug" }),
+      makeTopic({ id: "t3", title: "Feature C", type: "feature" }),
     ];
 
-    render(<RoadmapBoard buckets={buckets} issueCounts={new Map()} projectId="p1" />);
+    render(<BucketStack buckets={buckets} issueCounts={new Map()} projectId="p1" />);
 
-    const header = screen.getByRole("heading", { name: "Komende week" }).closest("header")!;
-    expect(within(header).getByText("03")).toBeInTheDocument();
+    const upcomingHeader = screen.getByRole("heading", { name: "Komende week" });
+    const section = upcomingHeader.closest("section")!;
+
+    expect(within(section).getByText("Bugs")).toBeInTheDocument();
+    expect(within(section).getByText("Functionaliteit")).toBeInTheDocument();
+    expect(within(section).getByText("Bug A")).toBeInTheDocument();
+    expect(within(section).getByText("Bug B")).toBeInTheDocument();
+    expect(within(section).getByText("Feature C")).toBeInTheDocument();
   });
 
-  it("toont per lege bucket een eigen empty-state", () => {
-    render(<RoadmapBoard buckets={emptyBuckets()} issueCounts={new Map()} projectId="p1" />);
+  it("toont per lege type-kolom een eigen empty-state", () => {
+    render(<BucketStack buckets={emptyBuckets()} issueCounts={new Map()} projectId="p1" />);
 
-    expect(screen.getByText("Nog geen recent opgeleverde onderwerpen")).toBeInTheDocument();
-    expect(screen.getByText("Geen onderwerpen voor deze week")).toBeInTheDocument();
-    expect(screen.getByText("Geen geprioriteerde onderwerpen wachtend")).toBeInTheDocument();
-    expect(screen.getByText("Niets meer wachtend op jullie signaal")).toBeInTheDocument();
+    // Vier buckets × twee types = acht empty-states (vier per tekst).
+    expect(screen.getAllByText("Geen bugs in deze fase — fijn.")).toHaveLength(4);
+    expect(screen.getAllByText("Geen openstaande wensen in deze fase.")).toHaveLength(4);
   });
 
-  it("toont topic-card met client_title wanneer aanwezig, anders title", () => {
+  it("gebruikt client_title wanneer aanwezig, anders interne title", () => {
     const buckets = emptyBuckets();
     buckets.high_prio = [
       makeTopic({ id: "ta", title: "Internal A", client_title: "Client A" }),
       makeTopic({ id: "tb", title: "Internal B", client_title: null }),
     ];
 
-    render(<RoadmapBoard buckets={buckets} issueCounts={new Map()} projectId="p1" />);
+    render(<BucketStack buckets={buckets} issueCounts={new Map()} projectId="p1" />);
 
     expect(screen.getByText("Client A")).toBeInTheDocument();
     expect(screen.queryByText("Internal A")).not.toBeInTheDocument();

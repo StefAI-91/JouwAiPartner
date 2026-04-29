@@ -35,16 +35,3 @@ export function PriorityBadge({ priority }: { priority: string | null }) {
     </span>
   );
 }
-
-export function MetaItem({ children, prefix }: { children: React.ReactNode; prefix?: string }) {
-  return (
-    <span className="inline-flex items-baseline gap-1.5 text-xs text-muted-foreground">
-      {prefix ? (
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">
-          {prefix}
-        </span>
-      ) : null}
-      {children}
-    </span>
-  );
-}
