@@ -3,12 +3,12 @@
 import { z } from "zod";
 import { requireAdminInAction } from "@repo/auth/access";
 import { getMeetingForGoldenCoder } from "@repo/database/queries/golden";
+import { listMeetingsWithTranscript } from "@repo/database/queries/meetings/pipeline-fetches";
 import {
   countSpeakerMappingBackfillRemaining,
   getSpeakerMappingTranscriptCounts,
-  listMeetingsWithTranscript,
   listSpeakerMappingBackfillCandidates,
-} from "@repo/database/queries/meetings/core";
+} from "@repo/database/queries/meetings/speaker-mapping";
 import {
   runSpeakerIdentifier,
   getSpeakerIdentifierPrompt,
