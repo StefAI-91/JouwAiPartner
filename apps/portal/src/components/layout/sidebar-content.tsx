@@ -7,14 +7,21 @@ import {
   CalendarDays,
   ClipboardList,
   FolderKanban,
+  Inbox,
   ListChecks,
   MessageCircle,
 } from "lucide-react";
 import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
 import { cn } from "@repo/ui/utils";
 
+export interface SidebarProject {
+  id: string;
+  name: string;
+  openQuestionsCount: number;
+}
+
 interface SidebarContentProps {
-  projects: { id: string; name: string }[];
+  projects: SidebarProject[];
   onNavigate?: () => void;
 }
 
@@ -62,7 +69,7 @@ function ProjectsModeNav({
   pathname,
   onNavigate,
 }: {
-  projects: { id: string; name: string }[];
+  projects: SidebarProject[];
   pathname: string;
   onNavigate?: () => void;
 }) {
@@ -117,11 +124,13 @@ function ProjectModeNav({
   pathname,
   onNavigate,
 }: {
-  project: { id: string; name: string };
+  project: SidebarProject;
   pathname: string;
   onNavigate?: () => void;
 }) {
   const base = `/projects/${project.id}`;
+  const inboxLabel =
+    project.openQuestionsCount > 0 ? `Vragen (${project.openQuestionsCount})` : "Vragen";
 
   const items: {
     href: string;
@@ -131,6 +140,7 @@ function ProjectModeNav({
     { href: base, label: "Briefing", icon: ClipboardList },
     { href: `${base}/roadmap`, label: "Wat & wanneer", icon: ListChecks },
     { href: `${base}/meetings`, label: "Meetings", icon: CalendarDays },
+    { href: `${base}/inbox`, label: inboxLabel, icon: Inbox },
     { href: `${base}/feedback`, label: "Feedback geven", icon: MessageCircle },
   ];
 

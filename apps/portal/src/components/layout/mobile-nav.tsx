@@ -10,7 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
-import { SidebarContent } from "./sidebar-content";
+import { SidebarContent, type SidebarProject } from "./sidebar-content";
 
 const subscribeNoop = () => () => {};
 const getSnapshotClient = () => true;
@@ -58,7 +58,7 @@ export function MobileNavTrigger() {
 }
 
 interface MobileNavDrawerProps {
-  projects: { id: string; name: string }[];
+  projects: SidebarProject[];
 }
 
 export function MobileNavDrawer({ projects }: MobileNavDrawerProps) {

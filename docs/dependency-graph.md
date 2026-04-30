@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 592 |
-| Exported functions/constants | 897 |
-| Exported types/interfaces | 377 |
-| Cross-package imports | 596 |
+| Files scanned | 598 |
+| Exported functions/constants | 906 |
+| Exported types/interfaces | 385 |
+| Cross-package imports | 603 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -73,6 +73,14 @@
 - `listRecentAgentRuns()`
 
 **Types:** `AgentMetrics`, `AgentRunRow`
+
+### `queries/client-questions.ts`
+
+**Exports:**
+- `listOpenQuestionsForProject()`
+- `countOpenQuestionsByProject()`
+
+**Types:** `ClientQuestionReplyRow`, `ClientQuestionListRow`
 
 ### `queries/content.ts`
 
@@ -653,6 +661,14 @@
 - `recordAuditEvent()`
 
 **Types:** `AuditEventInput`
+
+### `mutations/client-questions.ts`
+
+**Exports:**
+- `sendQuestion()`
+- `replyToQuestion()`
+
+**Types:** `MutationResult`, `ClientQuestionRow`
 
 ### `mutations/decisions.ts`
 
@@ -4104,6 +4120,19 @@
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/database/mutations/issues/attachments` → storeIssueMedia
 
+### `apps/devhub/src/actions/questions.ts`
+
+**Exports:**
+- `askQuestionAction()`
+- `replyAsTeamAction()`
+
+**Types:** `AskQuestionInput`
+
+**Depends on:**
+- `@repo/auth/helpers` → createPageClient, getAuthenticatedUser
+- `@repo/database/mutations/client-questions` → sendQuestion, replyToQuestion
+- `@repo/database/validations/client-questions` → replyToQuestionSchema
+
 ### `apps/devhub/src/actions/review.ts`
 
 **Exports:**
@@ -4365,6 +4394,37 @@
 **Exports:**
 - `TopBar()`
 
+### `apps/devhub/src/components/questions/ask-question-modal.tsx`
+
+**Exports:**
+- `AskQuestionModal()`
+
+**Types:** `AskQuestionModalProps`
+
+**Depends on:**
+- `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
+
+### `apps/devhub/src/components/questions/open-questions-block.tsx`
+
+**Exports:**
+- `OpenQuestionsBlock()`
+
+**Types:** `OpenQuestionsBlockProps`
+
+**Depends on:**
+- `@repo/auth/helpers` → createPageClient
+- `@repo/database/queries/client-questions` → listOpenQuestionsForProject
+
+### `apps/devhub/src/components/questions/question-thread.tsx`
+
+**Exports:**
+- `QuestionThread()`
+
+**Types:** `QuestionThreadProps`
+
+**Depends on:**
+- (type) `@repo/database/queries/client-questions` → ClientQuestionListRow
+
 ### `apps/devhub/src/components/review/action-items-list.tsx`
 
 **Exports:**
@@ -4444,9 +4504,9 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 101 | 8 | 8 | 38 | - | 155 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 23 | 3 | 12 | - | - | 38 |
+| DevHub Server Actions | 25 | 3 | 13 | - | - | 41 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
-| DevHub Components | 1 | 2 | - | 14 | - | 17 |
+| DevHub Components | 3 | 2 | 1 | 15 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 28 | - | 22 | 12 | - | 62 |
 | MCP Server | 28 | 1 | - | - | - | 29 |
@@ -4488,6 +4548,13 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `recordAuditEvent()` | `apps/devhub/src/actions/widget-domains.ts` |
+
+### mutations/client-questions.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `sendQuestion()` | `apps/devhub/src/actions/questions.ts` |
+| `replyToQuestion()` | `apps/devhub/src/actions/questions.ts` |
 
 ### mutations/emails.ts
 
@@ -4687,6 +4754,12 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getAgentMetrics()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
 | `listRecentAgentRuns()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
+
+### queries/client-questions.ts
+
+| Query | Used in |
+|-------|---------|
+| `listOpenQuestionsForProject()` | `apps/devhub/src/components/questions/open-questions-block.tsx` |
 
 ### queries/content.ts
 

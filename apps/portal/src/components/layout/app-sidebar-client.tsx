@@ -1,9 +1,9 @@
 "use client";
 
-import { SidebarContent } from "./sidebar-content";
+import { SidebarContent, type SidebarProject } from "./sidebar-content";
 
 interface AppSidebarClientProps {
-  projects: { id: string; name: string }[];
+  projects: SidebarProject[];
 }
 
 export function AppSidebarClient({ projects }: AppSidebarClientProps) {

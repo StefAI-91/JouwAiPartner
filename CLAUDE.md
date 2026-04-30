@@ -2,11 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## IMPORTANT: Read at Session Start
+## Dependency Graph
 
-**Before doing any work**, read [`docs/dependency-graph.md`](docs/dependency-graph.md) for a complete map of all functions, queries, mutations, actions, and pipelines — including what calls what. This gives you instant context on blast radius and data flow without needing to search.
+[`docs/dependency-graph.md`](docs/dependency-graph.md) is een auto-gegenereerde map van functies, queries, mutations, actions en pipelines + cross-package edges. Husky pre-commit regenereert hem; handmatig: `npm run dep-graph`.
 
-> The graph is auto-generated from the actual codebase. The Husky pre-commit hook regenerates it automatically when `.ts`/`.tsx` files in `packages/` or `apps/` are staged. Handmatige trigger: `npm run dep-graph`.
+**Hoe te gebruiken:**
+
+- **Bij sessie-start:** lees alleen de eerste secties (Overview, Package Dependency Flow, Cross-Package Dependency Matrix, Critical Integration Points). Niet de hele file — die is groot.
+- **Voor "wie roept X aan":** gebruik Grep, niet de graph.
+- **Voor blast-radius bij refactor:** raadpleeg de relevante per-layer sectie via offset/limit-Read of Grep.
+
+> AD-002 splitst dit op in een compact top-level + per-package files; tot dan geldt bovenstaande pragmatische werkwijze.
 
 ## Vision: AI-Native Operating System
 
@@ -14,12 +20,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The platform is a **full-circle AI-native operating system** with four quadrants:
 
-| Quadrant     | App             | Role                                                            | AI Acts As      |
-| ------------ | --------------- | --------------------------------------------------------------- | --------------- |
-| **Cockpit**  | `apps/cockpit/` | Strategy & PM — knowledge hub, meetings, decisions              | Project Manager |
-| **DevHub**   | `apps/devhub/`  | Build & Execute — tickets, triage, AI execution (internal tool) | Developer       |
-| **Portal**   | `apps/portal/`  | Client transparency — progress, Q&A, feedback                   | Account Manager |
-| **Delivery** | Client apps     | Shipped products — feedback widget, support chatbot             | Support Agent   |
+| Quadrant     | App                          | Role                                                            | AI Acts As      |
+| ------------ | ---------------------------- | --------------------------------------------------------------- | --------------- |
+| **Cockpit**  | `apps/cockpit/`              | Strategy & PM — knowledge hub, meetings, decisions              | Project Manager |
+| **DevHub**   | `apps/devhub/`               | Build & Execute — tickets, triage, AI execution (internal tool) | Developer       |
+| **Portal**   | `apps/portal/`               | Client transparency — progress, Q&A, feedback                   | Account Manager |
+| **Delivery** | `apps/widget/` + client apps | Shipped products — embedded feedback widget, support chatbot    | Support Agent   |
 
 Data flows in a continuous loop: Knowledge In (cockpit) → Work Created → Work Executed (devhub) → Product Delivered → Feedback Captured (delivery) → Client Informed (portal) → Knowledge Grows → back to cockpit.
 
@@ -27,7 +33,7 @@ Data flows in a continuous loop: Knowledge In (cockpit) → Work Created → Wor
 
 AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). Centralizes all company data, processes it through AI agents, and exposes it via MCP server, web dashboard, and client portal.
 
-**Current state:** Cockpit + DevHub in productie, Portal MVP in wireframe. Zie `sprints/done/` voor de sprint-historie en `docs/specs/docs-inventory.md §1` voor de per-prefix breakdown.
+**Current state:** Cockpit + DevHub in productie. Portal MVP live met project-overzicht, feedback, meetings en roadmap-pagina's. Widget V0 uitgerold (zie `apps/widget/`). Zie `sprints/done/` voor de sprint-historie en `docs/specs/docs-inventory.md §1` voor de per-prefix breakdown.
 **Team:** 6 people, 3 internal reviewers (Stef, Wouter, Ege). Platform maintained by Stef (non-coder) via Claude Code.
 **Verification model:** All content must be human-verified before becoming queryable truth (review gate). This applies to all quadrants.
 **DevHub:** Internal tool — not a product for clients. Optimized for team workflow and AI agent execution.
@@ -47,11 +53,27 @@ AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). 
 ## Commands
 
 ```bash
-npm run dev          # Start all workspaces (Turbopack via Turborepo)
-npm run build        # Production build (all workspaces)
-npm run lint         # ESLint (all workspaces)
-npm run type-check   # TypeScript check (all workspaces)
+# Build & dev
+npm run dev               # Start all workspaces (Turbopack via Turborepo)
+npm run build             # Production build (all workspaces)
+npm run lint              # ESLint (all workspaces)
+npm run type-check        # TypeScript check (all workspaces)
+npm run format            # Prettier write (alle bestanden)
+npm run format:check      # Prettier check zonder writes
+
+# Tests
+npm test                  # Vitest run (alle workspaces)
+npm run test:watch        # Vitest watch-mode (alleen lokaal)
+npm run test:coverage     # Vitest run + v8 coverage
+
+# Drift-checks (CI + pre-commit)
+npm run check:queries     # Geen directe .from() in apps/*/actions of app/api
+npm run check:features    # Feature-folder structuur volgt CLAUDE.md registry
+npm run check:readmes     # Cluster-READMEs zijn vers t.o.v. inhoud van die map
+npm run dep-graph         # Regenereer docs/dependency-graph.md
 ```
+
+> De drie `check:*` scripts draaien automatisch via Husky pre-commit. Run ze handmatig vóór een PR als je twijfelt.
 
 ## Import Conventions
 
@@ -119,9 +141,10 @@ minder rewrites, en minder verrassingen in productie.
   altijd de conservatieve variant.** Externe API-gedrag (Supabase
   query-syntax, PostgREST embed-aliases), productie-DB, deploy-
   specifieke quirks — als je het niet kunt reproduceren in de test-
-  omgeving, ga niet experimenteren. TH-914 is de cautionary tale:
-  een `referencedTable`-micro-optimalisatie brak de theme detail page
-  in productie omdat we het lokaal niet konden verifiëren.
+  omgeving, ga niet experimenteren. FIX-TH-914 (binnen sprint TH-009)
+  is de cautionary tale: een `referencedTable`-micro-optimalisatie brak
+  de theme detail page in productie omdat we het lokaal niet konden
+  verifiëren.
 
 ### Blast radius discipline
 
@@ -162,13 +185,13 @@ Drie categorieën in `apps/[app]/src/`. Kies één **vóór** je schrijft. Drift
 
 Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen view-code? → compositiepagina.
 
-**Registry (2026-04-28, bindend — update bij elke wijziging):**
+**Registry (2026-04-30, bindend — update bij elke wijziging; `npm run check:features` valideert):**
 
-| Type                                      | Cockpit                                                                                                                   | DevHub                                                                    | Portal                           |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------- |
-| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`                                                         | `issues`, `topics`                                                        | _(geen — portal is read-only)_   |
-| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                          | `dashboard`, `review`                                                     | `issues`, `projects`, `feedback` |
-| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review`, `widget` (route-only, geen actions) | `auth`, `feedback`               |
+| Type                                      | Cockpit                                                                                                                   | DevHub                                                                                                               | Portal                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`                                                         | `issues`, `topics`                                                                                                   | _(geen — portal is read-only)_                                     |
+| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                          | `dashboard`, `review`, `questions`                                                                                   | `briefing`, `meetings`, `roadmap`, `projects`, `feedback`, `inbox` |
+| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review`, `attachments`, `bulk-cluster-cleanup`, `widget-domains`, `widget` (route-only) | `auth`, `feedback`                                                 |
 
 **Regels:**
 
@@ -305,11 +328,15 @@ Escaleer naar de gebruiker in plaats van door te drukken.
 ## Sprint Management
 
 - **Vision doc:** `docs/specs/vision-ai-native-architecture.md` — every sprint must align with this
-- Sprints are in `sprints/`: `done/` for completed, `backlog/` for upcoming
-- When a sprint is completed, move its file from `sprints/backlog/` to `sprints/done/`
-- Each sprint file references requirement IDs (FUNC-xxx, DATA-xxx, AI-xxx, MCP-xxx, RULE-xxx) from `docs/specs/requirements.md`
+- Sprints staan in twee locaties:
+  - `sprints/backlog/` — meeste actieve sprints (CP-, DH-, PR-, SRP-, TH-, WG-, R-, AD-, sprint-NNN)
+  - `docs/backlog/` — PW-sprints en oudere DevHub-fase-2 specs
+  - `sprints/done/` — alle afgeronde sprints (zie `sprints/backlog/README.md` voor master-index)
+- Wanneer een sprint klaar is: verplaats het bestand naar `sprints/done/` en update de README-tabel.
+- Sprints **mogen** verwijzen naar requirement-IDs uit `docs/specs/requirements.md` (FUNC-xxx, DATA-xxx, AI-xxx, MCP-xxx, RULE-xxx) als dat bestaat. Niet verplicht — nieuwere prefix-sprints (CP, PR, SRP, AD) doen dit niet meer omdat ze meer zelfstandig staan.
 - Full platform spec: `docs/specs/platform-spec.md` (technical source of truth)
 - DevHub requirements: `docs/specs/requirements-devhub.md`
+- Portal requirements: `docs/specs/requirements-portal.md`
 - Archived docs in `docs/archive/` (PRD v1, PRD v2, business model v1)
 
 ## Deployment

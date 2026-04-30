@@ -18,8 +18,8 @@ vi.mock("@repo/ui/workspace-switcher", () => ({
 }));
 
 const projects = [
-  { id: "proj-a", name: "Project A" },
-  { id: "proj-b", name: "Project B" },
+  { id: "proj-a", name: "Project A", openQuestionsCount: 0 },
+  { id: "proj-b", name: "Project B", openQuestionsCount: 0 },
 ];
 
 function Harness() {

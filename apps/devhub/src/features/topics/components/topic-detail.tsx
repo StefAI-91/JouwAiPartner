@@ -10,6 +10,8 @@ import { TopicDeleteButton } from "./topic-delete-button";
 import { TopicResolutionEditor } from "./topic-resolution-editor";
 import { TopicStatusSelect } from "./topic-status-select";
 import { TopicTestInstructionsEditor } from "./topic-test-instructions-editor";
+import { AskQuestionModal } from "@/components/questions/ask-question-modal";
+import { OpenQuestionsBlock } from "@/components/questions/open-questions-block";
 
 const RESOLUTION_OPEN_BY_DEFAULT = new Set<TopicLifecycleStatus>([
   "done",
@@ -59,12 +61,15 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
           <h1 className="min-w-0 break-words text-2xl font-semibold tracking-tight text-foreground">
             {topic.title}
           </h1>
-          <Link
-            href={`/topics/${topic.id}/edit`}
-            className="inline-flex h-9 items-center rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted"
-          >
-            Bewerk topic
-          </Link>
+          <div className="flex items-center gap-2">
+            <AskQuestionModal projectId={topic.project_id} topicId={topic.id} />
+            <Link
+              href={`/topics/${topic.id}/edit`}
+              className="inline-flex h-9 items-center rounded-md border border-border bg-background px-3 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              Bewerk topic
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -118,6 +123,12 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
             initialResolution={topic.resolution}
             initialClientResolution={topic.client_resolution}
             defaultOpen={resolutionDefaultOpen}
+          />
+
+          <OpenQuestionsBlock
+            projectId={topic.project_id}
+            topicId={topic.id}
+            heading="Klantvragen op dit topic"
           />
         </div>
 
