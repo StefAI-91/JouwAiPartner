@@ -19,6 +19,7 @@ export interface InsertTopicData {
   client_title?: string | null;
   description?: string | null;
   client_description?: string | null;
+  client_test_instructions?: string | null;
   resolution?: string | null;
   client_resolution?: string | null;
   priority?: "P0" | "P1" | "P2" | "P3" | null;
@@ -35,6 +36,7 @@ export interface UpdateTopicData {
   client_title?: string | null;
   description?: string | null;
   client_description?: string | null;
+  client_test_instructions?: string | null;
   resolution?: string | null;
   client_resolution?: string | null;
   priority?: "P0" | "P1" | "P2" | "P3" | null;
@@ -54,7 +56,7 @@ export async function insertTopic(
     .insert(data)
     .select(
       `id, project_id, title, client_title, description, client_description,
-       resolution, client_resolution,
+       client_test_instructions, resolution, client_resolution,
        type, status, priority, target_sprint_id, status_overridden,
        wont_do_reason, closed_at, created_at, created_by, updated_at`,
     )
@@ -76,7 +78,7 @@ export async function updateTopic(
     .eq("id", id)
     .select(
       `id, project_id, title, client_title, description, client_description,
-       resolution, client_resolution,
+       client_test_instructions, resolution, client_resolution,
        type, status, priority, target_sprint_id, status_overridden,
        wont_do_reason, closed_at, created_at, created_by, updated_at`,
     )

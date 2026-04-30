@@ -15,6 +15,9 @@ interface EditProjectProps {
     status: string;
     description?: string | null;
     github_url?: string | null;
+    preview_url?: string | null;
+    production_url?: string | null;
+    screenshot_url?: string | null;
     start_date?: string | null;
     deadline?: string | null;
     owner?: { id: string; name: string } | null;
@@ -42,6 +45,9 @@ export function EditProject({
   const [orgId, setOrgId] = useState(organizationId ?? "");
   const [description, setDescription] = useState(project.description ?? "");
   const [githubUrl, setGithubUrl] = useState(project.github_url ?? "");
+  const [previewUrl, setPreviewUrl] = useState(project.preview_url ?? "");
+  const [productionUrl, setProductionUrl] = useState(project.production_url ?? "");
+  const [screenshotUrl, setScreenshotUrl] = useState(project.screenshot_url ?? "");
   const [ownerId, setOwnerId] = useState(project.owner?.id ?? "");
   const [contactPersonId, setContactPersonId] = useState(project.contact_person?.id ?? "");
   const [startDate, setStartDate] = useState(project.start_date ?? "");
@@ -57,6 +63,9 @@ export function EditProject({
         organization_id: orgId || null,
         description: description.trim() || null,
         github_url: githubUrl.trim() || null,
+        preview_url: previewUrl.trim() || null,
+        production_url: productionUrl.trim() || null,
+        screenshot_url: screenshotUrl.trim() || null,
         owner_id: ownerId || null,
         contact_person_id: contactPersonId || null,
         start_date: startDate || null,
@@ -145,6 +154,42 @@ export function EditProject({
               placeholder="https://github.com/org/repo"
             />
           </div>
+
+          <fieldset className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+            <legend className="px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Deploy &amp; screenshot (Portal Briefing)
+            </legend>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Preview URL</label>
+              <input
+                type="url"
+                value={previewUrl}
+                onChange={(e) => setPreviewUrl(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                placeholder="https://preview.acme.nl"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Productie URL</label>
+              <input
+                type="url"
+                value={productionUrl}
+                onChange={(e) => setProductionUrl(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                placeholder="https://app.acme.nl"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Screenshot URL</label>
+              <input
+                type="url"
+                value={screenshotUrl}
+                onChange={(e) => setScreenshotUrl(e.target.value)}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                placeholder="https://images.acme.nl/clienthub.png"
+              />
+            </div>
+          </fieldset>
 
           <div>
             <label className="mb-1 block text-sm font-medium">Status</label>

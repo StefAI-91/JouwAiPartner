@@ -15,6 +15,7 @@ export const createTopicSchema = z.object({
   client_title: z.string().max(200).nullable().optional(),
   description: z.string().max(5000).nullable().optional(),
   client_description: z.string().max(5000).nullable().optional(),
+  client_test_instructions: z.string().max(5000).nullable().optional(),
   resolution: z.string().max(5000).nullable().optional(),
   client_resolution: z.string().max(5000).nullable().optional(),
   type: z.enum(TOPIC_TYPES),

@@ -41,6 +41,9 @@ export const updateProjectSchema = z.object({
   start_date: z.string().nullable().optional(),
   deadline: z.string().nullable().optional(),
   github_url: z.string().url("Ongeldige URL").nullable().optional(),
+  preview_url: z.string().url("Ongeldige preview-URL").nullable().optional(),
+  production_url: z.string().url("Ongeldige productie-URL").nullable().optional(),
+  screenshot_url: z.string().url("Ongeldige screenshot-URL").nullable().optional(),
 });
 
 export const updatePersonSchema = z.object({

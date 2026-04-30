@@ -14,6 +14,7 @@ export interface TopicDetailRow {
   client_title: string | null;
   description: string | null;
   client_description: string | null;
+  client_test_instructions: string | null;
   resolution: string | null;
   client_resolution: string | null;
   type: TopicType;
@@ -41,7 +42,7 @@ export interface TopicWithIssues extends TopicDetailRow {
 
 const TOPIC_DETAIL_COLS = `
   id, project_id, title, client_title, description, client_description,
-  resolution, client_resolution,
+  client_test_instructions, resolution, client_resolution,
   type, status, priority, target_sprint_id, status_overridden,
   wont_do_reason, closed_at, created_at, created_by, updated_at
 ` as const;

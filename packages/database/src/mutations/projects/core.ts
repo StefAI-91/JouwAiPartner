@@ -51,6 +51,9 @@ export async function updateProject(
     start_date?: string | null;
     deadline?: string | null;
     github_url?: string | null;
+    preview_url?: string | null;
+    production_url?: string | null;
+    screenshot_url?: string | null;
   },
 ): Promise<{ success: true } | { error: string }> {
   const { error } = await getAdminClient()

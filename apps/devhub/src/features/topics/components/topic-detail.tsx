@@ -9,6 +9,7 @@ import { LinkedIssuesPanel } from "./linked-issues-panel";
 import { TopicDeleteButton } from "./topic-delete-button";
 import { TopicResolutionEditor } from "./topic-resolution-editor";
 import { TopicStatusSelect } from "./topic-status-select";
+import { TopicTestInstructionsEditor } from "./topic-test-instructions-editor";
 
 const RESOLUTION_OPEN_BY_DEFAULT = new Set<TopicLifecycleStatus>([
   "done",
@@ -100,6 +101,11 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
               <p className="whitespace-pre-wrap break-words text-sm">{topic.description}</p>
             </section>
           ) : null}
+
+          <TopicTestInstructionsEditor
+            topicId={topic.id}
+            initialInstructions={topic.client_test_instructions}
+          />
 
           <LinkedIssuesPanel
             topicId={topic.id}

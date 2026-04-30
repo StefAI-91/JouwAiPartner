@@ -1478,7 +1478,10 @@ export type Database = {
           name: string;
           organization_id: string | null;
           owner_id: string | null;
+          preview_url: string | null;
+          production_url: string | null;
           project_key: string | null;
+          screenshot_url: string | null;
           start_date: string | null;
           status: string | null;
           updated_at: string | null;
@@ -1497,7 +1500,10 @@ export type Database = {
           name: string;
           organization_id?: string | null;
           owner_id?: string | null;
+          preview_url?: string | null;
+          production_url?: string | null;
           project_key?: string | null;
+          screenshot_url?: string | null;
           start_date?: string | null;
           status?: string | null;
           updated_at?: string | null;
@@ -1516,7 +1522,10 @@ export type Database = {
           name?: string;
           organization_id?: string | null;
           owner_id?: string | null;
+          preview_url?: string | null;
+          production_url?: string | null;
           project_key?: string | null;
+          screenshot_url?: string | null;
           start_date?: string | null;
           status?: string | null;
           updated_at?: string | null;
@@ -1802,6 +1811,7 @@ export type Database = {
       topics: {
         Row: {
           client_description: string | null;
+          client_test_instructions: string | null;
           client_title: string | null;
           closed_at: string | null;
           created_at: string;
@@ -1820,6 +1830,7 @@ export type Database = {
         };
         Insert: {
           client_description?: string | null;
+          client_test_instructions?: string | null;
           client_title?: string | null;
           closed_at?: string | null;
           created_at?: string;
@@ -1838,6 +1849,7 @@ export type Database = {
         };
         Update: {
           client_description?: string | null;
+          client_test_instructions?: string | null;
           client_title?: string | null;
           closed_at?: string | null;
           created_at?: string;
