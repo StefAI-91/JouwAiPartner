@@ -43,6 +43,13 @@ AS $$
   RETURNING count;
 $$;
 
+-- SECURITY DEFINER draait onder de owner-role. Expliciet `postgres` zetten
+-- zodat een rebuild op een schone Supabase env (waar de migratie-runner
+-- per ongeluk een andere rol kan zijn) niet stilletjes met te veel of te
+-- weinig privileges gaat draaien. Op Supabase managed = postgres in de
+-- praktijk, maar we vertrouwen niet op default-gedrag.
+ALTER FUNCTION increment_rate_limit(text) OWNER TO postgres;
+
 -- Service-role mag de functie aanroepen; geen authenticated/anon access
 -- (consistent met de tabel-policy).
 REVOKE ALL ON FUNCTION increment_rate_limit(text) FROM PUBLIC;

@@ -102,9 +102,10 @@ met `Retry-After`-header tot de volgende uur-grens. Counter reset op
 één regel — geen DB-migratie nodig.
 
 **`/api/ingest/userback`** is admin-only (cron + admin-session, geen
-public Origin) en draagt om die reden geen rate-limit. Util ondersteunt
-de `userback_ingest`-prefix wel zodat een toekomstige public-mode (mocht
-die ooit nodig zijn) erop kan plug-en-playen.
+public Origin) en draagt om die reden geen rate-limit. Mocht er ooit een
+tweede public-route komen, dan kan die op dezelfde `widget_rate_limits`-
+tabel mee — voeg in dat geval een tweede prefix-constante toe en geef
+'m als arg aan de util.
 
 ## Vergelijkingsperiode-log
 

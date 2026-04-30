@@ -25,6 +25,12 @@ window.__JAIPWidget = {
   mount(root, config) {
     ensureStyles(root);
 
+    // Bewaar de actieve element in de Shadow Root (de Feedback-trigger)
+    // vóór de modal mount — `document.activeElement` ziet alleen de host,
+    // niet wat er binnen het shadow-tree focus heeft. Doorgeven aan Modal
+    // zodat focus-restore op close de juiste knop weer pakt.
+    const trigger = (root.activeElement as HTMLElement | null) ?? null;
+
     let container = root.querySelector<HTMLDivElement>("#__jaip-widget-modal");
     if (!container) {
       container = document.createElement("div");
@@ -38,7 +44,7 @@ window.__JAIPWidget = {
       render(null, container!);
     };
 
-    render(<Modal config={config} onClose={close} />, container);
+    render(<Modal config={config} trigger={trigger} onClose={close} />, container);
   },
 };
 

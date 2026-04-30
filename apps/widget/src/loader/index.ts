@@ -98,33 +98,34 @@ declare global {
   ].join(";");
   shadow.appendChild(button);
 
-  let widgetLoaded = false;
-  let loading = false;
+  // In-flight load wordt als gedeelde Promise opgeslagen zodat concurrente
+  // klikken (dubbelklik tijdens load) dezelfde tag-injection delen — geen
+  // setTimeout-polling die in een oneindige loop kan blijven hangen als
+  // widget.js nooit laadt.
+  let widgetLoadPromise: Promise<void> | null = null;
 
   // Cross-origin script injection ipv dynamic import: robuuster en werkt
   // ook in oudere browsers zonder een module-bundler-runtime aan kant van
   // de host.
   function loadWidget(): Promise<void> {
-    if (widgetLoaded) return Promise.resolve();
-    if (loading) return new Promise((resolve) => setTimeout(() => resolve(loadWidget()), 50));
-    loading = true;
+    if (widgetLoadPromise) return widgetLoadPromise;
 
-    return new Promise((resolve, reject) => {
+    widgetLoadPromise = new Promise<void>((resolve, reject) => {
       const widgetSrc = script!.src.replace(/loader\.js(\?.*)?$/, "widget.js");
       const tag = document.createElement("script");
       tag.src = widgetSrc;
       tag.async = true;
-      tag.onload = () => {
-        widgetLoaded = true;
-        loading = false;
-        resolve();
-      };
+      tag.onload = () => resolve();
       tag.onerror = () => {
-        loading = false;
+        // Reset zodat een volgende klik opnieuw mag proberen — anders
+        // blijft de widget dood na één netwerk-glitch.
+        widgetLoadPromise = null;
         reject(new Error("widget.js failed to load"));
       };
       document.head.appendChild(tag);
     });
+
+    return widgetLoadPromise;
   }
 
   button.addEventListener("click", async () => {

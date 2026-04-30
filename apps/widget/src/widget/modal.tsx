@@ -8,6 +8,13 @@ interface MountConfig {
 
 interface ModalProps {
   config: MountConfig;
+  /**
+   * Element dat focus had vóór open. Bij close geven we focus daarheen
+   * terug. Mag null zijn — dan wordt geen restore gedaan. Wordt vanuit
+   * `mount()` aangeleverd omdat `document.activeElement` in een Shadow
+   * DOM context alleen de host ziet, niet de échte trigger.
+   */
+  trigger?: HTMLElement | null;
   onClose: () => void;
 }
 
@@ -34,29 +41,30 @@ const SUCCESS_AUTOCLOSE_MS = 2000;
  * Escape sluit, ARIA-labels). Bij submit POST naar het ingest-endpoint met
  * auto-context (URL, viewport, userAgent).
  */
-export function Modal({ config, onClose }: ModalProps) {
+export function Modal({ config, trigger, onClose }: ModalProps) {
   const [type, setType] = useState<FeedbackType | null>(null);
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const dialogRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLElement | null>(null);
 
   const safeClose = useCallback(() => {
     if (status === "submitting") return;
     onClose();
   }, [onClose, status]);
 
-  // A11y: onthoud welk element focus had vóór open en restore bij close.
+  // A11y: focus de eerste interactieve knop bij open, restore naar de
+  // door `mount()` doorgegeven trigger bij close. Trigger wordt buiten
+  // de modal gevangen omdat `document.activeElement` in een Shadow DOM
+  // de host teruggeeft, niet de werkelijke trigger-button.
   useEffect(() => {
-    triggerRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const firstButton = dialogRef.current?.querySelector<HTMLElement>("button:not([disabled])");
     firstButton?.focus();
     return () => {
-      triggerRef.current?.focus?.();
+      trigger?.focus?.();
     };
-  }, []);
+  }, [trigger]);
 
   // A11y: Escape sluit modal, Tab loopt rond binnen modal.
   useEffect(() => {

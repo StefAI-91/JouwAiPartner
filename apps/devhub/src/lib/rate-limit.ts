@@ -1,7 +1,7 @@
 import { incrementRateLimit } from "@repo/database/mutations/widget";
 import {
+  WIDGET_RATE_LIMIT_KEY_PREFIX,
   WIDGET_RATE_LIMIT_PER_HOUR,
-  type WidgetRateLimitPrefix,
 } from "@repo/database/constants/widget";
 
 export interface RateLimitResult {
@@ -23,11 +23,8 @@ export interface RateLimitResult {
  * feedback per ongeluk weggooien is dat niet. Documentatie-trail in
  * `docs/security/audit-report.md`.
  */
-export async function rateLimitOrigin(
-  origin: string,
-  prefix: WidgetRateLimitPrefix,
-): Promise<RateLimitResult> {
-  const key = `${prefix}:${origin}`;
+export async function rateLimitOrigin(origin: string): Promise<RateLimitResult> {
+  const key = `${WIDGET_RATE_LIMIT_KEY_PREFIX}:${origin}`;
   try {
     const count = await incrementRateLimit(key);
     return {

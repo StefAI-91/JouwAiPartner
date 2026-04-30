@@ -331,8 +331,7 @@ maar vraagt een dedicated payload-signing-sprint; voor V0 is whitelist +
 rate-limit het pragmatische maximum.
 
 **`/api/ingest/userback`** is admin-only (cron + admin-session, geen public
-Origin) en heeft daarom geen rate-limit nodig — util ondersteunt de
-`userback_ingest`-prefix voor een hypothetische public-mode in de toekomst.
+Origin) en heeft daarom geen rate-limit nodig.
 
 ---
 

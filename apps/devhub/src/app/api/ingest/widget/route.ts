@@ -3,7 +3,6 @@ import { widgetIngestSchema } from "@repo/database/validations/widget";
 import { isOriginAllowedForProject } from "@repo/database/queries/widget";
 import { insertWidgetIssue } from "@repo/database/mutations/widget";
 import { rateLimitOrigin } from "@/lib/rate-limit";
-import { WIDGET_RATE_LIMIT_PREFIXES } from "@repo/database/constants/widget";
 
 // WG-005: rate-limit per Origin via Postgres-counter. Whitelist + rate-limit
 // tezamen sluiten het flood-risico — Origin spoof-resistant zou een nieuwe
@@ -27,7 +26,12 @@ interface IngestLog {
 
 function logIngest(entry: Omit<IngestLog, "type" | "ts">): void {
   const payload: IngestLog = { type: "widget_ingest", ts: new Date().toISOString(), ...entry };
-  console.log(JSON.stringify(payload));
+  // 4xx/5xx → warn zodat ze in Vercel filterbaar zijn; 200 → info.
+  if (entry.status >= 400) {
+    console.warn(JSON.stringify(payload));
+  } else {
+    console.info(JSON.stringify(payload));
+  }
 }
 
 function corsHeaders(origin: string): Headers {
@@ -51,17 +55,23 @@ function secondsUntilNextHour(): number {
 export async function POST(req: Request) {
   const origin = req.headers.get("origin");
   if (!origin) {
+    // Geen Origin = geen browser-call — browsers sturen 'm altijd op
+    // cross-origin POSTs. Dit pad raken alleen curl/server-tools, dus
+    // CORS-headers zijn hier zinloos.
     logIngest({ project_id: null, origin: null, status: 403, error_code: "no_origin" });
     return NextResponse.json({ error: "no_origin" }, { status: 403 });
   }
 
+  // Vanaf hier moeten ALLE responses CORS-headers dragen — anders kan de
+  // widget-modal de error-body niet lezen en ziet de gebruiker een
+  // generieke "HTTP 400" zonder details.
   const body = await req.json().catch(() => null);
   const parsed = widgetIngestSchema.safeParse(body);
   if (!parsed.success) {
     logIngest({ project_id: null, origin, status: 400, error_code: "validation" });
     return NextResponse.json(
       { error: "validation", details: parsed.error.flatten() },
-      { status: 400 },
+      { status: 400, headers: corsHeaders(origin) },
     );
   }
 
@@ -73,13 +83,16 @@ export async function POST(req: Request) {
       status: 403,
       error_code: "origin_not_allowed",
     });
-    return NextResponse.json({ error: "origin_not_allowed" }, { status: 403 });
+    return NextResponse.json(
+      { error: "origin_not_allowed" },
+      { status: 403, headers: corsHeaders(origin) },
+    );
   }
 
   // Rate-limit pas ná de whitelist-check zodat we niet onbedoeld counters
   // ophogen voor random Origins die er sowieso niet door komen.
   const originHost = new URL(origin).hostname;
-  const rate = await rateLimitOrigin(originHost, WIDGET_RATE_LIMIT_PREFIXES.widget_ingest);
+  const rate = await rateLimitOrigin(originHost);
   if (!rate.success) {
     logIngest({
       project_id: parsed.data.project_id,
@@ -88,22 +101,14 @@ export async function POST(req: Request) {
       error_code: "rate_limited",
       rate_count: rate.count,
     });
+    const retryAfter = secondsUntilNextHour();
+    const headers = corsHeaders(origin);
+    headers.set("Retry-After", String(retryAfter));
+    headers.set("X-RateLimit-Limit", String(rate.limit));
+    headers.set("X-RateLimit-Remaining", "0");
     return NextResponse.json(
-      {
-        error: "rate_limited",
-        retry_after_seconds: secondsUntilNextHour(),
-        limit_per_hour: rate.limit,
-      },
-      {
-        status: 429,
-        headers: (() => {
-          const h = corsHeaders(origin);
-          h.set("Retry-After", String(secondsUntilNextHour()));
-          h.set("X-RateLimit-Limit", String(rate.limit));
-          h.set("X-RateLimit-Remaining", "0");
-          return h;
-        })(),
-      },
+      { error: "rate_limited", retry_after_seconds: retryAfter, limit_per_hour: rate.limit },
+      { status: 429, headers },
     );
   }
 
