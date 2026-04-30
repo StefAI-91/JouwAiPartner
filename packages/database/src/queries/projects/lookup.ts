@@ -92,3 +92,50 @@ export async function getProjectByUserbackProjectId(
   }
   return data ? { id: data.id as string } : null;
 }
+
+/**
+ * List the linked `meeting_id`s for a project (uit `meeting_projects`).
+ * Mirror van `listMeetingProjectIds`; gebruikt door de summary-pipeline om
+ * alle meetings te bepalen die bij een project horen.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listProjectMeetingIds(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meeting_projects")
+    .select("meeting_id")
+    .eq("project_id", projectId);
+
+  if (error) {
+    console.error("[listProjectMeetingIds]", error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => r.meeting_id as string);
+}
+
+/**
+ * List the linked `email_id`s for a project (uit `email_projects`). Gebruikt
+ * door de summary-pipeline naast `listProjectMeetingIds`.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listProjectEmailIds(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("email_projects")
+    .select("email_id")
+    .eq("project_id", projectId);
+
+  if (error) {
+    console.error("[listProjectEmailIds]", error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => r.email_id as string);
+}

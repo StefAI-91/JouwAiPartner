@@ -1,4 +1,16 @@
 import { getAdminClient } from "@repo/database/supabase/admin";
+import {
+  listMeetingProjectIds,
+  getMeetingOrganizationId,
+} from "@repo/database/queries/meetings/metadata";
+import {
+  listMeetingExtractionOrgIds,
+  listEmailExtractionOrgIds,
+} from "@repo/database/queries/extractions";
+import {
+  listEmailProjectIds,
+  getEmailOrganizationId,
+} from "@repo/database/queries/emails/pipeline";
 import { generateProjectSummaries } from "./project";
 import { generateOrgSummaries } from "./org";
 
@@ -10,45 +22,14 @@ export async function triggerSummariesForMeeting(meetingId: string): Promise<voi
   console.info(`[triggerSummaries] Starting for meeting ${meetingId}`);
   const db = getAdminClient();
 
-  // Get project IDs linked to this meeting
-  const { data: projectLinks, error: plError } = await db
-    .from("meeting_projects")
-    .select("project_id")
-    .eq("meeting_id", meetingId);
+  const projectIdsRaw = await listMeetingProjectIds(meetingId, db);
+  const extractionOrgIds = await listMeetingExtractionOrgIds(meetingId, db);
+  const meetingOrgId = await getMeetingOrganizationId(meetingId, db);
 
-  if (plError) {
-    console.error("[triggerSummaries] Failed to get project links:", plError.message);
-  }
-
-  // Get organization IDs from extractions of this meeting
-  const { data: orgExtractions, error: oeError } = await db
-    .from("extractions")
-    .select("organization_id")
-    .eq("meeting_id", meetingId)
-    .not("organization_id", "is", null);
-
-  if (oeError) {
-    console.error("[triggerSummaries] Failed to get org extractions:", oeError.message);
-  }
-
-  const projectIds = [...new Set((projectLinks ?? []).map((l) => l.project_id))];
-  const orgIds = [
-    ...new Set(
-      (orgExtractions ?? [])
-        .map((e) => e.organization_id)
-        .filter((id): id is string => id !== null),
-    ),
-  ];
-
-  // Also check the meeting itself for organization_id
-  const { data: meeting } = await db
-    .from("meetings")
-    .select("organization_id")
-    .eq("id", meetingId)
-    .single();
-
-  if (meeting?.organization_id && !orgIds.includes(meeting.organization_id)) {
-    orgIds.push(meeting.organization_id);
+  const projectIds = [...new Set(projectIdsRaw)];
+  const orgIds = [...extractionOrgIds];
+  if (meetingOrgId && !orgIds.includes(meetingOrgId)) {
+    orgIds.push(meetingOrgId);
   }
 
   console.info(
@@ -62,7 +43,6 @@ export async function triggerSummariesForMeeting(meetingId: string): Promise<voi
     return;
   }
 
-  // Generate summaries in parallel
   const results = await Promise.allSettled([
     ...projectIds.map((id) => generateProjectSummaries(id, [meetingId])),
     ...orgIds.map((id) => generateOrgSummaries(id, [meetingId])),
@@ -87,44 +67,15 @@ export async function triggerSummariesForEmail(emailId: string): Promise<void> {
   console.info(`[triggerSummariesForEmail] Starting for email ${emailId}`);
   const db = getAdminClient();
 
-  // Get project IDs linked to this email
-  const { data: projectLinks, error: plError } = await db
-    .from("email_projects")
-    .select("project_id")
-    .eq("email_id", emailId);
+  const projectIdsRaw = await listEmailProjectIds(emailId, db);
+  const emailOrgId = await getEmailOrganizationId(emailId, db);
+  const extractionOrgIds = await listEmailExtractionOrgIds(emailId, db);
 
-  if (plError) {
-    console.error("[triggerSummariesForEmail] Failed to get project links:", plError.message);
-  }
-
-  // Get organization ID from the email itself
-  const { data: email } = await db
-    .from("emails")
-    .select("organization_id")
-    .eq("id", emailId)
-    .single();
-
-  const projectIds = [...new Set((projectLinks ?? []).map((l) => l.project_id))];
+  const projectIds = [...new Set(projectIdsRaw)];
   const orgIds: string[] = [];
-  if (email?.organization_id) {
-    orgIds.push(email.organization_id);
-  }
-
-  // Also check email_extractions for organization_id
-  const { data: emailExtractions, error: eeError } = await db
-    .from("email_extractions")
-    .select("organization_id")
-    .eq("email_id", emailId)
-    .not("organization_id", "is", null);
-
-  if (eeError) {
-    console.error("[triggerSummariesForEmail] Failed to get org extractions:", eeError.message);
-  }
-
-  for (const ex of emailExtractions ?? []) {
-    if (ex.organization_id && !orgIds.includes(ex.organization_id)) {
-      orgIds.push(ex.organization_id);
-    }
+  if (emailOrgId) orgIds.push(emailOrgId);
+  for (const id of extractionOrgIds) {
+    if (!orgIds.includes(id)) orgIds.push(id);
   }
 
   console.info(
@@ -138,7 +89,6 @@ export async function triggerSummariesForEmail(emailId: string): Promise<void> {
     return;
   }
 
-  // Generate summaries in parallel
   const results = await Promise.allSettled([
     ...projectIds.map((id) => generateProjectSummaries(id)),
     ...orgIds.map((id) => generateOrgSummaries(id)),

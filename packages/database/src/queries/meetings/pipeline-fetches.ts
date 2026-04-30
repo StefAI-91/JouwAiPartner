@@ -166,6 +166,42 @@ export async function getMeetingExtractionsBatch(
   return result;
 }
 
+export interface VerifiedMeetingForSummary {
+  id: string;
+  title: string | null;
+  date: string | null;
+  ai_briefing: string | null;
+  summary: string | null;
+  meeting_type: string | null;
+}
+
+/**
+ * List verified meetings by id, ordered by date desc, with the fields the
+ * project summary pipeline needs (title/date/ai_briefing/summary/meeting_type).
+ * Filtert non-verified meetings uit de selectie.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listVerifiedMeetingsForSummary(
+  meetingIds: string[],
+  client?: SupabaseClient,
+): Promise<VerifiedMeetingForSummary[]> {
+  if (meetingIds.length === 0) return [];
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("meetings")
+    .select("id, title, date, ai_briefing, summary, meeting_type")
+    .in("id", meetingIds)
+    .eq("verification_status", "verified")
+    .order("date", { ascending: false });
+
+  if (error) {
+    console.error("[listVerifiedMeetingsForSummary]", error.message);
+    return [];
+  }
+  return (data ?? []) as VerifiedMeetingForSummary[];
+}
+
 export interface MeetingForBatchSegmentation {
   id: string;
   title: string;

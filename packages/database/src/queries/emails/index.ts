@@ -40,5 +40,9 @@ export {
   getEmailForPipelineInput,
   listEmailsForReclassify,
   getUnprocessedEmails,
+  listEmailProjectIds,
+  getEmailOrganizationId,
+  listVerifiedEmailsForSummary,
   type EmailForPipelineInput,
+  type VerifiedEmailForSummary,
 } from "./pipeline";
