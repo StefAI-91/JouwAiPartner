@@ -26,3 +26,16 @@ export const revokeProjectClientSchema = z.object({
 });
 
 export type RevokeProjectClientInput = z.input<typeof revokeProjectClientSchema>;
+
+/**
+ * Grant een bestaand teamlid (role='member' of 'admin') portal-toegang tot
+ * een specifiek project. PR-024: member kiest hier zonder rol-wijziging een
+ * project waarop hij in de portal kan meekijken — geen invite-mail, geen
+ * profiel-creatie. Caller moet admin zijn (zie `requireAdminInAction`).
+ */
+export const grantMemberPortalAccessSchema = z.object({
+  profileId: zUuid,
+  projectId: zUuid,
+});
+
+export type GrantMemberPortalAccessInput = z.input<typeof grantMemberPortalAccessSchema>;

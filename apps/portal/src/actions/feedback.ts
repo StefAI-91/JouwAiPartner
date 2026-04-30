@@ -29,18 +29,25 @@ export async function submitFeedback(input: unknown): Promise<SubmitFeedbackResu
     };
   }
 
-  const { project_id, title, description, type } = parsed.data;
+  const { project_id, title, description, type, source_metadata } = parsed.data;
 
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) return { error: "Niet ingelogd" };
-  if (profile.role !== "admin" && profile.role !== "client") {
-    return { error: "Geen toegang tot het portaal" };
-  }
 
+  // PR-024: members met portal_project_access kunnen ook feedback submitten;
+  // hasPortalProjectAccess is de single source of truth voor portal-toegang.
   const allowed = await hasPortalProjectAccess(profile.id, project_id, supabase);
   if (!allowed) return { error: "Geen toegang tot dit project" };
+
+  // PR-021: bug-hint-velden komen optioneel binnen via source_metadata. Lege
+  // strings filteren we hier zodat de DB geen `{"browser": ""}`-rijen krijgt.
+  const cleanedHints = source_metadata
+    ? Object.fromEntries(
+        Object.entries(source_metadata).filter(([, v]) => typeof v === "string" && v.trim() !== ""),
+      )
+    : {};
 
   const result = await insertIssue(
     {
@@ -54,6 +61,7 @@ export async function submitFeedback(input: unknown): Promise<SubmitFeedbackResu
       reporter_email: profile.email,
       source_metadata: {
         submitted_at: new Date().toISOString(),
+        ...cleanedHints,
       },
     },
     supabase,

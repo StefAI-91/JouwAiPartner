@@ -128,6 +128,18 @@ Totaal: 72 requirements.
 | APP-P04 | Tailwind CSS v4 setup (zelfde als cockpit/devhub)     | portal-mvp.md:104 (APP-P04) | CP-002 |
 | APP-P05 | Middleware met requireRole: 'client'                  | portal-mvp.md:106 (APP-P06) | CP-002 |
 
+## PR-024 — Member portal-toegang
+
+| ID       | Beschrijving                                                                                                                                                                    | Sprint |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| SEC-220  | Portal middleware accepteert `member` als toegestane rol (naast `admin` en `client`).                                                                                           | PR-024 |
+| SEC-221  | `listPortalProjects` returnt voor members alleen projecten met een rij in `portal_project_access` (zelfde branch als clients). Member zonder rijen → lege lijst, geen redirect. | PR-024 |
+| SEC-222  | `hasPortalProjectAccess` returnt `true` voor een member desda er een rij in `portal_project_access` voor `(profileId, projectId)` bestaat.                                      | PR-024 |
+| SEC-223  | Cockpit "Portaltoegang"-sectie toont clients én members met role-badge; admin kan een member toevoegen of revoken zonder zijn `profiles.role` te wijzigen.                      | PR-024 |
+| SEC-224  | `inviteProjectClientAction` blokkeert members niet meer; bij een bestaande member-email wordt portal-access idempotent gegrant zonder rol-wijziging.                            | PR-024 |
+| FUNC-220 | Empty state in portal: een member zonder access-rijen ziet de standaard "geen projecten" pagina (geen 403, geen redirect-loop).                                                 | PR-024 |
+| EDGE-220 | RLS-test: een member met `portal_project_access` voor project X kan portal-data van X opvragen (`NOT is_client OR has_portal_access` blijft consistent na de wijziging).        | PR-024 |
+
 ## Niet-functionele eisen (bewust uitgesteld)
 
 | ID      | Beschrijving                                               | Bron              | Sprint |
@@ -158,6 +170,7 @@ Totaal: 72 requirements.
 | CP-003 | FUNC-P04, FUNC-P05, FUNC-P06, FUNC-P19, UI-P01, UI-P02, UI-P03, UI-P04, UI-P05, UI-P06, UI-P09, UI-P12, PERF-P01, EDGE-P01, EDGE-P02                                                        |
 | CP-004 | FUNC-P07, FUNC-P08, FUNC-P09, FUNC-P10, FUNC-P11, FUNC-P12, FUNC-P13, FUNC-P14, RULE-P02, RULE-P03, RULE-P05, UI-P08, EDGE-P06, EDGE-P07                                                    |
 | CP-005 | FUNC-P15, FUNC-P16, FUNC-P17, FUNC-P18, RULE-P06, RULE-P07, SEC-P05, UI-P10, UI-P11                                                                                                         |
+| PR-024 | SEC-220, SEC-221, SEC-222, SEC-223, SEC-224, FUNC-220, EDGE-220                                                                                                                             |
 
 ### Niet-gedekte requirements
 

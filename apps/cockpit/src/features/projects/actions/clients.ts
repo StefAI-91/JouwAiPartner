@@ -9,8 +9,10 @@ import { getProfileRole } from "@repo/database/queries/team";
 import {
   inviteProjectClientSchema,
   revokeProjectClientSchema,
+  grantMemberPortalAccessSchema,
   type InviteProjectClientInput,
   type RevokeProjectClientInput,
+  type GrantMemberPortalAccessInput,
 } from "@repo/database/validations/portal-access";
 
 /**
@@ -27,16 +29,15 @@ function invitedRedirectTo(): string {
 }
 
 /**
- * Invite een klant tot een specifiek project.
+ * Invite een persoon (client of bestaand teamlid) tot een specifiek project.
  *
  * Vier paden afhankelijk van of de email al bekend is:
  * - Onbekend → invite + create profile met role='client' + grant access
  * - Bestaande client → grant access (idempotent — `grantPortalAccess` upsert)
  * - Bestaande admin → grant access (geen rol-wijziging; admins zien al alles
  *   via preview-modus, een access-rij erbij is harmless)
- * - Bestaande member → error: "is een teamlid". Member→client migratie is
- *   bewust geen automatisch pad — moet via /admin/team gebeuren zodat de
- *   admin expliciet kiest dat de gebruiker geen interne toegang meer heeft.
+ * - Bestaande member → grant access (PR-024: geen rol-wijziging; member
+ *   houdt zijn interne toegang en krijgt portal-toegang erbij)
  */
 export async function inviteProjectClientAction(
   input: InviteProjectClientInput,
@@ -64,14 +65,11 @@ export async function inviteProjectClientAction(
   }
 
   if (existingUserId) {
-    const role = await getProfileRole(existingUserId, admin);
-    if (role === "member") {
-      return {
-        error:
-          "Deze gebruiker is een teamlid. Wijzig zijn rol via Team-beheer voordat je portaal-toegang verleent.",
-      };
-    }
-    // admin of client → grant idempotent
+    // Rol-lookup is nu alleen nog informatief — bij member/admin laten we de
+    // rol staan en grant idempotent access. Dat houdt de cockpit/devhub
+    // toegang van members intact (PR-024).
+    await getProfileRole(existingUserId, admin);
+
     const grantResult = await grantPortalAccess(existingUserId, projectId, admin);
     if ("error" in grantResult) return { error: grantResult.error };
 
@@ -103,10 +101,46 @@ export async function inviteProjectClientAction(
 }
 
 /**
- * Trek de portaal-toegang van één client tot één project in. Profile blijft
- * staan (attributie); andere projecten waar de client toegang toe heeft
- * worden niet geraakt. Niet idempotent in de zin dat tweede call een geen-op
- * is, maar `revokePortalAccess` is wel idempotent op DB-niveau.
+ * PR-024: geef een bestaand teamlid portal-toegang tot een project zonder
+ * een invite-mail te sturen of de rol te wijzigen. Member behoudt
+ * cockpit/devhub toegang en kan voortaan vanuit de portal-tab meekijken
+ * met de klant in dezelfde view-context.
+ *
+ * Verwacht een bestaande `profile_id` (member of admin). Idempotent op
+ * DB-niveau via `grantPortalAccess`.
+ */
+export async function grantMemberPortalAccessAction(
+  input: GrantMemberPortalAccessInput,
+): Promise<{ success: true; data: { profileId: string } } | { error: string }> {
+  const auth = await requireAdminInAction();
+  if ("error" in auth) return { error: auth.error };
+
+  const parsed = grantMemberPortalAccessSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
+  }
+
+  const admin = getAdminClient();
+  const { profileId, projectId } = parsed.data;
+
+  const role = await getProfileRole(profileId, admin);
+  if (role === null) return { error: "Onbekend profiel" };
+  if (role === "client") {
+    return { error: "Dit is een klant — gebruik de invite-flow met email." };
+  }
+
+  const grantResult = await grantPortalAccess(profileId, projectId, admin);
+  if ("error" in grantResult) return { error: grantResult.error };
+
+  revalidatePath(`/projects/${projectId}`);
+  return { success: true, data: { profileId } };
+}
+
+/**
+ * Trek de portaal-toegang van één persoon (klant of teamlid) tot één project
+ * in. Profile blijft staan (attributie); andere projecten waar de persoon
+ * toegang toe heeft worden niet geraakt. Niet idempotent in de zin dat tweede
+ * call een geen-op is, maar `revokePortalAccess` is wel idempotent op DB-niveau.
  */
 export async function revokeProjectClientAction(
   input: RevokeProjectClientInput,

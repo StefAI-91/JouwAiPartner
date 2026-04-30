@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 592 |
-| Exported functions/constants | 896 |
-| Exported types/interfaces | 375 |
+| Exported functions/constants | 897 |
+| Exported types/interfaces | 377 |
 | Cross-package imports | 596 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -209,11 +209,12 @@
 - `getIssueById()`
 - `getIssueCounts()`
 - `getWeeklyIssueIntake()`
+- `listClientIssuesForOrg()`
 - `countCriticalUnassigned()`
 - `ISSUE_SORTS`
 - `ISSUE_SELECT`
 
-**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`, `WeeklyIssueIntake`
+**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`, `WeeklyIssueIntake`, `ClientIssueRow`
 
 ### `queries/meetings/core.ts`
 
@@ -353,10 +354,10 @@
 
 **Exports:**
 - `listPortalProjects()`
-- `listPortalProjectClients()`
+- `listPortalProjectAssignees()`
 - `hasPortalProjectAccess()`
 
-**Types:** `PortalProject`, `ProjectClient`
+**Types:** `PortalProject`, `PortalAssigneeRole`, `ProjectAssignee`
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin

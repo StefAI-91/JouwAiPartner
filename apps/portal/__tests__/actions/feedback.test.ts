@@ -51,17 +51,37 @@ describe("submitFeedback", () => {
     expect(insertIssue).not.toHaveBeenCalled();
   });
 
-  it("blokkeert non-client/non-admin profielen", async () => {
+  it("blokkeert profielen zonder portal_project_access", async () => {
+    // PR-024: members en clients zonder access-rij worden geblokkeerd door
+    // hasPortalProjectAccess (niet meer door een rol-check).
     vi.mocked(getCurrentProfile).mockResolvedValue({
       id: "user-2",
       email: "intern@jouwai.nl",
       role: "member",
     } as never);
+    vi.mocked(hasPortalProjectAccess).mockResolvedValue(false);
 
     const result = await submitFeedback(VALID_INPUT);
 
-    expect(result).toEqual({ error: "Geen toegang tot het portaal" });
-    expect(hasPortalProjectAccess).not.toHaveBeenCalled();
+    expect(result).toEqual({ error: "Geen toegang tot dit project" });
+    expect(hasPortalProjectAccess).toHaveBeenCalled();
+  });
+
+  it("PR-024: member met portal_project_access mag feedback submitten", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue({
+      id: "user-3",
+      email: "stef@jouwai.nl",
+      role: "member",
+    } as never);
+    vi.mocked(hasPortalProjectAccess).mockResolvedValue(true);
+    vi.mocked(insertIssue).mockResolvedValue({
+      data: { id: "issue-99", issue_number: 99 },
+    } as never);
+
+    const result = await submitFeedback(VALID_INPUT);
+
+    expect(result).toEqual({ success: true, issueId: "issue-99", issueNumber: 99 });
+    expect(insertIssue).toHaveBeenCalled();
   });
 
   it("inserts issue met source='portal' en revalidate paths", async () => {
@@ -81,5 +101,47 @@ describe("submitFeedback", () => {
     expect(vi.mocked(revalidatePath).mock.calls.flat()).toContain(
       `/projects/${VALID_INPUT.project_id}`,
     );
+  });
+
+  it("PR-021: bug-hint-velden landen in source_metadata, lege strings worden gefilterd", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue(CLIENT_PROFILE as never);
+    vi.mocked(hasPortalProjectAccess).mockResolvedValue(true);
+    vi.mocked(insertIssue).mockResolvedValue({
+      data: { id: "issue-2", issue_number: 43 },
+    } as never);
+
+    await submitFeedback({
+      ...VALID_INPUT,
+      source_metadata: {
+        browser: "Chrome 120",
+        device: "",
+        steps_to_reproduce: "1. Login\n2. Klik op X",
+        on_behalf_of_user: "  ", // whitespace-only telt als leeg
+      },
+    });
+
+    const insertedRow = vi.mocked(insertIssue).mock.calls[0][0];
+    expect(insertedRow.source_metadata).toMatchObject({
+      browser: "Chrome 120",
+      steps_to_reproduce: "1. Login\n2. Klik op X",
+    });
+    // Lege en whitespace-only velden mogen niet in de DB landen.
+    expect(insertedRow.source_metadata).not.toHaveProperty("device");
+    expect(insertedRow.source_metadata).not.toHaveProperty("on_behalf_of_user");
+    // submitted_at blijft toegevoegd door de action.
+    expect(insertedRow.source_metadata).toHaveProperty("submitted_at");
+  });
+
+  it("PR-021: zonder source_metadata blijft alleen submitted_at over", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue(CLIENT_PROFILE as never);
+    vi.mocked(hasPortalProjectAccess).mockResolvedValue(true);
+    vi.mocked(insertIssue).mockResolvedValue({
+      data: { id: "issue-3", issue_number: 44 },
+    } as never);
+
+    await submitFeedback(VALID_INPUT);
+
+    const insertedRow = vi.mocked(insertIssue).mock.calls[0][0];
+    expect(Object.keys(insertedRow.source_metadata ?? {})).toEqual(["submitted_at"]);
   });
 });

@@ -1,4 +1,8 @@
-import { listPortalProjectClients } from "@repo/database/queries/portal/access";
+import {
+  listPortalProjectAssignees,
+  type PortalAssigneeRole,
+} from "@repo/database/queries/portal/access";
+import { listTeamMembers } from "@repo/database/queries/team";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { Users } from "lucide-react";
 import { InviteClientDialog } from "./invite-client-dialog";
@@ -26,50 +30,79 @@ function initials(email: string, fullName: string | null): string {
   return email.slice(0, 2).toUpperCase();
 }
 
+const ROLE_BADGE: Record<PortalAssigneeRole, { label: string; className: string }> = {
+  client: { label: "Klant", className: "bg-primary/10 text-primary" },
+  member: { label: "Team", className: "bg-emerald-100 text-emerald-700" },
+  admin: { label: "Admin", className: "bg-amber-100 text-amber-700" },
+};
+
 export async function ProjectClientsSection({ projectId }: { projectId: string }) {
   // Service-role client gebruikt voor de auth.users join in
-  // listPortalProjectClients. Sectie is admin-only — caller (project-detail
+  // listPortalProjectAssignees. Sectie is admin-only — caller (project-detail
   // page) draait al onder admin guard.
-  const clients = await listPortalProjectClients(projectId, getAdminClient());
+  const admin = getAdminClient();
+  const [assignees, teamMembers] = await Promise.all([
+    listPortalProjectAssignees(projectId, admin),
+    listTeamMembers(admin),
+  ]);
+
+  // Filter de team-members die nog geen portal-access voor dit project hebben.
+  const assignedIds = new Set(assignees.map((a) => a.profile_id));
+  const teamCandidates = teamMembers
+    .filter((m) => !assignedIds.has(m.id))
+    .map((m) => ({ id: m.id, email: m.email, full_name: m.full_name, role: m.role }));
 
   return (
     <section className="rounded-2xl border border-border/40 bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Users className="size-4 text-muted-foreground" />
-          <h2 className="text-base font-semibold">Klanten met portaltoegang</h2>
-          <span className="text-sm text-muted-foreground">{clients.length}</span>
+          <h2 className="text-base font-semibold">Portaltoegang</h2>
+          <span className="text-sm text-muted-foreground">{assignees.length}</span>
         </div>
-        <InviteClientDialog projectId={projectId} />
+        <InviteClientDialog projectId={projectId} teamCandidates={teamCandidates} />
       </div>
 
-      {clients.length === 0 ? (
+      {assignees.length === 0 ? (
         <p className="py-4 text-sm text-muted-foreground">
-          Nog geen klanten uitgenodigd. Nodig iemand uit om dit project via het portaal te kunnen
-          volgen.
+          Nog niemand uitgenodigd. Nodig een klant uit of geef een teamlid toegang.
         </p>
       ) : (
         <ul className="divide-y divide-border/40">
-          {clients.map((c) => (
-            <li
-              key={c.profile_id}
-              className="flex items-center gap-4 py-3 text-sm first:pt-0 last:pb-0"
-            >
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold uppercase text-muted-foreground">
-                {initials(c.email, c.full_name)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-medium">{c.full_name || c.email}</div>
-                {c.full_name && (
-                  <div className="truncate text-xs text-muted-foreground">{c.email}</div>
-                )}
-              </div>
-              <div className="hidden text-xs text-muted-foreground md:block">
-                {formatLastSignIn(c.last_sign_in_at)}
-              </div>
-              <RevokeClientButton profileId={c.profile_id} projectId={projectId} email={c.email} />
-            </li>
-          ))}
+          {assignees.map((a) => {
+            const badge = ROLE_BADGE[a.role] ?? ROLE_BADGE.client;
+            return (
+              <li
+                key={a.profile_id}
+                className="flex items-center gap-4 py-3 text-sm first:pt-0 last:pb-0"
+              >
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold uppercase text-muted-foreground">
+                  {initials(a.email, a.full_name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium">{a.full_name || a.email}</span>
+                    <span
+                      className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${badge.className}`}
+                    >
+                      {badge.label}
+                    </span>
+                  </div>
+                  {a.full_name && (
+                    <div className="truncate text-xs text-muted-foreground">{a.email}</div>
+                  )}
+                </div>
+                <div className="hidden text-xs text-muted-foreground md:block">
+                  {formatLastSignIn(a.last_sign_in_at)}
+                </div>
+                <RevokeClientButton
+                  profileId={a.profile_id}
+                  projectId={projectId}
+                  email={a.email}
+                />
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

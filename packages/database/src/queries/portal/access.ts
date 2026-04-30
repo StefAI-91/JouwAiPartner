@@ -17,8 +17,10 @@ const PORTAL_PROJECT_COLS = "id, name, project_key, organization_id, status";
  *
  * - Admin → alle projecten (preview-modus zodat admins het portaal kunnen
  *   bekijken vanuit intern perspectief, analoog aan `listAccessibleProjectIds`).
- * - Client → alleen de projecten met een rij in `portal_project_access`.
- * - Anders (member/onbekend) → lege lijst.
+ * - Client of member → alleen de projecten met een rij in `portal_project_access`.
+ *   Members zonder rijen krijgen een lege lijst (geen redirect — ze blijven
+ *   op de portal-empty-state). Zie PR-024 (SEC-221).
+ * - Anonieme/onbekende user → lege lijst.
  */
 export async function listPortalProjects(
   profileId: string,
@@ -54,26 +56,29 @@ export async function listPortalProjects(
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export interface ProjectClient {
+export type PortalAssigneeRole = "client" | "member" | "admin";
+
+export interface ProjectAssignee {
   profile_id: string;
   email: string;
   full_name: string | null;
+  role: PortalAssigneeRole;
   granted_at: string;
   last_sign_in_at: string | null;
 }
 
 /**
- * List clients met portal-access voor één project. Gebruikt vanuit cockpit
- * project-detail pagina om de "Klanten" sectie te vullen. Admin-only — caller
- * moet access enforcen voor invocatie.
+ * List alle profielen met portal-access voor één project — clients én members.
+ * Gebruikt vanuit cockpit project-detail om de "Portaltoegang" sectie te
+ * vullen. Admin-only — caller moet access enforcen vóór invocatie.
  *
  * `last_sign_in_at` komt uit `auth.users` en vereist daarom de service-role
  * client; default-fallback naar admin-client wordt expliciet gedaan.
  */
-export async function listPortalProjectClients(
+export async function listPortalProjectAssignees(
   projectId: string,
   client?: SupabaseClient,
-): Promise<ProjectClient[]> {
+): Promise<ProjectAssignee[]> {
   if (!projectId) return [];
 
   const db = client ?? getAdminClient();
@@ -84,27 +89,23 @@ export async function listPortalProjectClients(
     .eq("project_id", projectId);
 
   if (error) {
-    console.error("[listPortalProjectClients] Error:", error.message);
+    console.error("[listPortalProjectAssignees] Error:", error.message);
     return [];
   }
 
   type Row = {
     profile_id: string;
     created_at: string;
-    profiles: { email: string; full_name: string | null; role: string } | null;
+    profiles: { email: string; full_name: string | null; role: PortalAssigneeRole } | null;
   };
 
   const rows = (data ?? []) as unknown as Row[];
 
-  // Defense in depth: admins kunnen impliciet portal-toegang hebben zonder rij,
-  // maar als er per ongeluk een access-rij voor een non-client bestaat tonen we
-  // hem niet — anders zou een member tussen klanten verschijnen.
-  const clientRows = rows.filter(
-    (row): row is Row & { profiles: NonNullable<Row["profiles"]> } =>
-      row.profiles !== null && row.profiles.role === "client",
+  const assignees = rows.filter(
+    (row): row is Row & { profiles: NonNullable<Row["profiles"]> } => row.profiles !== null,
   );
 
-  if (clientRows.length === 0) return [];
+  if (assignees.length === 0) return [];
 
   // Verrijk met last_sign_in_at uit auth.users — alleen via service role
   // beschikbaar. Caller is verantwoordelijk voor admin-context (zie comment).
@@ -114,11 +115,12 @@ export async function listPortalProjectClients(
     (authList?.users ?? []).map((u) => [u.id, u.last_sign_in_at ?? null] as const),
   );
 
-  return clientRows
+  return assignees
     .map((row) => ({
       profile_id: row.profile_id,
       email: row.profiles.email,
       full_name: row.profiles.full_name,
+      role: row.profiles.role,
       granted_at: row.created_at,
       last_sign_in_at: lastSignInById.get(row.profile_id) ?? null,
     }))
@@ -128,8 +130,8 @@ export async function listPortalProjectClients(
 /**
  * Boolean check whether a user has portal access to a specific project.
  *
- * Admins krijgen altijd `true` (preview-modus). Clients via
- * `portal_project_access`. Overige rollen → `false`.
+ * Admins krijgen altijd `true` (preview-modus). Clients en members via
+ * `portal_project_access`. Onbekende user → `false`.
  */
 export async function hasPortalProjectAccess(
   profileId: string,
