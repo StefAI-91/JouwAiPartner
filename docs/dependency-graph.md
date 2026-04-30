@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 564 |
-| Exported functions/constants | 865 |
-| Exported types/interfaces | 354 |
+| Files scanned | 565 |
+| Exported functions/constants | 868 |
+| Exported types/interfaces | 356 |
 | Cross-package imports | 580 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -354,17 +354,26 @@
 **Depends on:**
 - `@repo/auth/access` → isAdmin
 
+### `queries/portal/briefing.ts`
+
+**Exports:**
+- `getProjectBriefingHeader()`
+- `listTopicsReadyToTest()`
+- `listTopicsAwaitingInput()`
+- `listWeeklyChangelog()`
+
+**Types:** `PortalBriefingHeader`, `BriefingTopic`, `ChangelogEntry`
+
 ### `queries/portal/core.ts`
 
 **Exports:**
 - `listPortalProjectsWithDetails()`
 - `getPortalProjectDashboard()`
-- `listRecentProjectIssues()`
 - `getProjectIssueCounts()`
 - `listPortalIssues()`
 - `getPortalIssue()`
 
-**Types:** `PortalStatusFilter`, `PortalIssueListFilters`, `PortalIssueCountFilters`, `PortalProjectWithDetails`, `PortalProjectDashboard`, `RecentPortalIssue`, `PortalIssueCounts`, `PortalIssue`
+**Types:** `PortalStatusFilter`, `PortalIssueListFilters`, `PortalIssueCountFilters`, `PortalProjectWithDetails`, `PortalProjectDashboard`, `PortalIssueCounts`, `PortalIssue`
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin

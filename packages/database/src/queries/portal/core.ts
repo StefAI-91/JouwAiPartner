@@ -186,39 +186,6 @@ export async function getPortalProjectDashboard(
   };
 }
 
-export interface RecentPortalIssue {
-  id: string;
-  issue_number: number;
-  title: string;
-  status: string;
-  updated_at: string;
-  created_at: string;
-}
-
-/**
- * Laatste N issues voor een project, gesorteerd op updated_at desc. Wordt
- * getoond in de recente-activiteit lijst op het portal dashboard.
- */
-export async function listRecentProjectIssues(
-  projectId: string,
-  limit: number,
-  client: SupabaseClient,
-): Promise<RecentPortalIssue[]> {
-  const { data, error } = await client
-    .from("issues")
-    .select("id, issue_number, title, status, updated_at, created_at")
-    .eq("project_id", projectId)
-    .order("updated_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error("[listRecentProjectIssues]", error.message);
-    return [];
-  }
-
-  return (data ?? []) as RecentPortalIssue[];
-}
-
 export type PortalIssueCounts = Record<PortalStatusKey, number>;
 
 /**

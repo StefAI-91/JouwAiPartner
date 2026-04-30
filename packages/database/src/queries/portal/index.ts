@@ -8,3 +8,4 @@
 export * from "./core";
 export * from "./access";
 export * from "./meetings";
+export * from "./briefing";
