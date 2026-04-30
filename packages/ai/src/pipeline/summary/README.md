@@ -4,17 +4,25 @@ AI-summarization pipelines rond de `summaries` tabel. Deur via `export *`.
 
 ## Bestanden
 
-| File                     | Wat                                                                        | Hoofdexports                                                                                                 |
-| ------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `index.ts`               | Deur                                                                       | —                                                                                                            |
-| `core.ts`                | Project- en org-summaries + trigger-helpers na approve (per meeting/email) | `generateProjectSummaries`, `generateOrgSummaries`, `triggerSummariesForMeeting`, `triggerSummariesForEmail` |
-| `weekly.ts`              | Wekelijkse summary over alle actieve projecten                             | `generateWeeklySummary`                                                                                      |
-| `management-insights.ts` | Management dashboard insights generator                                    | `generateManagementInsights`                                                                                 |
+| File                     | Wat                                                                       | Hoofdexports                                                                         |
+| ------------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `index.ts`               | Deur                                                                      | —                                                                                    |
+| `core.ts`                | Shared types + pure helpers (geen DB/AI calls)                            | `formatMeetingForSummary`, `formatEmailForSummary`, `buildTimelineStructuredContent` |
+| `project.ts`             | Project-summary generator (context + briefing)                            | `generateProjectSummaries`                                                           |
+| `org.ts`                 | Org-summary generator (context + briefing + timeline)                     | `generateOrgSummaries`                                                               |
+| `triggers.ts`            | Post-verification triggers per meeting/email — fan-out naar project + org | `triggerSummariesForMeeting`, `triggerSummariesForEmail`                             |
+| `weekly.ts`              | Wekelijkse summary over alle actieve projecten                            | `generateWeeklySummary`                                                              |
+| `management-insights.ts` | Management dashboard insights generator                                   | `generateManagementInsights`                                                         |
 
 ## Imports
 
 ```ts
-import { triggerSummariesForMeeting } from "@repo/ai/pipeline/summary/core";
+import { generateProjectSummaries } from "@repo/ai/pipeline/summary/project";
+import { generateOrgSummaries } from "@repo/ai/pipeline/summary/org";
+import {
+  triggerSummariesForMeeting,
+  triggerSummariesForEmail,
+} from "@repo/ai/pipeline/summary/triggers";
 import { generateWeeklySummary } from "@repo/ai/pipeline/summary/weekly";
 import { generateManagementInsights } from "@repo/ai/pipeline/summary/management-insights";
 ```

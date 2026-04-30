@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-04-29. Do not edit manually.
+> Auto-generated on 2026-04-30. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 545 |
-| Exported functions/constants | 845 |
-| Exported types/interfaces | 348 |
-| Cross-package imports | 564 |
+| Files scanned | 548 |
+| Exported functions/constants | 848 |
+| Exported types/interfaces | 350 |
+| Cross-package imports | 569 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -1617,19 +1617,11 @@
 ### `packages/ai/src/pipeline/summary/core.ts`
 
 **Exports:**
-- `generateProjectSummaries()`
-- `generateOrgSummaries()`
-- `triggerSummariesForMeeting()`
-- `triggerSummariesForEmail()`
+- `formatMeetingForSummary()`
+- `formatEmailForSummary()`
+- `buildTimelineStructuredContent()`
 
-**Depends on:**
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/summaries` → getLatestSummary
-- `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
-- `@repo/database/mutations/summaries` → createSummaryVersion
-
-**Internal deps:**
-- `../../agents/project-summarizer` → runProjectSummarizer, runOrgSummarizer
+**Types:** `FormattedMeetingForSummary`, `FormattedEmailForSummary`
 
 ### `packages/ai/src/pipeline/summary/management-insights.ts`
 
@@ -1643,6 +1635,48 @@
 
 **Internal deps:**
 - `../../agents/management-insights` → runManagementInsightsAgent
+
+### `packages/ai/src/pipeline/summary/org.ts`
+
+**Exports:**
+- `generateOrgSummaries()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/summaries` → getLatestSummary
+- `@repo/database/mutations/summaries` → createSummaryVersion
+
+**Internal deps:**
+- `../../agents/project-summarizer` → runOrgSummarizer
+- `./core` → formatMeetingForSummary, formatEmailForSummary, buildTimelineStructuredContent
+
+### `packages/ai/src/pipeline/summary/project.ts`
+
+**Exports:**
+- `generateProjectSummaries()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/queries/summaries` → getLatestSummary
+- `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
+- `@repo/database/mutations/summaries` → createSummaryVersion
+
+**Internal deps:**
+- `../../agents/project-summarizer` → runProjectSummarizer
+- `./core` → formatMeetingForSummary, formatEmailForSummary, buildTimelineStructuredContent
+
+### `packages/ai/src/pipeline/summary/triggers.ts`
+
+**Exports:**
+- `triggerSummariesForMeeting()`
+- `triggerSummariesForEmail()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+
+**Internal deps:**
+- `./project` → generateProjectSummaries
+- `./org` → generateOrgSummaries
 
 ### `packages/ai/src/pipeline/summary/weekly.ts`
 
@@ -2360,7 +2394,8 @@
 - `regenerateSummaryAction()`
 
 **Depends on:**
-- `@repo/ai/pipeline/summary/core` → generateProjectSummaries, generateOrgSummaries
+- `@repo/ai/pipeline/summary/project` → generateProjectSummaries
+- `@repo/ai/pipeline/summary/org` → generateOrgSummaries
 - `@repo/auth/helpers` → getAuthenticatedUser
 - `@repo/auth/access` → isAdmin
 
@@ -4055,10 +4090,10 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 13 | - | - | - | - | 13 |
-| AI Pipeline | 59 | - | - | - | - | 59 |
+| AI Pipeline | 63 | - | - | - | - | 63 |
 | AI Validations | 1 | - | - | - | - | 1 |
 | Auth | 4 | - | - | - | - | 4 |
-| Cockpit Server Actions | 28 | 12 | 13 | - | - | 53 |
+| Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 20 | 5 | - | 41 | - | 66 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
@@ -4243,7 +4278,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `createSummaryVersion()` | `packages/ai/src/pipeline/summary/core.ts`, `packages/ai/src/pipeline/summary/weekly.ts` |
+| `createSummaryVersion()` | `packages/ai/src/pipeline/summary/org.ts`, `packages/ai/src/pipeline/summary/project.ts`, `packages/ai/src/pipeline/summary/weekly.ts` |
 
 ### mutations/summaries/management-insights.ts
 
@@ -4439,7 +4474,7 @@ Which queries are used where across the codebase.
 | `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
 | `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
 | `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
-| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/core.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
+| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/project.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/meetings/regenerate.ts
 
@@ -4565,7 +4600,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary/core.ts` |
+| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary/org.ts`, `packages/ai/src/pipeline/summary/project.ts` |
 
 ### queries/summaries/management-insights.ts
 

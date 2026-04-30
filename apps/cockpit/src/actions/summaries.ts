@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { generateProjectSummaries, generateOrgSummaries } from "@repo/ai/pipeline/summary/core";
+import { generateProjectSummaries } from "@repo/ai/pipeline/summary/project";
+import { generateOrgSummaries } from "@repo/ai/pipeline/summary/org";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { isAdmin } from "@repo/auth/access";
 

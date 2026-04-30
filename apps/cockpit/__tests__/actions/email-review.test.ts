@@ -22,7 +22,7 @@ import { describeWithDb } from "../helpers/describe-with-db";
 
 vi.mock("next/cache", () => createNextCacheMock());
 vi.mock("@repo/database/supabase/server", () => createIntegrationServerMock());
-vi.mock("@repo/ai/pipeline/summary/core", () => ({
+vi.mock("@repo/ai/pipeline/summary/triggers", () => ({
   triggerSummariesForEmail: vi.fn(async () => {}),
 }));
 
