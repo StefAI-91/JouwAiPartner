@@ -15,6 +15,10 @@ export const portalFeedbackSchema = z.object({
     .min(10, "Beschrijving moet minstens 10 tekens zijn")
     .max(10000, "Beschrijving is te lang"),
   type: z.enum(ISSUE_TYPES),
+  // Optionele bug-context (PR-021): browser, device, steps_to_reproduce,
+  // on_behalf_of_user. Geen runtime-validatie van keys — caller filtert lege
+  // strings vóór doorzetten naar `source_metadata`.
+  source_metadata: z.record(z.string(), z.string()).optional(),
 });
 
 export type PortalFeedbackInput = z.infer<typeof portalFeedbackSchema>;
