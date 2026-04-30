@@ -14,8 +14,8 @@ describe("buildIssuesHref", () => {
   });
 
   it("voegt source-param toe", () => {
-    expect(buildIssuesHref(PROJECT, { source: "client" })).toBe(
-      "/projects/abc-123/issues?source=client",
+    expect(buildIssuesHref(PROJECT, { source: "portal_pm" })).toBe(
+      "/projects/abc-123/issues?source=portal_pm",
     );
   });
 
@@ -33,8 +33,8 @@ describe("buildIssuesHref", () => {
     expect(buildIssuesHref(PROJECT, { source: null, type: "feature_request" })).toBe(
       "/projects/abc-123/issues?type=feature_request",
     );
-    expect(buildIssuesHref(PROJECT, { source: "client", type: null })).toBe(
-      "/projects/abc-123/issues?source=client",
+    expect(buildIssuesHref(PROJECT, { source: "end_users", type: null })).toBe(
+      "/projects/abc-123/issues?source=end_users",
     );
   });
 });

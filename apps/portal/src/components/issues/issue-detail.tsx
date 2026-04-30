@@ -1,12 +1,27 @@
 import Link from "next/link";
-import { ArrowLeft, Inbox, Shield } from "lucide-react";
+import { ArrowLeft, Inbox, Shield, Users } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { formatDate, timeAgoDays } from "@repo/ui/format";
-import { resolvePortalSourceGroup } from "@repo/database/constants/issues";
+import {
+  resolvePortalSourceGroup,
+  type PortalSourceGroupKey,
+} from "@repo/database/constants/issues";
 import type { PortalIssue } from "@repo/database/queries/portal";
 import { IssueTypeBadge } from "./issue-type-badge";
 import { PortalStatusBadge } from "./portal-status-badge";
+
+const SOURCE_ICONS: Record<PortalSourceGroupKey, React.ComponentType<{ className?: string }>> = {
+  portal_pm: Inbox,
+  end_users: Users,
+  jaip: Shield,
+};
+
+const SOURCE_LABELS: Record<PortalSourceGroupKey, string> = {
+  portal_pm: "Mijn melding",
+  end_users: "Van gebruiker",
+  jaip: "JAIP-melding",
+};
 
 interface IssueDetailProps {
   projectId: string;
@@ -32,9 +47,8 @@ export function IssueDetail({ projectId, issue }: IssueDetailProps) {
   const heading = issue.client_title ?? issue.title;
   const body = issue.client_description ?? issue.description;
   const sourceGroup = resolvePortalSourceGroup(issue.source);
-  const isClient = sourceGroup === "client";
-  const SourceIcon = isClient ? Inbox : Shield;
-  const sourceLabel = isClient ? "Onze melding" : "JAIP-melding";
+  const SourceIcon = SOURCE_ICONS[sourceGroup];
+  const sourceLabel = SOURCE_LABELS[sourceGroup];
 
   return (
     <article className="flex flex-col gap-5">

@@ -8,27 +8,30 @@ import { PORTAL_SOURCE_GROUPS, resolvePortalSourceGroup } from "../../src/consta
 // tonen voor sources die de klant niet herkent.
 
 describe("PORTAL_SOURCE_GROUPS", () => {
-  it("definieert exact twee groepen: client en jaip", () => {
+  it("definieert drie groepen: portal_pm, end_users en jaip", () => {
     const keys = PORTAL_SOURCE_GROUPS.map((g) => g.key);
-    expect(keys).toEqual(["client", "jaip"]);
+    expect(keys).toEqual(["portal_pm", "end_users", "jaip"]);
   });
 
-  it("dekt portal/userback/jaip_widget onder client en manual/ai onder jaip", () => {
-    const client = PORTAL_SOURCE_GROUPS.find((g) => g.key === "client");
+  it("scheidt portal-PM van end-users en groepeert manual/ai onder jaip", () => {
+    const portalPm = PORTAL_SOURCE_GROUPS.find((g) => g.key === "portal_pm");
+    const endUsers = PORTAL_SOURCE_GROUPS.find((g) => g.key === "end_users");
     const jaip = PORTAL_SOURCE_GROUPS.find((g) => g.key === "jaip");
-    expect(client?.sources).toEqual(["portal", "userback", "jaip_widget"]);
+    expect(portalPm?.sources).toEqual(["portal"]);
+    // WG-004: jaip_widget hoort in dezelfde bucket als userback — beide zijn
+    // embedded feedback-knoppen op de client-app, niet door de PM ingediend.
+    expect(endUsers?.sources).toEqual(["userback", "jaip_widget"]);
     expect(jaip?.sources).toEqual(["manual", "ai"]);
   });
 });
 
 describe("resolvePortalSourceGroup", () => {
-  it("mapt portal, userback en jaip_widget naar 'client'", () => {
-    expect(resolvePortalSourceGroup("portal")).toBe("client");
-    expect(resolvePortalSourceGroup("userback")).toBe("client");
-    // WG-004 (WG-REQ-078): widget-feedback is door de klant zelf gemeld via
-    // de JAIP-eigen knop op zijn app — hoort in dezelfde bucket als portal
-    // en userback. Zonder deze mapping zou hij default op 'jaip' vallen.
-    expect(resolvePortalSourceGroup("jaip_widget")).toBe("client");
+  it("mapt portal naar 'portal_pm' en userback/jaip_widget naar 'end_users'", () => {
+    expect(resolvePortalSourceGroup("portal")).toBe("portal_pm");
+    expect(resolvePortalSourceGroup("userback")).toBe("end_users");
+    // WG-004 (WG-REQ-078): widget-feedback wordt via de JAIP-eigen knop op de
+    // client-app gemeld — eindgebruiker-categorie, niet PM-categorie.
+    expect(resolvePortalSourceGroup("jaip_widget")).toBe("end_users");
   });
 
   it("mapt manual en ai naar 'jaip'", () => {

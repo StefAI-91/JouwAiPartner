@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { Inbox, Shield } from "lucide-react";
+import { Inbox, Shield, Users } from "lucide-react";
 import { timeAgoDays } from "@repo/ui/format";
-import { resolvePortalSourceGroup } from "@repo/database/constants/issues";
+import {
+  resolvePortalSourceGroup,
+  type PortalSourceGroupKey,
+} from "@repo/database/constants/issues";
 import type { PortalIssue } from "@repo/database/queries/portal";
 import { IssueTypeBadge } from "./issue-type-badge";
 
@@ -10,6 +13,18 @@ const PRIORITY_DOT_CLASSES: Record<string, string> = {
   high: "bg-orange-500",
   medium: "bg-amber-400",
   low: "bg-muted-foreground/40",
+};
+
+const SOURCE_ICONS: Record<PortalSourceGroupKey, React.ComponentType<{ className?: string }>> = {
+  portal_pm: Inbox,
+  end_users: Users,
+  jaip: Shield,
+};
+
+const SOURCE_LABELS: Record<PortalSourceGroupKey, string> = {
+  portal_pm: "Mijn melding",
+  end_users: "Van gebruiker",
+  jaip: "JAIP-melding",
 };
 
 interface IssueCardProps {
@@ -21,14 +36,13 @@ interface IssueCardProps {
  * Compacte card binnen een bucketkolom. Toont de klant-vertaalde titel als
  * die er is (CP-007), valt anders terug op de interne titel (PRD §5.3).
  * De source-indicator is een subtiel icoon — clients zien zo of een melding
- * van henzelf komt of door JAIP is toegevoegd, zonder ruimte op te eten.
+ * van henzelf komt, van een eindgebruiker, of door JAIP is toegevoegd.
  */
 export function IssueCard({ projectId, issue }: IssueCardProps) {
   const heading = issue.client_title ?? issue.title;
   const sourceGroup = resolvePortalSourceGroup(issue.source);
-  const isClient = sourceGroup === "client";
-  const SourceIcon = isClient ? Inbox : Shield;
-  const sourceLabel = isClient ? "Onze melding" : "JAIP-melding";
+  const SourceIcon = SOURCE_ICONS[sourceGroup];
+  const sourceLabel = SOURCE_LABELS[sourceGroup];
   const dotClass = PRIORITY_DOT_CLASSES[issue.priority] ?? "bg-muted-foreground/40";
 
   return (

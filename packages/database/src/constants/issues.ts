@@ -164,17 +164,23 @@ export const PORTAL_STATUS_LABELS: Record<PortalStatusKey, PortalStatusLabel> =
 
 // ── Portal-specifieke source-groepering ──
 //
-// Het portal toont issues niet per ruwe `source` (portal/userback/manual/ai)
-// maar in twee buckets: "wat de klant zelf meldde" vs "wat JAIP toevoegde".
-// Eén bron van waarheid hier zodat zowel de portal-UI als toekomstige
-// portal-queries (CP-008) dezelfde mapping gebruiken.
+// Het portal toont issues niet per ruwe `source` maar in drie buckets:
+//   - portal_pm  → wat de klant-PM zelf indient via het portal-formulier
+//   - end_users  → wat eindgebruikers indienen via embedded widgets
+//                  (Userback óf JAIP-widget op de client-app)
+//   - jaip       → wat JAIP intern aanmaakt (handmatig of door AI)
+//
+// De PM ziet onder "Mijn feedback" alleen `portal_pm`; eindgebruiker-feedback
+// landt via topic-curatie in de Roadmap, niet als ruwe ticket-stroom.
+//
+// `jaip_widget` (WG-004) hoort bij `end_users`: dezelfde mentale categorie
+// als userback (embedded feedback-knop op de client-app, niet door de PM
+// zelf ingediend). Zonder deze mapping zou widget-feedback default op
+// 'jaip' vallen — verkeerde bucket voor eindgebruiker-feedback.
 
 export const PORTAL_SOURCE_GROUPS = [
-  // 'jaip_widget' is door de klant zelf gemelde feedback via de JAIP-eigen
-  // feedback-knop op zijn app — hoort in dezelfde bucket als portal/userback
-  // (CP-006/WG-004). Zonder deze mapping zou widget-feedback default op
-  // 'jaip' vallen — verkeerde bucket voor klant-zelf-gemelde feedback.
-  { key: "client", label: "Onze meldingen", sources: ["portal", "userback", "jaip_widget"] },
+  { key: "portal_pm", label: "Mijn meldingen", sources: ["portal"] },
+  { key: "end_users", label: "Van gebruikers", sources: ["userback", "jaip_widget"] },
   { key: "jaip", label: "JAIP-meldingen", sources: ["manual", "ai"] },
 ] as const;
 

@@ -64,17 +64,22 @@ describe("IssueDetail", () => {
     expect(screen.queryByText("internal raw")).not.toBeInTheDocument();
   });
 
-  it("toont 'Onze melding' source-badge voor source='portal'", () => {
+  it("toont 'Mijn melding' source-badge voor source='portal'", () => {
     render(<IssueDetail projectId="p1" issue={makeIssue({ source: "portal" })} />);
-    expect(screen.getAllByLabelText("Onze melding").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("Mijn melding").length).toBeGreaterThan(0);
   });
 
-  it("toont 'Onze melding' source-badge voor source='jaip_widget' (WG-004)", () => {
-    // WG-REQ-078: feedback via de eigen widget-knop hoort visueel bij 'Onze
-    // meldingen' — niet bij 'JAIP-meldingen'. Bewaakt de source-mapping in
-    // PORTAL_SOURCE_GROUPS.
+  it("toont 'Van gebruiker' source-badge voor source='userback'", () => {
+    render(<IssueDetail projectId="p1" issue={makeIssue({ source: "userback" })} />);
+    expect(screen.getAllByLabelText("Van gebruiker").length).toBeGreaterThan(0);
+  });
+
+  it("toont 'Van gebruiker' source-badge voor source='jaip_widget' (WG-004)", () => {
+    // WG-REQ-078: feedback via de eigen widget-knop hoort visueel bij eindgebruikers
+    // (zelfde categorie als userback) — niet bij 'JAIP-meldingen'. Bewaakt de
+    // source-mapping in PORTAL_SOURCE_GROUPS (3-bucket: portal_pm/end_users/jaip).
     render(<IssueDetail projectId="p1" issue={makeIssue({ source: "jaip_widget" })} />);
-    expect(screen.getAllByLabelText("Onze melding").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("Van gebruiker").length).toBeGreaterThan(0);
   });
 
   it("toont 'JAIP-melding' source-badge voor source='manual'", () => {
