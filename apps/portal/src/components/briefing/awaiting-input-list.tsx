@@ -49,10 +49,10 @@ export function AwaitingInputList({ topics, projectId }: AwaitingInputListProps)
                   {formatOpenSince(topic.updated_at)}
                 </p>
                 <Link
-                  href={`/projects/${projectId}/issues?topic=${topic.id}`}
+                  href={`/projects/${projectId}/roadmap/${topic.id}`}
                   className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-colors hover:bg-foreground/90"
                 >
-                  Geef antwoord
+                  Bekijk topic
                   <ArrowRight className="size-3.5" aria-hidden />
                 </Link>
               </div>

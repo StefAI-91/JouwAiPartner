@@ -52,10 +52,10 @@ describe("AwaitingInputList", () => {
     expect(screen.getByText("Open sinds vandaag")).toBeInTheDocument();
   });
 
-  it("CTA-link wijst naar /projects/{projectId}/issues?topic={topicId}", () => {
+  it("CTA-link wijst naar de topic-detail in de roadmap", () => {
     render(<AwaitingInputList topics={[makeTopic({ id: "topic-abc" })]} projectId="proj-xyz" />);
-    const link = screen.getByRole("link", { name: /Geef antwoord/ });
-    expect(link.getAttribute("href")).toBe("/projects/proj-xyz/issues?topic=topic-abc");
+    const link = screen.getByRole("link", { name: /Bekijk topic/ });
+    expect(link.getAttribute("href")).toBe("/projects/proj-xyz/roadmap/topic-abc");
   });
 
   it("toont client_title wanneer aanwezig, anders title", () => {
