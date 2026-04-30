@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 591 |
-| Exported functions/constants | 894 |
-| Exported types/interfaces | 374 |
+| Exported functions/constants | 895 |
+| Exported types/interfaces | 379 |
 | Cross-package imports | 595 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -212,7 +212,7 @@
 - `ISSUE_SORTS`
 - `ISSUE_SELECT`
 
-**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`
+**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `PriorityCountKey`, `StatusPriorityCounts`, `StatusCounts`
 
 ### `queries/meetings/core.ts`
 
@@ -599,6 +599,7 @@
 - `countOpenIssuesPerTopic()`
 - `getTopicMembershipForIssues()`
 - `getLinkedIssueIdsInProject()`
+- `getLinkedIssuePrioritiesForTopic()`
 - `getIssueIdsForTopics()`
 - `getIssuesForTopic()`
 
@@ -4311,7 +4312,7 @@
 - `EMPTY_COUNTS`
 - `issueCountStore`
 
-**Types:** `StatusKey`, `StatusCounts`
+**Types:** `StatusKey`, `PriorityKey`, `PriorityCounts`, `StatusCounts`
 
 ### `apps/devhub/src/components/layout/mobile-sidebar.tsx`
 
@@ -4340,7 +4341,7 @@
 - `issueHref()`
 - `NAV_ITEMS`
 
-**Types:** `NavItem`
+**Types:** `PriorityNavItem`, `NavItem`
 
 ### `apps/devhub/src/components/layout/sidebar-nav.tsx`
 

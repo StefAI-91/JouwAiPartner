@@ -137,6 +137,30 @@ export async function getLinkedIssueIdsInProject(
 }
 
 /**
+ * Issue-prio's per topic. Voedt `deriveTopicPriorityFromIssues` zodat de UI
+ * een suggestie kan tonen ("op basis van de issues hieronder zou dit topic
+ * P1 moeten zijn"). Eén query voor één topic — N+1 is op deze flow geen
+ * risico want we vragen per topic-detail.
+ */
+export async function getLinkedIssuePrioritiesForTopic(
+  topicId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+
+  const { data, error } = await db
+    .from("topic_issues")
+    .select("issues!inner(priority)")
+    .eq("topic_id", topicId);
+
+  if (error) throw new Error(`getLinkedIssuePrioritiesForTopic failed: ${error.message}`);
+
+  return ((data ?? []) as unknown as Array<{ issues: { priority: string } | null }>)
+    .map((r) => r.issues?.priority)
+    .filter((p): p is string => typeof p === "string");
+}
+
+/**
  * Resolve één of meer topic-ids naar de issue-ids die eronder gekoppeld zijn.
  * Gebruikt door `listIssues`/`countFilteredIssues` om `?topic=<id>` te
  * filteren — eerst hier de issue-ids ophalen, dan via `id IN (...)` op issues

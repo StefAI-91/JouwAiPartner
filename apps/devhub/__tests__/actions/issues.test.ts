@@ -69,7 +69,7 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
         project_id: TEST_IDS.project,
         title: "Test Bug",
         type: "bug",
-        priority: "medium",
+        priority: "p2",
       });
 
       expect(result).toEqual({ success: true, id: TEST_IDS.issue });
@@ -141,7 +141,7 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
       id: TEST_IDS.issue,
       title: "Original Title",
       status: "triage",
-      priority: "medium",
+      priority: "p2",
       type: "bug",
       component: null,
       severity: null,
@@ -151,19 +151,19 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
 
     it("updates issue fields", async () => {
       mockGetIssueById.mockResolvedValue(baseMockIssue);
-      mockUpdateIssue.mockResolvedValue({ ...baseMockIssue, priority: "high" });
+      mockUpdateIssue.mockResolvedValue({ ...baseMockIssue, priority: "p1" });
       mockInsertActivity.mockResolvedValue(undefined);
 
       const action = await getAction();
       const result = await action({
         id: TEST_IDS.issue,
-        priority: "high",
+        priority: "p1",
       });
 
       expect(result).toEqual({ success: true });
       expect(mockUpdateIssue).toHaveBeenCalledWith(
         TEST_IDS.issue,
-        expect.objectContaining({ priority: "high" }),
+        expect.objectContaining({ priority: "p1" }),
       );
     });
 
@@ -204,7 +204,7 @@ describeWithDb("Issue Actions (integration)")("Issue Actions (integration)", () 
       await action({
         id: TEST_IDS.issue,
         status: "backlog",
-        priority: "high",
+        priority: "p1",
       });
 
       expect(mockInsertActivity).toHaveBeenCalledWith(

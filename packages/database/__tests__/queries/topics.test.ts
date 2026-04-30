@@ -106,8 +106,8 @@ describeWithDb("queries/topics", () => {
 
     it("retourneert topic + 2 linked issues in één call (geen N+1)", async () => {
       await seedTopic(profileId, { id: TEST_IDS.topic, title: "Detail topic" });
-      await seedIssue({ id: TEST_IDS.issue, title: "Issue A", priority: "high" });
-      await seedIssue({ id: TEST_IDS.issue2, title: "Issue B", priority: "medium" });
+      await seedIssue({ id: TEST_IDS.issue, title: "Issue A", priority: "p1" });
+      await seedIssue({ id: TEST_IDS.issue2, title: "Issue B", priority: "p2" });
 
       await db.from("topic_issues").insert([
         {

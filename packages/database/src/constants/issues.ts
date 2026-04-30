@@ -20,7 +20,7 @@ export const ISSUE_STATUSES = [
 ] as const;
 export type IssueStatus = (typeof ISSUE_STATUSES)[number];
 
-export const ISSUE_PRIORITIES = ["urgent", "high", "medium", "low"] as const;
+export const ISSUE_PRIORITIES = ["p1", "p2", "nice_to_have"] as const;
 export type IssuePriority = (typeof ISSUE_PRIORITIES)[number];
 
 export const ISSUE_COMPONENTS = [
@@ -56,10 +56,19 @@ export const ISSUE_STATUS_LABELS: Record<IssueStatus, string> = {
 };
 
 export const ISSUE_PRIORITY_LABELS: Record<IssuePriority, string> = {
-  urgent: "Urgent",
-  high: "Hoog",
-  medium: "Gemiddeld",
-  low: "Laag",
+  p1: "P1",
+  p2: "P2",
+  nice_to_have: "Nice to have",
+};
+
+/**
+ * Klantvriendelijke labels voor in de portal. Werknaam intern blijft
+ * P1/P2/Nice to have, maar het portal toont een mensvriendelijke vertaling.
+ */
+export const PORTAL_PRIORITY_LABELS: Record<IssuePriority, string> = {
+  p1: "Heeft nu prio",
+  p2: "Heeft daarna prio",
+  nice_to_have: "Nice to have",
 };
 
 export const ISSUE_COMPONENT_LABELS: Record<IssueComponent, string> = {
@@ -81,11 +90,82 @@ export const ISSUE_SEVERITY_LABELS: Record<IssueSeverity, string> = {
 // ── Priority sort order (voor queries en client-side sorting) ──
 
 export const PRIORITY_ORDER: Record<string, number> = {
-  urgent: 0,
-  high: 1,
-  medium: 2,
-  low: 3,
+  p1: 0,
+  p2: 1,
+  nice_to_have: 2,
 };
+
+/**
+ * Topic-priority (P0/P1/P2/P3) → issue-priority bucket. Topics hebben hun
+ * eigen 4-waardes-schaal die portal-roadmap én DevHub-curatie deelt; voor
+ * presentatie in de portal valt elke topic-prio in één van onze drie
+ * issue-prio-buckets.
+ *
+ * P0 + P1 → "heeft nu prio" (p1)
+ * P2      → "heeft daarna prio" (p2)
+ * P3      → "nice to have"
+ * null    → p2 (veilige default zodat topics zonder prio niet uit de
+ *           roadmap vallen)
+ */
+export const TOPIC_PRIORITY_TO_ISSUE_PRIORITY: Record<string, IssuePriority> = {
+  P0: "p1",
+  P1: "p1",
+  P2: "p2",
+  P3: "nice_to_have",
+};
+
+export function mapTopicPriorityToIssuePriority(topicPriority: string | null): IssuePriority {
+  if (!topicPriority) return "p2";
+  return TOPIC_PRIORITY_TO_ISSUE_PRIORITY[topicPriority] ?? "p2";
+}
+
+/**
+ * Issue-priority → topic-priority. Gebruikt door het auto-derive-mechanisme:
+ * de hoogste issue-prio binnen een topic bepaalt de voorgestelde topic-prio.
+ *
+ * p1            → P1 (we kiezen P1 boven P0 — P0 reserveren we voor handmatige
+ *                 escalatie zoals brandende productie-bugs)
+ * p2            → P2
+ * nice_to_have  → P3
+ */
+export const ISSUE_PRIORITY_TO_TOPIC_PRIORITY: Record<IssuePriority, "P1" | "P2" | "P3"> = {
+  p1: "P1",
+  p2: "P2",
+  nice_to_have: "P3",
+};
+
+/**
+ * Lager getal = hogere prio. Gebruikt door `deriveTopicPriorityFromIssues`
+ * om uit een lijst issue-prio's de "hoogste" te kiezen.
+ */
+const ISSUE_PRIORITY_RANK: Record<IssuePriority, number> = {
+  p1: 0,
+  p2: 1,
+  nice_to_have: 2,
+};
+
+/**
+ * Bereken de voorgestelde topic-priority uit de prio's van de gekoppelde
+ * issues. De hoogste issue-prio wint — één urgent bug trekt het topic naar
+ * P1. Bij geen gekoppelde issues: geeft `null` (laat topic onaangetast).
+ *
+ * Auto-derive is een suggestie, geen automatisme — de UI laat een mens
+ * bevestigen voordat het topic.priority-veld wordt overschreven.
+ */
+export function deriveTopicPriorityFromIssues(
+  issuePriorities: ReadonlyArray<string>,
+): "P1" | "P2" | "P3" | null {
+  let highest: IssuePriority | null = null;
+  for (const raw of issuePriorities) {
+    if (!(raw in ISSUE_PRIORITY_RANK)) continue;
+    const candidate = raw as IssuePriority;
+    if (highest === null || ISSUE_PRIORITY_RANK[candidate] < ISSUE_PRIORITY_RANK[highest]) {
+      highest = candidate;
+    }
+  }
+  if (highest === null) return null;
+  return ISSUE_PRIORITY_TO_TOPIC_PRIORITY[highest];
+}
 
 // ── Portal-specifieke statusgroepen ──
 //

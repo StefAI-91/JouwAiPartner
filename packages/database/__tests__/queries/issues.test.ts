@@ -47,7 +47,7 @@ describeWithDb("queries/issues", () => {
         id: TEST_IDS.issue,
         project_id: TEST_IDS.project,
         title: "Test Issue List",
-        priority: "high",
+        priority: "p1",
       });
 
       const result = await listIssues({ projectId: TEST_IDS.project }, db);
@@ -71,10 +71,10 @@ describeWithDb("queries/issues", () => {
     it("filters by priority", async () => {
       await seedIssue({
         id: TEST_IDS.issue,
-        priority: "low",
+        priority: "nice_to_have",
       });
 
-      const result = await listIssues({ projectId: TEST_IDS.project, priority: ["urgent"] }, db);
+      const result = await listIssues({ projectId: TEST_IDS.project, priority: ["p1"] }, db);
 
       const ids = result.map((i) => i.id);
       expect(ids).not.toContain(TEST_IDS.issue);
@@ -100,7 +100,7 @@ describeWithDb("queries/issues", () => {
       // Create two issues with different priorities
       await seedIssue({
         id: TEST_IDS.issue,
-        priority: "low",
+        priority: "nice_to_have",
         title: "Low Priority Issue",
       });
 

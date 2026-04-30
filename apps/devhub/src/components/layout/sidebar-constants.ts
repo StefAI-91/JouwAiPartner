@@ -1,5 +1,12 @@
 import { CircleDot, Inbox, CheckCircle2, Loader2, XCircle, type LucideIcon } from "lucide-react";
 
+export interface PriorityNavItem {
+  label: string;
+  priority: "p1" | "p2" | "nice_to_have";
+  /** Kleur van het bulletje voor deze prio. */
+  dotClass: string;
+}
+
 export interface NavItem {
   label: string;
   status: string;
@@ -7,7 +14,19 @@ export interface NavItem {
   accent?: boolean;
   /** Tailwind text-color class voor het icoon wanneer dit menu-item actief is. */
   activeIconClass: string;
+  /**
+   * Sub-links per prio. Alleen aanwezig op statussen waar de IA-discussie
+   * heeft besloten dat prio-uitsplitsing zinvol is (Te doen + Backlog). Op de
+   * andere statussen blijft het menu plat.
+   */
+  prioritySubItems?: PriorityNavItem[];
 }
+
+const PRIORITY_SUB_ITEMS: PriorityNavItem[] = [
+  { label: "P1", priority: "p1", dotClass: "bg-red-500" },
+  { label: "P2", priority: "p2", dotClass: "bg-amber-500" },
+  { label: "Nice to have", priority: "nice_to_have", dotClass: "bg-muted-foreground/40" },
+];
 
 export const NAV_ITEMS: NavItem[] = [
   {
@@ -17,8 +36,20 @@ export const NAV_ITEMS: NavItem[] = [
     accent: true,
     activeIconClass: "text-orange-500",
   },
-  { label: "Backlog", status: "backlog", icon: CircleDot, activeIconClass: "text-slate-500" },
-  { label: "Te doen", status: "todo", icon: CircleDot, activeIconClass: "text-blue-500" },
+  {
+    label: "Backlog",
+    status: "backlog",
+    icon: CircleDot,
+    activeIconClass: "text-slate-500",
+    prioritySubItems: PRIORITY_SUB_ITEMS,
+  },
+  {
+    label: "Te doen",
+    status: "todo",
+    icon: CircleDot,
+    activeIconClass: "text-blue-500",
+    prioritySubItems: PRIORITY_SUB_ITEMS,
+  },
   {
     label: "In behandeling",
     status: "in_progress",

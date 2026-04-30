@@ -191,10 +191,10 @@ const FEEDBACK_TYPE_MAP: Record<string, string> = {
 };
 
 const PRIORITY_MAP: Record<string, string> = {
-  critical: "urgent",
-  important: "high",
-  neutral: "medium",
-  minor: "low",
+  critical: "p1",
+  important: "p1",
+  neutral: "p2",
+  minor: "nice_to_have",
 };
 
 // Userback stores status as a Workflow row; default columns are
@@ -278,7 +278,7 @@ export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string
     title: extractTitle(description),
     description,
     type: FEEDBACK_TYPE_MAP[item.feedbackType] ?? "bug",
-    priority: PRIORITY_MAP[item.priority] ?? "medium",
+    priority: PRIORITY_MAP[item.priority] ?? "p2",
     status: (workflowName && STATUS_MAP[workflowName]) ?? "triage",
     reporter_email: item.email ? item.email : null,
     reporter_name: item.name ? item.name : null,

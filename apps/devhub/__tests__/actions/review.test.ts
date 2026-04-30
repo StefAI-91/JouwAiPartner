@@ -62,7 +62,7 @@ const mockIssue = {
   description: "Cannot login on mobile",
   type: "bug",
   status: "triage",
-  priority: "high",
+  priority: "p1",
   component: "frontend",
   severity: "high",
   labels: ["auth"],
@@ -148,7 +148,7 @@ describe("Review Actions", () => {
       expect(mockSaveProjectReview).toHaveBeenCalledWith(
         expect.objectContaining({
           issues_by_status: { triage: 1 },
-          issues_by_priority: { high: 1 },
+          issues_by_priority: { p1: 1 },
           issues_by_type: { bug: 1 },
           avg_resolution_days: null, // no closed issues
         }),

@@ -41,7 +41,7 @@ export function IssueForm({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("bug");
-  const [priority, setPriority] = useState("medium");
+  const [priority, setPriority] = useState("p2");
   const [component, setComponent] = useState("");
   const [severity, setSeverity] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
@@ -117,7 +117,7 @@ export function IssueForm({
         title,
         description: description || null,
         type: type as "bug",
-        priority: priority as "medium",
+        priority: priority as "p2",
         component: (component || null) as "frontend" | null,
         severity: (severity || null) as "critical" | null,
         assigned_to: assignedTo || null,

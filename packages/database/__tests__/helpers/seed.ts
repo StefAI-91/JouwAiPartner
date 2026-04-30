@@ -246,7 +246,7 @@ export async function seedIssue(overrides: Record<string, unknown> = {}) {
     description: "Test issue description",
     type: "bug",
     status: "triage",
-    priority: "medium",
+    priority: "p2",
     source: "manual",
     issue_number: issueNumber,
     ...overrides,

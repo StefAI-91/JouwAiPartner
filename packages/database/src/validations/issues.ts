@@ -85,7 +85,7 @@ export const createIssueSchema = z.object({
   client_description: emptyToNull(5000),
   type: z.enum(ISSUE_TYPES).default("bug"),
   status: z.enum(ISSUE_STATUSES).default("triage"),
-  priority: z.enum(ISSUE_PRIORITIES).default("medium"),
+  priority: z.enum(ISSUE_PRIORITIES).default("p2"),
   component: z.enum(ISSUE_COMPONENTS).nullish(),
   severity: z.enum(ISSUE_SEVERITIES).nullish(),
   labels: z.array(z.string()).default([]),

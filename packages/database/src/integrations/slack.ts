@@ -43,7 +43,7 @@ export function resolveSlackEvent(issue: {
   if (issue.type === "bug" && issue.severity === "high") {
     return "high_bug";
   }
-  if (issue.priority === "urgent") {
+  if (issue.priority === "p1") {
     return "priority_urgent";
   }
   return null;

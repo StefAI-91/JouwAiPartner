@@ -8,7 +8,7 @@ import {
   deleteIssue,
   insertActivity,
 } from "@repo/database/mutations/issues";
-import { getIssueById, getIssueCounts } from "@repo/database/queries/issues";
+import { getIssueById, getIssueCounts, type StatusCounts } from "@repo/database/queries/issues";
 import { getProfileNameById } from "@repo/database/queries/team";
 import { classifyIssueBackground } from "./classify";
 import { CLOSED_STATUSES, type IssueStatus } from "@repo/database/constants/issues";
@@ -198,7 +198,7 @@ export async function updateIssueAction(
     current.severity !== data.severity &&
     updated.type === "bug";
 
-  const priorityEscalated = data.priority === "urgent" && current.priority !== "urgent";
+  const priorityEscalated = data.priority === "p1" && current.priority !== "p1";
 
   if (severityEscalated || priorityEscalated) {
     const slackEvent = resolveSlackEvent({
@@ -268,7 +268,7 @@ const projectIdSchema = z.string().uuid();
  */
 export async function getIssueCountsAction(
   projectId: string,
-): Promise<{ data: Record<string, number> } | { error: string }> {
+): Promise<{ data: StatusCounts } | { error: string }> {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 

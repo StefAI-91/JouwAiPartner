@@ -49,7 +49,7 @@ export async function submitFeedback(input: unknown): Promise<SubmitFeedbackResu
       description,
       type,
       status: "triage",
-      priority: "medium",
+      priority: "p2",
       source: "portal",
       reporter_email: profile.email,
       source_metadata: {

@@ -30,6 +30,7 @@ export {
   getIssuesForTopic,
   getIssueIdsForTopics,
   getLinkedIssueIdsInProject,
+  getLinkedIssuePrioritiesForTopic,
   getTopicMembershipForIssues,
   type IssueTopicMembership,
 } from "./linked-issues";

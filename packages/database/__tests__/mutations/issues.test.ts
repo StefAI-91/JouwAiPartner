@@ -51,7 +51,7 @@ describeWithDb("mutations/issues", () => {
           title: "T02 Test Issue",
           description: "Test description",
           type: "bug",
-          priority: "high",
+          priority: "p1",
         },
         db,
       );
@@ -76,19 +76,15 @@ describeWithDb("mutations/issues", () => {
         {
           project_id: TEST_IDS.project,
           title: "Before Update",
-          priority: "low",
+          priority: "nice_to_have",
         },
         db,
       );
 
-      const updated = await updateIssue(
-        issue.id,
-        { title: "After Update", priority: "critical" },
-        db,
-      );
+      const updated = await updateIssue(issue.id, { title: "After Update", priority: "p1" }, db);
 
       expect(updated.title).toBe("After Update");
-      expect(updated.priority).toBe("critical");
+      expect(updated.priority).toBe("p1");
       expect(new Date(updated.updated_at).getTime()).toBeGreaterThanOrEqual(
         new Date(issue.updated_at).getTime(),
       );
@@ -105,7 +101,7 @@ describeWithDb("mutations/issues", () => {
           source: "userback",
           userback_id: "ub-t02-new-1",
           type: "bug",
-          priority: "medium",
+          priority: "p2",
           status: "triage",
         },
       ];

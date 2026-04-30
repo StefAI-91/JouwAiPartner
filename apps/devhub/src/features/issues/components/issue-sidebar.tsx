@@ -14,6 +14,7 @@ import {
 import { SidebarSelect, SidebarAssignee } from "./sidebar-fields";
 import { SidebarAiClassification } from "./sidebar-ai-classification";
 import { SidebarDelete } from "./sidebar-delete";
+import { TriageSuggestion } from "./triage-suggestion";
 import { TopicPill } from "@/features/topics/components/topic-pill";
 
 interface Person {
@@ -45,6 +46,13 @@ export function IssueSidebar({
   return (
     <aside className="w-full shrink-0 border-t border-border bg-card p-4 lg:w-64 lg:border-l lg:border-t-0 lg:overflow-auto">
       <div className="space-y-4">
+        <TriageSuggestion
+          type={issue.type}
+          status={issue.status}
+          onAccept={(suggested) => onFieldChange("status", suggested)}
+          isPending={isPending}
+        />
+
         <SidebarSelect
           label="Status"
           value={issue.status}

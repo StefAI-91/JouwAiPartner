@@ -1,6 +1,6 @@
 import { createPageClient } from "@repo/auth/helpers";
 import { listTopicsByBucket, countIssuesPerTopic } from "@repo/database/queries/topics";
-import { BucketStack } from "@/components/roadmap/bucket-stack";
+import { PriorityStack } from "@/components/roadmap/priority-stack";
 import { RoadmapHero } from "@/components/roadmap/roadmap-hero";
 
 export default async function ProjectRoadmapPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +21,7 @@ export default async function ProjectRoadmapPage({ params }: { params: Promise<{
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <RoadmapHero buckets={buckets} />
-      <BucketStack buckets={buckets} issueCounts={issueCounts} projectId={id} />
+      <PriorityStack buckets={buckets} issueCounts={issueCounts} projectId={id} />
     </div>
   );
 }

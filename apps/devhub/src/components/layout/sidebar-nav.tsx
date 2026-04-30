@@ -103,34 +103,82 @@ export function SidebarNav({
 
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const count = counts[item.status as keyof typeof counts] ?? 0;
-          const isActive = pathname === "/issues" && searchParams.get("status") === item.status;
+          const count = counts[item.status as keyof typeof counts];
+          const numericCount = typeof count === "number" ? count : 0;
+          const activePriority = searchParams.get("priority");
+          const isActive =
+            pathname === "/issues" && searchParams.get("status") === item.status && !activePriority;
+          // Sub-counts per prio voor Te doen en Backlog. Andere statussen
+          // krijgen geen prio-uitsplitsing.
+          const priorityCounts =
+            item.status === "todo"
+              ? counts.todo_priority
+              : item.status === "backlog"
+                ? counts.backlog_priority
+                : undefined;
           return (
-            <Link
-              key={item.status}
-              href={issueHref(projectId, { status: item.status })}
-              onClick={onNavigate}
-              className={cn(
-                "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                linkClassName,
-                isActive && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+            <div key={item.status}>
+              <Link
+                href={issueHref(projectId, { status: item.status })}
+                onClick={onNavigate}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  linkClassName,
+                  isActive && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+                )}
+              >
+                <Icon className={cn(iconSize, isActive && item.activeIconClass)} />
+                <span className="flex-1">{item.label}</span>
+                {numericCount > 0 && (
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.5 text-[0.65rem] font-medium leading-none",
+                      item.accent
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {numericCount}
+                  </span>
+                )}
+              </Link>
+              {item.prioritySubItems && (
+                <div className="ml-6 mt-0.5 space-y-0.5">
+                  {item.prioritySubItems.map((sub) => {
+                    const subCount = priorityCounts?.[sub.priority] ?? 0;
+                    const isSubActive =
+                      pathname === "/issues" &&
+                      searchParams.get("status") === item.status &&
+                      activePriority === sub.priority;
+                    return (
+                      <Link
+                        key={sub.priority}
+                        href={issueHref(projectId, {
+                          status: item.status,
+                          priority: sub.priority,
+                        })}
+                        onClick={onNavigate}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md px-2 text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                          linkClassName,
+                          "py-1 text-xs",
+                          isSubActive &&
+                            "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+                        )}
+                      >
+                        <span className={cn("size-2 rounded-full shrink-0", sub.dotClass)} />
+                        <span className="flex-1">{sub.label}</span>
+                        {subCount > 0 && (
+                          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[0.6rem] font-medium leading-none text-muted-foreground">
+                            {subCount}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
               )}
-            >
-              <Icon className={cn(iconSize, isActive && item.activeIconClass)} />
-              <span className="flex-1">{item.label}</span>
-              {count > 0 && (
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 py-0.5 text-[0.65rem] font-medium leading-none",
-                    item.accent
-                      ? "bg-orange-100 text-orange-700"
-                      : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {count}
-                </span>
-              )}
-            </Link>
+            </div>
           );
         })}
       </nav>

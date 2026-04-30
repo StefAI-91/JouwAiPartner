@@ -20,7 +20,15 @@
 import { getIssueCountsAction } from "@/features/issues/actions/issues";
 
 export type StatusKey = "triage" | "backlog" | "todo" | "in_progress" | "done" | "cancelled";
-export type StatusCounts = Partial<Record<StatusKey, number>>;
+export type PriorityKey = "p1" | "p2" | "nice_to_have";
+export type PriorityCounts = Partial<Record<PriorityKey, number>>;
+
+export type StatusCounts = Partial<Record<StatusKey, number>> & {
+  /** Sub-counts voor Te doen per prio. */
+  todo_priority?: PriorityCounts;
+  /** Sub-counts voor Backlog per prio. */
+  backlog_priority?: PriorityCounts;
+};
 
 // Stable singleton for "no counts yet" so useSyncExternalStore sees the same
 // reference between renders. Returning a fresh `{}` each call blows up

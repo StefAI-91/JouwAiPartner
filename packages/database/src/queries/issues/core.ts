@@ -339,8 +339,27 @@ export async function getIssueById(id: string, client?: SupabaseClient): Promise
 }
 
 export type StatusCountKey = "triage" | "backlog" | "todo" | "in_progress" | "done" | "cancelled";
+export type PriorityCountKey = "p1" | "p2" | "nice_to_have";
 
-export type StatusCounts = Record<StatusCountKey, number>;
+/**
+ * Sub-counts per (status, priority) voor de twee statussen waar de sidebar
+ * een prio-uitsplitsing toont (Te doen + Backlog). Andere statussen krijgen
+ * alleen een totaal — zie sidebar IA discussie.
+ */
+export type StatusPriorityCounts = Record<PriorityCountKey, number>;
+
+export interface StatusCounts {
+  triage: number;
+  backlog: number;
+  todo: number;
+  in_progress: number;
+  done: number;
+  cancelled: number;
+  /** Sub-counts voor Te doen, alleen P1/P2/Nice to have. */
+  todo_priority: StatusPriorityCounts;
+  /** Sub-counts voor Backlog, alleen P1/P2/Nice to have. */
+  backlog_priority: StatusPriorityCounts;
+}
 
 const STATUS_KEYS: readonly StatusCountKey[] = [
   "triage",
@@ -351,13 +370,17 @@ const STATUS_KEYS: readonly StatusCountKey[] = [
   "cancelled",
 ];
 
+const PRIORITY_KEYS: readonly PriorityCountKey[] = ["p1", "p2", "nice_to_have"];
+
+function emptyPriorityCounts(): StatusPriorityCounts {
+  return { p1: 0, p2: 0, nice_to_have: 0 };
+}
+
 /**
- * Get issue counts per status for a project.
+ * Get issue counts per status (en sub-counts per prio voor Te doen + Backlog)
+ * voor een project.
  *
- * Previously ran 6 separate count queries (one per status). Consolidated into
- * a single `select("status")` call and grouped in memory — one round trip
- * instead of six, which is the difference between "instant" and "visible lag"
- * for the sidebar badge.
+ * Eén round trip: de query haalt status + priority op en groepeert in memory.
  */
 export async function getIssueCounts(
   projectId: string,
@@ -372,9 +395,14 @@ export async function getIssueCounts(
     in_progress: 0,
     done: 0,
     cancelled: 0,
+    todo_priority: emptyPriorityCounts(),
+    backlog_priority: emptyPriorityCounts(),
   };
 
-  const { data, error } = await db.from("issues").select("status").eq("project_id", projectId);
+  const { data, error } = await db
+    .from("issues")
+    .select("status, priority")
+    .eq("project_id", projectId);
 
   if (error) {
     console.error("[getIssueCounts] Database error:", error.message);
@@ -383,9 +411,15 @@ export async function getIssueCounts(
 
   if (!data) return counts;
 
-  for (const row of data as { status: string }[]) {
+  for (const row of data as { status: string; priority: string }[]) {
     if ((STATUS_KEYS as readonly string[]).includes(row.status)) {
       counts[row.status as StatusCountKey]++;
+    }
+    if (row.status === "todo" && (PRIORITY_KEYS as readonly string[]).includes(row.priority)) {
+      counts.todo_priority[row.priority as PriorityCountKey]++;
+    }
+    if (row.status === "backlog" && (PRIORITY_KEYS as readonly string[]).includes(row.priority)) {
+      counts.backlog_priority[row.priority as PriorityCountKey]++;
     }
   }
 

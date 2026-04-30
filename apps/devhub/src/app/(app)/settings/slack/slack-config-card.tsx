@@ -17,7 +17,7 @@ const EVENT_LABELS: Record<SlackNotifyEvent, { label: string; description: strin
   },
   priority_urgent: {
     label: "Priority escalatie",
-    description: "Issue handmatig naar priority urgent gezet",
+    description: "Issue handmatig naar P1 (heeft nu prio) gezet",
   },
 };
 
