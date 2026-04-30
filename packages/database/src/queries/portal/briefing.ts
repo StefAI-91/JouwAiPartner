@@ -36,7 +36,6 @@ export interface ChangelogEntry {
   id: string;
   date: string;
   title: string;
-  summary: string | null;
 }
 
 const HEADER_COLS = `
@@ -170,7 +169,7 @@ export async function listWeeklyChangelog(
   const [topicsResult, meetingsResult] = await Promise.all([
     client
       .from("topics")
-      .select("id, title, client_title, client_description, closed_at, type")
+      .select("id, title, client_title, closed_at")
       .eq("project_id", projectId)
       .in("status", ["done", "wont_do", "wont_do_proposed_by_client"])
       .gte("closed_at", since)
@@ -178,7 +177,7 @@ export async function listWeeklyChangelog(
       .limit(limit),
     client
       .from("meeting_projects")
-      .select("meeting:meetings(id, title, date, party_type, summary)")
+      .select("meeting:meetings(id, title, date, party_type)")
       .eq("project_id", projectId)
       .order("created_at", { ascending: false })
       .limit(limit * 2),
@@ -196,7 +195,6 @@ export async function listWeeklyChangelog(
       id: string;
       title: string;
       client_title: string | null;
-      client_description: string | null;
       closed_at: string;
     };
     return {
@@ -204,7 +202,6 @@ export async function listWeeklyChangelog(
       id: r.id,
       date: r.closed_at,
       title: r.client_title ?? r.title,
-      summary: r.client_description,
     };
   });
 
@@ -217,7 +214,6 @@ export async function listWeeklyChangelog(
             title: string | null;
             date: string | null;
             party_type: string | null;
-            summary: string | null;
           } | null;
         }
       ).meeting;
@@ -228,7 +224,6 @@ export async function listWeeklyChangelog(
         id: m.id,
         date: m.date,
         title: m.title ?? "Meeting",
-        summary: m.summary,
       };
     })
     .filter((e): e is ChangelogEntry => e !== null);

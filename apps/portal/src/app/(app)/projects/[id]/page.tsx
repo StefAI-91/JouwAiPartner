@@ -41,7 +41,7 @@ export default async function ProjectBriefingPage({ params }: { params: Promise<
           <AwaitingInputList topics={waiting} projectId={id} />
         </div>
       </section>
-      <WeeklyChangelog entries={changelog} />
+      <WeeklyChangelog entries={changelog} projectId={id} />
       <StatusFooter counts={counts} projectId={id} />
     </div>
   );
