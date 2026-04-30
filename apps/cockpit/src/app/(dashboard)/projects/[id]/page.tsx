@@ -11,6 +11,7 @@ import { ProjectSections } from "@/features/projects/components/project-sections
 import { EditProject } from "@/features/projects/components/edit-project";
 import { ProjectSummaryCard } from "@/features/projects/components/project-summary-card";
 import { ProjectTimeline } from "@/features/projects/components/project-timeline";
+import { ProjectClientsSection } from "@/features/projects/components/project-clients-section";
 import { extractProjectTimeline } from "@repo/ai/validations/project-summary";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -80,6 +81,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           startDate={project.start_date}
           deadline={project.deadline}
         />
+        <ProjectClientsSection projectId={project.id} />
       </div>
 
       {/* Tabs */}

@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 564 |
-| Exported functions/constants | 864 |
-| Exported types/interfaces | 353 |
+| Exported functions/constants | 865 |
+| Exported types/interfaces | 354 |
 | Cross-package imports | 580 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -346,9 +346,10 @@
 
 **Exports:**
 - `listPortalProjects()`
+- `listPortalProjectClients()`
 - `hasPortalProjectAccess()`
 
-**Types:** `PortalProject`
+**Types:** `PortalProject`, `ProjectClient`
 
 **Depends on:**
 - `@repo/auth/access` → isAdmin
