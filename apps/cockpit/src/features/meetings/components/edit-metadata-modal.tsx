@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { X } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
 import { updateMeetingMetadataAction } from "../actions";
-import { CreateOrganizationModal } from "./create-organization-modal";
-import { CreateProjectSubModal } from "./create-project-sub-modal";
-import { CreatePersonSubModal } from "./create-person-sub-modal";
+import { MetadataTagSelector } from "./metadata-tag-selector";
+import { MetadataSubModals } from "./metadata-sub-modals";
 import { MEETING_TYPES } from "@repo/database/constants/meetings";
 import type { PersonWithOrg } from "@repo/database/queries/people";
 
@@ -76,7 +74,6 @@ function EditMetadataForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  // Sub-modal states
   const [showCreateOrg, setShowCreateOrg] = useState(false);
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [showCreatePerson, setShowCreatePerson] = useState(false);
@@ -88,7 +85,6 @@ function EditMetadataForm({
     ...newPeople.map((p) => ({ ...p, role: null, organization: null })),
   ];
 
-  // Computed available options (exclude already selected)
   const selectedProjectIds = new Set(selectedProjects.map((p) => p.id));
   const availableProjects = allProjectsMerged.filter((p) => !selectedProjectIds.has(p.id));
 
@@ -161,7 +157,6 @@ function EditMetadataForm({
   return (
     <>
       <div className="space-y-4">
-        {/* Title */}
         <div>
           <label htmlFor="meta-title" className="mb-1 block text-sm font-medium">
             Titel
@@ -175,7 +170,6 @@ function EditMetadataForm({
           />
         </div>
 
-        {/* Meeting Type + Party Type in a row */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="meta-meeting-type" className="mb-1 block text-sm font-medium">
@@ -215,7 +209,6 @@ function EditMetadataForm({
           </div>
         </div>
 
-        {/* Organization */}
         <div>
           <label htmlFor="meta-organization" className="mb-1 block text-sm font-medium">
             Organisatie
@@ -237,105 +230,31 @@ function EditMetadataForm({
           </select>
         </div>
 
-        {/* Projects */}
-        <div>
-          <label className="mb-1 block text-sm font-medium">Projecten</label>
-          {selectedProjects.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {selectedProjects.map((project) => (
-                <span
-                  key={project.id}
-                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
-                >
-                  {project.name}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedProjects((prev) => prev.filter((p) => p.id !== project.id))
-                    }
-                    disabled={isPending}
-                    className="rounded-full p-0.5 hover:bg-background/80"
-                    aria-label={`${project.name} verwijderen`}
-                  >
-                    <X className="size-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <select
-            key={selectedProjects.length}
-            onChange={(e) => {
-              handleAddProject(e.target.value);
-              e.target.value = "";
-            }}
-            disabled={isPending}
-            defaultValue=""
-            className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          >
-            <option value="" disabled>
-              Project toevoegen...
-            </option>
-            {availableProjects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-            <option value="__new__">+ Nieuw project aanmaken</option>
-          </select>
-        </div>
+        <MetadataTagSelector
+          label="Projecten"
+          selected={selectedProjects}
+          available={availableProjects}
+          onAdd={handleAddProject}
+          onRemove={(id) => setSelectedProjects((prev) => prev.filter((p) => p.id !== id))}
+          disabled={isPending}
+          addPlaceholder="Project toevoegen..."
+          newOptionLabel="+ Nieuw project aanmaken"
+        />
 
-        {/* Participants */}
-        <div>
-          <label className="mb-1 block text-sm font-medium">Deelnemers</label>
-          {selectedPeople.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {selectedPeople.map((person) => (
-                <span
-                  key={person.id}
-                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
-                >
-                  {person.name}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedPeople((prev) => prev.filter((p) => p.id !== person.id))
-                    }
-                    disabled={isPending}
-                    className="rounded-full p-0.5 hover:bg-background/80"
-                    aria-label={`${person.name} verwijderen`}
-                  >
-                    <X className="size-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <select
-            key={selectedPeople.length}
-            onChange={(e) => {
-              handleAddPerson(e.target.value);
-              e.target.value = "";
-            }}
-            disabled={isPending}
-            defaultValue=""
-            className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
-          >
-            <option value="" disabled>
-              Deelnemer toevoegen...
-            </option>
-            {availablePeople.map((person) => (
-              <option key={person.id} value={person.id}>
-                {personLabel(person)}
-              </option>
-            ))}
-            <option value="__new__">+ Nieuw persoon toevoegen</option>
-          </select>
-        </div>
+        <MetadataTagSelector
+          label="Deelnemers"
+          selected={selectedPeople}
+          available={availablePeople}
+          onAdd={handleAddPerson}
+          onRemove={(id) => setSelectedPeople((prev) => prev.filter((p) => p.id !== id))}
+          disabled={isPending}
+          addPlaceholder="Deelnemer toevoegen..."
+          newOptionLabel="+ Nieuw persoon toevoegen"
+          formatOption={(person) => personLabel(person as PersonWithOrg)}
+        />
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        {/* Footer */}
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onClose} disabled={isPending}>
             Annuleren
@@ -346,35 +265,29 @@ function EditMetadataForm({
         </div>
       </div>
 
-      {/* Sub-modals for creating new entities */}
-      <CreateOrganizationModal
-        open={showCreateOrg}
-        onClose={() => setShowCreateOrg(false)}
-        onCreated={(org) => {
+      <MetadataSubModals
+        organizations={allOrganizations}
+        showCreateOrg={showCreateOrg}
+        showCreateProject={showCreateProject}
+        showCreatePerson={showCreatePerson}
+        onCloseOrg={() => setShowCreateOrg(false)}
+        onCloseProject={() => setShowCreateProject(false)}
+        onClosePerson={() => setShowCreatePerson(false)}
+        onOrgCreated={(org) => {
           setNewOrganizations((prev) => [...prev, org]);
           setOrganizationId(org.id);
           setShowCreateOrg(false);
         }}
-      />
-      <CreateProjectSubModal
-        open={showCreateProject}
-        onClose={() => setShowCreateProject(false)}
-        onCreated={(project) => {
+        onProjectCreated={(project) => {
           setNewProjects((prev) => [...prev, project]);
           setSelectedProjects((prev) => [...prev, project]);
           setShowCreateProject(false);
         }}
-        organizations={allOrganizations}
-      />
-      <CreatePersonSubModal
-        open={showCreatePerson}
-        onClose={() => setShowCreatePerson(false)}
-        onCreated={(person) => {
+        onPersonCreated={(person) => {
           setNewPeople((prev) => [...prev, person]);
           setSelectedPeople((prev) => [...prev, person]);
           setShowCreatePerson(false);
         }}
-        organizations={allOrganizations}
       />
     </>
   );

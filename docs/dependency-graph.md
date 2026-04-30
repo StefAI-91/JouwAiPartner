@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 586 |
-| Exported functions/constants | 888 |
-| Exported types/interfaces | 370 |
+| Files scanned | 590 |
+| Exported functions/constants | 892 |
+| Exported types/interfaces | 374 |
 | Cross-package imports | 595 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -4002,6 +4002,28 @@
 
 **Exports:**
 - `GenerateWeeklyButton()`
+
+### `apps/cockpit/src/components/weekly/weekly-focus-item.tsx`
+
+**Exports:**
+- `WeeklyFocusItem()`
+
+### `apps/cockpit/src/components/weekly/weekly-project-card.tsx`
+
+**Exports:**
+- `WeeklyProjectCard()`
+
+### `apps/cockpit/src/components/weekly/weekly-status-tiles.tsx`
+
+**Exports:**
+- `WeeklyStatusTiles()`
+
+### `apps/cockpit/src/components/weekly/weekly-summary-types.ts`
+
+**Exports:**
+- `STATUS_CONFIG`
+
+**Types:** `WeeklyStatus`, `ProjectHealth`, `WeeklySummaryData`, `StatusStyle`
 
 ### `apps/cockpit/src/components/weekly/weekly-summary-view.tsx`
 
