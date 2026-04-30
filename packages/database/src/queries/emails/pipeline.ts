@@ -113,6 +113,89 @@ export async function listEmailsForReclassify(options: {
   }));
 }
 
+/**
+ * List the linked `project_id`s of an email (uit `email_projects`). Mirror
+ * van `listMeetingProjectIds`. Gebruikt door de summary-pipeline trigger.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listEmailProjectIds(
+  emailId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("email_projects")
+    .select("project_id")
+    .eq("email_id", emailId);
+
+  if (error) {
+    console.error("[listEmailProjectIds]", error.message);
+    return [];
+  }
+  return (data ?? []).map((r) => r.project_id as string);
+}
+
+/**
+ * Mini-query: 1 kolom (`organization_id`) van een email. Mirror van
+ * `getMeetingOrganizationId`. Gebruikt door de summary-pipeline trigger.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getEmailOrganizationId(
+  emailId: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("emails")
+    .select("organization_id")
+    .eq("id", emailId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getEmailOrganizationId]", error.message);
+    return null;
+  }
+  return (data?.organization_id as string | null) ?? null;
+}
+
+export interface VerifiedEmailForSummary {
+  subject: string | null;
+  date: string;
+  from_name: string | null;
+  from_address: string;
+  snippet: string | null;
+}
+
+/**
+ * List verified-and-kept emails by id, ordered by date desc. Used by the
+ * project summary pipeline om filter_status=kept emails op te halen voor
+ * het briefing-prompt. Filtert filtered/spam-emails uit de selectie.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listVerifiedEmailsForSummary(
+  emailIds: string[],
+  client?: SupabaseClient,
+): Promise<VerifiedEmailForSummary[]> {
+  if (emailIds.length === 0) return [];
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("emails")
+    .select("subject, date, from_name, from_address, snippet")
+    .in("id", emailIds)
+    .eq("verification_status", "verified")
+    .eq("filter_status", "kept")
+    .order("date", { ascending: false });
+
+  if (error) {
+    console.error("[listVerifiedEmailsForSummary]", error.message);
+    return [];
+  }
+  return (data ?? []) as VerifiedEmailForSummary[];
+}
+
 export async function getUnprocessedEmails(limit: number = 20): Promise<
   {
     id: string;

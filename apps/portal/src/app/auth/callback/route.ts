@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@repo/database/supabase/server";
+import { getProfileRole } from "@repo/database/queries/team";
 
 /**
  * Magic link / invite callback for the portal.
@@ -36,13 +37,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=session", req.url));
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const role = profile?.role ?? null;
+  const role = await getProfileRole(user.id, supabase);
 
   if (role === "client" || role === "admin") {
     const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";

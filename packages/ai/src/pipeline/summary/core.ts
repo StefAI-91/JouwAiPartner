@@ -5,8 +5,8 @@
  */
 
 export interface FormattedMeetingForSummary {
-  title: string;
-  date: string;
+  title: string | null;
+  date: string | null;
   meetingType: string | null;
   briefing: string | null;
   summary: string | null;
@@ -20,8 +20,8 @@ export interface FormattedEmailForSummary {
 }
 
 interface MeetingRow {
-  title: string;
-  date: string;
+  title: string | null;
+  date: string | null;
   meeting_type: string | null;
   ai_briefing: string | null;
   summary: string | null;
