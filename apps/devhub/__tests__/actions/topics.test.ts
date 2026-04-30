@@ -182,6 +182,25 @@ describe("updateTopicAction", () => {
     expect(result).toEqual({ error: "Topic niet gevonden" });
     expect(mockUpdateTopic).not.toHaveBeenCalled();
   });
+
+  it("vangt onverwachte throws (DB-errors uit getTopicById) als action-error", async () => {
+    // Voorheen liet een throw uit `getTopicById` de Server Action via een
+    // unhandled rejection naar de built-in Next.js global-error fallback
+    // bubbelen ("This page couldn't load"). De action-wrapper vangt dat nu
+    // op zodat de gebruiker een toast ziet i.p.v. een dichtgeklapte pagina.
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockGetTopicById.mockRejectedValue(new Error("getTopicById failed: connection lost"));
+    const action = await getAction();
+    const result = await action({
+      id: IDS.topic,
+      resolution: "Probleem opgelost via een hotfix.",
+    });
+    expect(result).toEqual({
+      error: "Er ging iets mis. Probeer het opnieuw of ververs de pagina.",
+    });
+    expect(mockUpdateTopic).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
 });
 
 describe("updateTopicStatusAction", () => {

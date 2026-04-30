@@ -9,12 +9,19 @@ interface ProjectHeaderProps {
 /**
  * CP-010 — Briefing-header. Toont de drie publieke project-kerngegevens
  * (organisatie, naam, status) plus de actie-elementen die de klant nodig
- * heeft: preview-knop, productie-knop, statische screenshot. Ontbrekende
+ * heeft: preview-knop, productie-knop, en een live preview van de
+ * productie-site via iframe (fallback: handmatige screenshot). Ontbrekende
  * velden vallen weg — geen lege placeholders.
+ *
+ * Iframe-aanpak: veel sites blokkeren framing via X-Frame-Options of CSP
+ * `frame-ancestors`. Voor die gevallen blijft `screenshot_url` als
+ * handmatige fallback bestaan; vul die alleen in als de live frame leeg
+ * blijkt.
  */
 export function ProjectHeader({ header }: ProjectHeaderProps) {
   const statusLabel = STATUS_LABELS[header.status as ProjectStatus] ?? header.status;
   const hasDeployLinks = Boolean(header.preview_url || header.production_url);
+  const previewHost = header.production_url ? safeHost(header.production_url) : null;
 
   return (
     <header className="space-y-6">
@@ -62,7 +69,7 @@ export function ProjectHeader({ header }: ProjectHeaderProps) {
         ) : null}
       </div>
 
-      {header.screenshot_url ? (
+      {header.production_url || header.screenshot_url ? (
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
           <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
             <div className="flex items-center gap-1.5">
@@ -70,22 +77,41 @@ export function ProjectHeader({ header }: ProjectHeaderProps) {
               <span className="size-2.5 rounded-full bg-muted" />
               <span className="size-2.5 rounded-full bg-muted" />
             </div>
-            {header.production_url ? (
-              <span className="font-mono text-[11px] text-muted-foreground">
-                {new URL(header.production_url).host}
-              </span>
+            {previewHost ? (
+              <span className="font-mono text-[11px] text-muted-foreground">{previewHost}</span>
             ) : null}
-            <span className="text-[11px] text-muted-foreground/70">screenshot</span>
+            <span className="text-[11px] text-muted-foreground/70">
+              {header.production_url ? "live" : "screenshot"}
+            </span>
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={header.screenshot_url}
-            alt={`Screenshot van ${header.name}`}
-            loading="lazy"
-            className="aspect-[16/7] w-full object-cover"
-          />
+          {header.production_url ? (
+            <iframe
+              src={header.production_url}
+              title={`Live preview van ${header.name}`}
+              loading="lazy"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              referrerPolicy="no-referrer"
+              className="aspect-[16/7] w-full bg-background"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={header.screenshot_url ?? ""}
+              alt={`Screenshot van ${header.name}`}
+              loading="lazy"
+              className="aspect-[16/7] w-full object-cover"
+            />
+          )}
         </div>
       ) : null}
     </header>
   );
+}
+
+function safeHost(url: string): string | null {
+  try {
+    return new URL(url).host;
+  } catch {
+    return null;
+  }
 }
