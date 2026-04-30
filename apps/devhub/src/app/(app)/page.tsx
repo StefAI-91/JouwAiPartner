@@ -1,12 +1,17 @@
 import { listAccessibleProjects } from "@repo/database/queries/projects/access";
 import { getLatestProjectReview, getHealthTrend } from "@repo/database/queries/projects/reviews";
-import { getIssueCounts, countCriticalUnassigned } from "@repo/database/queries/issues";
+import {
+  getIssueCounts,
+  countCriticalUnassigned,
+  getWeeklyIssueIntake,
+} from "@repo/database/queries/issues";
 import { getAuthenticatedUser, createPageClient } from "@repo/auth/helpers";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { HealthHero } from "@/components/dashboard/health-hero";
 import { DashboardMetrics } from "@/components/dashboard/dashboard-metrics";
+import { IssuesIntakeChart } from "@/components/dashboard/issues-intake-chart";
 import { AreaSummaries } from "@/components/dashboard/area-summaries";
 import { ActionItemsList } from "@/components/review/action-items-list";
 import { CountSeeder } from "@/components/layout/count-seeder";
@@ -39,11 +44,12 @@ export default async function DashboardPage({
   const hasAccess = projects.some((p) => p.id === projectId);
   if (!hasAccess) notFound();
 
-  const [review, counts, criticalUnassigned, healthTrend] = await Promise.all([
+  const [review, counts, criticalUnassigned, healthTrend, weeklyIntake] = await Promise.all([
     getLatestProjectReview(projectId, supabase),
     getIssueCounts(projectId, supabase),
     countCriticalUnassigned(projectId, supabase),
     getHealthTrend(projectId, supabase),
+    getWeeklyIssueIntake(projectId, 12, supabase),
   ]);
 
   const project = projects.find((p) => p.id === projectId);
@@ -84,6 +90,9 @@ export default async function DashboardPage({
         criticalUnassignedCount={criticalUnassigned}
         triageCount={counts.triage}
       />
+
+      {/* Weekly intake trend */}
+      <IssuesIntakeChart data={weeklyIntake} />
 
       {/* Area Summaries: Frontend + Backend */}
       {review && (

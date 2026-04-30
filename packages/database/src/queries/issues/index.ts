@@ -12,6 +12,7 @@ export {
   countFilteredIssues,
   getIssueById,
   getIssueCounts,
+  getWeeklyIssueIntake,
   countCriticalUnassigned,
   parseSearchQuery,
   UNASSIGNED_SENTINEL,
@@ -19,6 +20,7 @@ export {
   type IssueRow,
   type StatusCountKey,
   type StatusCounts,
+  type WeeklyIssueIntake,
 } from "./core";
 
 export { listIssueActivity, type IssueActivityRow } from "./activity";
