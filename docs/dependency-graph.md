@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 582 |
+| Files scanned | 586 |
 | Exported functions/constants | 888 |
 | Exported types/interfaces | 370 |
 | Cross-package imports | 595 |
