@@ -2,8 +2,8 @@
 
 Master backlog voor alle aankomende sprints. Sprint-telling + breakdown staat in `docs/specs/docs-inventory.md §1`.
 
-> **Last synced:** 2026-04-29 (SRP-serie toegevoegd).
-> **Completed sprints:** zie `sprints/done/` (72 bestanden). Samenvatting in de toplevel van deze README onder "Completed Sprints Summary".
+> **Last synced:** 2026-04-30 (backlog-audit: 37 al-gedane sprints verplaatst naar `sprints/done/`).
+> **Completed sprints:** zie `sprints/done/` (109 bestanden). Samenvatting in de toplevel van deze README onder "Completed Sprints Summary".
 
 ## Open backlog
 
