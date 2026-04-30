@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { mockAuthenticated, mockUnauthenticated, createServerMock } from "../helpers/mock-auth";
 import { createNextCacheMock, resetNextMocks, getRevalidatePathCalls } from "../helpers/mock-next";
 
@@ -68,6 +68,22 @@ function makeMeeting(overrides: Partial<Record<string, unknown>> = {}) {
 }
 
 describe("regenerateActionItemsAction", () => {
+  // Pre-warm de dynamic import één keer in beforeAll i.p.v. in elke test —
+  // onder parallel turbo-load (9 packages tegelijk op Windows) kan de eerste
+  // import van een Server Action ruim boven de 15s test-timeout duren door
+  // I/O contention, wat test 1 deed flakey-falen en via mock-pollution test 2
+  // mee de afgrond introk. beforeAll heeft default 60s setup-timeout en draait
+  // één keer per file, dus de cost telt niet meer mee in per-test timeouts.
+  let action: typeof import("@/features/meetings/actions/regenerate-action-items").regenerateActionItemsAction;
+
+  // Timeout op 60s (default is 10s) — onder parallel turbo-load op Windows kan
+  // de eerste import van een Server Action met @repo/ai-deps in z'n graph
+  // makkelijk 20-40s duren door I/O contention.
+  beforeAll(async () => {
+    const mod = await import("@/features/meetings/actions/regenerate-action-items");
+    action = mod.regenerateActionItemsAction;
+  }, 60_000);
+
   beforeEach(() => {
     mockAuthenticated(IDS.userId);
     resetNextMocks();
@@ -78,15 +94,8 @@ describe("regenerateActionItemsAction", () => {
     mockIsAdmin.mockResolvedValue(true); // default: admin, individuele tests overrulen
   });
 
-  async function getAction() {
-    const mod = await import("@/features/meetings/actions/regenerate-action-items");
-    return mod.regenerateActionItemsAction;
-  }
-
   it("blokkeert ongeauthenticeerde gebruikers", async () => {
     mockUnauthenticated();
-    const action = await getAction();
-
     const result = await action({ meetingId: IDS.meetingId });
 
     expect(result).toEqual({ error: "Niet ingelogd" });
@@ -95,8 +104,6 @@ describe("regenerateActionItemsAction", () => {
 
   it("blokkeert non-admins", async () => {
     mockIsAdmin.mockResolvedValueOnce(false);
-    const action = await getAction();
-
     const result = await action({ meetingId: IDS.meetingId });
 
     expect(result).toEqual({ error: "Geen toegang" });
@@ -105,8 +112,6 @@ describe("regenerateActionItemsAction", () => {
 
   it("returnt 404-error als meeting niet bestaat", async () => {
     mockGetMeeting.mockResolvedValue(null);
-    const action = await getAction();
-
     const result = await action({ meetingId: IDS.meetingId });
 
     expect(result).toEqual({ error: "Meeting niet gevonden" });
@@ -122,8 +127,6 @@ describe("regenerateActionItemsAction", () => {
       }),
     );
     mockGetKnownPeople.mockResolvedValue([]);
-    const action = await getAction();
-
     const result = await action({ meetingId: IDS.meetingId });
 
     expect("error" in result).toBe(true);
@@ -140,8 +143,6 @@ describe("regenerateActionItemsAction", () => {
     );
     mockGetKnownPeople.mockResolvedValue([]);
     mockRunStep.mockResolvedValue(undefined);
-    const action = await getAction();
-
     await action({ meetingId: IDS.meetingId });
 
     expect(mockRunStep).toHaveBeenCalledTimes(1);
@@ -152,8 +153,6 @@ describe("regenerateActionItemsAction", () => {
     mockGetMeeting.mockResolvedValue(makeMeeting());
     mockGetKnownPeople.mockResolvedValue([]);
     mockRunStep.mockResolvedValue(undefined);
-    const action = await getAction();
-
     await action({ meetingId: IDS.meetingId });
 
     const identifiedProjects = mockRunStep.mock.calls[0][3];
@@ -166,8 +165,6 @@ describe("regenerateActionItemsAction", () => {
     mockGetMeeting.mockResolvedValue(makeMeeting());
     mockGetKnownPeople.mockResolvedValue([]);
     mockRunStep.mockResolvedValue(undefined);
-    const action = await getAction();
-
     const result = await action({ meetingId: IDS.meetingId });
 
     expect(result).toEqual({ success: true });
@@ -181,8 +178,6 @@ describe("regenerateActionItemsAction", () => {
     mockGetMeeting.mockResolvedValue(makeMeeting());
     mockGetKnownPeople.mockResolvedValue([]);
     mockRunStep.mockRejectedValue(new Error("boom"));
-    const action = await getAction();
-
     const result = await action({ meetingId: IDS.meetingId });
 
     expect(result).toEqual({ error: "Action items regenereren mislukt: boom" });
