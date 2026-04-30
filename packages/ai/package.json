@@ -17,6 +17,8 @@
     "./pipeline/summary/*": "./src/pipeline/summary/*.ts",
     "./pipeline/email": "./src/pipeline/email/index.ts",
     "./pipeline/email/*": "./src/pipeline/email/*.ts",
+    "./pipeline/tagger": "./src/pipeline/tagger/index.ts",
+    "./pipeline/tagger/*": "./src/pipeline/tagger/*.ts",
     "./pipeline/*": "./src/pipeline/*.ts",
     "./embeddings": "./src/embeddings.ts",
     "./fireflies": "./src/fireflies.ts",
