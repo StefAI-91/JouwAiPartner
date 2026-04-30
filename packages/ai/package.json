@@ -19,6 +19,7 @@
     "./pipeline/email/*": "./src/pipeline/email/*.ts",
     "./pipeline/tagger": "./src/pipeline/tagger/index.ts",
     "./pipeline/tagger/*": "./src/pipeline/tagger/*.ts",
+    "./pipeline/steps/link-themes": "./src/pipeline/steps/link-themes/index.ts",
     "./pipeline/*": "./src/pipeline/*.ts",
     "./embeddings": "./src/embeddings.ts",
     "./fireflies": "./src/fireflies.ts",
