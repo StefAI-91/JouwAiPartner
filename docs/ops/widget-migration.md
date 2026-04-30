@@ -75,10 +75,10 @@ DevHub-ingest faalt):
 
 ## Bekende gaps
 
-| Gap                            | Impact                                                                                                  | Follow-up                                                                                                                       |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Geen annotated screenshots** | Userback laat gebruikers tekenen op een screenshot. JAIP V0 niet — alleen URL + viewport in de payload. | **WG-006** (gepland): `html2canvas` + draw-overlay. Cutover gaat nu door zonder als team akkoord is dat ze 'm tijdelijk missen. |
-| **Geen replay/recordings**     | Userback heeft session-replay bij feedback. Nice-to-have, niet kritiek voor team-dogfood.               | Geen plan; opnemen in v2-overweging als team het écht mist.                                                                     |
+| Gap                            | Impact                                                                                                  | Follow-up                                                                                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Geen annotated screenshots** | Userback laat gebruikers tekenen op een screenshot. JAIP V0 niet — alleen URL + viewport in de payload. | **WG-006a** (in progress): backend-route `/api/ingest/widget/screenshot` + claim-token-flow. **WG-006b** (gepland): `html2canvas` in widget-bundle + UI. Annotaties (draw-overlay) doorgeschoven naar **WG-007**. |
+| **Geen replay/recordings**     | Userback heeft session-replay bij feedback. Nice-to-have, niet kritiek voor team-dogfood.               | Geen plan; opnemen in v2-overweging als team het écht mist.                                                                                                                                                       |
 
 ## Rate-limit (WG-005)
 
@@ -106,6 +106,41 @@ public Origin) en draagt om die reden geen rate-limit. Mocht er ooit een
 tweede public-route komen, dan kan die op dezelfde `widget_rate_limits`-
 tabel mee — voeg in dat geval een tweede prefix-constante toe en geef
 'm als arg aan de util.
+
+## Screenshot upload (WG-006a)
+
+`/api/ingest/widget/screenshot` accepteert een PNG-screenshot uit de
+widget en parkeert hem in de `issue-attachments`-bucket onder
+`widget/<token>.png`. De route geeft een **claim-token** terug dat de
+widget in de feedback-POST meestuurt; WG-006b koppelt screenshot aan
+issue. Geeft de widget géén token mee → screenshot wordt 24u later
+opgeruimd door de cleanup-cron.
+
+| Aspect         | Waarde                                                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Endpoint**   | `POST /api/ingest/widget/screenshot` (multipart/form-data: `project_id`, `file`)                                                                                                                  |
+| **Mime**       | alleen `image/png` (V0)                                                                                                                                                                           |
+| **Max size**   | **2 MB** raw bytes (`WIDGET_SCREENSHOT_MAX_BYTES`)                                                                                                                                                |
+| **Rate-limit** | **10 uploads per uur per Origin-host** (`screenshot_ingest`-prefix, los van feedback-budget)                                                                                                      |
+| **Token-TTL**  | 1 uur — daarna kan de widget de screenshot niet meer claimen                                                                                                                                      |
+| **Foutcodes**  | `400 invalid_project_id`/`missing_file`/`invalid_multipart`, `403 no_origin`/`origin_not_allowed`, `413 payload_too_large`, `415 unsupported_media_type`, `429 rate_limited`, `500 upload_failed` |
+| **Whitelist**  | Identiek aan feedback-route — `isOriginAllowedForProject(project_id, origin)`                                                                                                                     |
+| **Cleanup**    | `pg_cron`-job `cleanup-widget-screenshot-tokens` draait dagelijks 03:00 UTC en verwijdert rijen waarvan `expires_at` > 24u geleden is verstreken                                                  |
+
+**Limieten aanpassen:** edit `WIDGET_SCREENSHOT_LIMIT_PER_HOUR`,
+`WIDGET_SCREENSHOT_MAX_BYTES` of `WIDGET_SCREENSHOT_ALLOWED_MIMES` in
+`packages/database/src/constants/widget.ts` en redeploy.
+
+**Storage-cleanup van wezen-objecten** zit niet in 006a. WG-006b haakt
+in op de claim-flow: bij claim → `claimed_at` zetten + attachment-rij
+aanmaken; cleanup-script verwijdert dan in één keer
+`(claimed_at IS NULL AND expires_at < now() - 24h)`-objecten zowel uit
+DB als uit storage. Tot 006b live is: maximaal `24u × 10/uur × 2MB ≈
+480MB` worst-case wees-bestanden — binnen budget.
+
+**`storage_path` lekt niet naar de client.** De route geeft alleen
+`token` + `expires_at` terug; het pad blijft server-side. Voorkomt dat
+een client met geldige whitelist de pad-conventie kan reverse-engineeren.
 
 ## Vergelijkingsperiode-log
 

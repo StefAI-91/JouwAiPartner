@@ -2,6 +2,8 @@ import { incrementRateLimit } from "@repo/database/mutations/widget";
 import {
   WIDGET_RATE_LIMIT_KEY_PREFIX,
   WIDGET_RATE_LIMIT_PER_HOUR,
+  WIDGET_SCREENSHOT_LIMIT_PER_HOUR,
+  WIDGET_SCREENSHOT_RATE_LIMIT_KEY_PREFIX,
 } from "@repo/database/constants/widget";
 
 export interface RateLimitResult {
@@ -14,7 +16,25 @@ export interface RateLimitResult {
 }
 
 /**
- * Rate-limit één request op `(prefix, origin)`. Atomic increment via een
+ * Welke counter wordt aangeroepen. Elke scope krijgt een eigen prefix in
+ * `widget_rate_limits.key` zodat counters voor verschillende routes niet
+ * door elkaar lopen.
+ */
+export type RateLimitScope = "widget_ingest" | "screenshot_ingest";
+
+const SCOPES: Record<RateLimitScope, { prefix: string; limit: number }> = {
+  widget_ingest: {
+    prefix: WIDGET_RATE_LIMIT_KEY_PREFIX,
+    limit: WIDGET_RATE_LIMIT_PER_HOUR,
+  },
+  screenshot_ingest: {
+    prefix: WIDGET_SCREENSHOT_RATE_LIMIT_KEY_PREFIX,
+    limit: WIDGET_SCREENSHOT_LIMIT_PER_HOUR,
+  },
+};
+
+/**
+ * Rate-limit één request op `(scope, origin)`. Atomic increment via een
  * Postgres-RPC, zodat concurrente requests niet langs elkaar heen kunnen
  * tellen.
  *
@@ -23,14 +43,18 @@ export interface RateLimitResult {
  * feedback per ongeluk weggooien is dat niet. Documentatie-trail in
  * `docs/security/audit-report.md`.
  */
-export async function rateLimitOrigin(origin: string): Promise<RateLimitResult> {
-  const key = `${WIDGET_RATE_LIMIT_KEY_PREFIX}:${origin}`;
+export async function rateLimitOrigin(
+  origin: string,
+  scope: RateLimitScope = "widget_ingest",
+): Promise<RateLimitResult> {
+  const { prefix, limit } = SCOPES[scope];
+  const key = `${prefix}:${origin}`;
   try {
     const count = await incrementRateLimit(key);
     return {
-      success: count <= WIDGET_RATE_LIMIT_PER_HOUR,
+      success: count <= limit,
       count,
-      limit: WIDGET_RATE_LIMIT_PER_HOUR,
+      limit,
     };
   } catch (error) {
     console.error(
@@ -41,6 +65,6 @@ export async function rateLimitOrigin(origin: string): Promise<RateLimitResult> 
         ts: new Date().toISOString(),
       }),
     );
-    return { success: true, count: -1, limit: WIDGET_RATE_LIMIT_PER_HOUR };
+    return { success: true, count: -1, limit };
   }
 }

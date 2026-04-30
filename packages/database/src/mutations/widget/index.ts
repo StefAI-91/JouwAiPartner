@@ -6,3 +6,4 @@
 export * from "./feedback";
 export * from "./admin";
 export * from "./rate-limit";
+export * from "./screenshot";

@@ -53,4 +53,31 @@ describe("rateLimitOrigin", () => {
       p_key: "widget_ingest:app.klant.nl",
     });
   });
+
+  // WG-006a: screenshot-scope hergebruikt de util met andere prefix + lager
+  // limit zodat screenshots geen feedback-budget eten.
+  describe("scope: screenshot_ingest", () => {
+    it("stuurt 'screenshot_ingest:<origin>' als RPC-key", async () => {
+      mockRpc.mockResolvedValueOnce({ data: 1, error: null });
+      await rateLimitOrigin("app.klant.nl", "screenshot_ingest");
+      expect(mockRpc).toHaveBeenCalledWith("increment_rate_limit", {
+        p_key: "screenshot_ingest:app.klant.nl",
+      });
+    });
+
+    it("staat exact de 10e request toe (limiet inclusief)", async () => {
+      mockRpc.mockResolvedValueOnce({ data: 10, error: null });
+      const result = await rateLimitOrigin("klant.nl", "screenshot_ingest");
+      expect(result.success).toBe(true);
+      expect(result.limit).toBe(10);
+    });
+
+    it("blokkeert de 11e request (boven limiet)", async () => {
+      mockRpc.mockResolvedValueOnce({ data: 11, error: null });
+      const result = await rateLimitOrigin("klant.nl", "screenshot_ingest");
+      expect(result.success).toBe(false);
+      expect(result.count).toBe(11);
+      expect(result.limit).toBe(10);
+    });
+  });
 });
