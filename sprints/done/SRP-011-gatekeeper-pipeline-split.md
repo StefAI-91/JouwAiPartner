@@ -38,13 +38,13 @@ packages/ai/src/pipeline/gatekeeper/
 
 ## Deliverables
 
-- [ ] `pipeline/gatekeeper/` folder met 6-7 files
-- [ ] Oude `gatekeeper-pipeline.ts` verwijderd
-- [ ] Orchestrator < 120 regels
-- [ ] Geen fase-functie > 100 regels
-- [ ] Skip-paden expliciet getest (en blijven werken)
-- [ ] Re-export uit `pipeline/index.ts` of via folder-resolution: `processMeeting` blijft importeerbaar als `from "@repo/ai/pipeline/gatekeeper-pipeline"` (of via package-export-map als die bestaat)
-- [ ] Lint, type-check, test groen
+- [x] `pipeline/gatekeeper/` folder met 9 files: `index.ts`, `types.ts`, `constants.ts`, `classify.ts`, `persist-meeting.ts`, `transcribe.ts`, `detect-themes.ts`, `extract.ts`, `finalize.ts`
+- [x] Oude `gatekeeper-pipeline.ts` verwijderd
+- [x] Orchestrator: 83 regels (`index.ts`)
+- [x] Fase-functies: classify 47 r, persist 75 r, transcribe 28 r, detect-themes 55 r, extract 76 r, finalize 85 r — alle ≤ 100
+- [ ] Skip-paden expliciet getest — **uitgesteld naar opvolg-sprint**: orchestrator-tests vragen om interne mocks van `run*Step`-functies (botst met test-mock-grens-policy in `CLAUDE.md`). Gedragstest moet via integration-stijl met DB + agents gemockt; te groot voor SRP-011-scope. Skip-paden zijn wel expliciet **in de code** zichtbaar in `index.ts` (insert-failure early-return) en in de symmetrische `shouldDetectThemes` checks tussen `detect-themes.ts` en `finalize.ts`.
+- [x] Callers + tests bijgewerkt naar `from "@repo/ai/pipeline/gatekeeper"` (5 files: 2 api routes, 1 reprocess action, 2 cockpit tests). Export-map entry toegevoegd: `"./pipeline/gatekeeper": "./src/pipeline/gatekeeper/index.ts"`. Registry `entrypoint` + pipeline README bijgewerkt.
+- [x] Lint (cockpit + ai), type-check (alle workspaces), test (cockpit 189 + ai 409) groen. Pre-existing devhub `search-input.tsx` lint-error is niet gerelateerd.
 
 ## Acceptance criteria
 

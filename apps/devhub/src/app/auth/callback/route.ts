@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@repo/database/supabase/server";
+import { getProfileRole } from "@repo/database/queries/team";
 
 /**
  * AUTH-171: Magic link / invite callback for DevHub.
@@ -34,13 +35,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=session", req.url));
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
+  const role = await getProfileRole(user.id, supabase);
 
-  if (profile?.role === "client") {
+  if (role === "client") {
     const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL;
     if (portalUrl) return NextResponse.redirect(new URL(portalUrl));
     await supabase.auth.signOut();

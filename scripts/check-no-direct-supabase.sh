@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
-# Q2b — blokkeer directe Supabase .from()-calls in Server Actions en API routes.
+# Blokkeer directe Supabase .from()-calls in Server Actions, API routes,
+# auth-callbacks en de AI-pipeline.
 #
-# Scope (Q2b):
-#   - apps/*/src/actions/**
-#   - apps/*/src/app/api/**
+# Scope:
+#   - apps/*/src/actions/**          (Server Actions)
+#   - apps/*/src/app/api/**          (Route handlers)
+#   - apps/*/src/app/auth/**         (Magic-link / OTP callbacks)
+#   - packages/ai/src/pipeline/**    (AI pipeline-stappen)
 #
-# Niet in scope (Q2c — toekomstige sprint):
-#   - Server Components (page.tsx / layout.tsx)
-#   - auth-callback route-handlers
+# Niet in scope:
+#   - Server Components (page.tsx / layout.tsx)  — separate sprint
+#   - packages/ai/src/scripts/**                 — eenmalige migrations
+#   - packages/ai/src/scan-needs.ts              — eenmalige scan
 #
 # Alle data-access hoort via helpers in packages/database/queries of
 # packages/database/mutations te lopen. Zie packages/database/README.md voor
@@ -16,7 +20,7 @@
 # Allowlist:
 #   scripts/supabase-from-allowlist.txt bevat paden die nog directe calls
 #   mogen bevatten omdat ze in scope van een latere sub-sprint migreren.
-#   Q2b-B en Q2b-C leegen die lijst progressief; wanneer hij leeg is kan het
+#   Sub-sprints leegen die lijst progressief; wanneer hij leeg is kan het
 #   bestand verwijderd worden.
 
 set -e
@@ -24,10 +28,14 @@ set -e
 FORBIDDEN_PATHS=(
   "apps/cockpit/src/actions"
   "apps/cockpit/src/app/api"
+  "apps/cockpit/src/app/auth"
   "apps/devhub/src/actions"
   "apps/devhub/src/app/api"
+  "apps/devhub/src/app/auth"
   "apps/portal/src/actions"
   "apps/portal/src/app/api"
+  "apps/portal/src/app/auth"
+  "packages/ai/src/pipeline"
 )
 
 ALLOWLIST_FILE="scripts/supabase-from-allowlist.txt"

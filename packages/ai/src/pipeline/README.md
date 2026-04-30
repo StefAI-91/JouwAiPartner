@@ -8,7 +8,7 @@ historisch impliciet was en nu expliciet hier vastligt.
 
 ```
 pipeline/
-├── gatekeeper-pipeline.ts   ← orchestrator (de "hoofdpijplijn")
+├── gatekeeper/              ← orchestrator (de "hoofdpijplijn") — fase per file
 ├── steps/                   ← orchestrator-API: één run*Step per file
 ├── lib/                     ← pure helpers, herbruikbaar tussen steps
 ├── saves/                   ← DB-writers voor extraction-tabellen
@@ -22,7 +22,7 @@ pipeline/
 ### Laag 1 — Steps (`steps/`)
 
 Public API van de pipeline. Elke step exporteert één `run*Step()`
-functie. **Alleen aangeroepen door** `gatekeeper-pipeline.ts` (volle
+functie. **Alleen aangeroepen door** `gatekeeper/` (volle
 ingest) en regenerate-actions / reprocess-routes.
 
 Apps en api-routes hoorden via deze laag te importeren — niet
@@ -56,9 +56,11 @@ side-effects hebben en specifiek aan een agent gekoppeld zijn.
 
 ### Orchestrator
 
-`gatekeeper-pipeline.ts` is de hoofdpijplijn voor meeting-ingest. Roept
-`runGatekeeper` (het filter-agent) aan en scheduleert daarna de steps in
-de juiste volgorde inclusief parallel-takken (themes naast embeddings).
+`gatekeeper/` is de hoofdpijplijn voor meeting-ingest. `gatekeeper/index.ts`
+exporteert `processMeeting` en delegeert naar zes fase-modules:
+`classify`, `persist-meeting`, `transcribe`, `detect-themes`, `extract`,
+`finalize`. Skip-paden (insert-failure, lage relevance-score) zijn expliciet
+zichtbaar in `index.ts`.
 
 ### Sub-pipelines (`email/`, `embed/`, `summary/`, `participant/`)
 

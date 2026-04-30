@@ -9,6 +9,7 @@ function createMockDb() {
     return {
       ...resp,
       single: vi.fn(() => resp),
+      maybeSingle: vi.fn(() => resp),
       eq: vi.fn((col: string, val: unknown) => makeResult(`${key}.${col}=${val}`)),
       not: vi.fn((_c: string, _op: string, _v: unknown) => makeResult(`${key}.not`)),
       in: vi.fn((_col: string, _vals: unknown[]) => makeResult(`${key}.in`)),

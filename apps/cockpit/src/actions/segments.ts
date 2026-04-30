@@ -47,19 +47,11 @@ export async function linkSegmentToProjectAction(
   // Get project_name_raw before linking (for alias feedback)
   const nameRaw = await getSegmentNameRaw(parsed.data.segmentId);
 
-  console.info("[linkSegmentToProjectAction]", {
-    segmentId: parsed.data.segmentId,
-    projectId: parsed.data.projectId,
-    meetingId: parsed.data.meetingId,
-    nameRaw,
-  });
-
   const result = await linkSegmentToProject(parsed.data.segmentId, parsed.data.projectId);
   if ("error" in result) {
     console.error("[linkSegmentToProjectAction] Failed:", result.error);
     return result;
   }
-  console.info("[linkSegmentToProjectAction] Success");
 
   // FUNC-090: Auto-add project_name_raw as alias to the project
   if (nameRaw) {

@@ -7,7 +7,7 @@ import {
   getExistingMeetingsByTitleDates,
 } from "@repo/database/queries/meetings";
 import { isValidDuration } from "@repo/ai/validations/fireflies";
-import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
+import { processMeeting } from "@repo/ai/pipeline/gatekeeper";
 import { runReEmbedWorker } from "@repo/ai/pipeline/embed/re-embed-worker";
 
 const ingestSchema = z.object({

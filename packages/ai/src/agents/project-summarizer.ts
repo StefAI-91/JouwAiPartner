@@ -23,7 +23,7 @@ const PROJECT_SYSTEM_PROMPT = readFileSync(
 const ORG_SYSTEM_PROMPT = readFileSync(resolve(PROMPTS_DIR, "org-summarizer.md"), "utf8").trimEnd();
 
 export interface MeetingInput {
-  title: string;
+  title: string | null;
   date: string | null;
   meetingType: string | null;
   briefing: string | null;

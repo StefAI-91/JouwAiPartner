@@ -37,3 +37,58 @@ export async function getExtractionsForMeetingByType(
   }
   return (data ?? []) as ExtractionForHarness[];
 }
+
+/**
+ * List unique non-null `organization_id`s from extractions of a single
+ * meeting. Used by the summary-pipeline trigger to fan out summaries naar
+ * de organisaties die in een meeting genoemd zijn.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listMeetingExtractionOrgIds(
+  meetingId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("extractions")
+    .select("organization_id")
+    .eq("meeting_id", meetingId)
+    .not("organization_id", "is", null);
+
+  if (error) {
+    console.error("[listMeetingExtractionOrgIds]", error.message);
+    return [];
+  }
+  const ids = (data ?? [])
+    .map((r) => r.organization_id as string | null)
+    .filter((id): id is string => id !== null);
+  return [...new Set(ids)];
+}
+
+/**
+ * List unique non-null `organization_id`s from `email_extractions` for a
+ * single email. Mirror van `listMeetingExtractionOrgIds`.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function listEmailExtractionOrgIds(
+  emailId: string,
+  client?: SupabaseClient,
+): Promise<string[]> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("email_extractions")
+    .select("organization_id")
+    .eq("email_id", emailId)
+    .not("organization_id", "is", null);
+
+  if (error) {
+    console.error("[listEmailExtractionOrgIds]", error.message);
+    return [];
+  }
+  const ids = (data ?? [])
+    .map((r) => r.organization_id as string | null)
+    .filter((id): id is string => id !== null);
+  return [...new Set(ids)];
+}
