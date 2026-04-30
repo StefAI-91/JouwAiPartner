@@ -9,8 +9,8 @@
 |--------|-------|
 | Files scanned | 598 |
 | Exported functions/constants | 906 |
-| Exported types/interfaces | 385 |
-| Cross-package imports | 603 |
+| Exported types/interfaces | 384 |
+| Cross-package imports | 604 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -217,12 +217,11 @@
 - `getIssueById()`
 - `getIssueCounts()`
 - `getWeeklyIssueIntake()`
-- `listClientIssuesForOrg()`
 - `countCriticalUnassigned()`
 - `ISSUE_SORTS`
 - `ISSUE_SELECT`
 
-**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`, `WeeklyIssueIntake`, `ClientIssueRow`
+**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`, `WeeklyIssueIntake`
 
 ### `queries/meetings/core.ts`
 
@@ -444,6 +443,7 @@
 - `getProjectByNameIlike()`
 - `getAllProjects()`
 - `getProjectName()`
+- `getProjectOrganizationId()`
 - `getProjectByUserbackProjectId()`
 - `listProjectMeetingIds()`
 - `listProjectEmailIds()`
@@ -4131,6 +4131,7 @@
 **Depends on:**
 - `@repo/auth/helpers` → createPageClient, getAuthenticatedUser
 - `@repo/database/mutations/client-questions` → sendQuestion, replyToQuestion
+- `@repo/database/queries/projects` → getProjectOrganizationId
 - `@repo/database/validations/client-questions` → replyToQuestionSchema
 
 ### `apps/devhub/src/actions/review.ts`
@@ -4504,7 +4505,7 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 101 | 8 | 8 | 38 | - | 155 |
 | Database Queries | - | - | 3 | - | - | 3 |
-| DevHub Server Actions | 25 | 3 | 13 | - | - | 41 |
+| DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
 | DevHub Components | 3 | 2 | 1 | 15 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
@@ -4947,7 +4948,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
 | `getAllOrganizations()` | `packages/ai/src/pipeline/lib/context-injection.ts`, `packages/ai/src/pipeline/lib/entity-resolution.ts` |
 | `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
@@ -5001,7 +5002,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
+| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 
 ### queries/projects/detail.ts
@@ -5023,6 +5024,7 @@ Which queries are used where across the codebase.
 | `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/lib/entity-resolution.ts` |
 | `getProjectName()` | `packages/ai/src/pipeline/summary/project.ts` |
+| `getProjectOrganizationId()` | `apps/devhub/src/actions/questions.ts` |
 | `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `listProjectMeetingIds()` | `packages/ai/src/pipeline/summary/project.ts` |
 | `listProjectEmailIds()` | `packages/ai/src/pipeline/summary/project.ts` |
@@ -5095,7 +5097,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/auth/callback/route.ts`, `apps/devhub/src/app/auth/callback/route.ts` |
@@ -5151,7 +5153,7 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `countOpenIssuesPerTopic()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getTopicMembershipForIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getTopicMembershipForIssues()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getLinkedIssueIdsInProject()` | `packages/database/src/queries/issues/core.ts` |
 | `getIssueIdsForTopics()` | `packages/database/src/queries/issues/core.ts` |
 
@@ -5159,7 +5161,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTopics()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `listTopics()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `listOpenTopicsForCluster()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
 | `listTopicSampleIssues()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
 
