@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 552 |
-| Exported functions/constants | 851 |
+| Files scanned | 556 |
+| Exported functions/constants | 855 |
 | Exported types/interfaces | 351 |
-| Cross-package imports | 569 |
+| Cross-package imports | 570 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -2979,6 +2979,29 @@
 - `@repo/auth/access` → requireAdmin
 - `@repo/database/queries/meetings` → listVerifiedMeetings
 
+### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/_components/backfill-panel.tsx`
+
+**Exports:**
+- `BackfillPanel()`
+
+**Depends on:**
+- `@repo/ui/format` → formatDate
+
+### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/_components/grouped-by-person.tsx`
+
+**Exports:**
+- `GroupedByPerson()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/_components/result-panel.tsx`
+
+**Exports:**
+- `ResultPanel()`
+
+### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/_components/stat.tsx`
+
+**Exports:**
+- `Stat()`
+
 ### `apps/cockpit/src/app/(dashboard)/dev/speaker-mapping/client.tsx`
 
 **Exports:**
@@ -4123,7 +4146,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 20 | 5 | - | 41 | - | 66 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 100 | 8 | 8 | 37 | - | 153 |
+| Cockpit Pages | 100 | 8 | 8 | 38 | - | 154 |
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 20 | 3 | 10 | - | - | 33 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
