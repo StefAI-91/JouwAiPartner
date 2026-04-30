@@ -13,18 +13,22 @@ describe("PORTAL_SOURCE_GROUPS", () => {
     expect(keys).toEqual(["client", "jaip"]);
   });
 
-  it("dekt portal/userback onder client en manual/ai onder jaip", () => {
+  it("dekt portal/userback/jaip_widget onder client en manual/ai onder jaip", () => {
     const client = PORTAL_SOURCE_GROUPS.find((g) => g.key === "client");
     const jaip = PORTAL_SOURCE_GROUPS.find((g) => g.key === "jaip");
-    expect(client?.sources).toEqual(["portal", "userback"]);
+    expect(client?.sources).toEqual(["portal", "userback", "jaip_widget"]);
     expect(jaip?.sources).toEqual(["manual", "ai"]);
   });
 });
 
 describe("resolvePortalSourceGroup", () => {
-  it("mapt portal en userback naar 'client'", () => {
+  it("mapt portal, userback en jaip_widget naar 'client'", () => {
     expect(resolvePortalSourceGroup("portal")).toBe("client");
     expect(resolvePortalSourceGroup("userback")).toBe("client");
+    // WG-004 (WG-REQ-078): widget-feedback is door de klant zelf gemeld via
+    // de JAIP-eigen knop op zijn app — hoort in dezelfde bucket als portal
+    // en userback. Zonder deze mapping zou hij default op 'jaip' vallen.
+    expect(resolvePortalSourceGroup("jaip_widget")).toBe("client");
   });
 
   it("mapt manual en ai naar 'jaip'", () => {

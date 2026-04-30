@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito, Fredoka, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { UserbackProvider } from "@/components/shared/userback-provider";
+import { JaipWidgetScript } from "@/components/shared/jaip-widget-script";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -56,6 +57,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col antialiased overflow-x-hidden">
         {children}
         <UserbackProvider />
+        <JaipWidgetScript />
       </body>
     </html>
   );

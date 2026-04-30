@@ -228,6 +228,11 @@ export type PortalIssueCounts = Record<PortalStatusKey, number>;
  * `filters` (CP-008) laten de counts dezelfde source/type-filters volgen als
  * de lijst zelf, zodat de bucket-headers nooit "Ingepland (8)" tonen terwijl
  * de zichtbare lijst maar 3 cards heeft.
+ *
+ * WG-004 (WG-REQ-079): test-submissies (label `'test'`) worden uit klant-
+ * views weggefilterd. Onze eigen smoke-tests via de widget mogen de klant-
+ * counts niet vervuilen. Admins zien ze nog wel — die view loopt via DevHub,
+ * niet hier.
  */
 export async function getProjectIssueCounts(
   projectId: string,
@@ -243,7 +248,8 @@ export async function getProjectIssueCounts(
         .from("issues")
         .select("id", { count: "exact", head: true })
         .eq("project_id", projectId)
-        .in("status", [...group.internalStatuses]);
+        .in("status", [...group.internalStatuses])
+        .not("labels", "cs", '{"test"}');
       if (sources) query = query.in("source", [...sources]);
       if (types) query = query.in("type", types);
 
@@ -305,6 +311,7 @@ export async function listPortalIssues(
     .from("issues")
     .select(PORTAL_ISSUE_COLS)
     .eq("project_id", projectId)
+    .not("labels", "cs", '{"test"}')
     .order("updated_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -334,6 +341,10 @@ export async function listPortalIssues(
  * het issue niet bestaat of bij een ander project hoort — dat laatste voorkomt
  * dat een gebruiker via URL-manipulatie issues van andere projecten opvraagt
  * (RLS is de primaire lijn van verdediging, dit is extra defensief).
+ *
+ * WG-004: test-submissies blokkeren we op detail-niveau ook — anders kan een
+ * klant via een directe URL-link toch een testrij openen die we juist niet
+ * willen tonen.
  */
 export async function getPortalIssue(
   issueId: string,
@@ -345,6 +356,7 @@ export async function getPortalIssue(
     .select(PORTAL_ISSUE_COLS)
     .eq("id", issueId)
     .eq("project_id", projectId)
+    .not("labels", "cs", '{"test"}')
     .maybeSingle();
 
   if (error) {

@@ -9,6 +9,11 @@ import { classifyIssueBackground } from "@/features/issues/actions/classify";
 
 export const maxDuration = 300;
 
+// WG-REQ-077: bij 5xx geven we een status-page link mee zodat de caller
+// weet of het aan ons ligt. Echte status-page volgt later — placeholder URL
+// is genoeg voor V0.
+const STATUS_PAGE_URL = "https://status.jouw-ai-partner.nl";
+
 const postSchema = z.object({
   projectId: z.string().uuid(),
   limit: z.number().int().min(1).max(1000).default(10),
@@ -73,7 +78,10 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error("[GET /api/ingest/userback]", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Sync failed" },
+      {
+        error: err instanceof Error ? err.message : "Sync failed",
+        status_page: STATUS_PAGE_URL,
+      },
       { status: 500 },
     );
   }
@@ -126,7 +134,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[POST /api/ingest/userback]", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Sync failed" },
+      {
+        error: err instanceof Error ? err.message : "Sync failed",
+        status_page: STATUS_PAGE_URL,
+      },
       { status: 500 },
     );
   }

@@ -16,6 +16,11 @@ const common = {
     "react/jsx-runtime": "preact/jsx-runtime",
     "react-dom/test-utils": "preact/test-utils",
   },
+  loader: {
+    // CSS importeren als string zodat we 'm in de Shadow DOM kunnen injecteren
+    // (geen aparte stylesheet — host-pagina mag onze styles niet zien).
+    ".css": "text",
+  },
   logLevel: "info",
 };
 

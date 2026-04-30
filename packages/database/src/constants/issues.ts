@@ -170,7 +170,11 @@ export const PORTAL_STATUS_LABELS: Record<PortalStatusKey, PortalStatusLabel> =
 // portal-queries (CP-008) dezelfde mapping gebruiken.
 
 export const PORTAL_SOURCE_GROUPS = [
-  { key: "client", label: "Onze meldingen", sources: ["portal", "userback"] },
+  // 'jaip_widget' is door de klant zelf gemelde feedback via de JAIP-eigen
+  // feedback-knop op zijn app — hoort in dezelfde bucket als portal/userback
+  // (CP-006/WG-004). Zonder deze mapping zou widget-feedback default op
+  // 'jaip' vallen — verkeerde bucket voor klant-zelf-gemelde feedback.
+  { key: "client", label: "Onze meldingen", sources: ["portal", "userback", "jaip_widget"] },
   { key: "jaip", label: "JAIP-meldingen", sources: ["manual", "ai"] },
 ] as const;
 

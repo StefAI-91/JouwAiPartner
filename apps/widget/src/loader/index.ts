@@ -27,9 +27,19 @@ interface JAIPWidgetGlobal {
   mount: (root: ShadowRoot, config: MountConfig) => void;
 }
 
+interface JAIPWidgetIdentifyInfo {
+  email: string;
+}
+
 declare global {
   interface Window {
     __JAIPWidget?: JAIPWidgetGlobal;
+    /**
+     * Runtime-API voor SPA's die het ingelogde email pas na hydration weten
+     * (bijv. na een `/me`-fetch). Volgende keer dat de modal mountt gebruikt
+     * hij de nieuwe email. WG-004 (klant-rollout).
+     */
+    __JAIPWidgetIdentify?: (info: JAIPWidgetIdentifyInfo) => void;
   }
 }
 
@@ -52,7 +62,16 @@ declare global {
     (window as unknown as { __JAIPWidgetApiUrl?: string }).__JAIPWidgetApiUrl ??
     "https://devhub.jouw-ai-partner.nl/api/ingest/widget";
 
-  const userEmail = script.dataset.userEmail ?? null;
+  let userEmail = script.dataset.userEmail ?? null;
+
+  // Runtime-identify voor klant-SPA's. Triage gebruikt dit email als hint,
+  // niet als bewijs — een browser kan altijd spoofen, maar de origin-
+  // whitelist blijft als hek staan. Cap op 320 chars (RFC-max e-mail).
+  window.__JAIPWidgetIdentify = (info) => {
+    if (info && typeof info.email === "string" && info.email.length <= 320) {
+      userEmail = info.email;
+    }
+  };
 
   const host = document.createElement("div");
   host.id = "__jaip-widget-host";
@@ -79,33 +98,34 @@ declare global {
   ].join(";");
   shadow.appendChild(button);
 
-  let widgetLoaded = false;
-  let loading = false;
+  // In-flight load wordt als gedeelde Promise opgeslagen zodat concurrente
+  // klikken (dubbelklik tijdens load) dezelfde tag-injection delen — geen
+  // setTimeout-polling die in een oneindige loop kan blijven hangen als
+  // widget.js nooit laadt.
+  let widgetLoadPromise: Promise<void> | null = null;
 
   // Cross-origin script injection ipv dynamic import: robuuster en werkt
   // ook in oudere browsers zonder een module-bundler-runtime aan kant van
   // de host.
   function loadWidget(): Promise<void> {
-    if (widgetLoaded) return Promise.resolve();
-    if (loading) return new Promise((resolve) => setTimeout(() => resolve(loadWidget()), 50));
-    loading = true;
+    if (widgetLoadPromise) return widgetLoadPromise;
 
-    return new Promise((resolve, reject) => {
+    widgetLoadPromise = new Promise<void>((resolve, reject) => {
       const widgetSrc = script!.src.replace(/loader\.js(\?.*)?$/, "widget.js");
       const tag = document.createElement("script");
       tag.src = widgetSrc;
       tag.async = true;
-      tag.onload = () => {
-        widgetLoaded = true;
-        loading = false;
-        resolve();
-      };
+      tag.onload = () => resolve();
       tag.onerror = () => {
-        loading = false;
+        // Reset zodat een volgende klik opnieuw mag proberen — anders
+        // blijft de widget dood na één netwerk-glitch.
+        widgetLoadPromise = null;
         reject(new Error("widget.js failed to load"));
       };
       document.head.appendChild(tag);
     });
+
+    return widgetLoadPromise;
   }
 
   button.addEventListener("click", async () => {
