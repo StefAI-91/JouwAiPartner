@@ -7,7 +7,7 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 570 |
+| Files scanned | 574 |
 | Exported functions/constants | 873 |
 | Exported types/interfaces | 356 |
 | Cross-package imports | 585 |
@@ -386,21 +386,41 @@
 **Depends on:**
 - `@repo/auth/access` → listAccessibleProjectIds
 
+### `queries/projects/context.ts`
+
+**Exports:**
+- `getActiveProjectsForContext()`
+
+**Types:** `ActiveProjectForContext`
+
 ### `queries/projects/core.ts`
 
 **Exports:**
 - `listProjects()`
-- `getProjectById()`
 - `listFocusProjects()`
+
+**Types:** `ProjectListItem`, `FocusProject`
+
+### `queries/projects/detail.ts`
+
+**Exports:**
+- `getProjectById()`
+
+**Types:** `ProjectDetail`
+
+### `queries/projects/embedding.ts`
+
+**Exports:**
+- `matchProjectsByEmbedding()`
+
+### `queries/projects/lookup.ts`
+
+**Exports:**
 - `getProjectAliases()`
 - `getProjectByNameIlike()`
 - `getAllProjects()`
-- `getActiveProjectsForContext()`
 - `getProjectName()`
 - `getProjectByUserbackProjectId()`
-- `matchProjectsByEmbedding()`
-
-**Types:** `ProjectListItem`, `ProjectDetail`, `FocusProject`, `ActiveProjectForContext`
 
 ### `queries/projects/reviews.ts`
 
@@ -4739,18 +4759,38 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `listAccessibleProjects()` | `apps/devhub/src/app/(app)/layout.tsx`, `apps/devhub/src/app/(app)/page.tsx`, `apps/devhub/src/app/(app)/settings/slack/page.tsx` |
 
+### queries/projects/context.ts
+
+| Query | Used in |
+|-------|---------|
+| `getActiveProjectsForContext()` | `packages/ai/src/pipeline/lib/context-injection.ts` |
+
 ### queries/projects/core.ts
 
 | Query | Used in |
 |-------|---------|
 | `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
-| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
+
+### queries/projects/detail.ts
+
+| Query | Used in |
+|-------|---------|
+| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
+
+### queries/projects/embedding.ts
+
+| Query | Used in |
+|-------|---------|
+| `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/lib/entity-resolution.ts` |
+
+### queries/projects/lookup.ts
+
+| Query | Used in |
+|-------|---------|
 | `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/lib/entity-resolution.ts` |
-| `getActiveProjectsForContext()` | `packages/ai/src/pipeline/lib/context-injection.ts` |
 | `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
-| `matchProjectsByEmbedding()` | `packages/ai/src/pipeline/lib/entity-resolution.ts` |
 
 ### queries/projects/reviews.ts
 
@@ -4792,7 +4832,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/core.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary/org.ts`, `packages/ai/src/pipeline/summary/project.ts` |
+| `getLatestSummary()` | `packages/database/src/queries/organizations.ts`, `packages/database/src/queries/projects/detail.ts`, `packages/database/src/queries/summaries/management-insights.ts`, `packages/database/src/queries/summaries/weekly.ts`, `packages/ai/src/pipeline/summary/org.ts`, `packages/ai/src/pipeline/summary/project.ts` |
 
 ### queries/summaries/management-insights.ts
 
