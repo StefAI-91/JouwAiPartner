@@ -14,6 +14,21 @@ Operationele config voor cockpit + devhub (+ portal, wanneer gedeployed).
 
 Beide apps (cockpit + devhub) hebben de 3 NEXT*PUBLIC*\* URL vars nodig zodat de workspace-switcher in de sidebar naar de andere quadranten kan linken.
 
+## MCP server (`/api/mcp` op cockpit)
+
+De MCP-server wordt vanuit de cockpit-deploy geserveerd op `/api/mcp` (zie
+`apps/cockpit/src/app/api/mcp/route.ts`, Streamable HTTP transport, OAuth 2.1).
+Geen aparte deploy of stdio-process nodig. De tools gebruiken dezelfde
+`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` als de web-apps.
+
+`ask_client_question` (PR-025) heeft geen extra server-side env-var nodig:
+de afzender komt uit de tool-call (`asked_by_name` parameter, gelijk aan
+hoe `create_task` met `created_by_name` werkt). De tool gebruikt
+`NEXT_PUBLIC_PORTAL_URL` voor de portal-deeplink in de output — al gezet
+voor de web-apps.
+
+Voor de install-snippets per MCP-client: `packages/mcp/README.md`.
+
 ## JAIP Feedback Widget (WG-003)
 
 De JAIP-eigen feedback-widget (`apps/widget`) wordt op elke quadrant

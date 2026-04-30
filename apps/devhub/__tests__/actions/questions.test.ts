@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // PR-023 — DevHub questions Server Actions. Mock-grens: auth helpers,
 // mutations en next/cache. `createPageClient` levert een minimale fake-client
-// die alleen het `projects.select().eq().single()`-pad afdekt dat
-// askQuestionAction nodig heeft voor de org-lookup.
+// die het `projects.select().eq().maybeSingle()`-pad afdekt dat
+// `getProjectOrganizationId` (gebruikt door askQuestionAction) aanroept.
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
@@ -25,7 +25,7 @@ vi.mock("@repo/auth/helpers", () => ({
       return {
         select: () => ({
           eq: () => ({
-            single: async () => mockProjectOrg(),
+            maybeSingle: async () => mockProjectOrg(),
           }),
         }),
       };

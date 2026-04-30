@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { sendQuestion, replyToQuestion } from "@repo/database/mutations/client-questions";
+import { getProjectOrganizationId } from "@repo/database/queries/projects";
 import { replyToQuestionSchema } from "@repo/database/validations/client-questions";
 
 /**
@@ -42,21 +43,15 @@ export async function askQuestionAction(
 
   const supabase = await createPageClient();
 
-  // Org afleiden uit project — minimal select, niet de zware getProjectById.
-  const { data: project, error: projectError } = await supabase
-    .from("projects")
-    .select("organization_id")
-    .eq("id", parsed.data.project_id)
-    .single();
-
-  if (projectError || !project?.organization_id) {
+  const organizationId = await getProjectOrganizationId(parsed.data.project_id, supabase);
+  if (!organizationId) {
     return { error: "Project of organisatie niet gevonden" };
   }
 
   const result = await sendQuestion(
     {
       project_id: parsed.data.project_id,
-      organization_id: project.organization_id as string,
+      organization_id: organizationId,
       body: parsed.data.body,
       topic_id: parsed.data.topic_id ?? null,
       issue_id: parsed.data.issue_id ?? null,

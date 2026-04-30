@@ -69,6 +69,31 @@ export async function getProjectName(
 }
 
 /**
+ * Single-column read voor de `organization_id` van één project. Gebruikt door
+ * Server Actions die een vraag/feedback aan een project willen koppelen en
+ * alleen de organisatie nodig hebben — niet de zware `getProjectById`.
+ *
+ * @param client See `packages/database/README.md` for client-scope policy.
+ */
+export async function getProjectOrganizationId(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("projects")
+    .select("organization_id")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[getProjectOrganizationId]", error.message);
+    return null;
+  }
+  return (data?.organization_id as string | null) ?? null;
+}
+
+/**
  * Zoek een project op basis van de Userback-project-ID (string kolom). Geeft
  * alleen het `id` terug — de Userback-sync route heeft niets anders nodig.
  * Admin-scope variant; de user-scoped page-variant volgt in Q2c.
