@@ -60,7 +60,7 @@ export async function reprocessMeetingAction(
   // 4. Run full pipeline (gatekeeper → classify → speaker map → ElevenLabs → summarizer → extractor → embed)
   try {
     const { chunkTranscript } = await import("@repo/ai/transcript-processor");
-    const { processMeeting } = await import("@repo/ai/pipeline/gatekeeper-pipeline");
+    const { processMeeting } = await import("@repo/ai/pipeline/gatekeeper");
 
     const chunks = chunkTranscript(transcript.sentences);
     const chunkedTranscript = chunks.map((c) => c.text).join("\n\n---\n\n");

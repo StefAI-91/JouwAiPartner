@@ -4,7 +4,7 @@ import { fetchFirefliesTranscript } from "@repo/ai/fireflies";
 import { chunkTranscript } from "@repo/ai/transcript-processor";
 import { getMeetingByFirefliesId, getMeetingByTitleAndDate } from "@repo/database/queries/meetings";
 import { isValidDuration } from "@repo/ai/validations/fireflies";
-import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
+import { processMeeting } from "@repo/ai/pipeline/gatekeeper";
 
 function verifyFirefliesSignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.FIREFLIES_WEBHOOK_SECRET;

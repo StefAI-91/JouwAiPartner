@@ -18,7 +18,7 @@ vi.mock("@repo/ai/validations/fireflies", () => ({
   isValidDuration: vi.fn(),
 }));
 
-vi.mock("@repo/ai/pipeline/gatekeeper-pipeline", () => ({
+vi.mock("@repo/ai/pipeline/gatekeeper", () => ({
   processMeeting: vi.fn(),
 }));
 
@@ -32,7 +32,7 @@ import {
   getExistingMeetingsByTitleDates,
 } from "@repo/database/queries/meetings";
 import { isValidDuration } from "@repo/ai/validations/fireflies";
-import { processMeeting } from "@repo/ai/pipeline/gatekeeper-pipeline";
+import { processMeeting } from "@repo/ai/pipeline/gatekeeper";
 import { runReEmbedWorker } from "@repo/ai/pipeline/embed/re-embed-worker";
 import { GET, POST } from "@/app/api/ingest/fireflies/route";
 import { emptyFirefliesSummary, firefliesSentence } from "../helpers/fireflies-fixtures";

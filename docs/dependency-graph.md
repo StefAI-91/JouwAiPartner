@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 574 |
-| Exported functions/constants | 873 |
-| Exported types/interfaces | 356 |
-| Cross-package imports | 585 |
+| Files scanned | 582 |
+| Exported functions/constants | 880 |
+| Exported types/interfaces | 368 |
+| Cross-package imports | 587 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -1336,36 +1336,126 @@
 **Exports:**
 - `buildMeetingEmbedText()`
 
-### `packages/ai/src/pipeline/gatekeeper-pipeline.ts`
+### `packages/ai/src/pipeline/gatekeeper/classify.ts`
+
+**Exports:**
+- `runClassifyPhase()`
+
+**Depends on:**
+- `@repo/database/queries/people` → getAllKnownPeople
+
+**Internal deps:**
+- `../../agents/gatekeeper` → runGatekeeper, type ParticipantInfo
+- `../participant/classifier` → classifyParticipantsWithCache, determinePartyType, determineRuleBasedMeetingType
+- `../participant/helpers` → mergeParticipantSources
+- `../lib/context-injection` → buildEntityContext
+- `../lib/speaker-map` → extractSpeakerNames, buildSpeakerMap, formatSpeakerContext
+- `./types` → ClassifyResult, MeetingInput
+
+### `packages/ai/src/pipeline/gatekeeper/constants.ts`
+
+**Exports:**
+- `THEME_DETECTOR_MIN_RELEVANCE`
+
+### `packages/ai/src/pipeline/gatekeeper/detect-themes.ts`
+
+**Exports:**
+- `runDetectThemesPhase()`
+
+**Types:** `DetectThemesPhaseOutcome`
+
+**Internal deps:**
+- `../steps/theme-detector` → runThemeDetectorStep
+- `./constants` → THEME_DETECTOR_MIN_RELEVANCE
+- `./types` → ClassifyResult, DetectThemesResult, MeetingInput
+
+### `packages/ai/src/pipeline/gatekeeper/extract.ts`
+
+**Exports:**
+- `runExtractPhase()`
+
+**Types:** `ExtractPhaseOutcome`
+
+**Internal deps:**
+- `../steps/summarize` → runSummarizeStep
+- `../steps/risk-specialist` → runRiskSpecialistStep
+- `../steps/action-item-specialist` → runActionItemSpecialistStep, buildActionItemParticipants
+- `./types` → ClassifyResult, DetectThemesResult, ExtractResult, MeetingInput, TranscribePhaseResult
+
+### `packages/ai/src/pipeline/gatekeeper/finalize.ts`
+
+**Exports:**
+- `runFinalizePhase()`
+
+**Types:** `FinalizeResult`
+
+**Internal deps:**
+- `../steps/generate-title` → runGenerateTitleStep
+- `../steps/tag-and-segment` → runTagAndSegmentStep
+- `../steps/embed` → runEmbedStep
+- `../steps/link-themes` → runLinkThemesStep
+- `./types` → ClassifyResult, DetectThemesResult, ExtractResult, MeetingInput, PersistResult
+
+### `packages/ai/src/pipeline/gatekeeper/index.ts`
 
 **Exports:**
 - `processMeeting()`
 
+**Internal deps:**
+- `./classify` → runClassifyPhase
+- `./persist-meeting` → runPersistPhase
+- `./transcribe` → runTranscribePhase
+- `./detect-themes` → runDetectThemesPhase
+- `./extract` → runExtractPhase
+- `./finalize` → runFinalizePhase
+- `./types` → MeetingInput, PipelineResult
+
+### `packages/ai/src/pipeline/gatekeeper/persist-meeting.ts`
+
+**Exports:**
+- `runPersistPhase()`
+
+**Types:** `PersistOutcome`
+
 **Depends on:**
 - `@repo/database/mutations/meetings` → insertMeeting
-- `@repo/database/queries/people` → getAllKnownPeople
 
 **Internal deps:**
-- `../agents/gatekeeper` → runGatekeeper
-- `../agents/gatekeeper` → ParticipantInfo
-- `../validations/gatekeeper` → GatekeeperOutput
-- `../validations/gatekeeper` → PartyType, IdentifiedProject
-- `./lib/entity-resolution` → resolveOrganization
-- `./lib/context-injection` → buildEntityContext
-- `./participant/classifier` → classifyParticipantsWithCache, determinePartyType, determineRuleBasedMeetingType
-- `./lib/build-raw-fireflies` → buildRawFireflies
-- `./steps/transcribe` → runTranscribeStep
-- `./steps/speaker-mapping` → runSpeakerMappingStep
-- `./steps/summarize` → runSummarizeStep
-- `./steps/risk-specialist` → runRiskSpecialistStep
-- `./steps/action-item-specialist` → runActionItemSpecialistStep, buildActionItemParticipants
-- `./steps/generate-title` → runGenerateTitleStep
-- `./steps/tag-and-segment` → runTagAndSegmentStep
-- `./steps/embed` → runEmbedStep
-- `./steps/theme-detector` → runThemeDetectorStep
-- `./steps/link-themes` → runLinkThemesStep
-- `./lib/speaker-map` → extractSpeakerNames, buildSpeakerMap, formatSpeakerContext
-- `./participant/helpers` → matchParticipants, mergeParticipantSources, type MeetingAttendee
+- `../lib/entity-resolution` → resolveOrganization
+- `../lib/build-raw-fireflies` → buildRawFireflies
+- `../participant/helpers` → matchParticipants
+- `./types` → ClassifyResult, MeetingInput, PersistResult
+
+### `packages/ai/src/pipeline/gatekeeper/transcribe.ts`
+
+**Exports:**
+- `runTranscribePhase()`
+
+**Types:** `TranscribePhaseOutcome`
+
+**Internal deps:**
+- `../steps/transcribe` → runTranscribeStep
+- `../steps/speaker-mapping` → runSpeakerMappingStep
+- `./types` → MeetingInput, TranscribePhaseResult
+
+### `packages/ai/src/pipeline/gatekeeper/types.ts`
+
+**Types:** `MeetingInput`, `PipelineResult`, `ClassifyResult`, `PersistResult`, `TranscribePhaseResult`, `DetectThemesResult`, `ExtractResult`
+
+**Depends on:**
+- (type) `@repo/database/queries/people` → KnownPerson
+- (type) `@repo/database/queries/themes` → ThemeWithNegativeExamples
+
+**Internal deps:**
+- `../../validations/gatekeeper` → GatekeeperOutput, PartyType, IdentifiedProject
+- `../../agents/gatekeeper` → ParticipantInfo
+- `../../validations/theme-detector` → ThemeDetectorOutput
+- `../lib/context-injection` → EntityContext
+- `../lib/speaker-map` → SpeakerMap
+- `../participant/helpers` → MeetingAttendee
+- `../steps/summarize` → SummarizeResult
+- `../steps/risk-specialist` → runRiskSpecialistStep
+- `../steps/action-item-specialist` → runActionItemSpecialistStep
 
 ### `packages/ai/src/pipeline/lib/build-raw-fireflies.ts`
 
@@ -2710,7 +2800,7 @@
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/database/queries/meetings` → getExistingFirefliesIds, getExistingMeetingsByTitleDates
 - `@repo/ai/validations/fireflies` → isValidDuration
-- `@repo/ai/pipeline/gatekeeper-pipeline` → processMeeting
+- `@repo/ai/pipeline/gatekeeper` → processMeeting
 - `@repo/ai/pipeline/embed/re-embed-worker` → runReEmbedWorker
 
 ### `apps/cockpit/src/app/api/ingest/reprocess/route.ts`
@@ -2792,7 +2882,7 @@
 - `@repo/ai/transcript-processor` → chunkTranscript
 - `@repo/database/queries/meetings` → getMeetingByFirefliesId, getMeetingByTitleAndDate
 - `@repo/ai/validations/fireflies` → isValidDuration
-- `@repo/ai/pipeline/gatekeeper-pipeline` → processMeeting
+- `@repo/ai/pipeline/gatekeeper` → processMeeting
 
 ## Cockpit Pages
 
@@ -4289,7 +4379,7 @@ Which layers depend on which packages:
 |-------|---|---|---|---|---|-------|
 | AI Agents | 1 | - | - | - | - | 1 |
 | AI Core | 13 | - | - | - | - | 13 |
-| AI Pipeline | 68 | - | - | - | - | 68 |
+| AI Pipeline | 70 | - | - | - | - | 70 |
 | AI Validations | 1 | - | - | - | - | 1 |
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
@@ -4420,7 +4510,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `insertMeeting()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts` |
+| `insertMeeting()` | `packages/ai/src/pipeline/gatekeeper/persist-meeting.ts` |
 | `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
 | `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
@@ -4750,7 +4840,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper-pipeline.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `getAllKnownPeople()` | `packages/ai/src/pipeline/gatekeeper/classify.ts`, `packages/ai/src/pipeline/participant/classifier.ts`, `packages/ai/src/scripts/reclassify-board-meetings.ts`, `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
 | `getPeopleForContext()` | `packages/ai/src/pipeline/lib/context-injection.ts` |
 
 ### queries/projects/access.ts

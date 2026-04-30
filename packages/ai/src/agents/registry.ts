@@ -55,7 +55,7 @@ export const AGENT_REGISTRY: AgentDefinition[] = [
     quadrant: "cockpit",
     status: "live",
     promptFile: "gatekeeper.md",
-    entrypoint: "packages/ai/src/pipeline/gatekeeper-pipeline.ts",
+    entrypoint: "packages/ai/src/pipeline/gatekeeper/index.ts",
   },
   {
     id: "summarizer",
