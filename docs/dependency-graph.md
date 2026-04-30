@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 599 |
-| Exported functions/constants | 909 |
+| Exported functions/constants | 907 |
 | Exported types/interfaces | 384 |
-| Cross-package imports | 607 |
+| Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -2533,14 +2533,13 @@
 ### `packages/mcp/src/tools/write-client-questions.ts`
 
 **Exports:**
-- `resolveSenderProfileId()`
-- `_resetSenderCacheForTests()`
 - `registerWriteClientQuestionTools()`
 
 **Depends on:**
 - `@repo/database/supabase/admin` → getAdminClient
 - `@repo/database/mutations/client-questions` → sendQuestion
-- `@repo/database/queries/team` → getProfileRole, getProfileNameById
+- `@repo/database/queries/people` → findProfileIdByName
+- `@repo/database/queries/team` → getProfileRole
 
 **Internal deps:**
 - `./utils` → escapeLike, sanitizeForContains, resolveOrganizationIds
@@ -4527,7 +4526,7 @@ Which layers depend on which packages:
 | DevHub Components | 3 | 2 | 1 | 15 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 28 | - | 22 | 12 | - | 62 |
-| MCP Server | 31 | 1 | - | - | - | 32 |
+| MCP Server | 32 | 1 | - | - | - | 33 |
 
 ## Critical Integration Points
 
@@ -4992,7 +4991,7 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `findPersonIdsByName()` | `packages/mcp/src/tools/actions.ts` |
-| `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
+| `findProfileIdByName()` | `packages/mcp/src/tools/correct-extraction.ts`, `packages/mcp/src/tools/write-client-questions.ts`, `packages/mcp/src/tools/write-client-updates.ts`, `packages/mcp/src/tools/write-tasks.ts` |
 | `findPeopleByEmails()` | `packages/ai/src/pipeline/participant/helpers.ts` |
 | `findPersonOrgByEmail()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
 
@@ -5118,7 +5117,6 @@ Which queries are used where across the codebase.
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `packages/mcp/src/tools/write-client-questions.ts`, `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/auth/callback/route.ts`, `apps/devhub/src/app/auth/callback/route.ts` |
-| `getProfileNameById()` | `packages/mcp/src/tools/write-client-questions.ts` |
 
 ### queries/themes/core.ts
 

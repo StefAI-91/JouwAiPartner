@@ -1,6 +1,6 @@
 # @repo/mcp
 
-MCP (Model Context Protocol) server die Claude (en andere MCP-clients) toegang geeft tot de kennisbasis van Jouw AI Partner: organisaties, projecten, mensen, meetings, actiepunten, decisions. Draait als standalone process naast de web-apps.
+MCP (Model Context Protocol) server die Claude (en andere MCP-clients) toegang geeft tot de kennisbasis van Jouw AI Partner: organisaties, projecten, mensen, meetings, actiepunten, decisions. Wordt geserveerd via cockpit's `/api/mcp`-route (Streamable HTTP transport, OAuth 2.1).
 
 ## Wanneer gebruiken
 
@@ -38,62 +38,32 @@ Zie `packages/mcp/src/tools/utils.ts` voor gedeelde auth-check + client-scope.
 ## Regels
 
 - **Verified-only by default.** Alle read-tools filteren standaard op `verification_status = 'approved'`; optional flag `include_drafts` om reviewers toe te laten. Zie sprint-014 (MCP verification filter).
-- **Write-tools vereisen expliciete context.** `create_task` moet altijd een source-meeting of source-extraction hebben. `log_client_update` schrijft naar `client_updates`. `ask_client_question` vereist een team-profiel via `MCP_SENDER_PROFILE_ID` (per dev).
+- **Write-tools vereisen expliciete context.** `create_task` moet altijd een source-meeting of source-extraction hebben. `log_client_update` schrijft naar `client_updates`. `ask_client_question` vereist `asked_by_name` (zelfde patroon als `create_task` met `created_by_name`); de tool weigert profielen met client-rol als defense-in-depth boven RLS.
 - **Geen directe `.from()`-calls.** Alle DB-access via `@repo/database/queries/*` of `@repo/database/mutations/*`. Check `npm run check:queries`.
 - **Test-uitzondering `_registeredTools`.** MCP SDK 1.28 biedt geen publieke `listTools()` — tests mogen `_registeredTools` en `_registeredPrompts` lezen met JSDoc-markering. Zie `docs/specs/test-strategy.md §4`.
 
 ## MCP-config (Claude Desktop & Claude Code)
 
-De server draait als stdio-process en wordt door de MCP-client opgestart.
-Beide clients lezen dezelfde server-config; alleen de plek waar je hem
-neerzet verschilt.
+De server is **geen stdio-process**. Hij wordt geserveerd via de cockpit als
+HTTP endpoint op `/api/mcp` (`apps/cockpit/src/app/api/mcp/route.ts`,
+Streamable HTTP transport) met OAuth 2.1 Bearer-auth voor remote MCP-clients.
+Claude Desktop en Claude Code koppelen dus aan een URL, niet aan een lokale
+binary.
 
-**Vereiste env-vars (zie `docs/ops/deployment.md` §MCP env vars):**
+**Identity voor `ask_client_question`** komt uit de tool-call zelf
+(`asked_by_name`-parameter), niet uit een env-var: één productie-deploy =
+één env-vars-set, dus een env-var-afzender wordt voor alle devs gelijk
+— precies wat we niet wilden. Geef daarom je naam mee in de tool-call,
+de tool resolved naar je profiel-id via `findProfileIdByName`.
 
-- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — admin-client (alle tools).
-- `MCP_SENDER_PROFILE_ID` — UUID van het team-profiel dat als afzender geldt
-  voor `ask_client_question`. **Per dev een ander profiel** zodat de portal
-  laat zien wie de vraag stelde. Lookup: in cockpit → `/admin/team` → ID
-  kopiëren bij je eigen rij.
-- `NEXT_PUBLIC_PORTAL_URL` — base-URL voor deeplinks in de tool-output.
+**Server-side env-vars** (Vercel deploy van cockpit):
 
-### Claude Desktop
+- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — al gezet voor de web-apps,
+  dezelfde admin-client wordt door MCP-tools gebruikt.
+- `NEXT_PUBLIC_PORTAL_URL` — al gezet; de tool gebruikt hem voor de
+  portal-deeplink in de output.
 
-Voeg een `jouwaipartner-knowledge`-entry toe aan
-`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) of
-`%APPDATA%\Claude\claude_desktop_config.json` (Windows):
-
-```json
-{
-  "mcpServers": {
-    "jouwaipartner-knowledge": {
-      "command": "tsx",
-      "args": ["/absolute/path/to/JouwAiPartner/packages/mcp/src/index.ts"],
-      "env": {
-        "SUPABASE_URL": "https://<project>.supabase.co",
-        "SUPABASE_SERVICE_ROLE_KEY": "<service-role-key>",
-        "MCP_SENDER_PROFILE_ID": "<jouw-profile-uuid>",
-        "NEXT_PUBLIC_PORTAL_URL": "https://jouw-ai-partner-portal.vercel.app"
-      }
-    }
-  }
-}
-```
-
-### Claude Code
-
-```bash
-claude mcp add jouwaipartner-knowledge \
-  --command tsx \
-  --args /absolute/path/to/JouwAiPartner/packages/mcp/src/index.ts \
-  --env SUPABASE_URL=https://<project>.supabase.co \
-  --env SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
-  --env MCP_SENDER_PROFILE_ID=<jouw-profile-uuid> \
-  --env NEXT_PUBLIC_PORTAL_URL=https://jouw-ai-partner-portal.vercel.app
-```
-
-Verifieer met `claude mcp list`. De tool `ask_client_question` is daarna
-beschikbaar in beide clients.
+Geen extra env-vars nodig om `ask_client_question` aan te zetten.
 
 ## Ontwikkeling
 

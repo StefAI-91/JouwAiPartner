@@ -14,24 +14,20 @@ Operationele config voor cockpit + devhub (+ portal, wanneer gedeployed).
 
 Beide apps (cockpit + devhub) hebben de 3 NEXT*PUBLIC*\* URL vars nodig zodat de workspace-switcher in de sidebar naar de andere quadranten kan linken.
 
-## MCP env vars
+## MCP server (`/api/mcp` op cockpit)
 
-Voor de MCP-server (`packages/mcp/`) die Claude Desktop en Claude Code aan de
-kennisbasis koppelt. Per dev een eigen config zodat schrijf-tools de juiste
-afzender registreren.
+De MCP-server wordt vanuit de cockpit-deploy geserveerd op `/api/mcp` (zie
+`apps/cockpit/src/app/api/mcp/route.ts`, Streamable HTTP transport, OAuth 2.1).
+Geen aparte deploy of stdio-process nodig. De tools gebruiken dezelfde
+`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` als de web-apps.
 
-- `SUPABASE_URL` — Supabase project-URL (zelfde als de web-apps).
-- `SUPABASE_SERVICE_ROLE_KEY` — service-role-key. **Server-side only**, niet
-  in een `NEXT_PUBLIC_`-variabele zetten.
-- `MCP_SENDER_PROFILE_ID` — UUID van het team-profiel dat als afzender geldt
-  voor write-tools (op dit moment `ask_client_question`). Per dev een
-  andere waarde: kopieer je eigen `profiles.id` uit cockpit `/admin/team`.
-  Server faalt fast bij eerste tool-call als de var ontbreekt of naar een
-  client-rol of onbekende UUID verwijst.
-- `NEXT_PUBLIC_PORTAL_URL` — base-URL voor deeplinks die de MCP-tool in zijn
-  output zet (zelfde var als de web-apps gebruiken).
+`ask_client_question` (PR-025) heeft geen extra server-side env-var nodig:
+de afzender komt uit de tool-call (`asked_by_name` parameter, gelijk aan
+hoe `create_task` met `created_by_name` werkt). De tool gebruikt
+`NEXT_PUBLIC_PORTAL_URL` voor de portal-deeplink in de output — al gezet
+voor de web-apps.
 
-Voor de exacte JSON/CLI-snippets per client: `packages/mcp/README.md` §MCP-config.
+Voor de install-snippets per MCP-client: `packages/mcp/README.md`.
 
 ## JAIP Feedback Widget (WG-003)
 

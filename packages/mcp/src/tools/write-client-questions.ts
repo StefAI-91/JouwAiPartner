@@ -3,7 +3,8 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { sendQuestion } from "@repo/database/mutations/client-questions";
-import { getProfileRole, getProfileNameById } from "@repo/database/queries/team";
+import { findProfileIdByName } from "@repo/database/queries/people";
+import { getProfileRole } from "@repo/database/queries/team";
 import { escapeLike, sanitizeForContains, resolveOrganizationIds } from "./utils";
 import { trackMcpQuery } from "./usage-tracking";
 
@@ -13,72 +14,22 @@ import { trackMcpQuery } from "./usage-tracking";
  * `client_questions`-tabel + `sendQuestion`-mutation; deze tool is alleen
  * een schrijf-ingang vanuit MCP.
  *
- * Identity: `sender_profile_id` komt uit env-var `MCP_SENDER_PROFILE_ID`. Per
- * dev een ander profiel zodat de portal-thread "Stef vraagt" toont, niet een
- * gedeelde Claude-Code-bot. De env wordt op eerste tool-call gevalideerd
- * (UUID + bestaand profiel + role admin/member) en daarna in module-scope
- * gecached om bij elke vraag een DB-roundtrip te besparen.
+ * Identity: de tool neemt `asked_by_name` als parameter en resolved naar
+ * `profile_id` via `findProfileIdByName` (zelfde patroon als `create_task`
+ * met `created_by_name`). Een env-var-aanpak werkte niet: de MCP-server
+ * draait als HTTP endpoint in de cockpit-deploy, dus één env-vars-set voor
+ * alle devs — verkeerde afzender. Een naam in de tool-call werkt zowel
+ * lokaal als in productie en matcht hoe Claude andere write-tools al
+ * aanroept. RLS blokkeert client-rol op INSERT (PR-SEC-031), dus we
+ * weigeren extra defensief op application-niveau wanneer de gevonden
+ * profiel-rol geen team-rol is.
  *
  * Project-resolutie: óf direct via `project_id` (UUID), óf fuzzy via
- * `organization_name + project_name`. De UUID-vorm is de happy-path voor een
- * dev die het project al weet; de naam-vorm is de fallback voor ad-hoc
- * gebruik. Geen impliciete project-detectie uit de werkmap — te fragiel,
- * een audit-trail die op `pwd` leunt is geen audit-trail.
+ * `organization_name + project_name`. De UUID-vorm is de happy-path voor
+ * een dev die het project al weet; de naam-vorm is de fallback voor
+ * ad-hoc gebruik. Geen impliciete project-detectie uit de werkmap — te
+ * fragiel, een audit-trail die op `pwd` leunt is geen audit-trail.
  */
-
-const ENV_KEY = "MCP_SENDER_PROFILE_ID";
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-interface SenderIdentity {
-  profile_id: string;
-  display_name: string;
-}
-
-let cachedSender: SenderIdentity | null = null;
-
-/**
- * Resolve and cache the team-profile that the MCP-server writes questions on
- * behalf of. Throws when the env-var ontbreekt of naar een ongeldig profiel
- * verwijst — bedoeld voor fail-fast bij eerste tool-call.
- *
- * @internal Geëxporteerd voor tests; productie-callers gaan via de tool-handler.
- */
-export async function resolveSenderProfileId(client?: SupabaseClient): Promise<SenderIdentity> {
-  if (cachedSender) return cachedSender;
-
-  const raw = process.env[ENV_KEY];
-  if (!raw) {
-    throw new Error(
-      `${ENV_KEY} is niet gezet. ask_client_question vereist een team-profiel-ID als afzender — zie packages/mcp/README.md voor de MCP-config.`,
-    );
-  }
-
-  const trimmed = raw.trim();
-  if (!UUID_RE.test(trimmed)) {
-    throw new Error(`${ENV_KEY}="${trimmed}" is geen geldig UUID.`);
-  }
-
-  const role = await getProfileRole(trimmed, client);
-  if (!role) {
-    throw new Error(
-      `${ENV_KEY} verwijst naar een onbekend profiel (${trimmed}). Controleer dat de UUID overeenkomt met een rij in 'profiles'.`,
-    );
-  }
-  if (role !== "admin" && role !== "member") {
-    throw new Error(
-      `${ENV_KEY} verwijst naar een profiel met role='${role}'. Alleen admin/member mogen vragen aan klanten stellen.`,
-    );
-  }
-
-  const display = (await getProfileNameById(trimmed, client)) ?? trimmed;
-  cachedSender = { profile_id: trimmed, display_name: display };
-  return cachedSender;
-}
-
-/** @internal Test-only — resets de identity-cache tussen tests. */
-export function _resetSenderCacheForTests(): void {
-  cachedSender = null;
-}
 
 interface ResolvedProject {
   project_id: string;
@@ -87,13 +38,6 @@ interface ResolvedProject {
   organization_name: string;
 }
 
-/**
- * Resolve a project from either its UUID or an `(organization_name,
- * project_name)`-paar. UUID-pad doet één lookup; naam-pad combineert de
- * bestaande `resolveOrganizationIds` met een project-naam-filter binnen de
- * gevonden orgs zodat ambiguïteit (twee orgs met "Demo"-project) opgelost
- * wordt door de org-naam.
- */
 async function resolveProject(
   supabase: SupabaseClient,
   input: {
@@ -227,6 +171,12 @@ export function registerWriteClientQuestionTools(server: McpServer) {
         .describe(
           "De vraag aan de klant. Min 10, max 2000 tekens. Wees specifiek en geef context.",
         ),
+      asked_by_name: z
+        .string()
+        .max(255)
+        .describe(
+          "Naam van het teamlid dat de vraag stelt (wordt opgezocht in profielen). Bepaalt wie de portal als afzender toont.",
+        ),
       due_date: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -245,19 +195,43 @@ export function registerWriteClientQuestionTools(server: McpServer) {
         .optional()
         .describe("Koppel de vraag aan een bestaand issue (UUID). Niet samen met topic_id."),
     },
-    async ({ project_id, organization_name, project_name, body, due_date, topic_id, issue_id }) => {
+    async ({
+      project_id,
+      organization_name,
+      project_name,
+      body,
+      asked_by_name,
+      due_date,
+      topic_id,
+      issue_id,
+    }) => {
       const supabase = getAdminClient();
       await trackMcpQuery(supabase, "ask_client_question", body.slice(0, 80));
 
-      let sender: SenderIdentity;
-      try {
-        sender = await resolveSenderProfileId(supabase);
-      } catch (err) {
+      const senderId = await findProfileIdByName(asked_by_name);
+      if (!senderId) {
         return {
           content: [
             {
               type: "text" as const,
-              text: `Fout: ${err instanceof Error ? err.message : String(err)}`,
+              text: `Geen team-profiel gevonden voor "${asked_by_name}". Controleer de naam of voeg het profiel toe via cockpit /admin/team.`,
+            },
+          ],
+        };
+      }
+
+      // Defense-in-depth: RLS-INSERT op client_questions blokkeert client-rol
+      // (PR-SEC-031), maar een match op `findProfileIdByName` kan ook een
+      // client-rij raken (bijv. portal-user met dezelfde voornaam als een
+      // teamlid). Expliciet weigeren op application-niveau geeft een leesbare
+      // foutmelding i.p.v. een raw RLS-violation.
+      const role = await getProfileRole(senderId, supabase);
+      if (role !== "admin" && role !== "member") {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Profiel "${asked_by_name}" heeft geen team-rol (role=${role ?? "onbekend"}). Alleen team-leden kunnen vragen aan klanten stellen.`,
             },
           ],
         };
@@ -281,7 +255,7 @@ export function registerWriteClientQuestionTools(server: McpServer) {
           topic_id: topic_id ?? null,
           issue_id: issue_id ?? null,
         },
-        sender.profile_id,
+        senderId,
         supabase,
       );
 
@@ -296,7 +270,7 @@ export function registerWriteClientQuestionTools(server: McpServer) {
         "## Vraag geplaatst in portal-inbox",
         `**Vraag-ID:** ${result.data.id}`,
         `**Project:** ${project.project_name} (${project.organization_name})`,
-        `**Afzender:** ${sender.display_name}`,
+        `**Afzender:** ${asked_by_name}`,
         `**Status:** open`,
         `**Portal:** ${portalUrl}`,
       ];

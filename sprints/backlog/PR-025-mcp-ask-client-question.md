@@ -8,18 +8,18 @@ E-mail- of Slack-notificatie naar de klant valt **buiten scope** — dat parkere
 
 ## Requirements
 
-| ID         | Beschrijving                                                                                                                                                                             |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR-MCP-080 | Nieuwe MCP-tool `ask_client_question` geregistreerd in `packages/mcp/src/server.ts` via een nieuwe `registerWriteClientQuestionTools` (analoog aan `registerWriteClientUpdateTools`).    |
-| PR-MCP-081 | Tool-input: `project` (by `id` óf `organization_name + project_name`), `body` (string, max 4000), optioneel `due_date` (YYYY-MM-DD), optioneel `topic_id`, optioneel `issue_id`.         |
-| PR-MCP-082 | Identity: `sender_profile_id` komt uit env-var `MCP_SENDER_PROFILE_ID`. Server faalt bij startup als de var ontbreekt of geen geldige `profiles.id` met `role IN ('admin','member')` is. |
-| PR-MCP-083 | Project-resolutie volgt patroon uit `write-tasks.ts` / `write-client-updates.ts`: probeer eerst `id`, anders fuzzy-match via organization+project (utils).                               |
-| PR-MCP-084 | Tool roept `sendQuestion(input, senderProfileId, adminClient)` aan (bestaande mutation, niet aanpassen). Geen directe `.from()` in de tool.                                              |
-| PR-MCP-085 | Tool-output: `{ question_id, project_name, organization_name, portal_url }` waarbij `portal_url` linkt naar `/projects/<id>/inbox` op de portal-host (env `NEXT_PUBLIC_PORTAL_URL`).     |
-| PR-MCP-086 | `trackMcpQuery` aangeroepen voor usage-tracking (zelfde patroon als andere write-tools).                                                                                                 |
-| PR-MCP-087 | Tool-description noemt expliciet wanneer wél/niet gebruiken: "wel" = klant-blokkerende vraag tijdens dev; "niet" = interne afweging die het team zelf kan maken.                         |
-| PR-DOC-090 | `docs/ops/deployment.md` krijgt een sectie "MCP env vars" met `MCP_SENDER_PROFILE_ID` (per dev) en `NEXT_PUBLIC_PORTAL_URL`. Voorbeeld-config voor Claude Desktop én Claude Code.        |
-| PR-DOC-091 | `packages/mcp/README.md` (of nieuwe sectie) documenteert installatie voor Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json`) en Claude Code (`mcp add`). |
+| ID         | Beschrijving                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR-MCP-080 | Nieuwe MCP-tool `ask_client_question` geregistreerd in `packages/mcp/src/server.ts` via een nieuwe `registerWriteClientQuestionTools` (analoog aan `registerWriteClientUpdateTools`).                                                                                                                                              |
+| PR-MCP-081 | Tool-input: `project` (by `id` óf `organization_name + project_name`), `body` (string, min 10, max 2000 — matcht `sendQuestionSchema`), `asked_by_name` (verplicht), optioneel `due_date` (YYYY-MM-DD), optioneel `topic_id`, optioneel `issue_id`.                                                                                |
+| PR-MCP-082 | Identity: `asked_by_name`-parameter (zelfde patroon als `create_task` met `created_by_name`). Tool resolved via `findProfileIdByName` en weigert profielen met client-rol als defense-in-depth boven RLS. **Niet via env-var** — de MCP-server is HTTP, één deploy = één env-vars-set, dus env-var-afzender breekt voor productie. |
+| PR-MCP-083 | Project-resolutie volgt patroon uit `write-tasks.ts` / `write-client-updates.ts`: probeer eerst `id`, anders fuzzy-match via organization+project (utils).                                                                                                                                                                         |
+| PR-MCP-084 | Tool roept `sendQuestion(input, senderProfileId, adminClient)` aan (bestaande mutation, niet aanpassen). Geen directe `.from()` in de tool.                                                                                                                                                                                        |
+| PR-MCP-085 | Tool-output: `{ question_id, project_name, organization_name, portal_url }` waarbij `portal_url` linkt naar `/projects/<id>/inbox` op de portal-host (env `NEXT_PUBLIC_PORTAL_URL`).                                                                                                                                               |
+| PR-MCP-086 | `trackMcpQuery` aangeroepen voor usage-tracking (zelfde patroon als andere write-tools).                                                                                                                                                                                                                                           |
+| PR-MCP-087 | Tool-description noemt expliciet wanneer wél/niet gebruiken: "wel" = klant-blokkerende vraag tijdens dev; "niet" = interne afweging die het team zelf kan maken.                                                                                                                                                                   |
+| PR-DOC-090 | `docs/ops/deployment.md` documenteert dat de MCP-server via cockpit's `/api/mcp`-route loopt en `ask_client_question` geen extra server-side env-var vereist (afzender komt uit de tool-call).                                                                                                                                     |
+| PR-DOC-091 | `packages/mcp/README.md` documenteert dat de server HTTP/OAuth is (geen stdio) en hoe identity werkt voor `ask_client_question`.                                                                                                                                                                                                   |
 
 ## Afhankelijkheden
 
@@ -42,55 +42,42 @@ Geen UI-werk. De vraag verschijnt automatisch in de bestaande portal-inbox (`app
 ### 1. Tool implementeren
 
 - `packages/mcp/src/tools/write-client-questions.ts`:
-  - Zod-schema voor input (project-discriminator + body + optionele velden).
-  - Validate `MCP_SENDER_PROFILE_ID` bij eerste aanroep (cache-check); bij missing → throw met heldere error.
-  - Resolve project → projectId + organizationId (hergebruik `resolveOrganizationIds` of vergelijkbare util).
+  - Zod-schema voor input (project-discriminator + body + `asked_by_name` + optionele velden).
+  - Resolve `asked_by_name` → profile_id via `findProfileIdByName`. Bij geen match → tool-error.
+  - Defense-in-depth check: `getProfileRole(profile_id)` moet admin/member zijn (anders weigeren met leesbare melding voordat RLS klaagt).
+  - Resolve project → projectId + organizationId (UUID-pad via `from('projects').eq().maybeSingle()`, naam-pad via `resolveOrganizationIds` + project-naam-filter binnen die orgs).
   - Roep `sendQuestion({ project_id, organization_id, body, due_date, topic_id, issue_id }, senderProfileId, getAdminClient())`.
   - Bij `MutationResult.error` → tool-error met de mutation-message.
-  - Bij success → return `{ question_id, project_name, organization_name, portal_url }`.
-  - `trackMcpQuery({ tool: 'ask_client_question', success })`.
+  - Bij success → markdown-output met `question_id`, project, afzender, status, portal-deeplink.
+  - `trackMcpQuery(supabase, "ask_client_question", body.slice(0, 80))`.
 
 - `packages/mcp/src/server.ts`: import + register de nieuwe tool-set.
 
-### 2. Identity-bootstrap
-
-- Helper `resolveSenderProfileId(client?)` in dezelfde file:
-  - Lees env, valideer UUID-format, lookup in `profiles` (via `findProfileById` query — toevoegen als die nog niet bestaat in `packages/database/src/queries/people.ts`).
-  - Eis `role IN ('admin','member')`. Anders: throw.
-  - Cache het resultaat in een module-scope `let` zodat we niet bij elke tool-call een DB-roundtrip doen.
-
-### 3. Tests
+### 2. Tests
 
 - `packages/mcp/__tests__/tools/write-client-questions.test.ts`:
-  - Boundary-mock op `sendQuestion` (mutation = grens want het is `@repo/database/mutations/*`? **Nee** — interne code, niet mocken). In plaats daarvan: payload-capture-mock op de Supabase-admin-client (zelfde patroon als andere write-tool tests).
+  - Volgt het bestaande MCP write-tool-patroon (mock op `@repo/database/mutations/*` + `queries/*` + admin-client). Comment in test-file legt uit dat dit afwijkt van CLAUDE.md §Tests boundary-policy maar consistent is met `write-client-updates.test.ts` — een suite-brede refactor is een eigen sprint.
   - Cases:
-    1. Happy path: project by id → `sendQuestion`-payload bevat juiste velden + `sender_profile_id` uit env.
+    1. Happy path: project by id → `sendQuestion`-payload bevat juiste velden + `sender_profile_id` uit name-resolution.
     2. Project by `organization_name + project_name` → resolve werkt.
-    3. Missing `MCP_SENDER_PROFILE_ID` → tool throwt heldere error.
-    4. `MCP_SENDER_PROFILE_ID` verwijst naar profile met `role='client'` → afgewezen.
-    5. Body > 4000 chars → Zod-error vóór DB-call.
-    6. Output bevat correcte `portal_url`.
+    3. Naam-pad faalt bij meerdere matches → leesbare melding.
+    4. Onbekende `asked_by_name` → tool-error, geen sendQuestion.
+    5. `asked_by_name` resolved naar client-rol → afgewezen.
+    6. `due_date` YYYY-MM-DD → ISO datetime in payload.
+    7. `NEXT_PUBLIC_PORTAL_URL` respecteerd in output.
+    8. Onbekend project_id → tool-error.
+    9. `sendQuestion` error → propageert naar tool-output.
 
-### 4. Documentatie
+### 3. Documentatie
 
-- `docs/ops/deployment.md` — sectie "MCP env vars":
+- `docs/ops/deployment.md` — sectie "MCP server (`/api/mcp` op cockpit)" die uitlegt dat de server via cockpit's HTTP route geserveerd wordt (geen aparte deploy) en dat `ask_client_question` geen extra env-var vereist; afzender komt uit de tool-call.
+- `packages/mcp/README.md` — sectie "MCP-config" die uitlegt dat de server geen stdio-process is, hoe identity werkt voor `ask_client_question` (tool-call parameter), en welke server-side env-vars de cockpit-deploy al heeft.
 
-  ```
-  MCP_SENDER_PROFILE_ID  — UUID van het team-profiel dat als afzender geldt
-                          voor write-tools (ask_client_question). Per dev anders.
-  NEXT_PUBLIC_PORTAL_URL — base-URL van de portal voor deeplinks in tool-output.
-  ```
+### 4. Manual verification
 
-- `packages/mcp/README.md` — installatie-snippets voor:
-  - Claude Desktop (`claude_desktop_config.json`)
-  - Claude Code (`claude mcp add` commando)
-  - In beide: env-vars setten incl. `MCP_SENDER_PROFILE_ID`.
-
-### 5. Manual verification
-
-- Tool aanroepen via Claude Code in deze repo: `ask_client_question` met `project="JouwAIPartner / Demo"`, `body="Welk datum-format wil je in de export?"`.
-- Verifieer in Supabase: row in `client_questions` met juiste `sender_profile_id`, `project_id`, `organization_id`, `status='open'`.
-- Open de portal-inbox-pagina van het Demo-project — vraag verschijnt bovenaan.
+- Tool aanroepen via Claude Code in deze repo: `ask_client_question` met `project_id=<demo-uuid>`, `asked_by_name="Stef"`, `body="Welk datum-format wil je in de export?"`.
+- Verifieer in Supabase: row in `client_questions` met juiste `sender_profile_id` (= jouw profiel-id), `project_id`, `organization_id`, `status='open'`.
+- Open de portal-inbox-pagina van het Demo-project — vraag verschijnt bovenaan met "Stef" als afzender.
 - Beantwoord via portal als test-klant — `status` flipt naar `responded` (bestaand gedrag uit PR-022).
 
 ## Out of scope
@@ -103,8 +90,8 @@ Geen UI-werk. De vraag verschijnt automatisch in de bestaande portal-inbox (`app
 
 ## Definition of done
 
-- [ ] Tool `ask_client_question` geregistreerd, schema gevalideerd, payload-capture tests groen.
-- [ ] `MCP_SENDER_PROFILE_ID` gevalideerd bij startup; ontbreken → heldere error.
+- [ ] Tool `ask_client_question` geregistreerd in `server.ts`, schema gevalideerd, tests groen.
+- [ ] Identity via `asked_by_name` → `findProfileIdByName`; client-rol expliciet geweigerd.
 - [ ] Manual verification gelukt vanuit zowel Claude Code als Claude Desktop.
-- [ ] `docs/ops/deployment.md` en `packages/mcp/README.md` bijgewerkt.
-- [ ] `npm run check:queries`, `npm run lint`, `npm run type-check`, `npm test` groen.
+- [ ] `docs/ops/deployment.md` en `packages/mcp/README.md` bijgewerkt — geen `MCP_SENDER_PROFILE_ID` meer (ontwerp-pivot tijdens implementatie, zie sectie "Identity" in `write-client-questions.ts`).
+- [ ] `npm run check:queries`, `npm run type-check`, `npm test` groen.

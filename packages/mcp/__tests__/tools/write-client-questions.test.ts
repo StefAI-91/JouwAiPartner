@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // PR-025 — Tests volgen het bestaande MCP write-tool-patroon: mock
-// `@repo/database/mutations/*` en `@repo/database/queries/team` (dezelfde
-// stijl als write-client-updates.test.ts). De Supabase-client wordt via
-// `createMockSupabase` gemockt voor de project-resolutie en usage-tracking.
+// `@repo/database/mutations/*` en `@repo/database/queries/*` (dezelfde stijl
+// als write-client-updates.test.ts). De Supabase-client wordt via een fake
+// gemockt voor de project-resolutie en usage-tracking.
 //
 // CLAUDE.md §Tests waarschuwt voor het mocken van interne queries; we volgen
 // hier bewust het patroon dat write-client-updates al hanteert om
@@ -18,18 +18,19 @@ vi.mock("@repo/database/mutations/client-questions", () => ({
   sendQuestion: vi.fn(),
 }));
 
+vi.mock("@repo/database/queries/people", () => ({
+  findProfileIdByName: vi.fn(),
+}));
+
 vi.mock("@repo/database/queries/team", () => ({
   getProfileRole: vi.fn(),
-  getProfileNameById: vi.fn(),
 }));
 
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { sendQuestion } from "@repo/database/mutations/client-questions";
-import { getProfileRole, getProfileNameById } from "@repo/database/queries/team";
-import {
-  registerWriteClientQuestionTools,
-  _resetSenderCacheForTests,
-} from "../../src/tools/write-client-questions";
+import { findProfileIdByName } from "@repo/database/queries/people";
+import { getProfileRole } from "@repo/database/queries/team";
+import { registerWriteClientQuestionTools } from "../../src/tools/write-client-questions";
 import { captureToolHandlers, getText } from "./_helpers";
 
 const handlers = captureToolHandlers(registerWriteClientQuestionTools);
@@ -92,14 +93,11 @@ function makeSupabaseFake(
 
 beforeEach(() => {
   vi.clearAllMocks();
-  _resetSenderCacheForTests();
-  process.env.MCP_SENDER_PROFILE_ID = SENDER_ID;
+  vi.mocked(findProfileIdByName).mockResolvedValue(SENDER_ID);
   vi.mocked(getProfileRole).mockResolvedValue("member");
-  vi.mocked(getProfileNameById).mockResolvedValue("Stef");
 });
 
 afterEach(() => {
-  delete process.env.MCP_SENDER_PROFILE_ID;
   delete process.env.NEXT_PUBLIC_PORTAL_URL;
 });
 
@@ -108,7 +106,7 @@ describe("ask_client_question", () => {
     expect(askHandler).toBeDefined();
   });
 
-  it("happy path: project_id resolve → sendQuestion krijgt afgeleide org + sender", async () => {
+  it("happy path: project_id + asked_by_name → sendQuestion krijgt afgeleide org + sender", async () => {
     const fake = makeSupabaseFake({
       projectById: {
         data: {
@@ -128,10 +126,12 @@ describe("ask_client_question", () => {
 
     const result = await askHandler({
       project_id: PROJECT_ID,
+      asked_by_name: "Stef",
       body: "Welk datum-format willen jullie in de export?",
     });
     const text = getText(result);
 
+    expect(findProfileIdByName).toHaveBeenCalledWith("Stef");
     expect(sendQuestion).toHaveBeenCalledTimes(1);
     const [payload, senderId] = vi.mocked(sendQuestion).mock.calls[0];
     expect(payload).toMatchObject({
@@ -173,6 +173,7 @@ describe("ask_client_question", () => {
     const result = await askHandler({
       organization_name: "Acme",
       project_name: "Knowledge",
+      asked_by_name: "Wouter",
       body: "Mogen we de oude logo's weghalen uit de footer?",
     });
     const text = getText(result);
@@ -202,6 +203,7 @@ describe("ask_client_question", () => {
     const result = await askHandler({
       organization_name: "Acme",
       project_name: "Demo",
+      asked_by_name: "Stef",
       body: "Een vraag van minimaal 10 tekens.",
     });
     const text = getText(result);
@@ -211,49 +213,37 @@ describe("ask_client_question", () => {
     expect(text).toContain("project_id");
   });
 
-  it("ontbrekende MCP_SENDER_PROFILE_ID → heldere foutmelding, geen sendQuestion", async () => {
-    delete process.env.MCP_SENDER_PROFILE_ID;
+  it("onbekende asked_by_name → heldere foutmelding, geen sendQuestion", async () => {
+    vi.mocked(findProfileIdByName).mockResolvedValue(null);
     const fake = makeSupabaseFake();
     vi.mocked(getAdminClient).mockReturnValue(fake as never);
 
     const result = await askHandler({
       project_id: PROJECT_ID,
+      asked_by_name: "Onbekend Persoon",
       body: "Een geldige vraag van minimaal 10 tekens.",
     });
     const text = getText(result);
 
     expect(sendQuestion).not.toHaveBeenCalled();
-    expect(text).toContain("MCP_SENDER_PROFILE_ID is niet gezet");
+    expect(text).toContain('Geen team-profiel gevonden voor "Onbekend Persoon"');
   });
 
-  it("MCP_SENDER_PROFILE_ID met role='client' wordt geweigerd", async () => {
+  it("asked_by_name resolves naar client-rol → afgewezen voor RLS faalt", async () => {
     vi.mocked(getProfileRole).mockResolvedValue("client");
     const fake = makeSupabaseFake();
     vi.mocked(getAdminClient).mockReturnValue(fake as never);
 
     const result = await askHandler({
       project_id: PROJECT_ID,
+      asked_by_name: "Klant Persoon",
       body: "Een geldige vraag van minimaal 10 tekens.",
     });
     const text = getText(result);
 
     expect(sendQuestion).not.toHaveBeenCalled();
-    expect(text).toContain("role='client'");
-  });
-
-  it("MCP_SENDER_PROFILE_ID met onbekend profiel wordt geweigerd", async () => {
-    vi.mocked(getProfileRole).mockResolvedValue(null);
-    const fake = makeSupabaseFake();
-    vi.mocked(getAdminClient).mockReturnValue(fake as never);
-
-    const result = await askHandler({
-      project_id: PROJECT_ID,
-      body: "Een geldige vraag van minimaal 10 tekens.",
-    });
-    const text = getText(result);
-
-    expect(sendQuestion).not.toHaveBeenCalled();
-    expect(text).toContain("onbekend profiel");
+    expect(text).toContain("geen team-rol");
+    expect(text).toContain("role=client");
   });
 
   it("due_date YYYY-MM-DD wordt geconverteerd naar ISO datetime voor de mutation", async () => {
@@ -276,6 +266,7 @@ describe("ask_client_question", () => {
 
     await askHandler({
       project_id: PROJECT_ID,
+      asked_by_name: "Stef",
       body: "Vraag met deadline van minimaal 10 tekens.",
       due_date: "2026-05-15",
     });
@@ -305,6 +296,7 @@ describe("ask_client_question", () => {
 
     const result = await askHandler({
       project_id: PROJECT_ID,
+      asked_by_name: "Stef",
       body: "Een vraag van minimaal 10 tekens.",
     });
     const text = getText(result);
@@ -320,6 +312,7 @@ describe("ask_client_question", () => {
 
     const result = await askHandler({
       project_id: PROJECT_ID,
+      asked_by_name: "Stef",
       body: "Een vraag van minimaal 10 tekens.",
     });
     const text = getText(result);
@@ -345,6 +338,7 @@ describe("ask_client_question", () => {
 
     const result = await askHandler({
       project_id: PROJECT_ID,
+      asked_by_name: "Stef",
       body: "Een vraag van minimaal 10 tekens.",
     });
     const text = getText(result);
