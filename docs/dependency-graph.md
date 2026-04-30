@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 598 |
-| Exported functions/constants | 906 |
+| Files scanned | 599 |
+| Exported functions/constants | 909 |
 | Exported types/interfaces | 384 |
-| Cross-package imports | 604 |
+| Cross-package imports | 607 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -2358,6 +2358,7 @@
 - `./tools/decisions` → registerDecisionTools
 - `./tools/write-tasks` → registerWriteTaskTools
 - `./tools/write-client-updates` → registerWriteClientUpdateTools
+- `./tools/write-client-questions` → registerWriteClientQuestionTools
 - `./tools/issues` → registerIssueTools
 - `./tools/project-report` → registerProjectReportTools
 
@@ -2528,6 +2529,22 @@
 - `formatVerificatieStatus()`
 - `lookupProfileNames()`
 - `collectVerifiedByIds()`
+
+### `packages/mcp/src/tools/write-client-questions.ts`
+
+**Exports:**
+- `resolveSenderProfileId()`
+- `_resetSenderCacheForTests()`
+- `registerWriteClientQuestionTools()`
+
+**Depends on:**
+- `@repo/database/supabase/admin` → getAdminClient
+- `@repo/database/mutations/client-questions` → sendQuestion
+- `@repo/database/queries/team` → getProfileRole, getProfileNameById
+
+**Internal deps:**
+- `./utils` → escapeLike, sanitizeForContains, resolveOrganizationIds
+- `./usage-tracking` → trackMcpQuery
 
 ### `packages/mcp/src/tools/write-client-updates.ts`
 
@@ -4510,7 +4527,7 @@ Which layers depend on which packages:
 | DevHub Components | 3 | 2 | 1 | 15 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 28 | - | 22 | 12 | - | 62 |
-| MCP Server | 28 | 1 | - | - | - | 29 |
+| MCP Server | 31 | 1 | - | - | - | 32 |
 
 ## Critical Integration Points
 
@@ -4554,7 +4571,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `sendQuestion()` | `apps/devhub/src/actions/questions.ts` |
+| `sendQuestion()` | `packages/mcp/src/tools/write-client-questions.ts`, `apps/devhub/src/actions/questions.ts` |
 | `replyToQuestion()` | `apps/devhub/src/actions/questions.ts` |
 
 ### mutations/emails.ts
@@ -5100,7 +5117,8 @@ Which queries are used where across the codebase.
 | `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
-| `getProfileRole()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/auth/callback/route.ts`, `apps/devhub/src/app/auth/callback/route.ts` |
+| `getProfileRole()` | `packages/mcp/src/tools/write-client-questions.ts`, `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/auth/callback/route.ts`, `apps/devhub/src/app/auth/callback/route.ts` |
+| `getProfileNameById()` | `packages/mcp/src/tools/write-client-questions.ts` |
 
 ### queries/themes/core.ts
 

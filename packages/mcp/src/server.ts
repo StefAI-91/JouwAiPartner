@@ -12,6 +12,7 @@ import { registerCorrectExtractionTools } from "./tools/correct-extraction";
 import { registerDecisionTools } from "./tools/decisions";
 import { registerWriteTaskTools } from "./tools/write-tasks";
 import { registerWriteClientUpdateTools } from "./tools/write-client-updates";
+import { registerWriteClientQuestionTools } from "./tools/write-client-questions";
 import { registerIssueTools } from "./tools/issues";
 import { registerProjectReportTools } from "./tools/project-report";
 
@@ -36,6 +37,7 @@ export function createMcpServer(): McpServer {
   registerDecisionTools(server);
   registerWriteTaskTools(server);
   registerWriteClientUpdateTools(server);
+  registerWriteClientQuestionTools(server);
   registerIssueTools(server);
   registerProjectReportTools(server);
 
