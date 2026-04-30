@@ -63,7 +63,6 @@ export async function submitFeedback(input: unknown): Promise<SubmitFeedbackResu
     return { error: result.error };
   }
 
-  revalidatePath(`/projects/${project_id}/issues`);
   revalidatePath(`/projects/${project_id}`);
 
   return {

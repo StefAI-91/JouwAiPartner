@@ -79,7 +79,7 @@ describe("submitFeedback", () => {
     expect(insertedRow.reporter_email).toBe("klant@acme.nl");
     expect(insertedRow.status).toBe("triage");
     expect(vi.mocked(revalidatePath).mock.calls.flat()).toContain(
-      `/projects/${VALID_INPUT.project_id}/issues`,
+      `/projects/${VALID_INPUT.project_id}`,
     );
   });
 });

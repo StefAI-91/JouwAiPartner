@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isAdmin } from "@repo/auth/access";
 import {
-  PORTAL_KEY_TO_INTERNAL_STATUSES,
   PORTAL_SOURCE_GROUPS,
   PORTAL_STATUS_GROUPS,
   type IssueType,
@@ -9,17 +8,10 @@ import {
   type PortalStatusKey,
 } from "../../constants/issues";
 
-export type PortalStatusFilter = PortalStatusKey;
-
-export interface PortalIssueListFilters {
-  status?: PortalStatusFilter;
+export interface PortalIssueCountFilters {
   sourceGroup?: PortalSourceGroupKey;
   types?: IssueType[];
-  limit?: number;
-  offset?: number;
 }
-
-export type PortalIssueCountFilters = Pick<PortalIssueListFilters, "sourceGroup" | "types">;
 
 const SOURCE_GROUP_TO_SOURCES = PORTAL_SOURCE_GROUPS.reduce(
   (acc, group) => {
@@ -231,105 +223,4 @@ export async function getProjectIssueCounts(
   );
 
   return Object.fromEntries(entries) as PortalIssueCounts;
-}
-
-export interface PortalIssue {
-  id: string;
-  issue_number: number;
-  title: string;
-  description: string | null;
-  client_title: string | null;
-  client_description: string | null;
-  status: string;
-  type: string;
-  priority: string;
-  source: string;
-  created_at: string;
-  updated_at: string;
-  closed_at: string | null;
-}
-
-const PORTAL_ISSUE_COLS =
-  "id, issue_number, title, description, client_title, client_description, status, type, priority, source, created_at, updated_at, closed_at";
-
-const DEFAULT_ISSUES_PAGE_SIZE = 50;
-const MAX_ISSUES_PAGE_SIZE = 200;
-
-/**
- * Portal issue lijst voor een project — alleen klant-relevante velden, geen
- * comments/assignees/interne metadata. Optioneel filteren op vertaalde
- * status-groep, source-groep ('client'/'jaip', CP-008) en/of types, plus
- * pagineren zodat een project met honderden issues de request niet opblaast.
- *
- * Source-filter mapt via `PORTAL_SOURCE_GROUPS` naar ruwe `source`-waarden;
- * onbekende sources blijven onzichtbaar onder beide groepen wanneer er
- * gefilterd wordt — dat is bewust, de UI toont ze in default-view en
- * resolveert hun groep visueel via `resolvePortalSourceGroup`.
- */
-export async function listPortalIssues(
-  projectId: string,
-  client: SupabaseClient,
-  filters?: PortalIssueListFilters,
-): Promise<PortalIssue[]> {
-  const limit = Math.min(filters?.limit ?? DEFAULT_ISSUES_PAGE_SIZE, MAX_ISSUES_PAGE_SIZE);
-  const offset = Math.max(filters?.offset ?? 0, 0);
-
-  let query = client
-    .from("issues")
-    .select(PORTAL_ISSUE_COLS)
-    .eq("project_id", projectId)
-    .not("labels", "cs", '{"test"}')
-    .order("updated_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (filters?.status) {
-    const internal = PORTAL_KEY_TO_INTERNAL_STATUSES[filters.status];
-    query = query.in("status", internal);
-  }
-  if (filters?.sourceGroup) {
-    query = query.in("source", [...SOURCE_GROUP_TO_SOURCES[filters.sourceGroup]]);
-  }
-  if (filters?.types && filters.types.length > 0) {
-    query = query.in("type", filters.types);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("[listPortalIssues]", error.message);
-    return [];
-  }
-
-  return (data ?? []) as PortalIssue[];
-}
-
-/**
- * Haal één issue op binnen de scope van een project. Retourneert `null` als
- * het issue niet bestaat of bij een ander project hoort — dat laatste voorkomt
- * dat een gebruiker via URL-manipulatie issues van andere projecten opvraagt
- * (RLS is de primaire lijn van verdediging, dit is extra defensief).
- *
- * WG-004: test-submissies blokkeren we op detail-niveau ook — anders kan een
- * klant via een directe URL-link toch een testrij openen die we juist niet
- * willen tonen.
- */
-export async function getPortalIssue(
-  issueId: string,
-  projectId: string,
-  client: SupabaseClient,
-): Promise<PortalIssue | null> {
-  const { data, error } = await client
-    .from("issues")
-    .select(PORTAL_ISSUE_COLS)
-    .eq("id", issueId)
-    .eq("project_id", projectId)
-    .not("labels", "cs", '{"test"}')
-    .maybeSingle();
-
-  if (error) {
-    console.error("[getPortalIssue]", error.message);
-    return null;
-  }
-
-  return (data as PortalIssue | null) ?? null;
 }

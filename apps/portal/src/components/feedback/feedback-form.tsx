@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Bug, CheckCircle2, HelpCircle, Lightbulb, Loader2 } from "lucide-react";
 import { cn } from "@repo/ui/utils";
@@ -84,19 +83,12 @@ export function FeedbackForm({ projectId, projectName }: FeedbackFormProps) {
                 Bedankt voor je feedback!
               </h2>
               <p className="text-sm text-emerald-900/80">
-                We hebben je feedback aangemaakt als issue{" "}
+                We hebben je feedback aangemaakt als{" "}
                 <span className="font-mono font-medium">#{success.issueNumber}</span> voor{" "}
-                {projectName}. Het team ontvangt het direct en je kunt de status volgen in de
-                issues-lijst.
+                {projectName}. Het team ontvangt het direct en pakt het op.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link
-                href={`/projects/${projectId}/issues/${success.issueId}`}
-                className="inline-flex h-8 items-center rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
-              >
-                Bekijk issue
-              </Link>
               <button
                 type="button"
                 onClick={reset}

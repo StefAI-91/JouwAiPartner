@@ -7,7 +7,6 @@ import {
   CalendarDays,
   ClipboardList,
   FolderKanban,
-  Inbox,
   ListChecks,
   MessageCircle,
 } from "lucide-react";
@@ -132,7 +131,6 @@ function ProjectModeNav({
     { href: base, label: "Briefing", icon: ClipboardList },
     { href: `${base}/roadmap`, label: "Wat & wanneer", icon: ListChecks },
     { href: `${base}/meetings`, label: "Meetings", icon: CalendarDays },
-    { href: `${base}/issues`, label: "Mijn feedback", icon: Inbox },
     { href: `${base}/feedback`, label: "Feedback geven", icon: MessageCircle },
   ];
 
