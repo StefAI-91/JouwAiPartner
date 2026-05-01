@@ -158,7 +158,7 @@ The portal is the client-facing window into their project. Clients see:
 Clients can:
 
 - Ask questions (AI drafts answer from verified knowledge, human reviews before sending)
-- Submit feedback (flows directly into DevHub as a ticket)
+- Submit feedback (flows into the Cockpit Inbox for PM review; promoted to a DevHub ticket only after endorsement — see `vision-customer-communication.md`)
 - View real-time status of their reported issues
 
 AI can:
@@ -208,9 +208,11 @@ This is how data flows through the four quadrants, creating a continuous feedbac
    Code deployed → Client uses the product
    → Feedback collected via widget/chatbot
 
-5. FEEDBACK CAPTURED (Delivery → DevHub)
-   Bug reported → AI classifies → Appears in DevHub triage
-   → Prioritized alongside other work
+5. FEEDBACK CAPTURED (Delivery → Cockpit Inbox → DevHub)
+   Bug/request reported → AI classifies → Appears in Cockpit Inbox
+   → PM reviews (endorse / decline / defer / convert to Q&A)
+   → Endorsed items become DevHub triage tickets, prioritized alongside other work
+   → See vision-customer-communication.md for the full PM-review gate
 
 6. CLIENT INFORMED (DevHub → Portal)
    Issue status changes → Portal updates in real-time
@@ -226,14 +228,15 @@ This is how data flows through the four quadrants, creating a continuous feedbac
 
 ### 3.1 The Bridges (connecting quadrants)
 
-| Bridge                  | From → To         | Mechanism                                                              |
-| ----------------------- | ----------------- | ---------------------------------------------------------------------- |
-| **Meeting → Ticket**    | Cockpit → DevHub  | Manual "Send to DevHub" on promoted tasks (see decision below)         |
-| **Feedback → Ticket**   | Delivery → DevHub | Userback/widget/chatbot creates issue with AI classification           |
-| **Ticket → Status**     | DevHub → Portal   | Issue status changes reflect in client portal                          |
-| **Question → Answer**   | Portal → Cockpit  | Client question triggers AI search of verified knowledge               |
-| **Knowledge → Context** | Cockpit → DevHub  | AI enriches DevHub tickets with relevant meeting context and decisions |
-| **Progress → Update**   | DevHub → Portal   | AI generates progress summaries for client review                      |
+| Bridge                  | From → To                 | Mechanism                                                                                               |
+| ----------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Meeting → Ticket**    | Cockpit → DevHub          | Manual "Send to DevHub" on promoted tasks (see decision below)                                          |
+| **Feedback → Inbox**    | Delivery/Portal → Cockpit | New issue lands in Cockpit Inbox with `needs_pm_review` status (see `vision-customer-communication.md`) |
+| **Inbox → Ticket**      | Cockpit → DevHub          | PM endorses item → status flips to `triage`, becomes active dev work                                    |
+| **Ticket → Status**     | DevHub → Portal           | Issue status changes reflect in client portal                                                           |
+| **Question → Answer**   | Portal → Cockpit          | Client question triggers AI search of verified knowledge                                                |
+| **Knowledge → Context** | Cockpit → DevHub          | AI enriches DevHub tickets with relevant meeting context and decisions                                  |
+| **Progress → Update**   | DevHub → Portal           | AI generates progress summaries for client review                                                       |
 
 #### Decision: Meeting → Ticket bridge is manual-first (2026-04-10)
 
