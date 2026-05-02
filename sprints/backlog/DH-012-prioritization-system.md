@@ -119,10 +119,9 @@ triage-bucket). Sidebar-dropdown blijft bestaan voor latere wijzigingen,
 maar voor de **eerste** triage is de knoppenrij de hoofdroute.
 
 **Waarom dwang:** voorkomt dat issues per ongeluk in triage blijven
-hangen of zonder prio doorrollen naar de backlog. Beide triagisten (Stef
-
-- dev) volgen dezelfde flow, dus geen dubbel werk: wie 'm eerst opent en
-  bevestigt, claimt 'm.
+hangen of zonder prio doorrollen naar de backlog. Beide triagisten
+(Stef en dev) volgen dezelfde flow, dus geen dubbel werk: wie 'm eerst
+opent en bevestigt, claimt 'm.
 
 ### `/mijn-week` query
 
