@@ -193,22 +193,27 @@ export const PORTAL_STATUS_LABELS: Record<PortalStatusKey, PortalStatusLabel> =
 // ── Portal-specifieke source-groepering ──
 //
 // Het portal toont issues niet per ruwe `source` maar in drie buckets:
-//   - portal_pm  → wat de klant-PM zelf indient via het portal-formulier
-//   - end_users  → wat eindgebruikers indienen via embedded widgets
-//                  (Userback óf JAIP-widget op de client-app)
-//   - jaip       → wat JAIP intern aanmaakt (handmatig of door AI)
+//   - client_pm → wat de klant-PM zelf indient via het portal-formulier
+//   - end_user  → wat eindgebruikers indienen via embedded widgets
+//                 (Userback óf JAIP-widget op de client-app)
+//   - jaip      → wat JAIP intern aanmaakt (handmatig of door AI)
 //
-// De PM ziet onder "Mijn feedback" alleen `portal_pm`; eindgebruiker-feedback
+// De PM ziet onder "Mijn feedback" alleen `client_pm`; eindgebruiker-feedback
 // landt via topic-curatie in de Roadmap, niet als ruwe ticket-stroom.
 //
-// `jaip_widget` (WG-004) hoort bij `end_users`: dezelfde mentale categorie
+// `jaip_widget` (WG-004) hoort bij `end_user`: dezelfde mentale categorie
 // als userback (embedded feedback-knop op de client-app, niet door de PM
 // zelf ingediend). Zonder deze mapping zou widget-feedback default op
 // 'jaip' vallen — verkeerde bucket voor eindgebruiker-feedback.
+//
+// Sleutels (`client_pm`, `end_user`) zijn aligned met DEVHUB_SOURCE_GROUPS
+// hieronder zodat beide quadranten dezelfde stakeholder-taxonomie volgen.
+// Verschil: PORTAL heeft een extra `jaip`-groep zodat de klant interne
+// meldingen herkent; DEVHUB toont intern als default (geen badge).
 
 export const PORTAL_SOURCE_GROUPS = [
-  { key: "portal_pm", label: "Mijn meldingen", sources: ["portal"] },
-  { key: "end_users", label: "Van gebruikers", sources: ["userback", "jaip_widget"] },
+  { key: "client_pm", label: "Mijn meldingen", sources: ["portal"] },
+  { key: "end_user", label: "Van gebruikers", sources: ["userback", "jaip_widget"] },
   { key: "jaip", label: "JAIP-meldingen", sources: ["manual", "ai"] },
 ] as const;
 
@@ -228,6 +233,31 @@ export function resolvePortalSourceGroup(source: string | null | undefined): Por
     }
   }
   return "jaip";
+}
+
+// ── DevHub-specifieke source-groepering ──
+//
+// Sleutels (`client_pm`, `end_user`) zijn aligned met PORTAL_SOURCE_GROUPS
+// — beide volgen dezelfde stakeholder-taxonomie. Verschil: DEVHUB heeft géén
+// `jaip`-groep omdat intern (`manual`/`ai`) geen badge krijgt (default,
+// zou visueel ruis geven). Resolver returnt `null` voor die sources.
+
+export const DEVHUB_SOURCE_GROUPS = [
+  { key: "client_pm", label: "Klant-PM", sources: ["portal"] },
+  { key: "end_user", label: "Eindgebruiker", sources: ["userback", "jaip_widget"] },
+] as const;
+
+export type DevhubSourceGroupKey = (typeof DEVHUB_SOURCE_GROUPS)[number]["key"];
+
+/** Mapt issue.source naar de DevHub-badge-groep, of null voor intern. */
+export function resolveDevhubSourceGroup(
+  source: string | null | undefined,
+): DevhubSourceGroupKey | null {
+  if (!source) return null;
+  for (const group of DEVHUB_SOURCE_GROUPS) {
+    if ((group.sources as readonly string[]).includes(source)) return group.key;
+  }
+  return null;
 }
 
 // ── PM-review-gate default-status (CC-001 vision §5) ──

@@ -71,6 +71,7 @@ export function useIssueFiltersUrl() {
     searchParams.has("priority") ||
     searchParams.has("type") ||
     searchParams.has("component") ||
+    searchParams.has("source") ||
     searchParams.has("assignee") ||
     searchParams.has("topic") ||
     searchParams.has("ungrouped") ||

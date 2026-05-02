@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 616 |
-| Exported functions/constants | 931 |
+| Files scanned | 617 |
+| Exported functions/constants | 932 |
 | Exported types/interfaces | 409 |
-| Cross-package imports | 611 |
+| Cross-package imports | 613 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -4561,6 +4561,15 @@
 **Depends on:**
 - `@repo/ui/utils` → cn
 
+### `apps/devhub/src/components/shared/source-badge.tsx`
+
+**Exports:**
+- `SourceBadge()`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
+- `@repo/database/constants/issues` → resolveDevhubSourceGroup, type DevhubSourceGroupKey
+
 ### `apps/devhub/src/components/shared/status-badge.tsx`
 
 **Exports:**
@@ -4612,7 +4621,7 @@ Which layers depend on which packages:
 | Database Queries | - | - | 4 | - | - | 4 |
 | DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
-| DevHub Components | 3 | 2 | 1 | 15 | - | 21 |
+| DevHub Components | 4 | 2 | 1 | 16 | - | 23 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 28 | - | 22 | 12 | - | 62 |
 | MCP Server | 32 | 1 | - | - | - | 33 |

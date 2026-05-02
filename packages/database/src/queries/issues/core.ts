@@ -1,6 +1,22 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../../supabase/admin";
-import { PRIORITY_ORDER, UNASSIGNED_SENTINEL } from "../../constants/issues";
+import {
+  PRIORITY_ORDER,
+  UNASSIGNED_SENTINEL,
+  DEVHUB_SOURCE_GROUPS,
+  type DevhubSourceGroupKey,
+} from "../../constants/issues";
+
+// CC-003 — flatten DEVHUB_SOURCE_GROUPS keys → ruwe `source`-waarden. Elders
+// zou je dat per call doen, maar één afgeleide map houdt query-laag dom.
+const DEVHUB_SOURCE_GROUP_TO_SOURCES: Record<DevhubSourceGroupKey, readonly string[]> =
+  DEVHUB_SOURCE_GROUPS.reduce(
+    (acc, group) => {
+      acc[group.key] = group.sources;
+      return acc;
+    },
+    {} as Record<DevhubSourceGroupKey, readonly string[]>,
+  );
 import { getIssueIdsForTopics, getLinkedIssueIdsInProject } from "../topics/linked-issues";
 
 // UUID-regex hergebruikt voor het quoten van pre-fetched id-lijsten in
@@ -108,6 +124,7 @@ export async function listIssues(
     component?: string[];
     assignedTo?: string[];
     topicIds?: string[];
+    sourceGroups?: DevhubSourceGroupKey[];
     ungroupedOnly?: boolean;
     search?: string;
     issueNumber?: number;
@@ -166,6 +183,10 @@ export async function listIssues(
   }
   if (params.component && params.component.length > 0) {
     query = query.in("component", params.component);
+  }
+  if (params.sourceGroups && params.sourceGroups.length > 0) {
+    const sources = params.sourceGroups.flatMap((key) => DEVHUB_SOURCE_GROUP_TO_SOURCES[key] ?? []);
+    if (sources.length > 0) query = query.in("source", sources);
   }
   if (params.assignedTo && params.assignedTo.length > 0) {
     const wantsUnassigned = params.assignedTo.includes(UNASSIGNED_SENTINEL);
@@ -247,6 +268,7 @@ export async function countFilteredIssues(
     component?: string[];
     assignedTo?: string[];
     topicIds?: string[];
+    sourceGroups?: DevhubSourceGroupKey[];
     ungroupedOnly?: boolean;
     search?: string;
     issueNumber?: number;
@@ -296,6 +318,10 @@ export async function countFilteredIssues(
   }
   if (params.component && params.component.length > 0) {
     query = query.in("component", params.component);
+  }
+  if (params.sourceGroups && params.sourceGroups.length > 0) {
+    const sources = params.sourceGroups.flatMap((key) => DEVHUB_SOURCE_GROUP_TO_SOURCES[key] ?? []);
+    if (sources.length > 0) query = query.in("source", sources);
   }
   if (params.assignedTo && params.assignedTo.length > 0) {
     const uuids = params.assignedTo.filter((v) => v !== UNASSIGNED_SENTINEL);

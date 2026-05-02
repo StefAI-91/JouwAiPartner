@@ -8,14 +8,14 @@ import { PORTAL_SOURCE_GROUPS, resolvePortalSourceGroup } from "../../src/consta
 // tonen voor sources die de klant niet herkent.
 
 describe("PORTAL_SOURCE_GROUPS", () => {
-  it("definieert drie groepen: portal_pm, end_users en jaip", () => {
+  it("definieert drie groepen: client_pm, end_user en jaip", () => {
     const keys = PORTAL_SOURCE_GROUPS.map((g) => g.key);
-    expect(keys).toEqual(["portal_pm", "end_users", "jaip"]);
+    expect(keys).toEqual(["client_pm", "end_user", "jaip"]);
   });
 
   it("scheidt portal-PM van end-users en groepeert manual/ai onder jaip", () => {
-    const portalPm = PORTAL_SOURCE_GROUPS.find((g) => g.key === "portal_pm");
-    const endUsers = PORTAL_SOURCE_GROUPS.find((g) => g.key === "end_users");
+    const portalPm = PORTAL_SOURCE_GROUPS.find((g) => g.key === "client_pm");
+    const endUsers = PORTAL_SOURCE_GROUPS.find((g) => g.key === "end_user");
     const jaip = PORTAL_SOURCE_GROUPS.find((g) => g.key === "jaip");
     expect(portalPm?.sources).toEqual(["portal"]);
     // WG-004: jaip_widget hoort in dezelfde bucket als userback — beide zijn
@@ -26,12 +26,12 @@ describe("PORTAL_SOURCE_GROUPS", () => {
 });
 
 describe("resolvePortalSourceGroup", () => {
-  it("mapt portal naar 'portal_pm' en userback/jaip_widget naar 'end_users'", () => {
-    expect(resolvePortalSourceGroup("portal")).toBe("portal_pm");
-    expect(resolvePortalSourceGroup("userback")).toBe("end_users");
+  it("mapt portal naar 'client_pm' en userback/jaip_widget naar 'end_user'", () => {
+    expect(resolvePortalSourceGroup("portal")).toBe("client_pm");
+    expect(resolvePortalSourceGroup("userback")).toBe("end_user");
     // WG-004 (WG-REQ-078): widget-feedback wordt via de JAIP-eigen knop op de
     // client-app gemeld — eindgebruiker-categorie, niet PM-categorie.
-    expect(resolvePortalSourceGroup("jaip_widget")).toBe("end_users");
+    expect(resolvePortalSourceGroup("jaip_widget")).toBe("end_user");
   });
 
   it("mapt manual en ai naar 'jaip'", () => {

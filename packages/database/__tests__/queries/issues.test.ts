@@ -96,6 +96,68 @@ describeWithDb("queries/issues", () => {
       expect(ids).toContain(TEST_IDS.issue);
     });
 
+    it("filters by sourceGroups: client_pm matcht alleen 'portal'", async () => {
+      // CC-003 — server-side bron-filter. Drie issues met verschillende
+      // sources; filter op `client_pm` mag alleen `portal`-issue terug geven.
+      const idPortal = "00000000-0000-0000-0000-00000000c001";
+      const idUserback = "00000000-0000-0000-0000-00000000c002";
+      const idManual = "00000000-0000-0000-0000-00000000c003";
+      try {
+        await seedIssue({ id: idPortal, source: "portal", title: "portal-src" });
+        await seedIssue({ id: idUserback, source: "userback", title: "userback-src" });
+        await seedIssue({ id: idManual, source: "manual", title: "manual-src" });
+
+        const result = await listIssues(
+          { projectId: TEST_IDS.project, sourceGroups: ["client_pm"] },
+          db,
+        );
+        const ids = result.map((i) => i.id);
+        expect(ids).toContain(idPortal);
+        expect(ids).not.toContain(idUserback);
+        expect(ids).not.toContain(idManual);
+      } finally {
+        await db.from("issues").delete().in("id", [idPortal, idUserback, idManual]);
+      }
+    });
+
+    it("filters by sourceGroups: end_user matcht 'userback' + 'jaip_widget'", async () => {
+      const idUserback = "00000000-0000-0000-0000-00000000c011";
+      const idWidget = "00000000-0000-0000-0000-00000000c012";
+      const idManual = "00000000-0000-0000-0000-00000000c013";
+      try {
+        await seedIssue({ id: idUserback, source: "userback", title: "ub-src" });
+        await seedIssue({ id: idWidget, source: "jaip_widget", title: "wg-src" });
+        await seedIssue({ id: idManual, source: "manual", title: "mn-src" });
+
+        const result = await listIssues(
+          { projectId: TEST_IDS.project, sourceGroups: ["end_user"] },
+          db,
+        );
+        const ids = result.map((i) => i.id);
+        expect(ids).toContain(idUserback);
+        expect(ids).toContain(idWidget);
+        expect(ids).not.toContain(idManual);
+      } finally {
+        await db.from("issues").delete().in("id", [idUserback, idWidget, idManual]);
+      }
+    });
+
+    it("zonder sourceGroups param filtert niet op source", async () => {
+      const idPortal = "00000000-0000-0000-0000-00000000c021";
+      const idManual = "00000000-0000-0000-0000-00000000c022";
+      try {
+        await seedIssue({ id: idPortal, source: "portal", title: "portal-noflt" });
+        await seedIssue({ id: idManual, source: "manual", title: "manual-noflt" });
+
+        const result = await listIssues({ projectId: TEST_IDS.project }, db);
+        const ids = result.map((i) => i.id);
+        expect(ids).toContain(idPortal);
+        expect(ids).toContain(idManual);
+      } finally {
+        await db.from("issues").delete().in("id", [idPortal, idManual]);
+      }
+    });
+
     it("sorts by priority weight then created_at DESC", async () => {
       // Create two issues with different priorities
       await seedIssue({

@@ -6,7 +6,13 @@ import {
   ISSUE_COMPONENTS,
   ISSUE_SEVERITIES,
   UNASSIGNED_SENTINEL,
+  DEVHUB_SOURCE_GROUPS,
 } from "../constants/issues";
+
+const DEVHUB_SOURCE_GROUP_KEYS = DEVHUB_SOURCE_GROUPS.map((g) => g.key) as [
+  (typeof DEVHUB_SOURCE_GROUPS)[number]["key"],
+  ...(typeof DEVHUB_SOURCE_GROUPS)[number]["key"][],
+];
 
 /**
  * Parse a comma-separated URL param into a validated array. Empty segments
@@ -50,6 +56,10 @@ export const issueListFilterSchema = z.object({
   component: csvListSchema(z.enum(ISSUE_COMPONENTS)),
   assignee: csvListSchema(assigneeItemSchema),
   topic: csvListSchema(z.string().uuid()),
+  // CC-003 — DevHub-source-filter (`?source=client_pm,end_user`). De groepen
+  // worden in `listIssues` geflattened naar ruwe `source`-waarden via
+  // `DEVHUB_SOURCE_GROUPS` zodat een verkeerde key in de URL als no-op valt.
+  source: csvListSchema(z.enum(DEVHUB_SOURCE_GROUP_KEYS)),
   // "1" → true, alles anders → false. Strikt zodat een knullig `?ungrouped=0`
   // niet ongewenst als truthy wordt geïnterpreteerd.
   ungrouped: z

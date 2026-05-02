@@ -10,7 +10,7 @@ export function SourceDot({ source }: { source: string | null | undefined }) {
   const group = resolvePortalSourceGroup(source);
   if (group === "jaip") return null;
 
-  const isClientPm = group === "portal_pm";
+  const isClientPm = group === "client_pm";
   const cls = isClientPm ? "bg-[oklch(0.55_0.12_280)]" : "bg-warning/80";
   const label = isClientPm ? "Klant-PM" : "Eindgebr.";
   return (
