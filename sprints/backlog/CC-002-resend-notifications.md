@@ -16,9 +16,9 @@ Dit is sprint 2 van 5 (CC-001 t/m CC-005) afgeleid uit `docs/specs/vision-custom
 
 ## Afhankelijkheden
 
-- **CC-001** — levert `endorseIssue` / `declineIssue` / `deferIssue` / `convertIssueToQuestion` mutations + nieuwe `issues`-statussen. CC-002 wired notificaties IN deze mutations.
-- **PR-022** — `client_questions` tabel + `replyToQuestion` mutation in `packages/database/src/mutations/client-questions.ts:104-172`. CC-002 wired notificatie in de `role: "team"`-tak.
-- Bestaande issue-update via `updateIssue` (`packages/database/src/mutations/issues/core.ts:92`) — fire-on-status-change-naar-`in_progress`/`done`/`cancelled`.
+- **CC-001** — levert `endorseIssue` / `declineIssue` / `deferIssue` / `convertIssueToQuestion` mutations + de cockpit server-actions die ze aanroepen + nieuwe `issues`-statussen. CC-002 wired notificaties op de action-laag (zie taak 6).
+- **PR-022** — `client_questions` tabel + `replyToQuestion` mutation in `packages/database/src/mutations/client-questions.ts:104-172`. CC-002 wired notificatie in de cockpit-action die `role: "team"` aanroept.
+- Bestaande issue-update via `updateIssue` (`packages/database/src/mutations/issues/core.ts:92`) — fire-on-status-change-naar-`in_progress`/`done` op de DevHub-action-laag.
 - Bestaande recipient-lookup: `listPortalProjectAssignees` in `packages/database/src/queries/portal/access.ts:78` (filtert op `role: "client"`-leden van het project en levert e-mailadressen via `profiles`-join op regel 88).
 - Resend-account + verified domain `notifications@jouwaipartner.nl` (eenmalig op te zetten in Resend-dashboard, buiten code-scope).
 - ENV-vars: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `PORTAL_BASE_URL` (laatste bestaat mogelijk al — verifieer in `apps/portal/src/lib/`).
@@ -260,38 +260,65 @@ export async function notifyTeamReply(
 }
 ```
 
-### 6. Trigger-wiring in mutations
+### 6. Trigger-wiring op de server-action laag (geen mutation-wiring)
 
-**`packages/database/src/mutations/issues/pm-review.ts` (uit CC-001):** voeg in elke van de vier acties één regel toe direct ná de succesvolle `update`:
+**Architecturale keuze:** notify-calls leven in de server-action laag (`apps/cockpit/...`, `apps/devhub/...`, `apps/portal/...`), **niet** in `@repo/database`-mutations. Twee redenen:
+
+1. **Geen circulaire dependency.** Als `@repo/database`-mutations `@repo/notifications` importeren, en notifications terug-importeert uit database (voor types/queries), ontstaat een cycle. Door notify-calls op de action-laag te plaatsen importeert alleen `apps/*` uit `@repo/notifications` — `@repo/database` blijft notifications-vrij.
+2. **CLAUDE.md-conform.** "Data muteren via Server Actions" — notify-side-effects horen op dezelfde laag als de mutation-call, niet in de pure DB-helper.
+
+`@repo/notifications` mag wél types importeren uit `@repo/database` (`IssueRow`, `ClientQuestionRow`) en runtime-queries (`listPortalProjectAssignees`) — die richting is acyclisch.
+
+#### 6a. CC-001 PM-review-actions (cockpit)
+
+In `apps/cockpit/src/features/inbox/actions/pm-review.ts` (uit CC-001 taak 6) — voeg in elke van de vier server-actions één call toe **direct ná** de mutation-success-check, **vóór** de `revalidatePath`:
 
 ```ts
-await notifyFeedbackStatusChanged(updatedIssue, "triage", client).catch((e) => console.error(...));
+const result = await endorseIssue(parsed.data.issueId, profile.id, supabase);
+if ("error" in result) return result;
+
+await notifyFeedbackStatusChanged(result.data, "triage").catch((e) =>
+  console.error("[notify] endorseIssue", e),
+);
+
+revalidatePath("/inbox");
+return { success: true };
 ```
 
-(Zelfde patroon voor `declined`, `deferred`, `converted_to_qa`.)
+Zelfde patroon voor `declineIssueAction` (status `declined` + `decline_reason` doorgeven), `deferIssueAction` (`deferred`), `convertIssueAction` (`converted_to_qa`).
 
-**`packages/database/src/mutations/issues/core.ts` `updateIssue` (regel 92):** detecteer status-transitie naar `in_progress` of `done`. Pseudocode:
+#### 6b. DevHub status-update-action
+
+In `apps/devhub/src/features/issues/actions/` (zoek de action die `updateIssue` aanroept — vermoedelijk `update-issue.ts` of vergelijkbaar). Pattern:
 
 ```ts
-const before = await selectIssue(id);
-const result = await update(...);
-if (before.status !== result.status && ["in_progress", "done"].includes(result.status)) {
-  await notifyFeedbackStatusChanged(result, result.status, client).catch(...);
+const before = await getIssueById(input.id, supabase);
+const result = await updateIssue(input, supabase);
+if ("error" in result) return result;
+
+if (before?.status !== result.data.status && ["in_progress", "done"].includes(result.data.status)) {
+  await notifyFeedbackStatusChanged(result.data, result.data.status).catch((e) =>
+    console.error("[notify] updateIssue", e),
+  );
 }
-return result;
 ```
 
-**`packages/database/src/mutations/client-questions.ts` `replyToQuestion` (regel 104-172):** alleen bij `sender.role === "team"` — voeg toe ná de succesvolle insert + parent-status-flip:
+Andere status-changes triggeren NIET (zie pickTemplateForStatus in taak 5).
+
+#### 6c. Cockpit team-reply-action (CC-001)
+
+In `apps/cockpit/src/features/inbox/actions/replies.ts` (uit CC-001 taak 6) — voeg toe ná `replyToQuestion`-success:
 
 ```ts
-if (sender.role === "team") {
-  await notifyTeamReply(parent, parsed.data.body, client).catch(...);
-}
+const result = await replyToQuestion(parsed.data, { profile_id, role: "team" }, supabase);
+if ("error" in result) return result;
+
+await notifyTeamReply(parent, parsed.data.body).catch((e) =>
+  console.error("[notify] replyAsTeam", e),
+);
 ```
 
-NB: `client.role === "client"` activeert NIET — voor team-notificatie zie scope (in-app counter, niet mail).
-
-**Drift-risico:** `notify*`-functies wonen in `@repo/notifications`, niet in `@repo/database`. Mutations krijgen daardoor een nieuwe import-richting (database → notifications). Check geen circulaire dep ontstaat — notifications importeert uit database (`IssueRow`, queries), database importeert uit notifications. **Oplossing:** notifications importeert alleen TYPES uit database (geen runtime), runtime queries (`listPortalProjectAssignees`) krijgt notifications via een passed-in `client` argument. Dit voorkomt cycle.
+Portal-side `replyToQuestion` met `role: "client"` blijft notify-loos — team-notificatie is in-app counter, geen mail (vision §8). Centraliseer dat door portal-action GEEN notify aan te roepen.
 
 ### 7. Tests
 
@@ -310,13 +337,12 @@ Mock-grens-beleid (CLAUDE.md): mock alleen `resend` (externe netwerk), nooit eig
   - Statussen `needs_pm_review`/`backlog`/`todo`/`cancelled` → geen mail (template-pick returns null).
   - Status `triage` → `sendMail` 1x per recipient met `tag: feedback-triage`.
 
-- **Mutation-integratie-tests** (uitbreiding op CC-001 `pm-review.test.ts`):
-  - `endorseIssue` triggers `notifyFeedbackStatusChanged` met status `triage` (capture-mock op notifications-module).
-  - `declineIssue` triggers met status `declined` + reason in props.
-
-- **`packages/database/__tests__/mutations/client-questions.test.ts`** (bestand bestaat reeds — uitbreiden):
-  - `replyToQuestion` met `role: "team"` → notifyTeamReply called.
-  - `replyToQuestion` met `role: "client"` → NIET called (avoids self-notify-loop).
+- **Action-integratie-tests** (uitbreiding op CC-001 cockpit-action tests):
+  - `endorseIssueAction` triggers `notifyFeedbackStatusChanged` met status `triage` (capture-mock op `@repo/notifications`).
+  - `declineIssueAction` triggers met status `declined` + reason in props.
+  - `replyAsTeamAction` triggert `notifyTeamReply`; portal `replyAsClientAction` triggert het NIET (avoids self-notify-loop).
+  - DevHub `updateIssueAction` triggert alleen bij transitie naar `in_progress` of `done`, niet bij andere status-changes.
+- **Mutations blijven notify-loos** — verifieer in `packages/database/__tests__/mutations/issues-pm-review.test.ts` (uit CC-001) dat ze géén `@repo/notifications` importeren (grep-test of build-test).
 
 ### 8. Docs + registry
 
@@ -337,22 +363,22 @@ Mock-grens-beleid (CLAUDE.md): mock alleen `resend` (externe netwerk), nooit eig
 - [ ] Decline-mail bevat de exacte `decline_reason`-tekst die PM heeft ingevoerd.
 - [ ] Alle templates bevatten een werkende deep-link `${PORTAL_BASE_URL}/projects/${projectId}/...`.
 - [ ] Resend-error in productie laat de mutation NIET falen (try/catch + log).
-- [ ] Geen circulaire dependency tussen `@repo/database` en `@repo/notifications` (alleen type-imports vanuit notifications naar database).
+- [ ] Geen circulaire dependency tussen `@repo/database` en `@repo/notifications`. `@repo/database`-mutation-bestanden importeren GEEN `@repo/notifications` (notify-wiring leeft op action-laag in `apps/*`).
 - [ ] `npm run typecheck`, `npm run lint`, `npm test` allemaal groen.
 - [ ] `sprints/backlog/README.md` bevat CC-002 rij.
 - [ ] CC-002 alleen aan vision §10 #1 markering toevoegen ("Implemented") nadat sprint klaar is.
 
 ## Risico's
 
-| Risico                                                                                         | Mitigatie                                                                                                                                                                                               |
-| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Resend-outage stopt issue-mutations als notify-call sync faalt.                                | Strict `try/catch` rondom elke `notify*`-call; mutation completed op DB-succes ongeacht mail-result.                                                                                                    |
-| Spam tijdens dev: developer endorsed test-issues → 50 mails naar productie-klanten.            | `NODE_ENV !== production` skipt Resend default. `RESEND_FORCE_SEND=1` als bewuste opt-in voor staging.                                                                                                  |
-| Circulaire dep `database` ↔ `notifications`.                                                   | Notifications importeert alléén types uit database; mutations injecteren `client` als argument; geen runtime-import van database in notifications. Verifieer met `npm run typecheck` op beide packages. |
-| Mail komt aan in spam-folder zonder verified domain.                                           | Resend-onboarding stap: SPF + DKIM + DMARC op `jouwaipartner.nl` via DNS. Buiten code-scope maar moet voor go-live.                                                                                     |
-| Race condition: PM endorsed binnen 2s na klant-submit, klant krijgt twee mails kort na elkaar. | Geen mail bij submit (zie open vraag #2) → klant krijgt alléén één mail bij PM-actie.                                                                                                                   |
-| Gebruiker heeft meerdere e-mails (niet ondersteund door `profiles.email` één-op-één).          | Out-of-scope; v1 stuurt alleen naar primaire `profiles.email`.                                                                                                                                          |
-| Resend-rate-limits bij batch-acties (PM endorsed 20 issues tegelijk).                          | Resend free-tier = 100 mails/dag; bij hogere volumes upgrade plan. Niet nu mitigeren.                                                                                                                   |
+| Risico                                                                                         | Mitigatie                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Resend-outage stopt issue-mutations als notify-call sync faalt.                                | Strict `try/catch` rondom elke `notify*`-call; mutation completed op DB-succes ongeacht mail-result.                                                                                                                                                                                           |
+| Spam tijdens dev: developer endorsed test-issues → 50 mails naar productie-klanten.            | `NODE_ENV !== production` skipt Resend default. `RESEND_FORCE_SEND=1` als bewuste opt-in voor staging.                                                                                                                                                                                         |
+| Circulaire dep `database` ↔ `notifications`.                                                   | Architecturaal opgelost (taak 6): notify-calls leven op de action-laag (`apps/*`), niet in `@repo/database`-mutations. Notifications importeert types + queries uit database (acyclisch). Verifieer met `npm run typecheck` + grep dat geen mutation-bestand `@repo/notifications` importeert. |
+| Mail komt aan in spam-folder zonder verified domain.                                           | Resend-onboarding stap: SPF + DKIM + DMARC op `jouwaipartner.nl` via DNS. Buiten code-scope maar moet voor go-live.                                                                                                                                                                            |
+| Race condition: PM endorsed binnen 2s na klant-submit, klant krijgt twee mails kort na elkaar. | Geen mail bij submit (zie open vraag #2) → klant krijgt alléén één mail bij PM-actie.                                                                                                                                                                                                          |
+| Gebruiker heeft meerdere e-mails (niet ondersteund door `profiles.email` één-op-één).          | Out-of-scope; v1 stuurt alleen naar primaire `profiles.email`.                                                                                                                                                                                                                                 |
+| Resend-rate-limits bij batch-acties (PM endorsed 20 issues tegelijk).                          | Resend free-tier = 100 mails/dag; bij hogere volumes upgrade plan. Niet nu mitigeren.                                                                                                                                                                                                          |
 
 ## Niet in scope
 
