@@ -6,30 +6,44 @@ import {
   listInboxItemsForTeam,
   type InboxItem,
 } from "@repo/database/queries/inbox";
+import { getProfilePreferences } from "@repo/database/queries/profiles";
 import { InboxHeader, type InboxFilter } from "./inbox-header";
 import { InboxList } from "./inbox-list";
 import { InboxEmptyState } from "./empty-state";
+import { OnboardingCard } from "./onboarding-card";
 
 /**
  * Composition-root voor `/inbox`. Filtert in JS na ophalen — de lijst is
  * meestal <100 items per team-member en de drie filters delen 80% van de
  * data, dus drie aparte queries draaien zou meer kosten dan winnen.
+ *
+ * `projectId` (CC-005) scopet de view naar één project — gebruikt door de
+ * per-project inbox-tab. `undefined` = globale view zoals voorheen.
  */
-export async function InboxPage({ filter }: { filter: InboxFilter }) {
+export async function InboxPage({
+  filter,
+  projectId,
+}: {
+  filter: InboxFilter;
+  projectId?: string;
+}) {
   const supabase = await createPageClient();
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
 
-  const [items, counts] = await Promise.all([
-    listInboxItemsForTeam(profile.id, supabase),
-    countInboxItemsForTeam(profile.id, supabase),
+  const [items, counts, preferences] = await Promise.all([
+    listInboxItemsForTeam(profile.id, { projectId }, supabase),
+    countInboxItemsForTeam(profile.id, { projectId }, supabase),
+    getProfilePreferences(profile.id, supabase),
   ]);
 
   const filtered = applyFilter(items, filter);
+  const showOnboarding = !preferences.dismissed_onboarding?.cockpit_inbox;
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden">
       <InboxHeader counts={counts} />
+      {showOnboarding && <OnboardingCard />}
       {filtered.length === 0 ? <InboxEmptyState filter={filter} /> : <InboxList items={filtered} />}
     </div>
   );

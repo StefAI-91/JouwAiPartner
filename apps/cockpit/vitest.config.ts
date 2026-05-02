@@ -4,7 +4,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["__tests__/**/*.test.ts", "src/**/*.test.ts"],
+    setupFiles: ["./__tests__/helpers/setup.ts"],
+    include: ["__tests__/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
     // passWithNoTests: we hebben nog geen cockpit-tests, maar we willen dat
     // `turbo test` niet faalt. Zodra hier echte tests komen (zie backlog)
     // mag deze regel eruit.

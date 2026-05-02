@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     getReviewQueueCount(supabase),
     listFocusProjects(supabase),
     profile
-      ? countInboxItemsForTeam(profile.id, supabase)
+      ? countInboxItemsForTeam(profile.id, {}, supabase)
       : Promise.resolve({ pmReview: 0, openQuestions: 0, deferred: 0, unread: 0 }),
   ]);
   const inboxCount = inboxCounts.unread;

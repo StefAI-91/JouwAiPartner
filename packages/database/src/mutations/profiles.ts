@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
+import {
+  dismissOnboardingInputSchema,
+  profilePreferencesSchema,
+  type OnboardingKey,
+  type ProfilePreferences,
+} from "../validations/profiles";
 
 /**
  * Self-heal missing profile row voor een auth.users entry. De handle_new_user
@@ -24,4 +30,32 @@ export async function upsertProfile(
 
   if (error) return { error: error.message };
   return { success: true };
+}
+
+/**
+ * CC-005 — markeer een onboarding-card als dismissed voor deze user. Atomic
+ * via de `dismiss_onboarding_key` RPC zodat parallelle dismissals (bv. portal-
+ * en cockpit-tab tegelijk) elkaars `preferences`-keys niet overschrijven. De
+ * `key` wordt door Zod gevalideerd (alleen bekende keys) — een vrije string
+ * komt nooit als jsonb-pad in de RPC terecht.
+ */
+export async function dismissOnboarding(
+  profileId: string,
+  key: OnboardingKey,
+  client?: SupabaseClient,
+): Promise<{ success: true; preferences: ProfilePreferences } | { error: string }> {
+  const validated = dismissOnboardingInputSchema.safeParse({ key });
+  if (!validated.success) return { error: "Onbekende onboarding-key" };
+
+  const db = client ?? getAdminClient();
+  const { data, error } = await db.rpc("dismiss_onboarding_key", {
+    p_profile_id: profileId,
+    p_key: validated.data.key,
+    p_timestamp: new Date().toISOString(),
+  });
+
+  if (error) return { error: error.message };
+
+  const parsed = profilePreferencesSchema.safeParse(data ?? {});
+  return { success: true, preferences: parsed.success ? parsed.data : {} };
 }
