@@ -58,6 +58,26 @@ ALTER TABLE profiles
 
 COMMENT ON COLUMN profiles.preferences IS
   'Per-user UI-state: dismissed onboarding, theme, notification-prefs. Free-form jsonb om sprint-na-sprint nieuwe keys toe te voegen zonder migratie.';
+
+-- Atomic dismiss-helper (zie taak 2). jsonb_set voorkomt read-modify-write
+-- races wanneer gebruiker tegelijk twee onboarding-cards dismissed.
+CREATE OR REPLACE FUNCTION dismiss_onboarding_key(
+  p_profile_id uuid,
+  p_key text,
+  p_timestamp text
+) RETURNS jsonb
+LANGUAGE sql
+AS $$
+  UPDATE profiles
+  SET preferences = jsonb_set(
+    coalesce(preferences, '{}'::jsonb),
+    ARRAY['dismissed_onboarding', p_key],
+    to_jsonb(p_timestamp),
+    true
+  )
+  WHERE id = p_profile_id
+  RETURNING preferences;
+$$;
 ```
 
 Geen index nodig — kolom wordt alleen per-row gelezen via `id`-lookup.
@@ -99,20 +119,44 @@ export async function dismissOnboarding(
   key: "portal_inbox" | "cockpit_inbox",
   client?: SupabaseClient,
 ): Promise<MutationResult<ProfilePreferences>> {
-  // Deep merge: behoud bestaande preferences, update alleen dismissed_onboarding[key]
-  const current = await getProfilePreferences(profileId, client);
-  const updated: ProfilePreferences = {
-    ...current,
-    dismissed_onboarding: {
-      ...current.dismissed_onboarding,
-      [key]: new Date().toISOString(),
-    },
-  };
-  // ... update via supabase ...
+  // Atomic update via jsonb_set — voorkomt read-modify-write race wanneer
+  // gebruiker tegelijk twee tabs open heeft of meerdere onboarding-cards
+  // dismissed binnen één render-cycle. Andere keys in `preferences` blijven
+  // intact; jsonb_set met `create_missing=true` (default) maakt het pad aan
+  // als het nog niet bestaat.
+  const supabase = client ?? getAdminClient();
+  const { data, error } = await supabase.rpc("dismiss_onboarding_key", {
+    p_profile_id: profileId,
+    p_key: key,
+    p_timestamp: new Date().toISOString(),
+  });
+  // ...
 }
 ```
 
-Validatie: `dismissOnboardingSchema = z.object({ key: z.enum(["portal_inbox", "cockpit_inbox"]) })`.
+Bijbehorende SQL-RPC in de profiles.preferences-migratie (zie taak 1):
+
+```sql
+CREATE OR REPLACE FUNCTION dismiss_onboarding_key(
+  p_profile_id uuid,
+  p_key text,
+  p_timestamp text
+) RETURNS jsonb
+LANGUAGE sql
+AS $$
+  UPDATE profiles
+  SET preferences = jsonb_set(
+    coalesce(preferences, '{}'::jsonb),
+    ARRAY['dismissed_onboarding', p_key],
+    to_jsonb(p_timestamp),
+    true
+  )
+  WHERE id = p_profile_id
+  RETURNING preferences;
+$$;
+```
+
+Validatie: `dismissOnboardingSchema = z.object({ key: z.enum(["portal_inbox", "cockpit_inbox"]) })` — `key`-validatie blokkeert SQL-injection-pad door RPC-input. Geen vrije strings naar `jsonb_set`.
 
 ### 3. Cockpit project-detail tabs
 
