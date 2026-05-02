@@ -96,12 +96,13 @@ Exports — alle vier accepteren `client?: SupabaseClient` (default admin per CL
 - `endorseIssue(id, actorId, client?)` → `update issues set status='triage', updated_at=now() where id=$1 and status='needs_pm_review'`. Defensieve status-guard voorkomt dubbel-endorseren.
 - `declineIssue(id, actorId, declineReason, client?)` → `status='declined', decline_reason=$reason, closed_at=now()`.
 - `deferIssue(id, actorId, client?)` → `status='deferred'`.
-- `convertIssueToQuestion(id, actorId, body, client?)`:
+- `convertIssueToQuestion(id, actorId, body, client?)` — issue-eerst om orphan-questions te vermijden:
   1. Lookup issue (`project_id`, `organization_id`).
-  2. Insert `client_questions` row (`parent_id=null`, `body=$body`, `sender_profile_id=actorId`, `issue_id=$issueId`).
-  3. Update issue: `status='converted_to_qa'`, `converted_to_question_id=$newQuestionId`, `closed_at=now()`.
+  2. Update issue: `status='converted_to_qa'`, `closed_at=now()` met status-guard `where id=$1 and status='needs_pm_review'`. `converted_to_question_id` blijft tijdelijk NULL.
+  3. Insert `client_questions`-row (`parent_id=null`, `body=$body`, `sender_profile_id=actorId`, `issue_id=$issueId`).
+  4. Update issue: zet `converted_to_question_id=$newQuestionId`.
 
-  Geen transactiewrapper (consistent met `replyToQuestion`-comments regels 98-102) — gedeeltelijk falen is corrigeerbaar. Wel return-error-early bij elke step.
+  Bij step-3-fail staat de issue al op `converted_to_qa` zonder bijbehorende vraag — PM ziet "kapot" in cockpit en kan handmatig herstellen. Slechter alternatief is vraag-eerst: dan zou een step-2-fail een orphan `client_questions`-rij achterlaten die de klant wél ziet zonder context. Issue-eerst maakt fail-state intern-zichtbaar i.p.v. klant-zichtbaar. Step 4 mag ook falen — dan ontbreekt enkel de FK-link, niet de data; opruim kan post-hoc linken via `client_questions.issue_id`.
 
 `insertIssue` (`packages/database/src/mutations/issues/core.ts:65-87`) **hoeft niet** te wijzigen: `data.status` is al optioneel input. Callers gaan expliciet `status: "needs_pm_review"` meegeven (taak 9).
 

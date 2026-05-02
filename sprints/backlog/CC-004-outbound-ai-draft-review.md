@@ -29,7 +29,7 @@ Dit is sprint 4 van 5 (CC-001 t/m CC-005) afgeleid uit `docs/specs/vision-custom
 
 1. **Drafts in aparte tabel of kolom op `client_questions`?** Aanbeveling: **aparte tabel `outbound_drafts`**. Drafts hebben review-lifecycle die sent-messages niet hebben; mengen leidt tot RLS-complexiteit ("klant mag deze rij nog niet zien") en onhandige queries. Bij approve wordt de body **gekopieerd** naar `client_questions` via `sendQuestion`, draft krijgt `status='sent'` met `sent_message_id` link voor traceability.
 2. **Welke trigger(s) in v1?** Aanbeveling: **alleen decline-reason → draft**. Eén volledige eind-tot-eind flow > drie half-werkende. Andere triggers (in_progress message, weekly proactive update, "draft a note"-button) komen in een follow-up. Concreet: schema en review-UI zijn generiek, alleen de **draft-trigger-laag** is nu één-doel.
-3. **Sync of async draft-generatie?** Aanbeveling: **async (best-effort)**. Bij `declineIssueAction`: insert draft-row met `status='generating'`, schedule een server-side draft-call die dezelfde mutation completes met body + `status='pending_review'`. Voorkomt dat de PM 5-10 seconden moet wachten op LLM tijdens decline-actie. Implementatie: server-action die direct returnt + `Promise.allSettled` op de draft-call met fail → log. Geen queue-systeem in v1 (out of scope).
+3. **Sync of async draft-generatie?** Aanbeveling: **async via Vercel `waitUntil()`**. Bij `declineIssueAction`: insert draft-row met `status='generating'`, dan `waitUntil(generateAndComplete(draftId))` zodat Next.js de response al kan retourneren terwijl de LLM-call in een achtergrond-context blijft draaien (Vercel houdt de function-instance levend tot `waitUntil`-promise resolved is). Voorkomt dat PM 5-10 seconden wacht. Géén `Promise.then()`-fire-and-forget zonder `waitUntil` — die wordt op Vercel "frozen" zodra de response weg is. Geen queue-systeem in v1 (out of scope).
 4. **AI-grounding: alleen issue-context of ook knowledge-search?** Aanbeveling: **issue-context + knowledge-search via MCP**. De Communicator-agent krijgt: (a) de issue (titel, beschrijving, decline_reason van PM, klant-context via project), (b) optionele context-snippets uit `search_knowledge` over dit project. **Haiku 4.5** als startmodel — review-gate maakt model-keuze omkeerbaar (PM ziet/edit alle drafts vóór verzending). Begin op het goedkope/snelle model; upgrade naar Sonnet als prompt-tuning + edit-rate aantonen dat reasoning-capacity het knelpunt is. Houd `review_action='approved_edited'`-stats bij voor die beslissing.
 5. **Review-actions: approve / edit / reject — wat met "edit"?** Aanbeveling: **edit = inline tekstveld in review-UI**. Edit overschrijft `body`, klikt dan approve. Geen aparte "edit-and-save-as-draft"-status; PM bewerkt direct in approve-flow. Eenvoudiger UX, geen extra status.
 6. **Wat als klant geen `profile.email` heeft (eindgebruiker via widget)?** Aanbeveling: **draft maken NIET, decline-flow returnt success zonder draft**. PM ziet in cockpit "kan geen klant-mail genereren — geen klant-PM gekoppeld". CC-005 is de plek voor eindgebruiker-feedback-aggregatie.
@@ -46,7 +46,7 @@ Pad migratie: `supabase/migrations/<timestamp>_outbound_drafts.sql`.
 CREATE TABLE outbound_drafts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id uuid NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-  organization_id uuid NOT NULL REFERENCES organizations(id),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 
   -- Trigger context: één van deze foreign keys ingevuld, rest NULL
   source_issue_id uuid REFERENCES issues(id) ON DELETE SET NULL,
@@ -246,6 +246,8 @@ export async function declineIssue(...) {
 `packages/ai/src/pipeline/outbound/schedule-decline-draft.ts` (nieuw):
 
 ```ts
+import { waitUntil } from "@vercel/functions";
+
 export async function scheduleDeclineDraft(input: {...}): Promise<void> {
   const draft = await createPendingDraft({
     projectId: input.projectId,
@@ -256,14 +258,18 @@ export async function scheduleDeclineDraft(input: {...}): Promise<void> {
   });
   if ('error' in draft) return;
 
-  // Async generation — Promise.allSettled-style fire
-  generateDeclineDraft({...})
-    .then((output) => completeGeneratedDraft({ draftId: draft.data.id, ...output }))
-    .catch((e) => failGeneratedDraft({ draftId: draft.data.id, error: e.message }));
+  // Vercel waitUntil houdt de function-instance levend tot deze promise
+  // resolved is, óók na het retourneren van de server-action response.
+  // Lokaal (zonder Vercel runtime) draait waitUntil als gewone await — fine.
+  waitUntil(
+    generateDeclineDraft({...})
+      .then((output) => completeGeneratedDraft({ draftId: draft.data.id, ...output }))
+      .catch((e) => failGeneratedDraft({ draftId: draft.data.id, error: e.message })),
+  );
 }
 ```
 
-NB: deze flow runt tijdens een server-action — Next.js heeft nl. NIET serverless-job-queue. Verifieer dat `Promise.then()` die voorbij de action-return loopt op Vercel echt completes (anders: spawn een fire-and-forget fetch naar een internal API-route die de draft genereert). Test dit lokaal én op Vercel preview vóór merge.
+`@vercel/functions` package toevoegen aan `packages/ai/package.json`. In dev/test (geen Vercel runtime): `waitUntil` is een no-op-await polyfill — werkt transparant.
 
 ### 6. Cockpit Inbox UI: drafts-sectie
 
@@ -299,16 +305,32 @@ export async function rejectDraftAction(draftId: string, reason?: string): Promi
 export async function regenerateDraftAction(draftId: string): Promise<ActionResult>;
 ```
 
-### 8. CC-002 integratie
+### 8. CC-002 integratie + decline-mail-toggle
 
-In `packages/notifications/src/notify/`:
+**8a. Nieuwe outbound-template** voor de draft-flow:
 
-- Optie A: hergebruik bestaande `notifyTeamReply` (CC-002 task 5) — werkt als draft via `sendQuestion` als root-question landt en die via `replyToQuestion`-helper een notify triggert.
+- Optie A: hergebruik bestaande `notifyTeamReply` (CC-002 task 5) — werkt als draft via `sendQuestion` als root-question landt.
 - Optie B: nieuwe `notifyOutboundSent` orchestrator + `outbound-sent` template ("Je hebt een bericht van Jouw AI Partner ontvangen").
 
 Aanbeveling **Optie B** — een outbound message uit CC-004 verschilt qua context van een reply-on-question (CC-002). Klant herkent "nieuwe boodschap" beter dan "antwoord op iets dat ik niet vroeg".
 
 Voeg toe: `packages/notifications/src/templates/outbound-sent.ts` + `notify/outbound-sent.ts`. Wired in `approveAndSendDraftAction` na `markDraftSent`.
+
+**8b. Schakel CC-002's automatische decline-mail UIT** zodra CC-004 live is — anders krijgt klant twee mails (sobere CC-002 + AI-draft uit CC-004). In `packages/notifications/src/notify/feedback-status.ts` (CC-002 taak 5):
+
+```ts
+// VOOR CC-004:
+//   declined: declineTemplate,
+// NA CC-004:
+const TEMPLATE_FOR_STATUS: Record<string, Template | null> = {
+  triage: endorsedTemplate,
+  declined: null, // ← uitgeschakeld door CC-004; outbound-flow stuurt zelf via outbound-sent
+  deferred: deferredTemplate,
+  // ...
+};
+```
+
+Deze wijziging zit IN CC-004's PR (niet in een latere sprint). Acceptatiecriterium hieronder bewaakt dat de toggle gemerged is.
 
 ### 9. Tests
 
@@ -342,6 +364,7 @@ Voeg toe: `packages/notifications/src/templates/outbound-sent.ts` + `notify/outb
 - [ ] Failed-draft toont error in UI met regenerate-knop.
 - [ ] Eindgebruiker-issue (geen klant-PM aan project) → decline triggert WEL het draft-record met `status='failed'` en duidelijke `generation_error` ("geen ontvanger"), of trigger schakelt zichzelf vooraf uit. Beide acceptabel mits PM het ziet.
 - [ ] CC-002 notificatie verstuurd na approve+send (Optie B template `outbound-sent`).
+- [ ] CC-002's automatische `feedback-declined`-mail uitgeschakeld (`pickTemplateForStatus('declined') → null`) zodat klant niet twee mails krijgt bij decline. Test verifieert: `declineIssueAction` veroorzaakt geen Resend-call vanuit CC-002's feedback-status-notify.
 - [ ] Tests groen voor mutations, agent, schedule, action, integratie.
 - [ ] Async-completion getest op Vercel preview vóór merge (zie risico's).
 - [ ] `npm run typecheck`, `npm run lint`, `npm test`, `npm run check:queries`, `npm run check:features` allemaal groen.
@@ -349,16 +372,16 @@ Voeg toe: `packages/notifications/src/templates/outbound-sent.ts` + `notify/outb
 
 ## Risico's
 
-| Risico                                                                                                                                                                 | Mitigatie                                                                                                                                                                                                                                                                                                            |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Vercel serverless completion na response**: `Promise.then` na een server-action returnt loopt mogelijk niet voltooid op Vercel (functie wordt "frozen" na response). | **Hoofd-mitigatie**: gebruik Vercel `waitUntil()` of een fetch naar interne API-route die de draft genereert (route blijft live tot completion). Test op Vercel preview vóór merge — niet alleen lokaal. Fallback: cron-job die elke 5min `status='generating'`-rijen ouder dan 1min picks up.                       |
-| LLM (Haiku 4.5) genereert ongepaste content (te formeel, te casual, taal-fout) → PM moet alles editen.                                                                 | Iteratie op prompt op basis van eerste 10 echte drafts. Houd `review_action='approved_edited'`-rate bij; als die boven ~50% blijft hangen na prompt-tuning, upgrade naar Sonnet 4.6 (één-regel-wijziging in `communicator.ts` + registry-entry). Review-gate maakt model-zwakte zichtbaar zonder dat klant het ziet. |
-| Klant krijgt mail "we wijzen je verzoek af" zonder dat PM zorgvuldig heeft gelezen (auto-approve-temptation).                                                          | Geen "auto-approve binnen 24u" v1. Drafts blijven hangen tot PM expliciet actie neemt. Acceptabel risk: lange-tail drafts blokkeren tijd, maar dat is beter dan slechte mail eruit.                                                                                                                                  |
-| Race: PM klikt approve, klant klikt eerder een nieuwe vraag op hetzelfde issue → conflict.                                                                             | `sendQuestion` is idempotent op `(project_id, body, sender_profile_id, created_at)`-uniqueness niet — gewoon nieuwe rij, geen conflict.                                                                                                                                                                              |
-| Klant verbaast over outbound zonder dat hij iets heeft gevraagd.                                                                                                       | Mail-template begint met "Je hebt onlangs aangevraagd: [issue title]" zodat context glashelder is. Geen "out of nowhere"-mail.                                                                                                                                                                                       |
-| `outbound_drafts` tabel groeit groot bij volume.                                                                                                                       | Niet nu mitigeren; bij >10k rijen overweeg archive-strategie. Index op `(status)` waar `status='pending_review'` houdt review-query snel.                                                                                                                                                                            |
-| Knowledge-search-call faalt → geen snippets → draft minder gefundeerd.                                                                                                 | Geaccepteerd risico v1; fallback is "prompt zonder snippets". Logging voor stats.                                                                                                                                                                                                                                    |
-| Communicator-agent gebruikt verkeerde projectnaam of klant-aanspraak.                                                                                                  | Prompt-tunings + agent-input-validatie (Zod).                                                                                                                                                                                                                                                                        |
+| Risico                                                                                                                   | Mitigatie                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Vercel serverless completion na response**: ruwe `Promise.then` na een server-action returnt wordt "frozen" op Vercel. | **Opgelost in design** (taak 5): `scheduleDeclineDraft` gebruikt `waitUntil()` uit `@vercel/functions` als eerste-keuze, geen Promise.then-trick. Acceptatiecriterium "Async-completion getest op Vercel preview" valideert. Fallback bij volume-issues: cron-job die `status='generating'`-rijen ouder dan 1min oppikt — pas instellen als monitoring het aantoont. |
+| LLM (Haiku 4.5) genereert ongepaste content (te formeel, te casual, taal-fout) → PM moet alles editen.                   | Iteratie op prompt op basis van eerste 10 echte drafts. Houd `review_action='approved_edited'`-rate bij; als die boven ~50% blijft hangen na prompt-tuning, upgrade naar Sonnet 4.6 (één-regel-wijziging in `communicator.ts` + registry-entry). Review-gate maakt model-zwakte zichtbaar zonder dat klant het ziet.                                                 |
+| Klant krijgt mail "we wijzen je verzoek af" zonder dat PM zorgvuldig heeft gelezen (auto-approve-temptation).            | Geen "auto-approve binnen 24u" v1. Drafts blijven hangen tot PM expliciet actie neemt. Acceptabel risk: lange-tail drafts blokkeren tijd, maar dat is beter dan slechte mail eruit.                                                                                                                                                                                  |
+| Race: PM klikt approve, klant klikt eerder een nieuwe vraag op hetzelfde issue → conflict.                               | `sendQuestion` is idempotent op `(project_id, body, sender_profile_id, created_at)`-uniqueness niet — gewoon nieuwe rij, geen conflict.                                                                                                                                                                                                                              |
+| Klant verbaast over outbound zonder dat hij iets heeft gevraagd.                                                         | Mail-template begint met "Je hebt onlangs aangevraagd: [issue title]" zodat context glashelder is. Geen "out of nowhere"-mail.                                                                                                                                                                                                                                       |
+| `outbound_drafts` tabel groeit groot bij volume.                                                                         | Niet nu mitigeren; bij >10k rijen overweeg archive-strategie. Index op `(status)` waar `status='pending_review'` houdt review-query snel.                                                                                                                                                                                                                            |
+| Knowledge-search-call faalt → geen snippets → draft minder gefundeerd.                                                   | Geaccepteerd risico v1; fallback is "prompt zonder snippets". Logging voor stats.                                                                                                                                                                                                                                                                                    |
+| Communicator-agent gebruikt verkeerde projectnaam of klant-aanspraak.                                                    | Prompt-tunings + agent-input-validatie (Zod).                                                                                                                                                                                                                                                                                                                        |
 
 ## Niet in scope
 

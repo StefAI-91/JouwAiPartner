@@ -145,8 +145,14 @@ export async function sendMail(
     return { ok: false, reason: "no_api_key" };
   }
 
+  const from = process.env.RESEND_FROM_EMAIL;
+  if (!from) {
+    console.error("[notifications] RESEND_FROM_EMAIL missing — fail loud", { tag: input.tag });
+    return { ok: false, reason: "no_from_email" };
+  }
+
   const { error } = await client.emails.send({
-    from: process.env.RESEND_FROM_EMAIL ?? "notifications@jouwaipartner.nl",
+    from,
     to: input.to,
     subject: input.subject,
     html: input.html,
@@ -230,12 +236,21 @@ export async function notifyFeedbackStatusChanged(
 `pickTemplateForStatus(newStatus)` mapt:
 
 - `triage` (vanuit `needs_pm_review`) → `feedback-endorsed`
-- `declined` → `feedback-declined`
+- `declined` → `feedback-declined` **(zie note over CC-004 hieronder)**
 - `deferred` → `feedback-deferred`
 - `converted_to_qa` → `feedback-converted`
 - `in_progress` → `feedback-progress`
 - `done` → `feedback-done`
 - `needs_pm_review`, `backlog`, `todo`, `cancelled` → `null` (geen mail)
+
+**Interactie met CC-004 (decline-mail-overlap):** zolang CC-004 nog niet gemerged is verstuurt CC-002 een sobere `feedback-declined`-mail met de raw `decline_reason`-tekst — klant krijgt direct uitleg, geen wachten op AI. Zodra CC-004 live is genereert die een AI-draft voor decline; CC-004's `approveAndSendDraftAction` stuurt dan een `outbound-sent`-mail. Op dat moment moet `pickTemplateForStatus('declined')` → `null` worden gezet om dubbele mails te voorkomen. Concreet checklist-item voor CC-004's PR (niet voor CC-002's PR):
+
+```ts
+// In pickTemplateForStatus: declined → null zodra CC-004 gemerged is
+declined: null,
+```
+
+CC-004 is verantwoordelijk voor deze wijziging in CC-002's code (zie CC-004 acceptatiecriterium "decline-mail door CC-002 uitgeschakeld").
 
 `packages/notifications/src/notify/question-reply.ts`:
 

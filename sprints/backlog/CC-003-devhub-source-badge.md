@@ -35,25 +35,47 @@ CC-001 / CC-002 zijn **geen** harde dep — CC-003 kan ervoor of erna landen. Al
 
 Bouwvolgorde **constants → component → wire-in row → filter (optioneel) → tests**. Klein, lineair.
 
-### 1. DevHub source-groep-constanten
+### 1. Source-groep-constanten — naming-align + DevHub-set toevoegen
 
-Pad: `packages/database/src/constants/issues.ts` (bestand bestaat — uitbreiden, niet vervangen).
+Pad: `packages/database/src/constants/issues.ts` (bestand bestaat — uitbreiden + rename PORTAL keys).
 
-Voeg toe naast bestaande `PORTAL_SOURCE_GROUPS`:
+**1a. Rename PORTAL_SOURCE_GROUPS keys** voor consistente naming met DevHub. Bestaande callers gebruiken alleen `PortalSourceGroupKey`-type (geen string-literals buiten constants + één test-file), dus rename is binnen scope.
+
+```ts
+// VOOR (huidig regel 181-185):
+//   { key: "portal_pm", label: "Mijn meldingen", sources: ["portal"] },
+//   { key: "end_users", label: "Van gebruikers", sources: ["userback", "jaip_widget"] },
+//   { key: "jaip",      label: "JAIP-meldingen", sources: ["manual", "ai"] },
+//
+// NA — keys aligned met DEVHUB_SOURCE_GROUPS (singular `end_user`, geen `_pm` suffix):
+export const PORTAL_SOURCE_GROUPS = [
+  { key: "client_pm", label: "Mijn meldingen", sources: ["portal"] },
+  { key: "end_user", label: "Van gebruikers", sources: ["userback", "jaip_widget"] },
+  { key: "jaip", label: "JAIP-meldingen", sources: ["manual", "ai"] },
+] as const;
+```
+
+Update meegaande consumers (alle binnen `packages/database`):
+
+- `packages/database/src/queries/portal/core.ts:16-21` — type-only consumer, geen string-literal-wijziging nodig.
+- `packages/database/__tests__/constants/issues-portal-source.test.ts:13,17,18,30,31,34` — vervang test-literals `'portal_pm'` → `'client_pm'`, `'end_users'` → `'end_user'`. Update describe-tekst regel 11 (`"definieert drie groepen: client_pm, end_user en jaip"`).
+- Update commentaarblok regel 165-179 in `constants/issues.ts` zodat de keys-namen kloppen.
+
+Grep-check vóór merge: `grep -rn "'portal_pm'\|\"portal_pm\"\|'end_users'\|\"end_users\"" apps packages` moet null hits geven (afgezien van constants + tests).
+
+**1b. Voeg `DEVHUB_SOURCE_GROUPS` toe** naast PORTAL:
 
 ```ts
 // ── DevHub-specifieke source-groepering ──
 //
-// Portal en DevHub gebruiken niet dezelfde mapping: PORTAL_SOURCE_GROUPS
-// (regel 181) groepeert vanuit klant-perspectief ("mijn meldingen" vs "van
-// gebruikers"); DevHub groepeert vanuit triage-perspectief — één badge per
-// type-stakeholder, met intern (`manual`/`ai`) zonder badge omdat dat default
-// is en visueel ruis zou geven.
+// Sleutels (`client_pm`, `end_user`) zijn aligned met PORTAL_SOURCE_GROUPS
+// — beide volgen dezelfde stakeholder-taxonomie. Verschil: DEVHUB heeft géén
+// `jaip`-groep omdat intern (`manual`/`ai`) geen badge krijgt (default,
+// zou visueel ruis geven). Resolver returnt `null` voor die sources.
 
 export const DEVHUB_SOURCE_GROUPS = [
   { key: "client_pm", label: "Klant-PM", sources: ["portal"] },
   { key: "end_user", label: "Eindgebruiker", sources: ["userback", "jaip_widget"] },
-  // 'manual' en 'ai' krijgen GEEN badge — return null vanuit resolver
 ] as const;
 
 export type DevhubSourceGroupKey = (typeof DEVHUB_SOURCE_GROUPS)[number]["key"];
@@ -181,13 +203,13 @@ Kleurkeuze: violet voor PM (rustig, gelijkwaardig aan TypeBadge purple), oranje 
 
 ## Risico's
 
-| Risico                                                                                                            | Mitigatie                                                                                                        |
-| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Twee badges (TypeBadge + SourceBadge) maakt rij visueel druk op smal scherm.                                      | Test op 1280px en 1024px; eventueel SourceBadge uit op `&lt;1024px` via Tailwind `hidden md:inline-flex`.        |
-| Kleur van violet/oranje botst met bestaande `STATUS_COLORS` in portal.                                            | DevHub-only badges — portal toont issues niet met deze badge. Geen cross-contamination.                          |
-| `PORTAL_SOURCE_GROUPS` en `DEVHUB_SOURCE_GROUPS` divergeren over tijd; verwarring welke waar gebruikt wordt.      | JSDoc-comment in beide constanten verwijst naar elkaar; test-bestand documenteert het verschil expliciet.        |
-| Source-filter URL-param `source` botst met bestaand "source"-veld in andere context (bv. unrelated query string). | Prefix met `src=` in URL als botsing optreedt. Verifieer in `use-issue-filters-url.ts` dat `source` nog vrij is. |
-| Server-side filter-uitbreiding in `listIssues` raakt veel call-sites.                                             | Optioneel param met default `undefined` = geen filter; bestaande callers blijven werken.                         |
+| Risico                                                                                                            | Mitigatie                                                                                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Twee badges (TypeBadge + SourceBadge) maakt rij visueel druk op smal scherm.                                      | Test op 1280px en 1024px; eventueel SourceBadge uit op `&lt;1024px` via Tailwind `hidden md:inline-flex`.                                                                       |
+| Kleur van violet/oranje botst met bestaande `STATUS_COLORS` in portal.                                            | DevHub-only badges — portal toont issues niet met deze badge. Geen cross-contamination.                                                                                         |
+| `PORTAL_SOURCE_GROUPS` en `DEVHUB_SOURCE_GROUPS` divergeren over tijd; verwarring welke waar gebruikt wordt.      | Keys bewust aligned (`client_pm`, `end_user`); JSDoc in beide constanten verwijst naar elkaar; test-bestand documenteert dat enige verschil de extra `jaip`-groep is in PORTAL. |
+| Source-filter URL-param `source` botst met bestaand "source"-veld in andere context (bv. unrelated query string). | Prefix met `src=` in URL als botsing optreedt. Verifieer in `use-issue-filters-url.ts` dat `source` nog vrij is.                                                                |
+| Server-side filter-uitbreiding in `listIssues` raakt veel call-sites.                                             | Optioneel param met default `undefined` = geen filter; bestaande callers blijven werken.                                                                                        |
 
 ## Niet in scope
 
