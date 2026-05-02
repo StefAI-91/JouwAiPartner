@@ -165,20 +165,6 @@ export const COCKPIT_SECTIONS: Array<{ key: string; label: string; items: Cockpi
   },
 ];
 
-export const COCKPIT_DRAFT: {
-  issueTitle: string;
-  declineReason: string;
-  draftSubject: string;
-  draftBody: string;
-} = {
-  issueTitle: "Klant-portal in eigen domein",
-  declineReason:
-    "Niet realiseerbaar binnen huidige scope; vereist eigen DNS-setup en SSL-management. Komt mogelijk in 2027 als dedicated project.",
-  draftSubject: "Update over je verzoek voor een eigen portal-domein",
-  draftBody:
-    "Hoi Marieke,\n\nWe hebben jullie verzoek om het portal onder een eigen domein te draaien zorgvuldig bekeken. Helaas valt deze stap buiten de scope van het huidige traject — een eigen domein vereist DNS-configuratie en SSL-management dat we nu niet kunnen leveren binnen de afgesproken planning.\n\nWe hebben dit onthouden voor het roadmap-overleg in 2027; dan willen we kijken of we hier een dedicated traject voor kunnen optuigen.\n\nLaat gerust weten als je hier nog vragen over hebt.\n\nGroet,\nStef",
-};
-
 export const PORTAL_ITEMS: PortalItem[] = [
   {
     id: "po-1",

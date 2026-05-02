@@ -1,9 +1,9 @@
-import { Sparkles, Plus, Filter, Inbox, Send, MoreHorizontal, ChevronRight } from "lucide-react";
-import { COCKPIT_SECTIONS, COCKPIT_DRAFT, type CockpitItem } from "./mock-data";
+import { Sparkles, Plus, Filter, Inbox, Send, ChevronRight } from "lucide-react";
+import { COCKPIT_SECTIONS, type CockpitItem } from "./mock-data";
 
 /**
- * Cockpit-inbox mock — visualiseert de team-zijde van CC-001 (PM-review-gate),
- * CC-004 (AI-draft + review) en CC-006 (vrije compose).
+ * Cockpit-inbox mock — visualiseert de team-zijde van CC-001 (PM-review-gate)
+ * en CC-006 (vrije compose). CC-004 (AI-draft) is gedeferred — niet getoond.
  */
 export function CockpitInboxMock() {
   return (
@@ -20,8 +20,6 @@ export function CockpitInboxMock() {
             </div>
           </Section>
         ))}
-
-        <DraftReviewCard />
       </div>
     </div>
   );
@@ -64,7 +62,7 @@ function OnboardingStrip() {
           <p className="text-[13px] font-medium text-foreground">Welkom in je cockpit-inbox</p>
           <p className="mt-0.5 text-[12px] leading-relaxed text-muted-foreground">
             Klant-feedback wacht op jouw endorsement vóór het in de DevHub-backlog landt. Vragen kun
-            je direct beantwoorden, AI helpt waar het kan met drafts.
+            je hier direct beantwoorden namens het team.
           </p>
         </div>
         <button className="rounded-md px-2 py-1 text-[11px] text-muted-foreground transition hover:bg-muted">
@@ -199,9 +197,6 @@ function ReplyComposer() {
         </p>
       </div>
       <div className="flex items-center gap-2 border-t border-border/50 bg-background px-3 py-2">
-        <button className="inline-flex items-center gap-1 rounded-md bg-foreground/[0.04] px-2 py-1 text-[11px] text-foreground/70 transition hover:bg-foreground/[0.08]">
-          <Sparkles className="h-3 w-3" /> AI-draft
-        </button>
         <span className="flex-1 text-[12px] text-muted-foreground/60">Schrijf je antwoord…</span>
         <button className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground transition hover:bg-primary/90">
           <Send className="h-3 w-3" />
@@ -240,74 +235,5 @@ function DeferredHint() {
       Geparkeerd — kan terug naar review
       <ChevronRight className="h-3 w-3" />
     </p>
-  );
-}
-
-/**
- * AI-draft review card: visualiseert CC-004's outbound_drafts review-gate.
- * Toont decline-context van PM, gegenereerde mail-draft, en approve/edit/reject.
- */
-function DraftReviewCard() {
-  return (
-    <section className="mt-10">
-      <div className="mb-2.5 flex items-baseline gap-3 px-1">
-        <h2 className="text-[11px] font-semibold tracking-[0.18em] text-foreground/70 uppercase">
-          AI-drafts wachten op review
-        </h2>
-        <span className="text-[11px] text-muted-foreground/60 tabular-nums">1</span>
-        <span aria-hidden className="ml-1 h-px flex-1 bg-border/60" />
-      </div>
-
-      <article className="overflow-hidden rounded-xl bg-card ring-1 ring-primary/[0.18] shadow-sm shadow-primary/[0.06]">
-        <div className="flex items-center gap-2 border-b border-primary/[0.12] bg-gradient-to-r from-primary/[0.06] to-transparent px-4 py-2.5">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[11px] font-semibold tracking-wide text-primary uppercase">
-            Communicator · Haiku 4.5
-          </span>
-          <span className="ml-auto text-[10px] text-muted-foreground/70 tabular-nums">
-            gegenereerd · 14s geleden
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2px_1.6fr]">
-          {/* PM context */}
-          <div className="px-4 py-4">
-            <p className="text-[10px] tracking-[0.16em] text-muted-foreground/70 uppercase">
-              Context van PM
-            </p>
-            <p className="mt-1.5 text-[12px] font-medium text-foreground">
-              {COCKPIT_DRAFT.issueTitle}
-            </p>
-            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-              {COCKPIT_DRAFT.declineReason}
-            </p>
-          </div>
-
-          <div aria-hidden className="hidden bg-border/40 lg:block" />
-
-          {/* Generated draft */}
-          <div className="border-t border-border/50 px-4 py-4 lg:border-t-0">
-            <p className="text-[10px] tracking-[0.16em] text-muted-foreground/70 uppercase">
-              Gegenereerde mail
-            </p>
-            <p className="mt-1.5 text-[12px] font-medium text-foreground">
-              {COCKPIT_DRAFT.draftSubject}
-            </p>
-            <p className="mt-2 text-[12px] leading-relaxed whitespace-pre-line text-foreground/80">
-              {COCKPIT_DRAFT.draftBody}
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2 -ml-1">
-              <ActionButton tone="primary">Goedkeuren & verzenden</ActionButton>
-              <ActionButton tone="muted">Bewerken</ActionButton>
-              <ActionButton tone="destructive">Afwijzen</ActionButton>
-              <button className="ml-auto inline-flex items-center gap-1 px-1.5 py-1 text-[11px] text-muted-foreground/70 transition hover:text-foreground">
-                <MoreHorizontal className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </article>
-    </section>
   );
 }

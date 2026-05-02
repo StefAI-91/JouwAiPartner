@@ -67,16 +67,16 @@ function Hero() {
         </h1>
 
         <p className="mt-5 max-w-[58ch] text-[15px] leading-relaxed text-muted-foreground">
-          Klant-feedback, vrije berichten en AI-drafted antwoorden — gerouteerd door één gedeelde
-          inbox-laag. Hieronder het ontwerp zoals team en klant het zullen zien zodra de zes
-          Customer-Communication-sprints landen.
+          Klant-feedback en vrije berichten — gerouteerd door één gedeelde inbox-laag. Hieronder het
+          ontwerp zoals team en klant het zullen zien zodra de Customer-Communication-sprints
+          landen. Mens-naar-mens v1; AI-drafts (CC-004) komen later bovenop.
         </p>
       </div>
 
       <dl className="grid grid-cols-3 gap-x-8 gap-y-1 text-right lg:text-left">
-        <Stat label="Sprints" value="6" />
+        <Stat label="Sprints" value="5" />
         <Stat label="Statussen" value="10" />
-        <Stat label="Templates" value="8" />
+        <Stat label="Templates" value="7" />
       </dl>
     </section>
   );
@@ -112,8 +112,8 @@ function FeatureLegend() {
     },
     {
       sprint: "CC-004",
-      team: "AI-draft kaart bij decline: Communicator-agent (Haiku 4.5) + review-gate",
-      client: "Tactvolle uitleg-mail i.p.v. raw decline-reason",
+      team: "🅿️ Gedeferred — AI-draft + review-gate komt later bovenop bestaande flow",
+      client: "—",
     },
     {
       sprint: "CC-005",
@@ -122,7 +122,7 @@ function FeatureLegend() {
     },
     {
       sprint: "CC-006",
-      team: "'+ Nieuw bericht' compose met optionele AI-draft, threaded conversation-detail",
+      team: "'+ Nieuw bericht' compose (mens-naar-mens), threaded conversation-detail",
       client: "'+ Nieuw bericht aan team' + threaded view",
     },
   ];

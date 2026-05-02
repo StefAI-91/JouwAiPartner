@@ -1,5 +1,25 @@
 # Micro Sprint CC-004: Outbound met AI-Draft + Review-Gate
 
+> **🅿️ DEFERRED — geschrapt uit de initial Customer-Communication-rollout (mei 2026).**
+>
+> Reden: we starten met een puur menselijke flow (CC-001 t/m CC-003 + CC-005 + CC-006).
+> AI-drafts zijn waardevol maar voegen prompt-tuning, model-kosten en review-overhead
+> toe vóór we weten of het basis-pad überhaupt door klanten gebruikt wordt. Eerst
+> bewijzen dat klant + team consistent in de inbox terechtkomen, dán AI bovenop.
+>
+> Wat dat hier betekent:
+>
+> - CC-002 stuurt een sobere `feedback-declined`-mail met de raw `decline_reason` —
+>   die blijft het permanente eindstation, niet een tussenstap voor CC-004.
+> - CC-006 compose-flow bevat **geen** "✨ Schrijf met AI"-knop. Team typt zelf.
+> - Schema (`outbound_drafts`), Communicator-agent, en deze hele spec blijven hier
+>   bewaard zodat we later kunnen oppakken zonder vanaf nul te starten.
+>
+> **Ontdooien:** als de inbox-laag minimaal 4 weken stabiel draait én PMs aangeven dat
+> decline-mails te bot voelen óf compose-tijd een knelpunt is. Tot dan: niet starten.
+
+---
+
 ## Doel
 
 Bouw de outbound-laag — team-naar-klant berichten die AI eerst drafted en mens reviewed vóór ze de klant bereiken. Dit voltooit de twee-richting-communicatie die in CC-001 begon: klant kan iets sturen, team kan iets sturen, maar wat we sturen moet altijd door menselijke hand zijn goedgekeurd.

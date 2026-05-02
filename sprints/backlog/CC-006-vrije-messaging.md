@@ -8,9 +8,12 @@ CC-006 verandert dit door:
 
 1. Een **"Nieuw bericht"**-flow in zowel cockpit-inbox als portal-inbox: klant kan een vrij bericht aan team starten, team kan een vrij bericht aan klant starten.
 2. **Threaded conversation-detail-pagina** (cockpit + portal): root + replies chronologisch, reply-form onderaan. Vervangt het impliciete "in-line in inbox-list"-model uit CC-001.
-3. **AI-draft hergebruik** uit CC-004: team kan optioneel "✨ AI-draft" klikken bij compose; gebruikt dezelfde `outbound_drafts`-infra + Communicator-agent.
-4. **RLS-update**: klant mag root-berichten starten op projecten waar zij portal-access op heeft (huidige PR-SEC-031 blokkeert dat).
-5. **Notify-uitbreiding**: nieuwe templates voor "team start gesprek" en "klant start gesprek" (laatste alleen in-app counter, geen mail aan team).
+3. **RLS-update**: klant mag root-berichten starten op projecten waar zij portal-access op heeft (huidige PR-SEC-031 blokkeert dat).
+4. **Notify-uitbreiding**: nieuwe templates voor "team start gesprek" en "klant start gesprek" (laatste alleen in-app counter, geen mail aan team).
+
+> **Geen AI in v1.** CC-004 (AI-draft) is gedeferred. Team typt compose-berichten zelf —
+> hetzelfde patroon als bestaande `replyAsTeamAction`. AI-draft kan later bovenop
+> zonder schema-wijziging.
 
 DB-naam blijft `client_questions` (geen rename — te grote blast-radius). UI-naming verschuift naar **"Berichten"** zodat het onderwerp-neutraal voelt.
 
@@ -19,8 +22,8 @@ Dit is een vervolg-sprint na CC-001 t/m CC-005. Niet in de oorspronkelijke visio
 ## Vision-alignment
 
 - `docs/specs/vision-customer-communication.md` **§3** — Inbox-model: één DB, twee views. Tot nu toe alleen issue-gebonden + reply; CC-006 vult de "vrije berichten" in beide views.
-- **§6** — Two-way messaging: "AI-draft button (vision §6 Phase 2)" werd in CC-001 expliciet uitgesloten. CC-006 implementeert die voor team-side compose, hergebruikend van CC-004's draft-infra.
-- **§7** — Outbound: "all outbound passes the AI-draft → human-review → send pattern". CC-006 maakt dat patroon ook beschikbaar voor manual-initiated outbound (niet alleen automatic decline-trigger uit CC-004).
+- **§6** — Two-way messaging: CC-006 voegt vrije compose toe in beide richtingen. AI-draft (vision §6 Phase 2) blijft open — komt mee zodra CC-004 wordt opgepakt.
+- **§7** — Outbound: pattern "AI-draft → human-review → send" is gedeferred (CC-004). CC-006 levert de manuele variant: team typt zelf, mens-naar-mens, geen review-gate nodig omdat er geen AI tussen zit.
 - **§9** — UX-principe "conversation threading": CC-006 levert de threaded view die §9 beschrijft.
 - **§10 #5** (deferred): rich-edit + due-date + topic-link in conversation-composer blijven gedeferred. CC-006 levert minimaal: textarea-only compose. Rich-edit komt later.
 
@@ -28,7 +31,6 @@ Dit is een vervolg-sprint na CC-001 t/m CC-005. Niet in de oorspronkelijke visio
 
 - **CC-001** — cockpit-inbox feature (`apps/cockpit/src/features/inbox/`), `cockpit-reply-form` component, en cross-project query `listInboxItemsForTeam`.
 - **CC-002** — notify-infra (`@repo/notifications` package + `sendMail` + templates-dir).
-- **CC-004** — `outbound_drafts` tabel, Communicator-agent (`packages/ai/src/agents/communicator.ts`), `waitUntil()`-pattern voor async draft-generatie.
 - **PR-022** — `client_questions` schema + RLS (`supabase/migrations/20260430110000_client_questions.sql`). CC-006 muteert RLS-policy `Client questions: insert (root team / reply role-aware)`.
 - **PR-023** — bestaande UI:
   - portal: `apps/portal/src/components/inbox/{client-reply-form,question-card,question-list}.tsx` + `apps/portal/src/actions/inbox.ts:replyAsClientAction`
@@ -40,10 +42,9 @@ Dit is een vervolg-sprint na CC-001 t/m CC-005. Niet in de oorspronkelijke visio
 1. **RLS klant-root: project-access-gebonden of organisatie-gebonden?** Aanbeveling: **project-access-gebonden via `has_portal_access(uid, project_id)`** — consistent met bestaande SELECT-policy regel 51. Een klant mag root starten op elk project waar zij portal-access op heeft, beperkt tot eigen organisatie. Niet org-wide ("starten op willekeurig project van organisatie") — dat zou klant-PMs van klanten met meerdere projecten verwarrend toegang geven.
 2. **Threading: single-level houden of upgraden naar multi-level?** Aanbeveling: **single-level houden**. Bestaande mutation `replyToQuestion` enforces `parent.parent_id !== null` blokkade (regel 131-136). Voor v1 vrije messaging is platte thread "root + chronologische replies" voldoende. Multi-level threading (Slack-stijl threads-in-threads) levert UX-complexiteit zonder duidelijke winst — defer naar latere sprint als gebruikers het missen.
 3. **Status-model voor vrije messaging?** Aanbeveling: **bestaand `open`/`responded` hergebruiken**. Semantiek: `open` = wacht op respons van tegenpartij van laatste sender; `responded` = klant-reply heeft team's bericht beantwoord. Werkt voor beide richtingen. Edge case: team-only thread (team start, team reply, team reply) blijft `open` — acceptabel, want klant moet alsnog antwoorden.
-4. **AI-draft toggle in compose-modal: default aan of uit?** Aanbeveling: **default uit, expliciete knop "✨ Schrijf met AI"**. Veel team-berichten zijn één-zinners ("Heb je tijd morgen 10u?") waar AI overkill is. Knop genereert dan een draft volgens CC-004's flow (status `pending_review` in `outbound_drafts`). PM kan vrij blijven typen of de draft accepteren/editen.
-5. **Naming-shift "Vraag" → "Bericht" in UI: ook bestaande Q&A-flow herbenoemen?** Aanbeveling: **ja, alle UI-strings**. DB-naam blijft `client_questions` (geen schema-rename). UI-strings (`Q&A`, `Vraag`, `Stel een vraag`, etc.) worden `Berichten`, `Bericht`, `Stuur een bericht`. Coherent voor klant; verwijderingen in DB-laag zijn geen optie zonder grote refactor.
-6. **Conversation-detail: aparte route of inline-expand in inbox-list?** Aanbeveling: **aparte route**. `/inbox/[id]` (cockpit) en `/projects/[id]/inbox/[messageId]` (portal). Voordelen: shareable URLs (klant kan deeplink uit mail terugklikken), browser-back-knop werkt logisch, threaded thread mag groeien zonder de inbox-lijst onhandig te maken. Inline-expand kan altijd later toegevoegd als "snel bekijken" — niet eerst.
-7. **Hergebruik `askQuestionAction` uit `apps/devhub/src/actions/questions.ts`?** Aanbeveling: **verplaatsen naar cockpit, niet hergebruiken**. DevHub gebruikt het zelf nu nog (als entry-point voor team-vraag-vanuit-issue). Verplaatsen → naam-clash. Beter: kopieer naar `apps/cockpit/src/features/inbox/actions/compose.ts` met cockpit-paths in `revalidatePath`. DevHub-versie kan later worden geconsolideerd in een opruimsprint als duplicatie pijnlijk wordt.
+4. **Naming-shift "Vraag" → "Bericht" in UI: ook bestaande Q&A-flow herbenoemen?** Aanbeveling: **ja, alle UI-strings**. DB-naam blijft `client_questions` (geen schema-rename). UI-strings (`Q&A`, `Vraag`, `Stel een vraag`, etc.) worden `Berichten`, `Bericht`, `Stuur een bericht`. Coherent voor klant; verwijderingen in DB-laag zijn geen optie zonder grote refactor.
+5. **Conversation-detail: aparte route of inline-expand in inbox-list?** Aanbeveling: **aparte route**. `/inbox/[id]` (cockpit) en `/projects/[id]/inbox/[messageId]` (portal). Voordelen: shareable URLs (klant kan deeplink uit mail terugklikken), browser-back-knop werkt logisch, threaded thread mag groeien zonder de inbox-lijst onhandig te maken. Inline-expand kan altijd later toegevoegd als "snel bekijken" — niet eerst.
+6. **Hergebruik `askQuestionAction` uit `apps/devhub/src/actions/questions.ts`?** Aanbeveling: **verplaatsen naar cockpit, niet hergebruiken**. DevHub gebruikt het zelf nu nog (als entry-point voor team-vraag-vanuit-issue). Verplaatsen → naam-clash. Beter: kopieer naar `apps/cockpit/src/features/inbox/actions/compose.ts` met cockpit-paths in `revalidatePath`. DevHub-versie kan later worden geconsolideerd in een opruimsprint als duplicatie pijnlijk wordt.
 
 ## Taken
 
@@ -125,23 +126,18 @@ Pad: `apps/cockpit/src/features/inbox/components/compose-modal.tsx` (nieuw).
 Modal-velden:
 
 - **Project-selector** — dropdown met alle projecten van team (cross-project; één geselecteerd = bericht naar dat project).
-- **Body-textarea** — min 10, max 5000 chars.
-- **"✨ Schrijf met AI"-knop** — open vraag #4: default uit. Klik triggert CC-004's draft-flow:
-  1. Insert `outbound_drafts`-row met `source_status_change='manual_compose'`, `source_metadata={projectId}`.
-  2. `waitUntil(generateManualDraft({...}))` — Communicator-agent met free-form prompt (geen decline-context).
-  3. Modal toont skeleton "AI schrijft...", polled status (3s interval, max 30s) of via Supabase realtime.
-  4. Bij `pending_review`: textarea pre-vult met body, subject genegeerd (vrije messages hebben geen subject in client_questions schema).
-  5. PM kan editen of direct submitten.
-- **"Verstuur"-knop** — direct verzenden zonder draft (als textarea handmatig is ingevuld).
+- **Body-textarea** — min 10, max 5000 chars. Plain text, geen rich-edit v1.
+- **"Verstuur"-knop** — submit triggert action.
 
-Server-action `composeMessageToClientAction(input: { projectId, body, draftId? })` in `apps/cockpit/src/features/inbox/actions/compose.ts` (nieuw):
+Geen AI-draft-knop in v1 — CC-004 is gedeferred. Team typt zelf, identiek aan bestaande `replyAsTeamAction`.
+
+Server-action `composeMessageToClientAction(input: { projectId, body })` in `apps/cockpit/src/features/inbox/actions/compose.ts` (nieuw):
 
 1. Auth + profile-lookup.
 2. Zod-validate (`composeMessageSchema`).
-3. Als `draftId`: roep `markDraftSent` aan na `sendQuestion`-success (link draft → message).
-4. `sendQuestion({ project_id, body, ... }, profile.id, supabase)`.
-5. `notifyNewMessageFromTeam(message, projectId)` — nieuwe orchestrator (taak 7).
-6. `revalidatePath('/inbox')` + return `{ success: true, messageId }`.
+3. `sendQuestion({ project_id, body }, profile.id, supabase)`.
+4. `notifyNewMessageFromTeam(message, projectId)` — nieuwe orchestrator (taak 7).
+5. `revalidatePath('/inbox')` + return `{ success: true, messageId }`.
 
 Wire de modal-knop in `apps/cockpit/src/features/inbox/components/inbox-view.tsx` (uit CC-001, header rechts: "+ Nieuw bericht").
 
@@ -254,14 +250,10 @@ Counter uit CC-001 (`countInboxItemsForTeam`) telt al alle `open`-status items i
   - Cockpit: drie berichten (root team + reply klant + reply team) renderen in correcte volgorde met juiste role-badges.
   - Portal: zelfde fixture, klant-side, reply-form is `client-reply-form`-variant.
 
-- **AI-draft compose-flow** (`packages/ai/__tests__/agents/communicator-manual.test.ts`):
-  - Communicator-agent ondersteunt `mode: 'manual_compose'` (geen decline-context, free-form prompt).
-  - Capture-mock op LLM-call: prompt bevat project-naam + optionele user-hint, géén decline-reason.
-
 ### 11. Docs + registry
 
-- Update `apps/cockpit/src/features/inbox/README.md` — sectie "Compose-flow (team → klant)" + "AI-draft hergebruikt CC-004 outbound_drafts".
-- Update `docs/specs/vision-customer-communication.md` — markeer §6 Phase 2 (AI-draft button) als implemented in CC-006; markeer §10 #5 "conversation-composer" als partially-implemented (textarea-only).
+- Update `apps/cockpit/src/features/inbox/README.md` — sectie "Compose-flow (team → klant)".
+- Update `docs/specs/vision-customer-communication.md` — markeer §10 #5 "conversation-composer" als partially-implemented (textarea-only). §6 Phase 2 (AI-draft button) blijft open, gekoppeld aan CC-004 deferred.
 - Voeg CC-006 rij toe aan `sprints/backlog/README.md` direct onder CC-005.
 - Update `packages/database/README.md` — RLS-policy voor `client_questions.insert` is gewijzigd; documenteer.
 
@@ -270,8 +262,7 @@ Counter uit CC-001 (`countInboxItemsForTeam`) telt al alle `open`-status items i
 - [ ] RLS-migratie toegepast: klant met portal-access op project kan root-message inserten; klant op ander project of andere org wordt geblokkeerd.
 - [ ] `getConversationThread()` query bestaat en returnt single-level thread met participants.
 - [ ] Cockpit `/inbox` heeft "+ Nieuw bericht"-knop in header die compose-modal opent.
-- [ ] Cockpit-compose werkt zonder AI-draft (direct verzenden).
-- [ ] Cockpit-compose met "✨ Schrijf met AI" triggert CC-004's draft-flow; PM kan editen of accepteren; bij submit gaat draft naar `sent` en wordt `client_questions`-row aangemaakt.
+- [ ] Cockpit-compose verzendt direct via `sendQuestion`; geen AI-draft-pad in v1.
 - [ ] Portal `/projects/[id]/inbox` heeft "+ Nieuw bericht aan team"-knop die compose-form opent.
 - [ ] Portal-compose werkt: klant kan vrij bericht starten.
 - [ ] Cockpit conversation-detail `/inbox/[id]` toont root + replies chronologisch + reply-form.
@@ -286,16 +277,13 @@ Counter uit CC-001 (`countInboxItemsForTeam`) telt al alle `open`-status items i
 
 ## Risico's
 
-| Risico                                                                                                                         | Mitigatie                                                                                                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| RLS-update te permissief: klant kan root-inserten op project van andere klant binnen dezelfde organisatie.                     | Migratie test (taak 10) borgt org-match én portal-access. Geen `getAdminClient()`-shortcut in `sendMessageAsClientAction` — strict klant-cookie-client.                                                                    |
-| Naming-mismatch DB (`client_questions`) vs UI ("Berichten") verwart developers bij nieuwe sprints.                             | JSDoc op `ClientQuestionRow` type: "Representeert zowel issue-gebonden vragen als vrije berichten — UI-naam is 'Bericht'." Refactor naar `client_messages` parkeren als losse cleanup-sprint als drift schade veroorzaakt. |
-| AI-draft + handmatige compose-paden divergeren (twee codepaden in cockpit-compose-modal).                                      | Eén modal-component met conditionele rendering op `draftId !== null`. Niet twee aparte modals. Test-fixture covert beide takken.                                                                                           |
-| Klant kan via vrije compose spam-message starten (low-effort, hoge volume).                                                    | Rate-limit op `sendQuestion` per klant (uit packages/auth bestaand utility?) — verifieer in CC-006 PR. Fallback: monitoring in Resend-dashboard, manueel ingrijpen.                                                        |
-| Conversation-detail-route deeplink uit mail werkt niet als klant niet ingelogd is.                                             | Auth-middleware redirect naar login → callback URL → terug naar `/projects/[id]/inbox/[messageId]`. Bestaand pattern, alleen valideren dat het werkt voor diepe routes.                                                    |
-| Free-message body kan rich content bevatten (URLs, mentions) die we niet escapen → XSS in conversation-detail.                 | Render body als plain text in v1 (`<p>{body}</p>`), nooit `dangerouslySetInnerHTML`. URL-detectie + linkify als follow-up sprint.                                                                                          |
-| AI-draft genereert bericht dat klant raar vindt voor "out-of-the-blue" outbound (geen decline-context).                        | Communicator-prompt updaten met `mode: 'manual_compose'`-tak: "Schrijf een kort, vriendelijk team-bericht. Geen excuses zonder context. Vraag toestemming als 't om planning gaat." Iteratie op eerste 10 echte drafts.    |
-| Twee endpoints om team-message te starten (CC-004 decline-trigger automatisch + CC-006 manual compose) → drafts-lijst overlapt | Beide vullen `outbound_drafts.source_status_change` — `'declined'` vs `'manual_compose'`. UI filter-tab in drafts-sectie kan op die kolom filteren als overlap pijn doet.                                                  |
+| Risico                                                                                                         | Mitigatie                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RLS-update te permissief: klant kan root-inserten op project van andere klant binnen dezelfde organisatie.     | Migratie test (taak 10) borgt org-match én portal-access. Geen `getAdminClient()`-shortcut in `sendMessageAsClientAction` — strict klant-cookie-client.                                                                    |
+| Naming-mismatch DB (`client_questions`) vs UI ("Berichten") verwart developers bij nieuwe sprints.             | JSDoc op `ClientQuestionRow` type: "Representeert zowel issue-gebonden vragen als vrije berichten — UI-naam is 'Bericht'." Refactor naar `client_messages` parkeren als losse cleanup-sprint als drift schade veroorzaakt. |
+| Klant kan via vrije compose spam-message starten (low-effort, hoge volume).                                    | Rate-limit op `sendQuestion` per klant (uit packages/auth bestaand utility?) — verifieer in CC-006 PR. Fallback: monitoring in Resend-dashboard, manueel ingrijpen.                                                        |
+| Conversation-detail-route deeplink uit mail werkt niet als klant niet ingelogd is.                             | Auth-middleware redirect naar login → callback URL → terug naar `/projects/[id]/inbox/[messageId]`. Bestaand pattern, alleen valideren dat het werkt voor diepe routes.                                                    |
+| Free-message body kan rich content bevatten (URLs, mentions) die we niet escapen → XSS in conversation-detail. | Render body als plain text in v1 (`<p>{body}</p>`), nooit `dangerouslySetInnerHTML`. URL-detectie + linkify als follow-up sprint.                                                                                          |
 
 ## Niet in scope
 
@@ -323,7 +311,7 @@ Combinatie met CC-001 t/m CC-005:
 - Klant ziet één inbox in portal met issue-feedback, vrije team-berichten, en eigen verzonden berichten (vision §3 ✅)
 - Klant kan vrije berichten starten naar team (vision §6 — nieuw)
 - Team ziet dezelfde inbox cross-project + per-project (CC-001 + CC-005 + nu compose-flow)
-- AI-draft beschikbaar voor zowel automatische decline-mail (CC-004) als manuele compose (CC-006) — review-gate identiek (vision §7 ✅)
+- AI-draft (CC-004) blijft gedeferred — compose is mens-naar-mens v1, AI komt later bovenop zonder schema-wijziging
 - Notify-laag dekt alle nieuwe bericht-events (CC-002 + uitbreidingen in CC-006)
 
 Volgende stappen na CC-006:

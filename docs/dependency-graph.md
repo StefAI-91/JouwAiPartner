@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 605 |
-| Exported functions/constants | 916 |
+| Exported functions/constants | 915 |
 | Exported types/interfaces | 393 |
 | Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 14 |
@@ -3865,7 +3865,6 @@
 **Exports:**
 - `MOCK_PROJECTS`
 - `COCKPIT_SECTIONS`
-- `COCKPIT_DRAFT`
 - `PORTAL_ITEMS`
 
 **Types:** `MockSource`, `MockInboxStatus`, `MockPortalStatus`, `SourceBadge`, `MockProject`, `MockSender`, `CockpitItem`, `PortalItem`
