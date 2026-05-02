@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 600 |
-| Exported functions/constants | 908 |
-| Exported types/interfaces | 385 |
+| Files scanned | 605 |
+| Exported functions/constants | 916 |
+| Exported types/interfaces | 393 |
 | Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -3324,6 +3324,11 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/emails` → listEmails, listActiveGoogleAccountsSafe, countEmailsByDirection, countEmailsByFilterStatus, countUnprocessedEmails, type EmailDirection, type EmailFilterStatus
 
+### `apps/cockpit/src/app/(dashboard)/inbox-preview/page.tsx`
+
+**Exports:**
+- `metadata`
+
 ### `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`
 
 **Exports:**
@@ -3844,6 +3849,31 @@
 - `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
 - (type) `@repo/database/queries/tasks` → TaskRow
 - (type) `@repo/database/queries/people` → PersonForAssignment
+
+### `apps/cockpit/src/components/inbox-preview/cockpit-inbox-mock.tsx`
+
+**Exports:**
+- `CockpitInboxMock()`
+
+### `apps/cockpit/src/components/inbox-preview/device-frame.tsx`
+
+**Exports:**
+- `DeviceFrame()`
+
+### `apps/cockpit/src/components/inbox-preview/mock-data.ts`
+
+**Exports:**
+- `MOCK_PROJECTS`
+- `COCKPIT_SECTIONS`
+- `COCKPIT_DRAFT`
+- `PORTAL_ITEMS`
+
+**Types:** `MockSource`, `MockInboxStatus`, `MockPortalStatus`, `SourceBadge`, `MockProject`, `MockSender`, `CockpitItem`, `PortalItem`
+
+### `apps/cockpit/src/components/inbox-preview/portal-inbox-mock.tsx`
+
+**Exports:**
+- `PortalInboxMock()`
 
 ### `apps/cockpit/src/components/intelligence/board-meeting-card.tsx`
 
