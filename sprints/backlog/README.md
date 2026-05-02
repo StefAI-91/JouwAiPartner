@@ -38,6 +38,7 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | TH-8     | Cleanup majors (DRY, SRP, query-efficiency, file-splits)     | Themes QA     | `sprints/backlog/` | Backlog       |
 | TH-9     | Cleanup minors (conventies, tokens, hygiëne)                 | Themes QA     | `sprints/backlog/` | Backlog       |
 | CC-001   | Cockpit Inbox + PM-review-gate                               | Customer Comm | `sprints/backlog/` | Backlog       |
+| CC-002   | Resend notificaties (klantgericht)                           | Customer Comm | `sprints/backlog/` | Backlog       |
 | WG-001   | Widget ingest foundation (DB whitelist + DevHub endpoint)    | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-002   | Widget app scaffold + loader.js (apps/widget/, Vercel)       | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-003   | Widget UI + cockpit rollout (modal + script-tag)             | Widget V0     | `sprints/backlog/` | Backlog       |
