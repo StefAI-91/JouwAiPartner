@@ -16,6 +16,7 @@ Dit is sprint 1 van 5 (CC-001 t/m CC-005) afgeleid uit `docs/specs/vision-custom
 ## Afhankelijkheden
 
 - `docs/specs/vision-customer-communication.md` (input).
+- **Design-referentie:** `/inbox-preview` (cockpit) — `apps/cockpit/src/app/(dashboard)/inbox-preview/page.tsx` toont het beoogde eindbeeld voor zowel de Linear-overzicht-stijl als de iMessage conversation-detail. Implementatie van deze sprint matcht die mockup pixel-niveau waar redelijk.
 - **PR-022** (`supabase/migrations/20260430110000_client_questions.sql`) — DB-tabel + RLS + `replyToQuestion` mutation in `packages/database/src/mutations/client-questions.ts:104-172`.
 - **PR-023** — portal-side reply UI als visuele referentie: `apps/portal/src/components/inbox/{question-card,question-list,client-reply-form}.tsx`.
 - Bestaande `issues`-tabel + status-flow (constraint `chk_issues_status` in `supabase/migrations/20260409100005_devhub_quality_fixes.sql:35-36`).
@@ -42,6 +43,8 @@ Bouw-volgorde **database → constants/types → query → mutations → validat
 
 Nieuwe migratie: `supabase/migrations/20260502100000_cc001_pm_review_gate.sql`.
 
+**1a. Status-uitbreiding op `issues`:**
+
 - `ALTER TABLE issues DROP CONSTRAINT IF EXISTS chk_issues_status;`
 - `ALTER TABLE issues ADD CONSTRAINT chk_issues_status CHECK (status IN ('needs_pm_review','triage','backlog','todo','in_progress','done','cancelled','declined','deferred','converted_to_qa'));`
 - `ALTER TABLE issues ADD COLUMN IF NOT EXISTS decline_reason text;`
@@ -49,7 +52,60 @@ Nieuwe migratie: `supabase/migrations/20260502100000_cc001_pm_review_gate.sql`.
 - `CREATE INDEX IF NOT EXISTS idx_issues_status_pm_review ON issues(status) WHERE status = 'needs_pm_review';` (partial index — cockpit-inbox query hit 'm continu)
 - Comment-blok dat per status uitlegt waar hij thuishoort.
 
-> **Belangrijk:** GEEN backfill van bestaande issues. Zie Risico's.
+**1b. Activity-tracking op `client_questions` (voor unread-detectie):**
+
+```sql
+ALTER TABLE client_questions ADD COLUMN IF NOT EXISTS last_activity_at timestamptz;
+
+-- Backfill: bestaande root-rijen krijgen hun eigen created_at als activity-bookmark.
+UPDATE client_questions SET last_activity_at = created_at WHERE parent_id IS NULL;
+
+-- Trigger: root-insert zet zichzelf, reply-insert tilt parent op.
+CREATE OR REPLACE FUNCTION sync_client_question_activity() RETURNS TRIGGER
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.parent_id IS NULL THEN
+    NEW.last_activity_at := NEW.created_at;
+  ELSE
+    UPDATE client_questions SET last_activity_at = NEW.created_at WHERE id = NEW.parent_id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_client_question_activity
+  BEFORE INSERT ON client_questions
+  FOR EACH ROW EXECUTE FUNCTION sync_client_question_activity();
+```
+
+`issues` hebben al een auto-updated `updated_at`; geen extra trigger nodig daar.
+
+**1c. Per-user read-state (`inbox_reads`):**
+
+```sql
+CREATE TABLE inbox_reads (
+  profile_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  item_kind text NOT NULL CHECK (item_kind IN ('issue', 'question')),
+  item_id uuid NOT NULL,
+  read_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (profile_id, item_kind, item_id)
+);
+
+CREATE INDEX idx_inbox_reads_profile_kind ON inbox_reads (profile_id, item_kind);
+
+-- RLS: een gebruiker mag alleen zijn eigen reads zien en schrijven.
+ALTER TABLE inbox_reads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "inbox_reads: own only" ON inbox_reads FOR ALL TO authenticated
+  USING (profile_id = auth.uid()) WITH CHECK (profile_id = auth.uid());
+```
+
+Bewuste keuzes:
+
+- **Geen FK** op `item_id` — polymorphic ref (kan naar `issues` of `client_questions` wijzen). Acceptabel omdat een dangling read-row geen data-corruptie is, alleen wat dood-data dat opgeruimd kan worden.
+- **Per-user**, niet per-organisatie: cross-project team-leden hebben elk hun eigen "wat heb ik gezien"-state. Stef kan iets lezen, Wouter nog niet.
+- **`item_kind` als string** ipv enum — uitbreidbaar (bv. `outbound_draft` later) zonder migratie.
+
+> **Belangrijk:** GEEN backfill van bestaande `issues`. Read-state default = NULL (alles is "nieuw" voor iedereen na deploy — acceptable one-time-cost).
 
 ### 2. Constants & types
 
@@ -66,26 +122,36 @@ Nieuwe migratie: `supabase/migrations/20260502100000_cc001_pm_review_gate.sql`.
 
 ### 3. Queries — nieuw bestand
 
-**Cluster-vs-flat:** flat — één coherent domein, verwacht <200 regels met 2 exports. Pad: `packages/database/src/queries/inbox.ts`.
+**Cluster-vs-flat:** flat — één coherent domein, verwacht <250 regels met 4 exports. Pad: `packages/database/src/queries/inbox.ts`.
 
 Exports:
 
-- `listInboxItemsForTeam(profileId, supabase)` → `Promise<InboxItem[]>` waar `InboxItem` een discriminated union is:
+- `listInboxItemsForTeam(profileId, supabase)` → `Promise<InboxItem[]>` waar `InboxItem` een discriminated union is mét read-state:
 
   ```ts
-  type InboxItem =
-    | { kind: "feedback"; issue: IssueRow }
-    | { kind: "question"; question: ClientQuestionListRow };
+  type InboxItem = {
+    kind: "feedback" | "question";
+    id: string;
+    activityAt: string; // issue.updated_at of client_questions.last_activity_at
+    isUnread: boolean; // afgeleid: read_at IS NULL OR read_at < activityAt
+    // ... rest van velden per kind
+  } & ({ kind: "feedback"; issue: IssueRow } | { kind: "question"; thread: ClientQuestionThread });
   ```
 
   Strategy:
   1. `listAccessibleProjectIds(profileId, supabase)` (uit `@repo/auth/access:147`) → array van project-ids.
-  2. Twee parallelle SELECTs (geen SQL UNION — verlaagt typing-precisie):
+  2. Drie parallelle SELECTs (geen SQL UNION — verlaagt typing-precisie):
      - `issues` waar `project_id IN (...)` AND `status IN ('needs_pm_review','deferred')`, sorteer op `created_at DESC`.
-     - `client_questions` waar `project_id IN (...)` AND `status='open'` AND `parent_id IS NULL`, met embed `replies:client_questions!parent_id (id, body, sender_profile_id, created_at)`, sorteer op `created_at DESC`.
-  3. Merge → status-first sorted (needs_pm_review > question-open > deferred), dan `created_at DESC`.
+     - `client_questions` waar `project_id IN (...)` AND `parent_id IS NULL`, met embed `replies:client_questions!parent_id (id, body, sender_profile_id, created_at)`, sorteer op `last_activity_at DESC`.
+     - `inbox_reads` waar `profile_id = $current` — alle rows in één keer, dan in JS mappen op `(item_kind, item_id)`.
+  3. Per item: `isUnread = !read || read.read_at < item.activityAt`. Default voor items zonder read-row: `true` (nieuw).
+  4. Merge → status-first sorted (needs_pm_review > question-open > deferred > responded), dan `activityAt DESC`.
 
-- `countInboxItemsForTeam(profileId, supabase)` → `Promise<{ pmReview: number; openQuestions: number; deferred: number }>`. Drie `count: 'exact', head: true` calls (geen rows ophalen).
+- `countInboxItemsForTeam(profileId, supabase)` → `Promise<{ pmReview: number; openQuestions: number; deferred: number; unread: number }>`. Vier `count: 'exact', head: true` calls; `unread` count via een `count(*) FILTER (WHERE read_at IS NULL OR read_at < activity_at)`-style approach (acceptabel: per-PM call elke route-load is goedkoper dan realtime).
+
+- `getConversationThread(messageId, profileId, supabase)` → `Promise<ConversationThread | null>` voor de detail-route (taak 8). Returnt root + alle replies chronologisch + per-message `senderProfile`-info via join. Aanroep markeert thread automatisch als read voor `profileId` (via `markInboxItemRead`).
+
+- `getInboxItemForDetail(kind, id, profileId, supabase)` → `Promise<InboxItem | null>` voor de detail-route header — single-item fetch met dezelfde shape als list-item.
 
 ### 4. Mutations — nieuw bestand
 
@@ -105,6 +171,24 @@ Exports — alle vier accepteren `client?: SupabaseClient` (default admin per CL
   Bij step-3-fail staat de issue al op `converted_to_qa` zonder bijbehorende vraag — PM ziet "kapot" in cockpit en kan handmatig herstellen. Slechter alternatief is vraag-eerst: dan zou een step-2-fail een orphan `client_questions`-rij achterlaten die de klant wél ziet zonder context. Issue-eerst maakt fail-state intern-zichtbaar i.p.v. klant-zichtbaar. Step 4 mag ook falen — dan ontbreekt enkel de FK-link, niet de data; opruim kan post-hoc linken via `client_questions.issue_id`.
 
 `insertIssue` (`packages/database/src/mutations/issues/core.ts:65-87`) **hoeft niet** te wijzigen: `data.status` is al optioneel input. Callers gaan expliciet `status: "needs_pm_review"` meegeven (taak 9).
+
+**Read-state mutation** in `packages/database/src/mutations/inbox-reads.ts` (nieuw, flat):
+
+```ts
+export async function markInboxItemRead(
+  profileId: string,
+  kind: "issue" | "question",
+  itemId: string,
+  client?: SupabaseClient,
+): Promise<MutationResult<void>>;
+```
+
+Implementatie: simpele UPSERT op `(profile_id, item_kind, item_id)` met `read_at = now()`. Idempotent — herhaaldelijk aanroepen is veilig (latere lees overschrijft). Geen Zod nodig: types zijn strict via parameter-signature.
+
+Wired vanuit:
+
+- `getConversationThread` query — markeer auto bij detail-page-laad.
+- `endorseIssue`/`declineIssue`/`deferIssue` mutations — markeer auto wanneer reviewer actie neemt.
 
 ### 5. Validations
 
@@ -133,75 +217,111 @@ pmReviewActionSchema = z.discriminatedUnion("action", [
 
 ### 6. Cockpit feature — `apps/cockpit/src/features/inbox/`
 
+> **Design-referentie:** `/inbox-preview` (cockpit) toont het beoogde eindbeeld
+> — sectie "Overzicht" voor de Linear-stijl lijst, sectie "Conversation-detail"
+> voor de chat-thread met action-bar. Implementatie matcht die mockup.
+
 Nieuwe folder, structuur volgt `apps/cockpit/src/features/review/`:
 
 ```
 apps/cockpit/src/features/inbox/
 ├── README.md
 ├── actions/
-│   ├── pm-review.ts              # endorse/decline/defer/convert acties
-│   └── replies.ts                # replyToQuestionAsTeamAction
+│   ├── pm-review.ts                  # endorse/decline/defer/convert acties
+│   ├── replies.ts                    # replyToQuestionAsTeamAction
+│   └── mark-read.ts                  # markInboxItemReadAction
 ├── components/
-│   ├── inbox-page.tsx            # composition-root
-│   ├── inbox-list.tsx            # status-grouped lijst
-│   ├── inbox-item-card.tsx       # één rij in de lijst
-│   ├── feedback-action-panel.tsx # vier knoppen + decline-reason modal
-│   ├── cockpit-reply-form.tsx    # mirror van portal client-reply-form
+│   ├── inbox-page.tsx                # /inbox composition-root
+│   ├── inbox-header.tsx              # title + count + filter-chips
+│   ├── inbox-list.tsx                # time-grouped lijst
+│   ├── inbox-row.tsx                 # één rij — Linear-stijl met hover-actions
+│   ├── source-dot.tsx                # subtle bron-indicator (Klant-PM/Eindgebr.)
+│   ├── conversation-page.tsx         # /inbox/[id] composition-root
+│   ├── conversation-header.tsx       # title + project meta + status-pill
+│   ├── conversation-action-bar.tsx   # 4 PM-acties (alleen bij feedback-thread)
+│   ├── conversation-bubbles.tsx      # iMessage-style thread render
+│   ├── conversation-reply-dock.tsx   # vaste reply-form onderaan
+│   ├── decline-modal.tsx             # textarea + min-10-chars validatie
+│   ├── convert-modal.tsx             # textarea voor verhelderingsvraag
 │   └── empty-state.tsx
 └── validations/
-    └── pm-review.ts              # re-export pmReviewActionSchema voor scoping
+    └── pm-review.ts                  # re-export schemas
 ```
 
-**Per file:**
+**Overzicht-componenten** (matcht `/inbox-preview` sectie II):
 
-- **`actions/pm-review.ts`** — vier server-actions, allemaal:
+- **`inbox-header.tsx`** — links: titel "Inbox" + count badge. Rechts: "+ Nieuw bericht" knop (placeholder tot CC-006). Onder een filter-strip met chips: `[Wacht op mij · N]`, `[Wacht op klant · N]`, `[Geparkeerd · N]`. Default actief = "Wacht op mij". Filter via URL-param `?filter=`.
+
+- **`inbox-list.tsx`** — gefilterde, time-grouped rendering:
+  - Time-buckets: "Vandaag" (`activityAt >= today_00:00`), "Eerder deze week" (`>= week_start`), "Eerder" (rest).
+  - Per item: `<InboxRow>` — geen secties-per-status (filter-chips doen het filtering-werk).
+  - Sticky time-group headers met backdrop-blur.
+
+- **`inbox-row.tsx`** — Linear-stijl rij, één per item:
+  - **Status-bullet links**: solid primary dot voor `needs_pm_review` + onbeantwoorde questions; open ring voor responded + deferred.
+  - **Avatar** (initial van sender, role-tinted: team=primary, client=violet).
+  - **Sender + project** in compacte 2-regel-kolom.
+  - **Subject of body-snippet** in flex-1 — `font-semibold` als `isUnread`, anders `font-medium`.
+  - **Source-dot** (alleen bij feedback): violet voor Klant-PM, warning voor Eindgebruiker.
+  - **Timestamp** rechts — fade-out on row-hover via `group-hover/row:opacity-0`.
+  - **Hover-actions** (slide-in vanaf rechts, `opacity-0 group-hover:opacity-100`):
+    - `needs_pm_review`: 4 icon-buttons (Check/X/Clock/MessageSquarePlus) → opent modals (decline/convert) of triggert direct (endorse/defer).
+    - Andere statussen: één icon (open detail).
+  - Klik op rij (buiten action-area): navigeer naar `/inbox/${kind}/${id}`.
+
+**Detail-componenten** (matcht `/inbox-preview` sectie III):
+
+- **`conversation-page.tsx`** — server component op route `/inbox/[kind]/[id]`. Roept `getConversationThread(id, profile.id, supabase)` aan; auto-markeert als read tijdens fetch. Rendert: header → action-bar (alleen voor feedback met `needs_pm_review`) → bubbles → reply-dock.
+
+- **`conversation-header.tsx`** — back-knop + title + meta (project · N berichten · status). Voor feedback: bron-badge naast title. Voor questions: status-pill rechts ("We hebben gereageerd" / "Wacht op klant").
+
+- **`conversation-action-bar.tsx`** — alleen bij `kind === 'feedback' && status === 'needs_pm_review'`. Vier action-pills: Endorse (primary, "→ DevHub"), Decline (destructive), Defer, Convert. Decline en Convert openen modals; Endorse en Defer triggeren direct.
+
+- **`conversation-bubbles.tsx`** — iMessage-conventie:
+  - Date-dividers tussen dagen (`Vandaag`, `Gisteren`, `15 mei`).
+  - Per bericht: avatar + sender-naam + timestamp + bubble.
+  - **PM-bericht (eigen)**: `flex-row-reverse`, bubble in `bg-primary text-primary-foreground`, rounded met `rounded-tr-md` (vlakke hoek aan eigen kant).
+  - **Anders bericht**: `flex-row`, bubble in `bg-background ring-foreground/[0.08]`, rounded met `rounded-tl-md`.
+  - Plain text rendering, `whitespace-pre-line`. Geen markdown v1.
+
+- **`conversation-reply-dock.tsx`** — vaste reply-form onderaan met paperclip-placeholder (functie out-of-scope), textarea, "Verstuur"-knop. Helper-tekst onderaan: "Antwoord namens team — {clientName} ziet je naam in het portal." Roept `replyToQuestionAsTeamAction`. Plain text v1.
+
+**Modals & misc:**
+
+- **`decline-modal.tsx`** — textarea met placeholder ("scope-creep · duplicate · niet realiseerbaar"), min-10-char Zod-validatie, submit roept `declineIssueAction`. `useTransition` + optimistic close.
+- **`convert-modal.tsx`** — textarea voor verhelderingsvraag (min 10 chars), submit roept `convertIssueAction`.
+- **`source-dot.tsx`** — re-use van `resolveDevhubSourceGroup` uit CC-003 als die gemerged is, anders eigen kleine resolver. Subtle 1.5×1.5 dot + label op xl-screens.
+
+**Per file (actions):**
+
+- **`actions/pm-review.ts`** — vier server-actions:
   1. `parsed = pmReviewActionSchema.safeParse(input)` → fail-fast.
   2. Auth: cockpit-pattern (`createClient` + `getCurrentProfile`).
   3. Roep mutation aan met `parsed.data` + `profile.id` als actorId.
-  4. Revalideer `/inbox`.
-  5. Return `{ success: true }` of `{ error }`.
+  4. `markInboxItemRead(profile.id, 'issue', issueId)` — implicit read on action.
+  5. Revalideer `/inbox` + `/inbox/issue/[id]`.
+  6. Return `{ success: true }` of `{ error }`.
 
 - **`actions/replies.ts`** — `replyToQuestionAsTeamAction(input)`:
   - Mirror van `apps/portal/src/actions/inbox.ts:26-58`, maar `role: "team"` en geen portal-access-check (cockpit is team).
   - Roept `replyToQuestion(parsed.data, { profile_id, role: "team" }, supabase)`.
-  - Revalideer `/inbox`.
+  - Revalideer `/inbox` + `/inbox/question/[id]`.
 
-- **`components/inbox-page.tsx`** — server component, laadt `listInboxItemsForTeam(profile.id, supabase)` + `countInboxItemsForTeam`, rendert headline-counters + `<InboxList items={...}>`.
+- **`actions/mark-read.ts`** — `markInboxItemReadAction(kind, itemId)`:
+  - Auth-check, dan `markInboxItemRead(profile.id, kind, itemId, supabase)`.
+  - Geen `revalidatePath` — read-state is per-user, route-revalidation komt natuurlijk bij volgende navigatie.
 
-- **`components/inbox-list.tsx`** — gegroepeerde rendering volgens vision §9 status-first principe:
+- **`README.md`** — feature-template per CLAUDE.md regel 199. Menu per laag + verwijzing naar `/inbox-preview` als design-bron + bullet "Vrije compose en RLS-update voor klant-root komen in CC-006".
 
-  ```ts
-  // Bron van waarheid voor sectie-volgorde — bewaar in dit bestand, niet
-  // duplicaten in styling of card-component.
-  const ATTENTION_ORDER = [
-    "needs_pm_review", // klant-feedback wacht op PM-actie
-    "open", // open client_questions wacht op team-antwoord
-    "deferred", // geparkeerd, herinnert dat 't er staat
-    "responded", // klant heeft net geantwoord
-  ] as const;
-  ```
+### 7. Cockpit-routes + sidebar
 
-  - Sectie **"Wacht op jou"** — `needs_pm_review` + open `questions` zonder team-reply.
-  - Sectie **"Wacht op klant"** — open `questions` mét team-reply (NB: `client_questions.status` blijft `'open'` ook ná team-reply; alleen client-reply flipt 'm naar `'responded'` per regel 152-169 in `client-questions.ts`).
-  - Sectie **"Geparkeerd"** — `deferred`.
-  - Per item: `<InboxItemCard>`.
+Twee routes onder `(dashboard)`:
 
-- **`components/inbox-item-card.tsx`** — discriminated render op `kind`: feedback → titel + source-badge + `<FeedbackActionPanel>`; question → thread-preview + `<CockpitReplyForm>`.
+- `apps/cockpit/src/app/(dashboard)/inbox/page.tsx` (server component, render `<InboxPage />`) + `loading.tsx` + `error.tsx` — overzicht met filter-strip + time-grouped Linear-lijst.
+- `apps/cockpit/src/app/(dashboard)/inbox/[kind]/[id]/page.tsx` (server component, render `<ConversationPage />`) + `loading.tsx` + `error.tsx` — detail-route. `kind` is `'issue'` of `'question'`. Onbekende combinatie → `notFound()`.
 
-- **`components/feedback-action-panel.tsx`** — client-component:
-  - Vier knoppen: "Endorse → triage", "Decline", "Defer", "Convert naar vraag".
-  - Endorse + Defer: directe action-call.
-  - Decline: opent inline modal met required textarea (min 10 chars), submit roept `declineIssueAction`.
-  - Convert: opent modal met textarea voor vraag-body, submit roept `convertIssueAction`.
-  - `useTransition` + lokale optimistic state + error-rendering (mirror `client-reply-form` pattern).
+Sidebar:
 
-- **`components/cockpit-reply-form.tsx`** — kopie van `apps/portal/src/components/inbox/client-reply-form.tsx` met drie wijzigingen: andere action import (`replyToQuestionAsTeamAction`), label "Antwoord namens team", geen `projectId` prop nodig (mutation derived).
-
-- **`README.md`** — feature-template per CLAUDE.md regel 199. Menu per laag (actions / components / validations) + bullet "AI-draft button (vision §6 Phase 2) is GEEN onderdeel van CC-001".
-
-### 7. Cockpit-route + sidebar
-
-- `apps/cockpit/src/app/(dashboard)/inbox/page.tsx` (server component, render `<InboxPage />`) + `loading.tsx` + `error.tsx`.
 - `apps/cockpit/src/lib/constants/navigation.ts`:
   - **Regel 18:** breidt `NavItem.badgeKey` type uit van `"reviewCount"` naar `"reviewCount" | "inboxCount"`.
   - **Regel 22-29:** voeg toe in `primaryNavItems` als **tweede item, ná Home en vóór Intelligence**: `{ href: "/inbox", label: "Inbox", icon: Inbox, badgeKey: "inboxCount" }` (`Inbox` icon importeren uit `lucide-react`). Plaats bewust vóór Intelligence — Inbox = dagelijks-aandacht-oppervlak; Intelligence/Review/Projects zijn analyse-tooling (zie open vraag #4).
@@ -256,12 +376,26 @@ Volgt CLAUDE.md test-pyramide en mock-grens-beleid:
   - `declineIssue` zet `decline_reason` + `closed_at`.
   - `deferIssue` flipt naar `deferred`.
   - `convertIssueToQuestion` spawned een `client_questions`-row, linkt FK, en zet status.
+- **Read-state mutation-test** (`packages/database/src/mutations/__tests__/inbox-reads.test.ts`):
+  - Eerste call: insert. Tweede call op zelfde `(profile_id, item_kind, item_id)`: update `read_at`. Twee profile_id's: twee aparte rows.
+  - RLS: profile A kan profile B's reads niet zien of muteren (test met twee auth-cookies).
+- **Activity-trigger-test** (`packages/database/src/__tests__/migrations/client-questions-activity.test.ts`):
+  - Insert root → `last_activity_at = created_at`.
+  - Insert reply onder root → root's `last_activity_at` updates naar reply's `created_at`. Tweede reply: opnieuw update.
+- **Query-test** (`packages/database/src/queries/__tests__/inbox.test.ts`):
+  - `listInboxItemsForTeam` returnt items met `isUnread=true` als geen read-row, `false` als `read_at >= activityAt`, `true` als `read_at < activityAt` (na nieuwe reply).
+  - Time-grouping logica werkt — `today.length + earlier.length` matcht totaal.
 - **Action-tests** (`apps/cockpit/src/features/inbox/actions/__tests__/`):
   - Payload-capture mocks per actie; valideer dat `pmReviewActionSchema` faalt op te-korte decline-reason.
   - Auth-failure → `{ error }`.
+  - PM-action calls `markInboxItemRead` voor de actor.
 - **Component-tests** (`apps/cockpit/src/features/inbox/components/__tests__/`):
-  - `feedback-action-panel.test.tsx` — vier knoppen renderen, Decline opent modal met required textarea, submit-disabled bij <10 chars.
-  - `inbox-list.test.tsx` — sectie-grouping correct (op fixture met mix van items).
+  - `inbox-row.test.tsx` — unread-fixture toont `font-semibold`, read toont `font-medium`. Hover-actions toont vier buttons bij `needs_pm_review`, één bij anders. Status-bullet kleur correct.
+  - `inbox-list.test.tsx` — time-grouping correct op fixture met items op verschillende dagen.
+  - `inbox-header.test.tsx` — filter-chip klik update URL-param `?filter=`.
+  - `conversation-bubbles.test.tsx` — fixture met team-msg + client-msg → team alignment-rechts + primary-bg, client alignment-links + background-bg.
+  - `conversation-action-bar.test.tsx` — toont 4 knoppen alleen bij `kind='feedback' && status='needs_pm_review'`. Bij andere statussen: niet renderen.
+  - `decline-modal.test.tsx` / `convert-modal.test.tsx` — submit-disabled bij <10 chars; validatie-error inline tonen.
 - **Validatie-test** (`packages/database/src/validations/__tests__/issues.test.ts`): vier discriminated-union-paden valideren, vier failure-paden.
 - **Constants-test** (`packages/database/src/constants/__tests__/issues.test.ts`): alle nieuwe statussen hebben een label én zitten in een portal-status-groep (geen wees-status). Plus table-driven test op `defaultStatusForSource()` (`portal` → `needs_pm_review`, `userback` → `needs_pm_review`, `jaip_widget` → `needs_pm_review`, `manual` → `triage`, `ai` → `triage`).
 - **DevHub-non-regression-test**: laad `apps/devhub/src/app/(app)/issues/page.tsx` met fixture die `needs_pm_review`-issues bevat, valideer dat `UNGROUPED_DEFAULT_OPEN` (regel 29) ze NIET toont. Geen code-wijziging in DevHub nodig — `needs_pm_review` zit niet in de array, dus default-filtered uit. Test borgt dat niemand 'm later toevoegt.
@@ -276,19 +410,60 @@ Volgt CLAUDE.md test-pyramide en mock-grens-beleid:
 
 ## Acceptatiecriteria
 
+**Schema:**
+
 - [ ] DB-migratie draait clean op een lege en op een gevulde DB; `chk_issues_status` accepteert nu 10 statussen.
 - [ ] `decline_reason` (text, nullable) en `converted_to_question_id` (uuid FK met `ON DELETE SET NULL`) bestaan op `issues`.
+- [ ] `client_questions.last_activity_at` bestaat met trigger die root-insert + reply-insert correct bijhoudt.
+- [ ] `inbox_reads` tabel bestaat met PK `(profile_id, item_kind, item_id)` en RLS "own only".
+
+**Constants & queries:**
+
 - [ ] `ISSUE_STATUSES` + `ISSUE_STATUS_LABELS` + `CLOSED_STATUSES` gesynchroniseerd in `packages/database/src/constants/issues.ts`.
 - [ ] `PORTAL_STATUS_GROUPS` mapt vision §5-tabel correct (`needs_pm_review` → "Ontvangen", `declined` → "Afgerond", `deferred` → "Later").
-- [ ] `listInboxItemsForTeam` returnt issues uit alle accessible projecten gemerged met open questions, status-first gesorteerd.
+- [ ] `listInboxItemsForTeam` returnt items met `isUnread` correct afgeleid uit `read_at < activityAt`.
+- [ ] `getConversationThread` markeert thread automatisch als read voor de current profile.
+
+**Mutations:**
+
 - [ ] `endorseIssue`, `declineIssue`, `deferIssue`, `convertIssueToQuestion` zijn als pure mutations beschikbaar én via cockpit-server-actions aan te roepen.
-- [ ] Cockpit-sidebar heeft `/inbox` link met live count-badge; `NavItem.badgeKey` type uitgebreid; `(dashboard)/layout.tsx` fetch en prop-passing aangepast.
-- [ ] `/inbox` pagina toont drie secties (Wacht op jou / Wacht op klant / Geparkeerd) en empty-state als alles leeg is.
-- [ ] `feedback-action-panel` toont vier knoppen; Decline forceert reason ≥10 chars vóór submit.
-- [ ] `cockpit-reply-form` post via `role: "team"` — verifieerd in DB-test.
+- [ ] `markInboxItemRead` is idempotent (UPSERT, latere lees overschrijft).
+
+**Cockpit UI — overzicht (`/inbox`):**
+
+- [ ] Linear-stijl rij-rendering matcht `/inbox-preview` mockup: status-bullet links, avatar, sender+project, subject/snippet (`font-semibold` als unread, `font-medium` als gelezen), source-dot, timestamp rechts.
+- [ ] Hover-actions verschijnen on-hover (`opacity-0 group-hover:opacity-100`), niet altijd zichtbaar. Voor `needs_pm_review`: 4 icon-buttons. Voor andere: 1 (open detail).
+- [ ] Filter-strip toont chips `[Wacht op mij · N]` `[Wacht op klant · N]` `[Geparkeerd · N]`. URL-param `?filter=` werkt; default `wacht_op_mij`.
+- [ ] Time-grouping: Vandaag / Eerder deze week / Eerder. Sticky headers met backdrop-blur.
+- [ ] Klik op rij (buiten action-area) navigeert naar `/inbox/[kind]/[id]`.
+
+**Cockpit UI — detail (`/inbox/[kind]/[id]`):**
+
+- [ ] Conversation-page rendert iMessage-bubbles: jouw bericht (PM) rechts in `bg-primary text-primary-foreground` met `rounded-tr-md`; ander links in `bg-background` met `rounded-tl-md`.
+- [ ] Date-dividers tussen dagen ("Gisteren", "Vandaag").
+- [ ] Action-bar bovenaan toont 4 PM-acties **alleen** bij `kind='feedback'` AND `status='needs_pm_review'`. Andere statussen: alleen header + thread + reply-dock.
+- [ ] Reply-dock onderaan met paperclip-placeholder + textarea + Verstuur-knop. Helper-tekst toont klant-naam.
+- [ ] Bezoek aan detail-page markeert thread als read voor current profile (verifieer via DB-query).
+
+**Sidebar:**
+
+- [ ] Cockpit-sidebar heeft `/inbox` link met live `inboxCount`-badge (totaal aantal unread); `NavItem.badgeKey` type uitgebreid; `(dashboard)/layout.tsx` fetch en prop-passing aangepast.
+
+**Status-flip flows (PM-acties):**
+
+- [ ] Decline-modal forceert reason ≥10 chars vóór submit.
+- [ ] Convert-modal forceert vraag ≥10 chars vóór submit.
+- [ ] Reply-dock post via `role: "team"` — verifieerd in DB-test.
+- [ ] PM-actie markeert het item automatisch als read voor de actor.
+
+**Cross-laag:**
+
 - [ ] Portal-feedback (`/projects/[id]/feedback/new`), widget en Userback-nieuwe inserts landen op `needs_pm_review`, niet meer op `triage`.
 - [ ] DevHub `/issues` (filter `UNGROUPED_DEFAULT_OPEN`) toont GEEN `needs_pm_review` issues.
 - [ ] Portal-statusbadge toont "Ontvangen" voor `needs_pm_review`, "Later" voor `deferred`, "Afgewezen — {reason}" voor `declined`.
+
+**Build:**
+
 - [ ] `npm run check:features`, `npm run check:queries`, `npm run typecheck`, `npm run lint` zijn alle vier groen.
 - [ ] CLAUDE.md regel 192 + `scripts/check-feature-drift.sh` regel 21-29 bevatten `inbox` resp. `cockpit:inbox`.
 - [ ] `sprints/backlog/README.md` heeft CC-001 in de open-backlog-tabel.

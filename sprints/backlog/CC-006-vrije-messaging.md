@@ -7,9 +7,16 @@ Bouw de vrije communicatie-laag bovenop de issue-gebonden flow uit CC-001 t/m CC
 CC-006 verandert dit door:
 
 1. Een **"Nieuw bericht"**-flow in zowel cockpit-inbox als portal-inbox: klant kan een vrij bericht aan team starten, team kan een vrij bericht aan klant starten.
-2. **Threaded conversation-detail-pagina** (cockpit + portal): root + replies chronologisch, reply-form onderaan. Vervangt het impliciete "in-line in inbox-list"-model uit CC-001.
+2. **Threaded conversation-detail aan portal-zijde** + reply-form. (Cockpit-zijde levert CC-001 al — zie scope-shift hieronder.)
 3. **RLS-update**: klant mag root-berichten starten op projecten waar zij portal-access op heeft (huidige PR-SEC-031 blokkeert dat).
 4. **Notify-uitbreiding**: nieuwe templates voor "team start gesprek" en "klant start gesprek" (laatste alleen in-app counter, geen mail aan team).
+5. **Naming-shift "Vraag" → "Bericht"** in alle UI-strings (DB blijft `client_questions`).
+
+> **Scope-shift t.o.v. eerdere versie:** de cockpit conversation-detail-pagina
+> (`/inbox/[kind]/[id]`) leeft nu in CC-001 zodat de Linear-stijl overzicht en
+> de iMessage-bubbles vanaf de eerste merge consistent zijn. CC-006 voegt aan
+> cockpit-zijde alléén de compose-modal toe; aan portal-zijde komen wél de
+> conversation-detail-pagina + compose-form bij.
 
 > **Geen AI in v1.** CC-004 (AI-draft) is gedeferred. Team typt compose-berichten zelf —
 > hetzelfde patroon als bestaande `replyAsTeamAction`. AI-draft kan later bovenop
@@ -29,12 +36,11 @@ Dit is een vervolg-sprint na CC-001 t/m CC-005. Niet in de oorspronkelijke visio
 
 ## Afhankelijkheden
 
-- **CC-001** — cockpit-inbox feature (`apps/cockpit/src/features/inbox/`), `cockpit-reply-form` component, en cross-project query `listInboxItemsForTeam`.
+- **Design-referentie:** `/inbox-preview` — sectie III "Conversation-detail" toont de iMessage-bubbles + compose-flow die portal-zijde implementeert.
+- **CC-001** — cockpit-inbox feature (`apps/cockpit/src/features/inbox/`) inclusief `conversation-page.tsx`, `conversation-bubbles.tsx`, `conversation-reply-dock.tsx` (cockpit-detail bestaat al). CC-006 voegt cockpit alléén compose-modal + sendMessage-action toe.
 - **CC-002** — notify-infra (`@repo/notifications` package + `sendMail` + templates-dir).
 - **PR-022** — `client_questions` schema + RLS (`supabase/migrations/20260430110000_client_questions.sql`). CC-006 muteert RLS-policy `Client questions: insert (root team / reply role-aware)`.
-- **PR-023** — bestaande UI:
-  - portal: `apps/portal/src/components/inbox/{client-reply-form,question-card,question-list}.tsx` + `apps/portal/src/actions/inbox.ts:replyAsClientAction`
-  - devhub: `apps/devhub/src/actions/questions.ts:askQuestionAction` + `replyAsTeamAction` (volledig herbruikbaar voor cockpit — alleen verplaatsen + revalidatePaths anpassen)
+- **PR-023** — bestaande portal UI-components als referentie: `apps/portal/src/components/inbox/{client-reply-form,question-card,question-list}.tsx` + `apps/portal/src/actions/inbox.ts:replyAsClientAction`. Worden uitgebreid met conversation-detail-pagina + compose-form.
 - Bestaande mutations `sendQuestion` + `replyToQuestion` in `packages/database/src/mutations/client-questions.ts` — CC-006 hoeft géén nieuwe mutations toe te voegen, alleen RLS-toegang verbreden voor `sendQuestion`.
 
 ## Open vragen vóór start
@@ -93,59 +99,42 @@ Geen schema-wijziging op `client_questions` zelf. Geen nieuwe kolommen.
 
 `replyToQuestion` blijft ongewijzigd (was al two-way).
 
-### 3. Queries — conversation-thread
+### 3. Queries — geen wijziging nodig
 
-Pad: `packages/database/src/queries/client-questions.ts` (bestand bestaat — uitbreiden).
+`getConversationThread` is al in CC-001 toegevoegd (voor de cockpit conversation-detail-pagina). Portal hergebruikt diezelfde query — single-level threading werkt identiek voor beide perspectieven.
 
-```ts
-export interface ConversationThread {
-  root: ClientQuestionRow;
-  replies: ClientQuestionRow[]; // chronologisch oplopend
-  participants: Array<{ profile_id: string; role: "team" | "client"; name: string }>;
-}
+`listInboxItemsForTeam` uit CC-001 hoeft geen wijziging — vrije messages zijn `client_questions` zonder `issue_id`/`topic_id`, vallen al in de `kind: "question"`-bucket. Wel UI-styling-wise onderscheiden (in `inbox-row.tsx` uit CC-001: een vrij bericht heeft geen issue-link en wordt iets anders gerenderd dan een feedback-converted vraag).
 
-/**
- * Haalt root + alle replies + participant-info op. Single-level threading
- * (parent → reply); reply-op-reply niet ondersteund — `replyToQuestion`
- * mutation enforces dat al.
- */
-export async function getConversationThread(
-  messageId: string,
-  client?: SupabaseClient,
-): Promise<ConversationThread | null>;
-```
+### 4. Cockpit: compose-modal (team → klant)
 
-Implementatie: één query met `parent_id` embed (`replies:client_questions!parent_id(...)`) + één join op `profiles` voor namen. Filter parent op `id=$messageId AND parent_id IS NULL` — als de gebruiker per ongeluk een reply-id stuurt, returnt `null` (niet de thread van de parent — dat zou onverwachte navigatie geven).
-
-`listInboxItemsForTeam` uit CC-001 hoeft geen wijziging — vrije messages zijn `client_questions` zonder `issue_id`/`topic_id`, vallen al in de `kind: "question"`-bucket. Wel UI-styling-wise onderscheiden (taak 5).
-
-### 4. Cockpit: compose-flow team → klant
-
-Pad: `apps/cockpit/src/features/inbox/components/compose-modal.tsx` (nieuw).
+Pad: `apps/cockpit/src/features/inbox/components/compose-modal.tsx` (nieuw, opent vanuit "+ Nieuw bericht"-knop in `inbox-header.tsx` uit CC-001).
 
 Modal-velden:
 
 - **Project-selector** — dropdown met alle projecten van team (cross-project; één geselecteerd = bericht naar dat project).
 - **Body-textarea** — min 10, max 5000 chars. Plain text, geen rich-edit v1.
-- **"Verstuur"-knop** — submit triggert action.
+- **"Verstuur"-knop** — submit triggert action, modal sluit + redirect naar `/inbox/question/${newMessageId}` zodat PM direct in het verse gesprek staat.
 
-Geen AI-draft-knop in v1 — CC-004 is gedeferred. Team typt zelf, identiek aan bestaande `replyAsTeamAction`.
+Geen AI-draft-knop in v1 — CC-004 is gedeferred. Team typt zelf, identiek aan bestaande `replyToQuestion` flow.
 
 Server-action `composeMessageToClientAction(input: { projectId, body })` in `apps/cockpit/src/features/inbox/actions/compose.ts` (nieuw):
 
 1. Auth + profile-lookup.
 2. Zod-validate (`composeMessageSchema`).
 3. `sendQuestion({ project_id, body }, profile.id, supabase)`.
-4. `notifyNewMessageFromTeam(message, projectId)` — nieuwe orchestrator (taak 7).
-5. `revalidatePath('/inbox')` + return `{ success: true, messageId }`.
+4. `markInboxItemRead(profile.id, 'question', newMessage.id, supabase)` — eigen compose telt direct als gelezen.
+5. `notifyNewMessageFromTeam(message, projectId)` — nieuwe orchestrator (taak 6).
+6. `revalidatePath('/inbox')` + return `{ success: true, messageId }`.
 
-Wire de modal-knop in `apps/cockpit/src/features/inbox/components/inbox-view.tsx` (uit CC-001, header rechts: "+ Nieuw bericht").
+CC-001 levert al de conversation-detail-pagina (`/inbox/question/[id]`) waar de PM heenkomt na submit — geen extra UI nodig in deze sprint aan cockpit-zijde.
 
-### 5. Portal: compose-flow klant → team
+### 5. Portal: compose-form + conversation-detail-pagina
+
+#### 5a. Compose-form (klant → team)
 
 Pad: `apps/portal/src/components/inbox/new-message-form.tsx` (nieuw).
 
-Veel simpeler dan cockpit-compose: geen project-selector (project-context komt uit URL `/projects/[id]/inbox`), geen AI-draft (klant schrijft eigen woorden), geen subject.
+Veel simpeler dan cockpit-compose: geen project-selector (project-context komt uit URL `/projects/[id]/inbox`), geen subject.
 
 Velden:
 
@@ -159,41 +148,42 @@ Server-action `sendMessageAsClientAction(projectId, input)` in `apps/portal/src/
 3. Zod-validate.
 4. `sendQuestion({ project_id, body }, profile.id, supabase)` — RLS uit taak 1 staat het nu toe via klant-cookie-client.
 5. `notifyNewMessageFromClient(message, projectId)` — geen mail naar team (vision §8 in-app counter), wel sidebar-counter-bump in cockpit.
-6. `revalidatePath(\`/projects/${projectId}/inbox\`)` + return.
+6. `revalidatePath(\`/projects/${projectId}/inbox\`)` + return + redirect naar `/projects/${projectId}/inbox/${newMessage.id}`.
 
 Wire in `apps/portal/src/app/(app)/projects/[id]/inbox/page.tsx` als header-actie ("+ Nieuw bericht aan team").
 
-### 6. Conversation-detail-pagina's
+#### 5b. Conversation-detail-pagina (portal)
 
-#### 6a. Cockpit
-
-Pad: `apps/cockpit/src/app/(dashboard)/inbox/[id]/page.tsx` (nieuw) + `loading.tsx` + `error.tsx`.
+Pad: `apps/portal/src/app/(app)/projects/[id]/inbox/[messageId]/page.tsx` (nieuw) + `loading.tsx` + `error.tsx`.
 
 ```tsx
-export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const thread = await getConversationThread(id);
-  if (!thread) notFound();
-  return <ConversationThreadView thread={thread} role="team" />;
+export default async function ConversationPage({
+  params,
+}: {
+  params: Promise<{ id: string; messageId: string }>;
+}) {
+  const { id: projectId, messageId } = await params;
+  const supabase = await createClient();
+  const profile = await getCurrentProfile(supabase);
+  if (!profile) redirect("/login");
+
+  const thread = await getConversationThread(messageId, profile.id, supabase);
+  if (!thread || thread.root.project_id !== projectId) notFound();
+
+  return <PortalConversationView thread={thread} />;
 }
 ```
 
-Component `ConversationThreadView` (nieuw, in `features/inbox/components/`):
+Component `apps/portal/src/components/inbox/portal-conversation-view.tsx` (nieuw) — matcht `/inbox-preview` sectie III "Portal · detail":
 
-- **Header**: project-naam, deelnemer-namen, status-badge (`open`/`responded`).
-- **Berichten-stream**: root + replies chronologisch, per bericht een card met sender-naam, role-badge ("Team"/"Klant"), timestamp, body.
-- **Reply-form onderaan** — hergebruik `cockpit-reply-form` uit CC-001 (geen nieuw component nodig).
-- Per-project tab uit CC-005: deze route blijft globaal `/inbox/[id]`, niet onder `projects/[id]/inbox/[id]` (single shareable URL voor het gesprek; project-context is afleidbaar uit thread).
+- **Header**: back-knop + title (eerste 80 chars body of "Bericht aan team") + meta (project-naam · "met {team-sender-name}") + status-pill rechts ("Beantwoord" als status `responded`, "Wacht op antwoord" als `open`).
+- **Bubbles**: iMessage-stijl, **klant-perspectief** — klant rechts in `bg-foreground text-background` (eigen bericht = donker), team links in `bg-background ring-foreground/[0.08]`. Date-dividers tussen dagen.
+- **Reply-dock onderaan** — hergebruik bestaande `client-reply-form` uit PR-023, geen wijziging.
+- Auto-mark-read tijdens fetch via `getConversationThread` (zelfde query-pattern als CC-001 cockpit-detail).
 
-#### 6b. Portal
+In portal's bestaande `question-list.tsx` + nieuwe `mail-row` (uit CC-001 portal-display-updates): klikken op een rij navigeert naar `/projects/[id]/inbox/[messageId]`. Bestaande in-line reply-form in `question-card.tsx` vervalt — alle reply-acties leven nu op de detail-page.
 
-Pad: `apps/portal/src/app/(app)/projects/[id]/inbox/[messageId]/page.tsx` (nieuw) + loading/error.
-
-Hergebruik `ConversationThreadView` als shared component (zet 'm in `@repo/ui` óf dupliceer in portal — kies dupliceer voor v1, blast-radius is klein, eventuele divergentie is fine). Klant-side is `role="client"` zodat de reply-form wisselt naar `client-reply-form` (bestaand uit PR-023).
-
-In portal's `question-list.tsx` (bestaand): elke item-titel wordt klikbare link naar `/projects/[id]/inbox/[messageId]`. Bestaande in-line reply-form vervalt — alleen de detail-page heeft een form.
-
-### 7. Notify-templates uitbreiden
+### 6. Notify-templates uitbreiden
 
 In `packages/notifications/src/templates/` (uit CC-002):
 
@@ -205,7 +195,7 @@ In `packages/notifications/src/notify/`:
 
 CC-006 stuurt **GEEN** mail naar team bij klant-initiated message — vision §8 expliciet "in-app only voor team". Sidebar-counter uit CC-001 update via `revalidatePath` is voldoende.
 
-### 8. Naming-shift "Vraag" → "Bericht"
+### 7. Naming-shift "Vraag" → "Bericht"
 
 Volledige replace-pass over UI-strings — DB-laag onveranderd. Concrete bestanden (grep voor "Vraag", "Vragen", "Stel", "Q&A"):
 
@@ -219,11 +209,11 @@ Mail-templates uit CC-002 ook synchroniseren: `feedback-converted` heet nu "We h
 
 Test-scope: snapshot-tests die "Vraag"-strings asserten moeten geüpdatet worden.
 
-### 9. Sidebar-counter — geen wijziging
+### 8. Sidebar-counter — geen wijziging
 
 Counter uit CC-001 (`countInboxItemsForTeam`) telt al alle `open`-status items inclusief vrije messages — geen aanpassing nodig. Verifieer alleen dat een vrije root-message van klant correct in `pmReview`/`openQuestions`-bucket valt; anders update.
 
-### 10. Tests
+### 9. Tests
 
 - **RLS-migratie** (`packages/database/__tests__/migrations/cc006-client-root.test.ts`):
   - Klant met portal-access op project A kan root-message inserten op project A.
@@ -250,7 +240,7 @@ Counter uit CC-001 (`countInboxItemsForTeam`) telt al alle `open`-status items i
   - Cockpit: drie berichten (root team + reply klant + reply team) renderen in correcte volgorde met juiste role-badges.
   - Portal: zelfde fixture, klant-side, reply-form is `client-reply-form`-variant.
 
-### 11. Docs + registry
+### 10. Docs + registry
 
 - Update `apps/cockpit/src/features/inbox/README.md` — sectie "Compose-flow (team → klant)".
 - Update `docs/specs/vision-customer-communication.md` — markeer §10 #5 "conversation-composer" als partially-implemented (textarea-only). §6 Phase 2 (AI-draft button) blijft open, gekoppeld aan CC-004 deferred.
