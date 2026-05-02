@@ -7,8 +7,8 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 609 |
-| Exported functions/constants | 920 |
+| Files scanned | 607 |
+| Exported functions/constants | 918 |
 | Exported types/interfaces | 394 |
 | Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 14 |
@@ -3855,11 +3855,6 @@
 **Exports:**
 - `CockpitInboxLinear()`
 
-### `apps/cockpit/src/components/inbox-preview/cockpit-inbox-mock.tsx`
-
-**Exports:**
-- `CockpitInboxMock()`
-
 ### `apps/cockpit/src/components/inbox-preview/conversation-cockpit.tsx`
 
 **Exports:**
@@ -3889,11 +3884,6 @@
 
 **Exports:**
 - `PortalInboxMail()`
-
-### `apps/cockpit/src/components/inbox-preview/portal-inbox-mock.tsx`
-
-**Exports:**
-- `PortalInboxMock()`
 
 ### `apps/cockpit/src/components/intelligence/board-meeting-card.tsx`
 

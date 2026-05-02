@@ -1,6 +1,4 @@
 import { Sparkles } from "lucide-react";
-import { CockpitInboxMock } from "@/components/inbox-preview/cockpit-inbox-mock";
-import { PortalInboxMock } from "@/components/inbox-preview/portal-inbox-mock";
 import { CockpitInboxLinear } from "@/components/inbox-preview/cockpit-inbox-linear";
 import { PortalInboxMail } from "@/components/inbox-preview/portal-inbox-mail";
 import { ConversationCockpit } from "@/components/inbox-preview/conversation-cockpit";
@@ -12,14 +10,13 @@ export const metadata = {
 };
 
 /**
- * Inbox-blueprint: design-exercitie voor de Customer-Communication-laag.
+ * Inbox-blueprint: definitieve design voor de Customer-Communication-laag.
  * Pure mockup — geen DB, geen mutations.
  *
  * Drie secties:
- *   I.   Design-rationale + 8 principes
- *   II.  Twee overview-varianten (Cards-stijl + Linear-stijl voor cockpit,
- *        Cards-stijl + Mail-stijl voor portal)
- *   III. Conversation-detail (chat-thread voor cockpit + portal)
+ *   I.   8 design-principes die het ontwerp verantwoorden
+ *   II.  Overzicht — Linear voor cockpit, Apple Mail voor portal
+ *   III. Conversation-detail — chat-thread met iMessage-bubbles
  */
 export default function InboxBlueprintPage() {
   return (
@@ -33,72 +30,40 @@ export default function InboxBlueprintPage() {
 
         <SectionLabel
           number="II"
-          title="Overzicht — twee varianten"
-          subtitle="Vergelijk Cards (huidig) en Linear/Mail (nieuw). Mijn aanbeveling staat onderaan."
+          title="Overzicht"
+          subtitle="Cockpit volgt Linear-conventies (dichte rij, hover-actions, time-grouping). Portal volgt Apple Mail (avatar + sender + subject + status). Bold = ongelezen — vertrouwd patroon dat klanten al 30 jaar kennen."
         />
 
-        <VariantBlock
-          label="A · Cards-stijl"
-          tagline="Status-secties, alle acties altijd zichtbaar. Hoog ontdekbaar, visueel druk."
-        >
-          <div className="grid grid-cols-1 gap-10 xl:grid-cols-[1.3fr_1fr] xl:gap-12">
-            <DeviceFrame
-              url="cockpit.jouwaipartner.nl/inbox"
-              caption="Cockpit · Cards"
-              index="A.1"
-              variant="team"
-            >
-              <CockpitInboxMock />
-            </DeviceFrame>
-            <DeviceFrame
-              url="portal.jouwaipartner.nl/projects/acme/inbox"
-              caption="Portal · Cards"
-              index="A.2"
-              variant="client"
-            >
-              <PortalInboxMock />
-            </DeviceFrame>
-          </div>
-        </VariantBlock>
-
-        <VariantBlock
-          label="B · Linear/Mail-stijl"
-          tagline="Vertrouwd uit Linear (PM) en Apple Mail (klant). Default rust, acties on-hover, time-grouping."
-          accent="primary"
-        >
-          <div className="grid grid-cols-1 gap-10 xl:grid-cols-[1.3fr_1fr] xl:gap-12">
-            <DeviceFrame
-              url="cockpit.jouwaipartner.nl/inbox"
-              caption="Cockpit · Linear"
-              index="B.1"
-              variant="team"
-            >
-              <CockpitInboxLinear />
-            </DeviceFrame>
-            <DeviceFrame
-              url="portal.jouwaipartner.nl/projects/acme/inbox"
-              caption="Portal · Mail"
-              index="B.2"
-              variant="client"
-            >
-              <PortalInboxMail />
-            </DeviceFrame>
-          </div>
-        </VariantBlock>
-
-        <Recommendation />
+        <div className="grid grid-cols-1 gap-10 xl:grid-cols-[1.3fr_1fr] xl:gap-12">
+          <DeviceFrame
+            url="cockpit.jouwaipartner.nl/inbox"
+            caption="Team · Cockpit"
+            index="I"
+            variant="team"
+          >
+            <CockpitInboxLinear />
+          </DeviceFrame>
+          <DeviceFrame
+            url="portal.jouwaipartner.nl/projects/acme/inbox"
+            caption="Klant · Portal"
+            index="II"
+            variant="client"
+          >
+            <PortalInboxMail />
+          </DeviceFrame>
+        </div>
 
         <SectionLabel
           number="III"
           title="Conversation-detail"
-          subtitle="Wanneer je op een rij klikt opent het gesprek. iMessage-conventie: jouw bericht rechts, ander links. Voor PM een action-bar bovenaan; voor klant alleen reply-form."
+          subtitle="Klikken op een rij opent het gesprek. iMessage-conventie: jouw bericht rechts, ander links. Voor PM een action-bar bovenaan; voor klant alleen reply-form."
         />
 
         <div className="grid grid-cols-1 gap-10 xl:grid-cols-2 xl:gap-12">
           <DeviceFrame
             url="cockpit.jouwaipartner.nl/inbox/zon-q1-crm"
             caption="Cockpit · detail"
-            index="C.1"
+            index="III"
             variant="team"
           >
             <ConversationCockpit />
@@ -106,7 +71,7 @@ export default function InboxBlueprintPage() {
           <DeviceFrame
             url="portal.jouwaipartner.nl/projects/zonnehof/inbox/q1-crm"
             caption="Portal · detail"
-            index="C.2"
+            index="IV"
             variant="client"
           >
             <ConversationPortal />
@@ -125,7 +90,7 @@ function Hero() {
       <div>
         <div className="flex items-center gap-2 text-[11px] tracking-[0.22em] text-muted-foreground/80 uppercase">
           <span className="inline-flex h-5 items-center gap-1 rounded-full bg-primary/10 px-2 font-medium text-primary tracking-wider normal-case">
-            <Sparkles className="h-3 w-3" /> Design-blueprint
+            <Sparkles className="h-3 w-3" /> Definitief
           </span>
           <span>Customer Communication · CC-001 → CC-006</span>
         </div>
@@ -137,15 +102,15 @@ function Hero() {
         </h1>
 
         <p className="mt-5 max-w-[60ch] text-[15px] leading-relaxed text-muted-foreground">
-          Klant-feedback en vrije berichten — gerouteerd door één gedeelde inbox-laag. Onder drie
-          bouwstenen: principes die we niet willen overtreden, twee overview-varianten om tegen
-          elkaar af te wegen, en het detail-gesprek waar het écht gebeurt.
+          Klant-feedback en vrije berichten — gerouteerd door één gedeelde inbox-laag. Linear voor
+          team, Apple Mail voor klant, iMessage voor het gesprek zelf. Vertrouwde mentale modellen,
+          geen heruitvinden.
         </p>
       </div>
 
       <dl className="grid grid-cols-3 gap-x-8 gap-y-1 text-right lg:text-left">
         <Stat label="Sprints" value="5" />
-        <Stat label="Varianten" value="2" />
+        <Stat label="Schermen" value="4" />
         <Stat label="Principes" value="8" />
       </dl>
     </section>
@@ -254,97 +219,6 @@ function SectionLabel({
         </p>
       </div>
     </div>
-  );
-}
-
-function VariantBlock({
-  label,
-  tagline,
-  accent,
-  children,
-}: {
-  label: string;
-  tagline: string;
-  accent?: "primary";
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mt-12">
-      <div className="mb-5 flex items-baseline gap-3">
-        <span
-          className={`inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-semibold tracking-wider ${
-            accent === "primary"
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground/[0.06] text-foreground"
-          }`}
-        >
-          {label}
-        </span>
-        <p className="text-[13px] leading-snug text-muted-foreground">{tagline}</p>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Recommendation() {
-  return (
-    <section className="mt-16 grid grid-cols-1 gap-10 lg:grid-cols-[auto_1fr] lg:gap-12">
-      <div>
-        <span className="text-[10px] tracking-[0.22em] text-muted-foreground/80 uppercase">
-          Aanbeveling
-        </span>
-        <h3 className="font-serif-display mt-2 text-3xl leading-tight text-foreground">
-          Variant B
-          <br />
-          <span className="italic text-foreground/60">voor beide.</span>
-        </h3>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <article className="rounded-xl bg-card p-5 ring-1 ring-foreground/[0.08]">
-          <p className="text-[10px] tracking-[0.16em] text-primary uppercase">Cockpit · Linear</p>
-          <h4 className="mt-2 text-[14.5px] font-semibold text-foreground">
-            Dichte rijen, hover-actions, time-grouping.
-          </h4>
-          <ul className="mt-3 space-y-1.5 text-[12.5px] leading-relaxed text-muted-foreground">
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-              PMs scannen sneller — minimaal 30% meer items per scherm dan cards.
-            </li>
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-              Filter-chips i.p.v. secties geven controle aan de PM.
-            </li>
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-              Keyboard-paths (J/K, ⌘E/⌘D) volgen Linear-conventies.
-            </li>
-          </ul>
-        </article>
-
-        <article className="rounded-xl bg-card p-5 ring-1 ring-foreground/[0.08]">
-          <p className="text-[10px] tracking-[0.16em] text-primary uppercase">Portal · Mail</p>
-          <h4 className="mt-2 text-[14.5px] font-semibold text-foreground">
-            Email-app vertrouwd. Sender, subject, status, tijd.
-          </h4>
-          <ul className="mt-3 space-y-1.5 text-[12.5px] leading-relaxed text-muted-foreground">
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-              Bold = ongelezen — een paradigm dat klanten al 30 jaar kennen.
-            </li>
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-              Status-pill rechts is rustig; geen aandacht-trekkende kleurvlakken.
-            </li>
-            <li className="flex gap-2">
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-              Geen secties — sporadische gebruikers raken verdwaald in groepering.
-            </li>
-          </ul>
-        </article>
-      </div>
-    </section>
   );
 }
 
