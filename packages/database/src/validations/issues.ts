@@ -128,3 +128,34 @@ export const deleteCommentSchema = z.object({
   id: z.string().uuid(),
   issue_id: z.string().uuid(),
 });
+
+// CC-001 — PM-review-gate.
+//
+// Discriminated union zodat één Zod-parse alle vier acties dekt; per actie
+// alleen de velden die hij nodig heeft. min(10) op decline_reason en
+// questionBody: een lege/eenwoord-toelichting is geen verklaring voor de
+// klant (vision §5).
+const zUuid = z.string().uuid();
+
+export const pmReviewActionSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("endorse"),
+    issueId: zUuid,
+  }),
+  z.object({
+    action: z.literal("decline"),
+    issueId: zUuid,
+    declineReason: z.string().min(10, "Geef minstens 10 tekens reden mee").max(1000),
+  }),
+  z.object({
+    action: z.literal("defer"),
+    issueId: zUuid,
+  }),
+  z.object({
+    action: z.literal("convert"),
+    issueId: zUuid,
+    questionBody: z.string().min(10, "Geef minstens 10 tekens vraag mee").max(2000),
+  }),
+]);
+
+export type PmReviewAction = z.infer<typeof pmReviewActionSchema>;

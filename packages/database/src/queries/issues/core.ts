@@ -44,6 +44,9 @@ export interface IssueRow {
   created_at: string;
   updated_at: string;
   closed_at: string | null;
+  // CC-001 PM-review-gate kolommen — gevuld na decline / convert.
+  decline_reason: string | null;
+  converted_to_question_id: string | null;
 }
 
 export const ISSUE_SELECT = `
@@ -52,6 +55,7 @@ export const ISSUE_SELECT = `
   labels, assigned_to, reporter_name, reporter_email, source, userback_id, source_url, source_metadata,
   issue_number, execution_type, ai_executable, ai_context, ai_result, duplicate_of_id, ai_classification,
   created_at, updated_at, closed_at,
+  decline_reason, converted_to_question_id,
   assigned_person:assigned_to (id, full_name)
 ` as const;
 

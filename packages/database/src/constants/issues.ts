@@ -11,12 +11,16 @@ export const ISSUE_TYPES = ["bug", "feature_request", "question"] as const;
 export type IssueType = (typeof ISSUE_TYPES)[number];
 
 export const ISSUE_STATUSES = [
+  "needs_pm_review",
   "triage",
   "backlog",
   "todo",
   "in_progress",
   "done",
   "cancelled",
+  "declined",
+  "deferred",
+  "converted_to_qa",
 ] as const;
 export type IssueStatus = (typeof ISSUE_STATUSES)[number];
 
@@ -36,7 +40,16 @@ export type IssueComponent = (typeof ISSUE_COMPONENTS)[number];
 export const ISSUE_SEVERITIES = ["critical", "high", "medium", "low"] as const;
 export type IssueSeverity = (typeof ISSUE_SEVERITIES)[number];
 
-export const CLOSED_STATUSES = new Set<IssueStatus>(["done", "cancelled"]);
+// `declined` en `converted_to_qa` zijn dood-end statussen (klant ziet
+// eind-verklaring resp. de issue is omgezet naar een vraag). `deferred`
+// blijft expliciet buiten de set: parked items kunnen terug naar
+// needs_pm_review en mogen niet als "closed" geteld worden.
+export const CLOSED_STATUSES = new Set<IssueStatus>([
+  "done",
+  "cancelled",
+  "declined",
+  "converted_to_qa",
+]);
 
 // ── Labels voor UI (voor dropdowns en badges) ──
 
@@ -47,12 +60,16 @@ export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
 };
 
 export const ISSUE_STATUS_LABELS: Record<IssueStatus, string> = {
+  needs_pm_review: "Wacht op PM-review",
   triage: "Triage",
   backlog: "Backlog",
   todo: "Te doen",
   in_progress: "In behandeling",
   done: "Afgerond",
   cancelled: "Geannuleerd",
+  declined: "Afgewezen",
+  deferred: "Later",
+  converted_to_qa: "Omgezet naar vraag",
 };
 
 export const ISSUE_PRIORITY_LABELS: Record<IssuePriority, string> = {
@@ -94,11 +111,17 @@ export const PRIORITY_ORDER: Record<string, number> = {
 // UI), het filter (portal queries) als de metric-aggregatie. Wijzig alleen
 // hier — label, key en bijbehorende interne statussen blijven in sync.
 
+// Klant ziet "Ontvangen" zowel vóór als na PM-endorsement (vision §5):
+// PM-internal taal lekt niet naar het portal. `parked` (= deferred) is een
+// aparte groep zodat de klant ziet dat 't aandacht heeft maar nog niet
+// ingepland is. `declined` en `converted_to_qa` vallen onder "Afgerond"
+// (dood-end voor de klant; `converted_to_qa` heeft een eigen FK naar de
+// spawned vraag voor traceability).
 export const PORTAL_STATUS_GROUPS = [
   {
     key: "ontvangen",
     label: "Ontvangen",
-    internalStatuses: ["triage"],
+    internalStatuses: ["needs_pm_review", "triage"],
   },
   {
     key: "ingepland",
@@ -111,9 +134,14 @@ export const PORTAL_STATUS_GROUPS = [
     internalStatuses: ["in_progress"],
   },
   {
+    key: "parked",
+    label: "Later",
+    internalStatuses: ["deferred"],
+  },
+  {
     key: "afgerond",
     label: "Afgerond",
-    internalStatuses: ["done", "cancelled"],
+    internalStatuses: ["done", "cancelled", "declined", "converted_to_qa"],
   },
 ] as const satisfies ReadonlyArray<{
   key: string;
@@ -200,4 +228,18 @@ export function resolvePortalSourceGroup(source: string | null | undefined): Por
     }
   }
   return "jaip";
+}
+
+// ── PM-review-gate default-status (CC-001 vision §5) ──
+//
+// Klant-bronnen passeren de PM-gate (issue landt op `needs_pm_review`).
+// Interne bronnen (manual/AI) gaan direct naar `triage` — een PM heeft die
+// zelf aangemaakt of een AI-pipeline heeft 'm geclassificeerd, dus extra
+// menselijke review is geen toevoeging. Centraal hier zodat een nieuwe
+// klant-bron in één plek geregistreerd wordt en niet in 3 call-sites.
+
+const CLIENT_SOURCED = new Set<string>(["portal", "userback", "jaip_widget"]);
+
+export function defaultStatusForSource(source: string): IssueStatus {
+  return CLIENT_SOURCED.has(source) ? "needs_pm_review" : "triage";
 }

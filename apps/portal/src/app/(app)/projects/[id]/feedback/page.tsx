@@ -6,6 +6,8 @@ import { getPortalProjectDashboard } from "@repo/database/queries/portal";
 import { listClientIssuesForOrg, type ClientIssueRow } from "@repo/database/queries/issues";
 import { STATUS_LABELS, type ProjectStatus } from "@repo/database/constants/projects";
 import { FeedbackForm } from "@/components/feedback/feedback-form";
+import { DeclinedBanner } from "@/components/feedback/declined-banner";
+import { translateStatus } from "@/lib/issue-status";
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("nl-NL", {
   day: "numeric",
@@ -140,9 +142,10 @@ function SubmissionItem({ projectId, row }: { projectId: string; row: ClientIssu
       ) : (
         <span className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="size-1.5 rounded-full bg-border" />
-          Ontvangen — wachten op triage
+          {translateStatus(row.status)}
         </span>
       )}
+      {row.status === "declined" ? <DeclinedBanner reason={row.decline_reason} /> : null}
     </>
   );
 

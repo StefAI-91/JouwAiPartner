@@ -5,6 +5,7 @@ import { createClient } from "@repo/database/supabase/server";
 import { getCurrentProfile } from "@repo/auth/access";
 import { hasPortalProjectAccess } from "@repo/database/queries/portal/access";
 import { insertIssue } from "@repo/database/mutations/issues";
+import { defaultStatusForSource } from "@repo/database/constants/issues";
 import { portalFeedbackSchema } from "@repo/database/validations/portal-feedback";
 
 export interface SubmitFeedbackSuccess {
@@ -55,7 +56,7 @@ export async function submitFeedback(input: unknown): Promise<SubmitFeedbackResu
       title,
       description,
       type,
-      status: "triage",
+      status: defaultStatusForSource("portal"),
       priority: "medium",
       source: "portal",
       reporter_email: profile.email,
