@@ -33,3 +33,5 @@ export {
 } from "./attachments";
 
 export { getCommentById, listIssueComments, type IssueCommentRow } from "./comments";
+
+export { listClientIssuesForOrg, type ClientIssueRow } from "./client-portal";
