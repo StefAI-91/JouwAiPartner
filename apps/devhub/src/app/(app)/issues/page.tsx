@@ -127,6 +127,7 @@ export default async function IssuesPage({
     component: params.component,
     assignedTo: params.assignee,
     topicIds: params.topic,
+    sourceGroups: params.source,
     ungroupedOnly: params.ungrouped,
     issueNumber,
     search,

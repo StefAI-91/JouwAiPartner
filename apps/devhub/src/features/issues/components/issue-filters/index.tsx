@@ -11,6 +11,7 @@ import {
   ISSUE_TYPE_LABELS,
   ISSUE_COMPONENTS,
   ISSUE_COMPONENT_LABELS,
+  DEVHUB_SOURCE_GROUPS,
   UNASSIGNED_SENTINEL,
 } from "@repo/database/constants/issues";
 import { FilterDropdown } from "./filter-dropdown";
@@ -27,6 +28,7 @@ const COMPONENT_OPTIONS = ISSUE_COMPONENTS.map((c) => ({
   value: c,
   label: ISSUE_COMPONENT_LABELS[c],
 }));
+const SOURCE_OPTIONS = DEVHUB_SOURCE_GROUPS.map((g) => ({ value: g.key, label: g.label }));
 
 interface IssueFiltersProps {
   people: { id: string; name: string }[];
@@ -81,6 +83,13 @@ export function IssueFilters({ people, topics }: IssueFiltersProps) {
         paramKey="component"
         options={COMPONENT_OPTIONS}
         selected={getValues("component")}
+        onToggle={toggleFilter}
+      />
+      <FilterDropdown
+        label="Bron"
+        paramKey="source"
+        options={SOURCE_OPTIONS}
+        selected={getValues("source")}
         onToggle={toggleFilter}
       />
       <FilterDropdown

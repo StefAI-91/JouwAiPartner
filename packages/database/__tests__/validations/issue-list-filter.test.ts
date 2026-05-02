@@ -61,6 +61,16 @@ describe("issueListFilterSchema", () => {
     expect(parsed.assignee).toBeUndefined();
   });
 
+  it("accepts geldige source-groepen (CC-003)", () => {
+    const parsed = issueListFilterSchema.parse({ source: "client_pm,end_user" });
+    expect(parsed.source).toEqual(["client_pm", "end_user"]);
+  });
+
+  it("dropt onbekende source-groepen (CC-003)", () => {
+    const parsed = issueListFilterSchema.parse({ source: "client_pm,jaip,bogus" });
+    expect(parsed.source).toEqual(["client_pm"]);
+  });
+
   it("validates each enum independently", () => {
     const parsed = issueListFilterSchema.parse({
       status: "triage",

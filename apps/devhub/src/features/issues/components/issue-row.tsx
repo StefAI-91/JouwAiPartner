@@ -10,6 +10,7 @@ import { PriorityBadge } from "@/components/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
+import { SourceBadge } from "@/components/shared/source-badge";
 import { Avatar } from "@/components/shared/avatar";
 import { timeAgo } from "@/components/shared/time-ago";
 import { TopicPill } from "@/features/topics/components/topic-pill";
@@ -172,6 +173,7 @@ export function IssueRowItem({
             <TypeBadge type={issue.type} />
             <StatusBadge status={issue.status} />
             <ComponentBadge component={issue.component} />
+            <SourceBadge source={issue.source} />
             <TopicPill
               issueId={issue.id}
               projectId={issue.project_id}
