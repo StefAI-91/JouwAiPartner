@@ -49,6 +49,7 @@ AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). 
 - **Hosting:** Vercel
 - **MCP Server:** Separate TypeScript/Node.js process
 - **Feedback:** Userback widget (`@userback/widget`)
+- **Transactional mail:** Resend (`@repo/notifications` wrapper; dev-mode-skip tenzij `NODE_ENV=production` of `RESEND_FORCE_SEND=1`)
 
 ## Commands
 

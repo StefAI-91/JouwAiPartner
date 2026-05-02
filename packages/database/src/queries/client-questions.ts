@@ -103,3 +103,35 @@ export async function countOpenQuestionsByProject(
   }
   return counts;
 }
+
+export interface ClientQuestionLookupRow {
+  id: string;
+  project_id: string;
+  organization_id: string;
+  parent_id: string | null;
+  body: string;
+}
+
+/**
+ * Lookup-query voor één client-vraag — bedoeld voor server-actions die ná
+ * een mutation wat extra context willen (bv. notify-orchestrator die
+ * project_id + body nodig heeft). Bewust kleine select: niet de volledige
+ * rij + replies-embed, dat doet `listOpenQuestionsForProject`.
+ */
+export async function getQuestionById(
+  id: string,
+  client?: SupabaseClient,
+): Promise<ClientQuestionLookupRow | null> {
+  if (!id) return null;
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("client_questions")
+    .select("id, project_id, organization_id, parent_id, body")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    console.error("[getQuestionById] failed", error.message);
+    return null;
+  }
+  return (data as ClientQuestionLookupRow) ?? null;
+}

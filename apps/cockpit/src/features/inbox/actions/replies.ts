@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@repo/database/supabase/server";
 import { getCurrentProfile } from "@repo/auth/access";
 import { replyToQuestion } from "@repo/database/mutations/client-questions";
+import { getQuestionById } from "@repo/database/queries/client-questions";
 import { replyToQuestionSchema } from "@repo/database/validations/client-questions";
 import { markInboxItemRead } from "@repo/database/mutations/inbox-reads";
+import { notifyTeamReply } from "@repo/notifications";
 
 /**
  * CC-001 — Cockpit reply als team. Mirror van portal `replyAsClientAction`,
@@ -36,6 +38,15 @@ export async function replyAsTeamAction(input: unknown): Promise<ReplyAsTeamResu
   const parentId = parsed.data.parent_id;
   if (parentId) {
     await markInboxItemRead(profile.id, "question", parentId, supabase);
+
+    // CC-002 — klant-mail bij team-reply. Parent-lookup is best-effort: als
+    // het faalt skippen we silent (mail is niet de SoT).
+    const parent = await getQuestionById(parentId, supabase);
+    if (parent) {
+      await notifyTeamReply(parent, parsed.data.body, supabase).catch((err) =>
+        console.error("[replyAsTeamAction] notify failed", err),
+      );
+    }
   }
 
   revalidatePath("/inbox");

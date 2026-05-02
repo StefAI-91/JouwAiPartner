@@ -37,7 +37,7 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | TH-7     | Cleanup blockers (CI lint, N+1, double-fetch, userId guard)  | Themes QA     | `sprints/backlog/` | Backlog       |
 | TH-8     | Cleanup majors (DRY, SRP, query-efficiency, file-splits)     | Themes QA     | `sprints/backlog/` | Backlog       |
 | TH-9     | Cleanup minors (conventies, tokens, hygiëne)                 | Themes QA     | `sprints/backlog/` | Backlog       |
-| CC-002   | Resend notificaties (klantgericht)                           | Customer Comm | `sprints/backlog/` | Backlog       |
+| CC-002   | Resend notificaties (klantgericht)                           | Customer Comm | `sprints/done/`    | Done          |
 | CC-003   | DevHub source-badge (klant vs intern)                        | Customer Comm | `sprints/backlog/` | Backlog       |
 | CC-004   | Outbound met AI-draft + review-gate                          | Customer Comm | `sprints/backlog/` | Backlog       |
 | CC-005   | Per-project inbox-tab + onboarding-card                      | Customer Comm | `sprints/backlog/` | Backlog       |

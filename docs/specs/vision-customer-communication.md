@@ -177,7 +177,7 @@ These are the strategic decisions made during the 2026-05-01 design session. Eac
 
 | #   | Decision                                                                              | Why                                                                                | Status                           |
 | --- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------- |
-| 1   | Resend for client-facing email notifications, immediate per-event                     | Without notifications, portal stays unvisited; email is unfair fallback            | Decided                          |
+| 1   | Resend for client-facing email notifications, immediate per-event                     | Without notifications, portal stays unvisited; email is unfair fallback            | Implemented in CC-002            |
 | 2   | Multi-stakeholder per client: deferred to v2                                          | Single-user-per-project works for current client volume; revisit when it breaks    | Deferred                         |
 | 3   | Internal team-thread on a client item: not now                                        | With two founders, Slack/in-person suffices; revisit at >3 reviewers               | Deferred                         |
 | 4   | Audit-layer (formal agreement trail): deferred, formal scope still via mail/contract  | Legal-grade audit needs design effort not justified at current scale               | Deferred                         |

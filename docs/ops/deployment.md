@@ -68,6 +68,32 @@ Voor klant-apps (niet-JAIP-eigen): zie
 [`widget-installation-clients.md`](widget-installation-clients.md) voor de
 korte versie die je naar de klant-developer kan sturen.
 
+## Resend (notificaties, CC-002)
+
+Transactional e-mail naar klanten zodra een feedback-issue van status verandert
+(endorsed/declined/deferred/converted/in_progress/done) of het team antwoordt
+op een vraag in de portal-inbox. Wordt aangeroepen vanaf de server-action laag
+in cockpit + devhub via `@repo/notifications`.
+
+- `RESEND_API_KEY` — bestaande Resend-account (productie + preview, server-only).
+  Verifieer in Vercel — staat al gezet, niet aanpassen.
+- `RESEND_FROM_EMAIL` — verified sender op het Resend-domein (bv.
+  `notifications@jouwaipartner.nl`). **Zet handmatig in Vercel productie + preview
+  vóór deploy van CC-002.** Zonder var faalt `sendMail` met `no_from_email` (mail
+  wordt overgeslagen, mutation blijft slagen).
+- `NEXT_PUBLIC_PORTAL_URL` — al gezet (zie boven); templates lezen die voor
+  deeplinks naar `/projects/{id}/feedback/{issueId}` en `/projects/{id}/inbox`.
+- `RESEND_FORCE_SEND` (optioneel) — leeg in productie en preview. Lokaal of op
+  staging-test optioneel `"1"` om de dev-mode-skip te overrulen — anders worden
+  mails alleen gelogd via `console.info`, niet daadwerkelijk verstuurd.
+
+**Dev-mode-skip:** in alles behalve `NODE_ENV=production` slaat de helper de
+Resend-API-call over en logt alleen. Voorkomt per-ongeluk-spam tijdens lokale
+dev. Zet `RESEND_FORCE_SEND=1` voor opt-in vanaf staging.
+
+**Best-effort:** Resend-failures laten de mutation NIET falen — de notify-call
+zit in `try/catch` op de action-laag. Mail is best-effort, mutation is SoT.
+
 ## Supabase dashboard (handmatig, DH-018)
 
 - **Redirect URLs whitelist** (Authentication → URL Configuration) moet beide productie-URL's `${cockpit}/auth/callback` en `${devhub}/auth/callback` bevatten, plus de preview/localhost varianten.

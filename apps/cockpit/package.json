@@ -17,6 +17,7 @@
     "@repo/ui": "*",
     "@repo/database": "*",
     "@repo/mcp": "*",
+    "@repo/notifications": "*",
     "@userback/widget": "^0.3.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

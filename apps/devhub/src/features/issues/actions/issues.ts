@@ -24,6 +24,7 @@ import {
   notifySlackIfUrgent,
   type SlackIssuePayload,
 } from "@repo/database/integrations/slack";
+import { notifyFeedbackStatusChanged } from "@repo/notifications";
 
 // ── Actions ──
 
@@ -191,8 +192,21 @@ export async function updateIssueAction(
 
   await Promise.all(activityPromises);
 
-  // Slack notifications for urgent changes (fire-and-forget)
   const updated = result.data;
+
+  // CC-002 — klant-mail bij statuswijziging naar in_progress of done.
+  // Andere status-changes triggeren NIET (zie pickTemplateForStatus).
+  if (
+    data.status &&
+    current.status !== updated.status &&
+    (updated.status === "in_progress" || updated.status === "done")
+  ) {
+    await notifyFeedbackStatusChanged(updated, updated.status as IssueStatus).catch((err) =>
+      console.error("[updateIssueAction] notify failed", err),
+    );
+  }
+
+  // Slack notifications for urgent changes (fire-and-forget)
   const severityEscalated =
     (data.severity === "critical" || data.severity === "high") &&
     current.severity !== data.severity &&
