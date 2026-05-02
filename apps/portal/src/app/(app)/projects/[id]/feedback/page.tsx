@@ -24,13 +24,18 @@ const TYPE_LABELS: Record<string, string> = {
   question: "Vraag",
 };
 
+// Bronnen die de klant op deze pagina ziet. Nu alleen wat hij zelf via het
+// portal-formulier indiende; later uitbreidbaar (bv. "jaip_widget" voor
+// eindgebruiker-feedback) zonder query-aanpassing.
+const FEEDBACK_PAGE_SOURCES = ["portal"] as const;
+
 export default async function ProjectFeedbackPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const supabase = await createPageClient();
   const [project, submissions] = await Promise.all([
     getPortalProjectDashboard(id, supabase),
-    listClientIssuesForOrg(id, supabase),
+    listClientIssuesForOrg(id, supabase, FEEDBACK_PAGE_SOURCES),
   ]);
 
   if (!project) notFound();

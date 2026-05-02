@@ -24,6 +24,10 @@ export interface ClientIssueRow {
  * ziet binnen z'n eigen organisatie. Caller geeft een server-side client
  * mee zodat RLS effectief is.
  *
+ * Optionele `sources` filtert op `issues.source` — laat de feedback-pagina
+ * alleen tonen wat de klant zelf indiende (`["portal"]`) en breidt later
+ * uit naar bv. `["portal", "jaip_widget"]` zonder query-wijziging.
+ *
  * Twee calls, geen PostgREST-embed: eerst issues, dan topic-membership via
  * `getTopicMembershipForIssues`. Volgt het pattern uit TH-914 (geen embed-
  * aliassen die productie-only kunnen breken).
@@ -31,14 +35,21 @@ export interface ClientIssueRow {
 export async function listClientIssuesForOrg(
   projectId: string,
   client?: SupabaseClient,
+  sources?: readonly string[],
 ): Promise<ClientIssueRow[]> {
   const db = client ?? getAdminClient();
-  const { data, error } = await db
+  let query = db
     .from("issues")
     .select("id, title, client_title, type, issue_number, created_at")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false })
     .limit(50);
+
+  if (sources && sources.length > 0) {
+    query = query.in("source", [...sources]);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw new Error(`listClientIssuesForOrg failed: ${error.message}`);
   if (!data || data.length === 0) return [];
