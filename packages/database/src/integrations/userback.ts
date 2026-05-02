@@ -1,4 +1,5 @@
 import type { InsertIssueData } from "../mutations/issues";
+import { defaultStatusForSource } from "../constants/issues";
 
 // ── Types ──
 
@@ -199,9 +200,15 @@ const PRIORITY_MAP: Record<string, string> = {
 
 // Userback stores status as a Workflow row; default columns are
 // "Open", "In Progress", "Closed". Custom workflow columns fall through
-// to the "triage" default downstream.
+// to `defaultStatusForSource("userback")` downstream — die plaatst
+// klant-bron items op `needs_pm_review` (CC-001 PM-review-gate).
+//
+// "Open" maps naar `needs_pm_review` zodat eindgebruiker-feedback óók
+// door de PM-gate gaat. Pas wanneer een team-member de Userback-status
+// heeft veranderd (In Progress / Closed) gaan we ervan uit dat de gate
+// impliciet al doorlopen is.
 const STATUS_MAP: Record<string, string> = {
-  Open: "triage",
+  Open: "needs_pm_review",
   "In Progress": "in_progress",
   Closed: "done",
   Resolved: "done",
@@ -279,7 +286,7 @@ export function mapUserbackToIssue(item: UserbackFeedbackItem, projectId: string
     description,
     type: FEEDBACK_TYPE_MAP[item.feedbackType] ?? "bug",
     priority: PRIORITY_MAP[item.priority] ?? "medium",
-    status: (workflowName && STATUS_MAP[workflowName]) ?? "triage",
+    status: (workflowName && STATUS_MAP[workflowName]) ?? defaultStatusForSource("userback"),
     reporter_email: item.email ? item.email : null,
     reporter_name: item.name ? item.name : null,
     source: "userback",

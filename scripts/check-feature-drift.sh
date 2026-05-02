@@ -25,6 +25,7 @@ FEATURES=(
   "cockpit:projects"
   "cockpit:review"
   "cockpit:directory"
+  "cockpit:inbox"
   "devhub:issues"
 )
 

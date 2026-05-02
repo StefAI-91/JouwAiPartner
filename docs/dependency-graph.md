@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 609 |
-| Exported functions/constants | 921 |
-| Exported types/interfaces | 394 |
-| Cross-package imports | 614 |
+| Files scanned | 616 |
+| Exported functions/constants | 930 |
+| Exported types/interfaces | 408 |
+| Cross-package imports | 611 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -183,6 +183,19 @@
 
 **Exports:**
 - `getIgnoredEntityNames()`
+
+### `queries/inbox.ts`
+
+**Exports:**
+- `listInboxItemsForTeam()`
+- `countInboxItemsForTeam()`
+- `getConversationThread()`
+- `getInboxItemForDetail()`
+
+**Types:** `InboxItemKind`, `InboxFeedbackItem`, `InboxQuestionReply`, `InboxQuestionThread`, `InboxQuestionItem`, `InboxItem`, `InboxCounts`, `ConversationMessage`, `FeedbackConversation`, `QuestionConversation`, `ConversationThread`
+
+**Depends on:**
+- `@repo/auth/access` → listAccessibleProjectIds
 
 ### `queries/issues/activity.ts`
 
@@ -765,6 +778,13 @@
 **Exports:**
 - `addIgnoredEntity()`
 
+### `mutations/inbox-reads.ts`
+
+**Exports:**
+- `markInboxItemRead()`
+
+**Types:** `InboxItemKind`, `InboxReadResult`
+
 ### `mutations/issues/attachments.ts`
 
 **Exports:**
@@ -788,6 +808,16 @@
 - `insertActivity()`
 
 **Types:** `InsertIssueData`, `UpdateIssueData`
+
+### `mutations/issues/pm-review.ts`
+
+**Exports:**
+- `endorseIssue()`
+- `declineIssue()`
+- `deferIssue()`
+- `convertIssueToQuestion()`
+
+**Types:** `PmReviewMutationResult`
 
 ### `mutations/meetings/core.ts`
 
@@ -3330,6 +3360,17 @@
 **Exports:**
 - `metadata`
 
+### `apps/cockpit/src/app/(dashboard)/inbox/[kind]/[id]/page.tsx`
+
+**Exports:**
+- `dynamic`
+
+### `apps/cockpit/src/app/(dashboard)/inbox/page.tsx`
+
+**Exports:**
+- `dynamic`
+- `metadata`
+
 ### `apps/cockpit/src/app/(dashboard)/intelligence/management/page.tsx`
 
 **Exports:**
@@ -4586,8 +4627,8 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 21 | 5 | - | 41 | - | 67 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 101 | 8 | 8 | 38 | - | 155 |
-| Database Queries | - | - | 3 | - | - | 3 |
+| Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
+| Database Queries | - | - | 4 | - | - | 4 |
 | DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
 | DevHub Components | 7 | 2 | 1 | 16 | - | 26 |
@@ -4705,6 +4746,12 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `addIgnoredEntity()` | `apps/cockpit/src/actions/segments.ts` |
+
+### mutations/inbox-reads.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `markInboxItemRead()` | `packages/database/src/queries/inbox.ts` |
 
 ### mutations/issues/attachments.ts
 
@@ -4923,6 +4970,12 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `getIgnoredEntityNames()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
+
+### queries/inbox.ts
+
+| Query | Used in |
+|-------|---------|
+| `countInboxItemsForTeam()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 
 ### queries/issues/activity.ts
 

@@ -1,5 +1,6 @@
 import {
   Home,
+  Inbox,
   BrainCircuit,
   ClipboardCheck,
   FolderKanban,
@@ -15,12 +16,13 @@ export interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  badgeKey?: "reviewCount";
+  badgeKey?: "reviewCount" | "inboxCount";
 }
 
-/** Primary nav — shown in all nav components (6 items) */
+/** Primary nav — shown in all nav components (7 items) */
 export const primaryNavItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
+  { href: "/inbox", label: "Inbox", icon: Inbox, badgeKey: "inboxCount" },
   { href: "/intelligence", label: "Intelligence", icon: BrainCircuit },
   { href: "/review", label: "Review", icon: ClipboardCheck, badgeKey: "reviewCount" },
   { href: "/projects", label: "Projects", icon: FolderKanban },
