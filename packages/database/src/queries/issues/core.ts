@@ -6,6 +6,7 @@ import {
   DEVHUB_SOURCE_GROUPS,
   type DevhubSourceGroupKey,
 } from "../../constants/issues";
+import { getIssueIdsForTopics, getLinkedIssueIdsInProject } from "../topics/linked-issues";
 
 // CC-003 — flatten DEVHUB_SOURCE_GROUPS keys → ruwe `source`-waarden. Elders
 // zou je dat per call doen, maar één afgeleide map houdt query-laag dom.
@@ -17,7 +18,6 @@ const DEVHUB_SOURCE_GROUP_TO_SOURCES: Record<DevhubSourceGroupKey, readonly stri
     },
     {} as Record<DevhubSourceGroupKey, readonly string[]>,
   );
-import { getIssueIdsForTopics, getLinkedIssueIdsInProject } from "../topics/linked-issues";
 
 // UUID-regex hergebruikt voor het quoten van pre-fetched id-lijsten in
 // `.not('id','in', ...)` — al zijn ids uit de DB, we filteren defensief.
