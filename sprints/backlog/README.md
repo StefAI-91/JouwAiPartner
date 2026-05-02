@@ -40,7 +40,7 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | CC-002   | Resend notificaties (klantgericht)                           | Customer Comm | `sprints/done/`    | Done          |
 | CC-003   | DevHub source-badge (klant vs intern)                        | Customer Comm | `sprints/done/`    | Done          |
 | CC-004   | Outbound met AI-draft + review-gate                          | Customer Comm | `sprints/backlog/` | Backlog       |
-| CC-005   | Per-project inbox-tab + onboarding-card                      | Customer Comm | `sprints/backlog/` | Backlog       |
+| CC-005   | Per-project inbox-tab + onboarding-card                      | Customer Comm | `sprints/done/`    | Done          |
 | WG-001   | Widget ingest foundation (DB whitelist + DevHub endpoint)    | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-002   | Widget app scaffold + loader.js (apps/widget/, Vercel)       | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-003   | Widget UI + cockpit rollout (modal + script-tag)             | Widget V0     | `sprints/backlog/` | Backlog       |

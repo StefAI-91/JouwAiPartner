@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { createPageClient } from "@repo/auth/helpers";
+import { getCurrentProfile } from "@repo/auth/access";
 import { getPortalProjectDashboard } from "@repo/database/queries/portal";
 import { listOpenQuestionsForProject } from "@repo/database/queries/client-questions";
+import { getProfilePreferences } from "@repo/database/queries/profiles";
 import { QuestionList } from "@/components/inbox/question-list";
+import { OnboardingCard } from "@/components/inbox/onboarding-card";
 
 export default async function ProjectInboxPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,6 +23,10 @@ export default async function ProjectInboxPage({ params }: { params: Promise<{ i
       </div>
     );
   }
+
+  const profile = await getCurrentProfile(supabase);
+  const preferences = profile ? await getProfilePreferences(profile.id, supabase) : {};
+  const showOnboarding = !preferences.dismissed_onboarding?.portal_inbox;
 
   const questions = await listOpenQuestionsForProject(
     project.id,
@@ -42,6 +49,7 @@ export default async function ProjectInboxPage({ params }: { params: Promise<{ i
         </p>
       </header>
 
+      {showOnboarding && <OnboardingCard />}
       <QuestionList projectId={project.id} questions={questions} />
     </div>
   );

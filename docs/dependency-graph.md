@@ -7,8 +7,8 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 617 |
-| Exported functions/constants | 932 |
+| Files scanned | 622 |
+| Exported functions/constants | 936 |
 | Exported types/interfaces | 409 |
 | Cross-package imports | 613 |
 | Critical integration points (3+ packages) | 14 |
@@ -419,6 +419,11 @@
 - `getClientMeetingSegment()`
 
 **Types:** `PortalMeetingSegment`
+
+### `queries/profiles.ts`
+
+**Exports:**
+- `getProfilePreferences()`
 
 ### `queries/projects/access.ts`
 
@@ -896,6 +901,7 @@
 
 **Exports:**
 - `upsertProfile()`
+- `dismissOnboarding()`
 
 ### `mutations/projects/core.ts`
 
@@ -3487,6 +3493,12 @@
 - `@repo/database/queries/people` → listPeople
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/ui/badge` → Badge
+
+### `apps/cockpit/src/app/(dashboard)/projects/[id]/inbox/page.tsx`
+
+**Exports:**
+- `dynamic`
+- `metadata`
 
 ### `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`
 

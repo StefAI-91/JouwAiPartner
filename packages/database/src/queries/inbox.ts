@@ -110,13 +110,26 @@ function fetchReadMap(rows: ReadRow[]): Map<string, string> {
  *
  * `isUnread` is per-user: true als geen read-row bestaat OF als read_at
  * vóór de activityAt ligt (nieuwe activiteit sinds laatste lees).
+ *
+ * Optionele `projectId` (CC-005) scopet de query naar één project — gebruikt
+ * door de per-project inbox-tab in cockpit. Als de user geen toegang heeft
+ * tot dat project (niet in `listAccessibleProjectIds`), retourneert de helper
+ * `[]` — geen existence-hint.
  */
 export async function listInboxItemsForTeam(
   profileId: string,
+  options: { projectId?: string } = {},
   client?: SupabaseClient,
 ): Promise<InboxItem[]> {
   const db = client ?? getAdminClient();
-  const projectIds = await listAccessibleProjectIds(profileId, db);
+  const accessibleIds = await listAccessibleProjectIds(profileId, db);
+  if (accessibleIds.length === 0) return [];
+
+  const projectIds = options.projectId
+    ? accessibleIds.includes(options.projectId)
+      ? [options.projectId]
+      : []
+    : accessibleIds;
   if (projectIds.length === 0) return [];
 
   const [issuesRes, questionsRes, readsRes] = await Promise.all([
@@ -195,10 +208,19 @@ export async function listInboxItemsForTeam(
  */
 export async function countInboxItemsForTeam(
   profileId: string,
+  options: { projectId?: string } = {},
   client?: SupabaseClient,
 ): Promise<InboxCounts> {
   const db = client ?? getAdminClient();
-  const projectIds = await listAccessibleProjectIds(profileId, db);
+  const accessibleIds = await listAccessibleProjectIds(profileId, db);
+  if (accessibleIds.length === 0) {
+    return { pmReview: 0, openQuestions: 0, deferred: 0, unread: 0 };
+  }
+  const projectIds = options.projectId
+    ? accessibleIds.includes(options.projectId)
+      ? [options.projectId]
+      : []
+    : accessibleIds;
   if (projectIds.length === 0) {
     return { pmReview: 0, openQuestions: 0, deferred: 0, unread: 0 };
   }
@@ -220,7 +242,7 @@ export async function countInboxItemsForTeam(
       .select("id", { count: "exact", head: true })
       .in("project_id", projectIds)
       .eq("status", "deferred"),
-    listInboxItemsForTeam(profileId, db),
+    listInboxItemsForTeam(profileId, options, db),
   ]);
 
   return {
