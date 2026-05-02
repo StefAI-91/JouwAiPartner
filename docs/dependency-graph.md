@@ -8,8 +8,8 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 616 |
-| Exported functions/constants | 930 |
-| Exported types/interfaces | 408 |
+| Exported functions/constants | 931 |
+| Exported types/interfaces | 409 |
 | Cross-package imports | 611 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -79,8 +79,9 @@
 **Exports:**
 - `listOpenQuestionsForProject()`
 - `countOpenQuestionsByProject()`
+- `getQuestionById()`
 
-**Types:** `ClientQuestionReplyRow`, `ClientQuestionListRow`
+**Types:** `ClientQuestionReplyRow`, `ClientQuestionListRow`, `ClientQuestionLookupRow`
 
 ### `queries/content.ts`
 

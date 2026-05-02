@@ -9,7 +9,10 @@ import {
   deferIssue,
   convertIssueToQuestion,
 } from "@repo/database/mutations/issues";
+import type { PmReviewMutationResult } from "@repo/database/mutations/issues/pm-review";
 import { markInboxItemRead } from "@repo/database/mutations/inbox-reads";
+import { notifyFeedbackStatusChanged } from "@repo/notifications";
+import type { IssueStatus } from "@repo/database/constants/issues";
 import { pmReviewActionSchema, type PmReviewAction } from "../validations/pm-review";
 
 /**
@@ -38,17 +41,21 @@ export async function pmReviewAction(input: PmReviewAction): Promise<PmReviewAct
 
   const data = parsed.data;
   const issueId = data.issueId;
-  let mutationResult: { success: true } | { error: string };
+  let mutationResult: PmReviewMutationResult;
+  let nextStatus: IssueStatus;
 
   switch (data.action) {
     case "endorse":
       mutationResult = await endorseIssue(issueId, profile.id, supabase);
+      nextStatus = "triage";
       break;
     case "decline":
       mutationResult = await declineIssue(issueId, profile.id, data.declineReason, supabase);
+      nextStatus = "declined";
       break;
     case "defer":
       mutationResult = await deferIssue(issueId, profile.id, supabase);
+      nextStatus = "deferred";
       break;
     case "convert":
       mutationResult = await convertIssueToQuestion(
@@ -57,6 +64,7 @@ export async function pmReviewAction(input: PmReviewAction): Promise<PmReviewAct
         data.questionBody,
         supabase,
       );
+      nextStatus = "converted_to_qa";
       break;
   }
 
@@ -64,6 +72,12 @@ export async function pmReviewAction(input: PmReviewAction): Promise<PmReviewAct
 
   // Implicit read: PM die een actie neemt heeft het item dus gezien.
   await markInboxItemRead(profile.id, "issue", issueId, supabase);
+
+  // CC-002 — best-effort klant-mail. Eigen try/catch in notify*; extra
+  // .catch() hier zodat een gemiste reject alsnog niet de action laat falen.
+  await notifyFeedbackStatusChanged(mutationResult.data, nextStatus, supabase).catch((err) =>
+    console.error("[pmReviewAction] notify failed", err),
+  );
 
   revalidatePath("/inbox");
   revalidatePath(`/inbox/feedback/${issueId}`);
