@@ -20,8 +20,12 @@ Dit is sprint 2 van 5 (CC-001 t/m CC-005) afgeleid uit `docs/specs/vision-custom
 - **PR-022** — `client_questions` tabel + `replyToQuestion` mutation in `packages/database/src/mutations/client-questions.ts:104-172`. CC-002 wired notificatie in de cockpit-action die `role: "team"` aanroept.
 - Bestaande issue-update via `updateIssue` (`packages/database/src/mutations/issues/core.ts:92`) — fire-on-status-change-naar-`in_progress`/`done` op de DevHub-action-laag.
 - Bestaande recipient-lookup: `listPortalProjectAssignees` in `packages/database/src/queries/portal/access.ts:78` (filtert op `role: "client"`-leden van het project en levert e-mailadressen via `profiles`-join op regel 88).
-- Resend-account + verified domain `notifications@jouwaipartner.nl` (eenmalig op te zetten in Resend-dashboard, buiten code-scope).
-- ENV-vars: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `PORTAL_BASE_URL` (laatste bestaat mogelijk al — verifieer in `apps/portal/src/lib/`).
+- **Resend-account + verified domain bestaan al** in productie, met `RESEND_API_KEY` reeds gezet in Vercel env. Geen account-onboarding of DNS-werk nodig in deze sprint.
+- ENV-vars die de spec gebruikt:
+  - `RESEND_API_KEY` — bestaat al in Vercel (productie + preview, server-only).
+  - `RESEND_FROM_EMAIL` — verifieer in Vercel; zet als ontbreekt (bv. `notifications@jouwaipartner.nl`).
+  - `NEXT_PUBLIC_PORTAL_URL` — bestaat al, gedocumenteerd in `docs/ops/deployment.md`. Gebruikt voor deeplinks in mail-templates. **Spec gebruikte voorheen `PORTAL_BASE_URL` — dat hernoemen naar de bestaande variable, niet een nieuwe introduceren.**
+  - `RESEND_FORCE_SEND` (nieuw, optioneel) — `"1"` om dev-mode-skip te overrulen voor staging-tests.
 
 ## Open vragen vóór start
 
@@ -81,21 +85,25 @@ Voeg toe aan workspace `pnpm-workspace.yaml` of root `package.json#workspaces` (
 
 ### 2. ENV-vars + deployment-doc
 
-Voeg toe in `.env.example` (en `apps/portal/.env.example` als die apart bestaat):
+Het project heeft géén `.env.example`-files; ENV-vars worden gedocumenteerd in `docs/ops/deployment.md` als bullet-list (zie bestaande structuur regel 6-13). Volg dat patroon.
 
-```
-RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=notifications@jouwaipartner.nl
-PORTAL_BASE_URL=https://portal.jouwaipartner.nl
-RESEND_FORCE_SEND=                   # leeg = skip in dev; "1" = ook in dev mailen
-```
+**Wat al bestaat in Vercel** (verifieer vóór sprint-start in Vercel-dashboard, niet aanpassen):
 
-Update `docs/ops/deployment.md` met:
+- `RESEND_API_KEY` — productie + preview, server-only.
+- `NEXT_PUBLIC_PORTAL_URL` — bestaat al; mail-templates lezen die voor deeplinks.
 
-- Resend-account setup (eenmalig)
-- Domain-verification stappen
-- Vercel env-var configuratie per environment
-- Hoe je dev-mode mails in console ziet vs. echt verstuurt
+**Wat erbij komt in Vercel** (zet handmatig vóór deploy van deze sprint):
+
+- `RESEND_FROM_EMAIL` — `notifications@jouwaipartner.nl` (of wat het verified domain dictateert). Server-only.
+- `RESEND_FORCE_SEND` — leeg in productie en preview. Lokaal of op staging-test optioneel `"1"` om de dev-mode-skip te overrulen.
+
+**Update `docs/ops/deployment.md`** — voeg een nieuwe sectie "Resend (notificaties)" toe met:
+
+- `RESEND_API_KEY` — bestaande Resend-account; mailen vanuit `notifications@jouwaipartner.nl` (verified domain).
+- `RESEND_FROM_EMAIL` — moet matchen met een verified sender op het Resend-domein.
+- `RESEND_FORCE_SEND` — uitleg dev-mode-skip + opt-in.
+
+Geen account-onboarding, geen DNS-stappen — die zijn al gedaan.
 
 ### 3. Resend-client + send-helper
 
@@ -193,15 +201,15 @@ export function renderLayout(opts: {
 
 Per template (zeven stuks):
 
-| Template             | Trigger                         | Subject (NL)                              | CTA                                                                                 |
-| -------------------- | ------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------- |
-| `feedback-endorsed`  | CC-001 `endorseIssue`           | "Je verzoek staat in de planning"         | "Bekijk in portal" → `${PORTAL_BASE_URL}/projects/${projectId}/feedback/${issueId}` |
-| `feedback-declined`  | CC-001 `declineIssue`           | "Update over je verzoek"                  | "Lees uitleg" → portal-deeplink                                                     |
-| `feedback-deferred`  | CC-001 `deferIssue`             | "We parkeren dit voor later"              | "Bekijk status"                                                                     |
-| `feedback-converted` | CC-001 `convertIssueToQuestion` | "We hebben hier een vraag over"           | "Beantwoord vraag" → inbox                                                          |
-| `feedback-progress`  | `updateIssue` → `in_progress`   | "We zijn ermee aan de slag"               | "Volg voortgang"                                                                    |
-| `feedback-done`      | `updateIssue` → `done`          | "Klaar — bekijk wat we hebben opgeleverd" | "Bekijk resultaat"                                                                  |
-| `new-team-reply`     | `replyToQuestion(role:"team")`  | "Je hebt een nieuw antwoord"              | "Open inbox" → `/projects/${projectId}/inbox`                                       |
+| Template             | Trigger                         | Subject (NL)                              | CTA                                                                                        |
+| -------------------- | ------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `feedback-endorsed`  | CC-001 `endorseIssue`           | "Je verzoek staat in de planning"         | "Bekijk in portal" → `${NEXT_PUBLIC_PORTAL_URL}/projects/${projectId}/feedback/${issueId}` |
+| `feedback-declined`  | CC-001 `declineIssue`           | "Update over je verzoek"                  | "Lees uitleg" → portal-deeplink                                                            |
+| `feedback-deferred`  | CC-001 `deferIssue`             | "We parkeren dit voor later"              | "Bekijk status"                                                                            |
+| `feedback-converted` | CC-001 `convertIssueToQuestion` | "We hebben hier een vraag over"           | "Beantwoord vraag" → inbox                                                                 |
+| `feedback-progress`  | `updateIssue` → `in_progress`   | "We zijn ermee aan de slag"               | "Volg voortgang"                                                                           |
+| `feedback-done`      | `updateIssue` → `done`          | "Klaar — bekijk wat we hebben opgeleverd" | "Bekijk resultaat"                                                                         |
+| `new-team-reply`     | `replyToQuestion(role:"team")`  | "Je hebt een nieuw antwoord"              | "Open inbox" → `/projects/${projectId}/inbox`                                              |
 
 Voor `feedback-declined` neemt de body de `decline_reason` rechtstreeks over (afkomstig uit `issues.decline_reason`-kolom uit CC-001) — geen herschrijving, geen AI-tussenstap. Vision §5 "Decline UX" wil dat klant exact ziet wat PM heeft genoteerd.
 
@@ -224,7 +232,7 @@ export async function notifyFeedbackStatusChanged(
   if (recipients.length === 0) return; // skip eindgebruiker-only items
   const template = pickTemplateForStatus(newStatus);
   if (!template) return; // status-wijziging zonder mail-trigger
-  const props = { issue, portalUrl: process.env.PORTAL_BASE_URL ?? "" };
+  const props = { issue, portalUrl: process.env.NEXT_PUBLIC_PORTAL_URL ?? "" };
   await Promise.all(
     recipients.map((r) =>
       sendMail({ to: r.email, ...template(props), tag: `feedback-${newStatus}` }),
@@ -258,7 +266,7 @@ export async function notifyTeamReply(
   const props = {
     question: parentQuestion,
     replyPreview: replyBody.slice(0, 200),
-    portalUrl: process.env.PORTAL_BASE_URL ?? "",
+    portalUrl: process.env.NEXT_PUBLIC_PORTAL_URL ?? "",
   };
   await Promise.all(
     recipients.map((r) =>
@@ -362,14 +370,15 @@ Mock-grens-beleid (CLAUDE.md): mock alleen `resend` (externe netwerk), nooit eig
 ## Acceptatiecriteria
 
 - [ ] `packages/notifications/` bestaat met Resend-client, sendMail-helper, 7 templates, 2 notify-orchestrators.
-- [ ] `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `PORTAL_BASE_URL`, `RESEND_FORCE_SEND` toegevoegd aan `.env.example` + `docs/ops/deployment.md`.
+- [ ] `RESEND_FROM_EMAIL` en `RESEND_FORCE_SEND` toegevoegd aan Vercel env (productie + preview). `RESEND_API_KEY` en `NEXT_PUBLIC_PORTAL_URL` waren al gezet — geverifieerd in dashboard.
+- [ ] `docs/ops/deployment.md` heeft nieuwe sectie "Resend (notificaties)" met de drie variabelen + dev-mode-skip-uitleg.
 - [ ] In `NODE_ENV !== "production"` zonder `RESEND_FORCE_SEND=1`: geen Resend-API-call, wel `console.info` log.
 - [ ] In productie: 4 PM-acties uit CC-001 sturen mail met juist template + tag.
 - [ ] `updateIssue` detecteert status-transitie naar `in_progress` en `done` en triggert respectieve mail. Andere status-changes triggeren NIET.
 - [ ] `replyToQuestion` met `role: "team"` triggert `new-team-reply` mail; `role: "client"` triggert geen mail.
 - [ ] Eindgebruiker-widget items (geen `profile.email` linkage) → geen mail, geen error.
 - [ ] Decline-mail bevat de exacte `decline_reason`-tekst die PM heeft ingevoerd.
-- [ ] Alle templates bevatten een werkende deep-link `${PORTAL_BASE_URL}/projects/${projectId}/...`.
+- [ ] Alle templates bevatten een werkende deep-link `${NEXT_PUBLIC_PORTAL_URL}/projects/${projectId}/...`.
 - [ ] Resend-error in productie laat de mutation NIET falen (try/catch + log).
 - [ ] Geen circulaire dependency tussen `@repo/database` en `@repo/notifications`. `@repo/database`-mutation-bestanden importeren GEEN `@repo/notifications` (notify-wiring leeft op action-laag in `apps/*`).
 - [ ] `npm run typecheck`, `npm run lint`, `npm test` allemaal groen.
