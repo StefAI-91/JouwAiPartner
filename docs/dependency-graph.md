@@ -7,9 +7,9 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 605 |
-| Exported functions/constants | 915 |
-| Exported types/interfaces | 393 |
+| Files scanned | 609 |
+| Exported functions/constants | 920 |
+| Exported types/interfaces | 394 |
 | Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 14 |
 
@@ -3850,10 +3850,25 @@
 - (type) `@repo/database/queries/tasks` → TaskRow
 - (type) `@repo/database/queries/people` → PersonForAssignment
 
+### `apps/cockpit/src/components/inbox-preview/cockpit-inbox-linear.tsx`
+
+**Exports:**
+- `CockpitInboxLinear()`
+
 ### `apps/cockpit/src/components/inbox-preview/cockpit-inbox-mock.tsx`
 
 **Exports:**
 - `CockpitInboxMock()`
+
+### `apps/cockpit/src/components/inbox-preview/conversation-cockpit.tsx`
+
+**Exports:**
+- `ConversationCockpit()`
+
+### `apps/cockpit/src/components/inbox-preview/conversation-portal.tsx`
+
+**Exports:**
+- `ConversationPortal()`
 
 ### `apps/cockpit/src/components/inbox-preview/device-frame.tsx`
 
@@ -3865,9 +3880,15 @@
 **Exports:**
 - `MOCK_PROJECTS`
 - `COCKPIT_SECTIONS`
+- `CONVERSATION_FIXTURE`
 - `PORTAL_ITEMS`
 
-**Types:** `MockSource`, `MockInboxStatus`, `MockPortalStatus`, `SourceBadge`, `MockProject`, `MockSender`, `CockpitItem`, `PortalItem`
+**Types:** `MockSource`, `MockInboxStatus`, `MockPortalStatus`, `SourceBadge`, `MockProject`, `MockSender`, `CockpitItem`, `PortalItem`, `ConversationMessage`
+
+### `apps/cockpit/src/components/inbox-preview/portal-inbox-mail.tsx`
+
+**Exports:**
+- `PortalInboxMail()`
 
 ### `apps/cockpit/src/components/inbox-preview/portal-inbox-mock.tsx`
 
