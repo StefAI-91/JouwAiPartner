@@ -15,6 +15,14 @@ Server actions voor CRUD, AI-classificatie en comments.
 | `comments.ts`    | `createCommentAction`, `updateCommentAction`, `deleteCommentAction`                   | `comment-form`                                                                                     |
 | `attachments.ts` | `createIssueAttachmentUploadUrlAction`, `recordIssueAttachmentAction`                 | `issue-form` (signed-upload-flow naar Supabase Storage)                                            |
 
+### `validations/`
+
+Re-export van `@repo/database/validations/issues` plus DevHub-only action-schemas (classify, attachment-upload). Patroon volgt `features/topics/validations/`.
+
+| File       | Exports                                                                                                                                                                                                                                      |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `issue.ts` | Re-export: `createIssueSchema`, `updateIssueSchema`, `deleteIssueSchema`, `createCommentSchema`, `updateCommentSchema`, `deleteCommentSchema`. DevHub-eigen: `projectIdSchema`, `classifySchema`, `bulkClassifySchema`, attachment-schema's. |
+
 ### `components/`
 
 UI voor issue-lijsten, detail, formulieren, sidebar, attachments, en comments. Platte map — de naamgeving (`issue-*`, `comment-*`, `sidebar-*`) doet het werk van sub-foldering. Geen barrel.

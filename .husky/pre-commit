@@ -8,6 +8,10 @@ bash scripts/check-no-direct-supabase.sh
 # Zie CLAUDE.md § Feature-structuur en scripts/check-feature-drift.sh.
 bash scripts/check-feature-drift.sh
 
+# Database exports-drift: elke folder-cluster onder packages/database/src/{queries,mutations}/
+# moet expliciete package.json exports-entries hebben (SRP-013 post-mortem).
+bash scripts/check-database-exports.sh
+
 # Regenerate dependency graph if any source files changed
 STAGED_SRC=$(git diff --cached --name-only -- 'packages/' 'apps/' | grep -E '\.(ts|tsx)$' || true)
 if [ -n "$STAGED_SRC" ]; then

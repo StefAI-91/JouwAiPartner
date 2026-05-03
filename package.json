@@ -21,6 +21,7 @@
     "check:queries": "bash scripts/check-no-direct-supabase.sh",
     "check:features": "bash scripts/check-feature-drift.sh",
     "check:readmes": "bash scripts/check-readme-freshness.sh",
+    "check:exports": "bash scripts/check-database-exports.sh",
     "detect-themes-batch": "tsx scripts/batch-detect-themes.ts",
     "prepare": "husky"
   },

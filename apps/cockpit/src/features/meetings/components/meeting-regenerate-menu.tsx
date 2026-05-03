@@ -20,7 +20,7 @@ import {
 } from "@/features/meetings/actions";
 import { regenerateMeetingThemesAction } from "@/features/themes/actions";
 
-interface RegenerateMenuProps {
+interface MeetingRegenerateMenuProps {
   meetingId: string;
 }
 
@@ -33,7 +33,7 @@ type LoadingState =
   | "themes"
   | null;
 
-export function RegenerateMenu({ meetingId }: RegenerateMenuProps) {
+export function MeetingRegenerateMenu({ meetingId }: MeetingRegenerateMenuProps) {
   const router = useRouter();
   const [loading, setLoading] = useState<LoadingState>(null);
   const [error, setError] = useState<string | null>(null);

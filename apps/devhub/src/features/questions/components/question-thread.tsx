@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { ClientQuestionListRow } from "@repo/database/queries/client-questions";
-import { replyAsTeamAction } from "@/actions/questions";
+import { replyAsTeamAction } from "@/features/questions/actions/questions";
 
 /**
  * PR-023 — inline thread voor één klant-vraag in de DevHub-blok.

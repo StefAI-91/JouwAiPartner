@@ -38,7 +38,7 @@ import { listTaggedMeetingIds } from "@repo/database/queries/meetings/themes";
 
 ## Cross-package
 
-Mutations in `packages/database/src/mutations/meetings.ts`,
-`meeting-participants.ts`, `meeting-themes.ts`,
-`meeting-project-summaries.ts`. AI-pipeline gebruikt deze queries
-in `packages/ai/src/pipeline/*`.
+Mutations leven in `packages/database/src/mutations/meetings/` als cluster
+(SRP-013: `crud.ts`, `classification.ts`, `linking.ts`, `pipeline.ts`,
+`participants.ts`, `project-summaries.ts`, `themes.ts`). AI-pipeline gebruikt
+deze queries in `packages/ai/src/pipeline/*`.

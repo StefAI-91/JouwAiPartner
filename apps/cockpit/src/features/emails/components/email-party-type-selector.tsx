@@ -15,7 +15,7 @@ const PARTY_TYPE_LABELS: Record<string, string> = {
   other: "Overig",
 };
 
-export function PartyTypeSelector({
+export function EmailPartyTypeSelector({
   emailId,
   currentType,
 }: {

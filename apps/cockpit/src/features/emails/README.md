@@ -103,13 +103,13 @@ import { EmailReviewCard } from "@/features/emails/components/email-review-card"
 
 ### Link-selectors (voor metadata-edits)
 
-| Component              | Props (interface)                                    |
-| ---------------------- | ---------------------------------------------------- |
-| `ProjectLinker`        | `{ emailId, linkedProjects, allProjects }`           |
-| `OrganizationSelector` | `{ emailId, currentOrganization, allOrganizations }` |
-| `SenderPersonSelector` | `{ emailId, currentPerson, allPeople }`              |
-| `PartyTypeSelector`    | `{ emailId, currentType }`                           |
-| `EmailTypeSelector`    | `{ emailId, currentType }`                           |
+| Component                | Props (interface)                                    |
+| ------------------------ | ---------------------------------------------------- |
+| `EmailProjectLinker`     | `{ emailId, linkedProjects, allProjects }`           |
+| `OrganizationSelector`   | `{ emailId, currentOrganization, allOrganizations }` |
+| `SenderPersonSelector`   | `{ emailId, currentPerson, allPeople }`              |
+| `EmailPartyTypeSelector` | `{ emailId, currentType }`                           |
+| `EmailTypeSelector`      | `{ emailId, currentType }`                           |
 
 ### Bulk-tools / settings
 

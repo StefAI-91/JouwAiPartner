@@ -3,20 +3,20 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { FollowUpChecklist } from "@/components/shared/follow-up-checklist";
-import { RiskList, type RiskItem } from "@/features/meetings/components/risk-list";
+import { RiskList, type RiskItem } from "@/components/shared/risk-list";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@repo/ui/tabs";
-import { ReviewActionBar } from "./review-action-bar";
+import { ReviewActionBar } from "@/components/shared/review-action-bar";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
-import { EditableTitle } from "@/features/meetings/components/editable-title";
-import { MeetingTypeSelector } from "@/features/meetings/components/meeting-type-selector";
-import { PartyTypeSelector } from "@/features/meetings/components/party-type-selector";
-import { PeopleSelector } from "@/features/meetings/components/people-selector";
-import { ProjectLinker } from "@/features/meetings/components/project-linker";
-import { CopyMeetingButton } from "@/features/meetings/components/copy-meeting-button";
+import { EditableTitle } from "@/components/shared/editable-title";
+import { MeetingTypeSelector } from "@/components/shared/meeting-type-selector";
+import { PartyTypeSelector } from "@/components/shared/party-type-selector";
+import { PeopleSelector } from "@/components/shared/people-selector";
+import { ProjectLinker } from "@/components/shared/project-linker";
+import { CopyMeetingButton } from "@/components/shared/copy-meeting-button";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "../actions/review";
 import { updateMeetingSummaryAction } from "@/features/meetings/actions";
-import { RegenerateMenu } from "@/components/shared/regenerate-menu";
+import { MeetingRegenerateMenu } from "@/features/meetings/components/meeting-regenerate-menu";
 import { AlertTriangle, Mail, Tags } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meetings/project-summaries";
@@ -226,7 +226,7 @@ export function ReviewDetail({
                   </TabsTrigger>
                 )}
               </TabsList>
-              <RegenerateMenu meetingId={meeting.id} />
+              <MeetingRegenerateMenu meetingId={meeting.id} />
             </div>
           </div>
 

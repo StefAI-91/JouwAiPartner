@@ -14,7 +14,7 @@ import {
   createCommentSchema,
   updateCommentSchema,
   deleteCommentSchema,
-} from "@repo/database/validations/issues";
+} from "@/features/issues/validations/issue";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 
