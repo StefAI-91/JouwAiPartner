@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 652 |
-| Exported functions/constants | 963 |
+| Files scanned | 654 |
+| Exported functions/constants | 965 |
 | Exported types/interfaces | 416 |
-| Cross-package imports | 609 |
+| Cross-package imports | 611 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -4100,6 +4100,22 @@
 **Depends on:**
 - `@repo/ui/card` → Card, CardContent
 
+### `apps/cockpit/src/components/journey/living-document-mockup.tsx`
+
+**Exports:**
+- `LivingDocumentMockup()`
+
+**Depends on:**
+- `@repo/ui/card` → Card, CardContent, CardHeader
+
+### `apps/cockpit/src/components/journey/mockup-generator-concept.tsx`
+
+**Exports:**
+- `MockupGeneratorConcept()`
+
+**Depends on:**
+- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
+
 ### `apps/cockpit/src/components/journey/phase-card.tsx`
 
 **Exports:**
@@ -4762,7 +4778,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 22 | 5 | - | 47 | - | 74 |
+| Cockpit Components | 22 | 5 | - | 49 | - | 76 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 39 | - | 158 |
 | Database Queries | - | - | 6 | - | - | 6 |

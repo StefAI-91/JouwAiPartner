@@ -5,6 +5,8 @@ import { PhaseCard } from "@/components/journey/phase-card";
 import { DataFlowDiagram } from "@/components/journey/data-flow-diagram";
 import { WhatsNew } from "@/components/journey/whats-new";
 import { ScopeAuditFlow } from "@/components/journey/scope-audit-flow";
+import { LivingDocumentMockup } from "@/components/journey/living-document-mockup";
+import { MockupGeneratorConcept } from "@/components/journey/mockup-generator-concept";
 
 export const metadata = {
   title: "Klantreis — Cockpit",
@@ -44,6 +46,20 @@ export default function JourneyPage() {
           voor een PRD/voorstel. Hieronder de state machine die dat aanstuurt.
         </p>
         <ScopeAuditFlow />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Het levend project-document</h2>
+        <p className="text-sm text-muted-foreground">
+          Geen statisch artefact aan het eind — één document dat met elke meeting/email rijker
+          wordt. Per sectie een rijpheid-meter, bron-traceerbaarheid en aannames apart gemarkeerd.
+          Onderstaande mockup toont hoe een Discovery-project er bij 62% rijpheid uitziet.
+        </p>
+        <LivingDocumentMockup />
+      </section>
+
+      <section className="space-y-3">
+        <MockupGeneratorConcept />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
