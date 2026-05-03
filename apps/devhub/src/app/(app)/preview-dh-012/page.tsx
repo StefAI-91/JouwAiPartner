@@ -1,12 +1,22 @@
 import Link from "next/link";
-import { Inbox, Target, AlertCircle, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
+import {
+  Inbox,
+  Target,
+  AlertCircle,
+  CheckCircle2,
+  Sparkles,
+  ArrowRight,
+  Flame,
+  Settings2,
+  HelpCircle,
+} from "lucide-react";
 import { cn } from "@repo/ui/utils";
 
 // ──────────────────────────────────────────────────────────────────────────
-// Preview-pagina voor sprint DH-012 (prioritization system + Mijn Week).
-// Pure mock met hardcoded data, geen DB-calls. Doel: laat Stef visueel zien
-// wat we gaan bouwen vóór we de echte implementatie starten. Verwijderen
-// zodra de sprint live is.
+// Preview-pagina voor sprint DH-012 (prioritization system + Deze week op
+// dashboard). Pure mock met hardcoded data, geen DB-calls. Doel: laat Stef
+// visueel zien wat we gaan bouwen vóór we de echte implementatie starten.
+// Verwijderen zodra de sprint live is.
 // URL: /preview-dh-012
 // ──────────────────────────────────────────────────────────────────────────
 
@@ -55,11 +65,10 @@ function PrioBadge({ prio, size = "sm" }: { prio: MockPriority; size?: "sm" | "m
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md font-mono font-semibold",
+        "inline-flex items-center rounded-md border font-mono font-semibold",
         c.bg,
         c.text,
         c.border,
-        "border",
         size === "sm" ? "px-1.5 py-0.5 text-xs" : "px-2 py-1 text-sm",
       )}
     >
@@ -68,34 +77,91 @@ function PrioBadge({ prio, size = "sm" }: { prio: MockPriority; size?: "sm" | "m
   );
 }
 
-function MockIssueRow({
+function MockAvatar({ name, color }: { name: string; color: string }) {
+  return (
+    <div
+      className={cn(
+        "flex size-7 items-center justify-center rounded-full text-xs font-semibold text-white",
+        color,
+      )}
+    >
+      {name
+        .split(" ")
+        .map((p) => p[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()}
+    </div>
+  );
+}
+
+function MockIssueLine({
   number,
   title,
   prio,
-  meta,
   unTriaged,
+  showClaim,
 }: {
   number: number;
   title: string;
   prio: MockPriority;
-  meta?: string;
   unTriaged?: boolean;
+  showClaim?: boolean;
 }) {
   return (
-    <div className="flex items-start gap-3 border-b border-border px-4 py-3 last:border-0 hover:bg-muted/40">
+    <div className="flex items-center gap-3 py-1.5 pl-10 pr-3 hover:bg-muted/40">
       <PrioBadge prio={prio} />
-      <span className="shrink-0 font-mono text-sm text-muted-foreground">#{number}</span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-medium">{title}</p>
-          {unTriaged && (
-            <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700">
-              Nog te triëren
-            </span>
-          )}
-        </div>
-        {meta && <p className="mt-0.5 text-xs text-muted-foreground">{meta}</p>}
+      <span className="shrink-0 font-mono text-xs text-muted-foreground">#{number}</span>
+      <span className="min-w-0 flex-1 truncate text-sm">{title}</span>
+      {unTriaged && (
+        <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700">
+          Nog te triëren
+        </span>
+      )}
+      {showClaim && (
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100"
+        >
+          Claim
+          <ArrowRight className="size-3" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function AssigneeGroup({
+  name,
+  color,
+  count,
+  unassigned,
+  children,
+}: {
+  name: string;
+  color: string;
+  count: number;
+  unassigned?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn("border-b border-border last:border-0", unassigned && "bg-amber-50/30")}>
+      <div className="flex items-center gap-2 px-3 py-2">
+        {unassigned ? (
+          <div className="flex size-7 items-center justify-center rounded-full border-2 border-dashed border-amber-400 text-amber-600">
+            <HelpCircle className="size-3.5" />
+          </div>
+        ) : (
+          <MockAvatar name={name} color={color} />
+        )}
+        <span
+          className={cn("text-sm font-semibold", unassigned ? "text-amber-700" : "text-foreground")}
+        >
+          {name}
+        </span>
+        <span className="text-xs text-muted-foreground">({count})</span>
       </div>
+      <div className="pb-2">{children}</div>
     </div>
   );
 }
@@ -143,17 +209,16 @@ export default function PreviewDH012Page() {
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           <Sparkles className="size-3.5" />
-          Sprint DH-012 — Mock preview
+          Sprint DH-012 — Mock preview (v2)
         </div>
         <h1 className="text-3xl font-bold tracking-tight">Prioritization System</h1>
         <p className="max-w-2xl text-muted-foreground">
-          Drie ingrepen die op elkaar voortbouwen. Hieronder zie je per onderdeel hoe het er straks
-          in DevHub uit komt te zien. Dit is een mock — geen echte data, geen functionaliteit.
-          Verwijderen zodra de sprint live is.
+          Drie ingrepen die op elkaar voortbouwen. Geen aparte route — "Deze week" komt op het
+          dashboard zelf zodat de sidebar schoon blijft. Dit is een mock, geen echte data.
         </p>
       </div>
 
-      {/* Naming-tabel */}
+      {/* 1. P-niveaus */}
       <SectionCard
         icon={<Target className="size-5" />}
         title="1. P-niveaus & definities"
@@ -181,73 +246,100 @@ export default function PreviewDH012Page() {
         </div>
       </SectionCard>
 
-      {/* Mijn Week pagina */}
+      {/* 2. Deze week op dashboard — DE KERN VAN DE WIJZIGING */}
       <SectionCard
-        icon={<Sparkles className="size-5" />}
-        title="2. Pagina /mijn-week"
-        description="Eén plek voor de developer: alleen jouw open P0 + P1 issues."
-        badge="Nieuwe pagina"
+        icon={<Flame className="size-5" />}
+        title='2. Sectie "Deze week" op het dashboard'
+        description="Team-focus: bovenaan urgent (open P0+P1), daaronder actief (in_progress). Per persoon gegroepeerd."
+        badge="Nieuw — geen aparte route"
       >
         <div className="border-b border-border bg-muted/30 px-5 py-3">
           <p className="text-xs text-muted-foreground">
-            URL: <code className="font-mono text-foreground">/mijn-week</code> · sidebar nav: "Mijn
-            week" (bovenaan, vóór Triage)
+            Locatie: dashboard <code className="font-mono text-foreground">/</code> · plek: na de
+            metric-tegels, vóór de intake-chart · sidebar:{" "}
+            <strong className="text-foreground">geen wijziging</strong>
           </p>
         </div>
 
-        {/* Groep P0 */}
+        {/* Subsectie A: Urgent */}
         <div className="border-b border-border">
-          <div className="flex items-center gap-2 bg-red-50/50 px-5 py-2.5">
-            <AlertCircle className="size-4 text-red-600" />
-            <h3 className="text-sm font-semibold text-red-700">P0 — Kritiek (1)</h3>
-            <span className="text-xs text-muted-foreground">SLA: vandaag</span>
+          <div className="flex items-center gap-2 bg-red-50/40 px-5 py-2.5">
+            <Flame className="size-4 text-red-600" />
+            <h3 className="text-sm font-semibold text-red-700">Urgent — open P0 + P1 (4)</h3>
+            <span className="ml-auto text-xs text-muted-foreground">
+              Wat moet deze week gebeuren
+            </span>
           </div>
-          <MockIssueRow
-            number={142}
-            title="Login werkt niet meer na deploy — alle users zijn buitengesloten"
-            prio="P0"
-            meta="Project: Klant X · Toegewezen aan jou · 23 min geleden"
-          />
+
+          <AssigneeGroup name="Wouter" color="bg-blue-500" count={2}>
+            <MockIssueLine
+              number={142}
+              title="Login werkt niet meer na deploy — alle users buitengesloten"
+              prio="P0"
+            />
+            <MockIssueLine
+              number={138}
+              title="PDF-export geeft lege pagina bij meer dan 50 records"
+              prio="P1"
+            />
+          </AssigneeGroup>
+
+          <AssigneeGroup name="Stef" color="bg-purple-500" count={1}>
+            <MockIssueLine
+              number={134}
+              title="Filters resetten zichzelf na pagina-refresh"
+              prio="P1"
+            />
+          </AssigneeGroup>
+
+          <AssigneeGroup name="Niemand" color="" count={1} unassigned>
+            <MockIssueLine
+              number={156}
+              title="Tooltip te kort op mobile — knipt af bij lange tekst"
+              prio="P1"
+              showClaim
+            />
+          </AssigneeGroup>
         </div>
 
-        {/* Groep P1 */}
+        {/* Subsectie B: Actief */}
         <div>
-          <div className="flex items-center gap-2 bg-orange-50/50 px-5 py-2.5">
-            <AlertCircle className="size-4 text-orange-600" />
-            <h3 className="text-sm font-semibold text-orange-700">P1 — Urgent (3)</h3>
-            <span className="text-xs text-muted-foreground">SLA: deze week</span>
+          <div className="flex items-center gap-2 bg-amber-50/40 px-5 py-2.5">
+            <Settings2 className="size-4 text-amber-600" />
+            <h3 className="text-sm font-semibold text-amber-700">
+              Actief in behandeling — status: in_progress (2)
+            </h3>
+            <span className="ml-auto text-xs text-muted-foreground">Wat loopt nu</span>
           </div>
-          <MockIssueRow
-            number={138}
-            title="PDF-export geeft lege pagina terug bij meer dan 50 records"
-            prio="P1"
-            meta="Project: Klant X · Toegewezen aan jou · 2 uur geleden"
-          />
-          <MockIssueRow
-            number={134}
-            title="Filters resetten zichzelf na pagina-refresh"
-            prio="P1"
-            meta="Project: Klant Y · Toegewezen aan jou · gisteren"
-          />
-          <MockIssueRow
-            number={129}
-            title="Dashboard laadt traag bij grote datasets"
-            prio="P1"
-            meta="Project: Klant X · Toegewezen aan jou · 3 dagen geleden"
-          />
+
+          <AssigneeGroup name="Wouter" color="bg-blue-500" count={1}>
+            <MockIssueLine
+              number={110}
+              title="Onboarding-flow eerste stap herontwerpen"
+              prio="P2"
+            />
+          </AssigneeGroup>
+
+          <AssigneeGroup name="Ege" color="bg-emerald-500" count={1}>
+            <MockIssueLine
+              number={112}
+              title="Email-templates voor onboarding & reminders"
+              prio="P2"
+            />
+          </AssigneeGroup>
         </div>
 
         {/* Lege staat preview */}
         <div className="border-t border-dashed border-border bg-muted/20 px-5 py-6">
           <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Lege staat (als je niets open hebt)
+            Lege staat (alle subsecties leeg)
           </p>
           <div className="flex items-center gap-3 rounded-md border border-border bg-card px-4 py-6">
             <div className="text-2xl">🌿</div>
             <div>
-              <p className="font-medium">Geen urgente issues</p>
+              <p className="font-medium">Geen urgente of actieve issues</p>
               <p className="text-sm text-muted-foreground">
-                Adem rustig in. P2 en P3 wachten op{" "}
+                Mooi moment om P2 of P3 op te pakken via{" "}
                 <Link href="/issues" className="text-primary hover:underline">
                   /issues
                 </Link>
@@ -256,13 +348,21 @@ export default function PreviewDH012Page() {
             </div>
           </div>
         </div>
+
+        <div className="border-t border-blue-200 bg-blue-50/40 px-5 py-3 text-sm">
+          <p className="text-blue-900">
+            <strong>Waarom op het dashboard:</strong> sidebar blijft schoon, manager-data (health,
+            intake) en team-focus (deze week) staan op één pagina. Stand-up = open{" "}
+            <code className="font-mono">/</code>, scroll, klaar.
+          </p>
+        </div>
       </SectionCard>
 
-      {/* Triage prio-bar */}
+      {/* 3. Triage met dwang + auto-status */}
       <SectionCard
         icon={<Inbox className="size-5" />}
-        title="3. Triage met dwang"
-        description="Issue verlaat triage pas als prio + status door reviewer gezet zijn."
+        title="3. Triage met dwang (auto-status)"
+        description="Issue verlaat triage pas als prio gezet is. Status volgt automatisch — één klik minder."
         badge="Aangepast component"
       >
         <div className="space-y-4 p-5">
@@ -279,7 +379,7 @@ export default function PreviewDH012Page() {
             </h3>
           </div>
 
-          {/* PRIO BAR — de kern van deze sprint */}
+          {/* PRIO BAR — vereenvoudigd, geen status-radio meer */}
           <div className="rounded-md border-2 border-primary/40 bg-primary/5 p-4">
             <div className="space-y-4">
               <div>
@@ -311,29 +411,20 @@ export default function PreviewDH012Page() {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Volgende status
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
-                  >
-                    Backlog
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md border-2 border-blue-500 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 ring-2 ring-blue-200"
-                  >
-                    ✓ Te doen
-                  </button>
-                </div>
+              <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm">
+                <p className="text-blue-900">
+                  <ArrowRight className="mr-1 inline size-3.5" />
+                  <strong>P1 gekozen</strong> → status wordt automatisch{" "}
+                  <strong className="text-blue-700">"Te doen"</strong>
+                </p>
+                <p className="mt-1 text-xs text-blue-700/80">
+                  P0/P1 → Te doen · P2/P3 → Backlog · later wijzigen kan via sidebar
+                </p>
               </div>
 
               <div className="flex items-center justify-between border-t border-primary/20 pt-3">
                 <p className="text-xs text-muted-foreground">
-                  Beide velden gevuld? Bevestig om uit triage te halen.
+                  Prio gekozen? Bevestig om uit triage te halen.
                 </p>
                 <button
                   type="button"
@@ -349,19 +440,19 @@ export default function PreviewDH012Page() {
           <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm">
             <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-blue-600" />
             <p className="text-blue-900">
-              <strong>Waarom dwang?</strong> Voorkomt dat issues per ongeluk in triage blijven
-              hangen. Beide triagisten (Stef + dev) volgen dezelfde flow — wie 'm eerst opent en
-              bevestigt, claimt 'm.
+              <strong>Eén klik minder:</strong> waar je eerst prio + status moest kiezen, doe je nu
+              alleen prio. De status volgt logisch (urgent gaat naar werklijst, niet naar backlog).
+              Reviewer kan in de sidebar alsnog overrulen voor edge cases.
             </p>
           </div>
         </div>
       </SectionCard>
 
-      {/* Issue-list voor/na */}
+      {/* 4. Issue-list voor/na */}
       <SectionCard
         icon={<Target className="size-5" />}
         title="4. Issue-lijst: badge in plaats van bolletje"
-        description="Direct scanbaar — je ziet meteen wat de prio is zonder te raden."
+        description="Direct scanbaar — prio is meteen leesbaar zonder kleurcode te onthouden."
         badge="Aangepast component"
       >
         <div className="grid grid-cols-1 gap-0 lg:grid-cols-2">
@@ -403,27 +494,65 @@ export default function PreviewDH012Page() {
                 Straks (PriorityBadge compact)
               </p>
             </div>
-            <div>
-              <MockIssueRow number={142} title="Login werkt niet meer..." prio="P0" />
-              <MockIssueRow number={138} title="PDF-export geeft lege pagina..." prio="P1" />
-              <MockIssueRow number={121} title="Filter-dropdown sluit niet..." prio="P2" />
-              <MockIssueRow number={118} title="Tooltip te kort op mobile" prio="P3" />
-              <MockIssueRow
-                number={147}
-                title="Knop 'Opslaan' reageert niet op mobile"
-                prio="P2"
-                unTriaged
-              />
+            <div className="divide-y divide-border">
+              {[
+                { num: 142, title: "Login werkt niet meer...", prio: "P0" as MockPriority },
+                { num: 138, title: "PDF-export geeft lege pagina...", prio: "P1" as MockPriority },
+                { num: 121, title: "Filter-dropdown sluit niet...", prio: "P2" as MockPriority },
+                { num: 118, title: "Tooltip te kort op mobile", prio: "P3" as MockPriority },
+                {
+                  num: 147,
+                  title: "Knop 'Opslaan' reageert niet op mobile",
+                  prio: "P2" as MockPriority,
+                  unTriaged: true,
+                },
+              ].map((row) => (
+                <div key={row.num} className="flex items-center gap-2 px-4 py-3">
+                  <PrioBadge prio={row.prio} />
+                  <span className="font-mono text-sm text-muted-foreground">#{row.num}</span>
+                  <span className="truncate text-sm flex-1">{row.title}</span>
+                  {row.unTriaged && (
+                    <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700">
+                      Nog te triëren
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </SectionCard>
 
+      {/* Wat anders is t.o.v. v1 */}
+      <div className="rounded-md border border-blue-200 bg-blue-50/50 p-4 text-sm text-blue-900">
+        <strong className="text-foreground">Wat is veranderd t.o.v. v1 van de mock:</strong>
+        <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>
+            ❌ <strong>Geen aparte route</strong> <code>/mijn-week</code> meer — sidebar blijft
+            schoon
+          </li>
+          <li>
+            ✅ <strong>"Deze week" als sectie op dashboard</strong> — team-view, niet alleen
+            ingelogde user
+          </li>
+          <li>
+            ✅ <strong>Per persoon gegroepeerd</strong> — direct zichtbaar wie waaraan werkt
+          </li>
+          <li>
+            ✅ <strong>Auto-status in triage</strong> — P0/P1 → Te doen, P2/P3 → Backlog (geen losse
+            status-keuze meer)
+          </li>
+          <li>
+            ✅ <strong>Combinatie urgent + actief</strong> — wat moet en wat loopt, in één scherm
+          </li>
+        </ul>
+      </div>
+
       {/* Footer */}
       <div className="rounded-md border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
         <strong className="text-foreground">Niet inbegrepen in deze sprint:</strong> AI suggested
-        priority (jouw scope-besluit), DB-migratie van keys (te risicovol), unassigned P0/P1 op
-        /mijn-week (open vraag — voorlopig nee). Volledige spec staat in{" "}
+        priority, DB-migratie van keys, Inbox/notificaties (volgende sprint DH-013), severity
+        opruimen (DH-014), sidebar opschonen (DH-015). Volledige spec in{" "}
         <code>sprints/backlog/DH-012-prioritization-system.md</code>.
       </div>
     </div>
