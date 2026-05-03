@@ -5,7 +5,7 @@ import { requireAdminInAction } from "@repo/auth/access";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { upsertProfile } from "@repo/database/mutations/team";
 import { grantPortalAccess, revokePortalAccess } from "@repo/database/mutations/portal-access";
-import { getProfileRole } from "@repo/database/queries/team";
+import { getProfileEmail, getProfileRole } from "@repo/database/queries/team";
 import {
   inviteProjectClientSchema,
   revokeProjectClientSchema,
@@ -14,6 +14,7 @@ import {
   type RevokeProjectClientInput,
   type GrantMemberPortalAccessInput,
 } from "@repo/database/validations/portal-access";
+import { notifyPortalAccessGranted } from "@repo/notifications";
 
 /**
  * Magic link-redirect: de invite-mail landt op de devhub-callback. Die bouncet
@@ -73,6 +74,11 @@ export async function inviteProjectClientAction(
     const grantResult = await grantPortalAccess(existingUserId, projectId, admin);
     if ("error" in grantResult) return { error: grantResult.error };
 
+    // Supabase Auth stuurt geen invite-mail voor bestaande users — daarom
+    // sturen we hier zelf een "je hebt nu toegang"-mail via Resend, anders
+    // krijgt de ontvanger nul signaal dat ze het project kunnen openen.
+    await notifyPortalAccessGranted({ to: email, projectId }, admin);
+
     revalidatePath(`/projects/${projectId}`);
     return { success: true, data: { profileId: existingUserId, invitedFresh: false } };
   }
@@ -131,6 +137,17 @@ export async function grantMemberPortalAccessAction(
 
   const grantResult = await grantPortalAccess(profileId, projectId, admin);
   if ("error" in grantResult) return { error: grantResult.error };
+
+  // Member krijgt portal-toegang erbij — stuur een "je hebt nu toegang"-mail
+  // zodat hij/zij weet dat het project nu zichtbaar is in het portaal. Voor
+  // admins skippen we: die zien al alles via preview-modus en hoeven geen
+  // self-notify.
+  if (role === "member") {
+    const email = await getProfileEmail(profileId, admin);
+    if (email) {
+      await notifyPortalAccessGranted({ to: email, projectId }, admin);
+    }
+  }
 
   revalidatePath(`/projects/${projectId}`);
   return { success: true, data: { profileId } };

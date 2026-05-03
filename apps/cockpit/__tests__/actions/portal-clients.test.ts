@@ -14,8 +14,10 @@ const mockGrantPortalAccess = vi.fn();
 const mockRevokePortalAccess = vi.fn();
 const mockUpsertProfile = vi.fn();
 const mockGetProfileRole = vi.fn();
+const mockGetProfileEmail = vi.fn();
 const mockListUsers = vi.fn();
 const mockInviteUserByEmail = vi.fn();
+const mockNotifyPortalAccessGranted = vi.fn();
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
@@ -56,6 +58,11 @@ vi.mock("@repo/database/mutations/team", () => ({
 
 vi.mock("@repo/database/queries/team", () => ({
   getProfileRole: (...args: unknown[]) => mockGetProfileRole(...args),
+  getProfileEmail: (...args: unknown[]) => mockGetProfileEmail(...args),
+}));
+
+vi.mock("@repo/notifications", () => ({
+  notifyPortalAccessGranted: (...args: unknown[]) => mockNotifyPortalAccessGranted(...args),
 }));
 
 import {
@@ -71,6 +78,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockUser.value = { id: ADMIN_ID, email: "admin@jouwai.nl" };
   mockIsAdmin.mockResolvedValue(true);
+  mockNotifyPortalAccessGranted.mockResolvedValue(undefined);
 });
 
 describe("grantMemberPortalAccessAction", () => {
@@ -108,8 +116,9 @@ describe("grantMemberPortalAccessAction", () => {
     expect(mockGrantPortalAccess).not.toHaveBeenCalled();
   });
 
-  it("grant access voor member zonder rol-wijziging", async () => {
+  it("grant access voor member zonder rol-wijziging + stuurt access-mail", async () => {
     mockGetProfileRole.mockResolvedValueOnce("member");
+    mockGetProfileEmail.mockResolvedValueOnce("member@jouwai.nl");
     mockGrantPortalAccess.mockResolvedValueOnce({
       success: true,
       data: { id: "row-1", profile_id: MEMBER_ID, project_id: PROJECT_ID },
@@ -124,6 +133,24 @@ describe("grantMemberPortalAccessAction", () => {
     expect(mockGrantPortalAccess).toHaveBeenCalledWith(MEMBER_ID, PROJECT_ID, expect.anything());
     // Geen rol-wijziging — upsertProfile mag NIET zijn aangeroepen.
     expect(mockUpsertProfile).not.toHaveBeenCalled();
+    // Member krijgt notify-mail dat ze toegang hebben.
+    expect(mockNotifyPortalAccessGranted).toHaveBeenCalledWith(
+      { to: "member@jouwai.nl", projectId: PROJECT_ID },
+      expect.anything(),
+    );
+  });
+
+  it("admin krijgt geen self-notify mail (admins zien al alles)", async () => {
+    mockGetProfileRole.mockResolvedValueOnce("admin");
+    mockGrantPortalAccess.mockResolvedValueOnce({
+      success: true,
+      data: { id: "row-1", profile_id: ADMIN_ID, project_id: PROJECT_ID },
+    });
+
+    await grantMemberPortalAccessAction({ profileId: ADMIN_ID, projectId: PROJECT_ID });
+
+    expect(mockGrantPortalAccess).toHaveBeenCalled();
+    expect(mockNotifyPortalAccessGranted).not.toHaveBeenCalled();
   });
 
   it("idempotent: tweede call met zelfde paar levert nog steeds success", async () => {
@@ -148,7 +175,7 @@ describe("grantMemberPortalAccessAction", () => {
 });
 
 describe("inviteProjectClientAction (PR-024 — member-block weg)", () => {
-  it("bestaande member krijgt portal-access zonder rol-wijziging", async () => {
+  it("bestaande member krijgt portal-access zonder rol-wijziging + access-mail", async () => {
     mockListUsers.mockResolvedValueOnce({
       data: { users: [{ id: MEMBER_ID, email: "stef@jouwai.nl" }] },
     });
@@ -172,5 +199,64 @@ describe("inviteProjectClientAction (PR-024 — member-block weg)", () => {
     expect(mockUpsertProfile).not.toHaveBeenCalled();
     // Geen invite-mail voor bestaande gebruikers.
     expect(mockInviteUserByEmail).not.toHaveBeenCalled();
+    // Wél een access-mail via Resend zodat de gebruiker weet dat ze toegang hebben.
+    expect(mockNotifyPortalAccessGranted).toHaveBeenCalledWith(
+      { to: "stef@jouwai.nl", projectId: PROJECT_ID },
+      expect.anything(),
+    );
+  });
+
+  it("bestaande client krijgt access-mail (kernfix: voorheen geen signaal)", async () => {
+    const CLIENT_ID = "00000000-0000-4000-8000-0000000000cc";
+    mockListUsers.mockResolvedValueOnce({
+      data: { users: [{ id: CLIENT_ID, email: "info@flowwijs.nl" }] },
+    });
+    mockGetProfileRole.mockResolvedValueOnce("client");
+    mockGrantPortalAccess.mockResolvedValueOnce({
+      success: true,
+      data: { id: "row-3", profile_id: CLIENT_ID, project_id: PROJECT_ID },
+    });
+
+    const result = await inviteProjectClientAction({
+      email: "info@flowwijs.nl",
+      projectId: PROJECT_ID,
+    });
+
+    expect(result).toEqual({
+      success: true,
+      data: { profileId: CLIENT_ID, invitedFresh: false },
+    });
+    expect(mockInviteUserByEmail).not.toHaveBeenCalled();
+    expect(mockNotifyPortalAccessGranted).toHaveBeenCalledWith(
+      { to: "info@flowwijs.nl", projectId: PROJECT_ID },
+      expect.anything(),
+    );
+  });
+
+  it("fresh user (Supabase invite-pad) krijgt geen aparte access-mail (Supabase Auth stuurt zelf)", async () => {
+    const NEW_ID = "00000000-0000-4000-8000-0000000000ff";
+    mockListUsers.mockResolvedValueOnce({ data: { users: [] } });
+    mockInviteUserByEmail.mockResolvedValueOnce({
+      data: { user: { id: NEW_ID } },
+      error: null,
+    });
+    mockUpsertProfile.mockResolvedValueOnce({ success: true, data: { id: NEW_ID } });
+    mockGrantPortalAccess.mockResolvedValueOnce({
+      success: true,
+      data: { id: "row-4", profile_id: NEW_ID, project_id: PROJECT_ID },
+    });
+
+    const result = await inviteProjectClientAction({
+      email: "nieuw@klant.nl",
+      projectId: PROJECT_ID,
+    });
+
+    expect(result).toEqual({
+      success: true,
+      data: { profileId: NEW_ID, invitedFresh: true },
+    });
+    expect(mockInviteUserByEmail).toHaveBeenCalled();
+    // Fresh-user-pad: Supabase Auth stuurt al een invite-mail, geen dubbele Resend-mail.
+    expect(mockNotifyPortalAccessGranted).not.toHaveBeenCalled();
   });
 });
