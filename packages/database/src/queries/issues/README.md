@@ -5,13 +5,17 @@ vier content-files.
 
 ## Bestanden
 
-| File             | Wat                                                               | Publieke API                                                                                                                                                                                                                            |
-| ---------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.ts`       | Deur — re-exporteert alles uit core/activity/attachments/comments | (zie de andere files)                                                                                                                                                                                                                   |
-| `core.ts`        | Issue-rij + lijst- en count-queries                               | `IssueRow`, `IssueSort`, `ISSUE_SORTS`, `ISSUE_SELECT`, `StatusCountKey`, `StatusCounts`, `WeeklyIssueIntake`, `listIssues`, `countFilteredIssues`, `getIssueById`, `getIssueCounts`, `getWeeklyIssueIntake`, `countCriticalUnassigned` |
-| `activity.ts`    | Activity-feed (status-changes, assigns, etc.)                     | `IssueActivityRow`, `listIssueActivity`                                                                                                                                                                                                 |
-| `attachments.ts` | Screenshots, video, files                                         | `IssueAttachmentRow`, `getIssueThumbnails`, `listIssueAttachments`, `getIssueIdsWithAttachments`                                                                                                                                        |
-| `comments.ts`    | Discussion-thread per issue                                       | `IssueCommentRow`, `getCommentById`, `listIssueComments`                                                                                                                                                                                |
+| File             | Wat                                                               | Publieke API                                                                                                               |
+| ---------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`       | Deur — re-exporteert alles uit core/activity/attachments/comments | (zie de andere files)                                                                                                      |
+| `core.ts`        | Re-export-barrel (≤10 regels) — combineert list/detail/stats      | `export * from list/detail/stats`                                                                                          |
+| `list.ts`        | Lijst- + count-queries met filters                                | `IssueSort`, `ISSUE_SORTS`, `ListIssuesParams`, `listIssues`, `countFilteredIssues`, `parseSearchQuery`                    |
+| `detail.ts`      | Single-issue lookup + row-shape                                   | `IssueRow`, `ISSUE_SELECT`, `getIssueById`, `UNASSIGNED_SENTINEL`                                                          |
+| `stats.ts`       | Counters voor sidebar + dashboards                                | `StatusCountKey`, `StatusCounts`, `WeeklyIssueIntake`, `getIssueCounts`, `getWeeklyIssueIntake`, `countCriticalUnassigned` |
+| `_filters.ts`    | Intern — shared filter-helpers (`applyAssignedToFilter` e.a.)     | _niet publiek_ — alleen voor `list.ts`                                                                                     |
+| `activity.ts`    | Activity-feed (status-changes, assigns, etc.)                     | `IssueActivityRow`, `listIssueActivity`                                                                                    |
+| `attachments.ts` | Screenshots, video, files                                         | `IssueAttachmentRow`, `getIssueThumbnails`, `listIssueAttachments`, `getIssueIdsWithAttachments`                           |
+| `comments.ts`    | Discussion-thread per issue                                       | `IssueCommentRow`, `getCommentById`, `listIssueComments`                                                                   |
 
 ## Imports
 

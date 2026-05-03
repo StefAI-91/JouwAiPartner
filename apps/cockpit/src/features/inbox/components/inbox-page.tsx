@@ -4,7 +4,7 @@ import { getCurrentProfile } from "@repo/auth/access";
 import {
   countInboxItemsForTeam,
   listInboxItemsForTeam,
-  type InboxItem,
+  INBOX_LIST_LIMIT,
 } from "@repo/database/queries/inbox";
 import { getProfilePreferences } from "@repo/database/queries/profiles";
 import { listAccessibleProjects } from "@repo/database/queries/projects/access";
@@ -14,12 +14,13 @@ import { InboxEmptyState } from "./empty-state";
 import { OnboardingCard } from "./onboarding-card";
 
 /**
- * Composition-root voor `/inbox`. Filtert in JS na ophalen — de lijst is
- * meestal <100 items per team-member en de drie filters delen 80% van de
- * data, dus drie aparte queries draaien zou meer kosten dan winnen.
+ * Composition-root voor `/inbox`. CC-008 — filtering staat in de DB
+ * (`listInboxItemsForTeam(profileId, { filter })`). Resultaten zijn gecapt
+ * op `INBOX_LIST_LIMIT` (200); UI cued de ceiling met een banner zodat de
+ * PM weet dat er meer items zijn dan getoond.
  *
  * `projectId` (CC-005) scopet de view naar één project — gebruikt door de
- * per-project inbox-tab. `undefined` = globale view zoals voorheen.
+ * per-project inbox-tab. `undefined` = globale view.
  */
 export async function InboxPage({
   filter,
@@ -32,50 +33,27 @@ export async function InboxPage({
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
 
-  const [items, counts, preferences, projects] = await Promise.all([
-    listInboxItemsForTeam(profile.id, { projectId }, supabase),
+  const [listResult, counts, preferences, projects] = await Promise.all([
+    listInboxItemsForTeam(profile.id, { projectId, filter }, supabase),
     countInboxItemsForTeam(profile.id, { projectId }, supabase),
     getProfilePreferences(profile.id, supabase),
     listAccessibleProjects(profile.id, supabase),
   ]);
 
-  const filtered = applyFilter(items, filter);
   const showOnboarding = !preferences.dismissed_onboarding?.cockpit_inbox;
+  const { items, hasMore } = listResult;
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden">
       <InboxHeader counts={counts} projects={projects} initialProjectId={projectId} />
       {showOnboarding && <OnboardingCard />}
-      {filtered.length === 0 ? <InboxEmptyState filter={filter} /> : <InboxList items={filtered} />}
+      {hasMore && (
+        <div className="border-b border-border/40 bg-warning/5 px-6 py-2 text-[12px] text-foreground/70">
+          Er zijn meer dan {INBOX_LIST_LIMIT} items — verfijn het filter of selecteer een project om
+          de rest te zien.
+        </div>
+      )}
+      {items.length === 0 ? <InboxEmptyState filter={filter} /> : <InboxList items={items} />}
     </div>
   );
-}
-
-function applyFilter(items: InboxItem[], filter: InboxFilter): InboxItem[] {
-  switch (filter) {
-    case "wacht_op_mij":
-      // Items die op de PM wachten: needs_pm_review feedback + open questions
-      // (waar klant heeft gereageerd, team moet terug-antwoorden).
-      return items.filter((i) => {
-        if (i.kind === "feedback") return i.issue.status === "needs_pm_review";
-        // Een question is "wacht op mij" als er een klant-reply ná de team-reply zit,
-        // of als het thread nog op `open` staat (waiting on team).
-        // CC-001 simplified: open = wacht op klant, responded = wacht op klant. Open
-        // questions zijn hier "wacht op klant" als status open is en ze hebben geen
-        // recente klant-activiteit. Voor v1: open + last activity by client = wacht op mij.
-        return i.thread.status === "open" && hasUnreadClientActivity(i);
-      });
-    case "wacht_op_klant":
-      return items.filter((i) => i.kind === "question" && i.thread.status === "responded");
-    case "geparkeerd":
-      return items.filter((i) => i.kind === "feedback" && i.issue.status === "deferred");
-  }
-}
-
-// Helper voor de "wacht op mij" beslissing op questions: laatste reply is van
-// een ander dan team (in v1 geen role-info per reply, dus we benaderen het
-// op count: als er replies zijn die ná de root komen, gaan we ervan uit dat
-// er klant-input is). Pragmatisch tot CC-002 reply-role bijhoudt.
-function hasUnreadClientActivity(item: Extract<InboxItem, { kind: "question" }>): boolean {
-  return item.isUnread || item.thread.replies.length > 0;
 }

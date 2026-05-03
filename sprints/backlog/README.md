@@ -43,7 +43,7 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | CC-005   | Per-project inbox-tab + onboarding-card                       | Customer Comm | `sprints/done/`    | Done          |
 | CC-006   | Vrije messaging (cockpit ↔ portal)                            | Customer Comm | `sprints/done/`    | Done          |
 | CC-007   | Security & correctness fixes (review CC-001 t/m CC-006)       | Customer Comm | `sprints/done/`    | Done          |
-| CC-008   | Architectuur-drift, tests & polish (review CC-001 t/m CC-006) | Customer Comm | `sprints/backlog/` | Backlog       |
+| CC-008   | Architectuur-drift, tests & polish (review CC-001 t/m CC-006) | Customer Comm | `sprints/done/`    | Done          |
 | WG-001   | Widget ingest foundation (DB whitelist + DevHub endpoint)     | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-002   | Widget app scaffold + loader.js (apps/widget/, Vercel)        | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-003   | Widget UI + cockpit rollout (modal + script-tag)              | Widget V0     | `sprints/backlog/` | Backlog       |

@@ -10,38 +10,42 @@ Cross-project Cockpit-inbox waarin de PM klant- en eindgebruiker-feedback endors
 
 ### `actions/`
 
-| File           | Exports                        | Gebruikt door                                    |
-| -------------- | ------------------------------ | ------------------------------------------------ |
-| `pm-review.ts` | `pmReviewAction`               | `inbox-row`, `conversation-action-bar`, modals   |
-| `replies.ts`   | `replyAsTeamAction`            | `conversation-reply-dock`                        |
-| `compose.ts`   | `composeMessageToClientAction` | `compose-modal` (header "+ Nieuw bericht")       |
-| `mark-read.ts` | `markInboxItemReadAction`      | (toekomstige UI hooks; auto-mark gaat via query) |
+| File             | Exports                        | Gebruikt door                                    |
+| ---------------- | ------------------------------ | ------------------------------------------------ |
+| `pm-review.ts`   | `pmReviewAction`               | `inbox-row`, `conversation-action-bar`, modals   |
+| `replies.ts`     | `replyAsTeamAction`            | `conversation-reply-dock`                        |
+| `compose.ts`     | `composeMessageToClientAction` | `compose-modal` (header "+ Nieuw bericht")       |
+| `mark-read.ts`   | `markInboxItemReadAction`      | (toekomstige UI hooks; auto-mark gaat via query) |
+| `preferences.ts` | `dismissOnboardingAction`      | `onboarding-card`                                |
 
 ### `components/`
 
-| File                          | Rol                                                                                               |
-| ----------------------------- | ------------------------------------------------------------------------------------------------- |
-| `inbox-page.tsx`              | Composition-root voor `/inbox` — fetch + filter + render lijst.                                   |
-| `inbox-header.tsx`            | Title + count badge + filter-chips (`?filter=` URL-param).                                        |
-| `inbox-list.tsx`              | Time-grouped lijst (Vandaag / Eerder deze week / Eerder) met sticky headers.                      |
-| `inbox-row.tsx`               | Linear-stijl rij — status-bullet, avatar, sender+project, snippet, hover-actions, source-dot.     |
-| `source-dot.tsx`              | Subtle bron-indicator (Klant-PM violet / Eindgebruiker oranje).                                   |
-| `conversation-page.tsx`       | Composition-root voor `/inbox/[kind]/[id]` — fetch thread + auto-mark-as-read + render.           |
-| `conversation-header.tsx`     | Back-knop + titel + meta + status-pill.                                                           |
-| `conversation-action-bar.tsx` | 4 PM-acties — alleen voor `kind=feedback` AND `status=needs_pm_review`.                           |
-| `conversation-bubbles.tsx`    | iMessage-stijl thread; eigen-bericht rechts in primary, ander links in background. Date-dividers. |
-| `conversation-reply-dock.tsx` | Vaste reply-form onderaan (alleen voor question-threads).                                         |
-| `decline-modal.tsx`           | Reden-textarea met min-10-chars validatie.                                                        |
-| `convert-modal.tsx`           | Verheldering-textarea (issue → bericht spawn).                                                    |
-| `compose-modal.tsx`           | CC-006 — vrije compose: project-selector + body, redirect naar conversation-detail na succes.     |
-| `empty-state.tsx`             | Per filter een eigen empty-message.                                                               |
+| File                          | Rol                                                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- |
+| `inbox-page.tsx`              | Composition-root voor `/inbox` — fetch + filter + render lijst.                                     |
+| `inbox-header.tsx`            | Title + count badge + filter-chips (`?filter=` URL-param).                                          |
+| `inbox-list.tsx`              | Time-grouped lijst (Vandaag / Eerder deze week / Eerder) met sticky headers.                        |
+| `inbox-row.tsx`               | Linear-stijl rij — status-bullet, avatar, sender+project, snippet, hover-actions, source-indicator. |
+| `conversation-page.tsx`       | Composition-root voor `/inbox/[kind]/[id]` — fetch thread + auto-mark-as-read + render.             |
+| `conversation-header.tsx`     | Back-knop + titel + meta + status-pill.                                                             |
+| `conversation-action-bar.tsx` | 4 PM-acties — alleen voor `kind=feedback` AND `status=needs_pm_review`.                             |
+| `conversation-bubbles.tsx`    | iMessage-stijl thread; eigen-bericht rechts in primary, ander links in background. Date-dividers.   |
+| `conversation-reply-dock.tsx` | Vaste reply-form onderaan (alleen voor question-threads).                                           |
+| `decline-modal.tsx`           | Reden-textarea met min-10-chars validatie.                                                          |
+| `convert-modal.tsx`           | Verheldering-textarea (issue → bericht spawn).                                                      |
+| `compose-modal.tsx`           | CC-006 — vrije compose: project-selector + body, redirect naar conversation-detail na succes.       |
+| `empty-state.tsx`             | Per filter een eigen empty-message.                                                                 |
+| `onboarding-card.tsx`         | CC-005 — dismiss-bare onboarding-uitleg bovenaan de inbox; key `cockpit_inbox`.                     |
 
 ### `validations/`
 
-| File           | Exports                                                                |
-| -------------- | ---------------------------------------------------------------------- |
-| `pm-review.ts` | Re-export van `pmReviewActionSchema` uit `@repo/database/validations`. |
-| `compose.ts`   | `composeMessageSchema` (CC-006 — projectId + body, min 10 / max 5000). |
+| File         | Exports                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| `compose.ts` | `composeMessageSchema` (CC-006 — projectId + body, min 10 / max 5000). |
+
+PM-review's `pmReviewActionSchema` wordt sinds CC-008 direct vanuit
+`@repo/database/validations/issues` geïmporteerd; de lokale 1-line re-export
+is verwijderd om unnecessary indirection te voorkomen.
 
 ## Gerelateerde packages (NIET in deze feature)
 
@@ -82,7 +86,7 @@ CC-006 voegt `composeMessageToClientAction` + `compose-modal` toe. Pad bij
    PM direct in het verse gesprek staat.
 
 Klant-side equivalent leeft in de portal-inbox-componenten +
-`sendMessageAsClientAction` (zie `apps/portal/src/actions/inbox.ts`).
+`sendMessageAsClientAction` (zie `apps/portal/src/actions/`).
 
 ## Vrije ruimte
 

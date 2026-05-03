@@ -49,8 +49,10 @@ export async function replyAsTeamAction(input: unknown): Promise<ReplyAsTeamResu
     }
   }
 
+  // CC-008 — vervang het dure `revalidatePath("/", "layout")` door per-route
+  // revalidatie zoals pm-review.ts.
   revalidatePath("/inbox");
   if (parentId) revalidatePath(`/inbox/question/${parentId}`);
-  revalidatePath("/", "layout");
+  revalidatePath("/projects/[id]/inbox", "page");
   return { success: true };
 }

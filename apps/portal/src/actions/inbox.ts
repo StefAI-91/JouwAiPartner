@@ -6,7 +6,10 @@ import { createClient } from "@repo/database/supabase/server";
 import { getCurrentProfile } from "@repo/auth/access";
 import { hasPortalProjectAccess } from "@repo/database/queries/portal/access";
 import { replyToQuestion, sendQuestion } from "@repo/database/mutations/client-questions";
-import { replyToQuestionSchema } from "@repo/database/validations/client-questions";
+import {
+  messageBodySchema,
+  replyToQuestionSchema,
+} from "@repo/database/validations/client-questions";
 import { getProjectOrganizationId } from "@repo/database/queries/projects/lookup";
 import { countClientRootMessagesInLastHour } from "@repo/database/queries/client-questions";
 
@@ -81,8 +84,9 @@ export async function replyAsClientAction(
  * Geen mail naar team (vision §8 in-app only); sidebar-counter update via
  * revalidatePath in de cockpit-layout zodra de PM de inbox opent.
  */
+// CC-008 — body-regel komt uit @repo/database; één bron-van-waarheid.
 const sendMessageAsClientSchema = z.object({
-  body: z.string().min(10).max(5000),
+  body: messageBodySchema,
 });
 
 export type SendMessageAsClientResult = { success: true; messageId: string } | { error: string };

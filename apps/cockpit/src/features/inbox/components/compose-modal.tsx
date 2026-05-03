@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import type { AccessibleProject } from "@repo/database/queries/projects/access";
@@ -10,6 +10,9 @@ import { composeMessageToClientAction } from "../actions/compose";
  * CC-006 — Cockpit compose-modal voor team-initiated free message naar klant.
  * Mens-naar-mens; geen AI-draft in v1. Na success redirect naar de
  * conversation-detail-pagina zodat de PM direct in het verse gesprek staat.
+ *
+ * CC-008 UX-polish: autofocus textarea, ESC sluit modal, project-naam in
+ * submit-knop ("Verstuur naar {name}") als laatste-blik bevestiging.
  */
 export function ComposeModal({
   projects,
@@ -29,7 +32,26 @@ export function ComposeModal({
   const [body, setBody] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // CC-008 — autofocus op de textarea bij open. We kiezen de body-input boven
+  // het project-select omdat 90% van de PM's het project via `initialProjectId`
+  // al goed heeft staan; ze willen direct typen.
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
+  // CC-008 — ESC sluit de modal. Document-level listener zodat het ook werkt
+  // wanneer focus op de select/textarea staat.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const selectedProject = projects.find((p) => p.id === projectId);
   const isValid = projectId.length > 0 && body.trim().length >= 10;
 
   const onSubmit = (e: React.FormEvent) => {
@@ -105,6 +127,7 @@ export function ComposeModal({
         <label className="block">
           <span className="mb-1 block text-[11px] font-medium text-foreground">Bericht</span>
           <textarea
+            ref={textareaRef}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={6}
@@ -131,7 +154,11 @@ export function ComposeModal({
             disabled={!isValid || isPending}
             className="rounded-md bg-primary px-3 py-1.5 text-[12px] font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
           >
-            {isPending ? "Bezig…" : "Verstuur"}
+            {isPending
+              ? "Bezig…"
+              : selectedProject
+                ? `Verstuur naar ${selectedProject.name}`
+                : "Verstuur"}
           </button>
         </div>
       </form>

@@ -1,6 +1,19 @@
 "use client";
 
-export default function InboxError({ reset }: { reset: () => void }) {
+import { useEffect } from "react";
+
+interface ErrorProps {
+  error: Error & { digest?: string };
+  reset: () => void;
+}
+
+// CC-008 — error-boundary logt de error zodat de oorzaak via console / Vercel-
+// logs traceerbaar blijft. `error.digest` is Next's gemaskeerde id in productie.
+export default function InboxError({ error, reset }: ErrorProps) {
+  useEffect(() => {
+    console.error("[inbox/error]", error);
+  }, [error]);
+
   return (
     <div className="px-4 py-16 text-center">
       <h2 className="font-heading text-xl font-semibold">Inbox kon niet laden</h2>

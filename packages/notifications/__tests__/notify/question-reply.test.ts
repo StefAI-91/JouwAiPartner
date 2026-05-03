@@ -55,6 +55,24 @@ describe("notifyTeamReply", () => {
     expect(mockSendMail).not.toHaveBeenCalled();
   });
 
+  it("CC-008 — preview is code-point-aware (knipt geen emoji's halverwege)", async () => {
+    mockListAssignees.mockResolvedValueOnce([
+      { profile_id: "p1", email: "k1@x.nl", role: "client" },
+    ]);
+    // 199 emoji's (elk 2 UTF-16 code units = 398 units totaal).
+    // Met `.slice(0, 200)` zou je halverwege een surrogate pair afkappen.
+    const emojiBody = "🎉".repeat(199);
+
+    await notifyTeamReply(parent, emojiBody);
+
+    const call = mockSendMail.mock.calls[0]![0];
+    // Niet meer dan 199 hele emoji's. Geen onleesbare half-surrogate.
+    expect(call.html.includes("\uD83C")).toBe(true); // de hele 🎉 is aanwezig
+    // Het halve surrogate-fragment (alléén "\uD83C" gevolgd door iets niet-laag-surrogate
+    // zoals "<" voor sluittag) is een teken dat de slice gehalveerd heeft. Dat moet niet.
+    expect(call.html).not.toMatch(/\uD83C(?![\uDC00-\uDFFF])/);
+  });
+
   it("vangt errors uit listPortalProjectAssignees (best-effort)", async () => {
     mockListAssignees.mockRejectedValueOnce(new Error("db down"));
     vi.spyOn(console, "error").mockImplementation(() => {});

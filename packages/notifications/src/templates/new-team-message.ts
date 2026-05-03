@@ -22,7 +22,10 @@ export function newTeamMessageTemplate({
   const base = inboxDeeplink(portalUrl, message.project_id);
   const url = `${base}/${message.id}`;
   const subject = "Je hebt een nieuw bericht van Jouw AI Partner";
-  const preview = message.body.trim().slice(0, 200);
+  // CC-008 — `Array.from(...).slice(...).join("")` voorkomt UTF-16 surrogate-
+  // splits op emoji's en andere supplementary-plane chars. `String.slice`
+  // indexeert op UTF-16 code units, niet op code points.
+  const preview = Array.from(message.body.trim()).slice(0, 200).join("");
 
   return {
     subject,

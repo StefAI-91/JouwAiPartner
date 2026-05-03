@@ -13,7 +13,7 @@ import type { PmReviewMutationResult } from "@repo/database/mutations/issues/pm-
 import { markInboxItemRead } from "@repo/database/mutations/inbox-reads";
 import { notifyFeedbackStatusChanged } from "@repo/notifications";
 import type { IssueStatus } from "@repo/database/constants/issues";
-import { pmReviewActionSchema, type PmReviewAction } from "../validations/pm-review";
+import { pmReviewActionSchema, type PmReviewAction } from "@repo/database/validations/issues";
 
 /**
  * CC-001 — Server actions voor de vier PM-acties op needs_pm_review issues.
@@ -79,9 +79,12 @@ export async function pmReviewAction(input: PmReviewAction): Promise<PmReviewAct
     console.error("[pmReviewAction] notify failed", err),
   );
 
+  // CC-008 — `revalidatePath("/", "layout")` was duur (revalideert ALLES).
+  // We weten welke routes de inbox tonen: globale inbox + per-project inbox.
+  // De sidebar-counter rendert in beide layouts, dus beide expliciet revalideren
+  // is goedkoper en preciezer.
   revalidatePath("/inbox");
   revalidatePath(`/inbox/feedback/${issueId}`);
-  // Sidebar-counter zit in de root-layout.
-  revalidatePath("/", "layout");
+  revalidatePath("/projects/[id]/inbox", "page");
   return { success: true };
 }

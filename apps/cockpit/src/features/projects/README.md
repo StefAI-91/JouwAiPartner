@@ -32,6 +32,10 @@ UI-componenten voor projectoverzicht, detail en bewerking. Geen barrel — breek
 | `timeline-entry.tsx`               | Render van één timeline-entry met kantelpunt-accent (via `detectPivot`) en email/meeting-discriminatie.                   |
 | `regenerate-summary-button.tsx`    | Trigger voor AI-herberekening van de project-samenvatting. Ook gebruikt op org- en client-pagina's.                       |
 | `status-pipeline.tsx`              | Statusweergave, samengesteld in `project-card`.                                                                           |
+| `project-tabs.tsx`                 | Tab-navigatie op de detail-pagina (overzicht / inbox / klanten / e-mails).                                                |
+| `project-clients-section.tsx`      | Sectie op de detail-pagina die portal-clients toont met invite/revoke knoppen.                                            |
+| `invite-client-dialog.tsx`         | Modal voor het uitnodigen van een nieuwe klant op een project (portal access).                                            |
+| `revoke-client-button.tsx`         | Inline confirm-knop om portal access van een klant in te trekken.                                                         |
 
 ### `hooks/`
 

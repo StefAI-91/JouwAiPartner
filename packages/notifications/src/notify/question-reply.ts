@@ -28,7 +28,9 @@ export async function notifyTeamReply(
     if (!portalUrl) return;
     const rendered = newTeamReplyTemplate({
       question: parentQuestion,
-      replyPreview: replyBody.slice(0, 200),
+      // CC-008 — code-point-aware slice; `String.slice` knipt op UTF-16 units
+      // en kan emoji's halveren tot een onleesbare surrogate-rest.
+      replyPreview: Array.from(replyBody).slice(0, 200).join(""),
       portalUrl,
     });
 

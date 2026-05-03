@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Check, X, Clock, MessageSquarePlus } from "lucide-react";
 import type { InboxItem } from "@repo/database/queries/inbox";
+import { resolvePortalSourceGroup } from "@repo/database/constants/issues";
+import { SourceIndicator, type SourceGroup } from "@repo/ui/source-indicator";
 import { pmReviewAction } from "../actions/pm-review";
-import { SourceDot } from "./source-dot";
 import { DeclineModal } from "./decline-modal";
 import { ConvertModal } from "./convert-modal";
 
@@ -85,7 +86,8 @@ export function InboxRow({ item, currentTime }: { item: InboxItem; currentTime: 
           {sender.name}
         </span>
         <span className="truncate text-[10px] text-muted-foreground/70">
-          {isFeedback ? item.issue.project_id.slice(0, 8) : item.thread.project_id.slice(0, 8)}
+          {item.project.name ??
+            (isFeedback ? item.issue.project_id : item.thread.project_id).slice(0, 8)}
         </span>
       </div>
 
@@ -103,7 +105,9 @@ export function InboxRow({ item, currentTime }: { item: InboxItem; currentTime: 
         {error ? <span className="text-[10px] text-destructive">{error}</span> : null}
       </div>
 
-      {isFeedback ? <SourceDot source={item.issue.source} /> : null}
+      {isFeedback ? (
+        <SourceIndicator group={portalGroupAsIndicator(item.issue.source)} variant="dot" />
+      ) : null}
 
       <span className="w-12 shrink-0 text-right text-[11px] tabular-nums text-muted-foreground/60 transition group-hover/row:opacity-0">
         {ts}
@@ -192,6 +196,14 @@ function IconBtn({
       {children}
     </button>
   );
+}
+
+// `resolvePortalSourceGroup` retourneert ook `"jaip"` voor interne meldingen;
+// SourceIndicator toont alleen klant/gebruiker. CC-008 — mapt 'jaip' → null
+// zodat de oude SourceDot-fallback (geen render bij intern) behouden blijft.
+function portalGroupAsIndicator(source: string | null | undefined): SourceGroup | null {
+  const group = resolvePortalSourceGroup(source);
+  return group === "jaip" ? null : group;
 }
 
 // Compact relatieve timestamp: "2u" / "3d" / "15 mei". Niet exact, niet

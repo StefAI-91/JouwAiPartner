@@ -48,5 +48,12 @@ export function pickTemplateForStatus(
     case "todo":
     case "cancelled":
       return null;
+    default: {
+      // CC-008 — exhaustive guard. Een nieuwe `IssueStatus` zonder
+      // case-clause faalt hier compile-time (`never` type-narrow).
+      const _exhaustive: never = status;
+      void _exhaustive;
+      return null;
+    }
   }
 }

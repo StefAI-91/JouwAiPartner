@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 622 |
-| Exported functions/constants | 937 |
-| Exported types/interfaces | 409 |
-| Cross-package imports | 613 |
+| Files scanned | 626 |
+| Exported functions/constants | 942 |
+| Exported types/interfaces | 415 |
+| Cross-package imports | 611 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -193,11 +193,21 @@
 - `countInboxItemsForTeam()`
 - `getConversationThread()`
 - `getInboxItemForDetail()`
+- `INBOX_LIST_LIMIT`
+- `ISSUE_STATUSES_PER_FILTER`
+- `QUESTION_STATUSES_PER_FILTER`
 
-**Types:** `InboxItemKind`, `InboxFeedbackItem`, `InboxQuestionReply`, `InboxQuestionThread`, `InboxQuestionItem`, `InboxItem`, `InboxCounts`, `ConversationMessage`, `FeedbackConversation`, `QuestionConversation`, `ConversationThread`
+**Types:** `InboxItemKind`, `InboxFilter`, `InboxProjectInfo`, `InboxFeedbackItem`, `InboxQuestionReply`, `InboxQuestionThread`, `InboxQuestionItem`, `InboxItem`, `InboxListResult`, `InboxCounts`, `ConversationMessage`, `FeedbackConversation`, `QuestionConversation`, `ConversationThread`
 
 **Depends on:**
 - `@repo/auth/access` → listAccessibleProjectIds
+
+### `queries/issues/_filters.ts`
+
+**Exports:**
+- `applyAssignedToFilter()`
+- `parseSearchQuery()`
+- `sanitizeIlikeQuery()`
 
 ### `queries/issues/activity.ts`
 
@@ -230,21 +240,32 @@
 
 **Types:** `IssueCommentRow`
 
-### `queries/issues/core.ts`
+### `queries/issues/detail.ts`
 
 **Exports:**
-- `parseSearchQuery()`
+- `getIssueById()`
+- `ISSUE_SELECT`
+
+**Types:** `IssueRow`
+
+### `queries/issues/list.ts`
+
+**Exports:**
 - `listIssues()`
 - `countFilteredIssues()`
-- `getIssueById()`
+- `ISSUE_SORTS`
+
+**Types:** `IssueSort`, `ListIssuesParams`
+
+### `queries/issues/stats.ts`
+
+**Exports:**
 - `getIssueCounts()`
 - `getWeeklyIssueIntake()`
 - `getDashboardThisWeek()`
 - `countCriticalUnassigned()`
-- `ISSUE_SORTS`
-- `ISSUE_SELECT`
 
-**Types:** `IssueSort`, `IssueRow`, `StatusCountKey`, `StatusCounts`, `WeeklyIssueIntake`
+**Types:** `StatusCountKey`, `StatusCounts`, `WeeklyIssueIntake`
 
 ### `queries/meetings/core.ts`
 
@@ -2365,6 +2386,13 @@
 - `timeAgoDays()`
 - `daysUntil()`
 - `truncate()`
+
+### `packages/ui/src/source-indicator.tsx`
+
+**Exports:**
+- `SourceIndicator()`
+
+**Types:** `SourceGroup`, `SourceIndicatorProps`
 
 ### `packages/ui/src/utils.ts`
 
@@ -4594,15 +4622,6 @@
 - `@repo/ui/utils` → cn
 - `@repo/database/constants/issues` → ISSUE_PRIORITY_LABELS, ISSUE_PRIORITY_SHORT_LABELS, type IssuePriority
 
-### `apps/devhub/src/components/shared/source-badge.tsx`
-
-**Exports:**
-- `SourceBadge()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-- `@repo/database/constants/issues` → resolveDevhubSourceGroup, type DevhubSourceGroupKey
-
 ### `apps/devhub/src/components/shared/status-badge.tsx`
 
 **Exports:**
@@ -4654,7 +4673,7 @@ Which layers depend on which packages:
 | Database Queries | - | - | 4 | - | - | 4 |
 | DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
-| DevHub Components | 4 | 2 | 1 | 16 | - | 23 |
+| DevHub Components | 3 | 2 | 1 | 15 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 29 | - | 22 | 12 | - | 63 |
 | MCP Server | 32 | 1 | - | - | - | 33 |
@@ -5000,6 +5019,14 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `countInboxItemsForTeam()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 
+### queries/issues/_filters.ts
+
+| Query | Used in |
+|-------|---------|
+| `applyAssignedToFilter()` | `packages/database/src/queries/issues/list.ts` |
+| `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `sanitizeIlikeQuery()` | `packages/database/src/queries/issues/list.ts` |
+
 ### queries/issues/activity.ts
 
 | Query | Used in |
@@ -5020,14 +5047,23 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `listIssueComments()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 
-### queries/issues/core.ts
+### queries/issues/detail.ts
 
 | Query | Used in |
 |-------|---------|
-| `parseSearchQuery()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+
+### queries/issues/list.ts
+
+| Query | Used in |
+|-------|---------|
 | `listIssues()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+
+### queries/issues/stats.ts
+
+| Query | Used in |
+|-------|---------|
 | `getIssueCounts()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `getWeeklyIssueIntake()` | `apps/devhub/src/app/(app)/page.tsx` |
 | `getDashboardThisWeek()` | `apps/devhub/src/app/(app)/page.tsx` |
@@ -5314,8 +5350,8 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `countOpenIssuesPerTopic()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `getTopicMembershipForIssues()` | `packages/database/src/queries/issues/client-portal.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getLinkedIssueIdsInProject()` | `packages/database/src/queries/issues/core.ts` |
-| `getIssueIdsForTopics()` | `packages/database/src/queries/issues/core.ts` |
+| `getLinkedIssueIdsInProject()` | `packages/database/src/queries/issues/list.ts` |
+| `getIssueIdsForTopics()` | `packages/database/src/queries/issues/list.ts` |
 
 ### queries/topics/list.ts
 

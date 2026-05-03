@@ -4,6 +4,10 @@ import { getAdminClient } from "../supabase/admin";
 import { ISSUE_SELECT, type IssueRow } from "./issues";
 import { markInboxItemRead } from "../mutations/inbox-reads";
 
+// CLUSTER-WATCH (CC-008): 439+ regels (CLAUDE.md threshold 300 voor cluster-
+// splitsing). Volgende substantiële toevoeging: splits in
+// queries/inbox/{list,counts,thread}.ts. Tot dan blijft het flat.
+
 /**
  * CC-001 — Cockpit Inbox cross-project queries.
  *
@@ -16,11 +20,25 @@ import { markInboxItemRead } from "../mutations/inbox-reads";
  *   2. Drie parallelle SELECTs (issues, client_questions, inbox_reads). Geen
  *      SQL UNION — verlaagt typing-precisie en bemoeilijkt embed van replies.
  *   3. Merge in JS, status-first sorted, dan activityAt DESC.
+ *
+ * CC-008 — `filter` wordt nu in de DB toegepast (status-sets per bucket) en
+ * de result is gecapt op `INBOX_LIST_LIMIT` (200). UI cued de ceiling met
+ * `hasMore`. Project-naam komt mee via een PostgREST embed op `projects(name)`.
  */
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
 export type InboxItemKind = "feedback" | "question";
+
+export type InboxFilter = "alles" | "wacht_op_mij" | "wacht_op_klant" | "geparkeerd";
+
+/** Hard cap op de listquery; UI toont "verfijn filter"-cue als de ceiling geraakt is. */
+export const INBOX_LIST_LIMIT = 200;
+
+export interface InboxProjectInfo {
+  id: string;
+  name: string | null;
+}
 
 export interface InboxFeedbackItem {
   kind: "feedback";
@@ -28,6 +46,7 @@ export interface InboxFeedbackItem {
   activityAt: string;
   isUnread: boolean;
   issue: IssueRow;
+  project: InboxProjectInfo;
 }
 
 export interface InboxQuestionReply {
@@ -55,9 +74,16 @@ export interface InboxQuestionItem {
   activityAt: string;
   isUnread: boolean;
   thread: InboxQuestionThread;
+  project: InboxProjectInfo;
 }
 
 export type InboxItem = InboxFeedbackItem | InboxQuestionItem;
+
+export interface InboxListResult {
+  items: InboxItem[];
+  /** True als de result is gecapt op INBOX_LIST_LIMIT (200). UI toont "verfijn filter". */
+  hasMore: boolean;
+}
 
 export interface InboxCounts {
   pmReview: number;
@@ -103,9 +129,26 @@ function fetchReadMap(rows: ReadRow[]): Map<string, string> {
 
 // ── Public queries ────────────────────────────────────────────────────────
 
+// Per-filter status-sets — `null` betekent: skip die kant van de query helemaal.
+// Sluit aan op `applyFilter` van vóór CC-008 (zelfde gedrag, één bron-van-waarheid).
+// Geëxporteerd voor unit-test in `__tests__/queries/inbox-filter-map.test.ts`.
+export const ISSUE_STATUSES_PER_FILTER: Record<InboxFilter, string[] | null> = {
+  alles: ["needs_pm_review", "deferred"],
+  wacht_op_mij: ["needs_pm_review"],
+  wacht_op_klant: null, // alleen `responded` questions
+  geparkeerd: ["deferred"],
+};
+
+export const QUESTION_STATUSES_PER_FILTER: Record<InboxFilter, string[] | null> = {
+  alles: ["open", "responded"],
+  wacht_op_mij: ["open"],
+  wacht_op_klant: ["responded"],
+  geparkeerd: null,
+};
+
 /**
  * Cross-project inbox-lijst voor team-members. Combineert:
- *   - issues met status `needs_pm_review` of `deferred` (PM-aandacht)
+ *   - issues met PM-aandacht-statussen (needs_pm_review, deferred)
  *   - client_questions root-rijen (open of responded)
  *
  * `isUnread` is per-user: true als geen read-row bestaat OF als read_at
@@ -115,36 +158,58 @@ function fetchReadMap(rows: ReadRow[]): Map<string, string> {
  * door de per-project inbox-tab in cockpit. Als de user geen toegang heeft
  * tot dat project (niet in `listAccessibleProjectIds`), retourneert de helper
  * `[]` — geen existence-hint.
+ *
+ * `filter` (CC-008) wordt naar de DB gepushed via status-sets — voorheen
+ * filterde de page in JS na ophalen. Resulteert in 0–2 sub-queries i.p.v. 2.
+ *
+ * Result is gecapt op `INBOX_LIST_LIMIT` (200) per side; `hasMore` is true
+ * als óf issues óf questions de cap raakte. UI gebruikt het als verfijn-cue.
  */
 export async function listInboxItemsForTeam(
   profileId: string,
-  options: { projectId?: string } = {},
+  options: { projectId?: string; filter?: InboxFilter } = {},
   client?: SupabaseClient,
-): Promise<InboxItem[]> {
+): Promise<InboxListResult> {
   const db = client ?? getAdminClient();
+  const filter: InboxFilter = options.filter ?? "alles";
   const accessibleIds = await listAccessibleProjectIds(profileId, db);
-  if (accessibleIds.length === 0) return [];
+  if (accessibleIds.length === 0) return { items: [], hasMore: false };
 
   const projectIds = options.projectId
     ? accessibleIds.includes(options.projectId)
       ? [options.projectId]
       : []
     : accessibleIds;
-  if (projectIds.length === 0) return [];
+  if (projectIds.length === 0) return { items: [], hasMore: false };
+
+  const issueStatuses = ISSUE_STATUSES_PER_FILTER[filter];
+  const questionStatuses = QUESTION_STATUSES_PER_FILTER[filter];
+
+  // Skip de side die voor deze filter geen items kan opleveren.
+  const issuePromise = issueStatuses
+    ? db
+        .from("issues")
+        .select(`${ISSUE_SELECT}, project:projects(id, name)`)
+        .in("project_id", projectIds)
+        .in("status", issueStatuses)
+        .order("created_at", { ascending: false })
+        .limit(INBOX_LIST_LIMIT)
+    : Promise.resolve({ data: [], error: null });
+
+  const questionPromise = questionStatuses
+    ? db
+        .from("client_questions")
+        .select(`${QUESTION_LIST_COLS}, ${QUESTION_REPLY_EMBED}, project:projects(id, name)`)
+        .in("project_id", projectIds)
+        .is("parent_id", null)
+        .in("status", questionStatuses)
+        .order("last_activity_at", { ascending: false })
+        .limit(INBOX_LIST_LIMIT)
+    : Promise.resolve({ data: [], error: null });
 
   const [issuesRes, questionsRes, readsRes] = await Promise.all([
-    db
-      .from("issues")
-      .select(ISSUE_SELECT)
-      .in("project_id", projectIds)
-      .in("status", ["needs_pm_review", "deferred"])
-      .order("created_at", { ascending: false }),
-    db
-      .from("client_questions")
-      .select(`${QUESTION_LIST_COLS}, ${QUESTION_REPLY_EMBED}`)
-      .in("project_id", projectIds)
-      .is("parent_id", null)
-      .order("last_activity_at", { ascending: false }),
+    issuePromise,
+    questionPromise,
     db.from("inbox_reads").select("item_kind, item_id, read_at").eq("profile_id", profileId),
   ]);
 
@@ -160,17 +225,26 @@ export async function listInboxItemsForTeam(
 
   const reads = fetchReadMap((readsRes.data ?? []) as unknown as ReadRow[]);
 
-  const issueItems: InboxFeedbackItem[] = ((issuesRes.data ?? []) as unknown as IssueRow[]).map(
-    (issue) => {
-      const activityAt = issue.updated_at;
-      const readAt = reads.get(`issue:${issue.id}`);
-      const isUnread = !readAt || readAt < activityAt;
-      return { kind: "feedback", id: issue.id, activityAt, isUnread, issue };
-    },
-  );
+  type IssueWithProject = IssueRow & { project: InboxProjectInfo | null };
+  const issueItems: InboxFeedbackItem[] = (
+    (issuesRes.data ?? []) as unknown as IssueWithProject[]
+  ).map((issue) => {
+    const activityAt = issue.updated_at;
+    const readAt = reads.get(`issue:${issue.id}`);
+    const isUnread = !readAt || readAt < activityAt;
+    return {
+      kind: "feedback",
+      id: issue.id,
+      activityAt,
+      isUnread,
+      issue,
+      project: issue.project ?? { id: issue.project_id, name: null },
+    };
+  });
 
+  type QuestionWithProject = InboxQuestionThread & { project: InboxProjectInfo | null };
   const questionItems: InboxQuestionItem[] = (
-    (questionsRes.data ?? []) as unknown as InboxQuestionThread[]
+    (questionsRes.data ?? []) as unknown as QuestionWithProject[]
   ).map((thread) => {
     const replies = [...(thread.replies ?? [])].sort((a, b) =>
       a.created_at.localeCompare(b.created_at),
@@ -184,17 +258,40 @@ export async function listInboxItemsForTeam(
       activityAt,
       isUnread,
       thread: { ...thread, replies },
+      project: thread.project ?? { id: thread.project_id, name: null },
     };
   });
 
-  const merged: InboxItem[] = [...issueItems, ...questionItems];
+  // Voor `wacht_op_mij` willen we open questions alleen tonen als er klant-
+  // activiteit is sinds de laatste team-reply. Heuristiek (v1, zie hieronder)
+  // blijft client-side omdat ze inbox_reads + replies samen vergelijkt.
+  const filteredQuestionItems =
+    filter === "wacht_op_mij"
+      ? questionItems.filter((q) => q.thread.status === "open" && hasUnreadClientActivity(q))
+      : questionItems;
+
+  const merged: InboxItem[] = [...issueItems, ...filteredQuestionItems];
   merged.sort((a, b) => {
     const w = sortWeight(a) - sortWeight(b);
     if (w !== 0) return w;
     return b.activityAt.localeCompare(a.activityAt);
   });
 
-  return merged;
+  const hasMore =
+    (issuesRes.data?.length ?? 0) >= INBOX_LIST_LIMIT ||
+    (questionsRes.data?.length ?? 0) >= INBOX_LIST_LIMIT;
+
+  return { items: merged, hasMore };
+}
+
+/**
+ * Open question is "wacht op mij" als er klant-activiteit is. In v1 hebben
+ * replies geen role-veld, dus we benaderen het op count: replies > 0 ÓF
+ * onread (geen team-read sinds laatste activiteit). Pragmatisch tot CC-002
+ * reply-role bijhoudt.
+ */
+function hasUnreadClientActivity(item: InboxQuestionItem): boolean {
+  return item.isUnread || item.thread.replies.length > 0;
 }
 
 /**
@@ -225,7 +322,7 @@ export async function countInboxItemsForTeam(
     return { pmReview: 0, openQuestions: 0, deferred: 0, unread: 0 };
   }
 
-  const [pmRes, openQRes, deferredRes, items] = await Promise.all([
+  const [pmRes, openQRes, deferredRes, listResult] = await Promise.all([
     db
       .from("issues")
       .select("id", { count: "exact", head: true })
@@ -249,7 +346,7 @@ export async function countInboxItemsForTeam(
     pmReview: pmRes.count ?? 0,
     openQuestions: openQRes.count ?? 0,
     deferred: deferredRes.count ?? 0,
-    unread: items.filter((i) => i.isUnread).length,
+    unread: listResult.items.filter((i) => i.isUnread).length,
   };
 }
 
@@ -398,32 +495,33 @@ export async function getInboxItemForDetail(
   if (kind === "feedback") {
     const { data, error } = await db
       .from("issues")
-      .select(ISSUE_SELECT)
+      .select(`${ISSUE_SELECT}, project:projects(id, name)`)
       .eq("id", id)
       .in("project_id", projectIds)
       .maybeSingle();
     if (error) throw new Error(`getInboxItemForDetail (feedback) failed: ${error.message}`);
     if (!data) return null;
-    const issue = data as unknown as IssueRow;
+    const issue = data as unknown as IssueRow & { project: InboxProjectInfo | null };
     return {
       kind: "feedback",
       id: issue.id,
       activityAt: issue.updated_at,
       isUnread: false,
       issue,
+      project: issue.project ?? { id: issue.project_id, name: null },
     };
   }
 
   const { data, error } = await db
     .from("client_questions")
-    .select(`${QUESTION_LIST_COLS}, ${QUESTION_REPLY_EMBED}`)
+    .select(`${QUESTION_LIST_COLS}, ${QUESTION_REPLY_EMBED}, project:projects(id, name)`)
     .eq("id", id)
     .in("project_id", projectIds)
     .is("parent_id", null)
     .maybeSingle();
   if (error) throw new Error(`getInboxItemForDetail (question) failed: ${error.message}`);
   if (!data) return null;
-  const thread = data as unknown as InboxQuestionThread;
+  const thread = data as unknown as InboxQuestionThread & { project: InboxProjectInfo | null };
   const replies = [...(thread.replies ?? [])].sort((a, b) =>
     a.created_at.localeCompare(b.created_at),
   );
@@ -434,5 +532,6 @@ export async function getInboxItemForDetail(
     activityAt,
     isUnread: false,
     thread: { ...thread, replies },
+    project: thread.project ?? { id: thread.project_id, name: null },
   };
 }

@@ -25,7 +25,6 @@ vi.mock("@repo/database/queries/projects/lookup", () => ({
 
 vi.mock("@repo/database/mutations/client-questions", () => ({
   sendQuestion: vi.fn(),
-  replyToQuestion: vi.fn(),
 }));
 
 vi.mock("@repo/database/queries/client-questions", () => ({

@@ -54,7 +54,8 @@ export async function composeMessageToClientAction(input: unknown): Promise<Comp
     console.error("[composeMessageToClientAction] notify failed", err),
   );
 
+  // CC-008 — preciezer dan `revalidatePath("/", "layout")`.
   revalidatePath("/inbox");
-  revalidatePath("/", "layout");
+  revalidatePath("/projects/[id]/inbox", "page");
   return { success: true, messageId: result.data.id };
 }
