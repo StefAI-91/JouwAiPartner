@@ -23,14 +23,19 @@ function groupByAssignee(issues: IssueRow[]): AssigneeBucket[] {
   const unassigned: IssueRow[] = [];
 
   for (const issue of issues) {
-    if (!issue.assigned_to || !issue.assigned_person) {
+    // "Kapot toegewezen" telt als unassigned: assigned_to bestaat wel als
+    // UUID maar de profile-join geeft geen bruikbare naam (verwijderde
+    // user, lege full_name, alleen whitespace). Liever in de Niemand-
+    // bucket met Claim-knop dan een anonieme avatar zonder context.
+    const fullName = issue.assigned_person?.full_name?.trim() ?? "";
+    if (!issue.assigned_to || !fullName) {
       unassigned.push(issue);
       continue;
     }
     const key = issue.assigned_to;
     let bucket = named.get(key);
     if (!bucket) {
-      bucket = { name: issue.assigned_person.full_name, issues: [] };
+      bucket = { name: fullName, issues: [] };
       named.set(key, bucket);
     }
     bucket.issues.push(issue);
