@@ -26,7 +26,7 @@ export function InboxHeader({
   projects,
   initialProjectId,
 }: {
-  counts: { pmReview: number; openQuestions: number; deferred: number };
+  counts: { pmReview: number; openQuestions: number; respondedQuestions: number; deferred: number };
   projects: AccessibleProject[];
   initialProjectId?: string;
 }) {
@@ -34,7 +34,10 @@ export function InboxHeader({
   const active = (params.get("filter") as InboxFilter | null) ?? "wacht_op_mij";
   const [composeOpen, setComposeOpen] = useState(false);
 
-  const total = counts.pmReview + counts.openQuestions + counts.deferred;
+  // "Wacht op mij" = needs_pm_review issues + responded client_questions (klant
+  // antwoordde, team moet acteren). "Wacht op klant" = open client_questions.
+  const waitingOnMe = counts.pmReview + counts.respondedQuestions;
+  const total = waitingOnMe + counts.openQuestions + counts.deferred;
   const canCompose = projects.length > 0;
 
   return (
@@ -63,7 +66,7 @@ export function InboxHeader({
       <div className="flex items-center gap-1.5 border-b border-border/40 bg-muted/20 px-6 py-2">
         <Chip
           label="Wacht op mij"
-          count={counts.pmReview}
+          count={waitingOnMe}
           filter="wacht_op_mij"
           active={active === "wacht_op_mij"}
         />

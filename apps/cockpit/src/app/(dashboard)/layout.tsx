@@ -14,7 +14,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     listFocusProjects(supabase),
     profile
       ? countInboxItemsForTeam(profile.id, {}, supabase)
-      : Promise.resolve({ pmReview: 0, openQuestions: 0, deferred: 0, unread: 0 }),
+      : Promise.resolve({
+          pmReview: 0,
+          openQuestions: 0,
+          respondedQuestions: 0,
+          deferred: 0,
+          unread: 0,
+        }),
   ]);
   const inboxCount = inboxCounts.unread;
 
