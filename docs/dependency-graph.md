@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 626 |
-| Exported functions/constants | 942 |
+| Files scanned | 628 |
+| Exported functions/constants | 945 |
 | Exported types/interfaces | 415 |
-| Cross-package imports | 611 |
+| Cross-package imports | 617 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -4673,7 +4673,7 @@ Which layers depend on which packages:
 | Database Queries | - | - | 4 | - | - | 4 |
 | DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
-| DevHub Components | 3 | 2 | 1 | 15 | - | 21 |
+| DevHub Components | 7 | 2 | 1 | 16 | - | 26 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 29 | - | 22 | 12 | - | 63 |
 | MCP Server | 32 | 1 | - | - | - | 33 |
@@ -5057,7 +5057,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listIssues()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssues()` | `packages/database/src/queries/issues/stats.ts`, `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 
 ### queries/issues/stats.ts
