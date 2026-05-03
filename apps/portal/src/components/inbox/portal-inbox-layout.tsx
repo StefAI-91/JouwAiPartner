@@ -1,7 +1,7 @@
 import type { ClientQuestionListRow } from "@repo/database/queries/client-questions";
 import type { ConversationThread } from "@repo/database/queries/inbox";
 import { cn } from "@repo/ui/utils";
-import { PortalInboxList } from "./portal-inbox-list";
+import { PortalInboxList, type InboxFilter } from "./portal-inbox-list";
 import { PortalThreadPane } from "./portal-thread-pane";
 import { PortalComposePane } from "./portal-compose-pane";
 import { PortalEmptyPane } from "./portal-empty-pane";
@@ -27,6 +27,7 @@ export interface PortalInboxLayoutProps {
   thread: Extract<ConversationThread, { kind: "question" }> | null;
   currentProfileId: string;
   showOnboarding: boolean;
+  filter: InboxFilter;
 }
 
 export function PortalInboxLayout({
@@ -38,8 +39,10 @@ export function PortalInboxLayout({
   thread,
   currentProfileId,
   showOnboarding,
+  filter,
 }: PortalInboxLayoutProps) {
   const hasSelection = selectedId !== undefined;
+  const count = questions.length;
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col md:flex-row">
@@ -52,10 +55,17 @@ export function PortalInboxLayout({
         )}
       >
         <div className="border-b border-border/60 px-5 py-4">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
             {organizationName} · {projectName}
           </p>
-          <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Berichten</h1>
+          <div className="mt-1 flex items-baseline justify-between gap-3">
+            <h1 className="font-heading text-[22px] font-bold tracking-tight text-foreground">
+              Berichten
+            </h1>
+            <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
+              {count} {count === 1 ? "gesprek" : "gesprekken"}
+            </span>
+          </div>
         </div>
 
         <PortalInboxList
@@ -63,6 +73,7 @@ export function PortalInboxLayout({
           questions={questions}
           selectedId={selectedId}
           currentProfileId={currentProfileId}
+          filter={filter}
         />
       </aside>
 

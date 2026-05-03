@@ -7,6 +7,7 @@ import { getConversationThread, type ConversationThread } from "@repo/database/q
 import { listQuestionsForProject } from "@repo/database/queries/client-questions";
 import { getProfilePreferences } from "@repo/database/queries/profiles";
 import { PortalInboxLayout } from "@/components/inbox/portal-inbox-layout";
+import type { InboxFilter } from "@/components/inbox/portal-inbox-list";
 
 /**
  * PR-026 — Two-pane portal-inbox.
@@ -16,16 +17,24 @@ import { PortalInboxLayout } from "@/components/inbox/portal-inbox-layout";
  *   - `/inbox/<uuid>`       → thread geopend (desktop: rechts, mobile: alleen detail)
  *   - `/inbox/new`          → compose-pane (sentinel-string, geen uuid)
  *
+ * `?status=open|responded` filtert de lijst client-side display (we halen
+ * altijd alle threads op zodat de tab-counts kloppen). Geen DB-roundtrip
+ * verschil tussen tabs.
+ *
  * Eén server-fetch per page-render. Lijst + thread (indien geselecteerd) +
  * project-meta + preferences in `Promise.all`. Geen extra DB-roundtrips
  * t.o.v. de pre-PR-026 split-route variant.
  */
 export default async function PortalInboxPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; messageId?: string[] }>;
+  searchParams: Promise<{ status?: string }>;
 }) {
   const { id: projectId, messageId } = await params;
+  const { status } = await searchParams;
+  const filter: InboxFilter = status === "open" || status === "responded" ? status : "all";
   const selectedId = messageId?.[0];
 
   const supabase = await createPageClient();
@@ -80,6 +89,7 @@ export default async function PortalInboxPage({
       thread={thread as Extract<ConversationThread, { kind: "question" }> | null}
       currentProfileId={profile.id}
       showOnboarding={showOnboarding}
+      filter={filter}
     />
   );
 }

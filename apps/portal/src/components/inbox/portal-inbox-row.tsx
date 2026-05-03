@@ -1,18 +1,22 @@
 import Link from "next/link";
+import { CheckCheck, Clock } from "lucide-react";
 import type { ClientQuestionListRow } from "@repo/database/queries/client-questions";
 import { cn } from "@repo/ui/utils";
 
 /**
- * PR-026 — Linear-stijl rij voor de portal-inbox.
+ * Portal-inbox rij — status-first hiërarchie.
  *
- * Klant ziet maar één project per portal-view, dus de rij toont géén project-
- * naam of source-indicator (zou alleen ruis geven). Wel: status-bullet, sender,
- * eerste-zin van het bericht, timestamp, plus actieve-state als deze rij de
- * geopende thread is.
+ * Vervangt de oude "Jij/Team + body-preview + Beantwoord-pil" lay-out. De
+ * gebruiker weet altijd al dat threads van hem komen; ‘Jij’ als label heeft
+ * geen informatiewaarde. Wat wél informatie geeft is per thread anders:
  *
- * Sender-label is "Team" (bericht zonder eigen replies of waarvan de root
- * door team is verstuurd) of "Jij" (root door huidige klant). Voor v1
- * benaderen we dat met `sender_profile_id === currentProfileId`.
+ *   - Status: wachtend op team óf beantwoord (visueel gewicht hier)
+ *   - Bij wachtend: jouw vraag prominent, wachttijd onder
+ *   - Bij beantwoord: het antwoord van het team prominent, jouw vraag klein
+ *     erboven als context
+ *
+ * `currentProfileId` blijft alleen om team-vs-jij te onderscheiden — niet voor
+ * security (RLS doet dat).
  */
 export interface PortalInboxRowProps {
   projectId: string;
@@ -29,15 +33,14 @@ export function PortalInboxRow({
 }: PortalInboxRowProps) {
   const href = `/projects/${projectId}/inbox/${question.id}`;
   const isOwnRoot = question.sender_profile_id === currentProfileId;
-  const senderLabel = isOwnRoot ? "Jij" : "Team";
-  const isWaitingForClient = question.status === "open" && !isOwnRoot;
-  const isResponded = question.status === "responded";
+  const isAwaitingTeam = question.status === "open" && isOwnRoot;
+  const isAnswered = question.status === "responded";
 
-  const titleLine = makePreview(question.body);
   const lastReply =
     question.replies.length > 0 ? question.replies[question.replies.length - 1] : null;
-  const snippet = lastReply ? makePreview(lastReply.body) : null;
-  const timestamp = formatTimestamp(question.created_at);
+  const lastReplyByTeam = lastReply ? lastReply.sender_profile_id !== currentProfileId : false;
+  const time = formatTimestamp(question.created_at);
+  const replyCount = question.replies.length;
 
   return (
     <li>
@@ -45,53 +48,105 @@ export function PortalInboxRow({
         href={href}
         prefetch
         className={cn(
-          "block border-b border-border/30 px-5 py-3 transition",
-          isActive ? "bg-primary/5" : "hover:bg-muted/40",
+          "group block border-l-2 px-5 py-3.5 transition",
+          isActive
+            ? "border-primary bg-primary/5"
+            : isAwaitingTeam
+              ? "border-amber-400/70 bg-amber-50/30 hover:bg-amber-50/60"
+              : "border-transparent hover:bg-muted/40",
         )}
       >
+        {/* Top row: status pil + reactie-count + tijd */}
         <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "size-1.5 shrink-0 rounded-full",
-              isWaitingForClient ? "bg-amber-500" : isActive ? "bg-primary" : "bg-transparent",
+          {isAwaitingTeam ? (
+            <StatusPill tone="amber">
+              <Clock className="size-2.5" strokeWidth={2.5} />
+              Wacht op team
+            </StatusPill>
+          ) : isAnswered ? (
+            <StatusPill tone="success">
+              <CheckCheck className="size-2.5" strokeWidth={2.5} />
+              Beantwoord
+            </StatusPill>
+          ) : (
+            <StatusPill tone="muted">Open</StatusPill>
+          )}
+
+          <span className="ml-auto inline-flex items-center gap-1.5 text-[10.5px] tabular-nums text-muted-foreground/80">
+            {replyCount > 0 && (
+              <>
+                <span>
+                  <span className="font-semibold text-foreground/70">{replyCount}</span> reactie
+                  {replyCount === 1 ? "" : "s"}
+                </span>
+                <span className="size-0.5 rounded-full bg-muted-foreground/40" />
+              </>
             )}
-            aria-hidden
-          />
-          <span
+            <span>{time}</span>
+          </span>
+        </div>
+
+        {/* Body — twee varianten */}
+        {isAnswered && lastReply && lastReplyByTeam ? (
+          <div className="mt-2.5 space-y-1.5">
+            <p className="line-clamp-1 text-[11.5px] leading-snug text-muted-foreground">
+              <span className="font-semibold text-foreground/60">Jij vroeg:</span>{" "}
+              {makePreview(question.body)}
+            </p>
+            <p
+              className={cn(
+                "line-clamp-2 text-[13.5px] leading-snug",
+                isActive ? "text-foreground" : "text-foreground/90",
+              )}
+            >
+              <span className="text-muted-foreground">&ldquo;</span>
+              {makePreview(lastReply.body)}
+              <span className="text-muted-foreground">&rdquo;</span>
+            </p>
+          </div>
+        ) : (
+          <p
             className={cn(
-              "flex-1 text-[12px] font-medium",
-              isActive ? "text-foreground" : "text-foreground/85",
+              "mt-2 line-clamp-2 text-[13.5px] font-medium leading-snug",
+              isActive ? "text-foreground" : "text-foreground/90",
             )}
           >
-            {senderLabel}
-          </span>
-          {isResponded ? (
-            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Beantwoord
-            </span>
-          ) : null}
-          <span className="text-[10px] tabular-nums text-muted-foreground/70">{timestamp}</span>
-        </div>
-        <p
-          className={cn(
-            "mt-0.5 line-clamp-1 text-[13px] leading-snug",
-            isActive ? "text-foreground" : "text-foreground/85",
-          )}
-        >
-          {titleLine}
-        </p>
-        {snippet ? (
-          <p className="mt-0.5 line-clamp-1 text-[11.5px] text-muted-foreground/80">{snippet}</p>
-        ) : null}
+            {makePreview(question.body)}
+          </p>
+        )}
       </Link>
     </li>
   );
 }
 
+function StatusPill({
+  children,
+  tone,
+}: {
+  children: React.ReactNode;
+  tone: "amber" | "success" | "muted";
+}) {
+  const styles = {
+    amber: "bg-amber-100/80 text-amber-800 border-amber-200/70",
+    success: "bg-emerald-50 text-emerald-800 border-emerald-100",
+    muted: "bg-muted text-muted-foreground border-border/60",
+  } as const;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+        styles[tone],
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 function makePreview(body: string): string {
   const trimmed = body.trim().replace(/\s+/g, " ");
-  if (trimmed.length <= 90) return trimmed;
-  return trimmed.slice(0, 90) + "…";
+  if (trimmed.length <= 100) return trimmed;
+  return trimmed.slice(0, 100) + "…";
 }
 
 // Compact relatieve timestamp: "2u" / "3d" / "15 mei". Niet exact — de detail-
@@ -103,7 +158,7 @@ function formatTimestamp(iso: string): string {
   if (diffMin < 60) return `${Math.max(1, diffMin)}m`;
   const diffH = Math.floor(diffMin / 60);
   if (diffH < 24) return `${diffH}u`;
-  const diffD = Math.floor(diffH / 24);
+  const diffD = Math.floor(diffMin / 60 / 24);
   if (diffD < 7) return `${diffD}d`;
   const d = new Date(iso);
   return `${d.getDate()} ${["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"][d.getMonth()]}`;
