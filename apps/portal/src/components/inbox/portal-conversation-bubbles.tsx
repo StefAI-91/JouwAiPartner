@@ -102,8 +102,10 @@ function Bubble({ msg, alignment }: { msg: ConversationMessage; alignment: "left
         </div>
         <div
           className={`mt-1 whitespace-pre-line rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed ring-1 ${
+            // PR-026 — eigen-bubble was zwart op desktop te zwaar; lichtere
+            // primary-tint met dezelfde "rechts = jij"-affordance.
             isRight
-              ? "rounded-tr-md bg-foreground text-background ring-foreground/20"
+              ? "rounded-tr-md bg-primary/10 text-foreground ring-primary/20"
               : "rounded-tl-md bg-background text-foreground ring-foreground/[0.08]"
           }`}
         >

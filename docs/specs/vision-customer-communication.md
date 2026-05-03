@@ -172,6 +172,7 @@ The inbox is non-negotiable as a polished surface. If it does not feel great, ne
 - **Conversation threading** — questions render as a chat-style thread (latest at bottom), not a flat list of replies.
 - **Mobile-tolerable** — AI-drafted replies make it possible to approve/edit-and-send on phone. Full-feature mobile is not the goal; "approve a draft on the go" is.
 - **No empty state without onboarding cue** — first-time users see a short explainer card on what the inbox is for and how to get the most out of it.
+- **Two-pane Linear-stijl op desktop (PR-026).** Cockpit (sinds CC-001) en portal (sinds PR-026) renderen beide een lijst-pane links + thread/compose-pane rechts op `md+` (≥768px). Onder die breedte valt de layout terug op één-pane-tegelijk via CSS-only `hidden md:flex`. Geen modale compose-flow op two-pane: de rechter-pane wordt afwisselend thread óf compose. Eén catch-all-route per kant zodat selectie via URL deelbaar is.
 
 ---
 

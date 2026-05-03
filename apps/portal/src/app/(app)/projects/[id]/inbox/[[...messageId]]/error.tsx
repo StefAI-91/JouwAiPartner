@@ -11,7 +11,7 @@ interface ErrorProps {
 
 export default function InboxError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error(error);
+    console.error("[portal/inbox]", error);
   }, [error]);
 
   return (
