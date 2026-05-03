@@ -4,6 +4,7 @@ import { PhaseStrip } from "@/components/journey/phase-strip";
 import { PhaseCard } from "@/components/journey/phase-card";
 import { DataFlowDiagram } from "@/components/journey/data-flow-diagram";
 import { WhatsNew } from "@/components/journey/whats-new";
+import { ScopeAuditFlow } from "@/components/journey/scope-audit-flow";
 
 export const metadata = {
   title: "Klantreis — Cockpit",
@@ -34,6 +35,15 @@ export default function JourneyPage() {
             <PhaseCard key={phase.id} phase={phase} />
           ))}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Zoom-in op de Discovery → Sales overgang</h2>
+        <p className="text-sm text-muted-foreground">
+          De fase-overgang van 2 naar 3 is de belangrijkste — daar wordt bepaald of we klaar zijn
+          voor een PRD/voorstel. Hieronder de state machine die dat aanstuurt.
+        </p>
+        <ScopeAuditFlow />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">

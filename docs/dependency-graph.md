@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 651 |
-| Exported functions/constants | 962 |
+| Files scanned | 652 |
+| Exported functions/constants | 963 |
 | Exported types/interfaces | 416 |
-| Cross-package imports | 608 |
+| Cross-package imports | 609 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -4113,6 +4113,14 @@
 **Exports:**
 - `PhaseStrip()`
 
+### `apps/cockpit/src/components/journey/scope-audit-flow.tsx`
+
+**Exports:**
+- `ScopeAuditFlow()`
+
+**Depends on:**
+- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
+
 ### `apps/cockpit/src/components/journey/whats-new.tsx`
 
 **Exports:**
@@ -4754,7 +4762,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 22 | 5 | - | 46 | - | 73 |
+| Cockpit Components | 22 | 5 | - | 47 | - | 74 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 39 | - | 158 |
 | Database Queries | - | - | 6 | - | - | 6 |
