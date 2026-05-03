@@ -11,6 +11,8 @@ export type { SendMailInput, SendMailResult } from "./send";
 export { notifyFeedbackStatusChanged } from "./notify/feedback-status";
 export { notifyTeamReply } from "./notify/question-reply";
 export { notifyNewTeamMessage } from "./notify/new-team-message";
+export { notifyPortalAccessGranted } from "./notify/portal-access-granted";
+export type { NotifyPortalAccessGrantedInput } from "./notify/portal-access-granted";
 export { pickTemplateForStatus } from "./templates";
 export type {
   IssueForTemplate,

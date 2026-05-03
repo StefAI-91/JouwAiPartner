@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 642 |
-| Exported functions/constants | 950 |
+| Exported functions/constants | 951 |
 | Exported types/interfaces | 414 |
 | Cross-package imports | 603 |
 | Critical integration points (3+ packages) | 13 |
@@ -610,6 +610,7 @@
 - `countAdmins()`
 - `getProfileRole()`
 - `getProfileNameById()`
+- `getProfileEmail()`
 
 **Types:** `TeamRole`, `ProfileRole`, `TeamMember`, `TeamMemberWithAccess`
 

@@ -48,3 +48,9 @@ export function inboxDeeplink(portalUrl: string, projectId: string): string {
   const base = portalUrl.replace(/\/+$/, "");
   return `${base}/projects/${projectId}/inbox`;
 }
+
+/** Bouwt deeplink naar de project-overzichtspagina in het portaal. */
+export function projectDeeplink(portalUrl: string, projectId: string): string {
+  const base = portalUrl.replace(/\/+$/, "");
+  return `${base}/projects/${projectId}`;
+}

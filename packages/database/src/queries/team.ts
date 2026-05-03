@@ -138,3 +138,21 @@ export async function getProfileNameById(
   if (name) return name;
   return (data.email as string | null) ?? null;
 }
+
+/**
+ * Resolve a profile id to its email address. Returns `null` when the profile
+ * does not exist of geen e-mail heeft. Lichte helper voor notify-paden die
+ * alleen de email nodig hebben (bv. portal-access-granted notificatie).
+ */
+export async function getProfileEmail(
+  userId: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db.from("profiles").select("email").eq("id", userId).maybeSingle();
+  if (error) {
+    console.error("[getProfileEmail] error:", error.message);
+    return null;
+  }
+  return (data?.email as string | null) ?? null;
+}

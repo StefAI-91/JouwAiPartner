@@ -18,6 +18,8 @@ export {
 export { newTeamReplyTemplate } from "./new-team-reply";
 export { newTeamMessageTemplate } from "./new-team-message";
 export type { NewTeamMessageTemplateProps } from "./new-team-message";
+export { portalAccessGrantedTemplate } from "./portal-access-granted";
+export type { PortalAccessGrantedTemplateProps } from "./portal-access-granted";
 export * from "./types";
 
 /**
