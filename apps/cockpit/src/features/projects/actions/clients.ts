@@ -4,8 +4,11 @@ import { revalidatePath } from "next/cache";
 import { requireAdminInAction } from "@repo/auth/access";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { upsertProfile } from "@repo/database/mutations/team";
+import { setProfileOrganization } from "@repo/database/mutations/profiles";
 import { grantPortalAccess, revokePortalAccess } from "@repo/database/mutations/portal-access";
 import { getProfileEmail, getProfileRole } from "@repo/database/queries/team";
+import { getProfileOrganizationId } from "@repo/database/queries/profiles";
+import { getProjectOrganizationId } from "@repo/database/queries/projects/lookup";
 import {
   inviteProjectClientSchema,
   revokeProjectClientSchema,
@@ -56,6 +59,14 @@ export async function inviteProjectClientAction(
   const admin = getAdminClient();
   const { email, projectId } = parsed.data;
 
+  // FIX cockpit→portal-zichtbaarheid: voor klanten moet `profiles.organization_id`
+  // gelijk zijn aan de project-org, anders blokkeert RLS op `client_questions`
+  // de SELECT (zie `20260430110000_client_questions.sql` PR-SEC-030). Zonder
+  // deze sync zien klanten niets — admins wel, omdat die door
+  // `NOT is_client(auth.uid())` heen lopen.
+  const projectOrgId = await getProjectOrganizationId(projectId, admin);
+  if (!projectOrgId) return { error: "Project niet gevonden" };
+
   // Bestaat de email al?
   let existingUserId: string | null = null;
   try {
@@ -69,7 +80,15 @@ export async function inviteProjectClientAction(
     // Rol-lookup is nu alleen nog informatief — bij member/admin laten we de
     // rol staan en grant idempotent access. Dat houdt de cockpit/devhub
     // toegang van members intact (PR-024).
-    await getProfileRole(existingUserId, admin);
+    const role = await getProfileRole(existingUserId, admin);
+
+    // Klanten zijn single-tenant: mismatching org tussen huidige profile en
+    // het project blokkeert toch zichtbaarheid via RLS. Liever expliciet
+    // erroren dan stil grant'en + onzichtbare berichten als gevolg.
+    if (role === "client") {
+      const orgSync = await syncClientProfileOrganization(existingUserId, projectOrgId, admin);
+      if ("error" in orgSync) return { error: orgSync.error };
+    }
 
     const grantResult = await grantPortalAccess(existingUserId, projectId, admin);
     if ("error" in grantResult) return { error: grantResult.error };
@@ -99,11 +118,42 @@ export async function inviteProjectClientAction(
     return { error: `Profile upsert mislukt: ${profileResult.error}` };
   }
 
+  // Eerst org koppelen, dan pas grant: als de org-update faalt willen we
+  // geen "wel access, geen zichtbaarheid"-tussenstand achterlaten.
+  const orgSync = await syncClientProfileOrganization(userId, projectOrgId, admin);
+  if ("error" in orgSync) return { error: orgSync.error };
+
   const grantResult = await grantPortalAccess(userId, projectId, admin);
   if ("error" in grantResult) return { error: grantResult.error };
 
   revalidatePath(`/projects/${projectId}`);
   return { success: true, data: { profileId: userId, invitedFresh: true } };
+}
+
+/**
+ * Zet `profiles.organization_id` voor een klant gelijk aan de project-org.
+ *
+ * - NULL → set naar projectOrg
+ * - gelijk → no-op
+ * - mismatch → error (klant is single-tenant; cross-org-uitnodigingen vragen
+ *   om expliciete migratie van klant-data, geen stille overwrite)
+ *
+ * Niet bedoeld voor members/admins — die lopen niet langs de RLS-org-check.
+ */
+async function syncClientProfileOrganization(
+  profileId: string,
+  projectOrgId: string,
+  admin: ReturnType<typeof getAdminClient>,
+): Promise<{ success: true } | { error: string }> {
+  const currentOrg = await getProfileOrganizationId(profileId, admin);
+  if (currentOrg === projectOrgId) return { success: true };
+  if (currentOrg !== null) {
+    return {
+      error:
+        "Deze klant is gekoppeld aan een andere organisatie. Migreer eerst de klant-organisatie of gebruik een ander account.",
+    };
+  }
+  return setProfileOrganization(profileId, projectOrgId, admin);
 }
 
 /**

@@ -94,6 +94,14 @@ dev. Zet `RESEND_FORCE_SEND=1` voor opt-in vanaf staging.
 **Best-effort:** Resend-failures laten de mutation NIET falen — de notify-call
 zit in `try/catch` op de action-laag. Mail is best-effort, mutation is SoT.
 
+**Verdeling per Vercel-project:**
+
+- _Cockpit_ verstuurt de mail (`composeMessageToClientAction`,
+  `replyToQuestionAction`) → vereist `RESEND_API_KEY`, `RESEND_FROM_EMAIL`,
+  `NEXT_PUBLIC_PORTAL_URL` op cockpit.
+- _Portal_ ontvangt alleen de deeplink uit de mail → geen Resend-vars nodig
+  op de portal-deploy.
+
 ## Supabase dashboard (handmatig, DH-018)
 
 - **Redirect URLs whitelist** (Authentication → URL Configuration) moet beide productie-URL's `${cockpit}/auth/callback` en `${devhub}/auth/callback` bevatten, plus de preview/localhost varianten.

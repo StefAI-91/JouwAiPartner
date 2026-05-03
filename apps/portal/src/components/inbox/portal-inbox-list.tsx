@@ -9,9 +9,15 @@ import { PortalInboxRow } from "./portal-inbox-row";
  *
  * Sticky-bovenste rij is de prominente "Nieuw bericht aan team"-CTA in
  * primary-kleur — dit is de kern-actie van de inbox en mag het ook tonen.
- * Daaronder filter-tabs (Alles · Wacht op team · Beantwoord) gestuurd via
- * een URL-searchParam zodat de page-fetch leidend blijft. Daaronder een
+ * Daaronder filter-tabs (Alles · Open · Beantwoord) gestuurd via een
+ * URL-searchParam zodat de page-fetch leidend blijft. Daaronder een
  * datum-gegroepeerde lijst (Vandaag · Gisteren · Eerder).
+ *
+ * Tab "Open" telt en filtert ALLE open threads, ongeacht wie de root stuurde
+ * — dit voorkomt dat een door het team gestart open bericht onzichtbaar
+ * raakt in de "Wacht op team"-tab (oude logica filterde dat eruit). Visuele
+ * prominentie blijft per rij verschillen via de status-pill (zie
+ * `portal-inbox-row.tsx`).
  *
  * Counts in de tabs worden uit `questions` afgeleid — dat is de complete
  * (ongefilterde) set die de page ophaalt. Wisselen tussen tabs vereist dus
@@ -34,8 +40,8 @@ export function PortalInboxList({
   currentProfileId,
   filter,
 }: PortalInboxListProps) {
-  const counts = countByStatus(questions, currentProfileId);
-  const visible = filterQuestions(questions, currentProfileId, filter);
+  const counts = countByStatus(questions);
+  const visible = filterQuestions(questions, filter);
   const groups = groupByDate(visible);
 
   return (
@@ -73,7 +79,7 @@ export function PortalInboxList({
             count={counts.open}
             tone={counts.open > 0 ? "amber" : undefined}
           >
-            Wacht op team
+            Open
           </FilterTab>
           <FilterTab
             projectId={projectId}
@@ -199,7 +205,7 @@ function EmptyState() {
 function EmptyFilteredState({ filter }: { filter: InboxFilter }) {
   const labels: Record<InboxFilter, string> = {
     all: "Niets te tonen.",
-    open: "Niets dat nog op een antwoord wacht.",
+    open: "Geen open berichten.",
     responded: "Nog geen beantwoorde berichten.",
   };
   return (
@@ -213,17 +219,21 @@ function EmptyFilteredState({ filter }: { filter: InboxFilter }) {
    Pure helpers — eenvoudig testbaar zonder DOM.
    ──────────────────────────────────────────────────────────────── */
 
-function countByStatus(
-  questions: ClientQuestionListRow[],
-  currentProfileId: string,
-): { all: number; open: number; responded: number } {
+function countByStatus(questions: ClientQuestionListRow[]): {
+  all: number;
+  open: number;
+  responded: number;
+} {
   let open = 0;
   let responded = 0;
   for (const q of questions) {
-    // Tab "Wacht op team" = open thread waarvan de root van de klant zelf is.
-    // Threads die door het team zijn gestart en nog open staan, wachten juist
-    // op de klant — die horen niet in "wacht op team".
-    if (q.status === "open" && q.sender_profile_id === currentProfileId) open += 1;
+    // Tab "Open" telt elk thread waar nog geen reply op is gegeven —
+    // ongeacht of de klant of het team de root stuurde. Eerder filterden
+    // we team-initiated open eruit (commentaar verwees naar "Wacht op
+    // team"-betekenis), waardoor cockpit→portal-berichten visueel uit
+    // zowel het filter als de tellers verdwenen. De rij-pill differentieert
+    // alsnog visueel tussen "Nieuw van team" en "Wacht op team".
+    if (q.status === "open") open += 1;
     else if (q.status === "responded") responded += 1;
   }
   return { all: questions.length, open, responded };
@@ -231,13 +241,11 @@ function countByStatus(
 
 function filterQuestions(
   questions: ClientQuestionListRow[],
-  currentProfileId: string,
   filter: InboxFilter,
 ): ClientQuestionListRow[] {
   if (filter === "all") return questions;
   if (filter === "responded") return questions.filter((q) => q.status === "responded");
-  // open = wacht op team
-  return questions.filter((q) => q.status === "open" && q.sender_profile_id === currentProfileId);
+  return questions.filter((q) => q.status === "open");
 }
 
 function groupByDate(

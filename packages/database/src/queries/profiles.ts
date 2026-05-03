@@ -24,3 +24,29 @@ export async function getProfilePreferences(
   const parsed = profilePreferencesSchema.safeParse(data.preferences ?? {});
   return parsed.success ? parsed.data : {};
 }
+
+/**
+ * Lees alleen `profiles.organization_id` voor één profile. Gebruikt door de
+ * invite-flow om te checken of een bestaande klant al gekoppeld is aan een
+ * organisatie voordat we een nieuwe org-koppeling forceren — zo blokkeren we
+ * stille cross-org overwrites die de RLS-multi-tenant-guard zouden omzeilen.
+ *
+ * Returnt `null` bij ontbrekende rij óf bij `organization_id IS NULL`; de
+ * caller behandelt beide hetzelfde (sync nodig).
+ */
+export async function getProfileOrganizationId(
+  profileId: string,
+  client?: SupabaseClient,
+): Promise<string | null> {
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("profiles")
+    .select("organization_id")
+    .eq("id", profileId)
+    .maybeSingle();
+  if (error) {
+    console.error("[getProfileOrganizationId]", error.message);
+    return null;
+  }
+  return ((data?.organization_id as string | null | undefined) ?? null) || null;
+}

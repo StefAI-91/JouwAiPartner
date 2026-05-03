@@ -1,19 +1,21 @@
 import Link from "next/link";
-import { CheckCheck, Clock } from "lucide-react";
+import { CheckCheck, Clock, Sparkles } from "lucide-react";
 import type { ClientQuestionListRow } from "@repo/database/queries/client-questions";
 import { cn } from "@repo/ui/utils";
 
 /**
  * Portal-inbox rij — status-first hiërarchie.
  *
- * Vervangt de oude "Jij/Team + body-preview + Beantwoord-pil" lay-out. De
- * gebruiker weet altijd al dat threads van hem komen; ‘Jij’ als label heeft
- * geen informatiewaarde. Wat wél informatie geeft is per thread anders:
+ * Drie kernscenario's, elk met een eigen pill:
  *
- *   - Status: wachtend op team óf beantwoord (visueel gewicht hier)
- *   - Bij wachtend: jouw vraag prominent, wachttijd onder
- *   - Bij beantwoord: het antwoord van het team prominent, jouw vraag klein
- *     erboven als context
+ *   1. **Nieuw van team** (`status=open` + `sender ≠ klant`): team is gesprek
+ *      gestart, klant moet lezen/antwoorden. Primary border + Sparkles-pill —
+ *      meest prominente visuele cue zodat de klant nieuwe team-berichten niet
+ *      mist (FIX cockpit→portal-zichtbaarheid bug).
+ *   2. **Wacht op team** (`status=open` + `sender = klant`): klant heeft iets
+ *      gestuurd en wacht op antwoord. Amber border, attentie maar minder
+ *      urgent dan een nieuw team-bericht.
+ *   3. **Beantwoord** (`status=responded`): afgerond, archief-look.
  *
  * `currentProfileId` blijft alleen om team-vs-jij te onderscheiden — niet voor
  * security (RLS doet dat).
@@ -33,6 +35,7 @@ export function PortalInboxRow({
 }: PortalInboxRowProps) {
   const href = `/projects/${projectId}/inbox/${question.id}`;
   const isOwnRoot = question.sender_profile_id === currentProfileId;
+  const isNewFromTeam = question.status === "open" && !isOwnRoot;
   const isAwaitingTeam = question.status === "open" && isOwnRoot;
   const isAnswered = question.status === "responded";
 
@@ -51,14 +54,21 @@ export function PortalInboxRow({
           "group block border-l-2 px-5 py-3.5 transition",
           isActive
             ? "border-primary bg-primary/5"
-            : isAwaitingTeam
-              ? "border-amber-400/70 bg-amber-50/30 hover:bg-amber-50/60"
-              : "border-transparent hover:bg-muted/40",
+            : isNewFromTeam
+              ? "border-primary/70 bg-primary/5 hover:bg-primary/10"
+              : isAwaitingTeam
+                ? "border-amber-400/70 bg-amber-50/30 hover:bg-amber-50/60"
+                : "border-transparent hover:bg-muted/40",
         )}
       >
         {/* Top row: status pil + reactie-count + tijd */}
         <div className="flex items-center gap-2">
-          {isAwaitingTeam ? (
+          {isNewFromTeam ? (
+            <StatusPill tone="primary">
+              <Sparkles className="size-2.5" strokeWidth={2.5} />
+              Nieuw van team
+            </StatusPill>
+          ) : isAwaitingTeam ? (
             <StatusPill tone="amber">
               <Clock className="size-2.5" strokeWidth={2.5} />
               Wacht op team
@@ -124,9 +134,10 @@ function StatusPill({
   tone,
 }: {
   children: React.ReactNode;
-  tone: "amber" | "success" | "muted";
+  tone: "primary" | "amber" | "success" | "muted";
 }) {
   const styles = {
+    primary: "bg-primary/15 text-primary border-primary/30",
     amber: "bg-amber-100/80 text-amber-800 border-amber-200/70",
     success: "bg-emerald-50 text-emerald-800 border-emerald-100",
     muted: "bg-muted text-muted-foreground border-border/60",
