@@ -5,7 +5,7 @@ import { FolderKanban, X, Plus } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { linkEmailProjectAction, unlinkEmailProjectAction } from "@/features/emails/actions";
 
-export function ProjectLinker({
+export function EmailProjectLinker({
   emailId,
   linkedProjects,
   allProjects,

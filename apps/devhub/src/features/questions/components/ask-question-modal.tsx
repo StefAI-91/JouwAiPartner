@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@repo/ui/dialog";
-import { askQuestionAction } from "@/actions/questions";
+import { askQuestionAction } from "@/features/questions/actions/questions";
 
 /**
  * PR-023 — knop + modal om als team een vraag aan de klant te stellen.

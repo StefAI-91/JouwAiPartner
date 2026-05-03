@@ -99,7 +99,7 @@ describe("Review Actions", () => {
 
   describe("generateProjectReview", () => {
     async function getAction() {
-      const mod = await import("@/actions/review");
+      const mod = await import("@/features/review/actions/review");
       return mod.generateProjectReview;
     }
 

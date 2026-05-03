@@ -16,14 +16,15 @@ Server actions voor meeting-review. Emails hebben een eigen review-action in `fe
 
 UI voor review queue, review-detail en de actie-balk die meerdere review-types delen.
 
-| File                    | Rol                                                                                                                                  |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `review-queue.tsx`      | Lijst met openstaande reviews op `/review`.                                                                                          |
-| `empty-state.tsx`       | Getoond wanneer de queue leeg is.                                                                                                    |
-| `review-card.tsx`       | Kaartje in de queue met snelle approve-knop.                                                                                         |
-| `review-detail.tsx`     | Volledige review-pagina op `/review/[id]` — toont extractions, stelt bewerken toe, approve/reject flow.                              |
-| `review-action-bar.tsx` | Shared actie-balk (approve / edit / reject). Gebruikt door `review-detail` én door `features/emails/components/email-review-detail`. |
-| `proposals-list.tsx`    | Voorgestelde wijzigingen (bv. emerging themes) binnen de review-context.                                                             |
+| File                 | Rol                                                                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| `review-queue.tsx`   | Lijst met openstaande reviews op `/review`.                                                             |
+| `empty-state.tsx`    | Getoond wanneer de queue leeg is.                                                                       |
+| `review-card.tsx`    | Kaartje in de queue met snelle approve-knop.                                                            |
+| `review-detail.tsx`  | Volledige review-pagina op `/review/[id]` — toont extractions, stelt bewerken toe, approve/reject flow. |
+| `proposals-list.tsx` | Voorgestelde wijzigingen (bv. emerging themes) binnen de review-context.                                |
+
+> `ReviewActionBar` (approve / edit / reject) is opgetild naar `components/shared/` (AD-001) — review-detail én email-review-detail (in features/emails/) consumeren hem daar.
 
 ### `validations/`
 

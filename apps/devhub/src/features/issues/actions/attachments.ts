@@ -7,19 +7,17 @@ import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import { getAdminClient } from "@repo/database/supabase/admin";
 import { getIssueById } from "@repo/database/queries/issues";
 import { insertAttachment } from "@repo/database/mutations/issues/attachments";
+import {
+  createIssueAttachmentUploadUrlSchema,
+  recordIssueAttachmentSchema,
+} from "@/features/issues/validations/issue";
 
 const BUCKET_ID = "issue-attachments";
-const ATTACHMENT_TYPE = z.enum(["screenshot", "video", "attachment"]);
 
 function sanitizeFileName(name: string): string {
   const trimmed = name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g, "-");
   return trimmed.length > 120 ? trimmed.slice(0, 120) : trimmed || "image";
 }
-
-const createUploadUrlSchema = z.object({
-  issue_id: z.string().uuid(),
-  file_name: z.string().min(1).max(255),
-});
 
 /**
  * Mint a short-lived signed upload URL so the browser can PUT the blob
@@ -33,14 +31,14 @@ const createUploadUrlSchema = z.object({
  * round-trip it into `recordIssueAttachmentAction` afterwards.
  */
 export async function createIssueAttachmentUploadUrlAction(
-  input: z.input<typeof createUploadUrlSchema>,
+  input: z.input<typeof createIssueAttachmentUploadUrlSchema>,
 ): Promise<
   { success: true; signed_url: string; token: string; storage_path: string } | { error: string }
 > {
   const user = await getAuthenticatedUser();
   if (!user) return { error: "Niet ingelogd" };
 
-  const parsed = createUploadUrlSchema.safeParse(input);
+  const parsed = createIssueAttachmentUploadUrlSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Ongeldige invoer" };
   }
@@ -74,23 +72,6 @@ export async function createIssueAttachmentUploadUrlAction(
     storage_path: storagePath,
   };
 }
-
-const recordIssueAttachmentSchema = z.object({
-  issue_id: z.string().uuid(),
-  type: ATTACHMENT_TYPE,
-  storage_path: z.string().min(1).max(500),
-  file_name: z.string().min(1).max(255),
-  mime_type: z.string().max(120).nullable().optional(),
-  file_size: z
-    .number()
-    .int()
-    .min(0)
-    .max(50 * 1024 * 1024)
-    .nullable()
-    .optional(),
-  width: z.number().int().min(0).max(20_000).nullable().optional(),
-  height: z.number().int().min(0).max(20_000).nullable().optional(),
-});
 
 /**
  * Persist an issue-attachment row after the client uploaded the blob to

@@ -16,7 +16,8 @@ import {
   createIssueSchema,
   updateIssueSchema,
   deleteIssueSchema,
-} from "@repo/database/validations/issues";
+  projectIdSchema,
+} from "@/features/issues/validations/issue";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 import { createClient } from "@repo/database/supabase/server";
@@ -282,8 +283,6 @@ export async function deleteIssueAction(
   revalidatePath("/issues");
   return { success: true };
 }
-
-const projectIdSchema = z.string().uuid();
 
 /**
  * Get issue counts per status for sidebar display.

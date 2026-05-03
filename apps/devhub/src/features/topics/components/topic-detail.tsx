@@ -10,8 +10,8 @@ import { TopicDeleteButton } from "./topic-delete-button";
 import { TopicResolutionEditor } from "./topic-resolution-editor";
 import { TopicStatusSelect } from "./topic-status-select";
 import { TopicTestInstructionsEditor } from "./topic-test-instructions-editor";
-import { AskQuestionModal } from "@/components/questions/ask-question-modal";
-import { OpenQuestionsBlock } from "@/components/questions/open-questions-block";
+import { AskQuestionModal } from "@/features/questions/components/ask-question-modal";
+import { OpenQuestionsBlock } from "@/features/questions/components/open-questions-block";
 
 const RESOLUTION_OPEN_BY_DEFAULT = new Set<TopicLifecycleStatus>([
   "done",

@@ -71,6 +71,7 @@ npm run test:coverage     # Vitest run + v8 coverage
 npm run check:queries     # Geen directe .from() in apps/*/actions of app/api
 npm run check:features    # Feature-folder structuur volgt CLAUDE.md registry
 npm run check:readmes     # Cluster-READMEs zijn vers t.o.v. inhoud van die map
+npm run check:exports     # Folder-clusters onder packages/database hebben expliciete package.json exports
 npm run dep-graph         # Regenereer docs/dependency-graph.md
 ```
 
@@ -188,11 +189,11 @@ Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen 
 
 **Registry (2026-04-30, bindend — update bij elke wijziging; `npm run check:features` valideert):**
 
-| Type                                      | Cockpit                                                                                                                   | DevHub                                                                                                               | Portal                                                             |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`, `inbox`                                                | `issues`, `topics`                                                                                                   | _(geen — portal is read-only)_                                     |
-| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                          | `dashboard`, `review`, `questions`                                                                                   | `briefing`, `meetings`, `roadmap`, `projects`, `feedback`, `inbox` |
-| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review`, `attachments`, `bulk-cluster-cleanup`, `widget-domains`, `widget` (route-only) | `auth`, `feedback`, `inbox`, `preferences`                         |
+| Type                                      | Cockpit                                                                                                                                                                                           | DevHub                                                                                                     | Portal                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`, `inbox`                                                                                                                        | `issues`, `topics`, `review`, `questions`                                                                  | _(geen — portal is read-only)_                                     |
+| Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                                                                                                  | `dashboard`                                                                                                | `briefing`, `meetings`, `roadmap`, `projects`, `feedback`, `inbox` |
+| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `dev-action-item-runner`, `dev-speaker-mapping`, `golden-action-items`, `_utils` | `import`, `slack-settings`, `attachments`, `bulk-cluster-cleanup`, `widget-domains`, `widget` (route-only) | `auth`, `feedback`, `inbox`, `preferences`                         |
 
 **Regels:**
 

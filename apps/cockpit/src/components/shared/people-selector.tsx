@@ -4,7 +4,10 @@ import { useState, useRef, useEffect, useTransition } from "react";
 import { Users, X, Plus } from "lucide-react";
 import { Button } from "@repo/ui/button";
 import { Modal } from "@/components/shared/modal";
-import { linkMeetingParticipantAction, unlinkMeetingParticipantAction } from "../actions";
+import {
+  linkMeetingParticipantAction,
+  unlinkMeetingParticipantAction,
+} from "@/features/meetings/actions";
 import { createPersonAction } from "@/features/directory/actions/people";
 
 interface Person {

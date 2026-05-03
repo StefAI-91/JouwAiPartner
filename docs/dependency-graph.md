@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 628 |
-| Exported functions/constants | 945 |
-| Exported types/interfaces | 415 |
-| Cross-package imports | 617 |
-| Critical integration points (3+ packages) | 14 |
+| Files scanned | 642 |
+| Exported functions/constants | 950 |
+| Exported types/interfaces | 413 |
+| Cross-package imports | 603 |
+| Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
 
@@ -186,21 +186,50 @@
 **Exports:**
 - `getIgnoredEntityNames()`
 
-### `queries/inbox.ts`
+### `queries/inbox/counts.ts`
 
 **Exports:**
-- `listInboxItemsForTeam()`
 - `countInboxItemsForTeam()`
-- `getConversationThread()`
-- `getInboxItemForDetail()`
-- `INBOX_LIST_LIMIT`
-- `ISSUE_STATUSES_PER_FILTER`
-- `QUESTION_STATUSES_PER_FILTER`
-
-**Types:** `InboxItemKind`, `InboxFilter`, `InboxProjectInfo`, `InboxFeedbackItem`, `InboxQuestionReply`, `InboxQuestionThread`, `InboxQuestionItem`, `InboxItem`, `InboxListResult`, `InboxCounts`, `ConversationMessage`, `FeedbackConversation`, `QuestionConversation`, `ConversationThread`
 
 **Depends on:**
 - `@repo/auth/access` → listAccessibleProjectIds
+
+### `queries/inbox/detail.ts`
+
+**Exports:**
+- `getConversationThread()`
+- `getInboxItemForDetail()`
+
+**Depends on:**
+- `@repo/auth/access` → listAccessibleProjectIds
+
+### `queries/inbox/helpers.ts`
+
+**Exports:**
+- `sortWeight()`
+- `fetchReadMap()`
+- `hasUnreadClientActivity()`
+- `QUESTION_LIST_COLS`
+- `QUESTION_REPLY_EMBED`
+
+**Types:** `ReadRow`
+
+### `queries/inbox/list.ts`
+
+**Exports:**
+- `listInboxItemsForTeam()`
+- `ISSUE_STATUSES_PER_FILTER`
+- `QUESTION_STATUSES_PER_FILTER`
+
+**Depends on:**
+- `@repo/auth/access` → listAccessibleProjectIds
+
+### `queries/inbox/types.ts`
+
+**Exports:**
+- `INBOX_LIST_LIMIT`
+
+**Types:** `InboxItemKind`, `InboxFilter`, `InboxProjectInfo`, `InboxFeedbackItem`, `InboxQuestionReply`, `InboxQuestionThread`, `InboxQuestionItem`, `InboxItem`, `InboxListResult`, `InboxCounts`, `ConversationMessage`, `FeedbackConversation`, `QuestionConversation`, `ConversationThread`
 
 ### `queries/issues/_filters.ts`
 
@@ -724,26 +753,42 @@
 **Exports:**
 - `insertDecision()`
 
-### `mutations/emails.ts`
+### `mutations/emails/accounts.ts`
 
 **Exports:**
 - `upsertGoogleAccount()`
 - `updateGoogleAccountTokens()`
 - `updateGoogleAccountLastSync()`
 - `deactivateGoogleAccount()`
-- `insertEmails()`
-- `updateEmailClassification()`
-- `updateEmailFilterStatus()`
+
+### `mutations/emails/extractions.ts`
+
+**Exports:**
+- `insertEmailExtractions()`
+
+### `mutations/emails/linking.ts`
+
+**Exports:**
 - `linkEmailProject()`
+- `unlinkEmailProject()`
+
+### `mutations/emails/review.ts`
+
+**Exports:**
 - `verifyEmail()`
 - `verifyEmailWithEdits()`
 - `rejectEmail()`
+
+### `mutations/emails/rows.ts`
+
+**Exports:**
+- `insertEmails()`
+- `updateEmailClassification()`
+- `updateEmailFilterStatus()`
 - `updateEmailSenderPerson()`
 - `updateEmailType()`
 - `updateEmailPartyType()`
 - `updateEmailOrganization()`
-- `unlinkEmailProject()`
-- `insertEmailExtractions()`
 
 ### `mutations/embeddings.ts`
 
@@ -847,28 +892,28 @@
 
 **Types:** `PmReviewMutationResult`
 
-### `mutations/meetings/core.ts`
+### `mutations/meetings/classification.ts`
 
 **Exports:**
-- `insertMeeting()`
-- `insertManualMeeting()`
 - `updateMeetingClassification()`
-- `updateMeetingElevenLabs()`
-- `updateMeetingNamedTranscript()`
 - `updateMeetingType()`
 - `updateMeetingPartyType()`
 - `updateMeetingTitle()`
 - `updateMeetingOrganization()`
+
+### `mutations/meetings/crud.ts`
+
+**Exports:**
+- `insertMeeting()`
+- `insertManualMeeting()`
+- `deleteMeeting()`
+
+### `mutations/meetings/linking.ts`
+
+**Exports:**
 - `linkMeetingProject()`
 - `linkAllMeetingProjects()`
-- `updateMeetingSummary()`
-- `updateMeetingSummaryOnly()`
-- `updateMeetingRawFireflies()`
-- `markMeetingEmbeddingStale()`
 - `unlinkMeetingProject()`
-- `deleteMeeting()`
-- `parkMeetingForReprocess()`
-- `restoreParkedMeeting()`
 
 ### `mutations/meetings/participants.ts`
 
@@ -876,6 +921,18 @@
 - `linkMeetingParticipants()`
 - `linkMeetingParticipant()`
 - `unlinkMeetingParticipant()`
+
+### `mutations/meetings/pipeline.ts`
+
+**Exports:**
+- `updateMeetingElevenLabs()`
+- `updateMeetingNamedTranscript()`
+- `updateMeetingSummary()`
+- `updateMeetingSummaryOnly()`
+- `updateMeetingRawFireflies()`
+- `markMeetingEmbeddingStale()`
+- `parkMeetingForReprocess()`
+- `restoreParkedMeeting()`
 
 ### `mutations/meetings/project-summaries.ts`
 
@@ -4041,6 +4098,19 @@
 **Depends on:**
 - `@repo/ui/alert-dialog` → AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel
 
+### `apps/cockpit/src/components/shared/copy-meeting-button.tsx`
+
+**Exports:**
+- `CopyMeetingButton()`
+
+### `apps/cockpit/src/components/shared/editable-title.tsx`
+
+**Exports:**
+- `EditableTitle()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
 ### `apps/cockpit/src/components/shared/extraction-card.tsx`
 
 **Exports:**
@@ -4103,6 +4173,14 @@
 **Depends on:**
 - `@repo/database/constants/meetings` → formatMeetingType
 
+### `apps/cockpit/src/components/shared/meeting-type-selector.tsx`
+
+**Exports:**
+- `MeetingTypeSelector()`
+
+**Depends on:**
+- `@repo/database/constants/meetings` → MEETING_TYPES
+
 ### `apps/cockpit/src/components/shared/modal.tsx`
 
 **Exports:**
@@ -4123,10 +4201,31 @@
 - `ORG_TYPE_COLORS`
 - `ORG_STATUS_COLORS`
 
+### `apps/cockpit/src/components/shared/party-type-selector.tsx`
+
+**Exports:**
+- `PartyTypeSelector()`
+
+### `apps/cockpit/src/components/shared/people-selector.tsx`
+
+**Exports:**
+- `PeopleSelector()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
 ### `apps/cockpit/src/components/shared/pipeline-info.tsx`
 
 **Exports:**
 - `PipelineInfo()`
+
+### `apps/cockpit/src/components/shared/project-linker.tsx`
+
+**Exports:**
+- `ProjectLinker()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
 
 ### `apps/cockpit/src/components/shared/promote-task-form.tsx`
 
@@ -4136,14 +4235,17 @@
 **Depends on:**
 - (type) `@repo/database/queries/people` → PersonForAssignment
 
-### `apps/cockpit/src/components/shared/regenerate-menu.tsx`
+### `apps/cockpit/src/components/shared/review-action-bar.tsx`
 
 **Exports:**
-- `RegenerateMenu()`
+- `ReviewActionBar()`
 
-**Depends on:**
-- `@repo/ui/button` → Button
-- `@repo/ui/dropdown-menu` → DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator
+### `apps/cockpit/src/components/shared/risk-list.tsx`
+
+**Exports:**
+- `RiskList()`
+
+**Types:** `RiskItem`
 
 ### `apps/cockpit/src/components/shared/segment-list.tsx`
 
@@ -4266,36 +4368,6 @@
 - `@repo/database/integrations/userback` → extractMediaFromMetadata
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/database/mutations/issues/attachments` → storeIssueMedia
-
-### `apps/devhub/src/actions/questions.ts`
-
-**Exports:**
-- `askQuestionAction()`
-- `replyAsTeamAction()`
-
-**Types:** `AskQuestionInput`
-
-**Depends on:**
-- `@repo/auth/helpers` → createPageClient, getAuthenticatedUser
-- `@repo/database/mutations/client-questions` → sendQuestion, replyToQuestion
-- `@repo/database/queries/projects` → getProjectOrganizationId
-- `@repo/database/validations/client-questions` → replyToQuestionSchema
-
-### `apps/devhub/src/actions/review.ts`
-
-**Exports:**
-- `generateProjectReview()`
-
-**Depends on:**
-- `@repo/database/supabase/server` → createClient
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/issues` → listIssues
-- `@repo/database/queries/projects` → getProjectById
-- `@repo/database/mutations/projects/reviews` → saveProjectReview
-- `@repo/database/mutations/team` → ensureProfileExists
-- `@repo/ai/agents/issue-reviewer` → runIssueReviewer, type IssueForReview
-- `@repo/auth/helpers` → getAuthenticatedUser, isAuthBypassed
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
 
 ### `apps/devhub/src/actions/slack-settings.ts`
 
@@ -4560,45 +4632,6 @@
 **Exports:**
 - `TopBar()`
 
-### `apps/devhub/src/components/questions/ask-question-modal.tsx`
-
-**Exports:**
-- `AskQuestionModal()`
-
-**Types:** `AskQuestionModalProps`
-
-**Depends on:**
-- `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
-
-### `apps/devhub/src/components/questions/open-questions-block.tsx`
-
-**Exports:**
-- `OpenQuestionsBlock()`
-
-**Types:** `OpenQuestionsBlockProps`
-
-**Depends on:**
-- `@repo/auth/helpers` → createPageClient
-- `@repo/database/queries/client-questions` → listOpenQuestionsForProject
-
-### `apps/devhub/src/components/questions/question-thread.tsx`
-
-**Exports:**
-- `QuestionThread()`
-
-**Types:** `QuestionThreadProps`
-
-**Depends on:**
-- (type) `@repo/database/queries/client-questions` → ClientQuestionListRow
-
-### `apps/devhub/src/components/review/action-items-list.tsx`
-
-**Exports:**
-- `ActionItemsList()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-
 ### `apps/devhub/src/components/shared/avatar.tsx`
 
 **Exports:**
@@ -4667,13 +4700,13 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 21 | 5 | - | 41 | - | 67 |
+| Cockpit Components | 22 | 5 | - | 42 | - | 69 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
-| Database Queries | - | - | 4 | - | - | 4 |
-| DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
+| Database Queries | - | - | 6 | - | - | 6 |
+| DevHub Server Actions | 17 | 2 | 10 | - | - | 29 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
-| DevHub Components | 7 | 2 | 1 | 16 | - | 26 |
+| DevHub Components | 5 | 2 | - | 14 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 29 | - | 22 | 12 | - | 63 |
 | MCP Server | 32 | 1 | - | - | - | 33 |
@@ -4698,7 +4731,6 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
 | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` | auth, database, ai | 3 |
-| `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
 ## Key Dependency Chains
 
@@ -4720,20 +4752,29 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `sendQuestion()` | `packages/mcp/src/tools/write-client-questions.ts`, `apps/devhub/src/actions/questions.ts` |
-| `replyToQuestion()` | `apps/devhub/src/actions/questions.ts` |
+| `sendQuestion()` | `packages/mcp/src/tools/write-client-questions.ts` |
 
-### mutations/emails.ts
+### mutations/emails/accounts.ts
 
 | Mutation | Called from |
 |----------|------------|
 | `upsertGoogleAccount()` | `apps/cockpit/src/app/api/email/auth/callback/route.ts` |
 | `updateGoogleAccountTokens()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+
+### mutations/emails/linking.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `linkEmailProject()` | `packages/ai/src/pipeline/email/core.ts` |
+
+### mutations/emails/rows.ts
+
+| Mutation | Called from |
+|----------|------------|
 | `insertEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateEmailClassification()` | `packages/ai/src/pipeline/email/core.ts` |
 | `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email/core.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
-| `linkEmailProject()` | `packages/ai/src/pipeline/email/core.ts` |
 | `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email/core.ts` |
 
 ### mutations/embeddings.ts
@@ -4793,7 +4834,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `markInboxItemRead()` | `packages/database/src/queries/inbox.ts` |
+| `markInboxItemRead()` | `packages/database/src/queries/inbox/detail.ts` |
 
 ### mutations/issues/attachments.ts
 
@@ -4802,26 +4843,41 @@ Tracing the most important data flows from action → pipeline → database.
 | `insertAttachment()` | `apps/devhub/src/actions/attachments.ts` |
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
-### mutations/meetings/core.ts
+### mutations/meetings/classification.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
+
+### mutations/meetings/crud.ts
 
 | Mutation | Called from |
 |----------|------------|
 | `insertMeeting()` | `packages/ai/src/pipeline/gatekeeper/persist-meeting.ts` |
 | `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
-| `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
-| `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
-| `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
-| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
+
+### mutations/meetings/linking.ts
+
+| Mutation | Called from |
+|----------|------------|
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/saves/action-item-extractions.ts`, `packages/ai/src/pipeline/saves/risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
-| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
-| `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
-| `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meetings/participants.ts
 
 | Mutation | Called from |
 |----------|------------|
 | `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant/helpers.ts` |
+
+### mutations/meetings/pipeline.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
+| `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
+| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
+| `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
+| `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meetings/project-summaries.ts
 
@@ -4851,12 +4907,6 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `updateProjectAliases()` | `packages/ai/src/pipeline/lib/entity-resolution.ts`, `apps/cockpit/src/actions/segments.ts` |
-
-### mutations/projects/reviews.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `saveProjectReview()` | `apps/devhub/src/actions/review.ts` |
 
 ### mutations/slack-config.ts
 
@@ -4892,7 +4942,6 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
-| `ensureProfileExists()` | `apps/devhub/src/actions/review.ts` |
 | `updateProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 | `clearProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
@@ -4927,12 +4976,6 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getAgentMetrics()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
 | `listRecentAgentRuns()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
-
-### queries/client-questions.ts
-
-| Query | Used in |
-|-------|---------|
-| `listOpenQuestionsForProject()` | `apps/devhub/src/components/questions/open-questions-block.tsx` |
 
 ### queries/content.ts
 
@@ -5013,11 +5056,25 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getIgnoredEntityNames()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
-### queries/inbox.ts
+### queries/inbox/counts.ts
 
 | Query | Used in |
 |-------|---------|
 | `countInboxItemsForTeam()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
+
+### queries/inbox/helpers.ts
+
+| Query | Used in |
+|-------|---------|
+| `sortWeight()` | `packages/database/src/queries/inbox/list.ts` |
+| `fetchReadMap()` | `packages/database/src/queries/inbox/list.ts` |
+| `hasUnreadClientActivity()` | `packages/database/src/queries/inbox/list.ts` |
+
+### queries/inbox/list.ts
+
+| Query | Used in |
+|-------|---------|
+| `listInboxItemsForTeam()` | `packages/database/src/queries/inbox/counts.ts` |
 
 ### queries/issues/_filters.ts
 
@@ -5057,7 +5114,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listIssues()` | `packages/database/src/queries/issues/stats.ts`, `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssues()` | `packages/database/src/queries/issues/stats.ts`, `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 
 ### queries/issues/stats.ts
@@ -5205,7 +5262,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
+| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/projects/embedding.ts
 
@@ -5220,7 +5277,6 @@ Which queries are used where across the codebase.
 | `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/lib/entity-resolution.ts` |
 | `getProjectName()` | `packages/ai/src/pipeline/summary/project.ts` |
-| `getProjectOrganizationId()` | `apps/devhub/src/actions/questions.ts` |
 | `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `listProjectMeetingIds()` | `packages/ai/src/pipeline/summary/project.ts` |
 | `listProjectEmailIds()` | `packages/ai/src/pipeline/summary/project.ts` |

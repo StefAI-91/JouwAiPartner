@@ -12,10 +12,7 @@ import {
   notifySlackIfUrgent,
   type SlackIssuePayload,
 } from "@repo/database/integrations/slack";
-
-const classifySchema = z.object({
-  id: z.string().uuid(),
-});
+import { classifySchema, bulkClassifySchema } from "@/features/issues/validations/issue";
 
 /**
  * Core classification logic shared by interactive and background classify.
@@ -141,10 +138,6 @@ export async function classifyIssueBackground(issueId: string): Promise<void> {
     console.error("[classifyIssueBackground]", err);
   }
 }
-
-const bulkClassifySchema = z.object({
-  projectId: z.string().uuid(),
-});
 
 /**
  * Reclassify all issues in triage for a project.

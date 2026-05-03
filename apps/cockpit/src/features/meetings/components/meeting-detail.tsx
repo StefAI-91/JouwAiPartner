@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { VerificationBadge } from "@/components/shared/verification-badge";
 import { MeetingTranscriptPanel } from "@/components/shared/meeting-transcript-panel";
 import { ExtractionTabsPanel } from "./extraction-tabs-panel";
-import { CopyMeetingButton } from "./copy-meeting-button";
+import { CopyMeetingButton } from "@/components/shared/copy-meeting-button";
 import { EditMetadataModal } from "./edit-metadata-modal";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { Button } from "@repo/ui/button";

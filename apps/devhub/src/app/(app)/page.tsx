@@ -16,7 +16,7 @@ import { DashboardMetrics } from "@/components/dashboard/dashboard-metrics";
 import { IssuesIntakeChart } from "@/components/dashboard/issues-intake-chart";
 import { AreaSummaries } from "@/components/dashboard/area-summaries";
 import { ThisWeekSection } from "@/components/dashboard/this-week-section";
-import { ActionItemsList } from "@/components/review/action-items-list";
+import { ActionItemsList } from "@/features/review/components/action-items-list";
 import { CountSeeder } from "@/components/layout/count-seeder";
 import { LayoutDashboard } from "lucide-react";
 
