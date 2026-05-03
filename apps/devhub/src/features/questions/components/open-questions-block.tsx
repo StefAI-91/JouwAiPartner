@@ -1,5 +1,5 @@
 import { createPageClient } from "@repo/auth/helpers";
-import { listOpenQuestionsForProject } from "@repo/database/queries/client-questions";
+import { listQuestionsForProject } from "@repo/database/queries/client-questions";
 import { QuestionThread } from "./question-thread";
 
 /**
@@ -37,9 +37,10 @@ export async function OpenQuestionsBlock({
     return null;
   }
 
-  const all = await listOpenQuestionsForProject(
+  const all = await listQuestionsForProject(
     projectId,
     project.organization_id as string,
+    { status: "open" },
     supabase,
   );
 

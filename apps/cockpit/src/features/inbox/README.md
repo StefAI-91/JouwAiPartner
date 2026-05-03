@@ -10,13 +10,12 @@ Cross-project Cockpit-inbox waarin de PM klant- en eindgebruiker-feedback endors
 
 ### `actions/`
 
-| File             | Exports                        | Gebruikt door                                    |
-| ---------------- | ------------------------------ | ------------------------------------------------ |
-| `pm-review.ts`   | `pmReviewAction`               | `inbox-row`, `conversation-action-bar`, modals   |
-| `replies.ts`     | `replyAsTeamAction`            | `conversation-reply-dock`                        |
-| `compose.ts`     | `composeMessageToClientAction` | `compose-modal` (header "+ Nieuw bericht")       |
-| `mark-read.ts`   | `markInboxItemReadAction`      | (toekomstige UI hooks; auto-mark gaat via query) |
-| `preferences.ts` | `dismissOnboardingAction`      | `onboarding-card`                                |
+| File           | Exports                        | Gebruikt door                                    |
+| -------------- | ------------------------------ | ------------------------------------------------ |
+| `pm-review.ts` | `pmReviewAction`               | `inbox-row`, `conversation-action-bar`, modals   |
+| `replies.ts`   | `replyAsTeamAction`            | `conversation-reply-dock`                        |
+| `compose.ts`   | `composeMessageToClientAction` | `compose-modal` (header "+ Nieuw bericht")       |
+| `mark-read.ts` | `markInboxItemReadAction`      | (toekomstige UI hooks; auto-mark gaat via query) |
 
 ### `components/`
 
@@ -35,7 +34,6 @@ Cross-project Cockpit-inbox waarin de PM klant- en eindgebruiker-feedback endors
 | `convert-modal.tsx`           | Verheldering-textarea (issue → bericht spawn).                                                      |
 | `compose-modal.tsx`           | CC-006 — vrije compose: project-selector + body, redirect naar conversation-detail na succes.       |
 | `empty-state.tsx`             | Per filter een eigen empty-message.                                                                 |
-| `onboarding-card.tsx`         | CC-005 — dismiss-bare onboarding-uitleg bovenaan de inbox; key `cockpit_inbox`.                     |
 
 ### `validations/`
 

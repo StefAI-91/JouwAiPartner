@@ -100,6 +100,30 @@ describe("PortalInboxRow", () => {
     expect(screen.getByText("Een specifieke vraag over feature X.")).toBeInTheDocument();
   });
 
+  it("toont 'Beantwoord'-pill wanneer status='responded' (thread blijft zichtbaar in lijst)", () => {
+    render(
+      <PortalInboxRow
+        projectId={PROJECT_ID}
+        question={makeQuestion({ status: "responded", responded_at: new Date().toISOString() })}
+        currentProfileId={PROFILE_ID}
+        isActive={false}
+      />,
+    );
+    expect(screen.getByText("Beantwoord")).toBeInTheDocument();
+  });
+
+  it("toont GEEN 'Beantwoord'-pill wanneer status='open'", () => {
+    render(
+      <PortalInboxRow
+        projectId={PROJECT_ID}
+        question={makeQuestion({ status: "open" })}
+        currentProfileId={PROFILE_ID}
+        isActive={false}
+      />,
+    );
+    expect(screen.queryByText("Beantwoord")).not.toBeInTheDocument();
+  });
+
   it("rendert reply-snippet als laatste reply bestaat", () => {
     render(
       <PortalInboxRow

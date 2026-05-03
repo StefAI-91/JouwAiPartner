@@ -31,6 +31,7 @@ export function PortalInboxRow({
   const isOwnRoot = question.sender_profile_id === currentProfileId;
   const senderLabel = isOwnRoot ? "Jij" : "Team";
   const isWaitingForClient = question.status === "open" && !isOwnRoot;
+  const isResponded = question.status === "responded";
 
   const titleLine = makePreview(question.body);
   const lastReply =
@@ -64,6 +65,11 @@ export function PortalInboxRow({
           >
             {senderLabel}
           </span>
+          {isResponded ? (
+            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              Beantwoord
+            </span>
+          ) : null}
           <span className="text-[10px] tabular-nums text-muted-foreground/70">{timestamp}</span>
         </div>
         <p
