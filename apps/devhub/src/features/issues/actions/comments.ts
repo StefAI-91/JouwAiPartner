@@ -8,6 +8,7 @@ import {
   deleteComment,
   insertActivity,
 } from "@repo/database/mutations/issues";
+import { ensureProfileExists } from "@repo/database/mutations/team";
 import { getIssueById } from "@repo/database/queries/issues";
 import { getCommentById } from "@repo/database/queries/issues/comments";
 import {
@@ -15,7 +16,7 @@ import {
   updateCommentSchema,
   deleteCommentSchema,
 } from "@repo/database/validations/issues";
-import { getAuthenticatedUser } from "@repo/auth/helpers";
+import { getAuthenticatedUser, isAuthBypassed } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
 
 async function assertAccessToIssue(
@@ -46,6 +47,15 @@ export async function createCommentAction(
 
   const access = await assertAccessToIssue(user.id, parsed.data.issue_id);
   if ("error" in access) return access;
+
+  // issue_comments.author_id FKs to profiles(id). Legacy óf trigger-missed
+  // auth.users (zie 20260503100000_backfill_profiles_for_existing_auth_users)
+  // missen een profile-rij — self-heal voor we de comment inserten zodat we
+  // niet meer op een FK violation crashen. Dev-bypass user zit niet in
+  // auth.users, dus profile-insert daar zou zelf crashen op profiles.id FK.
+  if (!isAuthBypassed() && user.email) {
+    await ensureProfileExists({ id: user.id, email: user.email });
+  }
 
   const result = await insertComment({
     issue_id: parsed.data.issue_id,
