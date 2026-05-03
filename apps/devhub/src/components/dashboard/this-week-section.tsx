@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { Flame, Settings2 } from "lucide-react";
 import type { IssueRow } from "@repo/database/queries/issues";
+import type { TeamMember } from "@repo/database/queries/team";
 import { ThisWeekGroup } from "./this-week-group";
 
 interface ThisWeekSectionProps {
   urgent: IssueRow[];
   active: IssueRow[];
+  /**
+   * Teamleden voor naam-lookup. Een issue.assigned_to is alleen een uuid;
+   * we hebben deze lijst nodig om er een leesbare naam (of email als
+   * fallback) bij te tonen. Zelfde patroon als issue-detail sidebar.
+   */
+  people: TeamMember[];
 }
 
 interface AssigneeBucket {
@@ -15,27 +22,45 @@ interface AssigneeBucket {
 }
 
 /**
+ * Resolve assignee uuid naar een display-naam. Voorkeur: full_name uit de
+ * embedded join (snel, geen extra round-trip). Als die leeg is, val terug
+ * op de people-list (full_name → email). Volgt het patroon uit
+ * `getProfileNameById` in queries/team.ts.
+ */
+function resolveAssigneeName(issue: IssueRow, peopleById: Map<string, TeamMember>): string | null {
+  const embedded = issue.assigned_person?.full_name?.trim();
+  if (embedded) return embedded;
+
+  if (!issue.assigned_to) return null;
+  const member = peopleById.get(issue.assigned_to);
+  if (!member) return null;
+
+  const memberName = member.full_name?.trim();
+  if (memberName) return memberName;
+  return member.email ?? null;
+}
+
+/**
  * Groepeer issues per assignee. Unassigned-bucket komt onderaan zodat de
  * lijst stabiel sorteert (named buckets op naam, daarna unassigned).
  */
-function groupByAssignee(issues: IssueRow[]): AssigneeBucket[] {
+function groupByAssignee(
+  issues: IssueRow[],
+  peopleById: Map<string, TeamMember>,
+): AssigneeBucket[] {
   const named = new Map<string, AssigneeBucket>();
   const unassigned: IssueRow[] = [];
 
   for (const issue of issues) {
-    // "Kapot toegewezen" telt als unassigned: assigned_to bestaat wel als
-    // UUID maar de profile-join geeft geen bruikbare naam (verwijderde
-    // user, lege full_name, alleen whitespace). Liever in de Niemand-
-    // bucket met Claim-knop dan een anonieme avatar zonder context.
-    const fullName = issue.assigned_person?.full_name?.trim() ?? "";
-    if (!issue.assigned_to || !fullName) {
+    const displayName = resolveAssigneeName(issue, peopleById);
+    if (!issue.assigned_to || !displayName) {
       unassigned.push(issue);
       continue;
     }
     const key = issue.assigned_to;
     let bucket = named.get(key);
     if (!bucket) {
-      bucket = { name: fullName, issues: [] };
+      bucket = { name: displayName, issues: [] };
       named.set(key, bucket);
     }
     bucket.issues.push(issue);
@@ -49,9 +74,10 @@ function groupByAssignee(issues: IssueRow[]): AssigneeBucket[] {
   return [...sortedNamed, { name: null, issues: unassigned }];
 }
 
-export function ThisWeekSection({ urgent, active }: ThisWeekSectionProps) {
-  const urgentBuckets = groupByAssignee(urgent);
-  const activeBuckets = groupByAssignee(active);
+export function ThisWeekSection({ urgent, active, people }: ThisWeekSectionProps) {
+  const peopleById = new Map(people.map((p) => [p.id, p]));
+  const urgentBuckets = groupByAssignee(urgent, peopleById);
+  const activeBuckets = groupByAssignee(active, peopleById);
   const isEmpty = urgent.length === 0 && active.length === 0;
 
   if (isEmpty) {

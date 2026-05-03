@@ -10,7 +10,7 @@
 | Files scanned | 609 |
 | Exported functions/constants | 921 |
 | Exported types/interfaces | 394 |
-| Cross-package imports | 612 |
+| Cross-package imports | 614 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -4412,6 +4412,7 @@
 
 **Depends on:**
 - (type) `@repo/database/queries/issues` → IssueRow
+- (type) `@repo/database/queries/team` → TeamMember
 
 ### `apps/devhub/src/components/layout/app-sidebar.tsx`
 
@@ -4589,9 +4590,9 @@ Which layers depend on which packages:
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
-| DevHub Components | 6 | 2 | 1 | 16 | - | 25 |
+| DevHub Components | 7 | 2 | 1 | 16 | - | 26 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 28 | - | 22 | 12 | - | 62 |
+| DevHub Pages | 29 | - | 22 | 12 | - | 63 |
 | MCP Server | 32 | 1 | - | - | - | 33 |
 
 ## Critical Integration Points
@@ -5180,7 +5181,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `packages/mcp/src/tools/write-client-questions.ts`, `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/auth/callback/route.ts`, `apps/devhub/src/app/auth/callback/route.ts` |

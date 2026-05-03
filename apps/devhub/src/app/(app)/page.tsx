@@ -6,6 +6,7 @@ import {
   getWeeklyIssueIntake,
   getDashboardThisWeek,
 } from "@repo/database/queries/issues";
+import { listTeamMembers } from "@repo/database/queries/team";
 import { getAuthenticatedUser, createPageClient } from "@repo/auth/helpers";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
@@ -46,7 +47,7 @@ export default async function DashboardPage({
   const hasAccess = projects.some((p) => p.id === projectId);
   if (!hasAccess) notFound();
 
-  const [review, counts, criticalUnassigned, healthTrend, weeklyIntake, thisWeek] =
+  const [review, counts, criticalUnassigned, healthTrend, weeklyIntake, thisWeek, people] =
     await Promise.all([
       getLatestProjectReview(projectId, supabase),
       getIssueCounts(projectId, supabase),
@@ -54,6 +55,7 @@ export default async function DashboardPage({
       getHealthTrend(projectId, supabase),
       getWeeklyIssueIntake(projectId, 12, supabase),
       getDashboardThisWeek(projectId, supabase),
+      listTeamMembers(supabase),
     ]);
 
   const project = projects.find((p) => p.id === projectId);
@@ -96,7 +98,7 @@ export default async function DashboardPage({
       />
 
       {/* Deze week — team-focus: urgent + actief */}
-      <ThisWeekSection urgent={thisWeek.urgent} active={thisWeek.active} />
+      <ThisWeekSection urgent={thisWeek.urgent} active={thisWeek.active} people={people} />
 
       {/* Weekly intake trend */}
       <IssuesIntakeChart data={weeklyIntake} />
