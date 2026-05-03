@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Mail } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@repo/ui/tabs";
 import { FollowUpChecklist } from "@/components/shared/follow-up-checklist";
-import { RiskList, type RiskItem } from "./risk-list";
+import { RiskList, type RiskItem } from "@/components/shared/risk-list";
 import { AddExtractionForm } from "./add-extraction-form";
 import { updateExtractionAction, deleteExtractionAction } from "../actions";
-import { RegenerateMenu } from "@/components/shared/regenerate-menu";
+import { RegenerateMenu } from "./regenerate-menu";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 
 interface Extraction {

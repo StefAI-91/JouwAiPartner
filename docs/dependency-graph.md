@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 622 |
-| Exported functions/constants | 938 |
-| Exported types/interfaces | 411 |
-| Cross-package imports | 599 |
+| Files scanned | 629 |
+| Exported functions/constants | 945 |
+| Exported types/interfaces | 412 |
+| Cross-package imports | 601 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -4041,6 +4041,19 @@
 **Depends on:**
 - `@repo/ui/alert-dialog` → AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel
 
+### `apps/cockpit/src/components/shared/copy-meeting-button.tsx`
+
+**Exports:**
+- `CopyMeetingButton()`
+
+### `apps/cockpit/src/components/shared/editable-title.tsx`
+
+**Exports:**
+- `EditableTitle()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
 ### `apps/cockpit/src/components/shared/extraction-card.tsx`
 
 **Exports:**
@@ -4103,6 +4116,14 @@
 **Depends on:**
 - `@repo/database/constants/meetings` → formatMeetingType
 
+### `apps/cockpit/src/components/shared/meeting-type-selector.tsx`
+
+**Exports:**
+- `MeetingTypeSelector()`
+
+**Depends on:**
+- `@repo/database/constants/meetings` → MEETING_TYPES
+
 ### `apps/cockpit/src/components/shared/modal.tsx`
 
 **Exports:**
@@ -4123,10 +4144,31 @@
 - `ORG_TYPE_COLORS`
 - `ORG_STATUS_COLORS`
 
+### `apps/cockpit/src/components/shared/party-type-selector.tsx`
+
+**Exports:**
+- `PartyTypeSelector()`
+
+### `apps/cockpit/src/components/shared/people-selector.tsx`
+
+**Exports:**
+- `PeopleSelector()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
+
 ### `apps/cockpit/src/components/shared/pipeline-info.tsx`
 
 **Exports:**
 - `PipelineInfo()`
+
+### `apps/cockpit/src/components/shared/project-linker.tsx`
+
+**Exports:**
+- `ProjectLinker()`
+
+**Depends on:**
+- `@repo/ui/button` → Button
 
 ### `apps/cockpit/src/components/shared/promote-task-form.tsx`
 
@@ -4136,14 +4178,17 @@
 **Depends on:**
 - (type) `@repo/database/queries/people` → PersonForAssignment
 
-### `apps/cockpit/src/components/shared/regenerate-menu.tsx`
+### `apps/cockpit/src/components/shared/review-action-bar.tsx`
 
 **Exports:**
-- `RegenerateMenu()`
+- `ReviewActionBar()`
 
-**Depends on:**
-- `@repo/ui/button` → Button
-- `@repo/ui/dropdown-menu` → DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator
+### `apps/cockpit/src/components/shared/risk-list.tsx`
+
+**Exports:**
+- `RiskList()`
+
+**Types:** `RiskItem`
 
 ### `apps/cockpit/src/components/shared/segment-list.tsx`
 
@@ -4598,7 +4643,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 21 | 5 | - | 41 | - | 67 |
+| Cockpit Components | 22 | 5 | - | 42 | - | 69 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
 | Database Queries | - | - | 4 | - | - | 4 |

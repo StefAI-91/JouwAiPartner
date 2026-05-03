@@ -2,16 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { Pencil, X } from "lucide-react";
-import { updatePartyTypeAction } from "../actions";
+import { updateMeetingTypeAction } from "@/features/meetings/actions";
+import { MEETING_TYPES } from "@repo/database/constants/meetings";
 
-const PARTY_TYPES = [
-  { value: "internal", label: "Intern" },
-  { value: "client", label: "Klant" },
-  { value: "partner", label: "Partner" },
-  { value: "other", label: "Overig" },
-] as const;
-
-export function PartyTypeSelector({
+export function MeetingTypeSelector({
   meetingId,
   currentType,
 }: {
@@ -23,7 +17,9 @@ export function PartyTypeSelector({
   const [error, setError] = useState<string | null>(null);
 
   const currentLabel =
-    PARTY_TYPES.find((t) => t.value === currentType)?.label ?? currentType ?? "Onbekend";
+    MEETING_TYPES.find((t) => t.value === currentType)?.label ??
+    currentType?.replace(/_/g, " ") ??
+    "Onbekend";
 
   function handleChange(value: string) {
     if (value === currentType) {
@@ -32,9 +28,9 @@ export function PartyTypeSelector({
     }
     setError(null);
     startTransition(async () => {
-      const result = await updatePartyTypeAction({
+      const result = await updateMeetingTypeAction({
         meetingId,
-        partyType: value as (typeof PARTY_TYPES)[number]["value"],
+        meetingType: value as (typeof MEETING_TYPES)[number]["value"],
       });
       if ("error" in result) {
         setError(result.error);
@@ -49,7 +45,7 @@ export function PartyTypeSelector({
       <button
         onClick={() => setEditing(true)}
         className="inline-flex cursor-pointer items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium transition-colors hover:bg-muted/80"
-        aria-label="Party type wijzigen"
+        aria-label="Meeting type wijzigen"
       >
         {currentLabel}
         <Pencil className="ml-1 size-2.5 text-muted-foreground" />
@@ -65,7 +61,7 @@ export function PartyTypeSelector({
         disabled={isPending}
         className="h-6 rounded-md border border-border bg-background px-1.5 text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
       >
-        {PARTY_TYPES.map((type) => (
+        {MEETING_TYPES.map((type) => (
           <option key={type.value} value={type.value}>
             {type.label}
           </option>

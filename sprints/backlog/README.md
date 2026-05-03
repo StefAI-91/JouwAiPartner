@@ -61,7 +61,7 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | SRP-012  | queries/issues/core.ts splitsen (418 r, 9 exports)                                | Refactor SRP  | `sprints/backlog/` | Backlog       |
 | SRP-013  | Database god-files splitsen (inbox 537r, emails-mut 295r, meetings/core-mut 343r) | Refactor SRP  | `sprints/backlog/` | Backlog       |
 | DH-021   | DevHub feature-promotion: `review` + `questions` naar features/                   | Architectuur  | `sprints/done/`    | Done          |
-| AD-001   | Cockpit cross-feature ontkoppeling + agents-duplicate cleanup                     | Architectuur  | `sprints/backlog/` | Backlog       |
+| AD-001   | Cockpit cross-feature ontkoppeling + agents-duplicate cleanup                     | Architectuur  | `sprints/done/`    | Done          |
 
 > **SRP-serie:** elf refactor-sprints op files die de SRP-drempels uit `CLAUDE.md` overschrijden. SRP-001 (shift/page.tsx) is vervallen — die page bleek een ongelinkte mockup en is verwijderd ipv gesplitst. Volledige analyse, volgorde-aanbeveling, sprint-sizes en risico's: zie `sprints/backlog/SRP-matrix.md`. Overlap met `PW-QC-04` (File splits + anti-laundering tests in `docs/backlog/`): de SRP-serie is concreter per file; PW-QC-04 kan blijven als overkoepelend acceptance-bucket of vervangen worden door de SRP-matrix.
 

@@ -104,14 +104,11 @@ import { MeetingDetailView } from "@/features/meetings/components/meeting-detail
 
 ### Metadata editors (inline)
 
-| Component             | Props                                    | Doel                              |
-| --------------------- | ---------------------------------------- | --------------------------------- |
-| `EditableTitle`       | `{ meetingId, initialTitle }`            | click-to-edit titel               |
-| `MeetingTypeSelector` | `{ meetingId, currentType }`             | type-dropdown                     |
-| `PartyTypeSelector`   | `{ meetingId, currentPartyType }`        | party-type-dropdown               |
-| `PeopleSelector`      | `{ meetingId, linkedPeople, allPeople }` | deelnemer-selector + quick-create |
-| `ProjectLinker`       | `{ meetingId, linkedProjects, projects}` | project-linker + quick-create     |
-| `EditMetadataModal`   | `{ open, onClose, meeting, ... }`        | combo-edit-dialog                 |
+| Component           | Props                             | Doel              |
+| ------------------- | --------------------------------- | ----------------- |
+| `EditMetadataModal` | `{ open, onClose, meeting, ... }` | combo-edit-dialog |
+
+> `EditableTitle`, `MeetingTypeSelector`, `PartyTypeSelector`, `PeopleSelector`, `ProjectLinker` zijn opgetild naar `components/shared/` (AD-001) — review-pagina hergebruikt ze. Meeting-actions blijven via `@/features/meetings/actions`.
 
 ### Extraction-panel
 
@@ -119,18 +116,21 @@ import { MeetingDetailView } from "@/features/meetings/components/meeting-detail
 | --------------------- | ------------------------------------------- | ------------------------------- |
 | `ExtractionTabsPanel` | `{ extractions, meetingId, editable, ... }` | tabs: actions / decisions / ... |
 | `AddExtractionForm`   | `{ meetingId, type }`                       | handmatig extraction toevoegen  |
-| `RiskList`            | `{ risks }`                                 | risk-tab rendering              |
+
+> `RiskList` (risk-tab rendering) is opgetild naar `components/shared/` (AD-001).
 
 ### Helpers
 
 | Component                 | Props                                         | Doel                                                                      |
 | ------------------------- | --------------------------------------------- | ------------------------------------------------------------------------- |
-| `CopyMeetingButton`       | `{ meeting }`                                 | copy-to-clipboard in gestructureerd formaat                               |
+| `RegenerateMenu`          | `{ meetingId }`                               | dropdown om titel/risks/themes/etc opnieuw te genereren                   |
 | `CreateOrganizationModal` | `{ open, onClose, onCreated }`                | inline org-create                                                         |
 | `CreatePersonSubModal`    | `{ open, onClose, onCreated, organizations }` | inline person-create                                                      |
 | `CreateProjectSubModal`   | `{ open, onClose, onCreated, organizations }` | inline project-create                                                     |
 | `MetadataSubModals`       | `{ ... }`                                     | container die de bovenstaande sub-modals stapelt voor edit-metadata-modal |
 | `MetadataTagSelector`     | `{ tags, onChange }`                          | multi-tag picker in edit-metadata-modal                                   |
+
+> `CopyMeetingButton` is opgetild naar `components/shared/` (AD-001).
 
 ---
 
