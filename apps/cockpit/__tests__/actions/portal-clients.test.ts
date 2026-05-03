@@ -15,6 +15,9 @@ const mockRevokePortalAccess = vi.fn();
 const mockUpsertProfile = vi.fn();
 const mockGetProfileRole = vi.fn();
 const mockGetProfileEmail = vi.fn();
+const mockGetProjectOrgId = vi.fn();
+const mockGetProfileOrgId = vi.fn();
+const mockSetProfileOrg = vi.fn();
 const mockListUsers = vi.fn();
 const mockInviteUserByEmail = vi.fn();
 const mockNotifyPortalAccessGranted = vi.fn();
@@ -56,6 +59,10 @@ vi.mock("@repo/database/mutations/team", () => ({
   upsertProfile: (...args: unknown[]) => mockUpsertProfile(...args),
 }));
 
+vi.mock("@repo/database/mutations/profiles", () => ({
+  setProfileOrganization: (...args: unknown[]) => mockSetProfileOrg(...args),
+}));
+
 vi.mock("@repo/database/queries/team", () => ({
   getProfileRole: (...args: unknown[]) => mockGetProfileRole(...args),
   getProfileEmail: (...args: unknown[]) => mockGetProfileEmail(...args),
@@ -65,12 +72,21 @@ vi.mock("@repo/notifications", () => ({
   notifyPortalAccessGranted: (...args: unknown[]) => mockNotifyPortalAccessGranted(...args),
 }));
 
+vi.mock("@repo/database/queries/profiles", () => ({
+  getProfileOrganizationId: (...args: unknown[]) => mockGetProfileOrgId(...args),
+}));
+
+vi.mock("@repo/database/queries/projects/lookup", () => ({
+  getProjectOrganizationId: (...args: unknown[]) => mockGetProjectOrgId(...args),
+}));
+
 import {
   grantMemberPortalAccessAction,
   inviteProjectClientAction,
 } from "../../src/features/projects/actions/clients";
 
 const PROJECT_ID = "00000000-0000-4000-8000-000000000001";
+const PROJECT_ORG_ID = "00000000-0000-4000-8000-000000000088";
 const MEMBER_ID = "00000000-0000-4000-8000-000000000010";
 const ADMIN_ID = "00000000-0000-4000-8000-0000000000aa";
 
@@ -79,6 +95,12 @@ beforeEach(() => {
   mockUser.value = { id: ADMIN_ID, email: "admin@jouwai.nl" };
   mockIsAdmin.mockResolvedValue(true);
   mockNotifyPortalAccessGranted.mockResolvedValue(undefined);
+  // Default: project bestaat en hangt aan PROJECT_ORG_ID; profile-org is NULL
+  // (verse klant) en de set-org-call slaagt zonder fouten. Tests die andere
+  // states willen, overschrijven gericht.
+  mockGetProjectOrgId.mockResolvedValue(PROJECT_ORG_ID);
+  mockGetProfileOrgId.mockResolvedValue(null);
+  mockSetProfileOrg.mockResolvedValue({ success: true });
 });
 
 describe("grantMemberPortalAccessAction", () => {
@@ -197,6 +219,8 @@ describe("inviteProjectClientAction (PR-024 — member-block weg)", () => {
     expect(mockGrantPortalAccess).toHaveBeenCalledWith(MEMBER_ID, PROJECT_ID, expect.anything());
     // Member-block weg → geen "is een teamlid" error meer.
     expect(mockUpsertProfile).not.toHaveBeenCalled();
+    // Member loopt niet langs RLS-org-check → geen org-sync nodig.
+    expect(mockSetProfileOrg).not.toHaveBeenCalled();
     // Geen invite-mail voor bestaande gebruikers.
     expect(mockInviteUserByEmail).not.toHaveBeenCalled();
     // Wél een access-mail via Resend zodat de gebruiker weet dat ze toegang hebben.
@@ -258,5 +282,117 @@ describe("inviteProjectClientAction (PR-024 — member-block weg)", () => {
     expect(mockInviteUserByEmail).toHaveBeenCalled();
     // Fresh-user-pad: Supabase Auth stuurt al een invite-mail, geen dubbele Resend-mail.
     expect(mockNotifyPortalAccessGranted).not.toHaveBeenCalled();
+  });
+});
+
+describe("inviteProjectClientAction — org-sync voor klanten (FIX cockpit→portal-zichtbaarheid)", () => {
+  const NEW_USER_ID = "00000000-0000-4000-8000-0000000000ee";
+  const CLIENT_ID = "00000000-0000-4000-8000-0000000000ff";
+  const OTHER_ORG_ID = "00000000-0000-4000-8000-000000000099";
+
+  it("nieuwe klant: project-org wordt gekoppeld vóór grantPortalAccess", async () => {
+    // listUsers: leeg → invite-pad. inviteUserByEmail levert nieuwe user-id.
+    mockListUsers.mockResolvedValueOnce({ data: { users: [] } });
+    mockInviteUserByEmail.mockResolvedValueOnce({ data: { user: { id: NEW_USER_ID } } });
+    mockUpsertProfile.mockResolvedValueOnce({ success: true });
+    mockGrantPortalAccess.mockResolvedValueOnce({
+      success: true,
+      data: { id: "row-3", profile_id: NEW_USER_ID, project_id: PROJECT_ID },
+    });
+
+    const result = await inviteProjectClientAction({
+      email: "klant@example.com",
+      projectId: PROJECT_ID,
+    });
+
+    expect(result).toEqual({
+      success: true,
+      data: { profileId: NEW_USER_ID, invitedFresh: true },
+    });
+    // Capture-payload-assert: setProfileOrg krijgt de project-org door zodat
+    // RLS `client_questions` (org-isolatie) klant-SELECT toelaat.
+    expect(mockSetProfileOrg).toHaveBeenCalledWith(NEW_USER_ID, PROJECT_ORG_ID, expect.anything());
+    // Volgorde: org-sync vóór grant, anders kan klant theoretisch toegang
+    // krijgen tot een project zonder zichtbare berichten.
+    const setOrgOrder = mockSetProfileOrg.mock.invocationCallOrder[0];
+    const grantOrder = mockGrantPortalAccess.mock.invocationCallOrder[0];
+    expect(setOrgOrder).toBeLessThan(grantOrder);
+  });
+
+  it("bestaande klant zonder org: org wordt gesynced", async () => {
+    mockListUsers.mockResolvedValueOnce({
+      data: { users: [{ id: CLIENT_ID, email: "klant@example.com" }] },
+    });
+    mockGetProfileRole.mockResolvedValueOnce("client");
+    mockGetProfileOrgId.mockResolvedValueOnce(null);
+    mockGrantPortalAccess.mockResolvedValueOnce({
+      success: true,
+      data: { id: "row-4", profile_id: CLIENT_ID, project_id: PROJECT_ID },
+    });
+
+    const result = await inviteProjectClientAction({
+      email: "klant@example.com",
+      projectId: PROJECT_ID,
+    });
+
+    expect(result).toEqual({
+      success: true,
+      data: { profileId: CLIENT_ID, invitedFresh: false },
+    });
+    expect(mockSetProfileOrg).toHaveBeenCalledWith(CLIENT_ID, PROJECT_ORG_ID, expect.anything());
+  });
+
+  it("bestaande klant met matching org: setProfileOrg wordt overgeslagen", async () => {
+    mockListUsers.mockResolvedValueOnce({
+      data: { users: [{ id: CLIENT_ID, email: "klant@example.com" }] },
+    });
+    mockGetProfileRole.mockResolvedValueOnce("client");
+    mockGetProfileOrgId.mockResolvedValueOnce(PROJECT_ORG_ID);
+    mockGrantPortalAccess.mockResolvedValueOnce({
+      success: true,
+      data: { id: "row-5", profile_id: CLIENT_ID, project_id: PROJECT_ID },
+    });
+
+    const result = await inviteProjectClientAction({
+      email: "klant@example.com",
+      projectId: PROJECT_ID,
+    });
+
+    expect("success" in result).toBe(true);
+    expect(mockSetProfileOrg).not.toHaveBeenCalled();
+  });
+
+  it("bestaande klant met mismatching org: error, geen grant, geen overwrite", async () => {
+    mockListUsers.mockResolvedValueOnce({
+      data: { users: [{ id: CLIENT_ID, email: "klant@example.com" }] },
+    });
+    mockGetProfileRole.mockResolvedValueOnce("client");
+    mockGetProfileOrgId.mockResolvedValueOnce(OTHER_ORG_ID);
+
+    const result = await inviteProjectClientAction({
+      email: "klant@example.com",
+      projectId: PROJECT_ID,
+    });
+
+    expect("error" in result).toBe(true);
+    if ("error" in result) {
+      expect(result.error).toMatch(/andere organisatie/i);
+    }
+    expect(mockSetProfileOrg).not.toHaveBeenCalled();
+    expect(mockGrantPortalAccess).not.toHaveBeenCalled();
+  });
+
+  it("project zonder organization_id: error vóór invite", async () => {
+    mockGetProjectOrgId.mockResolvedValueOnce(null);
+
+    const result = await inviteProjectClientAction({
+      email: "klant@example.com",
+      projectId: PROJECT_ID,
+    });
+
+    expect(result).toEqual({ error: "Project niet gevonden" });
+    expect(mockListUsers).not.toHaveBeenCalled();
+    expect(mockInviteUserByEmail).not.toHaveBeenCalled();
+    expect(mockGrantPortalAccess).not.toHaveBeenCalled();
   });
 });

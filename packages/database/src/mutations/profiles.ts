@@ -33,6 +33,31 @@ export async function upsertProfile(
 }
 
 /**
+ * Zet `profiles.organization_id` voor één profile. Dunne wrapper rond een
+ * UPDATE — bestaat zodat de invite-flow geen directe `.from()` op `profiles`
+ * hoeft te doen en het org-update-pad één plek heeft die we kunnen
+ * unit-testen zonder de hele invite-action mee te draaien.
+ *
+ * Geen role-check hier; de caller (admin-action) verifieert reeds dat de
+ * target een klant is en dat een org-sync gewenst is. Mismatching org wordt
+ * óók in de caller afgehandeld (single-tenant-guard) zodat we hier niet
+ * stilletjes overschrijven.
+ */
+export async function setProfileOrganization(
+  profileId: string,
+  organizationId: string,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const { error } = await db
+    .from("profiles")
+    .update({ organization_id: organizationId })
+    .eq("id", profileId);
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
  * CC-005 — markeer een onboarding-card als dismissed voor deze user. Atomic
  * via de `dismiss_onboarding_key` RPC zodat parallelle dismissals (bv. portal-
  * en cockpit-tab tegelijk) elkaars `preferences`-keys niet overschrijven. De

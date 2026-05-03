@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 642 |
-| Exported functions/constants | 951 |
+| Exported functions/constants | 953 |
 | Exported types/interfaces | 414 |
 | Cross-package imports | 603 |
 | Critical integration points (3+ packages) | 13 |
@@ -476,6 +476,7 @@
 
 **Exports:**
 - `getProfilePreferences()`
+- `getProfileOrganizationId()`
 
 ### `queries/projects/access.ts`
 
@@ -982,6 +983,7 @@
 
 **Exports:**
 - `upsertProfile()`
+- `setProfileOrganization()`
 - `dismissOnboarding()`
 
 ### `mutations/projects/core.ts`
