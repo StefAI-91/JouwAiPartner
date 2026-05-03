@@ -19,6 +19,14 @@ const DEBOUNCE_MS = 250;
  * character. The `lastPushedRef` trick below tracks what *we* last wrote,
  * so only changes from elsewhere (browser back/forward, sidebar nav) pull
  * the input back in sync.
+ *
+ * Note: the React 19 lint rule `react-hooks/set-state-in-effect` flags this
+ * pattern and suggests deriving state during render. That alternative
+ * doesn't work here — `router.push` runs inside `startTransition`, so there
+ * are renders where `lastPushed` is already updated but `useSearchParams`
+ * hasn't propagated yet. A render-time `setValue(currentQ)` in that window
+ * would clear the input mid-typing. Refs sidestep this because they update
+ * synchronously and aren't part of render.
  */
 export function SearchInput() {
   const router = useRouter();
@@ -31,10 +39,9 @@ export function SearchInput() {
   const lastPushedRef = useRef(currentQ);
 
   useEffect(() => {
-    // Skip when this URL change came from our own push — the input is
-    // already ahead of it. Only mirror changes that originate elsewhere.
     if (currentQ === lastPushedRef.current) return;
     lastPushedRef.current = currentQ;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- see component JSDoc: render-time sync races with startTransition
     setValue(currentQ);
   }, [currentQ]);
 

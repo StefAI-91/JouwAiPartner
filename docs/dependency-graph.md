@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 628 |
-| Exported functions/constants | 945 |
+| Files scanned | 627 |
+| Exported functions/constants | 943 |
 | Exported types/interfaces | 415 |
-| Cross-package imports | 617 |
+| Cross-package imports | 612 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -4219,19 +4219,6 @@
 
 ## DevHub Server Actions
 
-### `apps/devhub/src/actions/attachments.ts`
-
-**Exports:**
-- `createIssueAttachmentUploadUrlAction()`
-- `recordIssueAttachmentAction()`
-
-**Depends on:**
-- `@repo/auth/helpers` → getAuthenticatedUser
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/issues` → getIssueById
-- `@repo/database/mutations/issues/attachments` → insertAttachment
-
 ### `apps/devhub/src/actions/bulk-cluster-cleanup.ts`
 
 **Exports:**
@@ -4671,7 +4658,7 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
 | Database Queries | - | - | 4 | - | - | 4 |
-| DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
+| DevHub Server Actions | 23 | 3 | 11 | - | - | 37 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
 | DevHub Components | 7 | 2 | 1 | 16 | - | 26 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
@@ -4799,7 +4786,6 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `insertAttachment()` | `apps/devhub/src/actions/attachments.ts` |
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
 ### mutations/meetings/core.ts
@@ -5051,7 +5037,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
+| `getIssueById()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 
 ### queries/issues/list.ts
 
