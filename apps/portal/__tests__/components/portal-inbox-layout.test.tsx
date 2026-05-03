@@ -35,6 +35,7 @@ const baseProps = {
   questions: [],
   currentProfileId: PROFILE_ID,
   showOnboarding: false,
+  filter: "all" as const,
 };
 
 function makeThread(): Extract<ConversationThread, { kind: "question" }> {
