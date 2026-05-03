@@ -10,7 +10,12 @@ import {
   TEST_IDS,
 } from "../helpers/seed";
 import { cleanupTestData, cleanupTestProfile } from "../helpers/cleanup";
-import { listIssues, getIssueById, getIssueCounts } from "../../src/queries/issues";
+import {
+  listIssues,
+  getIssueById,
+  getIssueCounts,
+  getDashboardThisWeek,
+} from "../../src/queries/issues";
 import { listIssueComments } from "../../src/queries/issues/comments";
 import { listIssueActivity } from "../../src/queries/issues/activity";
 import { getIssueThumbnails } from "../../src/queries/issues/attachments";
@@ -148,6 +153,56 @@ describeWithDb("queries/issues", () => {
       expect(result).toHaveProperty("done");
       expect(result).toHaveProperty("cancelled");
       expect(result.triage).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe("getDashboardThisWeek()", () => {
+    it("urgent bucket bevat alleen open P0/P1 issues", async () => {
+      await seedIssue({
+        id: TEST_IDS.issue,
+        priority: "high",
+        status: "todo",
+      });
+
+      const { urgent } = await getDashboardThisWeek(TEST_IDS.project, db);
+
+      const ids = urgent.map((i) => i.id);
+      expect(ids).toContain(TEST_IDS.issue);
+      // Geen done/cancelled in urgent
+      const closed = urgent.filter((i) => i.status === "done" || i.status === "cancelled");
+      expect(closed.length).toBe(0);
+      // Geen P2/P3 in urgent
+      const lowerPrio = urgent.filter((i) => i.priority === "medium" || i.priority === "low");
+      expect(lowerPrio.length).toBe(0);
+    });
+
+    it("active bucket bevat alleen status=in_progress (alle prio)", async () => {
+      await seedIssue({
+        id: TEST_IDS.issue,
+        priority: "low",
+        status: "in_progress",
+      });
+
+      const { active } = await getDashboardThisWeek(TEST_IDS.project, db);
+
+      const ids = active.map((i) => i.id);
+      expect(ids).toContain(TEST_IDS.issue);
+      // Alleen in_progress, niets anders
+      const wrongStatus = active.filter((i) => i.status !== "in_progress");
+      expect(wrongStatus.length).toBe(0);
+    });
+
+    it("issue dat én P0/P1 én in_progress is verschijnt in beide buckets", async () => {
+      await seedIssue({
+        id: TEST_IDS.issue,
+        priority: "urgent",
+        status: "in_progress",
+      });
+
+      const { urgent, active } = await getDashboardThisWeek(TEST_IDS.project, db);
+
+      expect(urgent.map((i) => i.id)).toContain(TEST_IDS.issue);
+      expect(active.map((i) => i.id)).toContain(TEST_IDS.issue);
     });
   });
 

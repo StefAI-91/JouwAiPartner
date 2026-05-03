@@ -4,6 +4,7 @@ import {
   getIssueCounts,
   countCriticalUnassigned,
   getWeeklyIssueIntake,
+  getDashboardThisWeek,
 } from "@repo/database/queries/issues";
 import { getAuthenticatedUser, createPageClient } from "@repo/auth/helpers";
 import { redirect } from "next/navigation";
@@ -13,6 +14,7 @@ import { HealthHero } from "@/components/dashboard/health-hero";
 import { DashboardMetrics } from "@/components/dashboard/dashboard-metrics";
 import { IssuesIntakeChart } from "@/components/dashboard/issues-intake-chart";
 import { AreaSummaries } from "@/components/dashboard/area-summaries";
+import { ThisWeekSection } from "@/components/dashboard/this-week-section";
 import { ActionItemsList } from "@/components/review/action-items-list";
 import { CountSeeder } from "@/components/layout/count-seeder";
 import { LayoutDashboard } from "lucide-react";
@@ -44,13 +46,15 @@ export default async function DashboardPage({
   const hasAccess = projects.some((p) => p.id === projectId);
   if (!hasAccess) notFound();
 
-  const [review, counts, criticalUnassigned, healthTrend, weeklyIntake] = await Promise.all([
-    getLatestProjectReview(projectId, supabase),
-    getIssueCounts(projectId, supabase),
-    countCriticalUnassigned(projectId, supabase),
-    getHealthTrend(projectId, supabase),
-    getWeeklyIssueIntake(projectId, 12, supabase),
-  ]);
+  const [review, counts, criticalUnassigned, healthTrend, weeklyIntake, thisWeek] =
+    await Promise.all([
+      getLatestProjectReview(projectId, supabase),
+      getIssueCounts(projectId, supabase),
+      countCriticalUnassigned(projectId, supabase),
+      getHealthTrend(projectId, supabase),
+      getWeeklyIssueIntake(projectId, 12, supabase),
+      getDashboardThisWeek(projectId, supabase),
+    ]);
 
   const project = projects.find((p) => p.id === projectId);
   const totalOpen = counts.triage + counts.backlog + counts.todo + counts.in_progress;
@@ -90,6 +94,9 @@ export default async function DashboardPage({
         criticalUnassignedCount={criticalUnassigned}
         triageCount={counts.triage}
       />
+
+      {/* Deze week — team-focus: urgent + actief */}
+      <ThisWeekSection urgent={thisWeek.urgent} active={thisWeek.active} />
 
       {/* Weekly intake trend */}
       <IssuesIntakeChart data={weeklyIntake} />

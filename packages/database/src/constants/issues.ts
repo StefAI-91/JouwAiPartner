@@ -56,11 +56,24 @@ export const ISSUE_STATUS_LABELS: Record<IssueStatus, string> = {
 };
 
 export const ISSUE_PRIORITY_LABELS: Record<IssuePriority, string> = {
-  urgent: "Urgent",
-  high: "Hoog",
-  medium: "Gemiddeld",
-  low: "Laag",
+  urgent: "P0 — Kritiek",
+  high: "P1 — Urgent",
+  medium: "P2 — Normaal",
+  low: "P3 — Nice-to-have",
 };
+
+export const ISSUE_PRIORITY_SHORT_LABELS: Record<IssuePriority, string> = {
+  urgent: "P0",
+  high: "P1",
+  medium: "P2",
+  low: "P3",
+};
+
+export function getPriorityShortLabel(priority: string): string {
+  return (
+    ISSUE_PRIORITY_SHORT_LABELS[priority as IssuePriority] ?? priority.toUpperCase().slice(0, 3)
+  );
+}
 
 export const ISSUE_COMPONENT_LABELS: Record<IssueComponent, string> = {
   frontend: "Frontend",
