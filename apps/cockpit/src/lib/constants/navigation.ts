@@ -10,6 +10,7 @@ import {
   Users,
   Receipt,
   Bot,
+  Map,
 } from "lucide-react";
 
 export interface NavItem {
@@ -43,6 +44,7 @@ export const secondaryNavItems: NavItem[] = [
 export const adminNavItems: NavItem[] = [
   { href: "/admin/team", label: "Team", icon: Users },
   { href: "/agents", label: "Agents", icon: Bot },
+  { href: "/journey", label: "Klantreis", icon: Map },
 ];
 
 /** Check if a nav item should be highlighted for the given pathname */

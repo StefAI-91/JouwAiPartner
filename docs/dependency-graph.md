@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 642 |
-| Exported functions/constants | 952 |
-| Exported types/interfaces | 414 |
-| Cross-package imports | 603 |
+| Files scanned | 651 |
+| Exported functions/constants | 962 |
+| Exported types/interfaces | 416 |
+| Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -3504,6 +3504,21 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/summaries/weekly` → getLatestWeeklySummary
 
+### `apps/cockpit/src/app/(dashboard)/journey/_data/phases.ts`
+
+**Exports:**
+- `phases`
+- `colorClasses`
+- `statusLabel`
+- `statusBadgeClass`
+
+**Types:** `PhaseStatus`, `Phase`
+
+### `apps/cockpit/src/app/(dashboard)/journey/page.tsx`
+
+**Exports:**
+- `metadata`
+
 ### `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`
 
 **Exports:**
@@ -4068,6 +4083,43 @@
 
 **Exports:**
 - `ScanNeedsButton()`
+
+### `apps/cockpit/src/components/journey/data-flow-diagram.tsx`
+
+**Exports:**
+- `DataFlowDiagram()`
+
+**Depends on:**
+- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
+
+### `apps/cockpit/src/components/journey/journey-intro.tsx`
+
+**Exports:**
+- `JourneyIntro()`
+
+**Depends on:**
+- `@repo/ui/card` → Card, CardContent
+
+### `apps/cockpit/src/components/journey/phase-card.tsx`
+
+**Exports:**
+- `PhaseCard()`
+
+**Depends on:**
+- `@repo/ui/card` → Card, CardContent, CardHeader
+
+### `apps/cockpit/src/components/journey/phase-strip.tsx`
+
+**Exports:**
+- `PhaseStrip()`
+
+### `apps/cockpit/src/components/journey/whats-new.tsx`
+
+**Exports:**
+- `WhatsNew()`
+
+**Depends on:**
+- `@repo/ui/card` → Card, CardContent, CardHeader, CardTitle
 
 ### `apps/cockpit/src/components/layout/desktop-sidebar.tsx`
 
@@ -4702,9 +4754,9 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 22 | 5 | - | 42 | - | 69 |
+| Cockpit Components | 22 | 5 | - | 46 | - | 73 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
+| Cockpit Pages | 102 | 8 | 9 | 39 | - | 158 |
 | Database Queries | - | - | 6 | - | - | 6 |
 | DevHub Server Actions | 17 | 2 | 10 | - | - | 29 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
