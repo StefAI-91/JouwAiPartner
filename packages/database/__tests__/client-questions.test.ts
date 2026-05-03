@@ -4,7 +4,8 @@
  *   1. Mutations (`sendQuestion`, `replyToQuestion`) — happy path + status-flip.
  *   2. DB-constraints (XOR topic_id/issue_id).
  *   3. RLS (org-isolatie + klant-root-INSERT-blokkade).
- *   4. Query (`listOpenQuestionsForProject`) — root + replies inline.
+ *   4. Query (`listQuestionsForProject`) — root + replies inline, met optionele
+ *      status-filter ("open" / "responded" / "all", default "all").
  *
  * Patroon volgt `emails-rls.test.ts`: echte `auth.admin.createUser` +
  * `signInWithPassword` zodat RLS daadwerkelijk evalueert in de klant-rol.
@@ -14,7 +15,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { describeWithDb } from "./helpers/describe-with-db";
 import { getTestClient } from "./helpers/test-client";
 import { sendQuestion, replyToQuestion } from "../src/mutations/client-questions";
-import { listOpenQuestionsForProject } from "../src/queries/client-questions";
+import { listQuestionsForProject } from "../src/queries/client-questions";
 
 const PR022_IDS = {
   orgA: "00000000-0000-4022-8000-0000000000aa",
@@ -608,8 +609,8 @@ describeWithDb("client_questions — mutations + RLS + query", () => {
   // Query
   // ===========================================================================
 
-  describe("listOpenQuestionsForProject", () => {
-    it("returnt alleen open root-vragen + replies inline, replies tijdsgesorteerd", async () => {
+  describe("listQuestionsForProject", () => {
+    it("status='open' returnt alleen open root-vragen + replies inline, replies tijdsgesorteerd", async () => {
       // Schoon vooraf zodat ordering-asserts deterministisch zijn.
       await cleanupQuestions();
 
@@ -675,7 +676,12 @@ describeWithDb("client_questions — mutations + RLS + query", () => {
       ]);
       if (re) throw new Error(re.message);
 
-      const rows = await listOpenQuestionsForProject(PR022_IDS.projectA, PR022_IDS.orgA, svc);
+      const rows = await listQuestionsForProject(
+        PR022_IDS.projectA,
+        PR022_IDS.orgA,
+        { status: "open" },
+        svc,
+      );
 
       const ids = rows.map((r) => r.id);
       expect(ids).toContain(open1.id);
@@ -686,6 +692,41 @@ describeWithDb("client_questions — mutations + RLS + query", () => {
       expect(open1Row.replies).toHaveLength(2);
       expect(open1Row.replies[0].body).toBe("Reply A (eerst)");
       expect(open1Row.replies[1].body).toBe("Reply B (later)");
+    });
+
+    it("default (geen status-optie) returnt zowel open als responded — portal verbergt geen beantwoorde threads", async () => {
+      await cleanupQuestions();
+
+      const { data: openQ, error: e1 } = await svc
+        .from("client_questions")
+        .insert({
+          project_id: PR022_IDS.projectA,
+          organization_id: PR022_IDS.orgA,
+          sender_profile_id: teamMember.id,
+          body: "Open root",
+        })
+        .select("id")
+        .single();
+      if (e1 || !openQ) throw new Error(e1?.message);
+
+      const { data: respondedQ, error: e2 } = await svc
+        .from("client_questions")
+        .insert({
+          project_id: PR022_IDS.projectA,
+          organization_id: PR022_IDS.orgA,
+          sender_profile_id: teamMember.id,
+          body: "Beantwoorde root",
+          status: "responded",
+          responded_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      if (e2 || !respondedQ) throw new Error(e2?.message);
+
+      const rows = await listQuestionsForProject(PR022_IDS.projectA, PR022_IDS.orgA, {}, svc);
+      const ids = rows.map((r) => r.id);
+      expect(ids).toContain(openQ.id);
+      expect(ids).toContain(respondedQ.id);
     });
 
     it("filtert op organisatie — andere-org-vragen niet zichtbaar", async () => {
@@ -707,7 +748,7 @@ describeWithDb("client_questions — mutations + RLS + query", () => {
       ]);
       if (e) throw new Error(e.message);
 
-      const orgARows = await listOpenQuestionsForProject(PR022_IDS.projectA, PR022_IDS.orgA, svc);
+      const orgARows = await listQuestionsForProject(PR022_IDS.projectA, PR022_IDS.orgA, {}, svc);
       expect(orgARows.every((r) => r.body.includes("Org A"))).toBe(true);
       expect(orgARows.length).toBeGreaterThan(0);
     });

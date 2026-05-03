@@ -4,7 +4,7 @@ import { getCurrentProfile } from "@repo/auth/access";
 import { getPortalProjectDashboard } from "@repo/database/queries/portal";
 import { hasPortalProjectAccess } from "@repo/database/queries/portal/access";
 import { getConversationThread, type ConversationThread } from "@repo/database/queries/inbox";
-import { listOpenQuestionsForProject } from "@repo/database/queries/client-questions";
+import { listQuestionsForProject } from "@repo/database/queries/client-questions";
 import { getProfilePreferences } from "@repo/database/queries/profiles";
 import { PortalInboxLayout } from "@/components/inbox/portal-inbox-layout";
 
@@ -52,7 +52,7 @@ export default async function PortalInboxPage({
   const threadId = !isComposeRoute ? selectedId : undefined;
 
   const [questions, thread, preferences] = await Promise.all([
-    listOpenQuestionsForProject(project.id, project.organization.id, supabase),
+    listQuestionsForProject(project.id, project.organization.id, {}, supabase),
     threadId
       ? getConversationThread("question", threadId, profile.id, supabase, {
           projectIds: [projectId],

@@ -2,13 +2,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "../supabase/admin";
 
 /**
- * PR-022 — `listOpenQuestionsForProject`.
+ * PR-022 — `listQuestionsForProject`.
  *
  * Root-vragen + replies in één PostgREST-call via een nested embed op
  * `client_questions!parent_id`. Filter: alleen root (`parent_id IS NULL`)
- * met status `open` voor het opgegeven project + organisatie. Replies
- * komen mee ongeacht hun status (een reply heeft zelf geen status-
- * lifecycle — alleen de root verandert van `open` naar `responded`).
+ * voor het opgegeven project + organisatie. Replies komen mee ongeacht hun
+ * status (een reply heeft zelf geen status-lifecycle — alleen de root
+ * verandert van `open` naar `responded`).
+ *
+ * `options.status` (default `"all"`) bepaalt of we filteren op de root-
+ * status. Portal toont alle threads (open + responded) zodat een bericht
+ * niet uit de lijst verdwijnt zodra de klant antwoordt; DevHub's
+ * "Open klantvragen"-blok geeft `"open"` mee.
  *
  * RLS-aware: in productie wordt deze query met de page-client (cookie auth)
  * uitgevoerd; team ziet alles, klant alleen eigen org × eigen project. De
@@ -42,23 +47,33 @@ const REPLY_EMBED = `replies:client_questions!parent_id (
   id, body, sender_profile_id, created_at
 )` as const;
 
-export async function listOpenQuestionsForProject(
+export interface ListQuestionsForProjectOptions {
+  status?: "open" | "responded" | "all";
+}
+
+export async function listQuestionsForProject(
   projectId: string,
   organizationId: string,
+  options: ListQuestionsForProjectOptions = {},
   client?: SupabaseClient,
 ): Promise<ClientQuestionListRow[]> {
   const db = client ?? getAdminClient();
+  const status = options.status ?? "all";
 
-  const { data, error } = await db
+  let query = db
     .from("client_questions")
     .select(`${QUESTION_LIST_COLS}, ${REPLY_EMBED}`)
     .eq("project_id", projectId)
     .eq("organization_id", organizationId)
-    .is("parent_id", null)
-    .eq("status", "open")
-    .order("created_at", { ascending: false });
+    .is("parent_id", null);
 
-  if (error) throw new Error(`listOpenQuestionsForProject failed: ${error.message}`);
+  if (status !== "all") {
+    query = query.eq("status", status);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
+
+  if (error) throw new Error(`listQuestionsForProject failed: ${error.message}`);
 
   // Replies komen ongeordend terug uit het PostgREST-embed; sorteer op tijd
   // zodat de UI een chronologische thread kan renderen zonder zelf te sorteren.
@@ -145,7 +160,7 @@ export interface ClientQuestionLookupRow {
  * Lookup-query voor één client-vraag — bedoeld voor server-actions die ná
  * een mutation wat extra context willen (bv. notify-orchestrator die
  * project_id + body nodig heeft). Bewust kleine select: niet de volledige
- * rij + replies-embed, dat doet `listOpenQuestionsForProject`.
+ * rij + replies-embed, dat doet `listQuestionsForProject`.
  */
 export async function getQuestionById(
   id: string,
