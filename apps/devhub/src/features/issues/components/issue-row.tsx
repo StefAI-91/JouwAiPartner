@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { MoreHorizontal, Trash2 } from "lucide-react";
 import type { IssueRow } from "@repo/database/queries/issues";
 import type { IssueTopicMembership } from "@repo/database/queries/topics";
-import { PriorityDot } from "@/components/shared/priority-badge";
+import { PriorityBadge } from "@/components/shared/priority-badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TypeBadge } from "@/components/shared/type-badge";
 import { ComponentBadge } from "@/components/shared/component-badge";
@@ -148,13 +148,18 @@ export function IssueRowItem({
         {/* Main link area */}
         <Link href={`/issues/${issue.id}?project=${issue.project_id}`} className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <PriorityDot priority={issue.priority} />
+            <PriorityBadge priority={issue.priority} variant="compact" className="mt-0.5" />
             <span className="shrink-0 text-sm text-muted-foreground font-mono mt-0.5">
               #{issue.issue_number}
             </span>
             <span className="min-w-0 flex-1 font-medium text-foreground group-hover:text-primary line-clamp-2">
               {issue.title}
             </span>
+            {issue.status === "triage" && (
+              <span className="mt-0.5 shrink-0 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700">
+                Nog te triëren
+              </span>
+            )}
           </div>
 
           {!compact && issue.description && issue.description !== issue.title && (

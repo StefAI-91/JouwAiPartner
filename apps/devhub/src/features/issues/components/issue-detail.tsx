@@ -14,6 +14,7 @@ import { IssueSidebar } from "./issue-sidebar";
 import { AiExecutionPanel } from "./ai-execution-panel";
 import { ClientTranslationSection } from "./client-translation-section";
 import { CommentSection, type CurrentUser } from "./comment-section";
+import { TriagePrioBar } from "./triage-prio-bar";
 
 interface Person {
   id: string;
@@ -97,6 +98,14 @@ export function IssueDetail({
           component={optimisticIssue.component}
           projectId={optimisticIssue.project_id}
         />
+
+        {optimisticIssue.status === "triage" && (
+          <TriagePrioBar
+            issueId={issue.id}
+            projectId={issue.project_id}
+            currentStatus={optimisticIssue.status}
+          />
+        )}
 
         {optimisticIssue.description && (
           <section className="mb-6">

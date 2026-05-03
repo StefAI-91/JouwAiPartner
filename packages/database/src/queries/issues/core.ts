@@ -446,6 +446,49 @@ export async function getWeeklyIssueIntake(
 }
 
 /**
+ * Dashboard "Deze week" — twee buckets:
+ *
+ * 1. Urgent: open issues met priority IN ('urgent','high'). "Open" = status
+ *    NIET in (done, cancelled). Antwoord op "wat moet deze week gebeuren".
+ * 2. Active: issues met status='in_progress' (alle prio). Antwoord op
+ *    "wat loopt nu".
+ *
+ * Een issue dat én P0/P1 én in_progress is verschijnt in beide buckets —
+ * bewust, want in een stand-up wil je weten dat het brandt én dat iemand
+ * er actief mee bezig is.
+ *
+ * Hergebruikt `listIssues`. Geen nieuwe DB-query / index nodig.
+ */
+export async function getDashboardThisWeek(
+  projectId: string,
+  client?: SupabaseClient,
+): Promise<{ urgent: IssueRow[]; active: IssueRow[] }> {
+  const [urgent, active] = await Promise.all([
+    listIssues(
+      {
+        projectId,
+        priority: ["urgent", "high"],
+        status: ["triage", "backlog", "todo", "in_progress"],
+        sort: "priority",
+        limit: 50,
+      },
+      client,
+    ),
+    listIssues(
+      {
+        projectId,
+        status: ["in_progress"],
+        sort: "priority",
+        limit: 50,
+      },
+      client,
+    ),
+  ]);
+
+  return { urgent, active };
+}
+
+/**
  * Count critical issues without an assignee (open statuses only).
  */
 export async function countCriticalUnassigned(

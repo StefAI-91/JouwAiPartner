@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-05-02. Do not edit manually.
+> Auto-generated on 2026-05-03. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 607 |
-| Exported functions/constants | 918 |
+| Files scanned | 609 |
+| Exported functions/constants | 921 |
 | Exported types/interfaces | 394 |
-| Cross-package imports | 608 |
+| Cross-package imports | 614 |
 | Critical integration points (3+ packages) | 14 |
 
 ## Package Dependency Flow
@@ -224,6 +224,7 @@
 - `getIssueById()`
 - `getIssueCounts()`
 - `getWeeklyIssueIntake()`
+- `getDashboardThisWeek()`
 - `countCriticalUnassigned()`
 - `ISSUE_SORTS`
 - `ISSUE_SELECT`
@@ -4395,6 +4396,24 @@
 **Depends on:**
 - (type) `@repo/database/queries/issues` → WeeklyIssueIntake
 
+### `apps/devhub/src/components/dashboard/this-week-group.tsx`
+
+**Exports:**
+- `ThisWeekGroup()`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
+- (type) `@repo/database/queries/issues` → IssueRow
+
+### `apps/devhub/src/components/dashboard/this-week-section.tsx`
+
+**Exports:**
+- `ThisWeekSection()`
+
+**Depends on:**
+- (type) `@repo/database/queries/issues` → IssueRow
+- (type) `@repo/database/queries/team` → TeamMember
+
 ### `apps/devhub/src/components/layout/app-sidebar.tsx`
 
 **Exports:**
@@ -4518,6 +4537,7 @@
 
 **Depends on:**
 - `@repo/ui/utils` → cn
+- `@repo/database/constants/issues` → ISSUE_PRIORITY_LABELS, ISSUE_PRIORITY_SHORT_LABELS, type IssuePriority
 
 ### `apps/devhub/src/components/shared/status-badge.tsx`
 
@@ -4570,9 +4590,9 @@ Which layers depend on which packages:
 | Database Queries | - | - | 3 | - | - | 3 |
 | DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
-| DevHub Components | 3 | 2 | 1 | 15 | - | 21 |
+| DevHub Components | 7 | 2 | 1 | 16 | - | 26 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 28 | - | 22 | 12 | - | 62 |
+| DevHub Pages | 29 | - | 22 | 12 | - | 63 |
 | MCP Server | 32 | 1 | - | - | - | 33 |
 
 ## Critical Integration Points
@@ -4934,6 +4954,7 @@ Which queries are used where across the codebase.
 | `getIssueById()` | `apps/devhub/src/actions/attachments.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getIssueCounts()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `getWeeklyIssueIntake()` | `apps/devhub/src/app/(app)/page.tsx` |
+| `getDashboardThisWeek()` | `apps/devhub/src/app/(app)/page.tsx` |
 | `countCriticalUnassigned()` | `apps/devhub/src/app/(app)/page.tsx` |
 
 ### queries/meetings/core.ts
@@ -5160,7 +5181,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `packages/mcp/src/tools/write-client-questions.ts`, `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/auth/callback/route.ts`, `apps/devhub/src/app/auth/callback/route.ts` |

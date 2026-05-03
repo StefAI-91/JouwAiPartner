@@ -12,6 +12,7 @@ export {
   countFilteredIssues,
   getIssueById,
   getIssueCounts,
+  getDashboardThisWeek,
   getWeeklyIssueIntake,
   countCriticalUnassigned,
   parseSearchQuery,
