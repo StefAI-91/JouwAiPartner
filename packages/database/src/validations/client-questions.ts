@@ -21,7 +21,7 @@ export const sendQuestionSchema = z
   .object({
     project_id: z.string().uuid(),
     organization_id: z.string().uuid(),
-    body: z.string().min(10).max(2000),
+    body: z.string().min(10).max(5000),
     topic_id: z.string().uuid().nullable().optional(),
     issue_id: z.string().uuid().nullable().optional(),
     due_date: z.string().datetime().nullable().optional(),

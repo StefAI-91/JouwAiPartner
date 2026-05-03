@@ -16,6 +16,8 @@ export {
   feedbackDoneTemplate,
 };
 export { newTeamReplyTemplate } from "./new-team-reply";
+export { newTeamMessageTemplate } from "./new-team-message";
+export type { NewTeamMessageTemplateProps } from "./new-team-message";
 export * from "./types";
 
 /**

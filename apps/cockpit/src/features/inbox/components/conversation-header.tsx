@@ -54,7 +54,7 @@ export function ConversationHeader({ thread }: { thread: ConversationThread }) {
             {t.body.slice(0, 80)}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            Vraag · {thread.messages.length} berichten
+            Bericht · {thread.messages.length} berichten
           </p>
         </div>
       </div>

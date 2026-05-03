@@ -11,8 +11,8 @@ export function InboxEmptyState({
       body: "Klant-feedback en eindgebruiker-meldingen verschijnen hier zodra ze binnenkomen.",
     },
     wacht_op_klant: {
-      title: "Geen open vragen",
-      body: "Vragen waar de klant nog op moet reageren komen hier te staan.",
+      title: "Geen open berichten",
+      body: "Berichten waar de klant nog op moet reageren komen hier te staan.",
     },
     geparkeerd: {
       title: "Geen geparkeerde items",

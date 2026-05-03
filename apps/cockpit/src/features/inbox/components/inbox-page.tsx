@@ -7,6 +7,7 @@ import {
   type InboxItem,
 } from "@repo/database/queries/inbox";
 import { getProfilePreferences } from "@repo/database/queries/profiles";
+import { listAccessibleProjects } from "@repo/database/queries/projects/access";
 import { InboxHeader, type InboxFilter } from "./inbox-header";
 import { InboxList } from "./inbox-list";
 import { InboxEmptyState } from "./empty-state";
@@ -31,10 +32,11 @@ export async function InboxPage({
   const profile = await getCurrentProfile(supabase);
   if (!profile) redirect("/login");
 
-  const [items, counts, preferences] = await Promise.all([
+  const [items, counts, preferences, projects] = await Promise.all([
     listInboxItemsForTeam(profile.id, { projectId }, supabase),
     countInboxItemsForTeam(profile.id, { projectId }, supabase),
     getProfilePreferences(profile.id, supabase),
+    listAccessibleProjects(profile.id, supabase),
   ]);
 
   const filtered = applyFilter(items, filter);
@@ -42,7 +44,7 @@ export async function InboxPage({
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden">
-      <InboxHeader counts={counts} />
+      <InboxHeader counts={counts} projects={projects} initialProjectId={projectId} />
       {showOnboarding && <OnboardingCard />}
       {filtered.length === 0 ? <InboxEmptyState filter={filter} /> : <InboxList items={filtered} />}
     </div>

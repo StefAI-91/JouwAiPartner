@@ -47,7 +47,7 @@ export function ConvertModal({
     <div
       role="dialog"
       aria-modal
-      aria-label="Omzetten naar vraag"
+      aria-label="Omzetten naar bericht"
       className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
@@ -58,7 +58,7 @@ export function ConvertModal({
       >
         <header className="mb-4 flex items-center justify-between">
           <h2 className="text-[15px] font-semibold tracking-tight text-foreground">
-            Omzetten naar vraag
+            Omzetten naar bericht
           </h2>
           <button
             type="button"
@@ -71,8 +71,8 @@ export function ConvertModal({
         </header>
 
         <p className="mb-3 text-[12.5px] leading-relaxed text-muted-foreground">
-          Stel een verheldering- of vervolgvraag aan de klant. De feedback wordt afgesloten met een
-          link naar de nieuwe vraag.
+          Stuur een verheldering of vervolg aan de klant. De feedback wordt afgesloten met een link
+          naar het nieuwe bericht.
         </p>
 
         <textarea

@@ -23,12 +23,10 @@ export function QuestionList({ projectId, questions }: QuestionListProps) {
         <div className="mx-auto mb-4 grid size-10 place-items-center rounded-full bg-muted">
           <MessageCircle className="size-5 text-muted-foreground" strokeWidth={1.75} />
         </div>
-        <p className="text-sm font-medium text-foreground">
-          Het team heeft geen openstaande vragen voor jou
-        </p>
+        <p className="text-sm font-medium text-foreground">Geen openstaande berichten</p>
         <p className="mx-auto mt-1 max-w-[36ch] text-xs text-muted-foreground">
-          Zodra het team iets vraagt verschijnt het hier. Je krijgt geen mail — kom gewoon af en toe
-          terug.
+          Zodra er een bericht is verschijnt het hier. Je kunt zelf ook altijd een nieuw gesprek
+          starten.
         </p>
       </div>
     );
