@@ -52,7 +52,17 @@ export async function createCommentAction(
     author_id: user.id,
     body: parsed.data.body,
   });
-  if ("error" in result) return { error: "Reactie plaatsen mislukt" };
+  if ("error" in result) {
+    // Log server-side zodat we de Supabase-error in Vercel-logs / lokale
+    // terminal kunnen zien. Zonder dit zag de gebruiker alleen "Reactie
+    // plaatsen mislukt" terwijl de echte oorzaak (FK violation, RLS,
+    // schema-mismatch, ...) verborgen bleef.
+    console.error("[createCommentAction] insertComment failed:", result.error, {
+      issueId: parsed.data.issue_id,
+      authorId: user.id,
+    });
+    return { error: result.error };
+  }
 
   await insertActivity({
     issue_id: parsed.data.issue_id,
