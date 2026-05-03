@@ -1,10 +1,10 @@
 "use client";
 
 import { OrganizationSelector } from "./organization-selector";
-import { ProjectLinker } from "./project-linker";
+import { EmailProjectLinker } from "./email-project-linker";
 import { SenderPersonSelector } from "./sender-person-selector";
 import { EmailTypeSelector } from "./email-type-selector";
-import { PartyTypeSelector } from "./party-type-selector";
+import { EmailPartyTypeSelector } from "./email-party-type-selector";
 
 interface EmailLinkEditorProps {
   emailId: string;
@@ -40,7 +40,7 @@ export function EmailLinkEditor({
           currentOrganization={currentOrganization}
           allOrganizations={allOrganizations}
         />
-        <ProjectLinker
+        <EmailProjectLinker
           emailId={emailId}
           linkedProjects={linkedProjects}
           allProjects={allProjects}
@@ -51,7 +51,7 @@ export function EmailLinkEditor({
           allPeople={allPeople}
         />
         <EmailTypeSelector emailId={emailId} currentType={emailType} />
-        <PartyTypeSelector emailId={emailId} currentType={partyType} />
+        <EmailPartyTypeSelector emailId={emailId} currentType={partyType} />
       </div>
     </div>
   );

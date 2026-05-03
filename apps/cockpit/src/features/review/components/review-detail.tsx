@@ -16,7 +16,7 @@ import { CopyMeetingButton } from "@/components/shared/copy-meeting-button";
 import { PipelineInfo } from "@/components/shared/pipeline-info";
 import { approveMeetingWithEditsAction, rejectMeetingAction } from "../actions/review";
 import { updateMeetingSummaryAction } from "@/features/meetings/actions";
-import { RegenerateMenu } from "@/features/meetings/components/regenerate-menu";
+import { MeetingRegenerateMenu } from "@/features/meetings/components/meeting-regenerate-menu";
 import { AlertTriangle, Mail, Tags } from "lucide-react";
 import type { PersonForAssignment } from "@repo/database/queries/people";
 import type { MeetingSegment } from "@repo/database/queries/meetings/project-summaries";
@@ -226,7 +226,7 @@ export function ReviewDetail({
                   </TabsTrigger>
                 )}
               </TabsList>
-              <RegenerateMenu meetingId={meeting.id} />
+              <MeetingRegenerateMenu meetingId={meeting.id} />
             </div>
           </div>
 

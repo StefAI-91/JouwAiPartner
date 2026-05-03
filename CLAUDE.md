@@ -71,6 +71,7 @@ npm run test:coverage     # Vitest run + v8 coverage
 npm run check:queries     # Geen directe .from() in apps/*/actions of app/api
 npm run check:features    # Feature-folder structuur volgt CLAUDE.md registry
 npm run check:readmes     # Cluster-READMEs zijn vers t.o.v. inhoud van die map
+npm run check:exports     # Folder-clusters onder packages/database hebben expliciete package.json exports
 npm run dep-graph         # Regenereer docs/dependency-graph.md
 ```
 

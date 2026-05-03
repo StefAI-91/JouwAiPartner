@@ -121,14 +121,14 @@ import { MeetingDetailView } from "@/features/meetings/components/meeting-detail
 
 ### Helpers
 
-| Component                 | Props                                         | Doel                                                                      |
-| ------------------------- | --------------------------------------------- | ------------------------------------------------------------------------- |
-| `RegenerateMenu`          | `{ meetingId }`                               | dropdown om titel/risks/themes/etc opnieuw te genereren                   |
-| `CreateOrganizationModal` | `{ open, onClose, onCreated }`                | inline org-create                                                         |
-| `CreatePersonSubModal`    | `{ open, onClose, onCreated, organizations }` | inline person-create                                                      |
-| `CreateProjectSubModal`   | `{ open, onClose, onCreated, organizations }` | inline project-create                                                     |
-| `MetadataSubModals`       | `{ ... }`                                     | container die de bovenstaande sub-modals stapelt voor edit-metadata-modal |
-| `MetadataTagSelector`     | `{ tags, onChange }`                          | multi-tag picker in edit-metadata-modal                                   |
+| Component                 | Props                                         | Doel                                                                                                                                                             |
+| ------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MeetingRegenerateMenu`   | `{ meetingId }`                               | dropdown om titel/risks/themes/etc opnieuw te genereren. Gebruikt door meeting-detail én review-detail. Bewust meeting-specifiek (vandaar prefix) — niet shared. |
+| `CreateOrganizationModal` | `{ open, onClose, onCreated }`                | inline org-create                                                                                                                                                |
+| `CreatePersonSubModal`    | `{ open, onClose, onCreated, organizations }` | inline person-create                                                                                                                                             |
+| `CreateProjectSubModal`   | `{ open, onClose, onCreated, organizations }` | inline project-create                                                                                                                                            |
+| `MetadataSubModals`       | `{ ... }`                                     | container die de bovenstaande sub-modals stapelt voor edit-metadata-modal                                                                                        |
+| `MetadataTagSelector`     | `{ tags, onChange }`                          | multi-tag picker in edit-metadata-modal                                                                                                                          |
 
 > `CopyMeetingButton` is opgetild naar `components/shared/` (AD-001).
 
