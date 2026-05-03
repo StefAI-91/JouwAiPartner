@@ -284,15 +284,21 @@ export type ConversationThread = FeedbackConversation | QuestionConversation;
  * Ophalen + auto-mark-as-read voor de detail-route. Mark-as-read draait pas
  * NA de fetch zodat een eventuele nieuwe activity die gelijktijdig binnenkomt
  * niet ten onrechte als "gezien" wordt gemarkeerd.
+ *
+ * `options.projectIds` overschrijft de standaard team-scoping (CC-006). Het
+ * portal vraagt deze query aan voor één klant-project en passeert de
+ * pre-gevalideerde project-id zelf — `listAccessibleProjectIds` is
+ * team-only (`devhub_project_access`) en zou voor klanten leeg teruggeven.
  */
 export async function getConversationThread(
   kind: InboxItemKind,
   id: string,
   profileId: string,
   client?: SupabaseClient,
+  options: { projectIds?: string[] } = {},
 ): Promise<ConversationThread | null> {
   const db = client ?? getAdminClient();
-  const projectIds = await listAccessibleProjectIds(profileId, db);
+  const projectIds = options.projectIds ?? (await listAccessibleProjectIds(profileId, db));
   if (projectIds.length === 0) return null;
 
   if (kind === "feedback") {

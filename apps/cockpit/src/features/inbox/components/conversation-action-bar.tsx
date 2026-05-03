@@ -40,7 +40,7 @@ export function ConversationActionBar({ issueId }: { issueId: string }) {
           Defer
         </ActionPill>
         <ActionPill tone="muted" onClick={() => setConvertOpen(true)} disabled={isPending}>
-          Convert naar vraag
+          Convert naar bericht
         </ActionPill>
         {error ? <span className="ml-auto text-[11px] text-destructive">{error}</span> : null}
       </div>

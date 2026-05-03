@@ -39,12 +39,12 @@ export function OnboardingCard() {
       <CardContent className="space-y-3 pr-10">
         <h3 className="text-base font-semibold">Welkom in de cockpit-inbox</h3>
         <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
-          <li>Hier verzamelen we klant-feedback en open vragen die nog jouw aandacht vragen.</li>
+          <li>Hier verzamelen we klant-feedback en open berichten die nog jouw aandacht vragen.</li>
           <li>
             Klant-feedback wacht op endorsement vóór het in de DevHub-backlog landt — keur goed,
             wijs af, of zet on-hold met een korte uitleg.
           </li>
-          <li>Vragen kun je direct beantwoorden vanuit de conversatie-weergave.</li>
+          <li>Berichten kun je direct beantwoorden vanuit de conversatie-weergave.</li>
         </ul>
         <Button variant="ghost" size="sm" onClick={handleDismiss}>
           Begrepen, dank

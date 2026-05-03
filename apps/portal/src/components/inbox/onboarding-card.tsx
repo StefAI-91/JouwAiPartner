@@ -43,9 +43,12 @@ export function OnboardingCard() {
       <CardContent className="space-y-3 pr-10">
         <h3 className="text-base font-semibold">Welkom in je inbox</h3>
         <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
-          <li>Hier komen alle vragen en updates van het Jouw AI Partner team.</li>
+          <li>Hier komen alle berichten en updates van het Jouw AI Partner team.</li>
           <li>Je krijgt een mail wanneer er iets nieuws is — je hoeft hier niet te wachten.</li>
-          <li>Je kunt direct antwoorden op een bericht; we zien het meteen aan onze kant.</li>
+          <li>
+            Je kunt direct antwoorden op een bericht of zelf een nieuw gesprek starten; we zien het
+            meteen aan onze kant.
+          </li>
         </ul>
         <Button variant="ghost" size="sm" onClick={handleDismiss}>
           Begrepen, dank

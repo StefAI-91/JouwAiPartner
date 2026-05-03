@@ -10,11 +10,12 @@ Cross-project Cockpit-inbox waarin de PM klant- en eindgebruiker-feedback endors
 
 ### `actions/`
 
-| File           | Exports                   | Gebruikt door                                    |
-| -------------- | ------------------------- | ------------------------------------------------ |
-| `pm-review.ts` | `pmReviewAction`          | `inbox-row`, `conversation-action-bar`, modals   |
-| `replies.ts`   | `replyAsTeamAction`       | `conversation-reply-dock`                        |
-| `mark-read.ts` | `markInboxItemReadAction` | (toekomstige UI hooks; auto-mark gaat via query) |
+| File           | Exports                        | Gebruikt door                                    |
+| -------------- | ------------------------------ | ------------------------------------------------ |
+| `pm-review.ts` | `pmReviewAction`               | `inbox-row`, `conversation-action-bar`, modals   |
+| `replies.ts`   | `replyAsTeamAction`            | `conversation-reply-dock`                        |
+| `compose.ts`   | `composeMessageToClientAction` | `compose-modal` (header "+ Nieuw bericht")       |
+| `mark-read.ts` | `markInboxItemReadAction`      | (toekomstige UI hooks; auto-mark gaat via query) |
 
 ### `components/`
 
@@ -31,7 +32,8 @@ Cross-project Cockpit-inbox waarin de PM klant- en eindgebruiker-feedback endors
 | `conversation-bubbles.tsx`    | iMessage-stijl thread; eigen-bericht rechts in primary, ander links in background. Date-dividers. |
 | `conversation-reply-dock.tsx` | Vaste reply-form onderaan (alleen voor question-threads).                                         |
 | `decline-modal.tsx`           | Reden-textarea met min-10-chars validatie.                                                        |
-| `convert-modal.tsx`           | Verheldering-textarea (issue → vraag spawn).                                                      |
+| `convert-modal.tsx`           | Verheldering-textarea (issue → bericht spawn).                                                    |
+| `compose-modal.tsx`           | CC-006 — vrije compose: project-selector + body, redirect naar conversation-detail na succes.     |
 | `empty-state.tsx`             | Per filter een eigen empty-message.                                                               |
 
 ### `validations/`
@@ -39,6 +41,7 @@ Cross-project Cockpit-inbox waarin de PM klant- en eindgebruiker-feedback endors
 | File           | Exports                                                                |
 | -------------- | ---------------------------------------------------------------------- |
 | `pm-review.ts` | Re-export van `pmReviewActionSchema` uit `@repo/database/validations`. |
+| `compose.ts`   | `composeMessageSchema` (CC-006 — projectId + body, min 10 / max 5000). |
 
 ## Gerelateerde packages (NIET in deze feature)
 
@@ -58,9 +61,29 @@ Cross-project Cockpit-inbox waarin de PM klant- en eindgebruiker-feedback endors
 - **Filter via URL-param, niet client-state.** `?filter=wacht_op_mij` → bookmark-baar, SSR-stabiel, geen hydration-mismatch.
 - **Bubbles tonen "ik vs anderen", niet "team vs klant".** Een team-PM ziet zijn eigen reply rechts; collega-team-replies links — net als WhatsApp/iMessage. Voorkomt het verraderlijke patroon "alles wat de andere kant zegt staat links" dat in een team-multi-author thread verwart.
 
+## Compose-flow (team → klant)
+
+CC-006 voegt `composeMessageToClientAction` + `compose-modal` toe. Pad bij
+"+ Nieuw bericht":
+
+1. Header rendert de knop met de pre-geladen lijst van `listAccessibleProjects`.
+2. Modal valideert via `composeMessageSchema` (projectId + body min 10).
+3. Action haalt `getProjectOrganizationId` op (defense-in-depth: spoofing van
+   `organization_id` uit de payload is uitgesloten omdat de payload hem niet
+   eens accepteert).
+4. `sendQuestion` insert root-row; RLS-policy (CC-006-migratie) staat root toe
+   voor team altijd.
+5. `markInboxItemRead` zet eigen compose direct als gelezen, voorkomt unread-
+   badge op je verzonden bericht.
+6. `notifyNewTeamMessage` stuurt mail naar klant-portal-leden met deeplink
+   naar `/projects/[id]/inbox/[messageId]`.
+7. Modal redirect via `router.push` naar `/inbox/question/[messageId]` zodat
+   PM direct in het verse gesprek staat.
+
+Klant-side equivalent leeft in de portal-inbox-componenten +
+`sendMessageAsClientAction` (zie `apps/portal/src/actions/inbox.ts`).
+
 ## Vrije ruimte
 
-- Compose-knop ("+ Nieuw bericht") komt in CC-006.
 - AI-draft-knop in cockpit-reply komt in CC-004 (vision §6 Phase 2).
-- Per-project inbox-tab (`/projects/[id]/inbox`) komt in CC-005.
 - Audit-events bij endorse/decline/defer/convert: deferred (vision §10 #4); de mutations accepteren al een `actorId`-param zodat een latere insert geen signature-break is.

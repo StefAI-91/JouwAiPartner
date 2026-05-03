@@ -6,6 +6,7 @@ import { listOpenQuestionsForProject } from "@repo/database/queries/client-quest
 import { getProfilePreferences } from "@repo/database/queries/profiles";
 import { QuestionList } from "@/components/inbox/question-list";
 import { OnboardingCard } from "@/components/inbox/onboarding-card";
+import { NewMessageToggle } from "@/components/inbox/new-message-toggle";
 
 export default async function ProjectInboxPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,7 +17,7 @@ export default async function ProjectInboxPage({ params }: { params: Promise<{ i
   if (!project.organization) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-12 lg:px-12 lg:py-16">
-        <h1 className="text-3xl font-semibold tracking-tight">Vragen van het team</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Berichten</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Dit project heeft geen gekoppelde organisatie. Neem contact op met het team.
         </p>
@@ -40,16 +41,15 @@ export default async function ProjectInboxPage({ params }: { params: Promise<{ i
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {project.organization.name} · {project.name}
         </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-          Vragen van het team
-        </h1>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Berichten</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Het team heeft hier een paar vragen voor jullie. Beantwoord ze hieronder — de vraag
-          verdwijnt zodra je antwoord geeft.
+          Hier verschijnen berichten van het team en je eigen vragen. Open een bericht om te
+          reageren of start zelf een nieuw gesprek.
         </p>
       </header>
 
       {showOnboarding && <OnboardingCard />}
+      <NewMessageToggle projectId={project.id} />
       <QuestionList projectId={project.id} questions={questions} />
     </div>
   );

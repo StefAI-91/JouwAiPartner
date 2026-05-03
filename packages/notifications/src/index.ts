@@ -10,6 +10,7 @@ export { sendMail } from "./send";
 export type { SendMailInput, SendMailResult } from "./send";
 export { notifyFeedbackStatusChanged } from "./notify/feedback-status";
 export { notifyTeamReply } from "./notify/question-reply";
+export { notifyNewTeamMessage } from "./notify/new-team-message";
 export { pickTemplateForStatus } from "./templates";
 export type {
   IssueForTemplate,

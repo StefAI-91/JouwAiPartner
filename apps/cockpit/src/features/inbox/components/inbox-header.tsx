@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Inbox, Plus } from "lucide-react";
+import type { AccessibleProject } from "@repo/database/queries/projects/access";
+import { ComposeModal } from "./compose-modal";
 
 /**
  * Page header met filter-chips. Filter via URL-param `?filter=` zodat de
@@ -10,7 +13,8 @@ import { Inbox, Plus } from "lucide-react";
  * client-side filtering, geen hydration-mismatch.
  *
  * Default = `wacht_op_mij`. Chips zijn `<Link>`s zodat ze SSR-bookmark-baar
- * blijven.
+ * blijven. CC-006 voegt de "+ Nieuw bericht"-knop toe die de compose-modal
+ * opent.
  */
 
 export type InboxFilter = "wacht_op_mij" | "wacht_op_klant" | "geparkeerd";
@@ -19,13 +23,19 @@ export const INBOX_FILTERS: InboxFilter[] = ["wacht_op_mij", "wacht_op_klant", "
 
 export function InboxHeader({
   counts,
+  projects,
+  initialProjectId,
 }: {
   counts: { pmReview: number; openQuestions: number; deferred: number };
+  projects: AccessibleProject[];
+  initialProjectId?: string;
 }) {
   const params = useSearchParams();
   const active = (params.get("filter") as InboxFilter | null) ?? "wacht_op_mij";
+  const [composeOpen, setComposeOpen] = useState(false);
 
   const total = counts.pmReview + counts.openQuestions + counts.deferred;
+  const canCompose = projects.length > 0;
 
   return (
     <>
@@ -39,9 +49,12 @@ export function InboxHeader({
         </div>
         <button
           type="button"
-          disabled
-          title="Compose komt in CC-006"
-          className="inline-flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-[12px] font-medium text-background opacity-50 transition"
+          onClick={() => setComposeOpen(true)}
+          disabled={!canCompose}
+          title={
+            canCompose ? "Start een vrij bericht aan een klant" : "Geen toegankelijke projecten"
+          }
+          className="inline-flex items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-[12px] font-medium text-background transition hover:bg-foreground/90 disabled:opacity-50"
         >
           <Plus className="h-3.5 w-3.5" />
           Nieuw bericht
@@ -67,6 +80,14 @@ export function InboxHeader({
           active={active === "geparkeerd"}
         />
       </div>
+
+      {composeOpen ? (
+        <ComposeModal
+          projects={projects}
+          initialProjectId={initialProjectId}
+          onClose={() => setComposeOpen(false)}
+        />
+      ) : null}
     </>
   );
 }
