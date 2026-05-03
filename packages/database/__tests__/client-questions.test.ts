@@ -467,17 +467,52 @@ describeWithDb("client_questions — mutations + RLS + query", () => {
   });
 
   describe("RLS — INSERT", () => {
-    it("PR-RULE-030: klant kan GEEN root-INSERT (parent_id NULL) doen", async () => {
+    it("CC-006: klant met portal-access + matching org KAN root-INSERT (parent_id NULL)", async () => {
+      // CC-006 vervangt PR-RULE-030 voor de root-tak. Klant mag nu een vrije
+      // thread starten op een project waar zij portal-access op heeft, mits
+      // de organization matcht. clientA: orgA + access op projectA → toegestaan.
       const { data, error } = await clientAClient
         .from("client_questions")
         .insert({
           project_id: PR022_IDS.projectA,
           organization_id: PR022_IDS.orgA,
           sender_profile_id: clientA.id,
-          body: "Klant probeert direct een root-vraag te plaatsen",
+          body: "Klant start een vrij bericht aan team — CC-006",
         })
         .select();
-      // RLS-blok = error óf 0 rijen affected.
+      expect(error).toBeNull();
+      expect((data ?? []).length).toBe(1);
+    });
+
+    it("CC-006: klant kan GEEN root-INSERT op project van andere org (multi-tenant guard)", async () => {
+      // clientA = orgA. portal-access seed gaf clientA alleen access op projectA.
+      // Probeer een root in projectB (org B) — RLS moet blokkeren.
+      const { data, error } = await clientAClient
+        .from("client_questions")
+        .insert({
+          project_id: PR022_IDS.projectB,
+          organization_id: PR022_IDS.orgB,
+          sender_profile_id: clientA.id,
+          body: "Cross-org root attempt — moet falen",
+        })
+        .select();
+      const inserted = error === null ? (data ?? []).length : 0;
+      expect(inserted).toBe(0);
+    });
+
+    it("CC-006: klant met portal-access maar mismatching org wordt geblokkeerd op root", async () => {
+      // clientB = orgB, maar heeft portal-access op projectA (orgA). Een root
+      // in projectA met organization_id=orgA moet alsnog falen omdat
+      // clientB's profile.organization_id ≠ orgA.
+      const { data, error } = await clientBClient
+        .from("client_questions")
+        .insert({
+          project_id: PR022_IDS.projectA,
+          organization_id: PR022_IDS.orgA,
+          sender_profile_id: clientB.id,
+          body: "Org-mismatch root attempt — moet falen",
+        })
+        .select();
       const inserted = error === null ? (data ?? []).length : 0;
       expect(inserted).toBe(0);
     });

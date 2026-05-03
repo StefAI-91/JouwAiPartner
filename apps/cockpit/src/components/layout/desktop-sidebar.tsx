@@ -72,12 +72,14 @@ function FocusProjectLink({ project, pathname }: { project: FocusProject; pathna
 export function DesktopSidebar({
   reviewCount,
   focusProjects = [],
+  inboxCount,
 }: {
   reviewCount?: number;
   focusProjects?: FocusProject[];
+  inboxCount?: number;
 }) {
   const pathname = usePathname();
-  const badges: Record<string, number | undefined> = { reviewCount };
+  const badges: Record<string, number | undefined> = { reviewCount, inboxCount };
 
   return (
     <aside className="hidden w-64 shrink-0 border-r border-border/50 bg-white/60 backdrop-blur-sm lg:flex lg:flex-col">

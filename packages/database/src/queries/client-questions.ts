@@ -103,3 +103,64 @@ export async function countOpenQuestionsByProject(
   }
   return counts;
 }
+
+/**
+ * CC-007 — count root-messages (parent_id IS NULL) door één klant in het laatste
+ * uur. Wordt gebruikt door `sendMessageAsClientAction` als minimal rate-limit
+ * (10/uur) om compose-spam te voorkomen.
+ *
+ * Bewust een count via `head: true` + `count: "exact"`: één DB-call, geen
+ * payload terug. RLS-aware: caller geeft de portal-cookie-client mee, dus
+ * count loopt binnen de zichtbaarheid van de klant. Server-only callers
+ * (cron, MCP) krijgen de admin-fallback.
+ */
+export async function countClientRootMessagesInLastHour(
+  profileId: string,
+  client?: SupabaseClient,
+): Promise<number> {
+  const db = client ?? getAdminClient();
+  const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count, error } = await db
+    .from("client_questions")
+    .select("id", { count: "exact", head: true })
+    .eq("sender_profile_id", profileId)
+    .is("parent_id", null)
+    .gte("created_at", sinceIso);
+  if (error) {
+    console.error("[countClientRootMessagesInLastHour] failed", error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
+export interface ClientQuestionLookupRow {
+  id: string;
+  project_id: string;
+  organization_id: string;
+  parent_id: string | null;
+  body: string;
+}
+
+/**
+ * Lookup-query voor één client-vraag — bedoeld voor server-actions die ná
+ * een mutation wat extra context willen (bv. notify-orchestrator die
+ * project_id + body nodig heeft). Bewust kleine select: niet de volledige
+ * rij + replies-embed, dat doet `listOpenQuestionsForProject`.
+ */
+export async function getQuestionById(
+  id: string,
+  client?: SupabaseClient,
+): Promise<ClientQuestionLookupRow | null> {
+  if (!id) return null;
+  const db = client ?? getAdminClient();
+  const { data, error } = await db
+    .from("client_questions")
+    .select("id, project_id, organization_id, parent_id, body")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    console.error("[getQuestionById] failed", error.message);
+    return null;
+  }
+  return (data as ClientQuestionLookupRow) ?? null;
+}

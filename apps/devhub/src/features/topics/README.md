@@ -34,15 +34,18 @@ Info-leak prevention: access-failures vertalen naar "niet gevonden", net als
 
 Plat — naamgeving (`topic-*`) doet het werk van sub-foldering.
 
-| File                      | Rol                                                                                                   |
-| ------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `topic-list.tsx`          | Server Component — list-view voor `/topics?project=…`, filters via form-action.                       |
-| `topic-card.tsx`          | Hairline-row in de list. Type-badge mono uppercase, priority text-only met tone (P0 rood…P3 grijs).   |
-| `topic-form.tsx`          | Client Component — create + edit (geen status-veld; type immutable bij edit).                         |
-| `topic-status-select.tsx` | Client Component — 7 statuses (geen `wont_do_proposed_by_client`); inline reason-input bij `wont_do`. |
-| `linked-issues-panel.tsx` | Client Component — gekoppelde issues + debounced searchable picker (250ms) met cap 50.                |
-| `topic-delete-button.tsx` | Client Component — inline confirm; toont waarschuwing als `linked_issues > 0`.                        |
-| `topic-detail.tsx`        | Server Component — detail-page body, combineert bovenstaande + breadcrumb + meta-rij.                 |
+| File                                 | Rol                                                                                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `topic-list.tsx`                     | Server Component — list-view voor `/topics?project=…`, filters via form-action.                       |
+| `topic-card.tsx`                     | Hairline-row in de list. Type-badge mono uppercase, priority text-only met tone (P0 rood…P3 grijs).   |
+| `topic-form.tsx`                     | Client Component — create + edit (geen status-veld; type immutable bij edit).                         |
+| `topic-status-select.tsx`            | Client Component — 7 statuses (geen `wont_do_proposed_by_client`); inline reason-input bij `wont_do`. |
+| `linked-issues-panel.tsx`            | Client Component — gekoppelde issues + debounced searchable picker (250ms) met cap 50.                |
+| `topic-delete-button.tsx`            | Client Component — inline confirm; toont waarschuwing als `linked_issues > 0`.                        |
+| `topic-detail.tsx`                   | Server Component — detail-page body, combineert bovenstaande + breadcrumb + meta-rij.                 |
+| `topic-pill.tsx`                     | Server Component — kleine status-pill voor de meta-rij en list-context.                               |
+| `topic-resolution-editor.tsx`        | Client Component — inline editor voor klant-resolution-veld bij `wont_do`/`done`.                     |
+| `topic-test-instructions-editor.tsx` | Client Component — inline editor voor test-instructies bij `ready_to_test`-status.                    |
 
 ### `validations/`
 
@@ -79,6 +82,7 @@ Plat — naamgeving (`topic-*`) doet het werk van sub-foldering.
 
 ## Tests
 
-| Pad                                                            | Wat                                         |
-| -------------------------------------------------------------- | ------------------------------------------- |
-| `apps/devhub/__tests__/features/topics/topics-actions.test.ts` | Server actions — Zod + auth + DB-grens-mock |
+| Pad                                                     | Wat                               |
+| ------------------------------------------------------- | --------------------------------- |
+| apps/devhub/\_\_tests\_\_/actions/topics.test.ts        | CRUD + status server actions      |
+| apps/devhub/\_\_tests\_\_/actions/topic-linking.test.ts | Linking server actions + searcher |

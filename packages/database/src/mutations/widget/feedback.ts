@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { insertIssue, type InsertIssueData } from "../issues";
+import { defaultStatusForSource } from "../../constants/issues";
 import { isTestSubmission } from "../../integrations/userback";
 import type { WidgetIngestInput } from "../../validations/widget";
 
@@ -36,7 +37,7 @@ export async function insertWidgetIssue(input: WidgetIngestInput, client?: Supab
       title: extractFirstLine(input.description),
       description: input.description,
       type: TYPE_MAP[input.type],
-      status: "triage",
+      status: defaultStatusForSource("jaip_widget"),
       source: "jaip_widget",
       source_url: input.context.url,
       source_metadata: {

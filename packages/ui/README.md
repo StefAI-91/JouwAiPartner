@@ -33,6 +33,7 @@ Elk bestand exporteert zowel de base-component als varianten/sub-components:
 
 - `@repo/ui/workspace-switcher` — sidebar-switcher die tussen cockpit/devhub/portal navigeert via `NEXT_PUBLIC_*_URL` env vars (met Vercel-prod-fallbacks).
 - `@repo/ui/workspaces` — de typed definitie van workspace-targets.
+- `@repo/ui/source-indicator` — `SourceIndicator` voor klant-PM/eindgebruiker visualisatie. Variants: `"dot"` (subtiele bullet, cockpit-inbox) en `"badge"` (gevulde badge met label, devhub-issues). CC-008 — vervangt de gedupliceerde `source-badge` (devhub) en `source-dot` (cockpit). Caller resolved zelf naar `SourceGroup` via `resolveDevhubSourceGroup` of `resolvePortalSourceGroup` uit `@repo/database/constants/issues`.
 
 ### Utilities
 

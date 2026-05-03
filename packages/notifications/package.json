@@ -1,0 +1,25 @@
+{
+  "name": "@repo/notifications",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./send": "./src/send.ts",
+    "./client": "./src/client.ts",
+    "./templates": "./src/templates/index.ts",
+    "./notify/feedback-status": "./src/notify/feedback-status.ts",
+    "./notify/question-reply": "./src/notify/question-reply.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/database": "*",
+    "resend": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

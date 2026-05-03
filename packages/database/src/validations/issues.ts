@@ -6,7 +6,13 @@ import {
   ISSUE_COMPONENTS,
   ISSUE_SEVERITIES,
   UNASSIGNED_SENTINEL,
+  DEVHUB_SOURCE_GROUPS,
 } from "../constants/issues";
+
+const DEVHUB_SOURCE_GROUP_KEYS = DEVHUB_SOURCE_GROUPS.map((g) => g.key) as [
+  (typeof DEVHUB_SOURCE_GROUPS)[number]["key"],
+  ...(typeof DEVHUB_SOURCE_GROUPS)[number]["key"][],
+];
 
 /**
  * Parse a comma-separated URL param into a validated array. Empty segments
@@ -50,6 +56,10 @@ export const issueListFilterSchema = z.object({
   component: csvListSchema(z.enum(ISSUE_COMPONENTS)),
   assignee: csvListSchema(assigneeItemSchema),
   topic: csvListSchema(z.string().uuid()),
+  // CC-003 — DevHub-source-filter (`?source=client_pm,end_user`). De groepen
+  // worden in `listIssues` geflattened naar ruwe `source`-waarden via
+  // `DEVHUB_SOURCE_GROUPS` zodat een verkeerde key in de URL als no-op valt.
+  source: csvListSchema(z.enum(DEVHUB_SOURCE_GROUP_KEYS)),
   // "1" → true, alles anders → false. Strikt zodat een knullig `?ungrouped=0`
   // niet ongewenst als truthy wordt geïnterpreteerd.
   ungrouped: z
@@ -128,3 +138,34 @@ export const deleteCommentSchema = z.object({
   id: z.string().uuid(),
   issue_id: z.string().uuid(),
 });
+
+// CC-001 — PM-review-gate.
+//
+// Discriminated union zodat één Zod-parse alle vier acties dekt; per actie
+// alleen de velden die hij nodig heeft. min(10) op decline_reason en
+// questionBody: een lege/eenwoord-toelichting is geen verklaring voor de
+// klant (vision §5).
+const zUuid = z.string().uuid();
+
+export const pmReviewActionSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("endorse"),
+    issueId: zUuid,
+  }),
+  z.object({
+    action: z.literal("decline"),
+    issueId: zUuid,
+    declineReason: z.string().min(10, "Geef minstens 10 tekens reden mee").max(1000),
+  }),
+  z.object({
+    action: z.literal("defer"),
+    issueId: zUuid,
+  }),
+  z.object({
+    action: z.literal("convert"),
+    issueId: zUuid,
+    questionBody: z.string().min(10, "Geef minstens 10 tekens vraag mee").max(2000),
+  }),
+]);
+
+export type PmReviewAction = z.infer<typeof pmReviewActionSchema>;

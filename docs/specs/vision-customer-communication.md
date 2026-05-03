@@ -157,6 +157,10 @@ All outbound passes the AI-draft → human-review → send pattern. No team memb
 
 **Rationale:** the notification layer is the difference between "portal that nobody visits" and "portal as primary channel". Without it, this whole architecture fails silently.
 
+**Rate-limit klant-compose (CC-007):** klanten zijn beperkt tot 10 root-messages per uur per profiel. Conservatieve anti-spam-grens; legitieme power-users halen hem zelden. Replies en team-side compose vallen er niet onder. Drempel afstellen op data, niet vooraf.
+
+**Fail-loud op missend `NEXT_PUBLIC_PORTAL_URL` (CC-007):** zonder portal-URL sturen we geen mail (in plaats van een mail met dode CTA-link). De skip wordt gelogd; klant blijft op de hoogte via in-app counter zodra de PM de inbox opent.
+
 ---
 
 ## 9. UX Principles
@@ -168,6 +172,7 @@ The inbox is non-negotiable as a polished surface. If it does not feel great, ne
 - **Conversation threading** — questions render as a chat-style thread (latest at bottom), not a flat list of replies.
 - **Mobile-tolerable** — AI-drafted replies make it possible to approve/edit-and-send on phone. Full-feature mobile is not the goal; "approve a draft on the go" is.
 - **No empty state without onboarding cue** — first-time users see a short explainer card on what the inbox is for and how to get the most out of it.
+- **Two-pane Linear-stijl op desktop (PR-026).** Cockpit (sinds CC-001) en portal (sinds PR-026) renderen beide een lijst-pane links + thread/compose-pane rechts op `md+` (≥768px). Onder die breedte valt de layout terug op één-pane-tegelijk via CSS-only `hidden md:flex`. Geen modale compose-flow op two-pane: de rechter-pane wordt afwisselend thread óf compose. Eén catch-all-route per kant zodat selectie via URL deelbaar is.
 
 ---
 
@@ -177,7 +182,7 @@ These are the strategic decisions made during the 2026-05-01 design session. Eac
 
 | #   | Decision                                                                              | Why                                                                                | Status                           |
 | --- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------- |
-| 1   | Resend for client-facing email notifications, immediate per-event                     | Without notifications, portal stays unvisited; email is unfair fallback            | Decided                          |
+| 1   | Resend for client-facing email notifications, immediate per-event                     | Without notifications, portal stays unvisited; email is unfair fallback            | Implemented in CC-002            |
 | 2   | Multi-stakeholder per client: deferred to v2                                          | Single-user-per-project works for current client volume; revisit when it breaks    | Deferred                         |
 | 3   | Internal team-thread on a client item: not now                                        | With two founders, Slack/in-person suffices; revisit at >3 reviewers               | Deferred                         |
 | 4   | Audit-layer (formal agreement trail): deferred, formal scope still via mail/contract  | Legal-grade audit needs design effort not justified at current scale               | Deferred                         |

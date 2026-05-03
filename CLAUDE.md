@@ -49,6 +49,7 @@ AI-native knowledge platform for Jouw AI Partner (consultancy/software bureau). 
 - **Hosting:** Vercel
 - **MCP Server:** Separate TypeScript/Node.js process
 - **Feedback:** Userback widget (`@userback/widget`)
+- **Transactional mail:** Resend (`@repo/notifications` wrapper; dev-mode-skip tenzij `NODE_ENV=production` of `RESEND_FORCE_SEND=1`)
 
 ## Commands
 
@@ -189,9 +190,9 @@ Test: heeft dit domein eigen server actions die muteren? Ja → feature. Alleen 
 
 | Type                                      | Cockpit                                                                                                                   | DevHub                                                                                                               | Portal                                                             |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`                                                         | `issues`, `topics`                                                                                                   | _(geen — portal is read-only)_                                     |
+| Features (`features/[naam]/`)             | `themes`, `meetings`, `emails`, `projects`, `review`, `directory`, `inbox`                                                | `issues`, `topics`                                                                                                   | _(geen — portal is read-only)_                                     |
 | Compositiepagina's (`components/[naam]/`) | `dashboard`, `weekly`, `intelligence`, `architectuur`, `administratie`, `agents`                                          | `dashboard`, `review`, `questions`                                                                                   | `briefing`, `meetings`, `roadmap`, `projects`, `feedback`, `inbox` |
-| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review`, `attachments`, `bulk-cluster-cleanup`, `widget-domains`, `widget` (route-only) | `auth`, `feedback`                                                 |
+| Platform actions                          | `tasks`, `management-insights`, `summaries`, `segments`, `scan-needs`, `weekly-summary`, `team`, `dev-detector`, `_utils` | `import`, `slack-settings`, `review`, `attachments`, `bulk-cluster-cleanup`, `widget-domains`, `widget` (route-only) | `auth`, `feedback`, `inbox`, `preferences`                         |
 
 **Regels:**
 

@@ -10,6 +10,14 @@ import { z } from "zod";
  */
 
 /**
+ * CC-008 — gedeelde body-schema voor alle vrije-tekst messaging-actions.
+ * Eerder dupliceerden cockpit-compose, portal-send en `sendQuestionSchema`
+ * deze regel; één bron-van-waarheid voorkomt drift bij toekomstige length-
+ * tuning of i18n.
+ */
+export const messageBodySchema = z.string().min(10).max(5000);
+
+/**
  * Root-vraag (team → klant). `topic_id` en `issue_id` zijn optionele
  * context-koppelingen; de `chk_question_xor_link`-constraint op DB-niveau
  * blokkeert beide tegelijk, en deze refine geeft eerder een leesbare error.
@@ -21,7 +29,7 @@ export const sendQuestionSchema = z
   .object({
     project_id: z.string().uuid(),
     organization_id: z.string().uuid(),
-    body: z.string().min(10).max(2000),
+    body: messageBodySchema,
     topic_id: z.string().uuid().nullable().optional(),
     issue_id: z.string().uuid().nullable().optional(),
     due_date: z.string().datetime().nullable().optional(),
@@ -37,6 +45,10 @@ export type SendQuestionInput = z.infer<typeof sendQuestionSchema>;
  * de mutation uit parent afgeleid (zie `replyToQuestion`), zodat een client
  * geen reply op een andere-org-thread kan smokkelen door eigen IDs mee te
  * sturen.
+ *
+ * Replies hebben een lagere min (1 char) dan root-messages (10 chars):
+ * een instemmend "Akkoord!" mag, maar een nieuw bericht openen vraagt om
+ * tenminste 10 tekens context.
  */
 export const replyToQuestionSchema = z.object({
   parent_id: z.string().uuid(),

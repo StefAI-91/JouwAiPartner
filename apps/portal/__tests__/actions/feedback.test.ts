@@ -97,7 +97,9 @@ describe("submitFeedback", () => {
     const insertedRow = vi.mocked(insertIssue).mock.calls[0][0];
     expect(insertedRow.source).toBe("portal");
     expect(insertedRow.reporter_email).toBe("klant@acme.nl");
-    expect(insertedRow.status).toBe("triage");
+    // CC-001 — portal-feedback passeert nu de PM-review-gate vóór DevHub.
+    // `defaultStatusForSource("portal")` routeert naar `needs_pm_review`.
+    expect(insertedRow.status).toBe("needs_pm_review");
     expect(vi.mocked(revalidatePath).mock.calls.flat()).toContain(
       `/projects/${VALID_INPUT.project_id}`,
     );

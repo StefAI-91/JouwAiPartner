@@ -11,6 +11,8 @@ export interface ClientIssueRow {
   id: string;
   title: string;
   type: string;
+  status: string;
+  decline_reason: string | null;
   issue_number: number;
   created_at: string;
   topic: { id: string; title: string } | null;
@@ -40,7 +42,7 @@ export async function listClientIssuesForOrg(
   const db = client ?? getAdminClient();
   let query = db
     .from("issues")
-    .select("id, title, client_title, type, issue_number, created_at")
+    .select("id, title, client_title, type, status, decline_reason, issue_number, created_at")
     .eq("project_id", projectId)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -59,6 +61,8 @@ export async function listClientIssuesForOrg(
     title: string;
     client_title: string | null;
     type: string;
+    status: string;
+    decline_reason: string | null;
     issue_number: number;
     created_at: string;
   }>;
@@ -72,6 +76,8 @@ export async function listClientIssuesForOrg(
     id: row.id,
     title: row.client_title ?? row.title,
     type: row.type,
+    status: row.status,
+    decline_reason: row.decline_reason,
     issue_number: row.issue_number,
     created_at: row.created_at,
     topic: topics.get(row.id) ?? null,

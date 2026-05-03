@@ -11,7 +11,7 @@ interface ErrorProps {
 
 export default function InboxError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error(error);
+    console.error("[portal/inbox]", error);
   }, [error]);
 
   return (
@@ -20,7 +20,7 @@ export default function InboxError({ error, reset }: ErrorProps) {
         <AlertTriangle className="size-5" />
       </div>
       <div className="space-y-1">
-        <h2 className="text-base font-semibold">Vragen konden niet worden geladen</h2>
+        <h2 className="text-base font-semibold">Berichten konden niet worden geladen</h2>
         <p className="text-sm text-muted-foreground">Probeer het nog eens.</p>
       </div>
       <Button variant="outline" size="sm" onClick={reset}>

@@ -87,14 +87,16 @@ function FocusProjectMenuLink({
 export function SideMenu({
   reviewCount,
   focusProjects = [],
+  inboxCount,
 }: {
   reviewCount?: number;
   focusProjects?: FocusProject[];
+  inboxCount?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const badges: Record<string, number | undefined> = { reviewCount };
+  const badges: Record<string, number | undefined> = { reviewCount, inboxCount };
 
   const close = useCallback(() => setOpen(false), []);
 
