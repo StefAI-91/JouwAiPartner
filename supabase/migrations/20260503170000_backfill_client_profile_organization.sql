@@ -43,8 +43,11 @@ BEGIN
     WHERE role = 'client'
       AND organization_id IS NULL
   LOOP
-    SELECT COUNT(DISTINCT pr.organization_id), MIN(pr.organization_id)
-      INTO distinct_count, derived_org
+    -- Postgres heeft geen `MIN(uuid)` aggregate, dus splitsen we de check
+    -- (count) en de pick (LIMIT 1) in twee queries. Voor de skip-paden
+    -- hieronder maakt de exacte gepickte UUID niet uit.
+    SELECT COUNT(DISTINCT pr.organization_id)
+      INTO distinct_count
     FROM portal_project_access pa
     JOIN projects pr ON pr.id = pa.project_id
     WHERE pa.profile_id = client_record.id;
@@ -62,6 +65,13 @@ BEGIN
       skipped_count := skipped_count + 1;
       CONTINUE;
     END IF;
+
+    SELECT pr.organization_id
+      INTO derived_org
+    FROM portal_project_access pa
+    JOIN projects pr ON pr.id = pa.project_id
+    WHERE pa.profile_id = client_record.id
+    LIMIT 1;
 
     UPDATE profiles
        SET organization_id = derived_org
