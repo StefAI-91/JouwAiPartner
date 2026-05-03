@@ -59,7 +59,7 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | SRP-010  | queries/projects/core.ts splitsen (460 r, 12 exports)                             | Refactor SRP  | `sprints/backlog/` | Backlog       |
 | SRP-011  | gatekeeper-pipeline.ts opbreken in fases (426 r)                                  | Refactor SRP  | `sprints/backlog/` | Backlog       |
 | SRP-012  | queries/issues/core.ts splitsen (418 r, 9 exports)                                | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-013  | Database god-files splitsen (inbox 537r, emails-mut 295r, meetings/core-mut 343r) | Refactor SRP  | `sprints/backlog/` | Backlog       |
+| SRP-013  | Database god-files splitsen (inbox 537r, emails-mut 295r, meetings/core-mut 343r) | Refactor SRP  | `sprints/done/`    | Done          |
 | DH-021   | DevHub feature-promotion: `review` + `questions` naar features/                   | Architectuur  | `sprints/done/`    | Done          |
 | AD-001   | Cockpit cross-feature ontkoppeling + agents-duplicate cleanup                     | Architectuur  | `sprints/done/`    | Done          |
 

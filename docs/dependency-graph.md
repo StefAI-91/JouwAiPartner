@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 629 |
-| Exported functions/constants | 945 |
-| Exported types/interfaces | 412 |
-| Cross-package imports | 601 |
+| Files scanned | 642 |
+| Exported functions/constants | 950 |
+| Exported types/interfaces | 413 |
+| Cross-package imports | 603 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -186,21 +186,50 @@
 **Exports:**
 - `getIgnoredEntityNames()`
 
-### `queries/inbox.ts`
+### `queries/inbox/counts.ts`
 
 **Exports:**
-- `listInboxItemsForTeam()`
 - `countInboxItemsForTeam()`
-- `getConversationThread()`
-- `getInboxItemForDetail()`
-- `INBOX_LIST_LIMIT`
-- `ISSUE_STATUSES_PER_FILTER`
-- `QUESTION_STATUSES_PER_FILTER`
-
-**Types:** `InboxItemKind`, `InboxFilter`, `InboxProjectInfo`, `InboxFeedbackItem`, `InboxQuestionReply`, `InboxQuestionThread`, `InboxQuestionItem`, `InboxItem`, `InboxListResult`, `InboxCounts`, `ConversationMessage`, `FeedbackConversation`, `QuestionConversation`, `ConversationThread`
 
 **Depends on:**
 - `@repo/auth/access` → listAccessibleProjectIds
+
+### `queries/inbox/detail.ts`
+
+**Exports:**
+- `getConversationThread()`
+- `getInboxItemForDetail()`
+
+**Depends on:**
+- `@repo/auth/access` → listAccessibleProjectIds
+
+### `queries/inbox/helpers.ts`
+
+**Exports:**
+- `sortWeight()`
+- `fetchReadMap()`
+- `hasUnreadClientActivity()`
+- `QUESTION_LIST_COLS`
+- `QUESTION_REPLY_EMBED`
+
+**Types:** `ReadRow`
+
+### `queries/inbox/list.ts`
+
+**Exports:**
+- `listInboxItemsForTeam()`
+- `ISSUE_STATUSES_PER_FILTER`
+- `QUESTION_STATUSES_PER_FILTER`
+
+**Depends on:**
+- `@repo/auth/access` → listAccessibleProjectIds
+
+### `queries/inbox/types.ts`
+
+**Exports:**
+- `INBOX_LIST_LIMIT`
+
+**Types:** `InboxItemKind`, `InboxFilter`, `InboxProjectInfo`, `InboxFeedbackItem`, `InboxQuestionReply`, `InboxQuestionThread`, `InboxQuestionItem`, `InboxItem`, `InboxListResult`, `InboxCounts`, `ConversationMessage`, `FeedbackConversation`, `QuestionConversation`, `ConversationThread`
 
 ### `queries/issues/_filters.ts`
 
@@ -724,26 +753,42 @@
 **Exports:**
 - `insertDecision()`
 
-### `mutations/emails.ts`
+### `mutations/emails/accounts.ts`
 
 **Exports:**
 - `upsertGoogleAccount()`
 - `updateGoogleAccountTokens()`
 - `updateGoogleAccountLastSync()`
 - `deactivateGoogleAccount()`
-- `insertEmails()`
-- `updateEmailClassification()`
-- `updateEmailFilterStatus()`
+
+### `mutations/emails/extractions.ts`
+
+**Exports:**
+- `insertEmailExtractions()`
+
+### `mutations/emails/linking.ts`
+
+**Exports:**
 - `linkEmailProject()`
+- `unlinkEmailProject()`
+
+### `mutations/emails/review.ts`
+
+**Exports:**
 - `verifyEmail()`
 - `verifyEmailWithEdits()`
 - `rejectEmail()`
+
+### `mutations/emails/rows.ts`
+
+**Exports:**
+- `insertEmails()`
+- `updateEmailClassification()`
+- `updateEmailFilterStatus()`
 - `updateEmailSenderPerson()`
 - `updateEmailType()`
 - `updateEmailPartyType()`
 - `updateEmailOrganization()`
-- `unlinkEmailProject()`
-- `insertEmailExtractions()`
 
 ### `mutations/embeddings.ts`
 
@@ -847,28 +892,28 @@
 
 **Types:** `PmReviewMutationResult`
 
-### `mutations/meetings/core.ts`
+### `mutations/meetings/classification.ts`
 
 **Exports:**
-- `insertMeeting()`
-- `insertManualMeeting()`
 - `updateMeetingClassification()`
-- `updateMeetingElevenLabs()`
-- `updateMeetingNamedTranscript()`
 - `updateMeetingType()`
 - `updateMeetingPartyType()`
 - `updateMeetingTitle()`
 - `updateMeetingOrganization()`
+
+### `mutations/meetings/crud.ts`
+
+**Exports:**
+- `insertMeeting()`
+- `insertManualMeeting()`
+- `deleteMeeting()`
+
+### `mutations/meetings/linking.ts`
+
+**Exports:**
 - `linkMeetingProject()`
 - `linkAllMeetingProjects()`
-- `updateMeetingSummary()`
-- `updateMeetingSummaryOnly()`
-- `updateMeetingRawFireflies()`
-- `markMeetingEmbeddingStale()`
 - `unlinkMeetingProject()`
-- `deleteMeeting()`
-- `parkMeetingForReprocess()`
-- `restoreParkedMeeting()`
 
 ### `mutations/meetings/participants.ts`
 
@@ -876,6 +921,18 @@
 - `linkMeetingParticipants()`
 - `linkMeetingParticipant()`
 - `unlinkMeetingParticipant()`
+
+### `mutations/meetings/pipeline.ts`
+
+**Exports:**
+- `updateMeetingElevenLabs()`
+- `updateMeetingNamedTranscript()`
+- `updateMeetingSummary()`
+- `updateMeetingSummaryOnly()`
+- `updateMeetingRawFireflies()`
+- `markMeetingEmbeddingStale()`
+- `parkMeetingForReprocess()`
+- `restoreParkedMeeting()`
 
 ### `mutations/meetings/project-summaries.ts`
 
@@ -4646,7 +4703,7 @@ Which layers depend on which packages:
 | Cockpit Components | 22 | 5 | - | 42 | - | 69 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
-| Database Queries | - | - | 4 | - | - | 4 |
+| Database Queries | - | - | 6 | - | - | 6 |
 | DevHub Server Actions | 17 | 2 | 10 | - | - | 29 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
 | DevHub Components | 5 | 2 | - | 14 | - | 21 |
@@ -4697,17 +4754,27 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `sendQuestion()` | `packages/mcp/src/tools/write-client-questions.ts` |
 
-### mutations/emails.ts
+### mutations/emails/accounts.ts
 
 | Mutation | Called from |
 |----------|------------|
 | `upsertGoogleAccount()` | `apps/cockpit/src/app/api/email/auth/callback/route.ts` |
 | `updateGoogleAccountTokens()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateGoogleAccountLastSync()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
+
+### mutations/emails/linking.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `linkEmailProject()` | `packages/ai/src/pipeline/email/core.ts` |
+
+### mutations/emails/rows.ts
+
+| Mutation | Called from |
+|----------|------------|
 | `insertEmails()` | `apps/cockpit/src/app/api/cron/email-sync/route.ts`, `apps/cockpit/src/app/api/email/sync/route.ts` |
 | `updateEmailClassification()` | `packages/ai/src/pipeline/email/core.ts` |
 | `updateEmailFilterStatus()` | `packages/ai/src/pipeline/email/core.ts`, `apps/cockpit/src/app/api/email/reclassify/route.ts` |
-| `linkEmailProject()` | `packages/ai/src/pipeline/email/core.ts` |
 | `updateEmailSenderPerson()` | `packages/ai/src/pipeline/email/core.ts` |
 
 ### mutations/embeddings.ts
@@ -4767,7 +4834,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `markInboxItemRead()` | `packages/database/src/queries/inbox.ts` |
+| `markInboxItemRead()` | `packages/database/src/queries/inbox/detail.ts` |
 
 ### mutations/issues/attachments.ts
 
@@ -4776,26 +4843,41 @@ Tracing the most important data flows from action → pipeline → database.
 | `insertAttachment()` | `apps/devhub/src/actions/attachments.ts` |
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
-### mutations/meetings/core.ts
+### mutations/meetings/classification.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
+| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
+
+### mutations/meetings/crud.ts
 
 | Mutation | Called from |
 |----------|------------|
 | `insertMeeting()` | `packages/ai/src/pipeline/gatekeeper/persist-meeting.ts` |
 | `insertManualMeeting()` | `packages/mcp/src/tools/write-client-updates.ts` |
-| `updateMeetingClassification()` | `apps/cockpit/src/app/api/cron/reclassify/route.ts` |
-| `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
-| `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
-| `updateMeetingTitle()` | `packages/ai/src/pipeline/steps/generate-title.ts` |
+
+### mutations/meetings/linking.ts
+
+| Mutation | Called from |
+|----------|------------|
 | `linkAllMeetingProjects()` | `packages/ai/src/pipeline/saves/action-item-extractions.ts`, `packages/ai/src/pipeline/saves/risk-extractions.ts`, `packages/ai/src/scripts/batch-segment-migration.ts` |
-| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
-| `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
-| `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meetings/participants.ts
 
 | Mutation | Called from |
 |----------|------------|
 | `linkMeetingParticipants()` | `packages/ai/src/pipeline/participant/helpers.ts` |
+
+### mutations/meetings/pipeline.ts
+
+| Mutation | Called from |
+|----------|------------|
+| `updateMeetingElevenLabs()` | `packages/ai/src/pipeline/steps/transcribe.ts` |
+| `updateMeetingNamedTranscript()` | `packages/ai/src/pipeline/steps/speaker-mapping.ts` |
+| `updateMeetingSummary()` | `packages/ai/src/pipeline/steps/summarize.ts` |
+| `updateMeetingRawFireflies()` | `apps/cockpit/src/app/api/ingest/backfill-sentences/route.ts` |
+| `markMeetingEmbeddingStale()` | `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
 ### mutations/meetings/project-summaries.ts
 
@@ -4974,11 +5056,25 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getIgnoredEntityNames()` | `packages/ai/src/pipeline/steps/tag-and-segment.ts`, `packages/ai/src/scripts/batch-segment-migration.ts`, `apps/cockpit/src/app/api/ingest/reprocess/route.ts` |
 
-### queries/inbox.ts
+### queries/inbox/counts.ts
 
 | Query | Used in |
 |-------|---------|
 | `countInboxItemsForTeam()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
+
+### queries/inbox/helpers.ts
+
+| Query | Used in |
+|-------|---------|
+| `sortWeight()` | `packages/database/src/queries/inbox/list.ts` |
+| `fetchReadMap()` | `packages/database/src/queries/inbox/list.ts` |
+| `hasUnreadClientActivity()` | `packages/database/src/queries/inbox/list.ts` |
+
+### queries/inbox/list.ts
+
+| Query | Used in |
+|-------|---------|
+| `listInboxItemsForTeam()` | `packages/database/src/queries/inbox/counts.ts` |
 
 ### queries/issues/_filters.ts
 
