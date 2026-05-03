@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { RefreshCw, Sparkles, Clock } from "lucide-react";
 import { Button } from "@repo/ui/button";
-import { generateProjectReview } from "@/actions/review";
+import { generateProjectReview } from "@/features/review/actions/review";
 
 interface DashboardHeaderProps {
   projectId: string;

@@ -7,9 +7,9 @@
 #   Nieuwe code voor zo'n domein hoort NIET in apps/[app]/src/components/[naam]/
 #   of in apps/[app]/src/actions/[naam].ts — dat is drift.
 #
-# Registry (stand 2026-04-25) — bindend, synchroon houden met CLAUDE.md:
-#   cockpit: themes, meetings, emails, projects, review, directory
-#   devhub:  issues
+# Registry (stand 2026-05-03) — bindend, synchroon houden met CLAUDE.md:
+#   cockpit: themes, meetings, emails, projects, review, directory, inbox
+#   devhub:  issues, topics, review, questions
 #
 # `agents` is bewust géén feature: het is een read-only observability-pagina
 # zonder eigen actions/validations. Hij leeft als compositiepagina onder
@@ -27,6 +27,9 @@ FEATURES=(
   "cockpit:directory"
   "cockpit:inbox"
   "devhub:issues"
+  "devhub:topics"
+  "devhub:review"
+  "devhub:questions"
 )
 
 VIOLATIONS=()

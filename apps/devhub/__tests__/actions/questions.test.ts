@@ -36,7 +36,10 @@ vi.mock("@repo/auth/helpers", () => ({
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { sendQuestion, replyToQuestion } from "@repo/database/mutations/client-questions";
-import { askQuestionAction, replyAsTeamAction } from "../../src/actions/questions";
+import {
+  askQuestionAction,
+  replyAsTeamAction,
+} from "../../src/features/questions/actions/questions";
 
 const PROJECT_ID = "00000000-0000-4023-8000-000000000010";
 const ORG_ID = "00000000-0000-4023-8000-0000000000a0";

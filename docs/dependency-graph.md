@@ -7,11 +7,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 628 |
-| Exported functions/constants | 945 |
-| Exported types/interfaces | 415 |
-| Cross-package imports | 617 |
-| Critical integration points (3+ packages) | 14 |
+| Files scanned | 622 |
+| Exported functions/constants | 938 |
+| Exported types/interfaces | 411 |
+| Cross-package imports | 599 |
+| Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
 
@@ -4267,36 +4267,6 @@
 - `@repo/database/integrations/userback-sync` → executeSyncPipeline
 - `@repo/database/mutations/issues/attachments` → storeIssueMedia
 
-### `apps/devhub/src/actions/questions.ts`
-
-**Exports:**
-- `askQuestionAction()`
-- `replyAsTeamAction()`
-
-**Types:** `AskQuestionInput`
-
-**Depends on:**
-- `@repo/auth/helpers` → createPageClient, getAuthenticatedUser
-- `@repo/database/mutations/client-questions` → sendQuestion, replyToQuestion
-- `@repo/database/queries/projects` → getProjectOrganizationId
-- `@repo/database/validations/client-questions` → replyToQuestionSchema
-
-### `apps/devhub/src/actions/review.ts`
-
-**Exports:**
-- `generateProjectReview()`
-
-**Depends on:**
-- `@repo/database/supabase/server` → createClient
-- `@repo/database/supabase/admin` → getAdminClient
-- `@repo/database/queries/issues` → listIssues
-- `@repo/database/queries/projects` → getProjectById
-- `@repo/database/mutations/projects/reviews` → saveProjectReview
-- `@repo/database/mutations/team` → ensureProfileExists
-- `@repo/ai/agents/issue-reviewer` → runIssueReviewer, type IssueForReview
-- `@repo/auth/helpers` → getAuthenticatedUser, isAuthBypassed
-- `@repo/auth/access` → assertProjectAccess, NotAuthorizedError
-
 ### `apps/devhub/src/actions/slack-settings.ts`
 
 **Exports:**
@@ -4560,45 +4530,6 @@
 **Exports:**
 - `TopBar()`
 
-### `apps/devhub/src/components/questions/ask-question-modal.tsx`
-
-**Exports:**
-- `AskQuestionModal()`
-
-**Types:** `AskQuestionModalProps`
-
-**Depends on:**
-- `@repo/ui/dialog` → Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
-
-### `apps/devhub/src/components/questions/open-questions-block.tsx`
-
-**Exports:**
-- `OpenQuestionsBlock()`
-
-**Types:** `OpenQuestionsBlockProps`
-
-**Depends on:**
-- `@repo/auth/helpers` → createPageClient
-- `@repo/database/queries/client-questions` → listOpenQuestionsForProject
-
-### `apps/devhub/src/components/questions/question-thread.tsx`
-
-**Exports:**
-- `QuestionThread()`
-
-**Types:** `QuestionThreadProps`
-
-**Depends on:**
-- (type) `@repo/database/queries/client-questions` → ClientQuestionListRow
-
-### `apps/devhub/src/components/review/action-items-list.tsx`
-
-**Exports:**
-- `ActionItemsList()`
-
-**Depends on:**
-- `@repo/ui/utils` → cn
-
 ### `apps/devhub/src/components/shared/avatar.tsx`
 
 **Exports:**
@@ -4671,9 +4602,9 @@ Which layers depend on which packages:
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
 | Database Queries | - | - | 4 | - | - | 4 |
-| DevHub Server Actions | 26 | 3 | 13 | - | - | 42 |
+| DevHub Server Actions | 17 | 2 | 10 | - | - | 29 |
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
-| DevHub Components | 7 | 2 | 1 | 16 | - | 26 |
+| DevHub Components | 5 | 2 | - | 14 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 29 | - | 22 | 12 | - | 63 |
 | MCP Server | 32 | 1 | - | - | - | 33 |
@@ -4698,7 +4629,6 @@ parts of the codebase — changes here have the widest blast radius.
 | `apps/cockpit/src/app/api/email/reclassify/route.ts` | database, ai, auth | 3 |
 | `apps/cockpit/src/components/agents/agent-card.tsx` | ai, database, ui | 3 |
 | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` | auth, database, ai | 3 |
-| `apps/devhub/src/actions/review.ts` | database, ai, auth | 3 |
 
 ## Key Dependency Chains
 
@@ -4720,8 +4650,7 @@ Tracing the most important data flows from action → pipeline → database.
 
 | Mutation | Called from |
 |----------|------------|
-| `sendQuestion()` | `packages/mcp/src/tools/write-client-questions.ts`, `apps/devhub/src/actions/questions.ts` |
-| `replyToQuestion()` | `apps/devhub/src/actions/questions.ts` |
+| `sendQuestion()` | `packages/mcp/src/tools/write-client-questions.ts` |
 
 ### mutations/emails.ts
 
@@ -4852,12 +4781,6 @@ Tracing the most important data flows from action → pipeline → database.
 |----------|------------|
 | `updateProjectAliases()` | `packages/ai/src/pipeline/lib/entity-resolution.ts`, `apps/cockpit/src/actions/segments.ts` |
 
-### mutations/projects/reviews.ts
-
-| Mutation | Called from |
-|----------|------------|
-| `saveProjectReview()` | `apps/devhub/src/actions/review.ts` |
-
 ### mutations/slack-config.ts
 
 | Mutation | Called from |
@@ -4892,7 +4815,6 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `upsertProfile()` | `apps/cockpit/src/actions/team.ts` |
-| `ensureProfileExists()` | `apps/devhub/src/actions/review.ts` |
 | `updateProfileRole()` | `apps/cockpit/src/actions/team.ts` |
 | `clearProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `insertProjectAccess()` | `apps/cockpit/src/actions/team.ts` |
@@ -4927,12 +4849,6 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `getAgentMetrics()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
 | `listRecentAgentRuns()` | `apps/cockpit/src/app/(dashboard)/agents/page.tsx` |
-
-### queries/client-questions.ts
-
-| Query | Used in |
-|-------|---------|
-| `listOpenQuestionsForProject()` | `apps/devhub/src/components/questions/open-questions-block.tsx` |
 
 ### queries/content.ts
 
@@ -5057,7 +4973,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listIssues()` | `packages/database/src/queries/issues/stats.ts`, `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/actions/review.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listIssues()` | `packages/database/src/queries/issues/stats.ts`, `apps/devhub/src/actions/bulk-cluster-cleanup.ts`, `apps/devhub/src/app/(app)/issues/page.tsx` |
 | `countFilteredIssues()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
 
 ### queries/issues/stats.ts
@@ -5205,7 +5121,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/devhub/src/actions/review.ts` |
+| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/projects/embedding.ts
 
@@ -5220,7 +5136,6 @@ Which queries are used where across the codebase.
 | `getProjectAliases()` | `apps/cockpit/src/actions/segments.ts` |
 | `getAllProjects()` | `packages/ai/src/pipeline/lib/entity-resolution.ts` |
 | `getProjectName()` | `packages/ai/src/pipeline/summary/project.ts` |
-| `getProjectOrganizationId()` | `apps/devhub/src/actions/questions.ts` |
 | `getProjectByUserbackProjectId()` | `apps/devhub/src/app/api/ingest/userback/route.ts` |
 | `listProjectMeetingIds()` | `packages/ai/src/pipeline/summary/project.ts` |
 | `listProjectEmailIds()` | `packages/ai/src/pipeline/summary/project.ts` |
