@@ -48,22 +48,22 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | WG-001   | Widget ingest foundation (DB whitelist + DevHub endpoint)                         | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-002   | Widget app scaffold + loader.js (apps/widget/, Vercel)                            | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-003   | Widget UI + cockpit rollout (modal + script-tag)                                  | Widget V0     | `sprints/backlog/` | Backlog       |
-| SRP-002  | queries/meetings/core.ts splitsen (892 r, 33+ exports)                            | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-003  | action-item-specialist.ts splitsen per pipeline (851 r)                           | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-004  | dev/action-items/run/client.tsx subcomponenten extraheren                         | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-005  | pipeline/summary/core.ts splitsen per scope (516 r)                               | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-006  | pipeline/tagger.ts splitsen per concern (504 r)                                   | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-007  | dev/speaker-mapping/client.tsx subcomponenten extraheren                          | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-008  | issue-filters.tsx subcomponenten extraheren (494 r)                               | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-009  | pipeline/steps/link-themes.ts opbreken in fases (484 r)                           | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-010  | queries/projects/core.ts splitsen (460 r, 12 exports)                             | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-011  | gatekeeper-pipeline.ts opbreken in fases (426 r)                                  | Refactor SRP  | `sprints/backlog/` | Backlog       |
-| SRP-012  | queries/issues/core.ts splitsen (418 r, 9 exports)                                | Refactor SRP  | `sprints/backlog/` | Backlog       |
+| SRP-002  | queries/meetings/core.ts splitsen (892 r, 33+ exports)                            | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-003  | action-item-specialist.ts splitsen per pipeline (851 r)                           | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-004  | dev/action-items/run/client.tsx subcomponenten extraheren                         | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-005  | pipeline/summary/core.ts splitsen per scope (516 r)                               | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-006  | pipeline/tagger.ts splitsen per concern (504 r)                                   | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-007  | dev/speaker-mapping/client.tsx subcomponenten extraheren                          | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-008  | issue-filters.tsx subcomponenten extraheren (494 r)                               | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-009  | pipeline/steps/link-themes.ts opbreken in fases (484 r)                           | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-010  | queries/projects/core.ts splitsen (460 r, 12 exports)                             | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-011  | gatekeeper-pipeline.ts opbreken in fases (426 r)                                  | Refactor SRP  | `sprints/done/`    | Done          |
+| SRP-012  | queries/issues/core.ts splitsen (418 r, 9 exports)                                | Refactor SRP  | `sprints/done/`    | Done          |
 | SRP-013  | Database god-files splitsen (inbox 537r, emails-mut 295r, meetings/core-mut 343r) | Refactor SRP  | `sprints/done/`    | Done          |
 | DH-021   | DevHub feature-promotion: `review` + `questions` naar features/                   | Architectuur  | `sprints/done/`    | Done          |
 | AD-001   | Cockpit cross-feature ontkoppeling + agents-duplicate cleanup                     | Architectuur  | `sprints/done/`    | Done          |
 
-> **SRP-serie:** elf refactor-sprints op files die de SRP-drempels uit `CLAUDE.md` overschrijden. SRP-001 (shift/page.tsx) is vervallen — die page bleek een ongelinkte mockup en is verwijderd ipv gesplitst. Volledige analyse, volgorde-aanbeveling, sprint-sizes en risico's: zie `sprints/backlog/SRP-matrix.md`. Overlap met `PW-QC-04` (File splits + anti-laundering tests in `docs/backlog/`): de SRP-serie is concreter per file; PW-QC-04 kan blijven als overkoepelend acceptance-bucket of vervangen worden door de SRP-matrix.
+> **SRP-serie:** alle 12 refactor-sprints zijn afgerond (SRP-002 t/m SRP-013). SRP-001 (shift/page.tsx) is vervallen — die page bleek een ongelinkte mockup en is verwijderd ipv gesplitst. Volledige analyse, sprint-sizes en risico's: zie `sprints/backlog/SRP-matrix.md` (historisch). Overlap met `PW-QC-04` (File splits + anti-laundering tests in `docs/backlog/`): SRP-serie heeft de file-splits gedekt; PW-QC-04 blijft relevant voor de anti-laundering test-discipline.
 
 ## Completed Sprints Summary
 
