@@ -67,6 +67,27 @@ describe("PortalInboxRow", () => {
     expect(screen.getByText(/Wacht op team/i)).toBeInTheDocument();
   });
 
+  it("toont 'Nieuw van team' met primary-rand wanneer thread open is en root door team is verstuurd (cockpit→portal)", () => {
+    // Regressie-guard: vóór deze fix viel een door team gestart open bericht
+    // door de net-tussen "Wacht op team" (eis: sender = klant) en "Beantwoord"
+    // (eis: status = responded) en kreeg een muted "Open"-pill zonder
+    // accent-rand. De klant zag het bericht in "Alles" wel staan, maar
+    // visueel zonder cue dat er iets nieuws was — gevolg: "het bericht komt
+    // niet aan".
+    const { container } = render(
+      <PortalInboxRow
+        projectId={PROJECT_ID}
+        question={makeQuestion({ status: "open", sender_profile_id: TEAM_PROFILE })}
+        currentProfileId={PROFILE_ID}
+        isActive={false}
+      />,
+    );
+    expect(screen.getByText(/Nieuw van team/i)).toBeInTheDocument();
+    const link = container.querySelector("a");
+    expect(link?.className).toContain("border-primary/70");
+    expect(link?.className).toContain("bg-primary/5");
+  });
+
   it("toont 'Beantwoord' wanneer status='responded'", () => {
     render(
       <PortalInboxRow
