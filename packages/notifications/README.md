@@ -29,10 +29,26 @@ CC-002 §6). Mail-trigger leeft altijd op de action-laag, na de mutation-success
 ## Env-vars
 
 - `RESEND_API_KEY` — Resend service-key, server-only.
-- `RESEND_FROM_EMAIL` — verified sender op het Resend-domein.
+- `RESEND_FROM_EMAIL` — verified sender op het Resend-domein. Mag een kale
+  mailbox zijn (`team@jouw-ai-partner.nl`) — `sendMail` wrapt 'm dan met de
+  hardcoded brand-naam tot `Jouw AI Partner <team@jouw-ai-partner.nl>`. Wil
+  je een afwijkende display-naam, zet de hele `Naam <email>` zelf in de var;
+  die wordt dan ongewijzigd doorgegeven.
 - `NEXT_PUBLIC_PORTAL_URL` — basis-URL voor deeplinks in templates.
 - `RESEND_FORCE_SEND` (optioneel) — zet op `"1"` om de dev-mode-skip te
   overrulen voor staging-tests.
+
+## Spambox-mitigaties
+
+`sendMail` zet op iedere mail een `List-Unsubscribe: <mailto:…?subject=Unsubscribe>`
+header (Gmail/Yahoo bulk-spec, februari 2024). Het doel-adres is de
+from-mailbox; afmeldverzoeken komen v1 binnen op die inbox en worden handmatig
+door het team verwerkt. Zodra volume groeit kan dit upgraden naar RFC-8058
+one-click via een portal-endpoint.
+
+Display-name in de `From` is een spam-signaal-reductor: kale `email@…` headers
+worden door Gmail vaker als bot/phishing geclassificeerd dan
+`Naam <email@…>`.
 
 ## Dev-mode
 

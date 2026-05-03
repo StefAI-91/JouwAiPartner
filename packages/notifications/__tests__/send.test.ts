@@ -58,10 +58,10 @@ describe("sendMail — dev-mode skip", () => {
 });
 
 describe("sendMail — productie / force-send", () => {
-  it("stuurt mail met correcte payload + tag wanneer RESEND_FORCE_SEND=1", async () => {
+  it("stuurt mail met display-name + List-Unsubscribe header wanneer RESEND_FORCE_SEND=1", async () => {
     process.env.RESEND_FORCE_SEND = "1";
     process.env.RESEND_API_KEY = "key_abc";
-    process.env.RESEND_FROM_EMAIL = "notifications@jouwaipartner.nl";
+    process.env.RESEND_FROM_EMAIL = "team@jouw-ai-partner.nl";
     sendSpy.mockResolvedValueOnce({ data: { id: "mail_1" }, error: null });
 
     const result = await sendMail({
@@ -75,13 +75,40 @@ describe("sendMail — productie / force-send", () => {
     expect(result).toEqual({ ok: true });
     expect(sendSpy).toHaveBeenCalledTimes(1);
     expect(sendSpy).toHaveBeenCalledWith({
-      from: "notifications@jouwaipartner.nl",
+      from: "Jouw AI Partner <team@jouw-ai-partner.nl>",
       to: "klant@example.com",
       subject: "Update",
       html: "<p>x</p>",
       text: "x",
       tags: [{ name: "category", value: "feedback-declined" }],
+      headers: {
+        "List-Unsubscribe": "<mailto:team@jouw-ai-partner.nl?subject=Unsubscribe>",
+      },
     });
+  });
+
+  it("respecteert eigen display-name in RESEND_FROM_EMAIL en extraheert email-deel voor List-Unsubscribe", async () => {
+    process.env.RESEND_FORCE_SEND = "1";
+    process.env.RESEND_API_KEY = "k";
+    process.env.RESEND_FROM_EMAIL = "Support Team <hello@example.com>";
+    sendSpy.mockResolvedValueOnce({ data: { id: "mail_2" }, error: null });
+
+    await sendMail({
+      to: "x@y.nl",
+      subject: "s",
+      html: "h",
+      text: "t",
+      tag: "feedback-done",
+    });
+
+    expect(sendSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: "Support Team <hello@example.com>",
+        headers: {
+          "List-Unsubscribe": "<mailto:hello@example.com?subject=Unsubscribe>",
+        },
+      }),
+    );
   });
 
   it("retourneert {ok:false, no_api_key} als API-key ontbreekt in productie", async () => {
