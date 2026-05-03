@@ -8,6 +8,15 @@ import { hasPortalProjectAccess } from "@repo/database/queries/portal/access";
 import { replyToQuestion, sendQuestion } from "@repo/database/mutations/client-questions";
 import { replyToQuestionSchema } from "@repo/database/validations/client-questions";
 import { getProjectOrganizationId } from "@repo/database/queries/projects/lookup";
+import { countClientRootMessagesInLastHour } from "@repo/database/queries/client-questions";
+
+/**
+ * CC-007 — minimale anti-spam rate-limit voor klant-compose.
+ * 10 root-messages per uur per klant-profiel. Bewust conservatief:
+ * legitieme power-users zien dit zelden, en de drempel kan op data
+ * worden bijgesteld. Bij volume-zorgen later naar Redis.
+ */
+const CLIENT_COMPOSE_RATE_LIMIT = 10;
 
 /**
  * PR-023 — Portal-action voor de klant-reply.
@@ -93,6 +102,13 @@ export async function sendMessageAsClientAction(
 
   const allowed = await hasPortalProjectAccess(profile.id, projectId, supabase);
   if (!allowed) return { error: "Geen toegang tot dit project" };
+
+  const recentCount = await countClientRootMessagesInLastHour(profile.id, supabase);
+  if (recentCount >= CLIENT_COMPOSE_RATE_LIMIT) {
+    return {
+      error: "Je hebt veel berichten verstuurd in het laatste uur. Probeer het later opnieuw.",
+    };
+  }
 
   const organizationId = await getProjectOrganizationId(projectId, supabase);
   if (!organizationId) return { error: "Project niet gevonden" };

@@ -53,6 +53,26 @@ vi.mock("@repo/database/integrations/slack", () => ({
 
 vi.mock("@repo/notifications", () => ({
   notifyFeedbackStatusChanged: (...args: unknown[]) => mockNotify(...args),
+  // CC-007 — DevHub gebruikt `pickTemplateForStatus` om te beslissen of er
+  // een mail moet. Hier mocken we het naar de echte waarheid: alle statussen
+  // met een template returnen { template, tag }, zonder template returnen
+  // ze null. De test gebruikt een minimale lookup-tabel die de productie-
+  // mapping spiegelt.
+  pickTemplateForStatus: (status: string) => {
+    const TRIGGERS = new Set([
+      "triage",
+      "declined",
+      "deferred",
+      "converted_to_qa",
+      "in_progress",
+      "done",
+    ]);
+    return TRIGGERS.has(status) ? { template: () => ({}), tag: `feedback-${status}` } : null;
+  },
+}));
+
+vi.mock("@repo/database/supabase/server", () => ({
+  createClient: vi.fn(async () => ({ __mock: "cookie-client" })),
 }));
 
 vi.mock("@/features/issues/actions/classify", () => ({
@@ -98,7 +118,7 @@ beforeEach(() => {
 });
 
 describe("updateIssueAction — notify wiring", () => {
-  it("triggert notifyFeedbackStatusChanged bij transitie naar in_progress", async () => {
+  it("triggert notifyFeedbackStatusChanged bij transitie naar in_progress en geeft cookie-client mee", async () => {
     mockGetIssueById.mockResolvedValue({ ...BASE_ISSUE, status: "todo" });
     const updated = { ...BASE_ISSUE, status: "in_progress" };
     mockUpdateIssue.mockResolvedValue({ success: true, data: updated });
@@ -107,7 +127,12 @@ describe("updateIssueAction — notify wiring", () => {
 
     expect(result).toEqual({ success: true });
     expect(mockNotify).toHaveBeenCalledTimes(1);
-    expect(mockNotify).toHaveBeenCalledWith(updated, "in_progress");
+    const [calledIssue, calledStatus, calledClient] = mockNotify.mock.calls[0]!;
+    expect(calledIssue).toBe(updated);
+    expect(calledStatus).toBe("in_progress");
+    // CC-007 — derde arg is de cookie-client (niet undefined / niet admin).
+    expect(calledClient).toBeDefined();
+    expect(calledClient).toMatchObject({ __mock: "cookie-client" });
   });
 
   it("triggert notify bij transitie naar done", async () => {
@@ -117,7 +142,23 @@ describe("updateIssueAction — notify wiring", () => {
 
     await updateIssueAction({ id: ISSUE_ID, status: "done" });
 
-    expect(mockNotify).toHaveBeenCalledWith(updated, "done");
+    expect(mockNotify).toHaveBeenCalled();
+    const [, status] = mockNotify.mock.calls[0]!;
+    expect(status).toBe("done");
+  });
+
+  it("triggert OOK bij transitie naar triage / declined / deferred / converted_to_qa (CC-007 trigger-coverage)", async () => {
+    for (const target of ["triage", "declined", "deferred", "converted_to_qa"] as const) {
+      mockNotify.mockClear();
+      mockGetIssueById.mockResolvedValue({ ...BASE_ISSUE, status: "needs_pm_review" });
+      mockUpdateIssue.mockResolvedValue({ success: true, data: { ...BASE_ISSUE, status: target } });
+
+      await updateIssueAction({ id: ISSUE_ID, status: target });
+
+      expect(mockNotify).toHaveBeenCalledTimes(1);
+      const [, status] = mockNotify.mock.calls[0]!;
+      expect(status).toBe(target);
+    }
   });
 
   it("triggert NIET als status onveranderd blijft", async () => {

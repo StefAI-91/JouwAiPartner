@@ -14,8 +14,11 @@ import { markInboxItemRead } from "@repo/database/mutations/inbox-reads";
  * natuurlijk bij de volgende navigatie.
  */
 
+// CC-007 — `feedback` is de UI-kind voor issue-items in de inbox-lijst
+// (zie `inbox-row.tsx`). De DB-kolom `inbox_reads.item_kind` kent enkel
+// `issue` en `question`, dus we mappen `feedback` → `issue` direct na parse.
 const markReadSchema = z.object({
-  kind: z.enum(["issue", "question"]),
+  kind: z.enum(["issue", "feedback", "question"]),
   itemId: z.string().uuid(),
 });
 
@@ -32,12 +35,9 @@ export async function markInboxItemReadAction(input: unknown): Promise<MarkReadR
   if (!profile) return { error: "Niet ingelogd" };
   if (profile.role === "client") return { error: "Geen toegang" };
 
-  const result = await markInboxItemRead(
-    profile.id,
-    parsed.data.kind,
-    parsed.data.itemId,
-    supabase,
-  );
+  const dbKind = parsed.data.kind === "feedback" ? "issue" : parsed.data.kind;
+
+  const result = await markInboxItemRead(profile.id, dbKind, parsed.data.itemId, supabase);
   if ("error" in result) return { error: result.error };
   return { success: true };
 }

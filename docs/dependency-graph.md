@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 622 |
-| Exported functions/constants | 936 |
+| Exported functions/constants | 937 |
 | Exported types/interfaces | 409 |
 | Cross-package imports | 613 |
 | Critical integration points (3+ packages) | 14 |
@@ -79,6 +79,7 @@
 **Exports:**
 - `listOpenQuestionsForProject()`
 - `countOpenQuestionsByProject()`
+- `countClientRootMessagesInLastHour()`
 - `getQuestionById()`
 
 **Types:** `ClientQuestionReplyRow`, `ClientQuestionListRow`, `ClientQuestionLookupRow`

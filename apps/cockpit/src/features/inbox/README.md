@@ -58,6 +58,7 @@ Cross-project Cockpit-inbox waarin de PM klant- en eindgebruiker-feedback endors
 - **Eén entry-point voor PM-acties.** `pmReviewAction` accepteert een discriminated union i.p.v. vier losse server-actions. Auth + revalidation zitten op één plek; voorkomt drift bij toekomstige actie-toevoegingen.
 - **`replyAsTeamAction` mirror van portal `replyAsClientAction`.** Identieke mutation, andere `role: "team"`, geen portal-access-check (cockpit is team).
 - **Mark-as-read implicit op detail-page.** `getConversationThread` markeert automatisch. De expliciete `markInboxItemReadAction` is voor toekomstige UI-hooks (swipe-to-read e.d.) en blijft daarom toch geëxporteerd.
+- **Kind-mapping `feedback` → `issue` (CC-007).** De UI-laag (`inbox-row.tsx`) gebruikt `kind="feedback"` voor issue-items, maar `inbox_reads.item_kind` kent enkel `issue` of `question`. `markInboxItemReadAction` accepteert daarom alle drie de UI-waardes (`issue` | `feedback` | `question`) en mapt `feedback` naar `issue` net vóór de mutation. Eén bron-van-waarheid voor de UI, één voor de DB.
 - **Filter via URL-param, niet client-state.** `?filter=wacht_op_mij` → bookmark-baar, SSR-stabiel, geen hydration-mismatch.
 - **Bubbles tonen "ik vs anderen", niet "team vs klant".** Een team-PM ziet zijn eigen reply rechts; collega-team-replies links — net als WhatsApp/iMessage. Voorkomt het verraderlijke patroon "alles wat de andere kant zegt staat links" dat in een team-multi-author thread verwart.
 

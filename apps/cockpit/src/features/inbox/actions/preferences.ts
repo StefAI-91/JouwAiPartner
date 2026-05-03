@@ -26,8 +26,11 @@ export async function dismissOnboardingAction(input: unknown): Promise<DismissOn
   const result = await dismissOnboarding(profile.id, parsed.data.key, supabase);
   if ("error" in result) return { error: result.error };
 
-  // Globale + per-project inbox lezen beide dezelfde key, dus revalideer de
-  // dashboard-layout zodat beide views dezelfde state oppikken.
-  revalidatePath("/(dashboard)", "layout");
+  // CC-007 — `revalidatePath("/(dashboard)", "layout")` was fout: route-groepen
+  // (`(dashboard)`) zijn *geen* URL-pad in Next.js, dus die call werd silent
+  // geskipt en de onboarding-card bleef hangen tot een full reload. Inbox
+  // staat zowel globaal als per project; beide routes nu expliciet revalideren.
+  revalidatePath("/inbox");
+  revalidatePath("/projects/[id]/inbox", "page");
   return { success: true };
 }

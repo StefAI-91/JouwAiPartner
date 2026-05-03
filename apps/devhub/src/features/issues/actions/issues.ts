@@ -19,12 +19,13 @@ import {
 } from "@repo/database/validations/issues";
 import { getAuthenticatedUser } from "@repo/auth/helpers";
 import { assertProjectAccess, NotAuthorizedError } from "@repo/auth/access";
+import { createClient } from "@repo/database/supabase/server";
 import {
   resolveSlackEvent,
   notifySlackIfUrgent,
   type SlackIssuePayload,
 } from "@repo/database/integrations/slack";
-import { notifyFeedbackStatusChanged } from "@repo/notifications";
+import { notifyFeedbackStatusChanged, pickTemplateForStatus } from "@repo/notifications";
 
 // ── Actions ──
 
@@ -194,15 +195,22 @@ export async function updateIssueAction(
 
   const updated = result.data;
 
-  // CC-002 — klant-mail bij statuswijziging naar in_progress of done.
-  // Andere status-changes triggeren NIET (zie pickTemplateForStatus).
+  // CC-002 / CC-007 — klant-mail bij elke statuswijziging waarvoor een template
+  // bestaat. We delegeren de keuze aan `pickTemplateForStatus` zodat een nieuwe
+  // status (bv. `triage`, `declined`, `deferred`, `converted_to_qa`) automatisch
+  // mee gaat zonder dat hier een hardcoded set bijgewerkt moet worden.
+  //
+  // Doorgeven van de cookie-client (i.p.v. fallback naar de admin-singleton in
+  // notifications) houdt RLS enforced op de recipient-lookup — defense-in-depth
+  // tegen cross-tenant leaks.
   if (
     data.status &&
     current.status !== updated.status &&
-    (updated.status === "in_progress" || updated.status === "done")
+    pickTemplateForStatus(updated.status as IssueStatus) !== null
   ) {
-    await notifyFeedbackStatusChanged(updated, updated.status as IssueStatus).catch((err) =>
-      console.error("[updateIssueAction] notify failed", err),
+    const supabase = await createClient();
+    await notifyFeedbackStatusChanged(updated, updated.status as IssueStatus, supabase).catch(
+      (err) => console.error("[updateIssueAction] notify failed", err),
     );
   }
 

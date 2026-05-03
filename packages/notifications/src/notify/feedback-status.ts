@@ -4,6 +4,7 @@ import { listPortalProjectAssignees } from "@repo/database/queries/portal";
 import { sendMail } from "../send";
 import { pickTemplateForStatus } from "../templates";
 import type { IssueForTemplate } from "../templates/types";
+import { requirePortalUrl } from "../client";
 
 /**
  * Notificeert klant-portal-leden over een statuswijziging op een feedback-issue.
@@ -32,10 +33,14 @@ export async function notifyFeedbackStatusChanged(
     const clientRecipients = assignees.filter((a) => a.role === "client" && a.email);
     if (clientRecipients.length === 0) return;
 
-    const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? "";
+    const portalUrl = requirePortalUrl();
+    if (!portalUrl) return;
     const rendered = picked.template({ issue, portalUrl });
 
-    await Promise.all(
+    // CC-007 — `allSettled` zodat één failing recipient (bv. bounce, Resend
+    // 4xx op één adres) de andere niet kapot maakt. Resend logt zelf de
+    // individuele errors; wij loggen het aggregaat.
+    const results = await Promise.allSettled(
       clientRecipients.map((r) =>
         sendMail({
           to: r.email,
@@ -46,6 +51,14 @@ export async function notifyFeedbackStatusChanged(
         }),
       ),
     );
+    const failed = results.filter((r) => r.status === "rejected");
+    if (failed.length > 0) {
+      console.error("[notifyFeedbackStatusChanged] partial failure", {
+        issueId: issue.id,
+        failedCount: failed.length,
+        total: results.length,
+      });
+    }
   } catch (err) {
     console.error("[notifyFeedbackStatusChanged] failed", {
       issueId: issue.id,

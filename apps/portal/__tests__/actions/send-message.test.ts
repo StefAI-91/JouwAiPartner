@@ -28,11 +28,16 @@ vi.mock("@repo/database/mutations/client-questions", () => ({
   replyToQuestion: vi.fn(),
 }));
 
+vi.mock("@repo/database/queries/client-questions", () => ({
+  countClientRootMessagesInLastHour: vi.fn(),
+}));
+
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@repo/auth/access";
 import { hasPortalProjectAccess } from "@repo/database/queries/portal/access";
 import { getProjectOrganizationId } from "@repo/database/queries/projects/lookup";
 import { sendQuestion } from "@repo/database/mutations/client-questions";
+import { countClientRootMessagesInLastHour } from "@repo/database/queries/client-questions";
 import { sendMessageAsClientAction } from "../../src/actions/inbox";
 
 const PROJECT_ID = "00000000-0000-4099-8000-000000000001";
@@ -46,6 +51,8 @@ const CLIENT_PROFILE = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Default: rate-limit niet gehaald — individuele test mag overschrijven.
+  vi.mocked(countClientRootMessagesInLastHour).mockResolvedValue(0);
 });
 
 describe("sendMessageAsClientAction", () => {
@@ -77,6 +84,40 @@ describe("sendMessageAsClientAction", () => {
 
     expect(result).toEqual({ error: "Geen toegang tot dit project" });
     expect(sendQuestion).not.toHaveBeenCalled();
+  });
+
+  it("CC-007 — blokkeert wanneer rate-limit (10/uur) gehaald is", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue(CLIENT_PROFILE as never);
+    vi.mocked(hasPortalProjectAccess).mockResolvedValue(true);
+    vi.mocked(countClientRootMessagesInLastHour).mockResolvedValue(10);
+
+    const result = await sendMessageAsClientAction(PROJECT_ID, {
+      body: "Een vrij bericht aan team — minimaal tien.",
+    });
+
+    expect("error" in result).toBe(true);
+    if ("error" in result) {
+      expect(result.error).toMatch(/laatste uur/i);
+    }
+    expect(sendQuestion).not.toHaveBeenCalled();
+  });
+
+  it("CC-007 — staat 10e bericht (count=9) toe, blokkeert pas vanaf 10", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue(CLIENT_PROFILE as never);
+    vi.mocked(hasPortalProjectAccess).mockResolvedValue(true);
+    vi.mocked(getProjectOrganizationId).mockResolvedValue(ORG_ID);
+    vi.mocked(countClientRootMessagesInLastHour).mockResolvedValue(9);
+    vi.mocked(sendQuestion).mockResolvedValue({
+      success: true,
+      data: { id: "msg-10", project_id: PROJECT_ID },
+    } as never);
+
+    const result = await sendMessageAsClientAction(PROJECT_ID, {
+      body: "Bericht binnen het uur — minimaal tien.",
+    });
+
+    expect(result).toEqual({ success: true, messageId: "msg-10" });
+    expect(sendQuestion).toHaveBeenCalled();
   });
 
   it("retourneert error wanneer project-org-lookup faalt", async () => {

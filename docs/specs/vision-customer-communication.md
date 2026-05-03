@@ -157,6 +157,10 @@ All outbound passes the AI-draft → human-review → send pattern. No team memb
 
 **Rationale:** the notification layer is the difference between "portal that nobody visits" and "portal as primary channel". Without it, this whole architecture fails silently.
 
+**Rate-limit klant-compose (CC-007):** klanten zijn beperkt tot 10 root-messages per uur per profiel. Conservatieve anti-spam-grens; legitieme power-users halen hem zelden. Replies en team-side compose vallen er niet onder. Drempel afstellen op data, niet vooraf.
+
+**Fail-loud op missend `NEXT_PUBLIC_PORTAL_URL` (CC-007):** zonder portal-URL sturen we geen mail (in plaats van een mail met dode CTA-link). De skip wordt gelogd; klant blijft op de hoogte via in-app counter zodra de PM de inbox opent.
+
 ---
 
 ## 9. UX Principles

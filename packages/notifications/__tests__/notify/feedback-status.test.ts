@@ -105,4 +105,40 @@ describe("notifyFeedbackStatusChanged", () => {
       expect.objectContaining({ issueId: "issue-1", newStatus: "triage" }),
     );
   });
+
+  it("CC-007 — slaat over wanneer NEXT_PUBLIC_PORTAL_URL ontbreekt en logt fail-loud", async () => {
+    delete process.env.NEXT_PUBLIC_PORTAL_URL;
+    mockListAssignees.mockResolvedValueOnce([
+      { profile_id: "p1", email: "klant@x.nl", role: "client" },
+    ]);
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await notifyFeedbackStatusChanged(baseIssue, "triage");
+
+    expect(mockSendMail).not.toHaveBeenCalled();
+    expect(errSpy).toHaveBeenCalledWith(
+      "[notifications] NEXT_PUBLIC_PORTAL_URL ontbreekt — mail wordt niet verstuurd",
+    );
+  });
+
+  it("CC-007 — Promise.allSettled: één falende recipient breekt de andere niet", async () => {
+    mockListAssignees.mockResolvedValueOnce([
+      { profile_id: "p1", email: "klant1@x.nl", role: "client" },
+      { profile_id: "p2", email: "klant2@x.nl", role: "client" },
+      { profile_id: "p3", email: "klant3@x.nl", role: "client" },
+    ]);
+    mockSendMail
+      .mockResolvedValueOnce({ ok: true })
+      .mockRejectedValueOnce(new Error("bounce"))
+      .mockResolvedValueOnce({ ok: true });
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await notifyFeedbackStatusChanged(baseIssue, "triage");
+
+    expect(mockSendMail).toHaveBeenCalledTimes(3);
+    expect(errSpy).toHaveBeenCalledWith(
+      "[notifyFeedbackStatusChanged] partial failure",
+      expect.objectContaining({ issueId: "issue-1", failedCount: 1, total: 3 }),
+    );
+  });
 });

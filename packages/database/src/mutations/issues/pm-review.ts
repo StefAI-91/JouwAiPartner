@@ -116,23 +116,36 @@ export async function convertIssueToQuestion(
 ): Promise<PmReviewMutationResult> {
   const db = client ?? getAdminClient();
 
-  // Step 1: issue ophalen voor project_id / organization_id.
-  const { data: lookup, error: lookupError } = await db
+  // Step 1: issue ophalen voor project_id, daarna losse lookup voor
+  // organization_id. We vermijden bewust de PostgREST embed-syntax
+  // (`projects!inner(organization_id)`) — zie FIX-TH-914 (sprint TH-009)
+  // voor de cautionary tale: een vergelijkbare embed-optimalisatie brak
+  // de theme detail page in productie omdat het lokaal niet reproduceerbaar
+  // was. Twee losse calls zijn voorspelbaar en lokaal verifieerbaar.
+  const { data: issue, error: issueError } = await db
     .from("issues")
-    .select("project_id, projects!inner(organization_id), status")
+    .select("project_id, status")
     .eq("id", id)
     .maybeSingle();
 
-  if (lookupError) return { error: `convertIssueToQuestion lookup failed: ${lookupError.message}` };
-  if (!lookup) return { error: "Issue niet gevonden" };
-  if ((lookup as { status?: string }).status !== "needs_pm_review") {
+  if (issueError) return { error: `convertIssueToQuestion lookup failed: ${issueError.message}` };
+  if (!issue) return { error: "Issue niet gevonden" };
+  if ((issue as { status?: string }).status !== "needs_pm_review") {
     return { error: "Issue niet meer in needs_pm_review" };
   }
 
-  const projectInfo = lookup as unknown as IssueProjectLookup & {
-    projects: { organization_id: string };
-  };
-  const organizationId = projectInfo.projects?.organization_id;
+  const projectInfo = issue as unknown as IssueProjectLookup;
+
+  const { data: project, error: projectError } = await db
+    .from("projects")
+    .select("organization_id")
+    .eq("id", projectInfo.project_id)
+    .maybeSingle();
+
+  if (projectError) {
+    return { error: `convertIssueToQuestion project lookup failed: ${projectError.message}` };
+  }
+  const organizationId = project?.organization_id;
   if (!organizationId) return { error: "Project zonder organization_id" };
 
   // Step 2: issue flippen naar converted_to_qa met status-guard.

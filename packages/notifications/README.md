@@ -45,6 +45,25 @@ dev. Zet `RESEND_FORCE_SEND=1` voor opt-in.
 Beide `notify*`-helpers vangen errors zelf (try/catch + log). Een Resend-outage
 laat de mutation NIET falen — mail is best-effort, mutation is SoT.
 
+Per-recipient gebruiken de orchestrators `Promise.allSettled` (CC-007), zodat
+één failing adres (bv. bounce of Resend-4xx) niet de andere klant-mails kapot
+maakt. Een aggregaat `partial failure`-log gaat naar `console.error`; Resend
+logt de individuele errors zelf.
+
+## Fail-loud op ontbrekende `NEXT_PUBLIC_PORTAL_URL`
+
+`requirePortalUrl()` in `src/client.ts` is de centrale guard. Zonder env-var
+sturen we **geen mail** — een mail met dode CTA (`/projects/.../`) komt nooit
+buiten de notify-laag uit. De skip wordt op `console.error` gelogd zodat de
+operator hem niet via het Resend-dashboard hoeft te ontdekken (CC-007).
+
+## Rate-limit klant-compose
+
+De portal-action `sendMessageAsClientAction` blokkeert klanten op meer dan
+10 root-messages per uur (`countClientRootMessagesInLastHour`). Drempel is
+conservatief; afstellen op data, niet vooraf. Bij volume-zorgen later naar
+Redis. Replies en team-messages vallen niet onder dit limiet.
+
 ## Tests
 
 - `__tests__/send.test.ts` — payload-capture-mock op `resend`, dev-mode-skip,

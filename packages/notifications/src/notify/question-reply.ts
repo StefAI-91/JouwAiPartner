@@ -3,6 +3,7 @@ import type { ClientQuestionRow } from "@repo/database/mutations/client-question
 import { listPortalProjectAssignees } from "@repo/database/queries/portal";
 import { sendMail } from "../send";
 import { newTeamReplyTemplate } from "../templates";
+import { requirePortalUrl } from "../client";
 
 /**
  * Notificeert klant-portal-leden over een nieuw team-antwoord op een vraag.
@@ -23,14 +24,15 @@ export async function notifyTeamReply(
     const clientRecipients = assignees.filter((a) => a.role === "client" && a.email);
     if (clientRecipients.length === 0) return;
 
-    const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? "";
+    const portalUrl = requirePortalUrl();
+    if (!portalUrl) return;
     const rendered = newTeamReplyTemplate({
       question: parentQuestion,
       replyPreview: replyBody.slice(0, 200),
       portalUrl,
     });
 
-    await Promise.all(
+    const results = await Promise.allSettled(
       clientRecipients.map((r) =>
         sendMail({
           to: r.email,
@@ -41,6 +43,14 @@ export async function notifyTeamReply(
         }),
       ),
     );
+    const failed = results.filter((r) => r.status === "rejected");
+    if (failed.length > 0) {
+      console.error("[notifyTeamReply] partial failure", {
+        questionId: parentQuestion.id,
+        failedCount: failed.length,
+        total: results.length,
+      });
+    }
   } catch (err) {
     console.error("[notifyTeamReply] failed", {
       questionId: parentQuestion.id,

@@ -3,6 +3,7 @@ import type { ClientQuestionRow } from "@repo/database/mutations/client-question
 import { listPortalProjectAssignees } from "@repo/database/queries/portal";
 import { sendMail } from "../send";
 import { newTeamMessageTemplate } from "../templates";
+import { requirePortalUrl } from "../client";
 
 /**
  * CC-006 — Notificeert klant-portal-leden over een nieuw team-initiated
@@ -21,10 +22,11 @@ export async function notifyNewTeamMessage(
     const clientRecipients = assignees.filter((a) => a.role === "client" && a.email);
     if (clientRecipients.length === 0) return;
 
-    const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? "";
+    const portalUrl = requirePortalUrl();
+    if (!portalUrl) return;
     const rendered = newTeamMessageTemplate({ message, portalUrl });
 
-    await Promise.all(
+    const results = await Promise.allSettled(
       clientRecipients.map((r) =>
         sendMail({
           to: r.email,
@@ -35,6 +37,14 @@ export async function notifyNewTeamMessage(
         }),
       ),
     );
+    const failed = results.filter((r) => r.status === "rejected");
+    if (failed.length > 0) {
+      console.error("[notifyNewTeamMessage] partial failure", {
+        messageId: message.id,
+        failedCount: failed.length,
+        total: results.length,
+      });
+    }
   } catch (err) {
     console.error("[notifyNewTeamMessage] failed", {
       messageId: message.id,
