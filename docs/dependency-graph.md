@@ -8,7 +8,7 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 642 |
-| Exported functions/constants | 953 |
+| Exported functions/constants | 952 |
 | Exported types/interfaces | 414 |
 | Cross-package imports | 603 |
 | Critical integration points (3+ packages) | 13 |
@@ -208,7 +208,6 @@
 **Exports:**
 - `sortWeight()`
 - `fetchReadMap()`
-- `hasUnreadClientActivity()`
 - `QUESTION_LIST_COLS`
 - `QUESTION_REPLY_EMBED`
 
@@ -5071,7 +5070,6 @@ Which queries are used where across the codebase.
 |-------|---------|
 | `sortWeight()` | `packages/database/src/queries/inbox/list.ts` |
 | `fetchReadMap()` | `packages/database/src/queries/inbox/list.ts` |
-| `hasUnreadClientActivity()` | `packages/database/src/queries/inbox/list.ts` |
 
 ### queries/inbox/list.ts
 

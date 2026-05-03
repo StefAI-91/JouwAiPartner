@@ -21,7 +21,7 @@ export async function countInboxItemsForTeam(
   const db = client ?? getAdminClient();
   const accessibleIds = await listAccessibleProjectIds(profileId, db);
   if (accessibleIds.length === 0) {
-    return { pmReview: 0, openQuestions: 0, deferred: 0, unread: 0 };
+    return { pmReview: 0, openQuestions: 0, respondedQuestions: 0, deferred: 0, unread: 0 };
   }
   const projectIds = options.projectId
     ? accessibleIds.includes(options.projectId)
@@ -29,10 +29,10 @@ export async function countInboxItemsForTeam(
       : []
     : accessibleIds;
   if (projectIds.length === 0) {
-    return { pmReview: 0, openQuestions: 0, deferred: 0, unread: 0 };
+    return { pmReview: 0, openQuestions: 0, respondedQuestions: 0, deferred: 0, unread: 0 };
   }
 
-  const [pmRes, openQRes, deferredRes, listResult] = await Promise.all([
+  const [pmRes, openQRes, respondedQRes, deferredRes, listResult] = await Promise.all([
     db
       .from("issues")
       .select("id", { count: "exact", head: true })
@@ -45,6 +45,12 @@ export async function countInboxItemsForTeam(
       .is("parent_id", null)
       .eq("status", "open"),
     db
+      .from("client_questions")
+      .select("id", { count: "exact", head: true })
+      .in("project_id", projectIds)
+      .is("parent_id", null)
+      .eq("status", "responded"),
+    db
       .from("issues")
       .select("id", { count: "exact", head: true })
       .in("project_id", projectIds)
@@ -55,6 +61,7 @@ export async function countInboxItemsForTeam(
   return {
     pmReview: pmRes.count ?? 0,
     openQuestions: openQRes.count ?? 0,
+    respondedQuestions: respondedQRes.count ?? 0,
     deferred: deferredRes.count ?? 0,
     unread: listResult.items.filter((i) => i.isUnread).length,
   };

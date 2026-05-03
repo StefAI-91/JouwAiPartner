@@ -68,6 +68,7 @@ export interface InboxListResult {
 export interface InboxCounts {
   pmReview: number;
   openQuestions: number;
+  respondedQuestions: number;
   deferred: number;
   unread: number;
 }

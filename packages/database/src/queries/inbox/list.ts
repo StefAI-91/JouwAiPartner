@@ -17,24 +17,24 @@ import {
   QUESTION_REPLY_EMBED,
   type ReadRow,
   fetchReadMap,
-  hasUnreadClientActivity,
   sortWeight,
 } from "./helpers";
 
 // Per-filter status-sets — `null` betekent: skip die kant van de query helemaal.
-// Sluit aan op `applyFilter` van vóór CC-008 (zelfde gedrag, één bron-van-waarheid).
+// Status-semantiek (zie `replyToQuestion`-mutation): `open` = team heeft gestuurd,
+// klant moet nog reageren; `responded` = klant heeft gereageerd, team moet acteren.
 // Geëxporteerd voor unit-test in `__tests__/queries/inbox-filter-map.test.ts`.
 export const ISSUE_STATUSES_PER_FILTER: Record<InboxFilter, string[] | null> = {
   alles: ["needs_pm_review", "deferred"],
   wacht_op_mij: ["needs_pm_review"],
-  wacht_op_klant: null, // alleen `responded` questions
+  wacht_op_klant: null, // alleen `open` questions
   geparkeerd: ["deferred"],
 };
 
 export const QUESTION_STATUSES_PER_FILTER: Record<InboxFilter, string[] | null> = {
   alles: ["open", "responded"],
-  wacht_op_mij: ["open"],
-  wacht_op_klant: ["responded"],
+  wacht_op_mij: ["responded"],
+  wacht_op_klant: ["open"],
   geparkeerd: null,
 };
 
@@ -154,15 +154,7 @@ export async function listInboxItemsForTeam(
     };
   });
 
-  // Voor `wacht_op_mij` willen we open questions alleen tonen als er klant-
-  // activiteit is sinds de laatste team-reply. Heuristiek (v1, zie hieronder)
-  // blijft client-side omdat ze inbox_reads + replies samen vergelijkt.
-  const filteredQuestionItems =
-    filter === "wacht_op_mij"
-      ? questionItems.filter((q) => q.thread.status === "open" && hasUnreadClientActivity(q))
-      : questionItems;
-
-  const merged: InboxItem[] = [...issueItems, ...filteredQuestionItems];
+  const merged: InboxItem[] = [...issueItems, ...questionItems];
   merged.sort((a, b) => {
     const w = sortWeight(a) - sortWeight(b);
     if (w !== 0) return w;

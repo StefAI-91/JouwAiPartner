@@ -1,4 +1,4 @@
-import type { InboxItem, InboxQuestionItem } from "./types";
+import type { InboxItem } from "./types";
 
 // Internal helpers gedeeld door list/counts/detail. Niet via de publieke barrel.
 
@@ -16,7 +16,9 @@ export const QUESTION_REPLY_EMBED = `replies:client_questions!parent_id (
 )` as const;
 
 // Status-first sort weight. Lager = hoger in de lijst. Vision §9 — items die
-// op de PM wachten staan altijd bovenaan, parked items onderaan.
+// op de PM wachten staan altijd bovenaan, parked items onderaan. `responded`
+// staat hoog (klant antwoordde, team moet acteren); `open` staat laag (team
+// stuurde, wacht op klant — geen actie voor team).
 export function sortWeight(item: InboxItem): number {
   if (item.kind === "feedback") {
     if (item.issue.status === "needs_pm_review") return 0;
@@ -24,7 +26,7 @@ export function sortWeight(item: InboxItem): number {
     return 2;
   }
   // question
-  return item.thread.status === "open" ? 1 : 4;
+  return item.thread.status === "responded" ? 1 : 4;
 }
 
 export function fetchReadMap(rows: ReadRow[]): Map<string, string> {
@@ -33,14 +35,4 @@ export function fetchReadMap(rows: ReadRow[]): Map<string, string> {
     map.set(`${r.item_kind}:${r.item_id}`, r.read_at);
   }
   return map;
-}
-
-/**
- * Open question is "wacht op mij" als er klant-activiteit is. In v1 hebben
- * replies geen role-veld, dus we benaderen het op count: replies > 0 ÓF
- * onread (geen team-read sinds laatste activiteit). Pragmatisch tot CC-002
- * reply-role bijhoudt.
- */
-export function hasUnreadClientActivity(item: InboxQuestionItem): boolean {
-  return item.isUnread || item.thread.replies.length > 0;
 }
