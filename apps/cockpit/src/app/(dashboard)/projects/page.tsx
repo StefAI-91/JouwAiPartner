@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@repo/database/supabase/server";
 import { listProjects } from "@repo/database/queries/projects";
 import { listOrganizations } from "@repo/database/queries/organizations";
-import { ProjectCard } from "@/features/projects/components/project-card";
+import { ProjectsList } from "@/features/projects/components/projects-list";
 import { AddProjectButton } from "@/features/projects/components/add-project-button";
 import { FolderKanban } from "lucide-react";
 
@@ -14,6 +14,8 @@ export default async function ProjectsPage() {
     listOrganizations(supabase),
   ]);
 
+  const orgOptions = organizations.map((o) => ({ id: o.id, name: o.name }));
+
   if (projects.length === 0) {
     return (
       <div className="px-4 py-16 text-center lg:px-10">
@@ -23,9 +25,7 @@ export default async function ProjectsPage() {
           Projects will appear here once meetings are linked to them.
         </p>
         <div className="mt-6">
-          <AddProjectButton
-            organizations={organizations.map((o) => ({ id: o.id, name: o.name }))}
-          />
+          <AddProjectButton organizations={orgOptions} />
         </div>
       </div>
     );
@@ -33,21 +33,12 @@ export default async function ProjectsPage() {
 
   return (
     <div className="space-y-4 px-4 py-8 lg:px-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1>Projects</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {projects.length} project{projects.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <AddProjectButton organizations={organizations.map((o) => ({ id: o.id, name: o.name }))} />
+      <div className="flex items-center justify-between gap-4">
+        <h1>Projects</h1>
+        <AddProjectButton organizations={orgOptions} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
-      </div>
+      <ProjectsList projects={projects} />
     </div>
   );
 }

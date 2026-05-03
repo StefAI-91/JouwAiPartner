@@ -29,3 +29,20 @@ export function getPhaseSteps(status: string) {
   if ((OTHER_STEPS as readonly string[]).includes(status)) return OTHER_STEPS;
   return SALES_STEPS;
 }
+
+export type ProjectSegment = "sales" | "active" | "other";
+
+export const PROJECT_SEGMENTS: readonly ProjectSegment[] = ["sales", "active", "other"] as const;
+
+export const SEGMENT_LABELS: Record<ProjectSegment, string> = {
+  sales: "Sales",
+  active: "Actief",
+  other: "On hold",
+};
+
+export function getProjectSegment(status: string): ProjectSegment {
+  if ((SALES_STEPS as readonly string[]).includes(status)) return "sales";
+  if ((DELIVERY_STEPS as readonly string[]).includes(status)) return "active";
+  if (status === "active") return "active";
+  return "other";
+}
