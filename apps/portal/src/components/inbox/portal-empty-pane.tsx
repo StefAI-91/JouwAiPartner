@@ -1,24 +1,50 @@
 import Link from "next/link";
 import { MessageCircle, Plus } from "lucide-react";
+import { OnboardingCard } from "./onboarding-card";
 
 /**
  * PR-026 — Empty-state voor de detail-pane op `md+` zonder selectie.
  *
- * Twee gevallen:
- *   - lijst is gevuld, maar gebruiker heeft geen item geselecteerd → "kies
- *     een bericht of start een nieuw gesprek".
- *   - lijst is leeg → "Start je eerste gesprek".
+ * Drie subvarianten:
+ *   - `showOnboarding=true`            → rijke welkom-card met de drie bullets
+ *     en een "+ Nieuw bericht"-CTA. Eerste-bezoek krijgt zo een duidelijke
+ *     intro zonder dat de smalle lijst-pane dichtgeplempt wordt.
+ *   - `hasQuestions=true` (gedismissed) → "Selecteer een bericht" prompt.
+ *   - lege lijst (gedismissed)         → "Nog geen berichten" + CTA.
  *
- * Pure visuele state-pane; geen data-fetching. Wordt op mobile (`<md`) niet
- * gerenderd want daar verbergt de layout-shell het hele detail-pane.
+ * Wordt op mobile (`<md`) niet gerenderd; daar verbergt de layout-shell
+ * het hele detail-pane wanneer er geen selectie is. Mobile-gebruikers
+ * vallen terug op de lijst zelf, die compact genoeg is om als
+ * onboarding-surface te dienen.
  */
 export function PortalEmptyPane({
   projectId,
   hasQuestions,
+  showOnboarding,
 }: {
   projectId: string;
   hasQuestions: boolean;
+  showOnboarding: boolean;
 }) {
+  if (showOnboarding) {
+    return (
+      <div className="flex h-full items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">
+          <OnboardingCard />
+          <div className="mt-2 flex justify-center">
+            <Link
+              href={`/projects/${projectId}/inbox/new`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition hover:bg-primary/90"
+            >
+              <Plus className="size-3.5" />
+              Start een nieuw gesprek
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full items-center justify-center px-6 py-12 text-center">
       <div>

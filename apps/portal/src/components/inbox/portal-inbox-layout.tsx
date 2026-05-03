@@ -1,7 +1,6 @@
 import type { ClientQuestionListRow } from "@repo/database/queries/client-questions";
 import type { ConversationThread } from "@repo/database/queries/inbox";
 import { cn } from "@repo/ui/utils";
-import { OnboardingCard } from "./onboarding-card";
 import { PortalInboxList } from "./portal-inbox-list";
 import { PortalThreadPane } from "./portal-thread-pane";
 import { PortalComposePane } from "./portal-compose-pane";
@@ -59,12 +58,6 @@ export function PortalInboxLayout({
           <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Berichten</h1>
         </div>
 
-        {showOnboarding ? (
-          <div className="border-b border-border/60 px-4 py-3">
-            <OnboardingCard />
-          </div>
-        ) : null}
-
         <PortalInboxList
           projectId={projectId}
           questions={questions}
@@ -89,7 +82,11 @@ export function PortalInboxLayout({
             currentProfileId={currentProfileId}
           />
         ) : (
-          <PortalEmptyPane projectId={projectId} hasQuestions={questions.length > 0} />
+          <PortalEmptyPane
+            projectId={projectId}
+            hasQuestions={questions.length > 0}
+            showOnboarding={showOnboarding}
+          />
         )}
       </main>
     </div>

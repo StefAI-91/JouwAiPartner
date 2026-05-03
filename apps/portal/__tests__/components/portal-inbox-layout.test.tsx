@@ -94,12 +94,17 @@ describe("PortalInboxLayout", () => {
     expect(screen.getByText(/Test bv · Test project/i)).toBeInTheDocument();
   });
 
-  it("toont onboarding-card als showOnboarding=true", () => {
-    render(
+  it("toont onboarding-card in de empty-pane (rechts) als showOnboarding=true", () => {
+    const { container } = render(
       <PortalInboxLayout {...baseProps} selectedId={undefined} thread={null} showOnboarding />,
     );
-    // OnboardingCard rendert "Welkom in je inbox" tekst.
-    expect(screen.getByText(/Welkom in je inbox/i)).toBeInTheDocument();
+    // OnboardingCard hoort in de detail-pane (right), niet in de aside (left) —
+    // eerste-bezoek krijgt een rijke welkom-surface op desktop. Mobile verbergt
+    // de hele detail-pane, dus geen welkom op mobile (acceptabel: lijst is compact).
+    const main = container.querySelector("main");
+    expect(main?.textContent).toMatch(/Welkom in je inbox/);
+    const aside = container.querySelector("aside");
+    expect(aside?.textContent ?? "").not.toMatch(/Welkom in je inbox/);
   });
 
   it("CSS-only mobile fallback: lijst-pane krijgt 'hidden md:flex' wanneer er een selectie is", () => {
