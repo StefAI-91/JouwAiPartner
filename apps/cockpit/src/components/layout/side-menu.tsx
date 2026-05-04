@@ -229,6 +229,7 @@ export function SideMenu({
                   onClick={() => setBronnenOpen((v) => !v)}
                   className="mb-1 mt-3 flex items-center gap-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40"
                   aria-expanded={bronnenOpen}
+                  aria-controls="mobile-nav-bronnen-section"
                 >
                   {bronnenOpen ? (
                     <ChevronDown className="h-3 w-3" />
@@ -237,16 +238,18 @@ export function SideMenu({
                   )}
                   Bronnen
                 </button>
-                {bronnenOpen &&
-                  sourceNavItems.map((item) => (
-                    <MenuLink
-                      key={item.href}
-                      item={item}
-                      pathname={pathname}
-                      small
-                      onNavigate={close}
-                    />
-                  ))}
+                <div id="mobile-nav-bronnen-section" hidden={!bronnenOpen}>
+                  {bronnenOpen &&
+                    sourceNavItems.map((item) => (
+                      <MenuLink
+                        key={item.href}
+                        item={item}
+                        pathname={pathname}
+                        small
+                        onNavigate={close}
+                      />
+                    ))}
+                </div>
 
                 {/* Setup & beheer — collapsible (no avatar dropdown on mobile, just inline disclosure) */}
                 <button
@@ -254,6 +257,7 @@ export function SideMenu({
                   onClick={() => setSetupOpen((v) => !v)}
                   className="mb-1 mt-3 flex items-center gap-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40"
                   aria-expanded={setupOpen}
+                  aria-controls="mobile-nav-setup-section"
                 >
                   {setupOpen ? (
                     <ChevronDown className="h-3 w-3" />
@@ -262,16 +266,18 @@ export function SideMenu({
                   )}
                   Setup &amp; beheer
                 </button>
-                {setupOpen &&
-                  setupNavItems.map((item) => (
-                    <MenuLink
-                      key={item.href}
-                      item={item}
-                      pathname={pathname}
-                      small
-                      onNavigate={close}
-                    />
-                  ))}
+                <div id="mobile-nav-setup-section" hidden={!setupOpen}>
+                  {setupOpen &&
+                    setupNavItems.map((item) => (
+                      <MenuLink
+                        key={item.href}
+                        item={item}
+                        pathname={pathname}
+                        small
+                        onNavigate={close}
+                      />
+                    ))}
+                </div>
               </nav>
             </div>
           </>,

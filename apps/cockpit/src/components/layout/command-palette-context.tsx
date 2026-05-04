@@ -30,10 +30,10 @@ export function CommandPaletteProvider({
   const openPalette = useCallback(() => setOpen(true), []);
   const closePalette = useCallback(() => setOpen(false), []);
 
-  // Global ⌘K / Ctrl+K shortcut. Skipped while typing in inputs/textareas
-  // unless the user explicitly holds the modifier — the modifier check below
-  // already gates that, but we still skip on contenteditable to avoid
-  // hijacking rich-text editors.
+  // Global ⌘K / Ctrl+K shortcut. Works inside `<input>` / `<textarea>` too —
+  // that's the whole point of a palette: openable from anywhere. Only
+  // contenteditable is skipped so we don't hijack rich-text editors that may
+  // bind ⌘K themselves (e.g. inserting a link).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey)) return;

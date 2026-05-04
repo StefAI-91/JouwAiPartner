@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 651 |
-| Exported functions/constants | 970 |
-| Exported types/interfaces | 422 |
-| Cross-package imports | 611 |
+| Files scanned | 646 |
+| Exported functions/constants | 962 |
+| Exported types/interfaces | 420 |
+| Cross-package imports | 609 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -3557,40 +3557,6 @@
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/meetings` → listVerifiedMeetings
 
-### `apps/cockpit/src/app/(dashboard)/navigatie-test/mock-data.ts`
-
-**Exports:**
-- `focusProjectsMvp`
-- `productionQuery`
-- `signals`
-- `parked`
-
-**Types:** `DeliveryPhase`, `FocusProjectMvp`
-
-### `apps/cockpit/src/app/(dashboard)/navigatie-test/navigatie-playground.tsx`
-
-**Exports:**
-- `NavigatiePlayground()`
-
-### `apps/cockpit/src/app/(dashboard)/navigatie-test/page.tsx`
-
-**Exports:**
-- `metadata`
-
-### `apps/cockpit/src/app/(dashboard)/navigatie-test/tiered/page.tsx`
-
-**Exports:**
-- `metadata`
-
-### `apps/cockpit/src/app/(dashboard)/navigatie-test/tiered/tiered-playground.tsx`
-
-**Exports:**
-- `TieredPlayground()`
-
-**Depends on:**
-- `@repo/ui/dialog` → Dialog, DialogContent, DialogTitle
-- `@repo/ui/dropdown-menu` → DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
-
 ### `apps/cockpit/src/app/(dashboard)/page.tsx`
 
 **Exports:**
@@ -4768,7 +4734,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 23 | 5 | - | 44 | - | 72 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 102 | 8 | 9 | 40 | - | 159 |
+| Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
 | Database Queries | - | - | 6 | - | - | 6 |
 | DevHub Server Actions | 17 | 2 | 10 | - | - | 29 |
 | DevHub API Routes | 8 | - | 1 | - | - | 9 |

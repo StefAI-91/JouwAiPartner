@@ -24,12 +24,11 @@ interface PaletteEntry {
   keywords?: string[];
 }
 
-function groupForItem(item: NavItem): Group {
-  if (dailyNavItems.includes(item)) return "Dagelijks";
-  if (sourceNavItems.includes(item)) return "Bronnen";
-  if (setupNavItems.includes(item)) return "Setup & beheer";
-  return "Dagelijks";
-}
+const NAV_ITEM_GROUP: ReadonlyMap<NavItem, Group> = new Map<NavItem, Group>([
+  ...dailyNavItems.map((i) => [i, "Dagelijks"] as const),
+  ...sourceNavItems.map((i) => [i, "Bronnen"] as const),
+  ...setupNavItems.map((i) => [i, "Setup & beheer"] as const),
+]);
 
 function PaletteContent({ onSelect }: { onSelect: (href: string) => void }) {
   const { focusProjects } = useCommandPalette();
@@ -41,7 +40,7 @@ function PaletteContent({ onSelect }: { onSelect: (href: string) => void }) {
       id: item.href,
       label: item.label,
       icon: item.icon as LucideIcon,
-      group: groupForItem(item),
+      group: NAV_ITEM_GROUP.get(item) ?? "Dagelijks",
       href: item.href,
       keywords: item.keywords,
     }));
@@ -66,11 +65,11 @@ function PaletteContent({ onSelect }: { onSelect: (href: string) => void }) {
   }, [query, entries]);
 
   const grouped = useMemo(() => {
-    const map = new Map<string, PaletteEntry[]>();
-    filtered.forEach((e) => {
-      const arr = map.get(e.group) ?? [];
-      arr.push(e);
-      map.set(e.group, arr);
+    const map = new Map<string, { entry: PaletteEntry; globalIndex: number }[]>();
+    filtered.forEach((entry, globalIndex) => {
+      const arr = map.get(entry.group) ?? [];
+      arr.push({ entry, globalIndex });
+      map.set(entry.group, arr);
     });
     return Array.from(map.entries());
   }, [filtered]);
@@ -123,8 +122,7 @@ function PaletteContent({ onSelect }: { onSelect: (href: string) => void }) {
               <div className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                 {group}
               </div>
-              {items.map((entry) => {
-                const globalIndex = filtered.indexOf(entry);
+              {items.map(({ entry, globalIndex }) => {
                 const isActive = globalIndex === safeIndex;
                 const Icon = entry.icon;
                 return (

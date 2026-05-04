@@ -210,14 +210,17 @@ export function DesktopSidebar({
           onClick={() => setBronnenOpen((v) => !v)}
           className="mb-1 mt-4 flex items-center gap-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 transition-colors hover:text-muted-foreground"
           aria-expanded={bronnenOpen}
+          aria-controls="sidebar-bronnen-section"
         >
           {bronnenOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
           Bronnen
         </button>
-        {bronnenOpen &&
-          sourceNavItems.map((item) => (
-            <NavLink key={item.href} item={item} pathname={pathname} small />
-          ))}
+        <div id="sidebar-bronnen-section" hidden={!bronnenOpen}>
+          {bronnenOpen &&
+            sourceNavItems.map((item) => (
+              <NavLink key={item.href} item={item} pathname={pathname} small />
+            ))}
+        </div>
       </nav>
 
       {/* Avatar / setup menu — Tier 3 lives here */}
