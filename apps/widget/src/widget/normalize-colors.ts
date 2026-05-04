@@ -1,7 +1,9 @@
 /**
- * html2canvas 1.4.1 ondersteunt geen `oklab()` of `oklch()` — moderne Tailwind
- * v4 sites (default oklch) of expliciet oklab-themed pagina's gooien daardoor
- * "Attempting to parse an unsupported color function" en de capture sterft.
+ * html2canvas 1.4.1 ondersteunt geen CSS Color 4 functies (`oklab`, `oklch`,
+ * `lab`, `lch`, `hwb`, `color()`) — moderne Tailwind v4 sites (default oklch),
+ * brand-pagina's met expliciete `lab()`-kleuren of wide-gamut `color()` calls
+ * gooien daardoor "Attempting to parse an unsupported color function" en de
+ * capture sterft.
  *
  * Aanpak vóór capture, in twee stappen die elkaar aanvullen:
  *
@@ -38,8 +40,12 @@ const COLOR_PROPERTIES = [
   "stroke",
 ] as const;
 
-const UNSUPPORTED_COLOR_TEST = /\b(oklab|oklch)\s*\(/i;
-const UNSUPPORTED_COLOR_REPLACE = /\b(oklab|oklch)\s*\([^()]*(?:\([^()]*\)[^()]*)*\)/gi;
+// CSS Color 4 functies die html2canvas 1.4.1 niet snapt. `\b` voorkomt dat
+// `lab`/`lch` per ongeluk binnen `oklab`/`oklch` matchen (geen word-boundary
+// tussen k en l). `color(` dekt de wide-gamut syntax (`color(display-p3 ...)`).
+const UNSUPPORTED_COLOR_TEST = /\b(oklab|oklch|lab|lch|hwb|color)\s*\(/i;
+const UNSUPPORTED_COLOR_REPLACE =
+  /\b(oklab|oklch|lab|lch|hwb|color)\s*\([^()]*(?:\([^()]*\)[^()]*)*\)/gi;
 
 export type ColorResolver = (input: string) => string;
 
