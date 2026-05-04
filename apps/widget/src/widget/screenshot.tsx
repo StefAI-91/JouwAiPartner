@@ -1,15 +1,14 @@
-import html2canvas from "html2canvas";
-import {
-  createCanvasColorResolver,
-  inlineUnsupportedColors,
-  rebuildStylesheets,
-} from "./normalize-colors";
+import html2canvas from "html2canvas-pro";
 
 /**
  * WG-006 lazy screenshot-bundle. Pas geladen wanneer gebruiker op
- * "Screenshot toevoegen" in de modal klikt — html2canvas + helpers
- * zit hier in een aparte bundle (~30 KB gzip) zodat baseline `widget.js`
- * klein blijft (~11 KB gzip) voor mensen die het niet gebruiken.
+ * "Screenshot toevoegen" in de modal klikt — html2canvas-pro zit hier in
+ * een aparte bundle (~50 KB gzip) zodat baseline `widget.js` klein blijft
+ * (~12 KB gzip) voor mensen die het niet gebruiken.
+ *
+ * `html2canvas-pro` is een fork van `niklasvh/html2canvas` met native
+ * support voor CSS Color 4 functies (oklab/oklch/lab/lch/hwb/color()) —
+ * Tailwind v4 default oklch werkte daardoor niet op de originele lib.
  *
  * Bind aan `window.__JAIPWidgetScreenshot.capture`. Geen esbuild
  * `globalName` (zie WG-007: var-shadow tegen window-binding) — handmatig
@@ -39,30 +38,17 @@ window.__JAIPWidgetScreenshot = {
     // Capture beperkt tot zichtbaar viewport, niet de hele scrollende
     // pagina — full-page op een lange feed kan 50 MB+ worden vóór
     // compressie en blokkeert de UI seconden lang.
-    const resolveColor = createCanvasColorResolver();
-    // Eerst de hele stylesheet rebuilden (dekt custom properties en ::before/
-    // ::after rules ook op iOS Safari mobile), dan inline-overrides met
-    // !important op elke element voor restant via CSS-vars / cross-origin sheets.
-    const restoreSheets = resolveColor ? rebuildStylesheets(document, resolveColor) : () => {};
-    const restoreInline = resolveColor
-      ? inlineUnsupportedColors(document.documentElement, resolveColor)
-      : () => {};
-    try {
-      const canvas = await html2canvas(document.documentElement, {
-        logging: false,
-        useCORS: true,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight,
-        // Behoud devicePixelRatio default — `scale: 1` geeft blurry tekst
-        // op high-DPR displays. Resize-stap hieronder schaalt alsnog terug.
-      });
-      return resizeAndEncode(canvas);
-    } finally {
-      restoreInline();
-      restoreSheets();
-    }
+    const canvas = await html2canvas(document.documentElement, {
+      logging: false,
+      useCORS: true,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+      // Behoud devicePixelRatio default — `scale: 1` geeft blurry tekst
+      // op high-DPR displays. Resize-stap hieronder schaalt alsnog terug.
+    });
+    return resizeAndEncode(canvas);
   },
 };
 

@@ -11,11 +11,13 @@ import { readFileSync } from "node:fs";
 const checks = [
   { file: "public/loader.js", maxKB: 5 },
   { file: "public/widget.js", maxKB: 30 },
-  // WG-006 lazy screenshot-bundle (html2canvas + capture). Alleen geladen
+  // WG-006 lazy screenshot-bundle (html2canvas-pro + capture). Alleen geladen
   // bij eerste klik op "Screenshot toevoegen" — baseline widget.js blijft klein.
-  // 50KB is praktisch maximum voor html2canvas@1.4.1 + onze wrapper; overweeg
-  // `modern-screenshot` als we hieronder willen zakken zonder DOM-coverage te verliezen.
-  { file: "public/widget-screenshot.js", maxKB: 50 },
+  // html2canvas-pro is iets groter dan vanilla html2canvas omdat het CSS Color 4
+  // (oklab/oklch/lab/lch/hwb/color) parsers meeneemt — nodig voor Tailwind v4.
+  // 60KB is praktisch maximum; overweeg `modern-screenshot` als we hieronder
+  // willen zakken zonder DOM-coverage te verliezen.
+  { file: "public/widget-screenshot.js", maxKB: 60 },
 ];
 
 let failed = false;
