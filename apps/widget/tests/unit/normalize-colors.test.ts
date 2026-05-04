@@ -16,8 +16,14 @@ import {
  */
 
 const fakeResolver: ColorResolver = (input) => {
+  // Volgorde matters: oklab/oklch eerst, anders matcht /lab|lch/ binnen
+  // oklab/oklch (in deze fake — productie regex gebruikt \b dus geen risk).
   if (/oklab/i.test(input)) return "rgb(11, 22, 33)";
   if (/oklch/i.test(input)) return "rgb(44, 55, 66)";
+  if (/\blab\(/i.test(input)) return "rgb(77, 88, 99)";
+  if (/\blch\(/i.test(input)) return "rgb(100, 110, 120)";
+  if (/\bhwb\(/i.test(input)) return "rgb(130, 140, 150)";
+  if (/\bcolor\(/i.test(input)) return "rgb(160, 170, 180)";
   return input;
 };
 
@@ -51,6 +57,27 @@ describe("normalizeUnsupportedColors", () => {
   it("gaat om met geneste functies in oklab args", () => {
     const input = "oklab(from var(--brand) l a b)";
     expect(normalizeUnsupportedColors(input, fakeResolver)).toBe("rgb(11, 22, 33)");
+  });
+
+  it("vervangt ook lab(), lch(), hwb() en color() — alle CSS Color 4 functies", () => {
+    expect(normalizeUnsupportedColors("lab(50% 40 30)", fakeResolver)).toBe("rgb(77, 88, 99)");
+    expect(normalizeUnsupportedColors("lch(50% 40 30deg)", fakeResolver)).toBe(
+      "rgb(100, 110, 120)",
+    );
+    expect(normalizeUnsupportedColors("hwb(120 10% 20%)", fakeResolver)).toBe("rgb(130, 140, 150)");
+    expect(normalizeUnsupportedColors("color(display-p3 1 0 0)", fakeResolver)).toBe(
+      "rgb(160, 170, 180)",
+    );
+  });
+
+  it("matcht lab niet binnen oklab door word-boundary", () => {
+    // Als lab/lch wel binnen oklab/oklch zou matchen, zou de gradient
+    // hieronder twee keer "geraakt" worden en faken/breken. Het assertion-
+    // resultaat van enkel de oklab-fallback bewijst de boundary.
+    const input = "linear-gradient(oklab(0.5 0 0), oklch(0.5 0.1 0))";
+    expect(normalizeUnsupportedColors(input, fakeResolver)).toBe(
+      "linear-gradient(rgb(11, 22, 33), rgb(44, 55, 66))",
+    );
   });
 });
 
