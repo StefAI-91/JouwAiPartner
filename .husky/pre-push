@@ -1,1 +1,7 @@
-npm run test
+# TS-001: --concurrency=1 voorkomt flaky devhub-tests onder turbo's
+# parallel-runner. Direct (npm test --workspace=apps/devhub) passen ze
+# allemaal, maar parallel falen er 5 (DB-state race / memory pressure
+# onder gelijktijdige vitest workers in cockpit + devhub + ai). Tot
+# we de root-cause in de tests zelf hebben opgelost: serieel runnen.
+# Trade-off: pre-push wordt iets trager (~10s extra), maar betrouwbaar.
+npx turbo test --concurrency=1
