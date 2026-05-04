@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { JSDOM } from "jsdom";
 import {
   inlineUnsupportedColors,
+  normalizeStylesheets,
   normalizeUnsupportedColors,
   type ColorResolver,
 } from "../../src/widget/normalize-colors";
@@ -118,5 +119,49 @@ describe("inlineUnsupportedColors", () => {
     // string terug staat na restore, niet de exacte literal.
     expect(article.style.color).toBe("oklab(0.5 0 0)");
     expect(span.style.backgroundColor).toMatch(/^oklch\(/);
+  });
+});
+
+describe("normalizeStylesheets", () => {
+  it("herschrijft oklab/oklch in regels van een <style> element", () => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .foo { color: oklab(0.7 0.1 0.1); }
+      .bar::before { content: ""; background-color: oklch(50% 0.2 30deg); }
+    `;
+    document.head.appendChild(style);
+
+    const sheet = style.sheet as CSSStyleSheet;
+    const fooRule = sheet.cssRules[0] as CSSStyleRule;
+    const barRule = sheet.cssRules[1] as CSSStyleRule;
+
+    const restore = normalizeStylesheets(document, fakeResolver);
+
+    expect(fooRule.style.getPropertyValue("color")).toBe("rgb(11, 22, 33)");
+    expect(barRule.style.getPropertyValue("background-color")).toBe("rgb(44, 55, 66)");
+
+    restore();
+    expect(fooRule.style.getPropertyValue("color")).toMatch(/^oklab\(/);
+    expect(barRule.style.getPropertyValue("background-color")).toMatch(/^oklch\(/);
+  });
+
+  it("recurseert in @media-blokken", () => {
+    const style = document.createElement("style");
+    style.textContent = `
+      @media (min-width: 600px) {
+        .x { color: oklab(0.4 0 0); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const sheet = style.sheet as CSSStyleSheet;
+    const mediaRule = sheet.cssRules[0] as CSSMediaRule;
+    const innerRule = mediaRule.cssRules[0] as CSSStyleRule;
+
+    const restore = normalizeStylesheets(document, fakeResolver);
+    expect(innerRule.style.getPropertyValue("color")).toBe("rgb(11, 22, 33)");
+
+    restore();
+    expect(innerRule.style.getPropertyValue("color")).toMatch(/^oklab\(/);
   });
 });
