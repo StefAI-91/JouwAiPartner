@@ -4,6 +4,7 @@ import {
   inlineUnsupportedColors,
   normalizeStylesheets,
   normalizeUnsupportedColors,
+  rebuildStylesheets,
   type ColorResolver,
 } from "../../src/widget/normalize-colors";
 
@@ -190,5 +191,52 @@ describe("normalizeStylesheets", () => {
 
     restore();
     expect(innerRule.style.getPropertyValue("color")).toMatch(/^oklab\(/);
+  });
+});
+
+describe("rebuildStylesheets", () => {
+  it("vervangt lab() in custom properties via stylesheet rebuild (Tailwind v4 patroon)", () => {
+    const style = document.createElement("style");
+    style.textContent = `
+      @supports (color: lab(0% 0 0)) {
+        :root, :host {
+          --color-red-50: lab(96.5% 4.2 1.5);
+          --color-red-100: lab(92.2% 10.3 3.8);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    const original = style.sheet as CSSStyleSheet;
+
+    const restore = rebuildStylesheets(document, fakeResolver);
+
+    // Origineel is gedisabled, nieuw <style> is geinjecteerd na het origineel
+    expect(original.disabled).toBe(true);
+    const injected = document.querySelector(
+      "style[data-jaip-normalized]",
+    ) as HTMLStyleElement | null;
+    expect(injected).not.toBeNull();
+    expect(injected!.textContent).toContain("rgb(77, 88, 99)");
+    expect(injected!.textContent).not.toContain("lab(");
+
+    restore();
+    // JSDOM init `disabled` als undefined; restore zet 'm terug naar wat het was.
+    expect(original.disabled).toBeFalsy();
+    expect(document.querySelector("style[data-jaip-normalized]")).toBeNull();
+  });
+
+  it("laat stylesheets zonder unsupported colors ongemoeid", () => {
+    const style = document.createElement("style");
+    style.textContent = `.foo { color: rgb(255, 0, 0); }`;
+    document.head.appendChild(style);
+    const original = style.sheet as CSSStyleSheet;
+
+    const restore = rebuildStylesheets(document, fakeResolver);
+
+    // JSDOM init `disabled` als undefined; restore zet 'm terug naar wat het was.
+    expect(original.disabled).toBeFalsy();
+    expect(document.querySelector("style[data-jaip-normalized]")).toBeNull();
+
+    restore();
   });
 });

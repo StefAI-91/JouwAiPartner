@@ -98,6 +98,70 @@ export function inlineUnsupportedColors(root: Element, resolve: ColorResolver): 
   return runAll(restore);
 }
 
+/**
+ * Bouwt elke same-origin stylesheet opnieuw op met genormaliseerde kleuren:
+ *  - Concatenateert alle top-level rules' `cssText`
+ *  - Regex-replace van oklab/oklch/lab/lch/hwb/color() in de hele tekst
+ *  - Injecteert een nieuw `<style>` element naast het origineel
+ *  - Disable't het origineel zodat alleen de genormaliseerde versie cascadeert
+ *
+ * Werkt waar `normalizeStylesheets` faalt: setProperty op custom properties
+ * (`--color-red-50: lab(...)`) propageerde op iOS Safari mobile niet correct
+ * door naar de gerenderde regel. cssText-replace + sheet swap omzeilt dat —
+ * we leveren feitelijk een nieuwe parse aan de browser.
+ *
+ * Cross-origin sheets blijven onbereikbaar (CORS blokkeert cssRules-toegang).
+ * Restore: re-enable origineel, verwijder injected sheet.
+ */
+export function rebuildStylesheets(doc: Document, resolve: ColorResolver): () => void {
+  const restore: Array<() => void> = [];
+  for (const sheet of Array.from(doc.styleSheets)) {
+    const styleSheet = sheet as CSSStyleSheet;
+    let rules: CSSRuleList | null = null;
+    try {
+      rules = styleSheet.cssRules;
+    } catch {
+      continue; // Cross-origin
+    }
+    if (!rules || rules.length === 0) continue;
+
+    let cssText = "";
+    for (const rule of Array.from(rules)) {
+      cssText += rule.cssText + "\n";
+    }
+    if (!UNSUPPORTED_COLOR_TEST.test(cssText)) continue;
+
+    const normalized = normalizeUnsupportedColors(cssText, resolve);
+    if (normalized === cssText) continue;
+
+    const styleEl = doc.createElement("style");
+    styleEl.setAttribute("data-jaip-normalized", "1");
+    styleEl.textContent = normalized;
+
+    const owner = styleSheet.ownerNode;
+    if (owner && owner.parentNode) {
+      owner.parentNode.insertBefore(styleEl, owner.nextSibling);
+    } else {
+      doc.head.appendChild(styleEl);
+    }
+
+    const wasDisabled = styleSheet.disabled;
+    styleSheet.disabled = true;
+
+    restore.push(() => {
+      styleSheet.disabled = wasDisabled;
+      styleEl.remove();
+    });
+  }
+  return runAll(restore);
+}
+
+/**
+ * Legacy per-property mutator. Op de meeste browsers werkt dit prima, maar
+ * faalt op iOS Safari mobile voor custom properties. `rebuildStylesheets`
+ * (hierboven) is de robustere optie en wordt gebruikt door screenshot.tsx.
+ * Deze functie blijft geëxporteerd voor toekomstige tests / fallbacks.
+ */
 export function normalizeStylesheets(doc: Document, resolve: ColorResolver): () => void {
   const restore: Array<() => void> = [];
   for (const sheet of Array.from(doc.styleSheets)) {
@@ -105,7 +169,6 @@ export function normalizeStylesheets(doc: Document, resolve: ColorResolver): () 
     try {
       rules = sheet.cssRules;
     } catch {
-      // Cross-origin stylesheet — kan cssRules niet lezen, sla over.
       continue;
     }
     if (rules) collectRuleRestores(rules, resolve, restore);
