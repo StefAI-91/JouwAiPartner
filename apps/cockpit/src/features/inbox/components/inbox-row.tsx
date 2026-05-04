@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { Check, X, Clock, MessageSquarePlus } from "lucide-react";
+import { Check, X, Clock, MessageSquarePlus, ChevronRight } from "lucide-react";
 import type { InboxItem } from "@repo/database/queries/inbox";
 import { resolvePortalSourceGroup } from "@repo/database/constants/issues";
 import { SourceIndicator, type SourceGroup } from "@repo/ui/source-indicator";
@@ -11,11 +11,14 @@ import { DeclineModal } from "./decline-modal";
 import { ConvertModal } from "./convert-modal";
 
 /**
- * Linear-stijl rij. Status-bullet links → avatar → sender+project →
- * subject/snippet → source-dot → timestamp (fade-out on hover) → hover-actions.
+ * Linear-stijl rij. Lead met project naam (meest onderscheidende info; "Klant"
+ * was niet onderscheidend genoeg — elke regel was identiek). Klant-rol staat
+ * als compacte pill ernaast. Bold weight is de hoofd-unread-cue (status-dot
+ * blijft als secondary signal voor items die op PM wachten). Chevron rechts
+ * geeft permanente tap-affordance — belangrijk op mobile waar geen hover is.
  *
- * Klik buiten de hover-actions navigeert naar de detail-route. Binnen de
- * hover-actions: 4 PM-acties bij needs_pm_review, 1 (open detail) bij andere.
+ * Klik buiten de hover-actions navigeert naar de detail-route. Hover-actions:
+ * 4 PM-acties bij needs_pm_review, anders is de chevron de open-actie.
  */
 
 export function InboxRow({ item, currentTime }: { item: InboxItem; currentTime: number }) {
@@ -28,18 +31,13 @@ export function InboxRow({ item, currentTime }: { item: InboxItem; currentTime: 
   const status = isFeedback ? item.issue.status : item.thread.status;
   const isWaitingOnMe = isFeedback && status === "needs_pm_review";
   const isOpenQuestion = !isFeedback && status === "open";
+  const needsAttentionDot = isWaitingOnMe || isOpenQuestion;
 
-  const sender = isFeedback
-    ? {
-        name: item.issue.reporter_name ?? "Klant",
-        initial: (item.issue.reporter_name ?? "K").charAt(0).toUpperCase(),
-        role: "client" as const,
-      }
-    : {
-        name: "Klant",
-        initial: "K",
-        role: "client" as const,
-      };
+  const reporterName = isFeedback ? item.issue.reporter_name : null;
+  const projectName =
+    item.project.name ??
+    `Project ${(isFeedback ? item.issue.project_id : item.thread.project_id).slice(0, 8)}`;
+  const initial = (reporterName ?? projectName).charAt(0).toUpperCase();
 
   const titleLine = isFeedback
     ? (item.issue.client_title ?? item.issue.title)
@@ -63,43 +61,39 @@ export function InboxRow({ item, currentTime }: { item: InboxItem; currentTime: 
   const ts = formatTimestamp(item.activityAt, currentTime);
 
   return (
-    <li className="group/row relative flex items-center gap-3 border-b border-border/20 px-6 py-2.5 transition hover:bg-muted/30">
+    <li className="group/row relative flex items-center gap-3 border-b border-border/20 px-4 py-2.5 transition hover:bg-muted/30 sm:px-6">
       <Link href={detailHref} className="absolute inset-0 z-0" aria-label="Open conversation" />
 
       <span
-        className={`mt-0.5 h-2 w-2 shrink-0 rounded-full relative z-[1] ${
-          isWaitingOnMe || isOpenQuestion
-            ? "bg-primary ring-2 ring-primary/20"
-            : "border border-foreground/30"
+        className={`relative z-[1] mt-0.5 h-2 w-2 shrink-0 rounded-full ${
+          needsAttentionDot ? "bg-primary ring-2 ring-primary/20" : "bg-transparent"
         }`}
         aria-hidden
       />
 
-      <Avatar role={sender.role} initial={sender.initial} />
+      <Avatar initial={initial} />
 
-      <div className="relative z-[1] flex w-40 shrink-0 flex-col leading-tight">
-        <span
-          className={`truncate text-[12px] ${
-            isUnread ? "font-semibold text-foreground" : "font-medium text-foreground/85"
-          }`}
-        >
-          {sender.name}
-        </span>
-        <span className="truncate text-[10px] text-muted-foreground/70">
-          {item.project.name ??
-            (isFeedback ? item.issue.project_id : item.thread.project_id).slice(0, 8)}
-        </span>
-      </div>
-
-      <div className="relative z-[1] min-w-0 flex-1">
+      <div className="relative z-[1] flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+        <div className="flex min-w-0 items-center gap-2">
+          <span
+            className={`truncate text-[12.5px] ${
+              isUnread ? "font-semibold text-foreground" : "font-medium text-foreground/85"
+            }`}
+          >
+            {projectName}
+          </span>
+          <span className="shrink-0 rounded-full bg-foreground/[0.06] px-1.5 py-px text-[9.5px] font-medium tracking-wide text-foreground/55 uppercase">
+            {reporterName ?? "Klant"}
+          </span>
+        </div>
         <p
           className={`truncate text-[12.5px] ${
-            isUnread ? "font-medium text-foreground" : "text-foreground/85"
+            isUnread ? "font-medium text-foreground" : "text-foreground/70"
           }`}
         >
           {titleLine}
           {snippet ? (
-            <span className="ml-2 font-normal text-muted-foreground/70">— {snippet}</span>
+            <span className="ml-1.5 font-normal text-muted-foreground/70">— {snippet}</span>
           ) : null}
         </p>
         {error ? <span className="text-[10px] text-destructive">{error}</span> : null}
@@ -109,9 +103,19 @@ export function InboxRow({ item, currentTime }: { item: InboxItem; currentTime: 
         <SourceIndicator group={portalGroupAsIndicator(item.issue.source)} variant="dot" />
       ) : null}
 
-      <span className="w-12 shrink-0 text-right text-[11px] tabular-nums text-muted-foreground/60 transition group-hover/row:opacity-0">
-        {ts}
-      </span>
+      <div className="relative z-[1] flex shrink-0 items-center gap-1">
+        <span
+          className={`text-[11px] tabular-nums transition group-hover/row:opacity-0 ${
+            isUnread ? "text-foreground/70" : "text-muted-foreground/60"
+          }`}
+        >
+          {ts}
+        </span>
+        <ChevronRight
+          className="h-3.5 w-3.5 text-foreground/25 transition group-hover/row:opacity-0"
+          aria-hidden
+        />
+      </div>
 
       <div className="pointer-events-none absolute right-4 z-[2] flex items-center gap-0.5 opacity-0 transition group-hover/row:pointer-events-auto group-hover/row:opacity-100">
         {isWaitingOnMe ? (
@@ -155,15 +159,9 @@ export function InboxRow({ item, currentTime }: { item: InboxItem; currentTime: 
   );
 }
 
-function Avatar({ role, initial }: { role: "team" | "client"; initial: string }) {
-  const cls =
-    role === "team"
-      ? "bg-primary/10 text-primary ring-primary/20"
-      : "bg-[oklch(0.55_0.12_280)]/10 text-[oklch(0.55_0.12_280)] ring-[oklch(0.55_0.12_280)]/20";
+function Avatar({ initial }: { initial: string }) {
   return (
-    <span
-      className={`relative z-[1] inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-medium ring-1 ${cls}`}
-    >
+    <span className="relative z-[1] inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[oklch(0.55_0.12_280)]/10 text-[10px] font-medium text-[oklch(0.55_0.12_280)] ring-1 ring-[oklch(0.55_0.12_280)]/20">
       {initial}
     </span>
   );

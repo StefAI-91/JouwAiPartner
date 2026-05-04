@@ -106,17 +106,20 @@ function Chip({
   filter: InboxFilter;
   active: boolean;
 }) {
+  // Subtiele active-state (lichte fill + ring) i.p.v. zwart-op-zwart met de
+  // "Nieuw bericht"-CTA — die blijft het enige donkere element op de page.
   const href = `/inbox?filter=${filter}`;
   const cls = active
-    ? "bg-foreground text-background"
+    ? "bg-foreground/[0.06] text-foreground ring-1 ring-foreground/[0.08]"
     : "text-muted-foreground hover:bg-muted/40 hover:text-foreground";
   return (
     <Link
       href={href}
       className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition ${cls}`}
+      aria-current={active ? "page" : undefined}
     >
       {label}
-      <span className={`tabular-nums ${active ? "text-background/70" : "text-foreground/40"}`}>
+      <span className={`tabular-nums ${active ? "text-foreground/55" : "text-foreground/40"}`}>
         {count}
       </span>
     </Link>
