@@ -17,33 +17,50 @@ export interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   badgeKey?: "reviewCount" | "inboxCount";
+  /** Extra terms used by the command palette to broaden search hits. */
+  keywords?: string[];
 }
 
-/** Primary nav — shown in all nav components (7 items) */
-export const primaryNavItems: NavItem[] = [
+/**
+ * Daily drivers — always visible in the rail. The 5 verbs of a working day:
+ * capture, triage, think, work, navigate-to-project.
+ */
+export const dailyNavItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/inbox", label: "Inbox", icon: Inbox, badgeKey: "inboxCount" },
-  { href: "/intelligence", label: "Intelligence", icon: BrainCircuit },
   { href: "/review", label: "Review", icon: ClipboardCheck, badgeKey: "reviewCount" },
+  { href: "/intelligence", label: "Intelligence", icon: BrainCircuit },
   { href: "/projects", label: "Projects", icon: FolderKanban },
-  { href: "/directory", label: "Directory", icon: BookUser },
-  { href: "/administratie", label: "Administratie", icon: Receipt },
-];
-
-/** Secondary nav — "Bronnen" section, desktop sidebar + mobile sheet only */
-export const secondaryNavItems: NavItem[] = [
-  { href: "/meetings", label: "Meetings", icon: Calendar },
-  { href: "/emails", label: "Emails", icon: Mail },
 ];
 
 /**
- * Admin nav — alleen admins zien cockpit (gehandhaafd door middleware na DH-015),
- * dus geen extra role-check hier nodig. UI-170.
+ * Bronnen — referenced data, not workflow starts. Collapsed by default in the
+ * rail. Reachable via deep-links from projects, search, and ⌘K.
  */
-export const adminNavItems: NavItem[] = [
+export const sourceNavItems: NavItem[] = [
+  { href: "/meetings", label: "Meetings", icon: Calendar },
+  { href: "/emails", label: "Emails", icon: Mail },
+  {
+    href: "/directory",
+    label: "Directory",
+    icon: BookUser,
+    keywords: ["clients", "people"],
+  },
+];
+
+/**
+ * Setup & beheer — weekly-or-less. Lives behind the avatar menu, not in the
+ * daily rail. Cockpit is admin-only (DH-015 middleware), so no extra role
+ * check needed.
+ */
+export const setupNavItems: NavItem[] = [
+  { href: "/administratie", label: "Administratie", icon: Receipt },
   { href: "/admin/team", label: "Team", icon: Users },
   { href: "/agents", label: "Agents", icon: Bot },
 ];
+
+/** Single source of truth for the command palette. Order matters for grouping. */
+export const allNavItems: NavItem[] = [...dailyNavItems, ...sourceNavItems, ...setupNavItems];
 
 /** Check if a nav item should be highlighted for the given pathname */
 export function isNavItemActive(href: string, pathname: string): boolean {
