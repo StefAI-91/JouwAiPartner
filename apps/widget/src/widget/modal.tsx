@@ -58,6 +58,46 @@ const MIN_DESCRIPTION_LENGTH = 10;
 const SUCCESS_AUTOCLOSE_MS = 2000;
 
 /**
+ * Mapping van Zod-veldpaden naar Nederlandse labels. Bij een validation-
+ * response toont de modal "Validatie mislukt — controleer: [labels]" zodat
+ * de gebruiker weet welk veld te fixen i.p.v. een kale "validation".
+ * Onbekende velden vallen terug op het ruwe veldpad.
+ */
+const FIELD_LABELS: Record<string, string> = {
+  project_id: "project-ID",
+  type: "type",
+  description: "beschrijving",
+  context: "context",
+  reporter_email: "e-mailadres",
+  screenshot: "screenshot",
+};
+
+function formatSubmitError(
+  status: number,
+  body: {
+    error?: string;
+    details?: {
+      formErrors?: string[];
+      fieldErrors?: Record<string, string[] | undefined>;
+    };
+  } | null,
+): string {
+  if (body?.error === "validation" && body.details) {
+    // Volledige Zod-output naar console zodat developers in DevTools
+    // direct kunnen zien wélke regel faalt (bv. "data_url length > 700000").
+    console.warn("[JAIP Widget] validation details:", body.details);
+    const fieldErrors = body.details.fieldErrors ?? {};
+    const failing = Object.keys(fieldErrors)
+      .filter((k) => (fieldErrors[k]?.length ?? 0) > 0)
+      .map((k) => FIELD_LABELS[k] ?? k);
+    if (failing.length > 0) {
+      return `validatie mislukt — controleer ${failing.join(", ")}`;
+    }
+  }
+  return body?.error ?? `HTTP ${status}`;
+}
+
+/**
  * WG-003 feedback modal. Mountt in een Shadow DOM zodat host-styling niet
  * lekt. Alle interactieve elementen zijn keyboard-accessible (focus-trap,
  * Escape sluit, ARIA-labels). Bij submit POST naar het ingest-endpoint met
@@ -170,8 +210,12 @@ export function Modal({ config, trigger, onClose }: ModalProps) {
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as {
           error?: string;
+          details?: {
+            formErrors?: string[];
+            fieldErrors?: Record<string, string[] | undefined>;
+          };
         } | null;
-        throw new Error(body?.error ?? `HTTP ${response.status}`);
+        throw new Error(formatSubmitError(response.status, body));
       }
       setStatus("success");
       window.setTimeout(onClose, SUCCESS_AUTOCLOSE_MS);
