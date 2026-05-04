@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 649 |
-| Exported functions/constants | 966 |
+| Files scanned | 651 |
+| Exported functions/constants | 970 |
 | Exported types/interfaces | 422 |
-| Cross-package imports | 608 |
+| Cross-package imports | 611 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -4113,6 +4113,24 @@
 **Exports:**
 - `ScanNeedsButton()`
 
+### `apps/cockpit/src/components/layout/command-palette-context.tsx`
+
+**Exports:**
+- `useCommandPalette()`
+- `CommandPaletteProvider()`
+- `CommandPaletteOpenState()`
+
+**Depends on:**
+- (type) `@repo/database/queries/projects` → FocusProject
+
+### `apps/cockpit/src/components/layout/command-palette.tsx`
+
+**Exports:**
+- `CommandPalette()`
+
+**Depends on:**
+- `@repo/ui/dialog` → Dialog, DialogContent, DialogTitle
+
 ### `apps/cockpit/src/components/layout/desktop-sidebar.tsx`
 
 **Exports:**
@@ -4121,6 +4139,7 @@
 **Depends on:**
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+- `@repo/ui/dropdown-menu` → DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger
 
 ### `apps/cockpit/src/components/layout/side-menu.tsx`
 
@@ -4747,7 +4766,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 22 | 5 | - | 42 | - | 69 |
+| Cockpit Components | 23 | 5 | - | 44 | - | 72 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 40 | - | 159 |
 | Database Queries | - | - | 6 | - | - | 6 |

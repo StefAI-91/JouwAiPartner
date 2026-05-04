@@ -4,17 +4,18 @@ import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Menu, Search, X } from "lucide-react";
 import type { FocusProject } from "@repo/database/queries/projects";
 import { WorkspaceSwitcher } from "@repo/ui/workspace-switcher";
 import {
-  primaryNavItems,
-  secondaryNavItems,
-  adminNavItems,
+  dailyNavItems,
+  sourceNavItems,
+  setupNavItems,
   isNavItemActive,
   isFocusProjectActive,
   type NavItem,
 } from "@/lib/constants/navigation";
+import { useCommandPalette } from "./command-palette-context";
 
 function MenuLink({
   item,
@@ -95,7 +96,10 @@ export function SideMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [bronnenOpen, setBronnenOpen] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(false);
   const pathname = usePathname();
+  const { openPalette } = useCommandPalette();
   const badges: Record<string, number | undefined> = { reviewCount, inboxCount };
 
   const close = useCallback(() => setOpen(false), []);
@@ -121,6 +125,11 @@ export function SideMenu({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
+
+  const handleSearchClick = () => {
+    close();
+    openPalette();
+  };
 
   return (
     <>
@@ -174,8 +183,20 @@ export function SideMenu({
                 <WorkspaceSwitcher current="cockpit" />
               </div>
 
+              {/* Search trigger */}
+              <div className="border-b border-sidebar-border px-4 py-3">
+                <button
+                  type="button"
+                  onClick={handleSearchClick}
+                  className="flex w-full items-center gap-3 rounded-xl border border-sidebar-border bg-background/40 px-4 py-2.5 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/40"
+                >
+                  <Search className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 text-left">Zoek of spring…</span>
+                </button>
+              </div>
+
               <nav className="flex flex-col gap-1.5 overflow-y-auto px-4 py-5">
-                {primaryNavItems.map((item) => (
+                {dailyNavItems.map((item) => (
                   <MenuLink
                     key={item.href}
                     item={item}
@@ -202,33 +223,55 @@ export function SideMenu({
                   </>
                 )}
 
-                {/* Bronnen section */}
-                <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                {/* Bronnen — collapsible */}
+                <button
+                  type="button"
+                  onClick={() => setBronnenOpen((v) => !v)}
+                  className="mb-1 mt-3 flex items-center gap-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40"
+                  aria-expanded={bronnenOpen}
+                >
+                  {bronnenOpen ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
                   Bronnen
-                </div>
-                {secondaryNavItems.map((item) => (
-                  <MenuLink
-                    key={item.href}
-                    item={item}
-                    pathname={pathname}
-                    small
-                    onNavigate={close}
-                  />
-                ))}
+                </button>
+                {bronnenOpen &&
+                  sourceNavItems.map((item) => (
+                    <MenuLink
+                      key={item.href}
+                      item={item}
+                      pathname={pathname}
+                      small
+                      onNavigate={close}
+                    />
+                  ))}
 
-                {/* Admin section */}
-                <div className="mb-1 mt-3 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
-                  Admin
-                </div>
-                {adminNavItems.map((item) => (
-                  <MenuLink
-                    key={item.href}
-                    item={item}
-                    pathname={pathname}
-                    small
-                    onNavigate={close}
-                  />
-                ))}
+                {/* Setup & beheer — collapsible (no avatar dropdown on mobile, just inline disclosure) */}
+                <button
+                  type="button"
+                  onClick={() => setSetupOpen((v) => !v)}
+                  className="mb-1 mt-3 flex items-center gap-1 px-4 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40"
+                  aria-expanded={setupOpen}
+                >
+                  {setupOpen ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                  Setup &amp; beheer
+                </button>
+                {setupOpen &&
+                  setupNavItems.map((item) => (
+                    <MenuLink
+                      key={item.href}
+                      item={item}
+                      pathname={pathname}
+                      small
+                      onNavigate={close}
+                    />
+                  ))}
               </nav>
             </div>
           </>,
