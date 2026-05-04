@@ -1,14 +1,14 @@
-import html2canvas from "html2canvas-pro";
+import { snapdom } from "@zumer/snapdom";
 
 /**
  * WG-006 lazy screenshot-bundle. Pas geladen wanneer gebruiker op
- * "Screenshot toevoegen" in de modal klikt — html2canvas-pro zit hier in
- * een aparte bundle (~50 KB gzip) zodat baseline `widget.js` klein blijft
- * (~12 KB gzip) voor mensen die het niet gebruiken.
+ * "Screenshot toevoegen" in de modal klikt.
  *
- * `html2canvas-pro` is een fork van `niklasvh/html2canvas` met native
- * support voor CSS Color 4 functies (oklab/oklch/lab/lch/hwb/color()) —
- * Tailwind v4 default oklch werkte daardoor niet op de originele lib.
+ * Gebruikt `@zumer/snapdom`: SVG `<foreignObject>`-rendering laat de
+ * browser zelf renderen (inclusief content-visibility, scroll-containers,
+ * transforms, en moderne CSS Color 4 functies). Dat lost de problemen op
+ * waar html2canvas en html2canvas-pro op moderne SPAs alleen achtergronden
+ * + position:fixed elementen vastlegden.
  *
  * Bind aan `window.__JAIPWidgetScreenshot.capture`. Geen esbuild
  * `globalName` (zie WG-007: var-shadow tegen window-binding) — handmatig
@@ -35,44 +35,43 @@ const JPEG_QUALITY = 0.7;
 
 window.__JAIPWidgetScreenshot = {
   async capture(): Promise<CaptureResult> {
-    // Capture beperkt tot zichtbaar viewport, niet de hele scrollende
-    // pagina — full-page op een lange feed kan 50 MB+ worden vóór
-    // compressie en blokkeert de UI seconden lang.
-    const canvas = await html2canvas(document.documentElement, {
-      logging: false,
-      useCORS: true,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
-      // Sluit de widget-host (knop + open modal) uit van de capture; anders
-      // staat de feedback-modal zelf op de screenshot. html2canvas-pro
-      // walkt shadow DOM, dus zonder dit zie je het hele formulier terug.
-      ignoreElements: (el) => el.id === "__jaip-widget-host",
-      // Moderne sites gebruiken `content-visibility: auto` en `contain: paint`
-      // voor scroll-perf — html2canvas's iframe-clone telt dat als off-screen
-      // en slaat de inhoud over (alleen achtergronden + position:fixed elementen
-      // worden gerenderd). Forceer alle elementen naar visible/contain:none in
-      // de clone, en eager-load lazy images zodat hun src tijdig binnen is.
-      onclone: (clonedDoc) => {
-        const overrideStyle = clonedDoc.createElement("style");
-        overrideStyle.textContent = `
-          *, *::before, *::after {
-            content-visibility: visible !important;
-            contain: none !important;
-          }
-        `;
-        clonedDoc.head.appendChild(overrideStyle);
-        clonedDoc.querySelectorAll("img[loading='lazy']").forEach((img) => {
-          (img as HTMLImageElement).loading = "eager";
-        });
-      },
-      // Behoud devicePixelRatio default — `scale: 1` geeft blurry tekst
-      // op high-DPR displays. Resize-stap hieronder schaalt alsnog terug.
+    // Capture documentElement (volledige document) en croppen we daarna
+    // naar de huidige viewport — anders zit eventueel scrollbare content
+    // mee in het screenshot dat de gebruiker niet zag.
+    const result = await snapdom(document.documentElement, {
+      exclude: ["#__jaip-widget-host"],
+      // "remove" haalt het host-element uit de clone; "hide" houdt layout
+      // intact maar verbergt het visueel. We kiezen remove omdat de host
+      // op `position: fixed bottom right` staat — verwijderen verandert
+      // de layout van andere content niet.
+      excludeMode: "remove",
+      backgroundColor: "#ffffff",
+      fast: true,
+      // Lokale fonts worden door de browser zelf gerenderd via foreignObject;
+      // remote font-embedding kost extra fetches en blokkeert capture-start.
+      embedFonts: false,
     });
-    return resizeAndEncode(canvas);
+    const fullCanvas = await result.toCanvas();
+    return resizeAndEncode(cropToViewport(fullCanvas));
   },
 };
+
+function cropToViewport(source: HTMLCanvasElement): HTMLCanvasElement {
+  const dpr = window.devicePixelRatio || 1;
+  const cropX = Math.max(0, Math.round(window.scrollX * dpr));
+  const cropY = Math.max(0, Math.round(window.scrollY * dpr));
+  const cropW = Math.min(source.width - cropX, Math.round(window.innerWidth * dpr));
+  const cropH = Math.min(source.height - cropY, Math.round(window.innerHeight * dpr));
+  if (cropW <= 0 || cropH <= 0) return source;
+
+  const target = document.createElement("canvas");
+  target.width = cropW;
+  target.height = cropH;
+  const ctx = target.getContext("2d");
+  if (!ctx) return source;
+  ctx.drawImage(source, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+  return target;
+}
 
 function resizeAndEncode(source: HTMLCanvasElement): CaptureResult {
   const scale = Math.min(1, MAX_WIDTH / source.width);
