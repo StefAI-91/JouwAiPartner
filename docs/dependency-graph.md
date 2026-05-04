@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 648 |
-| Exported functions/constants | 964 |
-| Exported types/interfaces | 420 |
-| Cross-package imports | 610 |
+| Files scanned | 651 |
+| Exported functions/constants | 973 |
+| Exported types/interfaces | 421 |
+| Cross-package imports | 612 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -3593,6 +3593,11 @@
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/ui/badge` → Badge
 
+### `apps/cockpit/src/app/(dashboard)/project-sidebar-preview/page.tsx`
+
+**Exports:**
+- `metadata`
+
 ### `apps/cockpit/src/app/(dashboard)/project-tabs-preview/page.tsx`
 
 **Exports:**
@@ -4120,6 +4125,30 @@
 **Depends on:**
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+
+### `apps/cockpit/src/components/project-tabs-preview/panels.tsx`
+
+**Exports:**
+- `ProjectHeader()`
+- `OverviewPanel()`
+- `ActivityPanel()`
+- `InsightsPanel()`
+- `InboxPanel()`
+- `PanelContent()`
+- `PANEL_META`
+
+**Types:** `PanelKey`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
+
+### `apps/cockpit/src/components/project-tabs-preview/project-sidebar-preview.tsx`
+
+**Exports:**
+- `ProjectSidebarPreview()`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
 
 ### `apps/cockpit/src/components/project-tabs-preview/project-tabs-preview.tsx`
 
@@ -4745,7 +4774,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 23 | 5 | - | 45 | - | 73 |
+| Cockpit Components | 23 | 5 | - | 47 | - | 75 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
 | Database Queries | - | - | 6 | - | - | 6 |
