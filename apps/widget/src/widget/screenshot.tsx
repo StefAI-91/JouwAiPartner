@@ -1,4 +1,5 @@
 import html2canvas from "html2canvas";
+import { createCanvasColorResolver, inlineUnsupportedColors } from "./normalize-colors";
 
 /**
  * WG-006 lazy screenshot-bundle. Pas geladen wanneer gebruiker op
@@ -34,17 +35,25 @@ window.__JAIPWidgetScreenshot = {
     // Capture beperkt tot zichtbaar viewport, niet de hele scrollende
     // pagina — full-page op een lange feed kan 50 MB+ worden vóór
     // compressie en blokkeert de UI seconden lang.
-    const canvas = await html2canvas(document.documentElement, {
-      logging: false,
-      useCORS: true,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
-      // Behoud devicePixelRatio default — `scale: 1` geeft blurry tekst
-      // op high-DPR displays. Resize-stap hieronder schaalt alsnog terug.
-    });
-    return resizeAndEncode(canvas);
+    const resolveColor = createCanvasColorResolver();
+    const restoreColors = resolveColor
+      ? inlineUnsupportedColors(document.documentElement, resolveColor)
+      : () => {};
+    try {
+      const canvas = await html2canvas(document.documentElement, {
+        logging: false,
+        useCORS: true,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+        // Behoud devicePixelRatio default — `scale: 1` geeft blurry tekst
+        // op high-DPR displays. Resize-stap hieronder schaalt alsnog terug.
+      });
+      return resizeAndEncode(canvas);
+    } finally {
+      restoreColors();
+    }
   },
 };
 
