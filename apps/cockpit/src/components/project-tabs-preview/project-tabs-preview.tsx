@@ -38,7 +38,7 @@ function ProjectShell({
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el) return;
+    if (!el || typeof IntersectionObserver === "undefined") return;
     const obs = new IntersectionObserver(([entry]) => setScrolled(!entry?.isIntersecting), {
       threshold: 0,
     });
