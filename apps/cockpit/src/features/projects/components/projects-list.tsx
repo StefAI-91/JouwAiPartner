@@ -17,6 +17,12 @@ const tabBase =
 const tabActive = "bg-background text-foreground shadow-sm dark:bg-card";
 const tabInactive = "text-muted-foreground hover:text-foreground";
 
+const EMPTY_COPY: Record<ProjectSegment, string> = {
+  sales: "Geen projecten in de sales-pipeline.",
+  active: "Geen actieve projecten.",
+  other: "Niets on hold of verloren.",
+};
+
 interface ProjectsListProps {
   projects: ProjectListItem[];
 }
@@ -69,7 +75,7 @@ export function ProjectsList({ projects }: ProjectsListProps) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mt-6 text-sm text-muted-foreground">Geen projecten in deze fase.</p>
+        <p className="mt-6 text-sm text-muted-foreground">{EMPTY_COPY[activeSegment]}</p>
       ) : (
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((project) => (
