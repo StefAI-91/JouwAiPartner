@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "node esbuild.config.mjs --watch",
-    "build": "node esbuild.config.mjs && node scripts/generate-health.mjs && node scripts/check-bundle-size.mjs",
+    "build": "node esbuild.config.mjs && node scripts/generate-health.mjs && node scripts/check-bundle-globals.mjs && node scripts/check-bundle-size.mjs",
     "type-check": "tsc --noEmit",
     "lint": "echo 'no lint configured (esbuild bundle, geen Next.js)'",
-    "test": "echo 'unit tests N/A — bundle-only; e2e via test:e2e'",
+    "test": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -17,6 +17,8 @@
     "@playwright/test": "^1.48.0",
     "@types/node": "^20",
     "esbuild": "^0.24.0",
-    "typescript": "^5"
+    "jsdom": "^25.0.1",
+    "typescript": "^5",
+    "vitest": "^4.1.4"
   }
 }

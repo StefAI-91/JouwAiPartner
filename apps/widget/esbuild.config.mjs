@@ -36,7 +36,9 @@ const builds = [
     entryPoints: ["src/widget/index.tsx"],
     outfile: "public/widget.js",
     format: "iife",
-    globalName: "__JAIPWidget",
+    // Geen globalName: source zet `window.__JAIPWidget = {...}` zelf. Esbuild's
+    // globalName zou een outer `var __JAIPWidget = (IIFE return)` zetten die de
+    // inner toewijzing met `undefined` overschrijft (IIFE heeft geen export).
     jsx: "automatic",
     jsxImportSource: "preact",
   },

@@ -80,6 +80,34 @@ DevHub-ingest faalt):
 | **Geen annotated screenshots** | Userback laat gebruikers tekenen op een screenshot. JAIP V0 niet — alleen URL + viewport in de payload. | **WG-006** (gepland): `html2canvas` + draw-overlay. Cutover gaat nu door zonder als team akkoord is dat ze 'm tijdelijk missen. |
 | **Geen replay/recordings**     | Userback heeft session-replay bij feedback. Nice-to-have, niet kritiek voor team-dogfood.               | Geen plan; opnemen in v2-overweging als team het écht mist.                                                                     |
 
+## Bundle-bindings (WG-007 lessen)
+
+Tijdens de eerste cockpit-smoke-test bleek de widget-bundle in productie
+fundamenteel stuk: knop zichtbaar, klik dood, geen console-error,
+`window.__JAIPWidget` undefined ondanks succesvolle 304-fetch. Root cause:
+
+- `apps/widget/esbuild.config.mjs` had `globalName: "__JAIPWidget"` — esbuild wraps
+  de output als `var __JAIPWidget = (() => { ... })()`.
+- `apps/widget/src/widget/index.tsx` zet zelf `window.__JAIPWidget = { mount }`
+  binnen de IIFE.
+- IIFE heeft geen `export` → returnt `undefined`.
+- Top-level `var __JAIPWidget` is in een non-module script gelijk aan
+  `window.__JAIPWidget`. Toewijzing van de IIFE-return overschrijft de
+  inner toewijzing — `window.__JAIPWidget` wordt `undefined`.
+- Loader heeft `window.__JAIPWidget?.mount(...)` — optional chaining slikt
+  het op zonder error.
+
+**Wat we nooit weer doen:** `globalName` zetten op een entry-point die zelf
+naar `window` schrijft. Eén binding-mechanisme per bundle, niet twee.
+
+**Welke guard ervoor zorgt:** `apps/widget/scripts/check-bundle-globals.mjs`
+faalt de build als `public/widget.js` (a) `window.__JAIPWidget=` mist OF
+(b) een outer `var __JAIPWidget=` shadow heeft. Plus jsdom unit-test
+`apps/widget/tests/unit/bundle-binding.test.ts` die de bundle als `<script>`
+in een verse JSDOM injecteert en `window.__JAIPWidget.mount` als function
+asserteert. Beide zijn build-time en lokaal-runtime; e2e-vangnet ligt in
+**WG-008** (e2e runtime herstellen).
+
 ## Rate-limit (WG-005)
 
 `/api/ingest/widget` rate-limit'd op **30 POST's per uur per Origin-host**
