@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 646 |
-| Exported functions/constants | 962 |
+| Files scanned | 648 |
+| Exported functions/constants | 964 |
 | Exported types/interfaces | 420 |
-| Cross-package imports | 609 |
+| Cross-package imports | 610 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -3593,6 +3593,11 @@
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/ui/badge` → Badge
 
+### `apps/cockpit/src/app/(dashboard)/project-tabs-preview/page.tsx`
+
+**Exports:**
+- `metadata`
+
 ### `apps/cockpit/src/app/(dashboard)/projects/[id]/inbox/page.tsx`
 
 **Exports:**
@@ -4115,6 +4120,14 @@
 **Depends on:**
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+
+### `apps/cockpit/src/components/project-tabs-preview/project-tabs-preview.tsx`
+
+**Exports:**
+- `ProjectTabsPreview()`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
 
 ### `apps/cockpit/src/components/shared/confidence-bar.tsx`
 
@@ -4732,7 +4745,7 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 23 | 5 | - | 44 | - | 72 |
+| Cockpit Components | 23 | 5 | - | 45 | - | 73 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
 | Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
 | Database Queries | - | - | 6 | - | - | 6 |
