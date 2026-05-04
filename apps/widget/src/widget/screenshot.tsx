@@ -49,6 +49,24 @@ window.__JAIPWidgetScreenshot = {
       // staat de feedback-modal zelf op de screenshot. html2canvas-pro
       // walkt shadow DOM, dus zonder dit zie je het hele formulier terug.
       ignoreElements: (el) => el.id === "__jaip-widget-host",
+      // Moderne sites gebruiken `content-visibility: auto` en `contain: paint`
+      // voor scroll-perf — html2canvas's iframe-clone telt dat als off-screen
+      // en slaat de inhoud over (alleen achtergronden + position:fixed elementen
+      // worden gerenderd). Forceer alle elementen naar visible/contain:none in
+      // de clone, en eager-load lazy images zodat hun src tijdig binnen is.
+      onclone: (clonedDoc) => {
+        const overrideStyle = clonedDoc.createElement("style");
+        overrideStyle.textContent = `
+          *, *::before, *::after {
+            content-visibility: visible !important;
+            contain: none !important;
+          }
+        `;
+        clonedDoc.head.appendChild(overrideStyle);
+        clonedDoc.querySelectorAll("img[loading='lazy']").forEach((img) => {
+          (img as HTMLImageElement).loading = "eager";
+        });
+      },
       // Behoud devicePixelRatio default — `scale: 1` geeft blurry tekst
       // op high-DPR displays. Resize-stap hieronder schaalt alsnog terug.
     });
