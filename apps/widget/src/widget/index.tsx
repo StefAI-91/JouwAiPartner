@@ -6,6 +6,8 @@ interface MountConfig {
   projectId: string;
   apiUrl: string;
   userEmail: string | null;
+  /** WG-006: voor lazy-load van widget-screenshot.js — afgeleid van widget.js URL */
+  bundleSrc: string;
 }
 
 declare global {

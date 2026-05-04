@@ -88,11 +88,29 @@ hoeft niet aangepast.
 
 - Zwarte knop rechtsonder, rond, met tekst "Feedback".
 - Klik opent een modal met type-keuze (bug/idee/vraag), beschrijving (min
-  10 tekens), Versturen / Annuleren. Op mobile (<640 px) opent hij als
-  bottom-sheet.
+  10 tekens), **Screenshot toevoegen** (optioneel), Versturen / Annuleren.
+  Op mobile (<640 px) opent hij als bottom-sheet.
 - Toetsenbord-bediening: Tab loopt rond binnen de modal, Escape sluit.
 - Bij succes: groen vinkje + "Bedankt! Je feedback is ontvangen." Modal
   sluit na 2 seconden.
+
+### Screenshot-feature (WG-006)
+
+De "Screenshot toevoegen"-knop maakt een afbeelding van het zichtbare
+viewport (geen full-page) en toont een preview vóór submit. Geen
+permission-prompt — wij gebruiken `html2canvas` (DOM-render), niet de
+browser's screen-share API.
+
+- Geen actie nodig vanuit de klant-developer — werkt zodra de widget-
+  bundle ververst (cache-TTL 5 min).
+- CSP: geen extra directives nodig boven wat in §4 staat. De capture-
+  bundle `widget-screenshot.js` wordt via dezelfde `script-src
+https://widget.jouw-ai-partner.nl` geladen.
+- Cross-origin images zonder `crossorigin="anonymous"` worden niet
+  meegerenderd — dat is een html2canvas-beperking, niet onze keuze.
+- Privacy: cijferinvoer / wachtwoorden / persoonsgegevens worden
+  gewoon meegescreenshot. Wil je elementen uitsluiten? Voeg
+  `data-html2canvas-ignore` attribuut toe aan die element(en).
 
 ## Wat JAIP ontvangt
 

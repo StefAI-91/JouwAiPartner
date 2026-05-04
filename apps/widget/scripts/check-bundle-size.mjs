@@ -11,6 +11,11 @@ import { readFileSync } from "node:fs";
 const checks = [
   { file: "public/loader.js", maxKB: 5 },
   { file: "public/widget.js", maxKB: 30 },
+  // WG-006 lazy screenshot-bundle (html2canvas + capture). Alleen geladen
+  // bij eerste klik op "Screenshot toevoegen" — baseline widget.js blijft klein.
+  // 50KB is praktisch maximum voor html2canvas@1.4.1 + onze wrapper; overweeg
+  // `modern-screenshot` als we hieronder willen zakken zonder DOM-coverage te verliezen.
+  { file: "public/widget-screenshot.js", maxKB: 50 },
 ];
 
 let failed = false;

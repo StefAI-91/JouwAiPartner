@@ -42,6 +42,17 @@ const builds = [
     jsx: "automatic",
     jsxImportSource: "preact",
   },
+  {
+    ...common,
+    entryPoints: ["src/widget/screenshot.tsx"],
+    outfile: "public/widget-screenshot.js",
+    format: "iife",
+    // WG-006 lazy bundle: html2canvas + capture helpers, alleen geladen
+    // bij eerste klik op "Screenshot toevoegen". Zelfde reden als widget.js
+    // om geen globalName te zetten — bundle bindt zelf `window.__JAIPWidgetScreenshot`.
+    jsx: "automatic",
+    jsxImportSource: "preact",
+  },
 ];
 
 if (watch) {

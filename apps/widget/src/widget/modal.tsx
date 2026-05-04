@@ -4,6 +4,28 @@ interface MountConfig {
   projectId: string;
   apiUrl: string;
   userEmail: string | null;
+  bundleSrc: string;
+}
+
+interface CapturedScreenshot {
+  dataUrl: string;
+  width: number;
+  height: number;
+}
+
+type ScreenshotState = "idle" | "capturing" | "ready" | "error";
+
+/**
+ * WG-006 cross-bundle binding. `widget-screenshot.js` is een aparte
+ * lazy-bundle die `window.__JAIPWidgetScreenshot` zet — TypeScript ziet die
+ * declare niet over bundle-grenzen, dus hier herhalen voor compile-time check.
+ */
+declare global {
+  interface Window {
+    __JAIPWidgetScreenshot?: {
+      capture: () => Promise<CapturedScreenshot>;
+    };
+  }
 }
 
 interface ModalProps {
@@ -46,6 +68,9 @@ export function Modal({ config, trigger, onClose }: ModalProps) {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [screenshot, setScreenshot] = useState<CapturedScreenshot | null>(null);
+  const [screenshotState, setScreenshotState] = useState<ScreenshotState>("idle");
+  const [screenshotError, setScreenshotError] = useState("");
 
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -85,6 +110,32 @@ export function Modal({ config, trigger, onClose }: ModalProps) {
   const trimmedLength = description.trim().length;
   const canSubmit = type !== null && trimmedLength >= MIN_DESCRIPTION_LENGTH && status === "idle";
 
+  async function handleCaptureScreenshot() {
+    if (screenshotState === "capturing") return;
+    setScreenshotState("capturing");
+    setScreenshotError("");
+    try {
+      await loadScreenshotBundle(config.bundleSrc);
+      const result = await window.__JAIPWidgetScreenshot?.capture();
+      if (!result) {
+        throw new Error("screenshot bundle niet beschikbaar");
+      }
+      setScreenshot(result);
+      setScreenshotState("ready");
+    } catch (err) {
+      setScreenshotState("error");
+      setScreenshotError(
+        err instanceof Error ? err.message : "Screenshot maken mislukte — probeer opnieuw.",
+      );
+    }
+  }
+
+  function handleRemoveScreenshot() {
+    setScreenshot(null);
+    setScreenshotState("idle");
+    setScreenshotError("");
+  }
+
   async function handleSubmit(event: Event) {
     event.preventDefault();
     if (!canSubmit || type === null) return;
@@ -107,6 +158,13 @@ export function Modal({ config, trigger, onClose }: ModalProps) {
             user_agent: navigator.userAgent,
           },
           reporter_email: config.userEmail ?? null,
+          screenshot: screenshot
+            ? {
+                data_url: screenshot.dataUrl,
+                width: screenshot.width,
+                height: screenshot.height,
+              }
+            : null,
         }),
       });
       if (!response.ok) {
@@ -216,6 +274,15 @@ export function Modal({ config, trigger, onClose }: ModalProps) {
               </p>
             </div>
 
+            <ScreenshotField
+              state={screenshotState}
+              screenshot={screenshot}
+              error={screenshotError}
+              disabled={isSubmitting}
+              onCapture={handleCaptureScreenshot}
+              onRemove={handleRemoveScreenshot}
+            />
+
             {isError ? (
               <div class="jaip-error" role="alert">
                 Er ging iets mis: {errorMessage || "onbekende fout"}.
@@ -244,6 +311,110 @@ export function Modal({ config, trigger, onClose }: ModalProps) {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * WG-006 lazy-load van widget-screenshot.js. Identiek patroon aan loader →
+ * widget.js: cross-origin script-tag, gedeelde Promise voor concurrente
+ * klikken, reset bij onerror zodat een netwerk-glitch niet permanent
+ * de feature uitschakelt.
+ */
+let screenshotBundlePromise: Promise<void> | null = null;
+
+function loadScreenshotBundle(widgetBundleSrc: string): Promise<void> {
+  if (screenshotBundlePromise) return screenshotBundlePromise;
+  screenshotBundlePromise = new Promise<void>((resolve, reject) => {
+    const src = widgetBundleSrc.replace(/widget\.js(\?.*)?$/, "widget-screenshot.js");
+    const tag = document.createElement("script");
+    tag.src = src;
+    tag.async = true;
+    tag.onload = () => resolve();
+    tag.onerror = () => {
+      screenshotBundlePromise = null;
+      reject(new Error("widget-screenshot.js failed to load"));
+    };
+    document.head.appendChild(tag);
+  });
+  return screenshotBundlePromise;
+}
+
+interface ScreenshotFieldProps {
+  state: ScreenshotState;
+  screenshot: CapturedScreenshot | null;
+  error: string;
+  disabled: boolean;
+  onCapture: () => void;
+  onRemove: () => void;
+}
+
+function ScreenshotField({
+  state,
+  screenshot,
+  error,
+  disabled,
+  onCapture,
+  onRemove,
+}: ScreenshotFieldProps) {
+  if (state === "ready" && screenshot) {
+    return (
+      <div class="jaip-screenshot jaip-screenshot-ready">
+        <img
+          src={screenshot.dataUrl}
+          alt="Screenshot van de pagina"
+          class="jaip-screenshot-thumb"
+        />
+        <div class="jaip-screenshot-meta">
+          <span>
+            Screenshot bijgevoegd ({screenshot.width}×{screenshot.height})
+          </span>
+          <button
+            type="button"
+            class="jaip-screenshot-remove"
+            onClick={onRemove}
+            disabled={disabled}
+            aria-label="Screenshot verwijderen"
+          >
+            Verwijderen
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const capturing = state === "capturing";
+  return (
+    <div class="jaip-screenshot">
+      <button
+        type="button"
+        class="jaip-btn jaip-btn-ghost jaip-screenshot-add"
+        onClick={onCapture}
+        disabled={disabled || capturing}
+        aria-busy={capturing}
+      >
+        <CameraIcon />
+        <span>{capturing ? "Screenshot maken…" : "Screenshot toevoegen"}</span>
+      </button>
+      {state === "error" ? (
+        <p class="jaip-hint jaip-screenshot-error" role="alert">
+          {error || "Screenshot maken mislukte — probeer opnieuw."}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none">
+      <path
+        d="M4 7h3l2-2h6l2 2h3v12H4V7z"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+      />
+      <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="1.6" />
+    </svg>
   );
 }
 

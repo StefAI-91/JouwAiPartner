@@ -3,6 +3,8 @@ public/loader.js
 public/loader.js.map
 public/widget.js
 public/widget.js.map
+public/widget-screenshot.js
+public/widget-screenshot.js.map
 public/health.json
 .vercel/
 *.log

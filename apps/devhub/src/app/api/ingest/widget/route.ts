@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { widgetIngestSchema } from "@repo/database/validations/widget";
 import { isOriginAllowedForProject } from "@repo/database/queries/widget";
 import { insertWidgetIssue } from "@repo/database/mutations/widget";
+import { uploadScreenshotDataUrl } from "@repo/database/mutations/issues";
 import { rateLimitOrigin } from "@/lib/rate-limit";
 
 // WG-005: rate-limit per Origin via Postgres-counter. Whitelist + rate-limit
@@ -124,6 +125,29 @@ export async function POST(req: Request) {
       { error: "insert_failed", message: result.error, status_page: STATUS_PAGE_URL },
       { status: 500, headers: corsHeaders(origin) },
     );
+  }
+
+  // WG-006 screenshot-upload. Bewust ná issue-insert en niet-blokkerend
+  // bij falen: gebruiker krijgt success-toast, screenshot mist. Een
+  // ontbrekende screenshot is hersteldbaar via een follow-up-comment;
+  // een geblokkeerd issue is dat niet.
+  if (parsed.data.screenshot) {
+    const upload = await uploadScreenshotDataUrl(
+      result.data.id,
+      parsed.data.screenshot.data_url,
+      parsed.data.screenshot.width,
+      parsed.data.screenshot.height,
+    );
+    if ("error" in upload) {
+      console.warn(
+        JSON.stringify({
+          type: "widget_screenshot_upload_failed",
+          issue_id: result.data.id,
+          error: upload.error,
+          ts: new Date().toISOString(),
+        }),
+      );
+    }
   }
 
   logIngest({ project_id: parsed.data.project_id, origin, status: 200, error_code: null });

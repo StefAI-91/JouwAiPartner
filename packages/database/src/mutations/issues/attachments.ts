@@ -84,6 +84,58 @@ export async function insertAttachment(
 }
 
 /**
+ * WG-006: upload een widget-screenshot (data URL, JPEG) naar de
+ * `issue-attachments` bucket en koppel een attachment-rij aan het issue.
+ * Niet-throwing — fouten zijn gelogd en als `{ error }` teruggegeven zodat
+ * de ingest-route de issue-200-response niet stuk maakt op upload-falen.
+ */
+export async function uploadScreenshotDataUrl(
+  issueId: string,
+  dataUrl: string,
+  width: number,
+  height: number,
+  client?: SupabaseClient,
+): Promise<{ success: true } | { error: string }> {
+  const db = client ?? getAdminClient();
+  const base64 = dataUrl.split(",")[1] ?? "";
+  if (!base64) return { error: "screenshot data_url miste base64-payload" };
+
+  let bytes: Uint8Array;
+  try {
+    const binary = Buffer.from(base64, "base64");
+    bytes = new Uint8Array(binary);
+  } catch (err) {
+    return { error: `screenshot base64 decode mislukte: ${(err as Error).message}` };
+  }
+
+  const storagePath = `widget/${issueId}/screenshot.jpg`;
+  const { error: uploadErr } = await db.storage
+    .from(BUCKET_ID)
+    .upload(storagePath, bytes, { contentType: "image/jpeg", upsert: true });
+  if (uploadErr) return { error: `storage upload mislukte: ${uploadErr.message}` };
+
+  try {
+    await insertAttachment(
+      {
+        issue_id: issueId,
+        type: "screenshot",
+        storage_path: storagePath,
+        original_url: null,
+        file_name: "screenshot.jpg",
+        mime_type: "image/jpeg",
+        file_size: bytes.byteLength,
+        width,
+        height,
+      },
+      db,
+    );
+  } catch (err) {
+    return { error: `attachment-row insert mislukte: ${(err as Error).message}` };
+  }
+  return { success: true };
+}
+
+/**
  * Download media from external URLs, upload to Supabase storage,
  * and insert attachment records for an issue.
  *

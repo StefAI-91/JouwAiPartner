@@ -49,6 +49,7 @@ Alle rijen in deze tabel corresponderen met een bestaand sprint-spec bestand. Ko
 | WG-002   | Widget app scaffold + loader.js (apps/widget/, Vercel)                            | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-003   | Widget UI + cockpit rollout (modal + script-tag)                                  | Widget V0     | `sprints/backlog/` | Backlog       |
 | WG-007   | Widget bundle binding fix + build-guard + jsdom regression-test                   | Widget V0     | `sprints/backlog/` | Backlog       |
+| WG-006   | Widget screenshot-bijlage (lazy bundle html2canvas, preview, geen annotaties)     | Widget V0     | `sprints/backlog/` | Backlog       |
 | SRP-002  | queries/meetings/core.ts splitsen (892 r, 33+ exports)                            | Refactor SRP  | `sprints/done/`    | Done          |
 | SRP-003  | action-item-specialist.ts splitsen per pipeline (851 r)                           | Refactor SRP  | `sprints/done/`    | Done          |
 | SRP-004  | dev/action-items/run/client.tsx subcomponenten extraheren                         | Refactor SRP  | `sprints/done/`    | Done          |

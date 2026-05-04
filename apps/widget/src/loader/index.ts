@@ -21,6 +21,12 @@ interface MountConfig {
   projectId: string;
   apiUrl: string;
   userEmail: string | null;
+  /**
+   * WG-006: URL van widget.js zodat de modal er widget-screenshot.js uit
+   * kan afleiden voor lazy-loading van de capture-bundle. Loader weet 'm
+   * al voor de eigen script-tag-injectie; doorgeven is goedkoop.
+   */
+  bundleSrc: string;
 }
 
 interface JAIPWidgetGlobal {
@@ -107,11 +113,12 @@ declare global {
   // Cross-origin script injection ipv dynamic import: robuuster en werkt
   // ook in oudere browsers zonder een module-bundler-runtime aan kant van
   // de host.
+  const widgetSrc = script!.src.replace(/loader\.js(\?.*)?$/, "widget.js");
+
   function loadWidget(): Promise<void> {
     if (widgetLoadPromise) return widgetLoadPromise;
 
     widgetLoadPromise = new Promise<void>((resolve, reject) => {
-      const widgetSrc = script!.src.replace(/loader\.js(\?.*)?$/, "widget.js");
       const tag = document.createElement("script");
       tag.src = widgetSrc;
       tag.async = true;
@@ -131,7 +138,12 @@ declare global {
   button.addEventListener("click", async () => {
     try {
       await loadWidget();
-      window.__JAIPWidget?.mount(shadow, { projectId, apiUrl, userEmail });
+      window.__JAIPWidget?.mount(shadow, {
+        projectId,
+        apiUrl,
+        userEmail,
+        bundleSrc: widgetSrc,
+      });
     } catch (err) {
       console.error("[JAIP Widget]", err);
     }

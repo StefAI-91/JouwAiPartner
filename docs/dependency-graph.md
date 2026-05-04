@@ -8,9 +8,9 @@
 | Metric | Count |
 |--------|-------|
 | Files scanned | 647 |
-| Exported functions/constants | 963 |
+| Exported functions/constants | 964 |
 | Exported types/interfaces | 422 |
-| Cross-package imports | 605 |
+| Cross-package imports | 606 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -884,6 +884,7 @@
 - `downloadAndUpload()`
 - `getAttachmentPublicUrl()`
 - `insertAttachment()`
+- `uploadScreenshotDataUrl()`
 - `storeIssueMedia()`
 
 **Types:** `InsertAttachmentData`
@@ -4451,6 +4452,7 @@
 - `@repo/database/validations/widget` → widgetIngestSchema
 - `@repo/database/queries/widget` → isOriginAllowedForProject
 - `@repo/database/mutations/widget` → insertWidgetIssue
+- `@repo/database/mutations/issues` → uploadScreenshotDataUrl
 
 ## DevHub Pages
 
@@ -4736,7 +4738,7 @@ Which layers depend on which packages:
 | Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
 | Database Queries | - | - | 6 | - | - | 6 |
 | DevHub Server Actions | 17 | 2 | 10 | - | - | 29 |
-| DevHub API Routes | 7 | - | 1 | - | - | 8 |
+| DevHub API Routes | 8 | - | 1 | - | - | 9 |
 | DevHub Components | 5 | 2 | - | 14 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
 | DevHub Pages | 31 | - | 22 | 12 | - | 65 |
@@ -4872,6 +4874,7 @@ Tracing the most important data flows from action → pipeline → database.
 | Mutation | Called from |
 |----------|------------|
 | `insertAttachment()` | `apps/devhub/src/actions/attachments.ts` |
+| `uploadScreenshotDataUrl()` | `apps/devhub/src/app/api/ingest/widget/route.ts` |
 | `storeIssueMedia()` | `apps/devhub/src/actions/import.ts` |
 
 ### mutations/meetings/classification.ts

@@ -1,31 +1,43 @@
 import { readFile } from "node:fs/promises";
 
 /**
- * WG-007 build-guard. Faalt de build als public/widget.js z'n
- * `window.__JAIPWidget=` toewijzing kwijt is, of als een outer
- * `var __JAIPWidget=` shadow opnieuw is geïntroduceerd door
- * een esbuild `globalName`-toevoeging. Beide zijn de fout-classes
- * waardoor klikken op de feedback-knop stilletjes niets deed.
+ * WG-007 + WG-006 build-guard. Faalt de build als een van de bundles
+ * z'n `window.__JAIPWidget*=` toewijzing kwijt is, of als een outer
+ * `var __JAIPWidget*=` shadow opnieuw is geïntroduceerd door een
+ * esbuild `globalName`-toevoeging. Beide zijn de fout-classes waardoor
+ * klikken op de feedback-knop (of "Screenshot toevoegen") stilletjes
+ * niets zou doen.
  */
 
-const path = "public/widget.js";
-const src = await readFile(path, "utf8");
+const BUNDLES = [
+  { file: "public/widget.js", global: "__JAIPWidget" },
+  { file: "public/widget-screenshot.js", global: "__JAIPWidgetScreenshot" },
+];
 
-const hasInnerBind = /window\.__JAIPWidget\s*=/.test(src);
-const hasOuterShadow = /^("use strict";)?\s*var\s+__JAIPWidget\s*=/.test(src);
+let hadError = false;
 
-const errors = [];
-if (!hasInnerBind) {
-  errors.push(`${path}: missing 'window.__JAIPWidget=' assignment — IIFE moet 'm zelf zetten`);
-}
-if (hasOuterShadow) {
-  errors.push(
-    `${path}: outer 'var __JAIPWidget=' shadow re-introduced — verwijder esbuild 'globalName' (zie WG-007)`,
-  );
+for (const { file, global } of BUNDLES) {
+  const src = await readFile(file, "utf8");
+
+  const innerBindRe = new RegExp(`window\\.${global}\\s*=`);
+  const outerShadowRe = new RegExp(`^("use strict";)?\\s*var\\s+${global}\\s*=`);
+
+  const hasInnerBind = innerBindRe.test(src);
+  const hasOuterShadow = outerShadowRe.test(src);
+
+  if (!hasInnerBind) {
+    console.error(`✗ ${file}: missing 'window.${global}=' assignment — IIFE moet 'm zelf zetten`);
+    hadError = true;
+  }
+  if (hasOuterShadow) {
+    console.error(
+      `✗ ${file}: outer 'var ${global}=' shadow re-introduced — verwijder esbuild 'globalName' (zie WG-007)`,
+    );
+    hadError = true;
+  }
+  if (hasInnerBind && !hasOuterShadow) {
+    console.log(`✓ ${file}: window.${global} binding intact, geen var-shadow`);
+  }
 }
 
-if (errors.length) {
-  for (const e of errors) console.error("✗", e);
-  process.exit(1);
-}
-console.log("✓ widget.js: window.__JAIPWidget binding intact, geen var-shadow");
+if (hadError) process.exit(1);
