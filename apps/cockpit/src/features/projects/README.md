@@ -31,7 +31,8 @@ UI-componenten voor projectoverzicht, detail en bewerking. Geen barrel — breek
 | `timeline-month-section.tsx`       | Groepering per maand binnen de scroll-container met sticky maand-header.                                                  |
 | `timeline-entry.tsx`               | Render van één timeline-entry met kantelpunt-accent (via `detectPivot`) en email/meeting-discriminatie.                   |
 | `regenerate-summary-button.tsx`    | Trigger voor AI-herberekening van de project-samenvatting. Ook gebruikt op org- en client-pagina's.                       |
-| `status-pipeline.tsx`              | Statusweergave, samengesteld in `project-card`.                                                                           |
+| `project-status-badge.tsx`         | Statuspill + dunne progress-bar (`stap N/M`) op de project-card. Toont een gekleurde pill voor on_hold/lost/maintenance.  |
+| `projects-list.tsx`                | Client-wrapper op `/projects` met segment-tabs (Sales / Actief / On hold) via `?segment=`-param. Telt + filtert.          |
 | `project-tabs.tsx`                 | Tab-navigatie op de detail-pagina (overzicht / inbox / klanten / e-mails).                                                |
 | `project-clients-section.tsx`      | Sectie op de detail-pagina die portal-clients toont met invite/revoke knoppen.                                            |
 | `invite-client-dialog.tsx`         | Modal voor het uitnodigen van een nieuwe klant op een project (portal access).                                            |
@@ -62,7 +63,7 @@ Pure helpers zonder React — volledig unit-tested.
 | `@repo/database/mutations/projects`    | Write-helpers: `createProject`, `updateProject`, `deleteProject` (gebruikt door `actions/projects.ts`). |
 | `@repo/database/validations/entities`  | `updateProjectSchema`, `deleteSchema`.                                                                  |
 | `@repo/database/validations/meetings`  | `createProjectSchema` (historisch daar, niet hier gedupliceerd).                                        |
-| `@repo/database/constants/projects`    | `PROJECT_STATUSES`, `STATUS_LABELS`.                                                                    |
+| `@repo/database/constants/projects`    | `PROJECT_STATUSES`, `STATUS_LABELS`, `getPhaseSteps`, `getProjectSegment` (sales/active/other).         |
 | `@repo/ai/validations/project-summary` | `extractProjectTimeline` (zet AI-samenvatting om naar timeline-items).                                  |
 
 ## Design decisions
