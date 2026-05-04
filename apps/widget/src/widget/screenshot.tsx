@@ -1,5 +1,9 @@
 import html2canvas from "html2canvas";
-import { createCanvasColorResolver, inlineUnsupportedColors } from "./normalize-colors";
+import {
+  createCanvasColorResolver,
+  inlineUnsupportedColors,
+  normalizeStylesheets,
+} from "./normalize-colors";
 
 /**
  * WG-006 lazy screenshot-bundle. Pas geladen wanneer gebruiker op
@@ -36,7 +40,11 @@ window.__JAIPWidgetScreenshot = {
     // pagina — full-page op een lange feed kan 50 MB+ worden vóór
     // compressie en blokkeert de UI seconden lang.
     const resolveColor = createCanvasColorResolver();
-    const restoreColors = resolveColor
+    // Eerst stylesheet-rules herschrijven (dekt ::before/::after en !important
+    // rules), dan inline-overrides met !important op elk element voor
+    // CSS-vars en computed-style residu.
+    const restoreSheets = resolveColor ? normalizeStylesheets(document, resolveColor) : () => {};
+    const restoreInline = resolveColor
       ? inlineUnsupportedColors(document.documentElement, resolveColor)
       : () => {};
     try {
@@ -52,7 +60,8 @@ window.__JAIPWidgetScreenshot = {
       });
       return resizeAndEncode(canvas);
     } finally {
-      restoreColors();
+      restoreInline();
+      restoreSheets();
     }
   },
 };
