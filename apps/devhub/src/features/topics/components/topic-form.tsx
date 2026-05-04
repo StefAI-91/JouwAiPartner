@@ -21,9 +21,16 @@ export interface TopicFormInitial {
   client_description?: string | null;
 }
 
+export interface SprintOption {
+  id: string;
+  name: string;
+  delivery_week: string;
+}
+
 interface TopicFormProps {
   projectId: string;
   initial?: TopicFormInitial;
+  sprintOptions: SprintOption[];
 }
 
 /**
@@ -31,7 +38,7 @@ interface TopicFormProps {
  * status muteren gaat via `<TopicStatusSelect />` op de detail-pagina,
  * zodat `closed_at` consistent blijft.
  */
-export function TopicForm({ projectId, initial }: TopicFormProps) {
+export function TopicForm({ projectId, initial, sprintOptions }: TopicFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -146,13 +153,23 @@ export function TopicForm({ projectId, initial }: TopicFormProps) {
 
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-medium">Target sprint</span>
-        <input
+        <select
           value={targetSprint ?? ""}
           onChange={(e) => setTargetSprint(e.target.value)}
           className={INPUT_CLASS}
-          maxLength={100}
-          placeholder="Vrij tekstveld in v1 — bv. 'Sprint 12' of '2026-W18'"
-        />
+        >
+          <option value="">— geen —</option>
+          {sprintOptions.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name} (week van {s.delivery_week})
+            </option>
+          ))}
+        </select>
+        {sprintOptions.length === 0 ? (
+          <span className="text-xs text-muted-foreground">
+            Nog geen sprints voor dit project — voeg er één toe vanuit het project in de cockpit.
+          </span>
+        ) : null}
       </label>
 
       <label className="flex flex-col gap-1.5">

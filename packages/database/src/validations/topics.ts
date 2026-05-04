@@ -2,6 +2,8 @@ import { z } from "zod";
 import { TOPIC_LIFECYCLE_STATUSES, TOPIC_TYPES } from "../constants/topics";
 
 const TOPIC_PRIORITIES = ["P0", "P1", "P2", "P3"] as const;
+export const TOPIC_ORIGINS = ["sprint", "production"] as const;
+export type TopicOrigin = (typeof TOPIC_ORIGINS)[number];
 
 /**
  * Validatie-schema voor het aanmaken van een topic. `created_by` zit
@@ -20,7 +22,8 @@ export const createTopicSchema = z.object({
   client_resolution: z.string().max(5000).nullable().optional(),
   type: z.enum(TOPIC_TYPES),
   priority: z.enum(TOPIC_PRIORITIES).nullable().optional(),
-  target_sprint_id: z.string().max(100).nullable().optional(),
+  target_sprint_id: z.string().uuid().nullable().optional(),
+  origin: z.enum(TOPIC_ORIGINS).optional(),
 });
 export type CreateTopicInput = z.infer<typeof createTopicSchema>;
 

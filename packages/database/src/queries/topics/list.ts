@@ -162,15 +162,21 @@ export async function listTopicsByBucket(
   projectId: string,
   currentSprintId: string | null = null,
   client?: SupabaseClient,
+  options?: { origin?: "sprint" | "production" },
 ): Promise<Record<PortalBucketKey, TopicListRow[]>> {
   const db = client ?? getAdminClient();
 
-  const { data, error } = await db
+  let query = db
     .from("topics")
     .select(TOPIC_LIST_COLS)
     .eq("project_id", projectId)
-    .in("status", ["awaiting_client_input", "prioritized", "scheduled", "in_progress", "done"])
-    .order("updated_at", { ascending: false });
+    .in("status", ["awaiting_client_input", "prioritized", "scheduled", "in_progress", "done"]);
+
+  if (options?.origin) {
+    query = query.eq("origin", options.origin);
+  }
+
+  const { data, error } = await query.order("updated_at", { ascending: false });
 
   if (error) throw new Error(`listTopicsByBucket failed: ${error.message}`);
 

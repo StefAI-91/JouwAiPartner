@@ -28,6 +28,9 @@ export async function cleanupTestData() {
     .delete()
     .in("issue_id", [TEST_IDS.issue, TEST_IDS.issue2, TEST_IDS.issue3]);
   await supabase.from("topics").delete().in("id", [TEST_IDS.topic, TEST_IDS.topic2]);
+  // CP-012: sprints hebben FK vanuit topics (target_sprint_id, ON DELETE
+  // SET NULL). Topics zijn nu al weg, dus sprints mag direct.
+  await supabase.from("sprints").delete().in("id", [TEST_IDS.sprint, TEST_IDS.sprint2]);
   await supabase
     .from("issues")
     .delete()

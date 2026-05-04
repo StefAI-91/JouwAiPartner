@@ -28,6 +28,11 @@ import { countIssuesPerTopic } from "@repo/database/queries/topics/linked-issues
 - Mutations: `packages/database/src/mutations/topics/`
 - Validations: `packages/database/src/validations/topics.ts`
 - Constants (statuses, types, bucket-mapping): `packages/database/src/constants/topics.ts`
+- **`origin` en `target_sprint_id`** (CP-012): topics zijn `'sprint'` of
+  `'production'`-gericht; `target_sprint_id` is een uuid FK naar
+  `sprints(id)` (eerder vrij text-veld). Portal-queries (briefing, bucket)
+  filteren op `origin` zodat dev-mode en productie-mode strikt gescheiden
+  zijn. Zie `@repo/database/queries/sprints` voor sprint-data.
 
 ## Performance-aannames
 
