@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 647 |
-| Exported functions/constants | 964 |
+| Files scanned | 649 |
+| Exported functions/constants | 966 |
 | Exported types/interfaces | 422 |
-| Cross-package imports | 606 |
+| Cross-package imports | 608 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -3577,6 +3577,20 @@
 **Exports:**
 - `metadata`
 
+### `apps/cockpit/src/app/(dashboard)/navigatie-test/tiered/page.tsx`
+
+**Exports:**
+- `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/navigatie-test/tiered/tiered-playground.tsx`
+
+**Exports:**
+- `TieredPlayground()`
+
+**Depends on:**
+- `@repo/ui/dialog` → Dialog, DialogContent, DialogTitle
+- `@repo/ui/dropdown-menu` → DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
+
 ### `apps/cockpit/src/app/(dashboard)/page.tsx`
 
 **Exports:**
@@ -4735,7 +4749,7 @@ Which layers depend on which packages:
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
 | Cockpit Components | 22 | 5 | - | 42 | - | 69 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
+| Cockpit Pages | 102 | 8 | 9 | 40 | - | 159 |
 | Database Queries | - | - | 6 | - | - | 6 |
 | DevHub Server Actions | 17 | 2 | 10 | - | - | 29 |
 | DevHub API Routes | 8 | - | 1 | - | - | 9 |

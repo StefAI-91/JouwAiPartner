@@ -1,4 +1,5 @@
-import { Link2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Layers, Link2 } from "lucide-react";
 import { NavigatiePlayground } from "./navigatie-playground";
 
 export const metadata = {
@@ -50,6 +51,27 @@ export default function NavigatieTestPage() {
           </div>
         </div>
       </div>
+
+      {/* Sibling playground link */}
+      <Link
+        href="/navigatie-test/tiered"
+        className="mb-10 flex items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4 transition-colors hover:bg-primary/10"
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <Layers className="h-5 w-5" />
+          </span>
+          <div>
+            <div className="text-[13px] font-semibold text-foreground">
+              Nieuw — Tiered menu mock
+            </div>
+            <div className="text-[12px] text-muted-foreground">
+              Vandaag vs. voorgesteld, met werkende ⌘K palette en avatar-menu. Klikbaar.
+            </div>
+          </div>
+        </div>
+        <ArrowRight className="h-4 w-4 shrink-0 text-primary" />
+      </Link>
 
       <NavigatiePlayground />
 
