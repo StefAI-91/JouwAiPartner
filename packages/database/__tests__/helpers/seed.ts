@@ -22,6 +22,9 @@ export const TEST_IDS = {
   topic2: "00000000-0000-0000-0000-000000000021",
   issue2: "00000000-0000-0000-0000-000000000022",
   issue3: "00000000-0000-0000-0000-000000000023",
+  // CP-012: sprints
+  sprint: "00000000-0000-0000-0000-000000000030",
+  sprint2: "00000000-0000-0000-0000-000000000031",
 } as const;
 
 export async function seedOrganization(overrides: Record<string, unknown> = {}) {
@@ -281,6 +284,30 @@ export async function seedTopic(createdBy: string, overrides: Record<string, unk
     .select()
     .single();
   if (error) throw new Error(`seedTopic failed: ${error.message}`);
+  return result;
+}
+
+/**
+ * Seed a sprint. Default `delivery_week` is een vaste maandag (2026-05-04)
+ * zodat de DB-CHECK constraint niet faalt op willekeurige dagen.
+ */
+export async function seedSprint(overrides: Record<string, unknown> = {}) {
+  const supabase = getTestClient();
+  const data = {
+    id: TEST_IDS.sprint,
+    project_id: TEST_IDS.project,
+    name: "Test Sprint",
+    delivery_week: "2026-05-04",
+    status: "planned",
+    order_index: 0,
+    ...overrides,
+  };
+  const { data: result, error } = await supabase
+    .from("sprints")
+    .upsert(data, { onConflict: "id" })
+    .select()
+    .single();
+  if (error) throw new Error(`seedSprint failed: ${error.message}`);
   return result;
 }
 

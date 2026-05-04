@@ -1555,6 +1555,53 @@ export type Database = {
           },
         ];
       };
+      sprints: {
+        Row: {
+          client_test_instructions: string | null;
+          created_at: string;
+          delivery_week: string;
+          id: string;
+          name: string;
+          order_index: number;
+          project_id: string;
+          status: string;
+          summary: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          client_test_instructions?: string | null;
+          created_at?: string;
+          delivery_week: string;
+          id?: string;
+          name: string;
+          order_index?: number;
+          project_id: string;
+          status?: string;
+          summary?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          client_test_instructions?: string | null;
+          created_at?: string;
+          delivery_week?: string;
+          id?: string;
+          name?: string;
+          order_index?: number;
+          project_id?: string;
+          status?: string;
+          summary?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sprints_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       summaries: {
         Row: {
           content: string;
@@ -1818,6 +1865,7 @@ export type Database = {
           created_by: string;
           description: string | null;
           id: string;
+          origin: string;
           priority: string | null;
           project_id: string;
           status: string;
@@ -1837,6 +1885,7 @@ export type Database = {
           created_by: string;
           description?: string | null;
           id?: string;
+          origin?: string;
           priority?: string | null;
           project_id: string;
           status?: string;
@@ -1856,6 +1905,7 @@ export type Database = {
           created_by?: string;
           description?: string | null;
           id?: string;
+          origin?: string;
           priority?: string | null;
           project_id?: string;
           status?: string;
@@ -1879,6 +1929,13 @@ export type Database = {
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "topics_target_sprint_id_fkey";
+            columns: ["target_sprint_id"];
+            isOneToOne: false;
+            referencedRelation: "sprints";
             referencedColumns: ["id"];
           },
         ];

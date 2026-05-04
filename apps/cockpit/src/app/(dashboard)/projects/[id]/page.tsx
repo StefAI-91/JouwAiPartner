@@ -12,7 +12,10 @@ import { EditProject } from "@/features/projects/components/edit-project";
 import { ProjectSummaryCard } from "@/features/projects/components/project-summary-card";
 import { ProjectTimeline } from "@/features/projects/components/project-timeline";
 import { ProjectClientsSection } from "@/features/projects/components/project-clients-section";
+import { ProjectSprintsCard } from "@/features/sprints/components/project-sprints-card";
 import { extractProjectTimeline } from "@repo/ai/validations/project-summary";
+
+const DEV_PHASE_STATUSES = new Set(["kickoff", "in_progress", "review"]);
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -76,6 +79,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               : null
           }
         />
+        {DEV_PHASE_STATUSES.has(project.status ?? "") && (
+          <ProjectSprintsCard projectId={project.id} />
+        )}
         <ProjectTimeline
           timeline={timeline}
           startDate={project.start_date}

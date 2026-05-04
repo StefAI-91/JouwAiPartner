@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { listAccessibleProjectIds } from "@repo/auth/access";
+import { listSprintsByProject } from "@repo/database/queries/sprints";
 import { TopicForm } from "@/features/topics/components/topic-form";
 
 const searchSchema = z.object({ project: z.string().uuid().optional() });
@@ -37,6 +38,13 @@ export default async function NewTopicPage({
     );
   }
 
+  const sprints = await listSprintsByProject(projectId, supabase);
+  const sprintOptions = sprints.map((s) => ({
+    id: s.id,
+    name: s.name,
+    delivery_week: s.delivery_week,
+  }));
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6">
       <header className="flex flex-col gap-1">
@@ -45,7 +53,7 @@ export default async function NewTopicPage({
           Maak een topic aan om losse issues te bundelen tot één klant-zichtbaar item.
         </p>
       </header>
-      <TopicForm projectId={projectId} />
+      <TopicForm projectId={projectId} sprintOptions={sprintOptions} />
     </div>
   );
 }

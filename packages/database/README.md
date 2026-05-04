@@ -92,6 +92,29 @@ export async function updateProfileRole(
 - **Idempotentie:** `upsert` met expliciete `onConflict`, zodat de helper
   veilig hernieuwbaar is.
 
+## Issues `source`-waarden (canoniek)
+
+`issues.source` is een vrij `text`-veld zonder DB-CHECK. De canonieke waarden
+en hun semantiek staan hier — nieuwe waarden alleen toevoegen na een
+roadmap-discussie en update van `PORTAL_SOURCE_GROUPS` in
+`src/constants/issues.ts`.
+
+| Source        | Wie genereert                                  | Portal-bucket (`PORTAL_SOURCE_GROUPS`) |
+| ------------- | ---------------------------------------------- | -------------------------------------- |
+| `portal`      | Klant-PM via portal-formulier (CP-005, PR-020) | `portal_pm` ("Mijn meldingen")         |
+| `userback`    | Userback-widget op cockpit/devhub of klant-app | `end_users` ("Van gebruikers")         |
+| `jaip_widget` | JAIP-widget op klant-app (WG-001..004)         | `end_users` ("Van gebruikers")         |
+| `manual`      | Team-member voegt issue toe in DevHub UI       | `jaip` ("JAIP-meldingen")              |
+| `ai`          | AI-agent (toekomstig)                          | `jaip` ("JAIP-meldingen")              |
+
+`source_metadata` is een `jsonb`-veld voor optionele context (browser, device,
+steps_to_reproduce, on_behalf_of_user). Geen runtime-validatie — UI-laag
+behandelt het als hint, geen blokkade.
+
+RLS-conventie: client-INSERT is alleen toegestaan met `source='portal'` +
+`status='triage'` op een project waar `has_portal_access` geldt — zie
+`supabase/migrations/20260418110000_issues_rls_client_hardening.sql`.
+
 ## Blokkering directe `.from()`-calls
 
 `scripts/check-no-direct-supabase.sh` scant `apps/*/src/actions/**` en

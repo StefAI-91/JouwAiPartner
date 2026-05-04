@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createPageClient } from "@repo/auth/helpers";
 import { getTopicWithIssues } from "@repo/database/queries/topics";
+import { getSprintById } from "@repo/database/queries/sprints";
 import { getProjectName } from "@repo/database/queries/projects";
 import { CLOSED_STATUSES, type IssueStatus } from "@repo/database/constants/issues";
 import type { TopicLifecycleStatus } from "@repo/database/constants/topics";
@@ -37,6 +38,9 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
   if (!topic) notFound();
 
   const projectName = await getProjectName(topic.project_id, supabase);
+  const sprint = topic.target_sprint_id
+    ? await getSprintById(topic.target_sprint_id, supabase)
+    : null;
 
   const closedIssueCount = topic.linked_issues.filter((i) =>
     CLOSED_STATUSES.has(i.status as IssueStatus),
@@ -75,7 +79,7 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="font-mono uppercase tracking-[0.14em]">● {topic.type}</span>
           {topic.priority ? <span className="font-mono">{topic.priority}</span> : null}
-          {topic.target_sprint_id ? <span>sprint: {topic.target_sprint_id}</span> : null}
+          {sprint ? <span>sprint: {sprint.name}</span> : null}
           <span>· bijgewerkt {new Date(topic.updated_at).toLocaleString("nl-NL")}</span>
         </div>
       </header>
@@ -162,10 +166,13 @@ export async function TopicDetail({ topicId }: TopicDetailProps) {
                   <dd className="font-mono text-xs uppercase tracking-wider">{topic.priority}</dd>
                 </div>
               ) : null}
-              {topic.target_sprint_id ? (
+              {sprint ? (
                 <div className="flex items-baseline justify-between gap-3">
                   <dt className="text-xs text-muted-foreground">Sprint</dt>
-                  <dd className="font-mono text-xs">{topic.target_sprint_id}</dd>
+                  <dd className="font-mono text-xs">
+                    {sprint.name}{" "}
+                    <span className="text-muted-foreground">({sprint.delivery_week})</span>
+                  </dd>
                 </div>
               ) : null}
               <div className="flex items-baseline justify-between gap-3">

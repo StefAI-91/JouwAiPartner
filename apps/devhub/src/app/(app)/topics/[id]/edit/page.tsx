@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createPageClient, getAuthenticatedUser } from "@repo/auth/helpers";
 import { listAccessibleProjectIds } from "@repo/auth/access";
 import { getTopicById } from "@repo/database/queries/topics";
+import { listSprintsByProject } from "@repo/database/queries/sprints";
 import type { TopicType } from "@repo/database/constants/topics";
 import { TopicForm } from "@/features/topics/components/topic-form";
 
@@ -40,6 +41,11 @@ export default async function EditTopicPage({
       </header>
       <TopicForm
         projectId={topic.project_id}
+        sprintOptions={(await listSprintsByProject(topic.project_id, supabase)).map((s) => ({
+          id: s.id,
+          name: s.name,
+          delivery_week: s.delivery_week,
+        }))}
         initial={{
           id: topic.id,
           title: topic.title,

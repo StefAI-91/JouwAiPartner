@@ -31,6 +31,20 @@ export interface BriefingTopic {
   updated_at: string;
 }
 
+/**
+ * CP-012 follow-up: sprints kunnen ook direct testbaar zijn (zonder
+ * tussenliggend topic). Shape spiegelt `BriefingTopic` zodat de UI ze
+ * door dezelfde card-component kan renderen via een discriminated union.
+ */
+export interface BriefingSprint {
+  id: string;
+  name: string;
+  summary: string | null;
+  client_test_instructions: string | null;
+  delivery_week: string;
+  updated_at: string;
+}
+
 export interface ChangelogEntry {
   kind: "topic_closed" | "meeting";
   id: string;
@@ -106,18 +120,55 @@ interface BriefingTopicRow {
  * en met ingevulde test-instructies. Zonder instructies blijft een topic
  * onzichtbaar — bewust forced ritual om het team te dwingen expliciet te
  * markeren wat de klant kan testen.
+ *
+ * `originFilter` is verplicht omdat dev-mode en productie-mode strikt
+ * gescheiden zijn (CP-012): in dev-mode tonen we alleen sprint-topics, in
+ * productie-mode alleen production-topics. Caller bepaalt de mode op basis
+ * van `project.status`.
+ *
+ * **Dedup-regel** (CP-012 follow-up review): topics waarvan de gekoppelde
+ * sprint zelf `client_test_instructions` heeft, worden uitgesloten — anders
+ * dupliceert de portal de communicatie (sprint-card én topic-card voor
+ * dezelfde feature). De sprint-card is het "ouderlijk" item; topics
+ * verschijnen alleen los als hun sprint geen eigen instructies heeft of
+ * het topic geen sprint-koppeling heeft.
  */
 export async function listTopicsReadyToTest(
   projectId: string,
   client: SupabaseClient,
+  originFilter: "sprint" | "production",
 ): Promise<BriefingTopic[]> {
-  const { data, error } = await client
+  // Eerst sprint-IDs ophalen die hun eigen test-communicatie doen. Deze
+  // topics laten we vallen om dubbele rendering te voorkomen. Productie-mode
+  // raakt geen sprints, dus alleen relevant in dev-mode.
+  let coveredSprintIds: string[] = [];
+  if (originFilter === "sprint") {
+    const { data: sprintRows, error: sprintError } = await client
+      .from("sprints")
+      .select("id")
+      .eq("project_id", projectId)
+      .not("client_test_instructions", "is", null);
+    if (sprintError) {
+      console.error("[listTopicsReadyToTest:sprintFilter]", sprintError.message);
+      return [];
+    }
+    coveredSprintIds = (sprintRows ?? []).map((r) => (r as { id: string }).id);
+  }
+
+  let query = client
     .from("topics")
     .select(BRIEFING_TOPIC_COLS)
     .eq("project_id", projectId)
     .eq("status", "in_progress")
-    .not("client_test_instructions", "is", null)
-    .order("updated_at", { ascending: false });
+    .eq("origin", originFilter)
+    .not("client_test_instructions", "is", null);
+
+  if (coveredSprintIds.length > 0) {
+    // PostgREST: `not.in.(uuid,uuid,...)` filtert de gedekte sprints uit.
+    query = query.not("target_sprint_id", "in", `(${coveredSprintIds.join(",")})`);
+  }
+
+  const { data, error } = await query.order("updated_at", { ascending: false });
 
   if (error) {
     console.error("[listTopicsReadyToTest]", error.message);
@@ -129,16 +180,21 @@ export async function listTopicsReadyToTest(
 /**
  * Topics waar de klant ons blokkeert: status `awaiting_client_input`.
  * `updated_at` voor "open sinds X dagen"-formattering in de UI.
+ *
+ * `originFilter` symmetrisch met `listTopicsReadyToTest`: dev-mode toont
+ * alleen sprint-blockers, productie-mode alleen production-blockers.
  */
 export async function listTopicsAwaitingInput(
   projectId: string,
   client: SupabaseClient,
+  originFilter: "sprint" | "production",
 ): Promise<BriefingTopic[]> {
   const { data, error } = await client
     .from("topics")
     .select(BRIEFING_TOPIC_COLS)
     .eq("project_id", projectId)
     .eq("status", "awaiting_client_input")
+    .eq("origin", originFilter)
     .order("updated_at", { ascending: false });
 
   if (error) {
@@ -146,6 +202,37 @@ export async function listTopicsAwaitingInput(
     return [];
   }
   return (data ?? []) as BriefingTopicRow[];
+}
+
+/**
+ * CP-012 follow-up — sprints met gevulde test-instructies en status
+ * `delivered`. Worden naast `listTopicsReadyToTest` gerenderd in dezelfde
+ * "Klaar om te testen"-sectie. Geen origin-filter nodig: sprints zijn per
+ * definitie sprint-werk; in productie-modus rendert de portal deze sectie
+ * niet als sprint-bron (caller checkt `project.status`).
+ *
+ * Status-keuze: `delivered`, niet `in_progress`. De klant test pas wanneer
+ * een sprint is opgeleverd; tijdens bouw zit hij nog niet stabiel op een
+ * preview-omgeving. De `in_progress`-sprint blijft zichtbaar via de
+ * SprintBanner ("huidige sprint die loopt") — andere kant, andere boodschap.
+ */
+export async function listSprintsReadyToTest(
+  projectId: string,
+  client: SupabaseClient,
+): Promise<BriefingSprint[]> {
+  const { data, error } = await client
+    .from("sprints")
+    .select("id, name, summary, client_test_instructions, delivery_week, updated_at")
+    .eq("project_id", projectId)
+    .eq("status", "delivered")
+    .not("client_test_instructions", "is", null)
+    .order("order_index", { ascending: false });
+
+  if (error) {
+    console.error("[listSprintsReadyToTest]", error.message);
+    return [];
+  }
+  return (data ?? []) as BriefingSprint[];
 }
 
 /**

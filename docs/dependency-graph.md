@@ -1,16 +1,16 @@
 # Dependency Graph
 
-> Auto-generated on 2026-05-03. Do not edit manually.
+> Auto-generated on 2026-05-04. Do not edit manually.
 > Run `node scripts/generate-dep-graph.js` to regenerate.
 
 ## Overview
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 642 |
-| Exported functions/constants | 952 |
-| Exported types/interfaces | 414 |
-| Cross-package imports | 603 |
+| Files scanned | 647 |
+| Exported functions/constants | 963 |
+| Exported types/interfaces | 422 |
+| Cross-package imports | 605 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -447,9 +447,10 @@
 - `getProjectBriefingHeader()`
 - `listTopicsReadyToTest()`
 - `listTopicsAwaitingInput()`
+- `listSprintsReadyToTest()`
 - `listWeeklyChangelog()`
 
-**Types:** `PortalBriefingHeader`, `BriefingTopic`, `ChangelogEntry`
+**Types:** `PortalBriefingHeader`, `BriefingTopic`, `BriefingSprint`, `ChangelogEntry`
 
 ### `queries/portal/core.ts`
 
@@ -568,6 +569,24 @@
 - `getReviewStats()`
 
 **Types:** `ReviewMeeting`, `ReviewMeetingDetail`
+
+### `queries/sprints/detail.ts`
+
+**Exports:**
+- `getSprintById()`
+- `listSprintsWithTopics()`
+
+**Types:** `SprintTopicRow`, `SprintWithTopics`
+
+### `queries/sprints/list.ts`
+
+**Exports:**
+- `listSprintsByProject()`
+- `getCurrentSprint()`
+- `SPRINT_STATUSES`
+- `SPRINT_COLS`
+
+**Types:** `SprintStatus`, `SprintRow`
 
 ### `queries/summaries/core.ts`
 
@@ -1014,6 +1033,16 @@
 - `deleteSlackConfig()`
 
 **Types:** `UpsertSlackConfigInput`
+
+### `mutations/sprints/crud.ts`
+
+**Exports:**
+- `insertSprint()`
+- `updateSprint()`
+- `deleteSprint()`
+- `reorderSprint()`
+
+**Types:** `MutationResult`, `InsertSprintData`, `UpdateSprintData`
 
 ### `mutations/summaries/core.ts`
 
@@ -4710,7 +4739,7 @@ Which layers depend on which packages:
 | DevHub API Routes | 7 | - | 1 | - | - | 8 |
 | DevHub Components | 5 | 2 | - | 14 | - | 21 |
 | DevHub Middleware | - | - | 1 | - | - | 1 |
-| DevHub Pages | 29 | - | 22 | 12 | - | 63 |
+| DevHub Pages | 31 | - | 22 | 12 | - | 65 |
 | MCP Server | 32 | 1 | - | - | - | 33 |
 
 ## Critical Integration Points
@@ -5202,7 +5231,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listOrganizations()` | `apps/cockpit/src/app/(dashboard)/directory/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/page.tsx`, `apps/cockpit/src/app/(dashboard)/people/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getOrganizationById()` | `apps/cockpit/src/app/(dashboard)/administratie/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/clients/[id]/page.tsx` |
 | `getAllOrganizations()` | `packages/ai/src/pipeline/lib/context-injection.ts`, `packages/ai/src/pipeline/lib/entity-resolution.ts` |
 | `findOrganizationIdByEmailDomain()` | `packages/ai/src/pipeline/email/core.ts`, `packages/ai/src/scripts/backfill-email-organizations.ts` |
@@ -5256,7 +5285,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx` |
+| `listProjects()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/cockpit/src/app/(dashboard)/emails/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/meetings/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/email/[id]/page.tsx`, `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `listFocusProjects()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
 
 ### queries/projects/detail.ts
@@ -5318,6 +5347,12 @@ Which queries are used where across the codebase.
 | `getDraftMeetingById()` | `apps/cockpit/src/app/(dashboard)/review/[id]/page.tsx` |
 | `getReviewStats()` | `apps/cockpit/src/app/(dashboard)/review/page.tsx` |
 
+### queries/sprints/list.ts
+
+| Query | Used in |
+|-------|---------|
+| `listSprintsByProject()` | `apps/devhub/src/app/(app)/topics/new/page.tsx`, `apps/devhub/src/app/(app)/topics/[id]/edit/page.tsx` |
+
 ### queries/summaries/core.ts
 
 | Query | Used in |
@@ -5350,7 +5385,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
+| `listTeamMembers()` | `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx`, `apps/devhub/src/app/(app)/issues/new/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/page.tsx` |
 | `getUserWithAccess()` | `apps/cockpit/src/actions/team.ts` |
 | `countAdmins()` | `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/(dashboard)/admin/team/page.tsx` |
 | `getProfileRole()` | `packages/mcp/src/tools/write-client-questions.ts`, `apps/cockpit/src/actions/team.ts`, `apps/cockpit/src/app/auth/callback/route.ts`, `apps/devhub/src/app/auth/callback/route.ts` |
@@ -5406,7 +5441,7 @@ Which queries are used where across the codebase.
 | Query | Used in |
 |-------|---------|
 | `countOpenIssuesPerTopic()` | `apps/devhub/src/app/(app)/issues/page.tsx` |
-| `getTopicMembershipForIssues()` | `packages/database/src/queries/issues/client-portal.ts`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `getTopicMembershipForIssues()` | `packages/database/src/queries/issues/client-portal.ts`, `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `getLinkedIssueIdsInProject()` | `packages/database/src/queries/issues/list.ts` |
 | `getIssueIdsForTopics()` | `packages/database/src/queries/issues/list.ts` |
 
@@ -5414,7 +5449,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `listTopics()` | `apps/devhub/src/app/(app)/issues/[id]/page.tsx`, `apps/devhub/src/app/(app)/issues/page.tsx` |
+| `listTopics()` | `apps/devhub/src/app/(app)/issues/page.tsx`, `apps/devhub/src/app/(app)/issues/[id]/page.tsx` |
 | `listOpenTopicsForCluster()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
 | `listTopicSampleIssues()` | `apps/devhub/src/actions/bulk-cluster-cleanup.ts` |
 
