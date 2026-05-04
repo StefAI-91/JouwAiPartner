@@ -7,10 +7,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Files scanned | 646 |
-| Exported functions/constants | 962 |
-| Exported types/interfaces | 420 |
-| Cross-package imports | 609 |
+| Files scanned | 657 |
+| Exported functions/constants | 977 |
+| Exported types/interfaces | 421 |
+| Cross-package imports | 619 |
 | Critical integration points (3+ packages) | 13 |
 
 ## Package Dependency Flow
@@ -3593,11 +3593,42 @@
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/ui/badge` → Badge
 
+### `apps/cockpit/src/app/(dashboard)/project-sidebar-preview/page.tsx`
+
+**Exports:**
+- `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/project-tabs-preview/page.tsx`
+
+**Exports:**
+- `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/projects/[id]/activity/page.tsx`
+
+**Exports:**
+- `dynamic`
+- `metadata`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+- `@repo/database/queries/projects` → getProjectById
+- `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
+
 ### `apps/cockpit/src/app/(dashboard)/projects/[id]/inbox/page.tsx`
 
 **Exports:**
 - `dynamic`
 - `metadata`
+
+### `apps/cockpit/src/app/(dashboard)/projects/[id]/insights/page.tsx`
+
+**Exports:**
+- `dynamic`
+- `metadata`
+
+**Depends on:**
+- `@repo/database/supabase/server` → createClient
+- `@repo/database/queries/projects` → getProjectById
 
 ### `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx`
 
@@ -3607,7 +3638,6 @@
 **Depends on:**
 - `@repo/database/supabase/server` → createClient
 - `@repo/database/queries/projects` → getProjectById
-- `@repo/database/queries/meetings/project-summaries` → getSegmentsByProjectId
 - `@repo/database/queries/organizations` → listOrganizations
 - `@repo/database/queries/people` → listPeople
 - `@repo/ai/validations/project-summary` → extractProjectTimeline
@@ -4115,6 +4145,38 @@
 **Depends on:**
 - (type) `@repo/database/queries/projects` → FocusProject
 - `@repo/ui/workspace-switcher` → WorkspaceSwitcher
+
+### `apps/cockpit/src/components/project-tabs-preview/panels.tsx`
+
+**Exports:**
+- `ProjectHeader()`
+- `OverviewPanel()`
+- `ActivityPanel()`
+- `InsightsPanel()`
+- `InboxPanel()`
+- `PanelContent()`
+- `PANEL_META`
+
+**Types:** `PanelKey`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
+
+### `apps/cockpit/src/components/project-tabs-preview/project-sidebar-preview.tsx`
+
+**Exports:**
+- `ProjectSidebarPreview()`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
+
+### `apps/cockpit/src/components/project-tabs-preview/project-tabs-preview.tsx`
+
+**Exports:**
+- `ProjectTabsPreview()`
+
+**Depends on:**
+- `@repo/ui/utils` → cn
 
 ### `apps/cockpit/src/components/shared/confidence-bar.tsx`
 
@@ -4732,9 +4794,9 @@ Which layers depend on which packages:
 | Auth | 4 | - | - | - | - | 4 |
 | Cockpit Server Actions | 28 | 13 | 13 | - | - | 54 |
 | Cockpit API Routes | 27 | 36 | 2 | - | 1 | 66 |
-| Cockpit Components | 23 | 5 | - | 44 | - | 72 |
+| Cockpit Components | 23 | 5 | - | 47 | - | 75 |
 | Cockpit Middleware | - | - | 1 | - | - | 1 |
-| Cockpit Pages | 102 | 8 | 9 | 38 | - | 157 |
+| Cockpit Pages | 108 | 8 | 10 | 38 | - | 164 |
 | Database Queries | - | - | 6 | - | - | 6 |
 | DevHub Server Actions | 17 | 2 | 10 | - | - | 29 |
 | DevHub API Routes | 8 | - | 1 | - | - | 9 |
@@ -5093,7 +5155,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `countInboxItemsForTeam()` | `apps/cockpit/src/app/(dashboard)/layout.tsx` |
+| `countInboxItemsForTeam()` | `apps/cockpit/src/app/(dashboard)/layout.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/layout.tsx` |
 
 ### queries/inbox/helpers.ts
 
@@ -5204,7 +5266,7 @@ Which queries are used where across the codebase.
 | `getSegmentCountsByMeetingIds()` | `packages/mcp/src/tools/list-meetings.ts` |
 | `getSegmentCountsByProjectIds()` | `packages/mcp/src/tools/projects.ts` |
 | `getSegmentNameRaw()` | `apps/cockpit/src/actions/segments.ts` |
-| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/project.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
+| `getSegmentsByProjectId()` | `packages/ai/src/pipeline/summary/project.ts`, `apps/cockpit/src/app/(dashboard)/projects/[id]/activity/page.tsx` |
 
 ### queries/meetings/regenerate.ts
 
@@ -5294,7 +5356,7 @@ Which queries are used where across the codebase.
 
 | Query | Used in |
 |-------|---------|
-| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
+| `getProjectById()` | `apps/cockpit/src/app/(dashboard)/projects/[id]/activity/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/insights/page.tsx`, `apps/cockpit/src/app/(dashboard)/projects/[id]/page.tsx` |
 
 ### queries/projects/embedding.ts
 
