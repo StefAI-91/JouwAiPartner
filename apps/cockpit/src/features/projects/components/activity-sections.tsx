@@ -5,7 +5,6 @@ import Link from "next/link";
 import { MeetingTypeBadge } from "@/components/shared/meeting-type-badge";
 import { getMeetingHref } from "@/lib/meeting-href";
 import { EmailsSection, type ProjectEmail } from "./project-emails-section";
-import { CombinedExtractionsSection, type CombinedItem } from "./combined-extractions-section";
 import type { ProjectSegment } from "@repo/database/queries/meetings/project-summaries";
 
 interface Meeting {
@@ -16,93 +15,34 @@ interface Meeting {
   verification_status: string;
 }
 
-interface Extraction {
-  id: string;
-  type: string;
-  content: string;
-  confidence: number | null;
-  transcript_ref: string | null;
-  metadata: Record<string, unknown>;
-  meeting: { id: string; title: string | null } | null;
-}
-
-interface EmailExtraction {
-  id: string;
-  type: string;
-  content: string;
-  confidence: number | null;
-  source_ref: string | null;
-  metadata: Record<string, unknown>;
-  email: { id: string; subject: string | null } | null;
-}
-
-const TABS = [
-  "segments",
-  "meetings",
-  "emails",
-  "action_items",
-  "decisions",
-  "needs_insights",
-] as const;
+const TABS = ["segments", "meetings", "emails"] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<Tab, string> = {
   segments: "Segmenten",
   meetings: "Meetings",
   emails: "Emails",
-  action_items: "Actiepunten",
-  decisions: "Beslissingen",
-  needs_insights: "Behoeften & Inzichten",
 };
 
-interface ProjectSectionsProps {
+interface ActivitySectionsProps {
   meetings: Meeting[];
   emails: ProjectEmail[];
-  extractions: Extraction[];
-  emailExtractions: EmailExtraction[];
-  segments?: ProjectSegment[];
+  segments: ProjectSegment[];
 }
 
-export function ProjectSections({
-  meetings,
-  emails,
-  extractions,
-  emailExtractions,
-  segments = [],
-}: ProjectSectionsProps) {
-  const [activeTab, setActiveTab] = useState<Tab>(segments.length > 0 ? "segments" : "meetings");
-
-  const allActionItems: CombinedItem[] = [
-    ...extractions.filter((e) => e.type === "action_item"),
-    ...emailExtractions.filter((e) => e.type === "action_item"),
-  ];
-  const allDecisions: CombinedItem[] = [
-    ...extractions.filter((e) => e.type === "decision"),
-    ...emailExtractions.filter((e) => e.type === "decision"),
-  ];
-  const allNeedsInsights: CombinedItem[] = [
-    ...extractions.filter((e) => e.type === "need" || e.type === "insight"),
-    ...emailExtractions.filter((e) => e.type === "need" || e.type === "insight"),
-  ];
-
+export function ActivitySections({ meetings, emails, segments }: ActivitySectionsProps) {
   const counts: Record<Tab, number> = {
     segments: segments.length,
     meetings: meetings.length,
     emails: emails.length,
-    action_items: allActionItems.length,
-    decisions: allDecisions.length,
-    needs_insights: allNeedsInsights.length,
   };
 
-  const visibleTabs = TABS.filter((tab) => {
-    if (tab === "meetings") return true;
-    return counts[tab] > 0;
-  });
+  const [activeTab, setActiveTab] = useState<Tab>(segments.length > 0 ? "segments" : "meetings");
 
   return (
     <div>
       <div className="flex gap-1 overflow-x-auto border-b border-border/50 pb-px">
-        {visibleTabs.map((tab) => (
+        {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -126,15 +66,6 @@ export function ProjectSections({
         {activeTab === "segments" && <SegmentsSection segments={segments} />}
         {activeTab === "meetings" && <MeetingsSection meetings={meetings} />}
         {activeTab === "emails" && <EmailsSection emails={emails} />}
-        {activeTab === "action_items" && (
-          <CombinedExtractionsSection items={allActionItems} type="action_item" />
-        )}
-        {activeTab === "decisions" && (
-          <CombinedExtractionsSection items={allDecisions} type="decision" />
-        )}
-        {activeTab === "needs_insights" && (
-          <CombinedExtractionsSection items={allNeedsInsights} type="needs_insights" />
-        )}
       </div>
     </div>
   );
@@ -215,7 +146,7 @@ function MeetingsSection({ meetings }: { meetings: Meeting[] }) {
   if (meetings.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-muted-foreground">
-        No meetings linked to this project
+        Geen meetings gekoppeld aan dit project
       </p>
     );
   }
@@ -230,7 +161,7 @@ function MeetingsSection({ meetings }: { meetings: Meeting[] }) {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-semibold">{meeting.title ?? "Untitled meeting"}</h4>
+              <h4 className="text-sm font-semibold">{meeting.title ?? "Naamloze meeting"}</h4>
               {meeting.date && (
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {new Date(meeting.date).toLocaleDateString("nl-NL", {

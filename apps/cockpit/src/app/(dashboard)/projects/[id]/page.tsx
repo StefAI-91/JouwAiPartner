@@ -3,11 +3,9 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { createClient } from "@repo/database/supabase/server";
 import { getProjectById } from "@repo/database/queries/projects";
-import { getSegmentsByProjectId } from "@repo/database/queries/meetings/project-summaries";
 import { listOrganizations } from "@repo/database/queries/organizations";
 import { listPeople } from "@repo/database/queries/people";
 import { ExternalLink } from "lucide-react";
-import { ProjectSections } from "@/features/projects/components/project-sections";
 import { EditProject } from "@/features/projects/components/edit-project";
 import { ProjectSummaryCard } from "@/features/projects/components/project-summary-card";
 import { ProjectTimeline } from "@/features/projects/components/project-timeline";
@@ -21,9 +19,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const supabase = await createClient();
 
-  const [project, segments, organizations, people] = await Promise.all([
+  const [project, organizations, people] = await Promise.all([
     getProjectById(id, supabase),
-    getSegmentsByProjectId(id, supabase),
     listOrganizations(supabase),
     listPeople(supabase),
   ]);
@@ -89,15 +86,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         />
         <ProjectClientsSection projectId={project.id} />
       </div>
-
-      {/* Tabs */}
-      <ProjectSections
-        meetings={project.meetings}
-        emails={project.emails}
-        extractions={project.extractions}
-        emailExtractions={project.email_extractions}
-        segments={segments}
-      />
     </div>
   );
 }

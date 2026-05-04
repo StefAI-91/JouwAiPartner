@@ -21,20 +21,26 @@ interface TabConfig {
   badge?: number;
 }
 
-const TABS: TabConfig[] = [
+const STATIC_TABS: Omit<TabConfig, "badge">[] = [
   { key: "overview", label: "Overzicht", suffix: "" },
+  { key: "activity", label: "Activiteit", suffix: "/activity" },
+  { key: "insights", label: "Inzichten", suffix: "/insights" },
   { key: "inbox", label: "Inbox", suffix: "/inbox" },
 ];
 
-export function ProjectTabs({ projectId }: { projectId: string }) {
+export function ProjectTabs({ projectId, inboxBadge }: { projectId: string; inboxBadge?: number }) {
   const pathname = usePathname();
   const base = `/projects/${projectId}`;
 
+  const tabs: TabConfig[] = STATIC_TABS.map((tab) =>
+    tab.key === "inbox" && inboxBadge && inboxBadge > 0 ? { ...tab, badge: inboxBadge } : tab,
+  );
+
   const activeKey =
-    TABS.find((tab) => {
+    tabs.find((tab) => {
       const href = `${base}${tab.suffix}`;
       return tab.suffix === "" ? pathname === base : pathname.startsWith(href);
-    })?.key ?? TABS[0]!.key;
+    })?.key ?? tabs[0]!.key;
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -60,17 +66,19 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
             : "border-b border-transparent bg-transparent",
         )}
       >
-        <TabBar projectId={projectId} activeKey={activeKey} base={base} />
+        <TabBar tabs={tabs} projectId={projectId} activeKey={activeKey} base={base} />
       </div>
     </>
   );
 }
 
 function TabBar({
+  tabs,
   projectId,
   activeKey,
   base,
 }: {
+  tabs: TabConfig[];
   projectId: string;
   activeKey: string;
   base: string;
@@ -98,16 +106,16 @@ function TabBar({
   }, [activeKey, measure, projectId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const idx = TABS.findIndex((t) => t.key === activeKey);
+    const idx = tabs.findIndex((t) => t.key === activeKey);
     if (idx < 0) return;
     let next = idx;
-    if (e.key === "ArrowRight") next = (idx + 1) % TABS.length;
-    else if (e.key === "ArrowLeft") next = (idx - 1 + TABS.length) % TABS.length;
+    if (e.key === "ArrowRight") next = (idx + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (idx - 1 + tabs.length) % tabs.length;
     else if (e.key === "Home") next = 0;
-    else if (e.key === "End") next = TABS.length - 1;
+    else if (e.key === "End") next = tabs.length - 1;
     else return;
     e.preventDefault();
-    tabRefs.current[TABS[next]!.key]?.focus();
+    tabRefs.current[tabs[next]!.key]?.focus();
   };
 
   return (
@@ -147,7 +155,7 @@ function TabBar({
           }}
         />
 
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const href = `${base}${tab.suffix}`;
           const isActive = activeKey === tab.key;
           return (
